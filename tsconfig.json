@@ -1,0 +1,18 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "strict": true,
+        "removeComments": true,
+        "declaration": true,
+        "outDir": "./build/",
+        "target": "es5",
+        "lib": ["es6", "dom"]
+    },
+    "include": [
+      "app/server/**/*"
+    ],
+    "exclude": [
+        "node_modules",
+        "dist"
+    ]
+}

@@ -1,0 +1,38 @@
+-
+    const data = {
+        assetsVersion: 1,
+        googleAnalyticsId: 'UA-XXXXXXX-1',
+        pageFavicon: {
+            href: 'assets/favicon.jpeg',
+            type: 'image/jpeg'
+        },
+        pageTitle: 'Page title'
+    }
+
+doctype html
+html
+    head
+        meta(charset='utf-8')
+        meta(name='viewport', content='width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no')
+        title= data.pageTitle
+        link(rel='icon', href=data.pageFavicon.href, type=data.pageFavicon.type)
+
+        <!-- link(href='https://fonts.googleapis.com/css?family=Sacramento', rel='stylesheet') -->
+        <!-- link(href='https://fonts.googleapis.com/css?family=Kalam', rel='stylesheet') -->
+        <!-- script(src='https://use.fontawesome.com/0cebcc1cf0.js') -->
+
+        link(rel='stylesheet', href='styles.css?' + data.assetsVersion)
+
+        <!-- google analytics -->
+        script(async, src='https://www.googletagmanager.com/gtag/js?id=' + data.googleAnalyticsId)
+        script
+            | window.dataLayer = window.dataLayer || [];
+            | function gtag(){dataLayer.push(arguments);}
+            | gtag('js', new Date());
+            | gtag('config', '#{data.googleAnalyticsId}');
+    body
+
+        div
+            p Bonjour
+
+        script(src='bundle.js?' + data.assetsVersion)
