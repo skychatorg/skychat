@@ -1,2 +1,4 @@
+import {SkyChatServer} from "./SkyChatServer";
 
-console.log('Hello');
+
+new SkyChatServer();
