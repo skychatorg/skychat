@@ -2,12 +2,15 @@ import * as WebSocket from "ws";
 import * as http from "http";
 import {Data} from "ws";
 import {EventEmitter} from "events";
+import {Session} from "./Session";
 
 
 /**
  * A client is basically a wrapper around a WebSocket
  */
 export class Client extends EventEmitter {
+
+    public readonly session: Session;
 
     private readonly webSocket: WebSocket;
 
@@ -16,11 +19,15 @@ export class Client extends EventEmitter {
      */
     private readonly request: http.IncomingMessage;
 
-    constructor(webSocket: WebSocket, request: http.IncomingMessage) {
+    constructor(session: Session, webSocket: WebSocket, request: http.IncomingMessage) {
         super();
+
+        this.session = session;
         this.webSocket = webSocket;
-        this.webSocket.on('message', message => this.onMessage(message));
         this.request = request;
+
+        this.session.attachClient(this);
+        this.webSocket.on('message', message => this.onMessage(message));
     }
 
     /**

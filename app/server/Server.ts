@@ -2,6 +2,7 @@ import * as WebSocket from "ws";
 import * as http from "http";
 import {ServerOptions} from "ws";
 import {Client} from "./Client";
+import {Session} from "./Session";
 
 
 
@@ -28,10 +29,16 @@ export class Server {
 
     private readonly wss: WebSocket.Server;
 
+    /**
+     * Authenticate function. Returns an unique identifier that will be used to group client in a session object.
+     */
+    public authenticateFunction: (request: http.IncomingMessage) => Promise<string | null>;
+
     constructor(serverConfig: ServerOptions) {
         this.serverConfig = serverConfig;
         this.wss = new WebSocket.Server(serverConfig);
         this.wss.on('connection', this.onConnection.bind(this));
+        this.authenticateFunction = async () => null;
     }
 
     /**
@@ -49,9 +56,19 @@ export class Server {
      * @param webSocket
      * @param request
      */
-    private onConnection(webSocket: WebSocket, request: http.IncomingMessage): void {
+    private async onConnection(webSocket: WebSocket, request: http.IncomingMessage): Promise<void> {
 
-        const client = new Client(webSocket, request);
+        let identifier = await this.authenticateFunction(request);
+        // @TODO remove when auth is implemented
+        if (identifier === null) {
+            identifier = '*Guest' + Math.random();
+        }
+
+        // Create a session based on the just-computed identifier
+        const session = new Session(identifier);
+
+        // Create a new client object & attach it to the session
+        const client = new Client(session, webSocket, request);
 
         // For every registered event
         Object.keys(this.events).forEach(eventName => {
