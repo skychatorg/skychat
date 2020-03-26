@@ -9,21 +9,13 @@ import {EventEmitter} from "events";
  */
 export class Client extends EventEmitter {
 
-    /**
-     * Underlying websocket
-     */
     private readonly webSocket: WebSocket;
 
     /**
-     * Handshake request
+     * Handshake request object
      */
     private readonly request: http.IncomingMessage;
 
-    /**
-     * Instantiates a new client
-     * @param webSocket
-     * @param request
-     */
     constructor(webSocket: WebSocket, request: http.IncomingMessage) {
         super();
         this.webSocket = webSocket;
@@ -32,7 +24,7 @@ export class Client extends EventEmitter {
     }
 
     /**
-     *
+     * When a message is received on the socket
      * @param data
      */
     private async onMessage(data: Data): Promise<void> {

@@ -1,6 +1,4 @@
 import {Server} from "./Server";
-import * as WebSocket from "ws";
-import * as http from "http";
 import {Client} from "./Client";
 
 /**
@@ -8,14 +6,8 @@ import {Client} from "./Client";
  */
 export class SkyChatController {
 
-    /**
-     * Underlying server
-     */
     private readonly server: Server;
 
-    /**
-     * Create a new controller
-     */
     constructor() {
         this.server = new Server({port: 8080});
         this.server.registerEvent('message', this.onMessage.bind(this), 'string');

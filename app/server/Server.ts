@@ -24,20 +24,10 @@ export class Server {
      */
     private readonly events: EventsDescription = {};
 
-    /**
-     * Server configuration
-     */
     private readonly serverConfig: ServerOptions;
 
-    /**
-     * WebSocket server underlying object
-     */
     private readonly wss: WebSocket.Server;
 
-    /**
-     * Create a new server object
-     * @param serverConfig
-     */
     constructor(serverConfig: ServerOptions) {
         this.serverConfig = serverConfig;
         this.wss = new WebSocket.Server(serverConfig);
@@ -60,8 +50,9 @@ export class Server {
      * @param request
      */
     private onConnection(webSocket: WebSocket, request: http.IncomingMessage): void {
-        // Create client wrapper
+
         const client = new Client(webSocket, request);
+
         // For every registered event
         Object.keys(this.events).forEach(eventName => {
             // Register it on the client object
@@ -78,7 +69,6 @@ export class Server {
     private async onClientEvent(eventName: keyof EventsDescription, payload: any, client: Client): Promise<void> {
         try {
 
-            // Retrieve event object
             const event = this.events[eventName];
 
             // Check payload type
@@ -91,7 +81,6 @@ export class Server {
 
         } catch (error) {
 
-            // On handler fail, notify client
             client.sendError(error);
         }
     }
