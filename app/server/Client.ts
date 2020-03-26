@@ -8,9 +8,9 @@ import {Session} from "./Session";
 /**
  * A client is basically a wrapper around a WebSocket
  */
-export class Client extends EventEmitter {
+export class Client<SessionData> extends EventEmitter {
 
-    public readonly session: Session;
+    public readonly session: Session<SessionData>;
 
     private readonly webSocket: WebSocket;
 
@@ -19,7 +19,7 @@ export class Client extends EventEmitter {
      */
     private readonly request: http.IncomingMessage;
 
-    constructor(session: Session, webSocket: WebSocket, request: http.IncomingMessage) {
+    constructor(session: Session<SessionData>, webSocket: WebSocket, request: http.IncomingMessage) {
         super();
 
         this.session = session;

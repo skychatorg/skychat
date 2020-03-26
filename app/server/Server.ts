@@ -6,24 +6,25 @@ import {Session} from "./Session";
 
 
 
-type EventHandler<T> = (payload: T, client: Client) => Promise<void>;
-type EventDescription = {
-    payloadType?: string,
-    handler: EventHandler<any>
+type EventHandler<SessionData, PayloadType> = (payload: PayloadType, client: Client<SessionData>) => Promise<void>;
+type EventsDescription<SessionData> = {
+    [eventName: string]: {
+        payloadType?: string,
+        handler: EventHandler<SessionData, any>
+    };
 };
-type EventsDescription = { [eventName: string]: EventDescription; };
 
 
 
 /**
  * Generic server object. Handle typed event communication.
  */
-export class Server {
+export class Server<SessionData> {
 
     /**
      * List of accepted events.
      */
-    private readonly events: EventsDescription = {};
+    private readonly events: EventsDescription<SessionData> = {};
 
     private readonly serverConfig: ServerOptions;
 
@@ -32,19 +33,23 @@ export class Server {
     /**
      * Authenticate function. Returns an unique identifier that will be used to group client in a session object.
      */
-    public authenticateFunction: (request: http.IncomingMessage) => Promise<string | null>;
+    public authenticateFunction?: (request: http.IncomingMessage) => Promise<string>;
+
+    /**
+     * Retrieve a session data from its unique identifier as returned by authenticateFunction
+     */
+    public getSessionDataFunction?: (identifier: string) => Promise<SessionData>;
 
     constructor(serverConfig: ServerOptions) {
         this.serverConfig = serverConfig;
         this.wss = new WebSocket.Server(serverConfig);
         this.wss.on('connection', this.onConnection.bind(this));
-        this.authenticateFunction = async () => null;
     }
 
     /**
      * Register an event
      */
-    public registerEvent<T>(name: string, handler: EventHandler<T>, payloadType?: string): void {
+    public registerEvent<PayloadType>(name: string, handler: EventHandler<SessionData, PayloadType>, payloadType?: string): void {
         this.events[name] = {
             handler: handler.bind(handler),
             payloadType: payloadType,
@@ -58,14 +63,22 @@ export class Server {
      */
     private async onConnection(webSocket: WebSocket, request: http.IncomingMessage): Promise<void> {
 
+        if (typeof this.authenticateFunction !== 'function') {
+            throw new Error('Authenticate function is not defined');
+        }
+
         let identifier = await this.authenticateFunction(request);
-        // @TODO remove when auth is implemented
         if (identifier === null) {
-            identifier = '*Guest' + Math.random();
+            throw new Error('Invalid identifier');
+        }
+
+        if (typeof this.getSessionDataFunction !== 'function') {
+            throw new Error('Authenticate function is not defined');
         }
 
         // Create a session based on the just-computed identifier
-        const session = new Session(identifier);
+        const sessionData = await this.getSessionDataFunction(identifier);
+        const session = new Session<SessionData>(identifier, sessionData);
 
         // Create a new client object & attach it to the session
         const client = new Client(session, webSocket, request);
@@ -83,7 +96,7 @@ export class Server {
      * @param payload
      * @param client
      */
-    private async onClientEvent(eventName: keyof EventsDescription, payload: any, client: Client): Promise<void> {
+    private async onClientEvent(eventName: keyof EventsDescription<SessionData>, payload: any, client: Client<SessionData>): Promise<void> {
         try {
 
             const event = this.events[eventName];
