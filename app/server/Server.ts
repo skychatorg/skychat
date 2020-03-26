@@ -1,10 +1,11 @@
 import * as WebSocket from "ws";
 import * as http from "http";
-import {Data, ServerOptions} from "ws";
+import {ServerOptions} from "ws";
+import {Client} from "./Client";
 
 
 
-type EventHandler<T> = (payload: T, webSocket: WebSocket, request: http.IncomingMessage) => Promise<void>;
+type EventHandler<T> = (payload: T, client: Client) => Promise<void>;
 type EventDescription = {
     payloadType?: string,
     handler: EventHandler<any>
@@ -47,7 +48,10 @@ export class Server {
      * Register an event
      */
     public registerEvent<T>(name: string, handler: EventHandler<T>, payloadType?: string): void {
-        this.events[name] = {payloadType, handler};
+        this.events[name] = {
+            handler: handler.bind(handler),
+            payloadType: payloadType,
+        };
     }
 
     /**
@@ -56,55 +60,39 @@ export class Server {
      * @param request
      */
     private onConnection(webSocket: WebSocket, request: http.IncomingMessage): void {
-        webSocket.on('message', message => this.onMessage(message, webSocket, request));
+        // Create client wrapper
+        const client = new Client(webSocket, request);
+        // For every registered event
+        Object.keys(this.events).forEach(eventName => {
+            // Register it on the client object
+            client.on(eventName, payload => this.onClientEvent(eventName, payload, client));
+        });
     }
 
     /**
-     *
-     * @param data
-     * @param webSocket
-     * @param request
+     * When a new client connects
+     * @param eventName
+     * @param payload
+     * @param client
      */
-    private async onMessage(data: Data, webSocket: WebSocket, request: http.IncomingMessage): Promise<void> {
-
+    private async onClientEvent(eventName: keyof EventsDescription, payload: any, client: Client): Promise<void> {
         try {
 
-            // If data is not of type string, fail with error
-            if (typeof data !== 'string') {
-                throw new Error('Incorrect message');
-            }
-
-            // Decode & unpack message
-            const decodedMessage = JSON.parse(data);
-            const eventName = decodedMessage.event;
-            const payload = decodedMessage.data;
-
-            // Check that the event name is valid and is registered
-            if (typeof eventName !== 'string') {
-                throw new Error('Event could not be parsed');
-            }
-            if (typeof this.events[eventName] !== 'object') {
-                throw new Error('Unsupported event');
-            }
-
-            // Get event metadata object
+            // Retrieve event object
             const event = this.events[eventName];
 
             // Check payload type
-            const payloadType = event.payloadType;
-            if (typeof payloadType !== 'undefined' && typeof payload !== payloadType) {
-                throw new Error('Unsupported payload type.');
+            if (typeof payload !== event.payloadType) {
+                throw new Error('Incorrect payload type');
             }
 
             // Call handler
-            await event.handler(payload, webSocket, request);
+            await event.handler(payload, client);
 
         } catch (error) {
 
-            webSocket.send(JSON.stringify({
-                event: 'error',
-                data: error.message
-            }))
+            // On handler fail, notify client
+            client.sendError(error);
         }
     }
 }
