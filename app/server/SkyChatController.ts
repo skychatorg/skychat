@@ -1,10 +1,7 @@
 import {Server} from "./Server";
 import {Client} from "./Client";
 import * as http from "http";
-
-type SessionData = {
-    seed: number
-};
+import {SkyChatSession} from "./SkyChatSession";
 
 
 /**
@@ -12,13 +9,13 @@ type SessionData = {
  */
 export class SkyChatController {
 
-    private readonly server: Server<SessionData>;
+    private readonly server: Server<SkyChatSession>;
 
     constructor() {
         this.server = new Server({port: 8080});
-        this.server.registerEvent('message', this.onMessage.bind(this), 'string');
         this.server.authenticateFunction = this.authenticate.bind(this);
-        this.server.getSessionDataFunction = this.getSessionData.bind(this);
+        this.server.getSessionFunction = this.getSession.bind(this);
+        this.server.registerEvent('message', this.onMessage.bind(this), 'string');
     }
 
     /**
@@ -31,10 +28,8 @@ export class SkyChatController {
     /**
      * Build a session data object
      */
-    private async getSessionData(identifier: string): Promise<SessionData> {
-        return {
-            seed: Math.random()
-        };
+    private async getSession(identifier: string): Promise<SkyChatSession> {
+        return new SkyChatSession(identifier);
     }
 
     /**
@@ -42,8 +37,8 @@ export class SkyChatController {
      * @param payload
      * @param client
      */
-    private async onMessage(payload: string, client: Client<SessionData>): Promise<void> {
-        console.log('message', client.session.identifier, client.session.data.seed, payload);
+    private async onMessage(payload: string, client: Client<SkyChatSession>): Promise<void> {
+        console.log('message', client.session.identifier, payload);
         client.send('message', payload);
     }
 }

@@ -6,11 +6,11 @@ import {Session} from "./Session";
 
 
 
-type EventHandler<SessionData, PayloadType> = (payload: PayloadType, client: Client<SessionData>) => Promise<void>;
-type EventsDescription<SessionData> = {
+type EventHandler<SessionObject extends Session, PayloadType> = (payload: PayloadType, client: Client<SessionObject>) => Promise<void>;
+type EventsDescription<SessionObject extends Session> = {
     [eventName: string]: {
         payloadType?: string,
-        handler: EventHandler<SessionData, any>
+        handler: EventHandler<SessionObject, any>
     };
 };
 
@@ -19,12 +19,12 @@ type EventsDescription<SessionData> = {
 /**
  * Generic server object. Handle typed event communication.
  */
-export class Server<SessionData> {
+export class Server<SessionObject extends Session> {
 
     /**
      * List of accepted events.
      */
-    private readonly events: EventsDescription<SessionData> = {};
+    private readonly events: EventsDescription<SessionObject> = {};
 
     private readonly serverConfig: ServerOptions;
 
@@ -38,7 +38,7 @@ export class Server<SessionData> {
     /**
      * Retrieve a session data from its unique identifier as returned by authenticateFunction
      */
-    public getSessionDataFunction?: (identifier: string) => Promise<SessionData>;
+    public getSessionFunction?: (identifier: string) => Promise<SessionObject>;
 
     constructor(serverConfig: ServerOptions) {
         this.serverConfig = serverConfig;
@@ -49,7 +49,7 @@ export class Server<SessionData> {
     /**
      * Register an event
      */
-    public registerEvent<PayloadType>(name: string, handler: EventHandler<SessionData, PayloadType>, payloadType?: string): void {
+    public registerEvent<PayloadType>(name: string, handler: EventHandler<SessionObject, PayloadType>, payloadType?: string): void {
         this.events[name] = {
             handler: handler.bind(handler),
             payloadType: payloadType,
@@ -72,13 +72,15 @@ export class Server<SessionData> {
             throw new Error('Invalid identifier');
         }
 
-        if (typeof this.getSessionDataFunction !== 'function') {
-            throw new Error('Authenticate function is not defined');
+        if (typeof this.getSessionFunction !== 'function') {
+            throw new Error('Session builder is not defined');
         }
 
         // Create a session based on the just-computed identifier
-        const sessionData = await this.getSessionDataFunction(identifier);
-        const session = new Session<SessionData>(identifier, sessionData);
+        const session = await this.getSessionFunction(identifier);
+
+        // Load session data
+        await session.loadData();
 
         // Create a new client object & attach it to the session
         const client = new Client(session, webSocket, request);
@@ -96,7 +98,7 @@ export class Server<SessionData> {
      * @param payload
      * @param client
      */
-    private async onClientEvent(eventName: keyof EventsDescription<SessionData>, payload: any, client: Client<SessionData>): Promise<void> {
+    private async onClientEvent(eventName: keyof EventsDescription<SessionObject>, payload: any, client: Client<SessionObject>): Promise<void> {
         try {
 
             const event = this.events[eventName];

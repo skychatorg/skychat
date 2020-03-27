@@ -4,20 +4,17 @@ import {Client} from "./Client";
 /**
  * A session represents an authenticated user. It can have multiple client objects.
  */
-export class Session<SessionData> {
+export abstract class Session {
 
     /**
      * Unique session identifier
      */
     public readonly identifier: string;
 
-    private readonly clients: Client<SessionData>[];
+    private readonly clients: Client<Session>[];
 
-    public readonly data: SessionData;
-
-    constructor(identifier: string, data: SessionData) {
+    constructor(identifier: string) {
         this.identifier = identifier;
-        this.data = data;
         this.clients = [];
     }
 
@@ -25,7 +22,13 @@ export class Session<SessionData> {
      * Attach a client to this session
      * @param client
      */
-    public attachClient(client: Client<SessionData>): void {
+    public attachClient(client: Client<Session>): void {
         this.clients.push(client);
     }
+
+    /**
+     * Loads session data.
+     */
+    public abstract loadData(): Promise<void>;
 }
+
