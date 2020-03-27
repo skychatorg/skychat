@@ -38,10 +38,11 @@ export class Server<SessionObject extends Session> {
     /**
      * Retrieve a session data from its unique identifier as returned by authenticateFunction
      */
-    public getSessionFunction?: (identifier: string) => Promise<SessionObject>;
+    public sessionConstructor: new (identifier: string) => SessionObject;
 
-    constructor(serverConfig: ServerOptions) {
+    constructor(serverConfig: ServerOptions, sessionConstructor: new (identifier: string) => SessionObject) {
         this.serverConfig = serverConfig;
+        this.sessionConstructor = sessionConstructor;
         this.wss = new WebSocket.Server(serverConfig);
         this.wss.on('connection', this.onConnection.bind(this));
     }
@@ -72,12 +73,8 @@ export class Server<SessionObject extends Session> {
             throw new Error('Invalid identifier');
         }
 
-        if (typeof this.getSessionFunction !== 'function') {
-            throw new Error('Session builder is not defined');
-        }
-
         // Create a session based on the just-computed identifier
-        const session = await this.getSessionFunction(identifier);
+        const session = new this.sessionConstructor(identifier);
 
         // Load session data
         await session.loadData();

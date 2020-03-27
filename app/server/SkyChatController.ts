@@ -12,10 +12,10 @@ export class SkyChatController {
     private readonly server: Server<SkyChatSession>;
 
     constructor() {
-        this.server = new Server({port: 8080});
+        this.server = new Server({port: 8080}, SkyChatSession);
         this.server.authenticateFunction = this.authenticate.bind(this);
-        this.server.getSessionFunction = this.getSession.bind(this);
         this.server.registerEvent('message', this.onMessage.bind(this), 'string');
+        this.server.registerEvent('register', this.onRegister.bind(this), 'object');
     }
 
     /**
@@ -26,10 +26,12 @@ export class SkyChatController {
     }
 
     /**
-     * Build a session data object
+     * Register event
+     * @param payload
+     * @param client
      */
-    private async getSession(identifier: string): Promise<SkyChatSession> {
-        return new SkyChatSession(identifier);
+    private async onRegister(payload: object, client: Client<SkyChatSession>): Promise<void> {
+        console.log(payload);
     }
 
     /**
