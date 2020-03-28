@@ -17,7 +17,7 @@ export class SkyChatSession extends Session {
     constructor(identifier: string) {
         super(identifier);
 
-        this.user = new SkyChatUser(0, identifier, '', {});
+        this.user = new SkyChatUser(0, identifier, '', 0, {});
     }
 
     /**

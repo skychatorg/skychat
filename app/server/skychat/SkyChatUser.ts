@@ -67,7 +67,7 @@ export class SkyChatUser {
         if (! userObject) {
             throw new Error('User does not exist');
         }
-        return new SkyChatUser(userObject.id, userObject.username_custom, userObject.password, JSON.parse(userObject.data));
+        return new SkyChatUser(userObject.id, userObject.username_custom, userObject.password, userObject.right, JSON.parse(userObject.data));
     }
 
     /**
@@ -79,7 +79,7 @@ export class SkyChatUser {
         if (! userObject) {
             throw new Error('User does not exist');
         }
-        return new SkyChatUser(userObject.id, userObject.username_custom, userObject.password, JSON.parse(userObject.data));
+        return new SkyChatUser(userObject.id, userObject.username_custom, userObject.password, userObject.right, JSON.parse(userObject.data));
     }
 
     /**
@@ -90,8 +90,8 @@ export class SkyChatUser {
     public static async registerUser(username: string, password: string): Promise<SkyChatUser> {
         const tms = Math.floor(Date.now() / 1000);
         const sqlQuery = SQL`insert into users
-            (username, username_custom, password, data, tms_created, tms_last_seen) values
-            (${username.toLowerCase()}, ${username}, ${''}, ${'{}'}, ${tms}, ${tms})`;
+            (username, username_custom, password, right, data, tms_created, tms_last_seen) values
+            (${username.toLowerCase()}, ${username}, ${''}, ${0}, ${'{}'}, ${tms}, ${tms})`;
         const statement = await DatabaseHelper.db.run(sqlQuery);
         const userId = statement.lastID;
         if (! userId) {
@@ -147,12 +147,15 @@ export class SkyChatUser {
 
     private readonly password: string;
 
+    private readonly right: number;
+
     public readonly data: SkyChatUserData;
 
-    constructor(id: number, username: string, password: string, data: SkyChatUserData) {
+    constructor(id: number, username: string, password: string, right: number, data: SkyChatUserData) {
         this.id = id;
         this.username = username;
         this.password = password;
+        this.right = right;
         this.data = data;
     }
 
@@ -172,6 +175,7 @@ export class SkyChatUser {
         return {
             id: this.id,
             username: this.username,
+            right: this.right,
             data: this.data
         }
     }
