@@ -29,6 +29,6 @@ export abstract class Session {
     /**
      * Loads session data.
      */
-    public abstract loadData(): Promise<void>;
+    public abstract load(): Promise<void>;
 }
 

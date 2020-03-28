@@ -3,13 +3,14 @@ import * as http from "http";
 import {ServerOptions} from "ws";
 import {Client} from "./Client";
 import {Session} from "./Session";
+import * as iof from "io-filter";
 
 
 
-type EventHandler<SessionObject extends Session, PayloadType> = (payload: PayloadType, client: Client<SessionObject>) => Promise<void>;
+type EventHandler<SessionObject extends Session, payloadFilter> = (payload: payloadFilter, client: Client<SessionObject>) => Promise<void>;
 type EventsDescription<SessionObject extends Session> = {
     [eventName: string]: {
-        payloadType?: string,
+        payloadFilter?: iof.MaskFilter,
         handler: EventHandler<SessionObject, any>
     };
 };
@@ -48,12 +49,16 @@ export class Server<SessionObject extends Session> {
     }
 
     /**
-     * Register an event
+     * Register a new client event
+     * @param name
+     * @param handler
+     * @param payloadType Type of payload. If set to a string, the type of the payload should be equal to this string. Can also be set to a valid mask filter.
      */
-    public registerEvent<PayloadType>(name: string, handler: EventHandler<SessionObject, PayloadType>, payloadType?: string): void {
+    public registerEvent<PayloadType>(name: string, handler: EventHandler<SessionObject, PayloadType>, payloadType?: string | iof.MaskFilter): void {
+        const payloadFilter = typeof payloadType === 'string' ? new iof.ValueTypeFilter(payloadType) : payloadType;
         this.events[name] = {
             handler: handler.bind(handler),
-            payloadType: payloadType,
+            payloadFilter: payloadFilter,
         };
     }
 
@@ -77,7 +82,7 @@ export class Server<SessionObject extends Session> {
         const session = new this.sessionConstructor(identifier);
 
         // Load session data
-        await session.loadData();
+        await session.load();
 
         // Create a new client object & attach it to the session
         const client = new Client(session, webSocket, request);
@@ -100,9 +105,10 @@ export class Server<SessionObject extends Session> {
 
             const event = this.events[eventName];
 
-            // Check payload type
-            if (typeof payload !== event.payloadType) {
-                throw new Error('Incorrect payload type');
+            // If payload filter is defined
+            if (event.payloadFilter) {
+                // Use it as a mask on the payload
+                payload = event.payloadFilter.mask(payload);
             }
 
             // Call handler

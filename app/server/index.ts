@@ -1,4 +1,4 @@
-import {SkyChatController} from "./SkyChatController";
+import {SkyChat} from "./skychat/SkyChat";
 
 
-new SkyChatController();
+new SkyChat();
