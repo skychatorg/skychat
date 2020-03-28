@@ -23,7 +23,7 @@ export class SkyChat {
     constructor() {
 
         // Create server instance
-        this.server = new Server({port: 8080}, this.getNewSession);
+        this.server = new Server({port: 8080}, this.getNewSession.bind(this));
 
         // Load database then register server events
         DatabaseHelper

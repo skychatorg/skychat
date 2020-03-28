@@ -50,7 +50,9 @@ export abstract class Session {
         if (connection.session === this) {
             return;
         }
-        connection.session.detachConnection(connection);
+        if (connection.session) {
+            connection.session.detachConnection(connection);
+        }
         connection.session = this;
         this.connections.push(connection);
     }

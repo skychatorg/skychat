@@ -10,7 +10,7 @@ import {Session} from "./Session";
  */
 export class Connection<SessionObject extends Session> extends EventEmitter {
 
-    public session: SessionObject;
+    public session!: SessionObject;
 
     private readonly webSocket: WebSocket;
 
@@ -22,11 +22,10 @@ export class Connection<SessionObject extends Session> extends EventEmitter {
     constructor(session: SessionObject, webSocket: WebSocket, request: http.IncomingMessage) {
         super();
 
-        this.session = session;
         this.webSocket = webSocket;
         this.request = request;
 
-        this.session.attachConnection(this);
+        session.attachConnection(this);
         this.webSocket.on('message', message => this.onMessage(message));
     }
 

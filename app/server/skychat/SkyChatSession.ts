@@ -26,6 +26,7 @@ export class SkyChatSession extends Session {
      */
     public attachConnection(connection: Connection<Session>): void {
         super.attachConnection(connection);
+
         connection.send('set-user', this.user.sanitized())
     }
 
