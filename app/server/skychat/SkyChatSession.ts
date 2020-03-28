@@ -1,10 +1,10 @@
 import {Session} from "../generic-server/Session";
 import {SkyChatUser} from "./SkyChatUser";
-import {Client} from "../generic-server/Client";
+import {Connection} from "../generic-server/Connection";
 
 
 /**
- * A SkyChatSession represents a connected client
+ * A SkyChatSession represents a connected user, who has an account or not
  */
 export class SkyChatSession extends Session {
 
@@ -13,6 +13,7 @@ export class SkyChatSession extends Session {
      */
     public user: SkyChatUser;
 
+
     constructor(identifier: string) {
         super(identifier);
 
@@ -20,19 +21,21 @@ export class SkyChatSession extends Session {
     }
 
     /**
-     * Load session data
+     * Attach a connection to this session
+     * @param connection
      */
-    public async load(): Promise<void> {
-
+    public attachConnection(connection: Connection<Session>): void {
+        super.attachConnection(connection);
+        connection.send('set-user', this.user.sanitized())
     }
 
-    public attachClient(client: Client<Session>): void {
-        super.attachClient(client);
-        client.send('set-client', this.user.sanitized())
-    }
-
+    /**
+     * Set associated user
+     * @param user
+     */
     public setUser(user: SkyChatUser): void {
+        this.identifier = user.username.toLowerCase();
         this.user = user;
-        this.clients.forEach(client => client.send('set-client', this.user.sanitized()));
+        this.connections.forEach(connection => connection.send('set-user', this.user.sanitized()));
     }
 }

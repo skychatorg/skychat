@@ -1,10 +1,12 @@
 import {Server} from "../generic-server/Server";
-import {Client} from "../generic-server/Client";
+import {Connection} from "../generic-server/Connection";
 import * as http from "http";
 import {SkyChatSession} from "./SkyChatSession";
 import {DatabaseHelper} from "./DatabaseHelper";
 import {SkyChatUser} from "./SkyChatUser";
 import * as iof from "io-filter";
+import {Room} from "../generic-server/Room";
+import {Session} from "../generic-server/Session";
 
 
 /**
@@ -12,17 +14,21 @@ import * as iof from "io-filter";
  */
 export class SkyChat {
 
-    private server: Server<SkyChatSession>;
+    private static CURRENT_GUEST_ID: number = 0;
+
+    private readonly room: Room = new Room();
+
+    private readonly server: Server<SkyChatSession>;
 
     constructor() {
-        this.server = new Server({port: 8080}, SkyChatSession);
+
+        // Create server instance
+        this.server = new Server({port: 8080}, this.getNewSession);
+
+        // Load database then register server events
         DatabaseHelper
             .load()
             .then(() => {
-                this.server.authenticateFunction = this.authenticate.bind(this);
-
-                // On message sent
-                this.server.registerEvent('message', this.onMessage.bind(this), 'string');
 
                 // On register
                 this.server.registerEvent('register', this.onRegister.bind(this), new iof.ObjectFilter({
@@ -42,39 +48,59 @@ export class SkyChat {
                     timestamp: new iof.NumberFilter(- Infinity, Infinity, false),
                     signature: new iof.ValueTypeFilter('string'),
                 }));
+
+                // On message sent
+                this.server.registerEvent('message', this.onMessage.bind(this), 'string');
             });
     }
 
     /**
-     * Get a new client username from its request handshake
+     * Get a new username when one connects to the server
      */
-    private async authenticate(request: http.IncomingMessage): Promise<string> {
-        return '*Hamster' + Math.random();
+    private async getNewSession(request: http.IncomingMessage): Promise<SkyChatSession> {
+        const identifier = '*Hamster' + (++ SkyChat.CURRENT_GUEST_ID);
+        const session = new SkyChatSession(identifier);
+        this.room.attachSession(session);
+        return session;
     }
 
-    private async onRegister(payload: any, client: Client<SkyChatSession>): Promise<void> {
-        const username = payload.username;
-        const password = payload.password;
-        const user = await SkyChatUser.registerUser(username, password);
-        console.log('register', user);
+    private async onRegister(payload: any, connection: Connection<SkyChatSession>): Promise<void> {
+        const user = await SkyChatUser.registerUser(payload.username, payload.password);
+        this.onAuthSuccessful(user, connection);
     }
 
-    private async onLogin(payload: any, client: Client<SkyChatSession>): Promise<void> {
-        const username = payload.username;
-        const password = payload.password;
-        const user = await SkyChatUser.login(username, password);
-        client.session.setUser(user);
-        client.send('auth-token', SkyChatUser.getAuthToken(user.id));
+    private async onLogin(payload: any, connection: Connection<SkyChatSession>): Promise<void> {
+        const user = await SkyChatUser.login(payload.username, payload.password);
+        this.onAuthSuccessful(user, connection);
     }
 
-    private async onSetToken(payload: any, client: Client<SkyChatSession>): Promise<void> {
+    private async onSetToken(payload: any, connection: Connection<SkyChatSession>): Promise<void> {
         const user = await SkyChatUser.verifyAuthToken(payload);
-        client.session.setUser(user);
-        client.send('auth-token', SkyChatUser.getAuthToken(user.id));
+        this.onAuthSuccessful(user, connection);
     }
 
-    private async onMessage(payload: string, client: Client<SkyChatSession>): Promise<void> {
-        console.log('message', client.session.identifier, payload);
-        client.send('message', payload);
+    /**
+     * When an auth attempt is completed
+     * @param user
+     * @param connection
+     */
+    private onAuthSuccessful(user: SkyChatUser, connection: Connection<SkyChatSession>): void {
+        // Find an existing session belonging to the same user
+        const recycledSession = Session.getSessionByIdentifier(user.username.toLowerCase());
+        if (recycledSession) {
+            // If such session exists, attach this connection to the active session
+            recycledSession.attachConnection(connection);
+        } else {
+            // Else, update this session
+            connection.session.setUser(user);
+        }
+        connection.send('auth-token', SkyChatUser.getAuthToken(user.id));
+    }
+
+    private async onMessage(payload: string, connection: Connection<SkyChatSession>): Promise<void> {
+        if (! connection.session.room) {
+            throw new Error('Join a room before sending a message');
+        }
+        connection.session.room.send('message', payload);
     }
 }

@@ -1,13 +1,13 @@
 import * as WebSocket from "ws";
 import * as http from "http";
 import {ServerOptions} from "ws";
-import {Client} from "./Client";
+import {Connection} from "./Connection";
 import {Session} from "./Session";
 import * as iof from "io-filter";
 
 
 
-type EventHandler<SessionObject extends Session, payloadFilter> = (payload: payloadFilter, client: Client<SessionObject>) => Promise<void>;
+type EventHandler<SessionObject extends Session, payloadFilter> = (payload: payloadFilter, client: Connection<SessionObject>) => Promise<void>;
 type EventsDescription<SessionObject extends Session> = {
     [eventName: string]: {
         payloadFilter?: iof.MaskFilter,
@@ -32,18 +32,13 @@ export class Server<SessionObject extends Session> {
     private readonly wss: WebSocket.Server;
 
     /**
-     * Authenticate function. Returns an unique identifier that will be used to group client in a session object.
+     * Builds a session object when a new connection is initiated
      */
-    public authenticateFunction?: (request: http.IncomingMessage) => Promise<string>;
+    public sessionBuilder: (request: http.IncomingMessage) => Promise<SessionObject>;
 
-    /**
-     * Retrieve a session data from its unique identifier as returned by authenticateFunction
-     */
-    public sessionConstructor: new (identifier: string) => SessionObject;
-
-    constructor(serverConfig: ServerOptions, sessionConstructor: new (identifier: string) => SessionObject) {
+    constructor(serverConfig: ServerOptions, sessionBuilder: (request: http.IncomingMessage) => Promise<SessionObject>) {
         this.serverConfig = serverConfig;
-        this.sessionConstructor = sessionConstructor;
+        this.sessionBuilder = sessionBuilder;
         this.wss = new WebSocket.Server(serverConfig);
         this.wss.on('connection', this.onConnection.bind(this));
     }
@@ -69,38 +64,26 @@ export class Server<SessionObject extends Session> {
      */
     private async onConnection(webSocket: WebSocket, request: http.IncomingMessage): Promise<void> {
 
-        if (typeof this.authenticateFunction !== 'function') {
-            throw new Error('Authenticate function is not defined');
-        }
-
-        let identifier = await this.authenticateFunction(request);
-        if (identifier === null) {
-            throw new Error('Invalid identifier');
-        }
-
         // Create a session based on the just-computed identifier
-        const session = new this.sessionConstructor(identifier);
+        const session = await this.sessionBuilder(request);
 
-        // Load session data
-        await session.load();
-
-        // Create a new client object & attach it to the session
-        const client = new Client(session, webSocket, request);
+        // Create a new connection object & attach it to the session
+        const connection = new Connection(session, webSocket, request);
 
         // For every registered event
         Object.keys(this.events).forEach(eventName => {
-            // Register it on the client object
-            client.on(eventName, payload => this.onClientEvent(eventName, payload, client));
+            // Register it on the connection object
+            connection.on(eventName, payload => this.onConnectionEvent(eventName, payload, connection));
         });
     }
 
     /**
-     * When a new client connects
+     * When a new event is received
      * @param eventName
      * @param payload
-     * @param client
+     * @param connection
      */
-    private async onClientEvent(eventName: keyof EventsDescription<SessionObject>, payload: any, client: Client<SessionObject>): Promise<void> {
+    private async onConnectionEvent(eventName: keyof EventsDescription<SessionObject>, payload: any, connection: Connection<SessionObject>): Promise<void> {
         try {
 
             const event = this.events[eventName];
@@ -112,11 +95,11 @@ export class Server<SessionObject extends Session> {
             }
 
             // Call handler
-            await event.handler(payload, client);
+            await event.handler(payload, connection);
 
         } catch (error) {
 
-            client.sendError(error);
+            connection.sendError(error);
         }
     }
 }

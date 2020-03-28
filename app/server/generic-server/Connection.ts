@@ -6,11 +6,11 @@ import {Session} from "./Session";
 
 
 /**
- * A client is basically a wrapper around a WebSocket
+ * A client represents an open connection to the server
  */
-export class Client<SessionObject extends Session> extends EventEmitter {
+export class Connection<SessionObject extends Session> extends EventEmitter {
 
-    public readonly session: SessionObject;
+    public session: SessionObject;
 
     private readonly webSocket: WebSocket;
 
@@ -26,7 +26,7 @@ export class Client<SessionObject extends Session> extends EventEmitter {
         this.webSocket = webSocket;
         this.request = request;
 
-        this.session.attachClient(this);
+        this.session.attachConnection(this);
         this.webSocket.on('message', message => this.onMessage(message));
     }
 
@@ -63,7 +63,7 @@ export class Client<SessionObject extends Session> extends EventEmitter {
     }
 
     /**
-     * Send en event to the client
+     * Send en event to the websocket
      * @param event
      * @param payload
      */
@@ -75,7 +75,7 @@ export class Client<SessionObject extends Session> extends EventEmitter {
     }
 
     /**
-     * Send an error back to the client
+     * Send an error back to the websocket
      * @param error
      */
     public sendError(error: Error): void {
