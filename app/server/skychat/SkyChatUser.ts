@@ -5,6 +5,11 @@ import SQL from "sql-template-strings";
 
 
 type SkyChatUserData = any;
+type SkyChatAuthToken = {
+    userId: number;
+    timestamp: number;
+    signature: string;
+}
 
 
 /**
@@ -18,14 +23,25 @@ export class SkyChatUser {
      */
     private static passwordSalt: string;
 
+
+    /**
+     * Token salt defined in .env.json
+     */
+    private static tokenSalt: string;
+
     /**
      * Static init block
      */
     static initialize() {
 
-        SkyChatUser.passwordSalt = JSON.parse(fs.readFileSync('.env.json').toString()).users_passwords_salt;
+        const env = JSON.parse(fs.readFileSync('.env.json').toString());
+        SkyChatUser.passwordSalt = env.users_passwords_salt;
         if (! SkyChatUser.passwordSalt) {
             throw new Error('Please define password salt in .env.json file');
+        }
+        SkyChatUser.tokenSalt = env.users_token_salt;
+        if (! SkyChatUser.tokenSalt) {
+            throw new Error('Please define token salt in .env.json file');
         }
     }
 
@@ -39,7 +55,6 @@ export class SkyChatUser {
         if (typeof userId !== 'number' || userId <= 0 || username.length === 0 || password.length === 0) {
             throw new Error('User and passwords must be supplied to compute password hash');
         }
-        console.log('debug', userId + SkyChatUser.passwordSalt + username.toLowerCase());
         return sha256(userId + password + SkyChatUser.passwordSalt + username.toLowerCase());
     }
 
@@ -100,6 +115,32 @@ export class SkyChatUser {
         return user;
     }
 
+    /**
+     * Build an auth token
+     * @param userId
+     * @param timestamp Timestamp (in milliseconds)
+     */
+    public static getAuthToken(userId: number, timestamp?: number): SkyChatAuthToken {
+        timestamp = timestamp || Date.now();
+        return {
+            userId,
+            timestamp,
+            signature: sha256(userId + this.tokenSalt + timestamp)
+        };
+    }
+
+    /**
+     * Verify an auth token
+     * @param token
+     */
+    public static async verifyAuthToken(token: any): Promise<SkyChatUser> {
+        const authToken = SkyChatUser.getAuthToken(token.userId, token.timestamp);
+        if (authToken.signature !== token.signature) {
+            throw new Error('Invalid token');
+        }
+        return SkyChatUser.getUserById(token.userId);
+    }
+
     public readonly id: number;
 
     public readonly username: string;
@@ -122,6 +163,17 @@ export class SkyChatUser {
     public testPassword(password: string): boolean {
         const hashedPassword = SkyChatUser.hashPassword(this.id, this.username, password);
         return hashedPassword === this.password;
+    }
+
+    /**
+     * What will be sent to the client
+     */
+    public sanitized() {
+        return {
+            id: this.id,
+            username: this.username,
+            data: this.data
+        }
     }
 }
 

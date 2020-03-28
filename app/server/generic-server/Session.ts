@@ -11,7 +11,7 @@ export abstract class Session {
      */
     public readonly identifier: string;
 
-    private readonly clients: Client<Session>[];
+    protected readonly clients: Client<Session>[];
 
     constructor(identifier: string) {
         this.identifier = identifier;

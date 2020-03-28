@@ -30,10 +30,17 @@ export class SkyChat {
                     password: new iof.RegExpFilter(/^.{4,512}$/),
                 }));
 
-                // On login
+                // Login by username & password
                 this.server.registerEvent('login', this.onLogin.bind(this), new iof.ObjectFilter({
                     username: new iof.RegExpFilter(/^[a-zA-Z0-9]{3,16}$/),
                     password: new iof.RegExpFilter(/^.{4,512}$/),
+                }));
+
+                // Login using token
+                this.server.registerEvent('set-token', this.onSetToken.bind(this), new iof.ObjectFilter({
+                    userId: new iof.NumberFilter(1, Infinity, false),
+                    timestamp: new iof.NumberFilter(- Infinity, Infinity, false),
+                    signature: new iof.ValueTypeFilter('string'),
                 }));
             });
     }
@@ -45,11 +52,6 @@ export class SkyChat {
         return '*Hamster' + Math.random();
     }
 
-    /**
-     * Register event
-     * @param payload
-     * @param client
-     */
     private async onRegister(payload: any, client: Client<SkyChatSession>): Promise<void> {
         const username = payload.username;
         const password = payload.password;
@@ -57,23 +59,20 @@ export class SkyChat {
         console.log('register', user);
     }
 
-    /**
-     * Register event
-     * @param payload
-     * @param client
-     */
     private async onLogin(payload: any, client: Client<SkyChatSession>): Promise<void> {
         const username = payload.username;
         const password = payload.password;
         const user = await SkyChatUser.login(username, password);
-        console.log('login', user);
+        client.session.setUser(user);
+        client.send('auth-token', SkyChatUser.getAuthToken(user.id));
     }
 
-    /**
-     * When a message is received
-     * @param payload
-     * @param client
-     */
+    private async onSetToken(payload: any, client: Client<SkyChatSession>): Promise<void> {
+        const user = await SkyChatUser.verifyAuthToken(payload);
+        client.session.setUser(user);
+        client.send('auth-token', SkyChatUser.getAuthToken(user.id));
+    }
+
     private async onMessage(payload: string, client: Client<SkyChatSession>): Promise<void> {
         console.log('message', client.session.identifier, payload);
         client.send('message', payload);
