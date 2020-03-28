@@ -26,7 +26,13 @@ export class SkyChat {
 
                 // On register
                 this.server.registerEvent('register', this.onRegister.bind(this), new iof.ObjectFilter({
-                    username: new iof.RegExpFilter(/^[a-zA-Z0-9]$/),
+                    username: new iof.RegExpFilter(/^[a-zA-Z0-9]{3,16}$/),
+                    password: new iof.RegExpFilter(/^.{4,512}$/),
+                }));
+
+                // On login
+                this.server.registerEvent('login', this.onLogin.bind(this), new iof.ObjectFilter({
+                    username: new iof.RegExpFilter(/^[a-zA-Z0-9]{3,16}$/),
                     password: new iof.RegExpFilter(/^.{4,512}$/),
                 }));
             });
@@ -48,6 +54,19 @@ export class SkyChat {
         const username = payload.username;
         const password = payload.password;
         const user = await SkyChatUser.registerUser(username, password);
+        console.log('register', user);
+    }
+
+    /**
+     * Register event
+     * @param payload
+     * @param client
+     */
+    private async onLogin(payload: any, client: Client<SkyChatSession>): Promise<void> {
+        const username = payload.username;
+        const password = payload.password;
+        const user = await SkyChatUser.login(username, password);
+        console.log('login', user);
     }
 
     /**

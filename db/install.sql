@@ -7,5 +7,6 @@ CREATE TABLE `users` (
   `password` varchar(256) NOT NULL,
   `data` varchar(1024) NOT NULL,
   `tms_created` int NOT NULL,
-  `tms_last_seen` int NOT NULL
+  `tms_last_seen` int NOT NULL,
+  CONSTRAINT username_unique UNIQUE(username)
 );
