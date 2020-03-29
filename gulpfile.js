@@ -12,6 +12,7 @@ const pug = require('gulp-pug');
 const ts = require('gulp-typescript');
 const tsProject = ts.createProject('tsconfig.json');
 const nodemon = require('gulp-nodemon');
+const webpack = require('webpack-stream');
 
 
 const pugPaths = { pages: ['app/client/views/*.pug'] };
@@ -36,21 +37,22 @@ gulp.task("build-client-scss", function () {
         .pipe(gulp.dest(distPath));
 });
 
-
-gulp.task("build-client-typescript", function () {
-    return browserify({
-        basedir: '.',
-        debug: true,
-        entries: srcPaths,
-        cache: {},
-        packageCache: {},
-    })
-        .plugin(tsify)
-        .bundle()
-        .pipe(source('bundle.js'))
-        .pipe(buffer())
-        .pipe(sourcemaps.init({loadMaps: true}))
-        //.pipe(uglify())
+gulp.task('build-client-typescript', function() {
+    return gulp
+        .src(srcPaths)
+        .pipe(webpack({
+            module: {
+                rules: [
+                    { test: /\.ts&/, loader: 'ts-loader' },
+                ],
+            },
+            output: {
+                filename: 'bundle.js'
+            },
+            externals: {
+                vue: 'Vue'
+            }
+        }))
         .pipe(gulp.dest(distPath));
 });
 

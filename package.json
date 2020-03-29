@@ -5,12 +5,14 @@
     "description": "",
     "scripts": {
         "setup": "bash scripts/setup.sh",
-        "clean": "rm -rf build dist",
-        "build:client": "npm run clean && gulp build-client",
-        "build:server": "npm run clean && gulp build-server",
+        "clean:client": "rm -rf dist",
+        "clean:server": "rm -rf build",
+        "clean": "npm run clean:client && npm run clean:server",
+        "build:client": "npm run clean:client && gulp build-client",
+        "build:server": "npm run clean:server && gulp build-server",
         "build": "npm run clean && gulp build",
-        "dev:server": "npm run clean && gulp watch-server",
-        "dev:client": "npm run clean && gulp watch-client",
+        "dev:client": "npm run clean:client && gulp watch-client",
+        "dev:server": "npm run clean:server && gulp watch-server",
         "dev": "npm run clean && gulp watch"
     },
     "keywords": [],
@@ -18,15 +20,18 @@
     "license": "ISC",
     "dependencies": {
         "events": "^3.1.0",
+        "express": "^4.17.1",
         "io-filter": "^2.1.2",
         "jsonwebtoken": "^8.5.1",
         "require-dir": "^1.2.0",
         "sha256": "^0.2.0",
         "sql-template-strings": "^2.2.2",
         "sqlite": "^3.0.6",
-        "ws": "^7.2.3"
+        "ws": "^7.2.3",
+        "vue": "^2.6.11"
     },
     "devDependencies": {
+        "@types/express": "^4.17.3",
         "@types/node": "^10.17.17",
         "@types/sha256": "^0.2.0",
         "@types/ws": "^7.2.3",
@@ -40,11 +45,14 @@
         "gulp-sourcemaps": "^2.6.5",
         "gulp-typescript": "^5.0.1",
         "gulp-uglify": "^3.0.2",
+        "gulp-webpack": "^1.5.0",
         "http-server": "^0.12.1",
         "minify-html": "0.0.2",
+        "ts-loader": "^6.2.2",
         "tsify": "^4.0.1",
         "typescript": "^3.8.3",
         "vinyl-buffer": "^1.0.1",
-        "vinyl-source-stream": "^2.0.0"
+        "vinyl-source-stream": "^2.0.0",
+        "webpack-stream": "^5.2.1"
     }
 }

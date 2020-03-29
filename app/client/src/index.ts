@@ -1,3 +1,9 @@
+import Vue from 'vue';
 
 
-console.log("ok");
+const app = new Vue({
+    el: '#app',
+    data: {
+        message: 'Hello Vue!'
+    }
+});
