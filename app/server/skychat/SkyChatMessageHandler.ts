@@ -1,7 +1,6 @@
 import {Connection} from "../generic-server/Connection";
 import {SkyChatSession} from "./SkyChatSession";
 import {SkyChatCommand} from "./SkyChatCommand";
-import {awaitExpression} from "babel-types";
 const requireDir = require('require-dir');
 
 

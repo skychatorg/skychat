@@ -6,9 +6,12 @@
     "scripts": {
         "setup": "bash scripts/setup.sh",
         "clean": "rm -rf build dist",
-        "build": "npm run clean && gulp && tsc",
-        "dev": "npm run build && http-server ./dist/",
-        "deploy": "sh ./scripts/deploy.sh"
+        "build:client": "npm run clean && gulp build-client",
+        "build:server": "npm run clean && gulp build-server",
+        "build": "npm run clean && gulp build",
+        "dev:server": "npm run clean && gulp watch-server",
+        "dev:client": "npm run clean && gulp watch-client",
+        "dev": "npm run clean && gulp watch"
     },
     "keywords": [],
     "author": "",
@@ -25,13 +28,13 @@
     },
     "devDependencies": {
         "@types/node": "^10.17.17",
-        "@types/require-dir": "^1.0.0",
         "@types/sha256": "^0.2.0",
         "@types/ws": "^7.2.3",
         "browserify": "^16.5.0",
         "gulp": "^4.0.2",
         "gulp-clean-css": "^3.10.0",
         "gulp-htmlmin": "^4.0.0",
+        "gulp-nodemon": "^2.5.0",
         "gulp-pug": "^4.0.1",
         "gulp-sass": "^4.0.2",
         "gulp-sourcemaps": "^2.6.5",
