@@ -1,9 +1,10 @@
 import Vue from 'vue';
+import page from "./page";
 
 
-const app = new Vue({
+new Vue({
     el: '#app',
-    data: {
-        message: 'Hello Vue!'
+    components: {
+        'page': page
     }
 });

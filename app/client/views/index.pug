@@ -3,10 +3,10 @@
         assetsVersion: 1,
         googleAnalyticsId: 'UA-XXXXXXX-1',
         pageFavicon: {
-            href: 'assets/favicon.jpeg',
-            type: 'image/jpeg'
+            href: 'assets/logo.png',
+            type: 'image/png'
         },
-        pageTitle: 'Page title'
+        pageTitle: '~ SkyChat'
     }
 
 doctype html
@@ -17,10 +17,10 @@ html
         title= data.pageTitle
         link(rel='icon', href=data.pageFavicon.href, type=data.pageFavicon.type)
         link(rel='stylesheet', href='styles.css?' + data.assetsVersion)
+
         script(src="https://cdn.jsdelivr.net/npm/vue@2.6.11/dist/vue.js")
+        link(href="https://fonts.googleapis.com/css?family=Ubuntu&display=swap", rel="stylesheet")
 
-
-        <!-- google analytics -->
         script(async, src='https://www.googletagmanager.com/gtag/js?id=' + data.googleAnalyticsId)
         script
             | window.dataLayer = window.dataLayer || [];
@@ -30,5 +30,6 @@ html
     body
 
         div#app
-            p {{message}}
+            page
+
         script(src='bundle.js?' + data.assetsVersion)

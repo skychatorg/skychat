@@ -1,0 +1,96 @@
+$header-size: 40px;
+
+body, #app, #page {
+    width: 100vw;
+    height: 100vh;
+    padding: 0;
+    margin: 0;
+}
+
+#page {
+    display: flex;
+    flex-direction: column;
+    background-color: rgb(17, 17, 17);
+    text-align: left;
+    color: white;
+    font-family: 'Ubuntu', sans-serif;
+
+    #page-header {
+        width: 100%;
+        height: $header-size;
+        background-color: rgba(26, 26, 26, .5);
+
+        .page-header-logo {
+            height: 100%;
+            margin-left: 10px;
+
+            > img {
+                height: 100%;
+            }
+        }
+    }
+
+    .subpage-auth {
+        flex-grow: 1;
+        height: 100%;
+
+        > :first-child {
+            width: 100%;
+            max-width: 500px;
+            margin: 100px auto 0;
+            display: block;
+        }
+    }
+}
+
+.shiny-block {
+    background-color: #111;
+
+    > .header {
+        width: 100%;
+        padding: 10px;
+        border-bottom: 2px solid #CC181E;
+        border-left: 2px solid #CC181E;
+        background-color: #222;
+        box-shadow: 0 0 6px #333;
+    }
+
+    > .content {
+        width: 100%;
+        padding: 10px;
+        box-shadow: 0 0 12px #333;
+    }
+}
+
+.form-group {
+
+    input.form-element {
+        width: 100%;
+        padding: 10px;
+        color: white;
+        background-color: #1f1f1f;
+        border: 1px solid #ff8a8a;
+        -webkit-box-sizing: border-box;
+        -moz-box-sizing: border-box;
+        box-sizing: border-box;
+    }
+}
+
+button.btn {
+    text-align: left;
+    padding: 10px;
+    color: white;
+    background-color: #1f1f1f;
+    border: 1px solid #ff8a8a;
+    cursor: pointer;
+}
+
+button.btn-full {
+    width: 100%;
+}
+
+.mt-1 { margin-top: 1rem; }
+.mt-2 { margin-top: 2rem; }
+.mt-3 { margin-top: 3rem; }
+.mt-4 { margin-top: 4rem; }
+.mt-5 { margin-top: 5rem; }

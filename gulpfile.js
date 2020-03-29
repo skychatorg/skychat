@@ -1,10 +1,4 @@
 const gulp = require("gulp");
-const browserify = require("browserify");
-const source = require('vinyl-source-stream');
-const uglify = require('gulp-uglify');
-const sourcemaps = require('gulp-sourcemaps');
-const buffer = require('vinyl-buffer');
-const tsify = require("tsify");
 const sass = require('gulp-sass');
 const cleanCSS = require('gulp-clean-css');
 const htmlmin = require('gulp-htmlmin');
@@ -45,6 +39,9 @@ gulp.task('build-client-typescript', function() {
                 rules: [
                     { test: /\.ts&/, loader: 'ts-loader' },
                 ],
+            },
+            resolve: {
+                extensions: ['.ts', '.js']
             },
             output: {
                 filename: 'bundle.js'
