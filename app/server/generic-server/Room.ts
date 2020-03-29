@@ -1,4 +1,5 @@
 import {Session} from "./Session";
+import {Connection} from "./Connection";
 
 
 export class Room {
@@ -6,29 +7,29 @@ export class Room {
     /**
      * Sessions that are within this room
      */
-    public sessions: Session[] = [];
+    public connections: Connection<Session>[] = [];
 
     /**
-     * Detach a session from this room
-     * @param session
+     * Detach a connection from this room
+     * @param connection
      */
-    public detachSession(session: Session) {
-        this.sessions = this.sessions.filter(s => s !== session);
+    public detachSession(connection: Connection<Session>) {
+        this.connections = this.connections.filter(c => c !== connection);
     }
 
     /**
-     * Attach a session to this room
-     * @param session
+     * Attach a connection to this room
+     * @param connection
      */
-    public attachSession(session: Session) {
-        if (session.room === this) {
+    public attachConnection(connection: Connection<Session>) {
+        if (connection.room === this) {
             return;
         }
-        if (session.room) {
-            session.room.detachSession(session);
+        if (connection.room) {
+            connection.room.detachSession(connection);
         }
-        session.room = this;
-        this.sessions.push(session);
+        connection.room = this;
+        this.connections.push(connection);
     }
 
     /**
@@ -37,6 +38,6 @@ export class Room {
      * @param payload
      */
     public send(event: string, payload: any): void {
-        this.sessions.forEach(session => session.send(event, payload));
+        this.connections.forEach(connection => connection.send(event, payload));
     }
 }

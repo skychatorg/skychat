@@ -147,7 +147,7 @@ export class SkyChatUser {
 
     private readonly password: string;
 
-    private readonly right: number;
+    public readonly right: number;
 
     public readonly data: SkyChatUserData;
 

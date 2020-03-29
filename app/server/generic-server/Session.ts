@@ -17,8 +17,6 @@ export abstract class Session {
      */
     private _identifier!: string;
 
-    public room: Room | null = null;
-
     public connections: Connection<Session>[];
 
     /**

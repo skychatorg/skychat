@@ -31,6 +31,8 @@ export class Server<SessionObject extends Session> {
 
     private readonly wss: WebSocket.Server;
 
+    public onConnectionCreated?: (connection: Connection<SessionObject>) => Promise<void>;
+
     /**
      * Builds a session object when a new connection is initiated
      */
@@ -75,6 +77,10 @@ export class Server<SessionObject extends Session> {
             // Register it on the connection object
             connection.on(eventName, payload => this.onConnectionEvent(eventName, payload, connection));
         });
+
+        if (typeof this.onConnectionCreated === 'function') {
+            await this.onConnectionCreated(connection);
+        }
     }
 
     /**

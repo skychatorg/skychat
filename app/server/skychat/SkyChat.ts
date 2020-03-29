@@ -7,6 +7,7 @@ import {SkyChatUser} from "./SkyChatUser";
 import * as iof from "io-filter";
 import {Room} from "../generic-server/Room";
 import {Session} from "../generic-server/Session";
+import {SkyChatMessageHandler} from "./SkyChatMessageHandler";
 
 
 /**
@@ -24,6 +25,9 @@ export class SkyChat {
 
         // Create server instance
         this.server = new Server({port: 8080}, this.getNewSession.bind(this));
+
+        // Register hooks
+        this.server.onConnectionCreated = this.onConnectionCreated.bind(this);
 
         // Load database then register server events
         DatabaseHelper
@@ -55,13 +59,19 @@ export class SkyChat {
     }
 
     /**
-     * Get a new username when one connects to the server
+     * Build a new session object when there is a new connection
      */
     private async getNewSession(request: http.IncomingMessage): Promise<SkyChatSession> {
         const identifier = '*Hamster' + (++ SkyChat.CURRENT_GUEST_ID);
-        const session = new SkyChatSession(identifier);
-        this.room.attachSession(session);
-        return session;
+        return new SkyChatSession(identifier);
+    }
+
+    /**
+     * Called each time a new connection is created
+     * @param connection
+     */
+    private async onConnectionCreated(connection: Connection<SkyChatSession>): Promise<void> {
+        this.room.attachConnection(connection);
     }
 
     private async onRegister(payload: any, connection: Connection<SkyChatSession>): Promise<void> {
@@ -97,10 +107,12 @@ export class SkyChat {
         connection.send('auth-token', SkyChatUser.getAuthToken(user.id));
     }
 
+    /**
+     * When a message is received
+     * @param payload
+     * @param connection
+     */
     private async onMessage(payload: string, connection: Connection<SkyChatSession>): Promise<void> {
-        if (! connection.session.room) {
-            throw new Error('Join a room before sending a message');
-        }
-        connection.session.room.send('message', payload);
+        await SkyChatMessageHandler.handleMessage(payload, connection);
     }
 }

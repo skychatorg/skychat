@@ -17,6 +17,7 @@
         "events": "^3.1.0",
         "io-filter": "^2.1.2",
         "jsonwebtoken": "^8.5.1",
+        "require-dir": "^1.2.0",
         "sha256": "^0.2.0",
         "sql-template-strings": "^2.2.2",
         "sqlite": "^3.0.6",
@@ -24,6 +25,7 @@
     },
     "devDependencies": {
         "@types/node": "^10.17.17",
+        "@types/require-dir": "^1.0.0",
         "@types/sha256": "^0.2.0",
         "@types/ws": "^7.2.3",
         "browserify": "^16.5.0",

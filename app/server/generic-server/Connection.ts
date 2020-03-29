@@ -3,6 +3,7 @@ import * as http from "http";
 import {Data} from "ws";
 import {EventEmitter} from "events";
 import {Session} from "./Session";
+import {Room} from "./Room";
 
 
 /**
@@ -13,6 +14,8 @@ export class Connection<SessionObject extends Session> extends EventEmitter {
     public session!: SessionObject;
 
     private readonly webSocket: WebSocket;
+
+    public room: Room | null = null;
 
     /**
      * Handshake request object
