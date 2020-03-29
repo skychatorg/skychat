@@ -1,13 +1,15 @@
-import Vue from 'vue';
-import pageHeader from "./page-header";
+import Vue from "vue";
+import {PageHeader} from "./page-header";
 
 
 /**
  * Main page component
  */
-export default Vue.extend({
+export const Page = Vue.extend({
 
-    components: {pageHeader},
+    components: {
+        'page-header': PageHeader
+    },
 
     template: `
     <div id="page">
@@ -20,7 +22,7 @@ export default Vue.extend({
                 </div>
                 <div class="content">
                     
-                    <div class="form-group">
+                    <div class="form-group mt-1">
                         <button class="btn btn-full">Login</button>
                         <button class="btn btn-full mt-1">Register</button>
                         <button class="btn btn-full mt-1">Login as guest</button>

@@ -33,11 +33,14 @@ gulp.task("build-client-scss", function () {
 
 gulp.task('build-client-typescript', function() {
     return gulp
-        .src(srcPaths)
+        .src('app/client/src/index.ts')
         .pipe(webpack({
             module: {
                 rules: [
-                    { test: /\.ts&/, loader: 'ts-loader' },
+                    {
+                        test: /\.ts$/,
+                        loader: 'ts-loader'
+                    },
                 ],
             },
             resolve: {
@@ -46,9 +49,7 @@ gulp.task('build-client-typescript', function() {
             output: {
                 filename: 'bundle.js'
             },
-            externals: {
-                vue: 'Vue'
-            }
+            devtool: 'source-map',
         }))
         .pipe(gulp.dest(distPath));
 });

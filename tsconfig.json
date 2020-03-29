@@ -6,10 +6,12 @@
         "declaration": true,
         "outDir": "./build/",
         "target": "es5",
-        "lib": ["es6", "dom"]
+        "lib": ["es6", "dom"],
+        "moduleResolution": "node",
+        "sourceMap": true
     },
     "include": [
-      "app/server/**/*"
+      "app/client/**/*"
     ],
     "exclude": [
         "node_modules",

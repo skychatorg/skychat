@@ -1,10 +1,14 @@
-import Vue from 'vue';
-import page from "./page";
+import Vue from "vue";
+import {Page} from "./view/page";
+//import {SkyChatClient} from "./skychat/SkyChatClient";
 
-
-new Vue({
+console.log(Page);
+const vueApp = new Vue({
     el: '#app',
     components: {
-        'page': page
+        'page': Page
     }
 });
+
+//const client = new SkyChatClient({host: 'localhost', port: 8080});
+//client.connect();
