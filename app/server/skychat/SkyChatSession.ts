@@ -1,5 +1,5 @@
 import {Session} from "../generic-server/Session";
-import {SkyChatUser} from "./SkyChatUser";
+import {User} from "./User";
 import {Connection} from "../generic-server/Connection";
 
 
@@ -11,13 +11,13 @@ export class SkyChatSession extends Session {
     /**
      * Associated user (if logged session)
      */
-    public user: SkyChatUser;
+    public user: User;
 
 
     constructor(identifier: string) {
         super(identifier);
 
-        this.user = new SkyChatUser(0, identifier, '', -1, {});
+        this.user = new User(0, identifier, '', -1, {});
     }
 
     /**
@@ -34,7 +34,7 @@ export class SkyChatSession extends Session {
      * Set associated user
      * @param user
      */
-    public setUser(user: SkyChatUser): void {
+    public setUser(user: User): void {
         this.identifier = user.username.toLowerCase();
         this.user = user;
         this.connections.forEach(connection => connection.send('set-user', this.user.sanitized()));

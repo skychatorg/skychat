@@ -1,10 +1,22 @@
 import {Connection} from "../generic-server/Connection";
 import {SkyChatSession} from "./SkyChatSession";
 import {Room} from "../generic-server/Room";
-import {SkyChatUser} from "./SkyChatUser";
+import {User} from "./User";
 
 
-export abstract class SkyChatCommand {
+/**
+ * A command parameter description object
+ */
+export type CommandParam = {
+    name: string,
+    pattern: RegExp,
+    info?: string
+};
+
+/**
+ * Base class for a skychat command
+ */
+export abstract class Command {
 
     /**
      * Command name
@@ -15,6 +27,11 @@ export abstract class SkyChatCommand {
      * Command aliases
      */
     public readonly aliases: string[] = [];
+
+    /**
+     * Define expected parameters. Can be defined globally or per command alias.
+     */
+    public readonly params?: CommandParam[] | {[alias: string]: CommandParam};
 
     /**
      * Minimum right to execute this function
@@ -44,22 +61,24 @@ export abstract class SkyChatCommand {
 
     /**
      * Execute the command
+     * @param alias
      * @param param
      * @param connection
      */
-    public async execute(param: string, connection: Connection<SkyChatSession>) {
+    public async execute(alias: string, param: string, connection: Connection<SkyChatSession>) {
         this.check(param, connection);
-        await this.run(param, connection, connection.session, connection.session.user, connection.room);
+        await this.run(alias, param, connection, connection.session, connection.session.user, connection.room);
     }
 
     /**
      * Command implementation
      */
     public abstract async run(
+        alias: string,
         param: string,
         connection: Connection<SkyChatSession>,
         session: SkyChatSession,
-        user: SkyChatUser,
+        user: User,
         room: Room | null
     ): Promise<void>;
 }

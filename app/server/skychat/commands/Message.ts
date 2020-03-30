@@ -1,9 +1,11 @@
-import {SkyChatCommand} from "../SkyChatCommand";
+import {Command} from "../Command";
 import {Connection} from "../../generic-server/Connection";
 import {SkyChatSession} from "../SkyChatSession";
+import {User} from "../User";
+import {Room} from "../../generic-server/Room";
 
 
-export class Message extends SkyChatCommand {
+export class Message extends Command {
 
     readonly name: string = 'message';
 
@@ -13,7 +15,17 @@ export class Message extends SkyChatCommand {
 
     public readonly roomRequired: boolean = true;
 
-    async run(param: string, connection: Connection<SkyChatSession>): Promise<void> {
-        connection.room!.send('message', param);
+    async run(
+        alias: string,
+        param: string,
+        connection: Connection<SkyChatSession>,
+        session: SkyChatSession,
+        user: User,
+        room: Room | null): Promise<void> {
+
+        connection.room!.send('message', {
+            message: param,
+            user: user.sanitized()
+        });
     }
 }

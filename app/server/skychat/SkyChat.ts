@@ -3,11 +3,11 @@ import {Connection} from "../generic-server/Connection";
 import * as http from "http";
 import {SkyChatSession} from "./SkyChatSession";
 import {DatabaseHelper} from "./DatabaseHelper";
-import {SkyChatUser} from "./SkyChatUser";
+import {User} from "./User";
 import * as iof from "io-filter";
 import {Room} from "../generic-server/Room";
 import {Session} from "../generic-server/Session";
-import {SkyChatMessageHandler} from "./SkyChatMessageHandler";
+import {MessageHandler} from "./MessageHandler";
 
 
 /**
@@ -75,17 +75,17 @@ export class SkyChat {
     }
 
     private async onRegister(payload: any, connection: Connection<SkyChatSession>): Promise<void> {
-        const user = await SkyChatUser.registerUser(payload.username, payload.password);
+        const user = await User.registerUser(payload.username, payload.password);
         this.onAuthSuccessful(user, connection);
     }
 
     private async onLogin(payload: any, connection: Connection<SkyChatSession>): Promise<void> {
-        const user = await SkyChatUser.login(payload.username, payload.password);
+        const user = await User.login(payload.username, payload.password);
         this.onAuthSuccessful(user, connection);
     }
 
     private async onSetToken(payload: any, connection: Connection<SkyChatSession>): Promise<void> {
-        const user = await SkyChatUser.verifyAuthToken(payload);
+        const user = await User.verifyAuthToken(payload);
         this.onAuthSuccessful(user, connection);
     }
 
@@ -94,7 +94,7 @@ export class SkyChat {
      * @param user
      * @param connection
      */
-    private onAuthSuccessful(user: SkyChatUser, connection: Connection<SkyChatSession>): void {
+    private onAuthSuccessful(user: User, connection: Connection<SkyChatSession>): void {
         // Find an existing session belonging to the same user
         const recycledSession = Session.getSessionByIdentifier(user.username.toLowerCase());
         if (recycledSession) {
@@ -104,7 +104,7 @@ export class SkyChat {
             // Else, update this session
             connection.session.setUser(user);
         }
-        connection.send('auth-token', SkyChatUser.getAuthToken(user.id));
+        connection.send('auth-token', User.getAuthToken(user.id));
     }
 
     /**
@@ -113,6 +113,14 @@ export class SkyChat {
      * @param connection
      */
     private async onMessage(payload: string, connection: Connection<SkyChatSession>): Promise<void> {
-        await SkyChatMessageHandler.handleMessage(payload, connection);
+        let message = payload;
+        for (let plugin of MessageHandler.plugins) {
+            message = await plugin.onNewMessage(message, connection);
+        }
+        try {
+            await MessageHandler.handleMessage(message, connection);
+        } catch (e) {
+            console.error(e);
+        }
     }
 }

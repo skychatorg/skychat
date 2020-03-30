@@ -15,7 +15,7 @@ type SkyChatAuthToken = {
 /**
  * A SkyChatUser is an user stored in the database
  */
-export class SkyChatUser {
+export class User {
 
 
     /**
@@ -35,12 +35,12 @@ export class SkyChatUser {
     static initialize() {
 
         const env = JSON.parse(fs.readFileSync('.env.json').toString());
-        SkyChatUser.passwordSalt = env.users_passwords_salt;
-        if (! SkyChatUser.passwordSalt) {
+        User.passwordSalt = env.users_passwords_salt;
+        if (! User.passwordSalt) {
             throw new Error('Please define password salt in .env.json file');
         }
-        SkyChatUser.tokenSalt = env.users_token_salt;
-        if (! SkyChatUser.tokenSalt) {
+        User.tokenSalt = env.users_token_salt;
+        if (! User.tokenSalt) {
             throw new Error('Please define token salt in .env.json file');
         }
     }
@@ -55,31 +55,31 @@ export class SkyChatUser {
         if (typeof userId !== 'number' || userId <= 0 || username.length === 0 || password.length === 0) {
             throw new Error('User and passwords must be supplied to compute password hash');
         }
-        return sha256(userId + password + SkyChatUser.passwordSalt + username.toLowerCase());
+        return sha256(userId + password + User.passwordSalt + username.toLowerCase());
     }
 
     /**
      * Get an user in the database from its id
      * @param username
      */
-    public static async getUserByUsername(username: string): Promise<SkyChatUser> {
+    public static async getUserByUsername(username: string): Promise<User> {
         const userObject = await DatabaseHelper.db.get(SQL`SELECT * FROM users WHERE username = ${username.toLowerCase()}`);
         if (! userObject) {
             throw new Error('User does not exist');
         }
-        return new SkyChatUser(userObject.id, userObject.username_custom, userObject.password, userObject.right, JSON.parse(userObject.data));
+        return new User(userObject.id, userObject.username_custom, userObject.password, userObject.right, JSON.parse(userObject.data));
     }
 
     /**
      * Get an user in the database from its id
      * @param userId
      */
-    public static async getUserById(userId: number): Promise<SkyChatUser> {
+    public static async getUserById(userId: number): Promise<User> {
         const userObject = await DatabaseHelper.db.get(SQL`SELECT * FROM users WHERE id = ${userId}`);
         if (! userObject) {
             throw new Error('User does not exist');
         }
-        return new SkyChatUser(userObject.id, userObject.username_custom, userObject.password, userObject.right, JSON.parse(userObject.data));
+        return new User(userObject.id, userObject.username_custom, userObject.password, userObject.right, JSON.parse(userObject.data));
     }
 
     /**
@@ -87,7 +87,7 @@ export class SkyChatUser {
      * @param username
      * @param password
      */
-    public static async registerUser(username: string, password: string): Promise<SkyChatUser> {
+    public static async registerUser(username: string, password: string): Promise<User> {
         const tms = Math.floor(Date.now() / 1000);
         const sqlQuery = SQL`insert into users
             (username, username_custom, password, right, data, tms_created, tms_last_seen) values
@@ -97,9 +97,9 @@ export class SkyChatUser {
         if (! userId) {
             throw new Error('Could not register user');
         }
-        const hashedPassword = SkyChatUser.hashPassword(userId, username.toLowerCase(), password);
+        const hashedPassword = User.hashPassword(userId, username.toLowerCase(), password);
         await DatabaseHelper.db.run(SQL`update users set password=${hashedPassword} where id=${userId}`);
-        return SkyChatUser.getUserById(userId);
+        return User.getUserById(userId);
     }
 
     /**
@@ -107,8 +107,8 @@ export class SkyChatUser {
      * @param username
      * @param password
      */
-    public static async login(username: string, password: string): Promise<SkyChatUser> {
-        const user = await SkyChatUser.getUserByUsername(username);
+    public static async login(username: string, password: string): Promise<User> {
+        const user = await User.getUserByUsername(username);
         if (! user.testPassword(password)) {
             throw new Error('Incorrect password');
         }
@@ -133,12 +133,12 @@ export class SkyChatUser {
      * Verify an auth token
      * @param token
      */
-    public static async verifyAuthToken(token: any): Promise<SkyChatUser> {
-        const authToken = SkyChatUser.getAuthToken(token.userId, token.timestamp);
+    public static async verifyAuthToken(token: any): Promise<User> {
+        const authToken = User.getAuthToken(token.userId, token.timestamp);
         if (authToken.signature !== token.signature) {
             throw new Error('Invalid token');
         }
-        return SkyChatUser.getUserById(token.userId);
+        return User.getUserById(token.userId);
     }
 
     public readonly id: number;
@@ -164,7 +164,7 @@ export class SkyChatUser {
      * @param password
      */
     public testPassword(password: string): boolean {
-        const hashedPassword = SkyChatUser.hashPassword(this.id, this.username, password);
+        const hashedPassword = User.hashPassword(this.id, this.username, password);
         return hashedPassword === this.password;
     }
 
@@ -181,4 +181,4 @@ export class SkyChatUser {
     }
 }
 
-SkyChatUser.initialize();
+User.initialize();
