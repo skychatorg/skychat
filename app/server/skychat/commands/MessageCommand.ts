@@ -1,11 +1,12 @@
 import {Command} from "../Command";
-import {Connection} from "../../generic-server/Connection";
+import {Connection} from "../generic-server/Connection";
 import {SkyChatSession} from "../SkyChatSession";
 import {User} from "../User";
-import {Room} from "../../generic-server/Room";
+import {Room} from "../generic-server/Room";
+import {Message} from "../Message";
 
 
-export class Message extends Command {
+export class MessageCommand extends Command {
 
     readonly name: string = 'message';
 
@@ -23,9 +24,7 @@ export class Message extends Command {
         user: User,
         room: Room | null): Promise<void> {
 
-        connection.room!.send('message', {
-            message: param,
-            user: user.sanitized()
-        });
+        const message = new Message(param, connection);
+        connection.room!.send('message', message.sanitized());
     }
 }

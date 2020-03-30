@@ -1,5 +1,5 @@
-import {Session} from "./Session";
 import {Connection} from "./Connection";
+import {SkyChatSession} from "../SkyChatSession";
 
 
 export class Room {
@@ -7,13 +7,13 @@ export class Room {
     /**
      * Sessions that are within this room
      */
-    public connections: Connection<Session>[] = [];
+    public connections: Connection<SkyChatSession>[] = [];
 
     /**
      * Detach a connection from this room
      * @param connection
      */
-    public detachSession(connection: Connection<Session>) {
+    public detachSession(connection: Connection<SkyChatSession>) {
         this.connections = this.connections.filter(c => c !== connection);
     }
 
@@ -21,7 +21,7 @@ export class Room {
      * Attach a connection to this room
      * @param connection
      */
-    public attachConnection(connection: Connection<Session>) {
+    public attachConnection(connection: Connection<SkyChatSession>) {
         if (connection.room === this) {
             return;
         }

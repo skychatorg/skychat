@@ -1,6 +1,6 @@
-import {Session} from "../generic-server/Session";
+import {Session} from "./generic-server/Session";
 import {User} from "./User";
-import {Connection} from "../generic-server/Connection";
+import {Connection} from "./generic-server/Connection";
 
 
 /**

@@ -4,11 +4,19 @@ import {DatabaseHelper} from "./DatabaseHelper";
 import SQL from "sql-template-strings";
 
 
-type SkyChatUserData = any;
-type SkyChatAuthToken = {
+type UserData = any;
+
+type AuthToken = {
     userId: number;
     timestamp: number;
     signature: string;
+}
+
+export type SanitizedUser = {
+    id: number;
+    username: string;
+    right: number;
+    data: UserData;
 }
 
 
@@ -120,7 +128,7 @@ export class User {
      * @param userId
      * @param timestamp Timestamp (in milliseconds)
      */
-    public static getAuthToken(userId: number, timestamp?: number): SkyChatAuthToken {
+    public static getAuthToken(userId: number, timestamp?: number): AuthToken {
         timestamp = timestamp || Date.now();
         return {
             userId,
@@ -149,9 +157,9 @@ export class User {
 
     public readonly right: number;
 
-    public readonly data: SkyChatUserData;
+    public readonly data: UserData;
 
-    constructor(id: number, username: string, password: string, right: number, data: SkyChatUserData) {
+    constructor(id: number, username: string, password: string, right: number, data: UserData) {
         this.id = id;
         this.username = username;
         this.password = password;
@@ -171,7 +179,7 @@ export class User {
     /**
      * What will be sent to the client
      */
-    public sanitized() {
+    public sanitized(): SanitizedUser {
         return {
             id: this.id,
             username: this.username,

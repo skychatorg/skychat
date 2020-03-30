@@ -1,7 +1,7 @@
-import {Connection} from "../generic-server/Connection";
+import {Connection} from "./generic-server/Connection";
 import {SkyChatSession} from "./SkyChatSession";
-import {Room} from "../generic-server/Room";
 import {User} from "./User";
+import {Room} from "./generic-server/Room";
 
 
 /**

@@ -1,13 +1,15 @@
-import {Server} from "../generic-server/Server";
-import {Connection} from "../generic-server/Connection";
+import {Server} from "./generic-server/Server";
+import {Connection} from "./generic-server/Connection";
 import * as http from "http";
 import {SkyChatSession} from "./SkyChatSession";
 import {DatabaseHelper} from "./DatabaseHelper";
 import {User} from "./User";
 import * as iof from "io-filter";
-import {Room} from "../generic-server/Room";
-import {Session} from "../generic-server/Session";
-import {MessageHandler} from "./MessageHandler";
+import {Session} from "./generic-server/Session";
+import {Plugin} from "./Plugin";
+import {Command} from "./Command";
+import {SkyChatRoom} from "./SkyChatRoom";
+const requireDir = require('require-dir');
 
 
 /**
@@ -17,7 +19,35 @@ export class SkyChat {
 
     private static CURRENT_GUEST_ID: number = 0;
 
-    private readonly room: Room = new Room();
+    /**
+     * Available commands (including plugins). All aliases of a command/plugin points to the same command instance.
+     */
+    public static commands: {[commandName: string]: Command};
+
+    public static plugins: Plugin[];
+
+    /**
+     * Load the available commands & plugins
+     */
+    public static initialize() {
+        const classes = requireDir('./commands', {cache: false});
+        SkyChat.commands = {};
+        SkyChat.plugins = [];
+        Object.keys(classes).forEach(ClassName => {
+            const ClassConstructor = classes[ClassName][ClassName];
+            const command = new ClassConstructor();
+            SkyChat.commands[command.name] = command;
+            if (command instanceof Plugin) {
+                SkyChat.plugins.push(command);
+            }
+            command.aliases.forEach((alias: any) => {
+                SkyChat.commands[alias] = command;
+            })
+        });
+        SkyChat.plugins.sort((a, b) => a.priority - b.priority);
+    }
+
+    private readonly room: SkyChatRoom = new SkyChatRoom();
 
     private readonly server: Server<SkyChatSession>;
 
@@ -72,6 +102,7 @@ export class SkyChat {
      */
     private async onConnectionCreated(connection: Connection<SkyChatSession>): Promise<void> {
         this.room.attachConnection(connection);
+
     }
 
     private async onRegister(payload: any, connection: Connection<SkyChatSession>): Promise<void> {
@@ -113,14 +144,39 @@ export class SkyChat {
      * @param connection
      */
     private async onMessage(payload: string, connection: Connection<SkyChatSession>): Promise<void> {
-        let message = payload;
-        for (let plugin of MessageHandler.plugins) {
-            message = await plugin.onNewMessage(message, connection);
-        }
+
+        // Apply hooks on payload
+        payload = await Plugin.executeNewMessageHook(SkyChat.plugins, payload, connection);
+
         try {
-            await MessageHandler.handleMessage(message, connection);
+
+            let message = payload.trim();
+            if (message.length === 0) {
+                throw new Error('Empty message');
+            }
+
+            if (message[0] !== '/') {
+                message = '/message ' + message;
+            }
+
+            // Command name
+            const commandName = message.split(' ')[0].substr(1).toLowerCase();
+
+            // Command params (everything after '/command ')
+            const param = message.substr(commandName.length + 2);
+
+            // Find command object
+            const command = SkyChat.commands[commandName];
+            if (! command) {
+                throw new Error('This command does not exist');
+            }
+
+            await command.execute(commandName, param, connection);
         } catch (e) {
-            console.error(e);
+
+            connection.sendError(e);
         }
     }
 }
+
+SkyChat.initialize();

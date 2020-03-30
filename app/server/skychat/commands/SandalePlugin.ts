@@ -1,11 +1,11 @@
-import {Connection} from "../../generic-server/Connection";
+import {Connection} from "../generic-server/Connection";
 import {SkyChatSession} from "../SkyChatSession";
 import {User} from "../User";
-import {Room} from "../../generic-server/Room";
 import {Plugin} from "../Plugin";
+import {Room} from "../generic-server/Room";
 
 
-export class Sandale extends Plugin {
+export class SandalePlugin extends Plugin {
 
     readonly name: string = 'sandale';
 
@@ -65,7 +65,7 @@ export class Sandale extends Plugin {
         this.addSandale(param, 1);
     }
 
-    public async onNewMessage(message: string, connection: Connection<SkyChatSession>): Promise<string> {
+    public async onNewMessageHook(message: string, connection: Connection<SkyChatSession>): Promise<string> {
         const username = connection.session.identifier;
         const sandales = this.getSandaleCount(username);
         if (sandales > 0) {
