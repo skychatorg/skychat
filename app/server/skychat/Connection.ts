@@ -2,16 +2,16 @@ import * as WebSocket from "ws";
 import * as http from "http";
 import {Data} from "ws";
 import {EventEmitter} from "events";
-import {Session} from "./Session";
 import {Room} from "./Room";
+import {Session} from "./Session";
 
 
 /**
  * A client represents an open connection to the server
  */
-export class Connection<SessionObject extends Session> extends EventEmitter {
+export class Connection extends EventEmitter {
 
-    public session!: SessionObject;
+    public session!: Session;
 
     private readonly webSocket: WebSocket;
 
@@ -22,7 +22,7 @@ export class Connection<SessionObject extends Session> extends EventEmitter {
      */
     private readonly request: http.IncomingMessage;
 
-    constructor(session: SessionObject, webSocket: WebSocket, request: http.IncomingMessage) {
+    constructor(session: Session, webSocket: WebSocket, request: http.IncomingMessage) {
         super();
 
         this.webSocket = webSocket;

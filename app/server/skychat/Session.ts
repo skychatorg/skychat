@@ -1,23 +1,16 @@
+import {User} from "./User";
 import {Connection} from "./Connection";
-import {Room} from "./Room";
 
 
 /**
- * A session represents an user. It can have multiple connections.
+ * A SkyChatSession represents a connected user, who has an account or not
  */
-export abstract class Session {
+export class Session {
 
     /**
      * Object mapping all active sessions
      */
     private static sessions: {[identifier: string]: Session} = {};
-
-    /**
-     * Unique session identifier
-     */
-    private _identifier!: string;
-
-    public connections: Connection<Session>[];
 
     /**
      * Find an existing session using its identifier
@@ -27,32 +20,31 @@ export abstract class Session {
         return Session.sessions[identifier];
     }
 
+    /**
+     * Unique session identifier
+     */
+    private _identifier!: string;
+
+    public connections: Connection[];
+
+    /**
+     * Associated user (if logged session)
+     */
+    public user: User;
+
+
     constructor(identifier: string) {
         this.connections = [];
         this.identifier = identifier;
+        this.user = new User(0, identifier, '', -1, {});
     }
 
     /**
      * Detach a connection from this session
      * @param connection
      */
-    public detachConnection(connection: Connection<Session>): void {
+    public detachConnection(connection: Connection): void {
         this.connections = this.connections.filter(c => c !== connection);
-    }
-
-    /**
-     * Attach a connection to this session
-     * @param connection
-     */
-    public attachConnection(connection: Connection<Session>): void {
-        if (connection.session === this) {
-            return;
-        }
-        if (connection.session) {
-            connection.session.detachConnection(connection);
-        }
-        connection.session = this;
-        this.connections.push(connection);
     }
 
     /**
@@ -82,5 +74,31 @@ export abstract class Session {
     public send(event: string, payload: any): void {
         this.connections.forEach(connection => connection.send(event, payload));
     }
-}
 
+    /**
+     * Attach a connection to this session
+     * @param connection
+     */
+    public attachConnection(connection: Connection): void {
+        if (connection.session === this) {
+            return;
+        }
+        if (connection.session) {
+            connection.session.detachConnection(connection);
+        }
+        connection.session = this;
+        this.connections.push(connection);
+
+        connection.send('set-user', this.user.sanitized())
+    }
+
+    /**
+     * Set associated user
+     * @param user
+     */
+    public setUser(user: User): void {
+        this.identifier = user.username.toLowerCase();
+        this.user = user;
+        this.connections.forEach(connection => connection.send('set-user', this.user.sanitized()));
+    }
+}

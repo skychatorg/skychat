@@ -1,8 +1,8 @@
 import {Command} from "../Command";
-import {Connection} from "../generic-server/Connection";
-import {SkyChatSession} from "../SkyChatSession";
+import {Connection} from "../Connection";
+import {Session} from "../Session";
 import {User} from "../User";
-import {Room} from "../generic-server/Room";
+import {Room} from "../Room";
 import {Message} from "../Message";
 
 
@@ -19,8 +19,8 @@ export class MessageCommand extends Command {
     async run(
         alias: string,
         param: string,
-        connection: Connection<SkyChatSession>,
-        session: SkyChatSession,
+        connection: Connection,
+        session: Session,
         user: User,
         room: Room | null): Promise<void> {
 

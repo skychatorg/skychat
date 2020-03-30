@@ -1,7 +1,7 @@
-import {Connection} from "./generic-server/Connection";
-import {SkyChatSession} from "./SkyChatSession";
+import {Connection} from "./Connection";
+import {Session} from "./Session";
 import {User} from "./User";
-import {Room} from "./generic-server/Room";
+import {Room} from "./Room";
 
 
 /**
@@ -46,7 +46,7 @@ export abstract class Command {
     /**
      * Check command rights and arguments
      */
-    public check(param: string, connection: Connection<SkyChatSession>) {
+    public check(param: string, connection: Connection) {
 
         // Check user right
         if (connection.session.user.right < this.minRight) {
@@ -65,7 +65,7 @@ export abstract class Command {
      * @param param
      * @param connection
      */
-    public async execute(alias: string, param: string, connection: Connection<SkyChatSession>) {
+    public async execute(alias: string, param: string, connection: Connection) {
         this.check(param, connection);
         await this.run(alias, param, connection, connection.session, connection.session.user, connection.room);
     }
@@ -76,8 +76,8 @@ export abstract class Command {
     public abstract async run(
         alias: string,
         param: string,
-        connection: Connection<SkyChatSession>,
-        session: SkyChatSession,
+        connection: Connection,
+        session: Session,
         user: User,
         room: Room | null
     ): Promise<void>;

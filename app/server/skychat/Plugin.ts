@@ -1,6 +1,5 @@
 import {Command} from "./Command";
-import {Connection} from "./generic-server/Connection";
-import {Session} from "./generic-server/Session";
+import {Connection} from "./Connection";
 
 
 /**
@@ -14,7 +13,7 @@ export abstract class Plugin extends Command {
      * @param plugins
      * @param connection
      */
-    public static async executeNewConnectionHook(plugins: Plugin[], connection: Connection<Session>): Promise<void> {
+    public static async executeNewConnectionHook(plugins: Plugin[], connection: Connection): Promise<void> {
         for (const plugin of plugins) {
             await plugin.onNewConnectionHook(connection);
         }
@@ -26,7 +25,7 @@ export abstract class Plugin extends Command {
      * @param message
      * @param connection
      */
-    public static async executeNewMessageHook(plugins: Plugin[], message: string, connection: Connection<Session>): Promise<string> {
+    public static async executeNewMessageHook(plugins: Plugin[], message: string, connection: Connection): Promise<string> {
         for (const plugin of plugins) {
             message = await plugin.onNewMessageHook(message, connection);
         }
@@ -42,14 +41,14 @@ export abstract class Plugin extends Command {
      * Executed when a new connection is made to the server
      * @param connection
      */
-    public async onNewConnectionHook(connection: Connection<Session>): Promise<void> { };
+    public async onNewConnectionHook(connection: Connection): Promise<void> { };
 
     /**
      * Executed when a new
      * @param message
      * @param connection
      */
-    public async onNewMessageHook(message: string, connection: Connection<Session>): Promise<string> {
+    public async onNewMessageHook(message: string, connection: Connection): Promise<string> {
         return message;
     }
 }

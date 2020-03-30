@@ -1,8 +1,8 @@
-import {Connection} from "../generic-server/Connection";
-import {SkyChatSession} from "../SkyChatSession";
+import {Connection} from "../Connection";
+import {Session} from "../Session";
 import {User} from "../User";
 import {Plugin} from "../Plugin";
-import {Room} from "../generic-server/Room";
+import {Room} from "../Room";
 
 
 export class SandalePlugin extends Plugin {
@@ -56,8 +56,8 @@ export class SandalePlugin extends Plugin {
     async run(
         alias: string,
         param: string,
-        connection: Connection<SkyChatSession>,
-        session: SkyChatSession,
+        connection: Connection,
+        session: Session,
         user: User,
         room: Room | null): Promise<void> {
 
@@ -65,7 +65,7 @@ export class SandalePlugin extends Plugin {
         this.addSandale(param, 1);
     }
 
-    public async onNewMessageHook(message: string, connection: Connection<SkyChatSession>): Promise<string> {
+    public async onNewMessageHook(message: string, connection: Connection): Promise<string> {
         const username = connection.session.identifier;
         const sandales = this.getSandaleCount(username);
         if (sandales > 0) {

@@ -2,8 +2,8 @@
     "compilerOptions": {
         "module": "commonjs",
         "strict": true,
-        "removeComments": true,
         "declaration": true,
+        "removeComments": true,
         "outDir": "./build/",
         "target": "es5",
         "lib": ["es6", "dom"],

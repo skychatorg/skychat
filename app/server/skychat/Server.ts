@@ -2,16 +2,16 @@ import * as WebSocket from "ws";
 import * as http from "http";
 import {ServerOptions} from "ws";
 import {Connection} from "./Connection";
-import {Session} from "./Session";
 import * as iof from "io-filter";
+import {Session} from "./Session";
 
 
 
-type EventHandler<SessionObject extends Session, payloadFilter> = (payload: payloadFilter, client: Connection<SessionObject>) => Promise<void>;
-type EventsDescription<SessionObject extends Session> = {
+type EventHandler<payloadFilter> = (payload: payloadFilter, client: Connection) => Promise<void>;
+type EventsDescription = {
     [eventName: string]: {
         payloadFilter?: iof.MaskFilter,
-        handler: EventHandler<SessionObject, any>
+        handler: EventHandler<any>
     };
 };
 
@@ -20,25 +20,25 @@ type EventsDescription<SessionObject extends Session> = {
 /**
  * Generic server object. Handle typed event communication.
  */
-export class Server<SessionObject extends Session> {
+export class Server {
 
     /**
      * List of accepted events.
      */
-    private readonly events: EventsDescription<SessionObject> = {};
+    private readonly events: EventsDescription = {};
 
     private readonly serverConfig: ServerOptions;
 
     private readonly wss: WebSocket.Server;
 
-    public onConnectionCreated?: (connection: Connection<SessionObject>) => Promise<void>;
+    public onConnectionCreated?: (connection: Connection) => Promise<void>;
 
     /**
      * Builds a session object when a new connection is initiated
      */
-    public sessionBuilder: (request: http.IncomingMessage) => Promise<SessionObject>;
+    public sessionBuilder: (request: http.IncomingMessage) => Promise<Session>;
 
-    constructor(serverConfig: ServerOptions, sessionBuilder: (request: http.IncomingMessage) => Promise<SessionObject>) {
+    constructor(serverConfig: ServerOptions, sessionBuilder: (request: http.IncomingMessage) => Promise<Session>) {
         this.serverConfig = serverConfig;
         this.sessionBuilder = sessionBuilder;
         this.wss = new WebSocket.Server(serverConfig);
@@ -51,7 +51,7 @@ export class Server<SessionObject extends Session> {
      * @param handler
      * @param payloadType Type of payload. If set to a string, the type of the payload should be equal to this string. Can also be set to a valid mask filter.
      */
-    public registerEvent<PayloadType>(name: string, handler: EventHandler<SessionObject, PayloadType>, payloadType?: string | iof.MaskFilter): void {
+    public registerEvent<PayloadType>(name: string, handler: EventHandler<PayloadType>, payloadType?: string | iof.MaskFilter): void {
         const payloadFilter = typeof payloadType === 'string' ? new iof.ValueTypeFilter(payloadType) : payloadType;
         this.events[name] = {
             handler: handler.bind(handler),
@@ -75,7 +75,7 @@ export class Server<SessionObject extends Session> {
         // For every registered event
         Object.keys(this.events).forEach(eventName => {
             // Register it on the connection object
-            connection.on(eventName, payload => this.onConnectionEvent(eventName, payload, connection));
+            connection.on(eventName, (payload: any) => this.onConnectionEvent(eventName, payload, connection));
         });
 
         if (typeof this.onConnectionCreated === 'function') {
@@ -89,7 +89,7 @@ export class Server<SessionObject extends Session> {
      * @param payload
      * @param connection
      */
-    private async onConnectionEvent(eventName: keyof EventsDescription<SessionObject>, payload: any, connection: Connection<SessionObject>): Promise<void> {
+    private async onConnectionEvent(eventName: keyof EventsDescription, payload: any, connection: Connection): Promise<void> {
         try {
 
             const event = this.events[eventName];

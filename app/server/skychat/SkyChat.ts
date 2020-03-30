@@ -1,14 +1,13 @@
-import {Server} from "./generic-server/Server";
-import {Connection} from "./generic-server/Connection";
+import {Server} from "./Server";
+import {Connection} from "./Connection";
 import * as http from "http";
-import {SkyChatSession} from "./SkyChatSession";
+import {Session} from "./Session";
 import {DatabaseHelper} from "./DatabaseHelper";
 import {User} from "./User";
 import * as iof from "io-filter";
-import {Session} from "./generic-server/Session";
 import {Plugin} from "./Plugin";
 import {Command} from "./Command";
-import {SkyChatRoom} from "./SkyChatRoom";
+import {Room} from "./Room";
 const requireDir = require('require-dir');
 
 
@@ -47,9 +46,9 @@ export class SkyChat {
         SkyChat.plugins.sort((a, b) => a.priority - b.priority);
     }
 
-    private readonly room: SkyChatRoom = new SkyChatRoom();
+    private readonly room: Room = new Room();
 
-    private readonly server: Server<SkyChatSession>;
+    private readonly server: Server;
 
     constructor() {
 
@@ -91,31 +90,31 @@ export class SkyChat {
     /**
      * Build a new session object when there is a new connection
      */
-    private async getNewSession(request: http.IncomingMessage): Promise<SkyChatSession> {
+    private async getNewSession(request: http.IncomingMessage): Promise<Session> {
         const identifier = '*Hamster' + (++ SkyChat.CURRENT_GUEST_ID);
-        return new SkyChatSession(identifier);
+        return new Session(identifier);
     }
 
     /**
      * Called each time a new connection is created
      * @param connection
      */
-    private async onConnectionCreated(connection: Connection<SkyChatSession>): Promise<void> {
+    private async onConnectionCreated(connection: Connection): Promise<void> {
         this.room.attachConnection(connection);
 
     }
 
-    private async onRegister(payload: any, connection: Connection<SkyChatSession>): Promise<void> {
+    private async onRegister(payload: any, connection: Connection): Promise<void> {
         const user = await User.registerUser(payload.username, payload.password);
         this.onAuthSuccessful(user, connection);
     }
 
-    private async onLogin(payload: any, connection: Connection<SkyChatSession>): Promise<void> {
+    private async onLogin(payload: any, connection: Connection): Promise<void> {
         const user = await User.login(payload.username, payload.password);
         this.onAuthSuccessful(user, connection);
     }
 
-    private async onSetToken(payload: any, connection: Connection<SkyChatSession>): Promise<void> {
+    private async onSetToken(payload: any, connection: Connection): Promise<void> {
         const user = await User.verifyAuthToken(payload);
         this.onAuthSuccessful(user, connection);
     }
@@ -125,7 +124,7 @@ export class SkyChat {
      * @param user
      * @param connection
      */
-    private onAuthSuccessful(user: User, connection: Connection<SkyChatSession>): void {
+    private onAuthSuccessful(user: User, connection: Connection): void {
         // Find an existing session belonging to the same user
         const recycledSession = Session.getSessionByIdentifier(user.username.toLowerCase());
         if (recycledSession) {
@@ -143,7 +142,7 @@ export class SkyChat {
      * @param payload
      * @param connection
      */
-    private async onMessage(payload: string, connection: Connection<SkyChatSession>): Promise<void> {
+    private async onMessage(payload: string, connection: Connection): Promise<void> {
 
         // Apply hooks on payload
         payload = await Plugin.executeNewMessageHook(SkyChat.plugins, payload, connection);
