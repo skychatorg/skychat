@@ -1,5 +1,5 @@
 import {Command} from "./Command";
-import {Connection} from "./Connection";
+import {Connection} from "../Connection";
 
 
 /**

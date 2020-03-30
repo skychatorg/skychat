@@ -1,7 +1,7 @@
-import {Connection} from "./Connection";
-import {Session} from "./Session";
-import {User} from "./User";
-import {Room} from "./Room";
+import {Connection} from "../Connection";
+import {Session} from "../Session";
+import {User} from "../User";
+import {Room} from "../Room";
 
 
 /**

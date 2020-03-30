@@ -5,10 +5,9 @@ import {Session} from "./Session";
 import {DatabaseHelper} from "./DatabaseHelper";
 import {User} from "./User";
 import * as iof from "io-filter";
-import {Plugin} from "./Plugin";
-import {Command} from "./Command";
+import {Plugin} from "./command/Plugin";
 import {Room} from "./Room";
-const requireDir = require('require-dir');
+import {CommandManager} from "./command/CommandManager";
 
 
 /**
@@ -17,34 +16,6 @@ const requireDir = require('require-dir');
 export class SkyChat {
 
     private static CURRENT_GUEST_ID: number = 0;
-
-    /**
-     * Available commands (including plugins). All aliases of a command/plugin points to the same command instance.
-     */
-    public static commands: {[commandName: string]: Command};
-
-    public static plugins: Plugin[];
-
-    /**
-     * Load the available commands & plugins
-     */
-    public static initialize() {
-        const classes = requireDir('./commands', {cache: false});
-        SkyChat.commands = {};
-        SkyChat.plugins = [];
-        Object.keys(classes).forEach(ClassName => {
-            const ClassConstructor = classes[ClassName][ClassName];
-            const command = new ClassConstructor();
-            SkyChat.commands[command.name] = command;
-            if (command instanceof Plugin) {
-                SkyChat.plugins.push(command);
-            }
-            command.aliases.forEach((alias: any) => {
-                SkyChat.commands[alias] = command;
-            })
-        });
-        SkyChat.plugins.sort((a, b) => a.priority - b.priority);
-    }
 
     private readonly room: Room = new Room();
 
@@ -145,7 +116,7 @@ export class SkyChat {
     private async onMessage(payload: string, connection: Connection): Promise<void> {
 
         // Apply hooks on payload
-        payload = await Plugin.executeNewMessageHook(SkyChat.plugins, payload, connection);
+        payload = await Plugin.executeNewMessageHook(CommandManager.plugins, payload, connection);
 
         try {
 
@@ -165,7 +136,7 @@ export class SkyChat {
             const param = message.substr(commandName.length + 2);
 
             // Find command object
-            const command = SkyChat.commands[commandName];
+            const command = CommandManager.commands[commandName];
             if (! command) {
                 throw new Error('This command does not exist');
             }
@@ -178,4 +149,3 @@ export class SkyChat {
     }
 }
 
-SkyChat.initialize();

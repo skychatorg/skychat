@@ -1,8 +1,5 @@
-import {Connection} from "../Connection";
-import {Session} from "../Session";
-import {User} from "../User";
+import {Connection} from "../../Connection";
 import {Plugin} from "../Plugin";
-import {Room} from "../Room";
 
 
 export class SandalePlugin extends Plugin {
@@ -53,18 +50,21 @@ export class SandalePlugin extends Plugin {
         this.sandales[username] += count;
     }
 
-    async run(
-        alias: string,
-        param: string,
-        connection: Connection,
-        session: Session,
-        user: User,
-        room: Room | null): Promise<void> {
-
-        // Sandalize without vergogne
+    /**
+     * On /sandale, sandalize without vergogne
+     * @param alias
+     * @param param
+     * @param connection
+     */
+    async run(alias: string, param: string, connection: Connection): Promise<void> {
         this.addSandale(param, 1);
     }
 
+    /**
+     * Intercept all messages and replace its content by a sandale if the user is sandalized
+     * @param message
+     * @param connection
+     */
     public async onNewMessageHook(message: string, connection: Connection): Promise<string> {
         const username = connection.session.identifier;
         const sandales = this.getSandaleCount(username);
