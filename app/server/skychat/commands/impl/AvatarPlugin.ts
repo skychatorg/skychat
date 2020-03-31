@@ -7,23 +7,23 @@ export class AvatarPlugin extends Plugin {
 
     static readonly DEFAULT_AVATAR: string = 'https://redsky.fr/picts/galerie/uploaded/2016-01-12/23-55-40-7922eb94a59acfa11a5f-pusheen2.jpg';
 
-    readonly name: string = 'avatar';
+    readonly name = 'avatar';
 
-    readonly aliases: string[] = [];
+    readonly aliases = [];
 
-    readonly minRight: number = 0;
+    readonly minRight = 0;
 
-    readonly minParamCount: number = 1;
-
-    readonly maxParamCount: number = 1;
-
-    public readonly params = [
-        {
-            name: 'avatar',
-            pattern: /^https:\/\/redsky.fr\/picts\/galerie\/uploaded\/(.+?).(jpg|png|gif|jpeg|webp)$/,
-            info: 'Image link'
-        }
-    ];
+    readonly params = {
+        minCount: 1,
+        maxCount: 1,
+        params: [
+            {
+                name: 'avatar',
+                pattern: /^https:\/\/redsky.fr\/picts\/galerie\/uploaded\/(.+?).(jpg|png|gif|jpeg|webp)$/,
+                info: 'Image link'
+            }
+        ]
+    };
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
 

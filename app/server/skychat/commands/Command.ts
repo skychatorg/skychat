@@ -5,12 +5,16 @@ import {Room} from "../Room";
 
 
 /**
- * A command parameter description object
+ * Command parameters description object
  */
-export type CommandParam = {
-    name: string,
-    pattern: RegExp,
-    info?: string
+export type CommandParamDefinitions = {
+    minCount?: number;
+    maxCount?: number;
+    params?: {
+        name: string,
+        pattern: RegExp,
+        info?: string
+    }[];
 };
 
 /**
@@ -31,17 +35,7 @@ export abstract class Command {
     /**
      * Define expected parameters. Can be defined globally or per command alias.
      */
-    public readonly params?: CommandParam[] | {[alias: string]: CommandParam[]};
-
-    /**
-     * Minimum amount of parameters that need to be sent. Can be defined for each aliases separately or globally.
-     */
-    public readonly minParamCount: number | {[alias: string]: number} = 0;
-
-    /**
-     * Maximum amount of parameters that need to be sent. Can be defined for each aliases separately or globally.
-     */
-    public readonly maxParamCount: number | {[alias: string]: number} = Infinity;
+    public readonly params?: CommandParamDefinitions | {[alias: string]: CommandParamDefinitions};
 
     /**
      * Minimum right to execute this function
@@ -71,29 +65,22 @@ export abstract class Command {
             throw new Error('This command needs to be executed in a room');
         }
 
-        // Check min parameter count
-        if (typeof this.minParamCount === 'number' || (this.minParamCount && this.minParamCount[alias])) {
-            const minParamCount = typeof this.minParamCount === 'number' ? this.minParamCount : this.minParamCount[alias];
+        // Check parameters
+        if (this.params && (typeof this.params.minCount !== 'undefined' || typeof (this.params as any)[alias] === 'object')) {
+            const paramDefinitions: CommandParamDefinitions = typeof this.params.minCount !== 'undefined' ? this.params : (this.params as any)[alias];
+            const minParamCount = paramDefinitions.minCount || 0;
+            const maxParamCount = paramDefinitions.maxCount || Infinity;
+            const params = paramDefinitions.params || [];
+            // Check parameter count
             if (splitParams.length < minParamCount) {
-                throw new Error('Expected ' + minParamCount + ' parameters. Got ' + splitParams.length);
-            }
-        }
-
-        // Check max parameter count
-        if (typeof this.maxParamCount === 'number' || (this.maxParamCount && this.maxParamCount[alias])) {
-            const maxParamCount = typeof this.maxParamCount === 'number' ? this.maxParamCount : this.maxParamCount[alias];
-            if (splitParams.length > maxParamCount) {
+                throw new Error('Expected at least ' + minParamCount + ' parameters. Got ' + splitParams.length);
+            } else if (splitParams.length > maxParamCount) {
                 throw new Error('Expected at most ' + maxParamCount + ' parameters. Got ' + splitParams.length);
             }
-        }
-
-        // Check parameters
-        if (Array.isArray(this.params) || (this.params && this.params[alias])) {
-            // Get param definition to use
-            const paramDefinitions: CommandParam[] = Array.isArray(this.params) ? this.params : this.params[alias];
-            for (let i = 0; i < paramDefinitions.length; ++ i) {
-                if (! paramDefinitions[i].pattern.exec(splitParams[i])) {
-                    throw new Error('Invalid format for ' + paramDefinitions[i].name);
+            // Check parameter format
+            for (let i = 0; i < params.length; ++ i) {
+                if (! params[i].pattern.exec(splitParams[i])) {
+                    throw new Error('Invalid format for ' + params[i].name);
                 }
             }
         }

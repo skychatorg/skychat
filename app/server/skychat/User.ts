@@ -35,6 +35,11 @@ export class User {
     };
 
     /**
+     * Neutral user used for sending erros and information
+     */
+    public static BOT_USER: User = new User(0, '~Server', '', 0);
+
+    /**
      * Valid username regexp
      */
     public static USERNAME_REGEXP: RegExp = /^[a-zA-Z0-9]{3,16}$/;

@@ -22,6 +22,26 @@ export class Session implements IBroadcaster {
     }
 
     /**
+     * Autocomplete an identifier to match an active existing identifier
+     * @param identifier
+     */
+    public static autocompleteIdentifier(identifier: string): string {
+        const matches = Object.keys(Session.sessions).filter(i => i.indexOf(identifier.toLowerCase()) === 0);
+        if (matches.length !== 1) {
+            return identifier;
+        }
+        return matches[0];
+    }
+
+    /**
+     * Tells if there is currently an active session for a given identifier
+     * @param identifier
+     */
+    public static sessionExists(identifier: string): boolean {
+        return typeof Session.getSessionByIdentifier(identifier) !== 'undefined';
+    }
+
+    /**
      * Unique session identifier
      */
     private _identifier!: string;

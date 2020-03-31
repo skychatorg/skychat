@@ -5,9 +5,9 @@ import {Session} from "./Session";
 import {DatabaseHelper} from "./DatabaseHelper";
 import {User} from "./User";
 import * as iof from "io-filter";
-import {Plugin} from "./command/Plugin";
+import {Plugin} from "./commands/Plugin";
 import {Room} from "./Room";
-import {CommandManager} from "./command/CommandManager";
+import {CommandManager} from "./commands/CommandManager";
 
 
 /**

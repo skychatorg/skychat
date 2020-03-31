@@ -4,15 +4,15 @@ import {Connection} from "../../Connection";
 
 export class MessageCommand extends Command {
 
-    readonly name: string = 'message';
+    readonly name = 'message';
 
-    readonly aliases: string[] = ['m'];
+    readonly aliases = ['m'];
 
-    readonly minRight: number = -1;
+    readonly minRight = -1;
 
-    readonly roomRequired: boolean = true;
+    readonly roomRequired = true;
 
-    readonly minParamCount: number = 1;
+    readonly minParamCount = 1;
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
 
