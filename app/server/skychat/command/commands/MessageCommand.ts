@@ -1,6 +1,5 @@
 import {Command} from "../Command";
 import {Connection} from "../../Connection";
-import {Message} from "../../Message";
 
 
 export class MessageCommand extends Command {
@@ -9,16 +8,15 @@ export class MessageCommand extends Command {
 
     readonly aliases: string[] = ['m'];
 
-    public readonly minRight: number = -1;
+    readonly minRight: number = -1;
 
-    public readonly roomRequired: boolean = true;
+    readonly roomRequired: boolean = true;
+
+    readonly minParamCount: number = 1;
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
 
-        // Create new message
-        const message = new Message(param, connection);
-
-        // Send it to the room
-        connection.room!.send('message', message.sanitized());
+        // Send the message to the room
+        connection.room!.sendMessage(param, connection.session.user);
     }
 }

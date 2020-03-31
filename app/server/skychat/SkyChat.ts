@@ -36,7 +36,7 @@ export class SkyChat {
 
                 // On register
                 this.server.registerEvent('register', this.onRegister.bind(this), new iof.ObjectFilter({
-                    username: new iof.RegExpFilter(/^[a-zA-Z0-9]{3,16}$/),
+                    username: new iof.RegExpFilter(User.USERNAME_REGEXP),
                     password: new iof.RegExpFilter(/^.{4,512}$/),
                 }));
 

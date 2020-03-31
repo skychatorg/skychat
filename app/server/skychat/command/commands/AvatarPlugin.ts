@@ -13,6 +13,18 @@ export class AvatarPlugin extends Plugin {
 
     readonly minRight: number = 0;
 
+    readonly minParamCount: number = 1;
+
+    readonly maxParamCount: number = 1;
+
+    public readonly params = [
+        {
+            name: 'avatar',
+            pattern: /^https:\/\/redsky.fr\/picts\/galerie\/uploaded\/(.+?).(jpg|png|gif|jpeg|webp)$/,
+            info: 'Image link'
+        }
+    ];
+
     async run(alias: string, param: string, connection: Connection): Promise<void> {
 
         const data = User.getPluginData(connection.session.user, AvatarPlugin.name, AvatarPlugin.DEFAULT_AVATAR);

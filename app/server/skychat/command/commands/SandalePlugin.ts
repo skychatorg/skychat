@@ -1,5 +1,6 @@
 import {Connection} from "../../Connection";
 import {Plugin} from "../Plugin";
+import {User} from "../../User";
 
 
 export class SandalePlugin extends Plugin {
@@ -11,6 +12,18 @@ export class SandalePlugin extends Plugin {
     public readonly roomRequired: boolean = true;
 
     private sandales: {[username: string]: number} = {};
+
+    public readonly minParamCount = 1;
+
+    public readonly maxParamCount = 1;
+
+    public readonly params = [
+        {
+            name: 'username',
+            pattern: User.USERNAME_REGEXP,
+            info: 'Target username'
+        }
+    ];
 
     /**
      * Get the number of sandales associated to an username

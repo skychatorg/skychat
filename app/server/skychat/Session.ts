@@ -1,11 +1,12 @@
 import {User} from "./User";
 import {Connection} from "./Connection";
+import {IBroadcaster} from "./IBroadcaster";
 
 
 /**
  * A SkyChatSession represents a connected user, who has an account or not
  */
-export class Session {
+export class Session implements IBroadcaster {
 
     /**
      * Object mapping all active sessions
@@ -67,15 +68,6 @@ export class Session {
     }
 
     /**
-     * Send to all this session's connections
-     * @param event
-     * @param payload
-     */
-    public send(event: string, payload: any): void {
-        this.connections.forEach(connection => connection.send(event, payload));
-    }
-
-    /**
      * Attach a connection to this session
      * @param connection
      */
@@ -100,5 +92,14 @@ export class Session {
         this.identifier = user.username.toLowerCase();
         this.user = user;
         this.connections.forEach(connection => connection.send('set-user', this.user.sanitized()));
+    }
+
+    /**
+     * Send to all this session's connections
+     * @param event
+     * @param payload
+     */
+    public send(event: string, payload: any): void {
+        this.connections.forEach(connection => connection.send(event, payload));
     }
 }

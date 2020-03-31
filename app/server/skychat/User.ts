@@ -35,6 +35,11 @@ export class User {
     };
 
     /**
+     * Valid username regexp
+     */
+    public static USERNAME_REGEXP: RegExp = /^[a-zA-Z0-9]{3,16}$/;
+
+    /**
      * Password salt defined in .env.json
      */
     private static passwordSalt: string;
