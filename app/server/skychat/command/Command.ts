@@ -57,6 +57,11 @@ export abstract class Command {
         if (this.roomRequired && ! connection.room) {
             throw new Error('This command needs to be executed in a room');
         }
+
+        // Check parameters
+        if (typeof this.params !== 'undefined') {
+
+        }
     }
 
     /**

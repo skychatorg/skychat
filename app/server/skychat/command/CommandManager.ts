@@ -2,6 +2,7 @@ import {Command} from "./Command";
 import {Plugin} from "./Plugin";
 import {MessageCommand} from "./commands/MessageCommand";
 import {SandalePlugin} from "./commands/SandalePlugin";
+import {AvatarPlugin} from "./commands/AvatarPlugin";
 
 
 /**
@@ -14,7 +15,8 @@ export class CommandManager {
      */
     public static readonly COMMANDS: Array<new () => Command> = [
         MessageCommand,
-        SandalePlugin
+        SandalePlugin,
+        AvatarPlugin
     ];
 
     /**
