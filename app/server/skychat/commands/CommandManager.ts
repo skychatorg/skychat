@@ -8,6 +8,7 @@ import {MutePlugin} from "./impl/MutePlugin";
 import {Connection} from "../Connection";
 import {User} from "../User";
 import {TypingListPlugin} from "./impl/TypingListPlugin";
+import {MotoPlugin} from "./impl/MotoPlugin";
 
 
 /**
@@ -22,6 +23,7 @@ export class CommandManager {
         AvatarPlugin,
         CursorPlugin,
         MessageCommand,
+        MotoPlugin,
         MutePlugin,
         SandalePlugin,
         TypingListPlugin,

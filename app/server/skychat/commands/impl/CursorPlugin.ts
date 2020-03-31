@@ -50,7 +50,7 @@ export class CursorPlugin extends Plugin {
      */
     async handleToggle(param: string, connection: Connection): Promise<void> {
         const cursorEnabled = param === 'on';
-        await User.savePluginData(connection.session.user, CursorPlugin.name, cursorEnabled);
+        await User.savePluginData(connection.session.user, this.name, cursorEnabled);
         connection.send('message', new Message('Cursor: ' + param, User.BOT_USER).sanitized());
     }
 
@@ -63,7 +63,7 @@ export class CursorPlugin extends Plugin {
         // For every connection in the room
         for (const conn of connection.room!.connections) {
             // If the user has cursors disabled
-            if (! User.getPluginData(conn.session.user, CursorPlugin.name)) {
+            if (! User.getPluginData(conn.session.user, this.name)) {
                 // Abort
                 continue;
             }

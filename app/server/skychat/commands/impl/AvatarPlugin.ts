@@ -29,10 +29,10 @@ export class AvatarPlugin extends Plugin {
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
 
-        const data = User.getPluginData(connection.session.user, AvatarPlugin.name);
+        const data = User.getPluginData(connection.session.user, this.name);
         if (data === param) {
             throw new Error('You already have this avatar');
         }
-        await User.savePluginData(connection.session.user, AvatarPlugin.name, param);
+        await User.savePluginData(connection.session.user, this.name, param);
     }
 }
