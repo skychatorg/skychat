@@ -7,6 +7,8 @@ export class AvatarPlugin extends Plugin {
 
     static readonly DEFAULT_AVATAR: string = 'https://redsky.fr/picts/galerie/uploaded/2016-01-12/23-55-40-7922eb94a59acfa11a5f-pusheen2.jpg';
 
+    readonly defaultDataStorageValue = AvatarPlugin.DEFAULT_AVATAR;
+
     readonly name = 'avatar';
 
     readonly aliases = [];
@@ -27,7 +29,7 @@ export class AvatarPlugin extends Plugin {
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
 
-        const data = User.getPluginData(connection.session.user, AvatarPlugin.name, AvatarPlugin.DEFAULT_AVATAR);
+        const data = User.getPluginData(connection.session.user, AvatarPlugin.name);
         if (data === param) {
             throw new Error('You already have this avatar');
         }

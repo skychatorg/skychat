@@ -28,9 +28,10 @@ export type SanitizedUser = {
 export class User {
 
     /**
-     * Default user data object
+     * Default user data object. This object is filled by the command manager to add the default values for each loaded
+     *  plugin.
      */
-    private static DEFAULT_DATA_OBJECT: UserData = {
+    static readonly DEFAULT_DATA_OBJECT: UserData = {
         plugins: {}
     };
 
@@ -40,9 +41,14 @@ export class User {
     public static BOT_USER: User = new User(0, '~Server', '', 0);
 
     /**
+     * Username regexp (including guests)
+     */
+    public static USERNAME_REGEXP: RegExp = /^\*?[a-zA-Z0-9]{3,16}$/;
+
+    /**
      * Valid username regexp
      */
-    public static USERNAME_REGEXP: RegExp = /^[a-zA-Z0-9]{3,16}$/;
+    public static USERNAME_LOGGED_REGEXP: RegExp = /^[a-zA-Z0-9]{3,16}$/;
 
     /**
      * Password salt defined in .env.json
@@ -171,12 +177,8 @@ export class User {
      * Get a plugin stored data
      * @param user
      * @param pluginName
-     * @param defaultValue
      */
-    public static getPluginData<T>(user: User, pluginName: string, defaultValue: T): any | T {
-        if (typeof user.data.plugins[pluginName] === 'undefined') {
-            return defaultValue;
-        }
+    public static getPluginData<T>(user: User, pluginName: string): any {
         return user.data.plugins[pluginName];
     }
 

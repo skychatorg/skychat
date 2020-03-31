@@ -9,33 +9,14 @@ import {Connection} from "../Connection";
 export abstract class Plugin extends Command {
 
     /**
-     * Execute new connection hook
-     * @param plugins
-     * @param connection
-     */
-    public static async executeNewConnectionHook(plugins: Plugin[], connection: Connection): Promise<void> {
-        for (const plugin of plugins) {
-            await plugin.onNewConnectionHook(connection);
-        }
-    }
-
-    /**
-     * Execute new connection hook
-     * @param plugins
-     * @param message
-     * @param connection
-     */
-    public static async executeNewMessageHook(plugins: Plugin[], message: string, connection: Connection): Promise<string> {
-        for (const plugin of plugins) {
-            message = await plugin.onNewMessageHook(message, connection);
-        }
-        return message;
-    }
-
-    /**
      * Plugins can modify application values on-the-fly. Therefore it is important to know in advance
      */
-    public priority: number = 0;
+    public readonly priority: number = 0;
+
+    /**
+     * If the plugin uses storage, it needs to define a default value for its custom entry in user data object.
+     */
+    public readonly defaultDataStorageValue?: any;
 
     /**
      * Executed when a new connection is made to the server

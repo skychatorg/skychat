@@ -9,6 +9,8 @@ import {Message} from "../../Message";
  */
 export class CursorPlugin extends Plugin {
 
+    readonly defaultDataStorageValue = true;
+
     readonly name = 'cursor';
 
     readonly aliases = ['c'];
@@ -61,7 +63,7 @@ export class CursorPlugin extends Plugin {
         // For every connection in the room
         for (const conn of connection.room!.connections) {
             // If the user has cursors disabled
-            if (! User.getPluginData(conn.session.user, CursorPlugin.name, true)) {
+            if (! User.getPluginData(conn.session.user, CursorPlugin.name)) {
                 // Abort
                 continue;
             }

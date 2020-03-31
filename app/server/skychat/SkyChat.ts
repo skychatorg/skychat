@@ -36,7 +36,7 @@ export class SkyChat {
 
                 // On register
                 this.server.registerEvent('register', this.onRegister.bind(this), new iof.ObjectFilter({
-                    username: new iof.RegExpFilter(User.USERNAME_REGEXP),
+                    username: new iof.RegExpFilter(User.USERNAME_LOGGED_REGEXP),
                     password: new iof.RegExpFilter(/^.{4,512}$/),
                 }));
 
@@ -72,6 +72,7 @@ export class SkyChat {
      */
     private async onConnectionCreated(connection: Connection): Promise<void> {
         this.room.attachConnection(connection);
+        await CommandManager.executeNewConnectionHook(connection);
 
     }
 
@@ -116,27 +117,15 @@ export class SkyChat {
     private async onMessage(payload: string, connection: Connection): Promise<void> {
 
         // Apply hooks on payload
-        payload = await Plugin.executeNewMessageHook(CommandManager.plugins, payload, connection);
+        payload = await CommandManager.executeNewMessageHook(payload, connection);
 
         try {
 
-            let message = payload.trim();
-            if (message.length === 0) {
-                throw new Error('Empty message');
-            }
+            // Parse command name and message content
+            const {param, commandName} = CommandManager.parseMessage(payload);
 
-            if (message[0] !== '/') {
-                message = '/message ' + message;
-            }
-
-            // Command name
-            const commandName = message.split(' ')[0].substr(1).toLowerCase();
-
-            // Command params (everything after '/command ')
-            const param = message.substr(commandName.length + 2);
-
-            // Find command object
-            const command = CommandManager.commands[commandName];
+            // Get command object
+            const command = CommandManager.getCommand(commandName);
             if (! command) {
                 throw new Error('This command does not exist');
             }

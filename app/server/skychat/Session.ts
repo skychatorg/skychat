@@ -11,7 +11,7 @@ export class Session implements IBroadcaster {
     /**
      * Object mapping all active sessions
      */
-    private static sessions: {[identifier: string]: Session} = {};
+     static sessions: {[identifier: string]: Session} = {};
 
     /**
      * Find an existing session using its identifier
@@ -28,7 +28,7 @@ export class Session implements IBroadcaster {
     public static autocompleteIdentifier(identifier: string): string {
         const matches = Object.keys(Session.sessions).filter(i => i.indexOf(identifier.toLowerCase()) === 0);
         if (matches.length !== 1) {
-            return identifier;
+            return identifier.toLowerCase();
         }
         return matches[0];
     }
@@ -73,6 +73,7 @@ export class Session implements IBroadcaster {
      * @param identifier
      */
     public set identifier(identifier: string) {
+        identifier = identifier.toLowerCase();
         if (Session.getSessionByIdentifier(identifier)) {
             throw new Error('Cannot change identifier to ' + identifier + ': Identifier must be unique');
         }

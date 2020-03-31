@@ -4,6 +4,10 @@ import {MessageCommand} from "./impl/MessageCommand";
 import {SandalePlugin} from "./impl/SandalePlugin";
 import {AvatarPlugin} from "./impl/AvatarPlugin";
 import {CursorPlugin} from "./impl/CursorPlugin";
+import {MutePlugin} from "./impl/MutePlugin";
+import {Connection} from "../Connection";
+import {User} from "../User";
+import {TypingListPlugin} from "./impl/TypingListPlugin";
 
 
 /**
@@ -15,10 +19,12 @@ export class CommandManager {
      * Available commands and plugins
      */
     public static readonly COMMANDS: Array<new () => Command> = [
-        MessageCommand,
-        SandalePlugin,
         AvatarPlugin,
-        CursorPlugin
+        CursorPlugin,
+        MessageCommand,
+        MutePlugin,
+        SandalePlugin,
+        TypingListPlugin,
     ];
 
     /**
@@ -51,10 +57,58 @@ export class CommandManager {
             // If it's a plugin, register it
             if (command instanceof Plugin) {
                 CommandManager.plugins.push(command);
+                // If plugin uses data storage and has a default value
+                if (typeof command.defaultDataStorageValue !== 'undefined') {
+                    User.DEFAULT_DATA_OBJECT.plugins[command.name] = command.defaultDataStorageValue;
+                }
             }
         }
         // Sort plugins by priority
         CommandManager.plugins.sort((a, b) => a.priority - b.priority);
+    }
+
+    /**
+     * Execute new connection hook
+     * @param connection
+     */
+    public static async executeNewConnectionHook(connection: Connection): Promise<void> {
+        for (const plugin of CommandManager.plugins) {
+            await plugin.onNewConnectionHook(connection);
+        }
+    }
+
+    /**
+     * Execute new connection hook
+     * @param message
+     * @param connection
+     */
+    public static async executeNewMessageHook(message: string, connection: Connection): Promise<string> {
+        for (const plugin of CommandManager.plugins) {
+            message = await plugin.onNewMessageHook(message, connection);
+        }
+        return message;
+    }
+
+    /**
+     * Get command name from the message
+     * @param message
+     */
+    public static parseMessage(message: string): {param: string, commandName: string} {
+        message = message.trim();
+        if (message[0] !== '/') {
+            message = '/message ' + message;
+        }
+        const commandName = message.split(' ')[0].substr(1).toLowerCase();
+        const param = message.substr(commandName.length + 2);
+        return {param, commandName};
+    }
+
+    /**
+     * Get command name from the message
+     * @param commandName
+     */
+    public static getCommand(commandName: string): Command | undefined {
+        return this.commands[commandName];
     }
 }
 
