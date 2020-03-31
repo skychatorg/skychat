@@ -1,14 +1,28 @@
 import {Connection} from "../../Connection";
 import {Plugin} from "../Plugin";
+import {User} from "../../User";
+import {Session} from "../../Session";
 
 
 export class SandalePlugin extends Plugin {
 
-    readonly name: string = 'sandale';
+    readonly name = 'sandale';
 
-    public readonly minRight: number = -1;
+    readonly minRight = -1;
 
-    public readonly roomRequired: boolean = true;
+    readonly roomRequired = true;
+
+    readonly params = {
+        minCount: 1,
+        maxCount: 1,
+        params: [
+            {
+                name: 'username',
+                pattern: User.USERNAME_REGEXP,
+                info: 'Target username'
+            }
+        ]
+    };
 
     private sandales: {[username: string]: number} = {};
 
@@ -57,7 +71,11 @@ export class SandalePlugin extends Plugin {
      * @param connection
      */
     async run(alias: string, param: string, connection: Connection): Promise<void> {
-        this.addSandale(param, 1);
+        const identifier = Session.autocompleteIdentifier(param);
+        if (! Session.sessionExists(identifier)) {
+            throw new Error('User ' + identifier + ' does not exist');
+        }
+        this.addSandale(identifier, 1);
     }
 
     /**

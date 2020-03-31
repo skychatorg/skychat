@@ -1,10 +1,23 @@
 import {Connection} from "./Connection";
 import {Session} from "./Session";
-import {SanitizedUser} from "./User";
+import {SanitizedUser, User} from "./User";
 
 export type SanitizedMessage = {
+
+    /**
+     * Message content
+     */
     content: string;
+
+    /**
+     * Author
+     */
     user: SanitizedUser;
+
+    /**
+     * Timestamp in seconds
+     */
+    createdTimestamp: number;
 };
 
 
@@ -12,12 +25,15 @@ export class Message {
 
     public readonly content: string;
 
-    public readonly connection: Connection;
+    public readonly user: User;
 
-    constructor(content: string, connection: Connection) {
+    public readonly createdTime: Date;
+
+    constructor(content: string, connection: User, createdTime?: Date) {
 
         this.content = content;
-        this.connection = connection;
+        this.user = connection;
+        this.createdTime = typeof createdTime !== 'undefined' ? createdTime : new Date();
     }
 
     /**
@@ -26,7 +42,8 @@ export class Message {
     public sanitized(): SanitizedMessage {
         return {
             content: this.content,
-            user: this.connection.session.user.sanitized()
+            user: this.user.sanitized(),
+            createdTimestamp: this.createdTime.getTime() * 0.001
         };
     }
 }

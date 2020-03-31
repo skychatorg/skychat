@@ -23,12 +23,11 @@
         "express": "^4.17.1",
         "io-filter": "^2.1.2",
         "jsonwebtoken": "^8.5.1",
-        "require-dir": "^1.2.0",
         "sha256": "^0.2.0",
         "sql-template-strings": "^2.2.2",
         "sqlite": "^3.0.6",
-        "ws": "^7.2.3",
-        "vue": "^2.6.11"
+        "vue": "^2.6.11",
+        "ws": "^7.2.3"
     },
     "devDependencies": {
         "@types/express": "^4.17.3",

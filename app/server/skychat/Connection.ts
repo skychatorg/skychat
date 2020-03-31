@@ -4,12 +4,13 @@ import {Data} from "ws";
 import {EventEmitter} from "events";
 import {Room} from "./Room";
 import {Session} from "./Session";
+import {IBroadcaster} from "./IBroadcaster";
 
 
 /**
  * A client represents an open connection to the server
  */
-export class Connection extends EventEmitter {
+export class Connection extends EventEmitter implements IBroadcaster {
 
     public session!: Session;
 

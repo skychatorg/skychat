@@ -5,12 +5,16 @@ import {Room} from "../Room";
 
 
 /**
- * A command parameter description object
+ * Command parameters description object
  */
-export type CommandParam = {
-    name: string,
-    pattern: RegExp,
-    info?: string
+export type CommandParamDefinitions = {
+    minCount?: number;
+    maxCount?: number;
+    params?: {
+        name: string,
+        pattern: RegExp,
+        info?: string
+    }[];
 };
 
 /**
@@ -31,7 +35,7 @@ export abstract class Command {
     /**
      * Define expected parameters. Can be defined globally or per command alias.
      */
-    public readonly params?: CommandParam[] | {[alias: string]: CommandParam};
+    public readonly params?: CommandParamDefinitions | {[alias: string]: CommandParamDefinitions};
 
     /**
      * Minimum right to execute this function
@@ -46,7 +50,10 @@ export abstract class Command {
     /**
      * Check command rights and arguments
      */
-    public check(param: string, connection: Connection) {
+    public check(alias: string, param: string, connection: Connection) {
+
+        // Split message
+        const splitParams = param.split(' ').filter(s => s !== '');
 
         // Check user right
         if (connection.session.user.right < this.minRight) {
@@ -57,6 +64,26 @@ export abstract class Command {
         if (this.roomRequired && ! connection.room) {
             throw new Error('This command needs to be executed in a room');
         }
+
+        // Check parameters
+        if (this.params && (typeof this.params.minCount !== 'undefined' || typeof (this.params as any)[alias] === 'object')) {
+            const paramDefinitions: CommandParamDefinitions = typeof this.params.minCount !== 'undefined' ? this.params : (this.params as any)[alias];
+            const minParamCount = paramDefinitions.minCount || 0;
+            const maxParamCount = paramDefinitions.maxCount || Infinity;
+            const params = paramDefinitions.params || [];
+            // Check parameter count
+            if (splitParams.length < minParamCount) {
+                throw new Error('Expected at least ' + minParamCount + ' parameters. Got ' + splitParams.length);
+            } else if (splitParams.length > maxParamCount) {
+                throw new Error('Expected at most ' + maxParamCount + ' parameters. Got ' + splitParams.length);
+            }
+            // Check parameter format
+            for (let i = 0; i < params.length; ++ i) {
+                if (! params[i].pattern.exec(splitParams[i])) {
+                    throw new Error('Invalid format for ' + params[i].name);
+                }
+            }
+        }
     }
 
     /**
@@ -66,7 +93,7 @@ export abstract class Command {
      * @param connection
      */
     public async execute(alias: string, param: string, connection: Connection) {
-        this.check(param, connection);
+        this.check(alias, param, connection);
         await this.run(alias, param, connection, connection.session, connection.session.user, connection.room);
     }
 

@@ -1,16 +1,17 @@
 import {User} from "./User";
 import {Connection} from "./Connection";
+import {IBroadcaster} from "./IBroadcaster";
 
 
 /**
  * A SkyChatSession represents a connected user, who has an account or not
  */
-export class Session {
+export class Session implements IBroadcaster {
 
     /**
      * Object mapping all active sessions
      */
-    private static sessions: {[identifier: string]: Session} = {};
+     static sessions: {[identifier: string]: Session} = {};
 
     /**
      * Find an existing session using its identifier
@@ -18,6 +19,26 @@ export class Session {
      */
     public static getSessionByIdentifier(identifier: string): Session | undefined {
         return Session.sessions[identifier];
+    }
+
+    /**
+     * Autocomplete an identifier to match an active existing identifier
+     * @param identifier
+     */
+    public static autocompleteIdentifier(identifier: string): string {
+        const matches = Object.keys(Session.sessions).filter(i => i.indexOf(identifier.toLowerCase()) === 0);
+        if (matches.length !== 1) {
+            return identifier.toLowerCase();
+        }
+        return matches[0];
+    }
+
+    /**
+     * Tells if there is currently an active session for a given identifier
+     * @param identifier
+     */
+    public static sessionExists(identifier: string): boolean {
+        return typeof Session.getSessionByIdentifier(identifier) !== 'undefined';
     }
 
     /**
@@ -36,7 +57,7 @@ export class Session {
     constructor(identifier: string) {
         this.connections = [];
         this.identifier = identifier;
-        this.user = new User(0, identifier, '', -1, {});
+        this.user = new User(0, identifier, '', -1);
     }
 
     /**
@@ -52,6 +73,7 @@ export class Session {
      * @param identifier
      */
     public set identifier(identifier: string) {
+        identifier = identifier.toLowerCase();
         if (Session.getSessionByIdentifier(identifier)) {
             throw new Error('Cannot change identifier to ' + identifier + ': Identifier must be unique');
         }
@@ -64,15 +86,6 @@ export class Session {
 
     public get identifier(): string {
         return this._identifier;
-    }
-
-    /**
-     * Send to all this session's connections
-     * @param event
-     * @param payload
-     */
-    public send(event: string, payload: any): void {
-        this.connections.forEach(connection => connection.send(event, payload));
     }
 
     /**
@@ -100,5 +113,14 @@ export class Session {
         this.identifier = user.username.toLowerCase();
         this.user = user;
         this.connections.forEach(connection => connection.send('set-user', this.user.sanitized()));
+    }
+
+    /**
+     * Send to all this session's connections
+     * @param event
+     * @param payload
+     */
+    public send(event: string, payload: any): void {
+        this.connections.forEach(connection => connection.send(event, payload));
     }
 }
