@@ -1,8 +1,10 @@
 import {Connection} from "./Connection";
-import {Session} from "./Session";
 import {User} from "./User";
 import {IBroadcaster} from "./IBroadcaster";
 import {Message} from "./Message";
+import {Command} from "./commands/Command";
+import {Plugin} from "./commands/Plugin";
+import {CommandManager} from "./commands/CommandManager";
 
 
 export class Room implements IBroadcaster {
@@ -26,6 +28,22 @@ export class Room implements IBroadcaster {
      * History of the last messages
      */
     public messages: Message[] = [];
+
+    /**
+     * Command instances (including plugins).
+     * All aliases of a command/plugin points to the same command instance.
+     */
+    public readonly commands: {[commandName: string]: Command};
+
+    /**
+     * List of loaded plugins
+     */
+    public readonly plugins: Plugin[];
+
+    constructor() {
+        this.commands = CommandManager.instantiateCommands(this);
+        this.plugins = CommandManager.extractPlugins(this.commands);
+    }
 
     /**
      * Detach a connection from this room
@@ -55,6 +73,18 @@ export class Room implements IBroadcaster {
         for (let i = Math.max(0, this.messages.length - Room.MESSAGE_HISTORY_VISIBLE_LENGTH); i < this.messages.length; ++ i) {
             connection.send('message', this.messages[i].sanitized());
         }
+    }
+
+    /**
+     * Execute new connection hook
+     * @param message
+     * @param connection
+     */
+    public async executeNewMessageHook(message: string, connection: Connection): Promise<string> {
+        for (const plugin of this.plugins) {
+            message = await plugin.onNewMessageHook(message, connection);
+        }
+        return message;
     }
 
     /**

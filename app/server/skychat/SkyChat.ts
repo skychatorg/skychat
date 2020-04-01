@@ -5,7 +5,6 @@ import {Session} from "./Session";
 import {DatabaseHelper} from "./DatabaseHelper";
 import {User} from "./User";
 import * as iof from "io-filter";
-import {Plugin} from "./commands/Plugin";
 import {Room} from "./Room";
 import {CommandManager} from "./commands/CommandManager";
 
@@ -72,8 +71,6 @@ export class SkyChat {
      */
     private async onConnectionCreated(connection: Connection): Promise<void> {
         this.room.attachConnection(connection);
-        await CommandManager.executeNewConnectionHook(connection);
-
     }
 
     private async onRegister(payload: any, connection: Connection): Promise<void> {
@@ -116,16 +113,20 @@ export class SkyChat {
      */
     private async onMessage(payload: string, connection: Connection): Promise<void> {
 
-        // Apply hooks on payload
-        payload = await CommandManager.executeNewMessageHook(payload, connection);
-
         try {
+
+            // Apply hooks on payload
+            if (! connection.room) {
+                throw new Error('Messages event should be sent in rooms');
+            }
+
+            payload = await connection.room.executeNewMessageHook(payload, connection);
 
             // Parse command name and message content
             const {param, commandName} = CommandManager.parseMessage(payload);
 
             // Get command object
-            const command = CommandManager.getCommand(commandName);
+            const command = connection.room.commands[commandName];
             if (! command) {
                 throw new Error('This command does not exist');
             }

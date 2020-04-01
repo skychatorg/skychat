@@ -15,8 +15,6 @@ export class MutePlugin extends Plugin {
 
     readonly minRight = -1; // @TODO set to >0
 
-    readonly roomRequired = true;
-
     readonly params = {
         mute: {
             minCount: 2,

@@ -4,7 +4,7 @@ import {Connection} from "../Connection";
 
 /**
  * Abstract class that represents a plugin. A plugin has access to multiple points of the application through the usage
- *  of hooks.
+ *  of hooks. Every room has its own instance of plugin
  */
 export abstract class Plugin extends Command {
 
@@ -17,12 +17,6 @@ export abstract class Plugin extends Command {
      * If the plugin uses storage, it needs to define a default value for its custom entry in user data object.
      */
     public readonly defaultDataStorageValue?: any;
-
-    /**
-     * Executed when a new connection is made to the server
-     * @param connection
-     */
-    public async onNewConnectionHook(connection: Connection): Promise<void> { };
 
     /**
      * Executed when a new
