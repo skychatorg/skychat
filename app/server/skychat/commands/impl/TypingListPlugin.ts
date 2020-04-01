@@ -12,8 +12,6 @@ export class TypingListPlugin extends Plugin {
 
     readonly minRight = -1;
 
-    readonly roomRequired = true;
-
     readonly params = {
         minCount: 1,
         maxCount: 1,

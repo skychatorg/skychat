@@ -5,10 +5,11 @@ import {SandalePlugin} from "./impl/SandalePlugin";
 import {AvatarPlugin} from "./impl/AvatarPlugin";
 import {CursorPlugin} from "./impl/CursorPlugin";
 import {MutePlugin} from "./impl/MutePlugin";
-import {Connection} from "../Connection";
 import {User} from "../User";
 import {TypingListPlugin} from "./impl/TypingListPlugin";
 import {MotoPlugin} from "./impl/MotoPlugin";
+import {YoutubePlugin} from "./impl/YoutubePlugin";
+import {Room} from "../Room";
 
 
 /**
@@ -19,7 +20,7 @@ export class CommandManager {
     /**
      * Available commands and plugins
      */
-    public static readonly COMMANDS: Array<new () => Command> = [
+    public static readonly COMMANDS: Array<new (room: Room) => Command> = [
         AvatarPlugin,
         CursorPlugin,
         MessageCommand,
@@ -27,68 +28,50 @@ export class CommandManager {
         MutePlugin,
         SandalePlugin,
         TypingListPlugin,
+        YoutubePlugin
     ];
 
     /**
-     * Command instances (including plugins).
-     * All aliases of a command/plugin points to the same command instance.
+     * Load all commands and plugins
      */
-    public static commands: {[commandName: string]: Command};
-
-    /**
-     * List of loaded plugins
-     */
-    public static plugins: Plugin[];
-
-    /**
-     * Load the available commands & plugins
-     */
-    public static initialize() {
+    public static instantiateCommands(room: Room) {
         // Initialize command and plugin instances
-        CommandManager.commands = {};
-        CommandManager.plugins = [];
+        const commands: {[commandName: string]: Command} = {};
         // For every command/plugin
         for (let CommandConstructor of CommandManager.COMMANDS) {
             // Instantiate it
-            const command = new CommandConstructor();
+            const command = new CommandConstructor(room);
             // Add it in the command object with its name and all its aliases
-            CommandManager.commands[command.name] = command;
+            commands[command.name] = command;
             command.aliases.forEach((alias: any) => {
-                CommandManager.commands[alias] = command;
+                commands[alias] = command;
             });
-            // If it's a plugin, register it
-            if (command instanceof Plugin) {
-                CommandManager.plugins.push(command);
-                // If plugin uses data storage and has a default value
-                if (typeof command.defaultDataStorageValue !== 'undefined') {
-                    User.DEFAULT_DATA_OBJECT.plugins[command.name] = command.defaultDataStorageValue;
-                }
+        }
+        return commands;
+    }
+
+    /**
+     * Load all commands and plugins
+     */
+    public static extractPlugins(commands: {[commandName: string]: Command}) {
+        return Object.keys(commands)
+            .filter(commandAlias => commands[commandAlias] instanceof Plugin)
+            .filter(pluginAlias => commands[pluginAlias].name === pluginAlias)
+            .map(pluginAlias => commands[pluginAlias] as Plugin)
+            .sort((a, b) => a.priority - b.priority);
+    }
+
+    /**
+     * Load the available commands & plugins
+     * @TODO remove
+     */
+    public static initialize() {
+        const plugins = CommandManager.extractPlugins(CommandManager.instantiateCommands(null as any));
+        plugins.forEach(plugin => {
+            if (typeof plugin.defaultDataStorageValue !== 'undefined') {
+                User.DEFAULT_DATA_OBJECT.plugins[plugin.name] = plugin.defaultDataStorageValue;
             }
-        }
-        // Sort plugins by priority
-        CommandManager.plugins.sort((a, b) => a.priority - b.priority);
-    }
-
-    /**
-     * Execute new connection hook
-     * @param connection
-     */
-    public static async executeNewConnectionHook(connection: Connection): Promise<void> {
-        for (const plugin of CommandManager.plugins) {
-            await plugin.onNewConnectionHook(connection);
-        }
-    }
-
-    /**
-     * Execute new connection hook
-     * @param message
-     * @param connection
-     */
-    public static async executeNewMessageHook(message: string, connection: Connection): Promise<string> {
-        for (const plugin of CommandManager.plugins) {
-            message = await plugin.onNewMessageHook(message, connection);
-        }
-        return message;
+        });
     }
 
     /**
@@ -103,14 +86,6 @@ export class CommandManager {
         const commandName = message.split(' ')[0].substr(1).toLowerCase();
         const param = message.substr(commandName.length + 2);
         return {param, commandName};
-    }
-
-    /**
-     * Get command name from the message
-     * @param commandName
-     */
-    public static getCommand(commandName: string): Command | undefined {
-        return this.commands[commandName];
     }
 }
 

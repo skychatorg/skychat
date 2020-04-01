@@ -17,8 +17,6 @@ export class CursorPlugin extends Plugin {
 
     readonly minRight = -1;
 
-    readonly roomRequired = true;
-
     readonly params = {
         cursor: {
             minCount: 1,
@@ -33,14 +31,11 @@ export class CursorPlugin extends Plugin {
     };
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
-        const handlers: any = {
-            cursor: this.handleToggle,
-            c: this.handleCursorEvent
-        };
-        if (typeof handlers[alias] === 'undefined') {
-            throw new Error('No handler defined for alias ' + alias);
+        if (alias === 'cursor') {
+            await this.handleToggle(param, connection);
+        } else {
+            await this.handleCursorEvent(param, connection);
         }
-        await handlers[alias](param, connection);
     }
 
     /**

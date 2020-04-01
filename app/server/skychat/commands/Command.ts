@@ -23,6 +23,11 @@ export type CommandParamDefinitions = {
 export abstract class Command {
 
     /**
+     * A command is attached to a specific room
+     */
+    public readonly room: Room;
+
+    /**
      * Command name
      */
     public abstract readonly name: string;
@@ -42,15 +47,19 @@ export abstract class Command {
      */
     public readonly minRight: number = -1;
 
-    /**
-     * Whether the connection needs to be in a room to execute this command
-     */
-    public readonly roomRequired: boolean = true;
+    constructor(room: Room) {
+        this.room = room;
+    }
 
     /**
      * Check command rights and arguments
      */
     public check(alias: string, param: string, connection: Connection) {
+
+        // Check room
+        if (! connection.room) {
+            throw new Error('This command needs to be executed in a room');
+        }
 
         // Split message
         const splitParams = param.split(' ').filter(s => s !== '');
@@ -58,11 +67,6 @@ export abstract class Command {
         // Check user right
         if (connection.session.user.right < this.minRight) {
             throw new Error('You don\'t have the right to execute this command');
-        }
-
-        // Check room
-        if (this.roomRequired && ! connection.room) {
-            throw new Error('This command needs to be executed in a room');
         }
 
         // Check parameters
