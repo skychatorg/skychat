@@ -150,7 +150,7 @@ export class YoutubePlugin extends Plugin {
         const duration = YoutubePlugin.youtubeDurationToSeconds(item.contentDetails.duration);
         const title = item.snippet.title;
         const thumb = item.snippet.thumbnails.medium.url;
-        return {id, duration: 5, title, thumb};
+        return {id, duration, title, thumb};
     }
 
     /**
@@ -208,7 +208,9 @@ export class YoutubePlugin extends Plugin {
         this.sync();
     }
 
-
+    /**
+     * Sync clients in the room
+     */
     public sync() {
         if (this.currentVideo) {
             this.room.send('yt', {
