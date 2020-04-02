@@ -12,7 +12,7 @@ export class TypingListPlugin extends Plugin {
 
     readonly minRight = -1;
 
-    readonly params = {
+    readonly rules = {
         minCount: 1,
         maxCount: 1,
         params: [{name: "action", pattern: /^(on|off)$/}]

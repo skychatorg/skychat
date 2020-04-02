@@ -3,7 +3,7 @@ import {Room} from "../../Room";
 import {User} from "../../User";
 import {Session} from "../../Session";
 import {Connection} from "../../Connection";
-import {CommandParamDefinitions} from "../Command";
+import {CommandEntryPointRule} from "../Command";
 import {google, youtube_v3} from "googleapis";
 import * as fs from "fs";
 
@@ -85,7 +85,7 @@ export class YoutubePlugin extends Plugin {
 
     readonly aliases = ['play'];
 
-    readonly params: {[alias: string]: CommandParamDefinitions} = {
+    readonly rules: {[alias: string]: CommandEntryPointRule} = {
         yt: {
             minCount: 1,
             maxCount: 1,

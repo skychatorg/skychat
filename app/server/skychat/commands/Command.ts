@@ -7,9 +7,26 @@ import {Room} from "../Room";
 /**
  * Command parameters description object
  */
-export type CommandParamDefinitions = {
+export type CommandEntryPointRule = {
+
+    /**
+     * Minimum number of expected parameters
+     */
     minCount?: number;
+
+    /**
+     * Maximum number of parameters
+     */
     maxCount?: number;
+
+    /**
+     * Cooldown in milliseconds
+     */
+    coolDown?: number;
+
+    /**
+     * Expected parameters
+     */
     params?: {
         name: string,
         pattern: RegExp,
@@ -38,14 +55,20 @@ export abstract class Command {
     public readonly aliases: string[] = [];
 
     /**
-     * Define expected parameters. Can be defined globally or per command alias.
+     * Define command rules, ie expected parameters and cooldown. Can be defined globally or per command alias.
      */
-    public readonly params?: CommandParamDefinitions | {[alias: string]: CommandParamDefinitions};
+    public readonly rules?: CommandEntryPointRule | {[alias: string]: CommandEntryPointRule};
 
     /**
      * Minimum right to execute this function
      */
     public readonly minRight: number = -1;
+
+    /**
+     *
+     * @param room
+     */
+    private readonly coolDownEntries: {[identifier: string]: Date} = {};
 
     constructor(room: Room) {
         this.room = room;
@@ -70,17 +93,35 @@ export abstract class Command {
         }
 
         // Check parameters
-        if (this.params && (typeof this.params.minCount !== 'undefined' || typeof (this.params as any)[alias] === 'object')) {
-            const paramDefinitions: CommandParamDefinitions = typeof this.params.minCount !== 'undefined' ? this.params : (this.params as any)[alias];
-            const minParamCount = paramDefinitions.minCount || 0;
-            const maxParamCount = paramDefinitions.maxCount || Infinity;
-            const params = paramDefinitions.params || [];
+        if (this.rules && (typeof this.rules.minCount !== 'undefined' || typeof (this.rules as any)[alias] === 'object')) {
+
+            // Get rule object
+            const entryPointRule: CommandEntryPointRule = typeof this.rules.minCount !== 'undefined' ? this.rules : (this.rules as any)[alias];
+            const minParamCount = entryPointRule.minCount || 0;
+            const maxParamCount = entryPointRule.maxCount || Infinity;
+            const coolDown = entryPointRule.coolDown || 0;
+            const params = entryPointRule.params || [];
+
+            // Check cool down
+            if (coolDown > 0) {
+                const identifier = connection.session.identifier;
+                // If a cool down entry exists
+                if (typeof this.coolDownEntries[identifier] !== 'undefined') {
+                    // If cool down still applies
+                    if (new Date() < new Date(this.coolDownEntries[identifier].getTime() + coolDown)) {
+                        throw new Error('Cool down for ' + alias + ' still applies');
+                    }
+                }
+                this.coolDownEntries[identifier] = new Date();
+            }
+
             // Check parameter count
             if (splitParams.length < minParamCount) {
                 throw new Error('Expected at least ' + minParamCount + ' parameters. Got ' + splitParams.length);
             } else if (splitParams.length > maxParamCount) {
                 throw new Error('Expected at most ' + maxParamCount + ' parameters. Got ' + splitParams.length);
             }
+
             // Check parameter format
             for (let i = 0; i < params.length; ++ i) {
                 if (! params[i].pattern.exec(splitParams[i])) {

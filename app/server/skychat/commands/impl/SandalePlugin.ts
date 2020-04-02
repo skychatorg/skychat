@@ -12,7 +12,7 @@ export class SandalePlugin extends Plugin {
 
     readonly roomRequired = true;
 
-    readonly params = {
+    readonly rules = {
         minCount: 1,
         maxCount: 1,
         params: [

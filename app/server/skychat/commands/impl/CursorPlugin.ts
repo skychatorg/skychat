@@ -17,7 +17,7 @@ export class CursorPlugin extends Plugin {
 
     readonly minRight = -1;
 
-    readonly params = {
+    readonly rules = {
         cursor: {
             minCount: 1,
             maxCount: 1,
