@@ -113,7 +113,7 @@ export class YoutubePlugin extends Plugin {
         }
         this.youtube = google.youtube({version: 'v3', auth: youtubeApiKey});
 
-        setInterval(this.loop.bind(this), 1000);
+        setInterval(this.tick.bind(this), 1000);
     }
 
     async run(alias: string, param: string, connection: Connection, session: Session, user: User, room: Room | null): Promise<void> {
@@ -122,6 +122,14 @@ export class YoutubePlugin extends Plugin {
         } else if (alias === 'play') {
             await this.handlePlay(param, connection);
         }
+    }
+
+    /**
+     * When client join the room, sync their yt player
+     * @param connection
+     */
+    async onConnectionJoinedRoom(connection: Connection): Promise<void> {
+        this.sync();
     }
 
     /**
@@ -178,7 +186,7 @@ export class YoutubePlugin extends Plugin {
     /**
      *
      */
-    private async loop(): Promise<void> {
+    private async tick(): Promise<void> {
 
         // If a video is playing currently
         if (this.currentVideo) {
@@ -217,7 +225,7 @@ export class YoutubePlugin extends Plugin {
                 user: this.currentVideo.user.sanitized(),
                 video: this.currentVideo.video,
                 startedDate: this.currentVideo.startedDate.getTime() * 0.001,
-                currentDate: Date.now() * 0.001
+                cursor: Date.now() * 0.001 - this.currentVideo.startedDate.getTime() * 0.001
             });
         } else {
             this.room.send('yt', null);

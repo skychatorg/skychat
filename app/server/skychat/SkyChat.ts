@@ -70,7 +70,7 @@ export class SkyChat {
      * @param connection
      */
     private async onConnectionCreated(connection: Connection): Promise<void> {
-        this.room.attachConnection(connection);
+        await this.room.attachConnection(connection);
     }
 
     private async onRegister(payload: any, connection: Connection): Promise<void> {

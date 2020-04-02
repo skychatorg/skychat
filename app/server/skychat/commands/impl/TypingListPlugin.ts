@@ -37,6 +37,18 @@ export class TypingListPlugin extends Plugin {
             delete this.typingList[connection.session.identifier];
         }
 
-        connection.room!.send('typing-list', Object.values(this.typingList).map(entry => entry.user.sanitized()));
+        this.sync();
+    }
+
+    async onConnectionJoinedRoom(connection: Connection): Promise<void> {
+        this.sync();
+    }
+
+    async onConnectionClosed(connection: Connection): Promise<void> {
+        delete this.typingList[connection.session.identifier];
+    }
+
+    private sync(): void {
+        this.room.send('typing-list', Object.values(this.typingList).map(entry => entry.user.sanitized()));
     }
 }
