@@ -10,8 +10,6 @@ export class MessageCommand extends Command {
 
     readonly minRight = -1;
 
-    readonly minParamCount = 1;
-
     async run(alias: string, param: string, connection: Connection): Promise<void> {
 
         // Send the message to the room
