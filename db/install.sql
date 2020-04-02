@@ -5,6 +5,8 @@ CREATE TABLE `users` (
   `username` varchar(32) NOT NULL,
   `username_custom` varchar(32) NOT NULL,
   `password` varchar(256) NOT NULL,
+  `money` int NOT NULL,
+  `xp` int NOT NULL,
   `right` int NOT NULL,
   `data` varchar(1024) NOT NULL,
   `tms_created` int NOT NULL,

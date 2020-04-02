@@ -5,11 +5,11 @@ import {SandalePlugin} from "./impl/SandalePlugin";
 import {AvatarPlugin} from "./impl/AvatarPlugin";
 import {CursorPlugin} from "./impl/CursorPlugin";
 import {MutePlugin} from "./impl/MutePlugin";
-import {User} from "../User";
 import {TypingListPlugin} from "./impl/TypingListPlugin";
 import {MotoPlugin} from "./impl/MotoPlugin";
 import {YoutubePlugin} from "./impl/YoutubePlugin";
 import {Room} from "../Room";
+import {HelpCommand} from "./impl/HelpCommand";
 
 
 /**
@@ -23,6 +23,7 @@ export class CommandManager {
     public static readonly COMMANDS: Array<new (room: Room) => Command> = [
         AvatarPlugin,
         CursorPlugin,
+        HelpCommand,
         MessageCommand,
         MotoPlugin,
         MutePlugin,
@@ -62,19 +63,6 @@ export class CommandManager {
     }
 
     /**
-     * Load the available commands & plugins
-     * @TODO remove
-     */
-    public static initialize() {
-        const plugins = CommandManager.extractPlugins(CommandManager.instantiateCommands(null as any));
-        plugins.forEach(plugin => {
-            if (typeof plugin.defaultDataStorageValue !== 'undefined') {
-                User.DEFAULT_DATA_OBJECT.plugins[plugin.name] = plugin.defaultDataStorageValue;
-            }
-        });
-    }
-
-    /**
      * Get command name from the message
      * @param message
      */
@@ -88,5 +76,3 @@ export class CommandManager {
         return {param, commandName};
     }
 }
-
-CommandManager.initialize();

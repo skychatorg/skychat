@@ -15,9 +15,10 @@ export class AvatarPlugin extends Plugin {
 
     readonly minRight = 0;
 
-    readonly params = {
+    readonly rules = {
         minCount: 1,
         maxCount: 1,
+        coolDown: 1000,
         params: [
             {
                 name: 'avatar',

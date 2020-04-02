@@ -26,4 +26,20 @@ export abstract class Plugin extends Command {
     public async onNewMessageHook(message: string, connection: Connection): Promise<string> {
         return message;
     }
+
+    /**
+     * Executed when a connection joins a room
+     * @param connection
+     */
+    public async onConnectionJoinedRoom(connection: Connection): Promise<void> {
+
+    }
+
+    /**
+     * Executed when a connection is closed
+     * @param connection
+     */
+    public async onConnectionClosed(connection: Connection): Promise<void> {
+
+    }
 }

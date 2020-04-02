@@ -2,6 +2,7 @@ import * as fs from "fs";
 import * as sha256 from "sha256";
 import {DatabaseHelper} from "./DatabaseHelper";
 import SQL from "sql-template-strings";
+import {CommandManager} from "./commands/CommandManager";
 
 
 type UserData = {
@@ -17,6 +18,8 @@ type AuthToken = {
 export type SanitizedUser = {
     id: number;
     username: string;
+    money: number;
+    xp: number;
     right: number;
     data: UserData;
 }
@@ -38,7 +41,7 @@ export class User {
     /**
      * Neutral user used for sending erros and information
      */
-    public static BOT_USER: User = new User(0, '~Server', '', 0);
+    public static BOT_USER: User = new User(0, '~Server', '', 0, 0, 0);
 
     /**
      * Username regexp (including guests)
@@ -51,30 +54,33 @@ export class User {
     public static USERNAME_LOGGED_REGEXP: RegExp = /^[a-zA-Z0-9]{3,16}$/;
 
     /**
+     * Validity of the auth token in seconds
+     */
+    public static AUTH_TOKEN_VALIDITY: number = 1000 * 60 * 60 * 6;
+
+    /**
      * Password salt defined in .env.json
      */
-    private static passwordSalt: string;
+    private static passwordSalt: string = JSON.parse(fs.readFileSync('.env.json').toString()).users_passwords_salt;
 
 
     /**
      * Token salt defined in .env.json
      */
-    private static tokenSalt: string;
+    private static tokenSalt: string = JSON.parse(fs.readFileSync('.env.json').toString()).users_token_salt;
 
     /**
      * Static init block
      */
     static initialize() {
 
-        const env = JSON.parse(fs.readFileSync('.env.json').toString());
-        User.passwordSalt = env.users_passwords_salt;
-        if (! User.passwordSalt) {
-            throw new Error('Please define password salt in .env.json file');
-        }
-        User.tokenSalt = env.users_token_salt;
-        if (! User.tokenSalt) {
-            throw new Error('Please define token salt in .env.json file');
-        }
+        CommandManager
+            .extractPlugins(CommandManager.instantiateCommands(null as any))
+            .forEach(plugin => {
+            if (typeof plugin.defaultDataStorageValue !== 'undefined') {
+                User.DEFAULT_DATA_OBJECT.plugins[plugin.name] = plugin.defaultDataStorageValue;
+            }
+        });
     }
 
     /**
@@ -99,7 +105,7 @@ export class User {
         if (! userObject) {
             throw new Error('User does not exist');
         }
-        return new User(userObject.id, userObject.username_custom, userObject.password, userObject.right, JSON.parse(userObject.data));
+        return new User(userObject.id, userObject.username_custom, userObject.password, userObject.money, userObject.xp, userObject.right, JSON.parse(userObject.data));
     }
 
     /**
@@ -111,7 +117,7 @@ export class User {
         if (! userObject) {
             throw new Error('User does not exist');
         }
-        return new User(userObject.id, userObject.username_custom, userObject.password, userObject.right, JSON.parse(userObject.data));
+        return new User(userObject.id, userObject.username_custom, userObject.password, userObject.money, userObject.xp, userObject.right, JSON.parse(userObject.data));
     }
 
     /**
@@ -122,8 +128,8 @@ export class User {
     public static async registerUser(username: string, password: string): Promise<User> {
         const tms = Math.floor(Date.now() / 1000);
         const sqlQuery = SQL`insert into users
-            (username, username_custom, password, right, data, tms_created, tms_last_seen) values
-            (${username.toLowerCase()}, ${username}, ${''}, ${0}, ${JSON.stringify(this.DEFAULT_DATA_OBJECT)}, ${tms}, ${tms})`;
+            (username, username_custom, password, money, xp, right, data, tms_created, tms_last_seen) values
+            (${username.toLowerCase()}, ${username}, ${''}, ${0}, ${0}, ${0}, ${JSON.stringify(this.DEFAULT_DATA_OBJECT)}, ${tms}, ${tms})`;
         const statement = await DatabaseHelper.db.run(sqlQuery);
         const userId = statement.lastID;
         if (! userId) {
@@ -165,10 +171,13 @@ export class User {
      * Verify an auth token
      * @param token
      */
-    public static async verifyAuthToken(token: any): Promise<User> {
+    public static async verifyAuthToken(token: AuthToken): Promise<User> {
         const authToken = User.getAuthToken(token.userId, token.timestamp);
         if (authToken.signature !== token.signature) {
             throw new Error('Invalid token');
+        }
+        if (new Date() > new Date(token.timestamp + User.AUTH_TOKEN_VALIDITY)) {
+            throw new Error('Token expired');
         }
         return User.getUserById(token.userId);
     }
@@ -199,14 +208,20 @@ export class User {
 
     private readonly password: string;
 
+    public readonly money: number;
+
+    public readonly xp: number;
+
     public readonly right: number;
 
     public readonly data: UserData;
 
-    constructor(id: number, username: string, password: string, right: number, data?: UserData) {
+    constructor(id: number, username: string, password: string, money: number, xp: number, right: number, data?: UserData) {
         this.id = id;
         this.username = username;
         this.password = password;
+        this.money = money;
+        this.xp = xp;
         this.right = right;
         this.data = typeof data !== 'undefined' ? data : JSON.parse(JSON.stringify(User.DEFAULT_DATA_OBJECT));
     }
@@ -226,7 +241,9 @@ export class User {
         return {
             id: this.id,
             username: this.username,
+            money: this.money,
             right: this.right,
+            xp: this.xp,
             data: this.data
         }
     }

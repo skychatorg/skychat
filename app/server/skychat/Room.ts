@@ -5,6 +5,7 @@ import {Message} from "./Message";
 import {Command} from "./commands/Command";
 import {Plugin} from "./commands/Plugin";
 import {CommandManager} from "./commands/CommandManager";
+import {awaitExpression} from "babel-types";
 
 
 export class Room implements IBroadcaster {
@@ -57,7 +58,7 @@ export class Room implements IBroadcaster {
      * Attach a connection to this room
      * @param connection
      */
-    public attachConnection(connection: Connection) {
+    public async attachConnection(connection: Connection) {
         if (connection.room === this) {
             return;
         }
@@ -73,6 +74,7 @@ export class Room implements IBroadcaster {
         for (let i = Math.max(0, this.messages.length - Room.MESSAGE_HISTORY_VISIBLE_LENGTH); i < this.messages.length; ++ i) {
             connection.send('message', this.messages[i].sanitized());
         }
+        await this.executeConnectionJoinedRoom(connection);
     }
 
     /**
@@ -85,6 +87,26 @@ export class Room implements IBroadcaster {
             message = await plugin.onNewMessageHook(message, connection);
         }
         return message;
+    }
+
+    /**
+     * Execute room join hook
+     * @param connection
+     */
+    public async executeConnectionJoinedRoom(connection: Connection): Promise<void> {
+        for (const plugin of this.plugins) {
+            await plugin.onConnectionJoinedRoom(connection);
+        }
+    }
+
+    /**
+     * Execute connection closed hook
+     * @param connection
+     */
+    public async executeOnConnectionClosed(connection: Connection): Promise<void> {
+        for (const plugin of this.plugins) {
+            await plugin.onConnectionClosed(connection);
+        }
     }
 
     /**
