@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
-        "outDir": "./built/",
+        "outDir": "./build/",
         "sourceMap": true,
         "strict": true,
         "noImplicitReturns": true,
@@ -10,5 +10,5 @@
     },
     "include": [
         "app/client/src/**/*"
-    ]
+    ],
 }

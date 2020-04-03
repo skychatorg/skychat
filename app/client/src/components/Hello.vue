@@ -16,6 +16,11 @@
                 message: 'Hello'
             }
         },
+
+        created() {
+            console.log('d1', this.$client);
+            console.log('d2', this.$store);
+        }
     });
 </script>
 

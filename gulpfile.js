@@ -37,7 +37,6 @@ gulp.task('build-client-typescript', function() {
     return gulp
         .src('app/client/src/index.ts')
         .pipe(webpack({
-            entry: './app/client/src/index.ts',
             output: {
                 filename: 'bundle.js'
             },
