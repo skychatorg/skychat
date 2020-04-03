@@ -1,0 +1,20 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "strict": true,
+        "declaration": true,
+        "removeComments": true,
+        "outDir": "./build/",
+        "target": "es5",
+        "lib": ["es6"],
+        "moduleResolution": "node",
+        "sourceMap": true
+    },
+    "include": [
+      "app/client/**/*"
+    ],
+    "exclude": [
+        "node_modules",
+        "dist"
+    ]
+}

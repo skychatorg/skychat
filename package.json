@@ -27,7 +27,6 @@
         "sha256": "^0.2.0",
         "sql-template-strings": "^2.2.2",
         "sqlite": "^3.0.6",
-        "vue": "^2.6.11",
         "ws": "^7.2.3"
     },
     "devDependencies": {
@@ -36,6 +35,7 @@
         "@types/sha256": "^0.2.0",
         "@types/ws": "^7.2.3",
         "browserify": "^16.5.0",
+        "css-loader": "^3.4.2",
         "gulp": "^4.0.2",
         "gulp-clean-css": "^3.10.0",
         "gulp-htmlmin": "^4.0.0",
@@ -50,6 +50,11 @@
         "typescript": "^3.8.3",
         "vinyl-buffer": "^1.0.1",
         "vinyl-source-stream": "^2.0.0",
+        "vue": "^2.6.11",
+        "vue-loader": "^15.9.1",
+        "vue-template-compiler": "^2.6.11",
+        "webpack": "^4.42.1",
+        "webpack-cli": "^3.3.11",
         "webpack-stream": "^5.2.1"
     }
 }

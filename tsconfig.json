@@ -1,20 +1,14 @@
 {
     "compilerOptions": {
-        "module": "commonjs",
+        "outDir": "./built/",
+        "sourceMap": true,
         "strict": true,
-        "declaration": true,
-        "removeComments": true,
-        "outDir": "./build/",
-        "target": "es5",
-        "lib": ["es6", "dom"],
+        "noImplicitReturns": true,
+        "module": "es2015",
         "moduleResolution": "node",
-        "sourceMap": true
+        "target": "es5"
     },
     "include": [
-      "app/client/**/*"
-    ],
-    "exclude": [
-        "node_modules",
-        "dist"
+        "app/client/src/**/*"
     ]
 }
