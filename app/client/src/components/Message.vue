@@ -59,7 +59,7 @@
             flex-grow: 1;
         }
         >.date {
-
+            font-size: 70%;
         }
     }
 </style>

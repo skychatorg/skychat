@@ -73,6 +73,7 @@ export class Connection extends EventEmitter implements IBroadcaster {
 
         if (this.room) {
             await this.room.executeOnConnectionClosed(this);
+            this.room.detachConnection(this);
         }
     }
 
