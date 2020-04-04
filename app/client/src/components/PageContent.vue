@@ -37,7 +37,7 @@
 
     .page-content {
         width: 100%;
-        height: 100%;
+        height: 0;
         max-width: 1400px;
         margin: 0 auto;
 
