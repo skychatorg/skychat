@@ -3,6 +3,7 @@ import Vuex, { StoreOptions } from "vuex";
 import { RootState } from './RootState';
 import {SanitizedUser} from "../../../server/skychat/User";
 import {SanitizedMessage} from "../../../server/skychat/Message";
+import {SanitizedYoutubeVideo} from "../../../server/skychat/commands/impl/YoutubePlugin";
 Vue.use(Vuex);
 
 const store: StoreOptions<RootState> = {
@@ -23,6 +24,7 @@ const store: StoreOptions<RootState> = {
         },
         connectedList: [],
         messages: [],
+        currentVideo: null,
     },
     mutations: {
 
@@ -36,6 +38,10 @@ const store: StoreOptions<RootState> = {
 
         NEW_MESSAGE(state: RootState, message: SanitizedMessage): void {
             state.messages.push(message);
+        },
+
+        SET_CURRENT_VIDEO(state: RootState, currentVideo: SanitizedYoutubeVideo): void {
+            state.currentVideo = currentVideo;
         }
     }
 };

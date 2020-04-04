@@ -18,8 +18,10 @@
         components: {Message},
         watch: {
             messages: function() {
-                console.log(this.$refs);
-                (this.$refs as any).messages.scrollTop = (this.$refs as any).messages.scrollHeight;
+
+                Vue.nextTick(() => {
+                    (this.$refs as any).messages.scrollTop = (this.$refs as any).messages.scrollHeight;
+                });
             }
         },
         computed: {

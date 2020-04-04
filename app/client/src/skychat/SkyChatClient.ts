@@ -1,6 +1,7 @@
 import {EventEmitter} from "events";
 import {SanitizedUser} from "../../../server/skychat/User";
 import {SanitizedMessage} from "../../../server/skychat/Message";
+import {SanitizedYoutubeVideo} from "../../../server/skychat/commands/impl/YoutubePlugin";
 
 
 
@@ -34,6 +35,7 @@ export class SkyChatClient extends EventEmitter {
         this.on('message', this.onMessage.bind(this));
         this.on('set-user', this.onSetUser.bind(this));
         this.on('connected-list', this.onConnectedList.bind(this));
+        this.on('yt-sync', this.onYtSync.bind(this));
     }
 
     /**
@@ -83,5 +85,13 @@ export class SkyChatClient extends EventEmitter {
      */
     private onConnectedList(users: SanitizedUser[]): void {
         this.store.commit('SET_CONNECTED_LIST', users);
+    }
+
+    /**
+     *
+     * @param video
+     */
+    private onYtSync(video: SanitizedYoutubeVideo): void {
+        this.store.commit('SET_CURRENT_VIDEO', video);
     }
 }

@@ -13,8 +13,9 @@
         "build": "npm run clean && ./node_modules/gulp/bin/gulp.js --max-old-space-size=8192 build",
         "dev:client": "npm run clean:client && ./node_modules/gulp/bin/gulp.js --max-old-space-size=8192 watch-client",
         "dev:server": "npm run clean:server && ./node_modules/gulp/bin/gulp.js --max-old-space-size=8192 watch-server",
+        "kill": "ps aux | grep 'node build/server.js' | awk '{print $2}' | xargs kill",
         "dev": "npm run clean && ./node_modules/gulp/bin/gulp.js --max-old-space-size=8192 watch",
-        "kill": "ps aux | grep 'node build/server.js' | awk '{print $2}' | xargs kill"
+        "start": "npm run build"
     },
     "keywords": [],
     "author": "",

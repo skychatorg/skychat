@@ -53,8 +53,8 @@
 
             >#player {
                 width: 100%;
-                height: 30%;
-                max-height: 300px;
+                height: 40%;
+                max-height: 350px;
             }
             >#message-form {
                 width: 100%;

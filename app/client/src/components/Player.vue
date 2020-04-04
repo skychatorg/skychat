@@ -5,8 +5,9 @@
 
 <template>
     <div>
-        <iframe class="player"
-                src="https://www.youtube.com/embed/dfYiIbqVhkA"
+        <iframe ref="player"
+                class="player"
+                :src="src"
                 frameborder="0"
                 allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
                 allowfullscreen></iframe>
@@ -16,7 +17,29 @@
 <script lang="ts">
     import Vue from "vue";
     export default Vue.extend({
-
+        data: function() {
+            return {
+                src: ''
+            }
+        },
+        watch: {
+            currentVideo: function() {
+                if (! this.currentVideo) {
+                    this.src = '';
+                    return;
+                }
+                let src = 'https://www.youtube.com/embed/' + this.currentVideo.video.id;
+                src += '?autoplay=1';
+                src += '&origin=' + document.location.origin;
+                src += '&start=' + parseInt(this.currentVideo.cursor);
+                this.src = src;
+            }
+        },
+        computed: {
+            currentVideo: function() {
+                return this.$store.state.currentVideo;
+            }
+        }
     });
 </script>
 

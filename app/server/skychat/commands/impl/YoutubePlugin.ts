@@ -1,6 +1,6 @@
 import {Plugin} from "../Plugin";
 import {Room} from "../../Room";
-import {User} from "../../User";
+import {SanitizedUser, User} from "../../User";
 import {Session} from "../../Session";
 import {Connection} from "../../Connection";
 import {CommandEntryPointRule} from "../Command";
@@ -40,6 +40,13 @@ interface YoutubeVideoMeta {
 interface PendingYoutubeVideo {
     user: User;
     video: YoutubeVideoMeta;
+}
+
+export type SanitizedYoutubeVideo = {
+    user: SanitizedUser,
+    video: YoutubeVideoMeta,
+    startedDate: number,
+    cursor: number
 }
 
 /**
@@ -192,7 +199,7 @@ export class YoutubePlugin extends Plugin {
         if (this.currentVideo) {
 
             // If video has finished
-            if (new Date() > new Date(this.currentVideo.startedDate.getTime() + this.currentVideo.video.duration * 1000)) {
+            if (new Date() > new Date(this.currentVideo.startedDate.getTime() + this.currentVideo.video.duration * 1000 + 2000)) {
                 this.currentVideo = null;
 
                 // If there is no more video to play, sync clients (this will deactive the player)
@@ -221,14 +228,14 @@ export class YoutubePlugin extends Plugin {
      */
     public sync() {
         if (this.currentVideo) {
-            this.room.send('yt', {
+            this.room.send('yt-sync', {
                 user: this.currentVideo.user.sanitized(),
                 video: this.currentVideo.video,
                 startedDate: this.currentVideo.startedDate.getTime() * 0.001,
                 cursor: Date.now() * 0.001 - this.currentVideo.startedDate.getTime() * 0.001
             });
         } else {
-            this.room.send('yt', null);
+            this.room.send('yt-sync', null);
         }
     }
 }
