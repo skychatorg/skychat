@@ -31,6 +31,17 @@
             };
         },
 
+        watch: {
+
+            message: function(newMessage, oldMessage) {
+                const oldTyping = oldMessage.length > 0 && oldMessage[0] !== '/';
+                const newTyping = newMessage.length > 0 && newMessage[0] !== '/';
+                if (newTyping !== oldTyping) {
+                    this.$client.setTyping(newTyping);
+                }
+            }
+        },
+
         methods: {
 
             /**
@@ -62,7 +73,7 @@
 <style lang="scss" scoped>
 
     .form {
-        padding: 10px;
+        padding: 4px 10px 4px 10px;
         display: flex;
 
         >.new-message {
@@ -81,7 +92,7 @@
         }
 
         >.new-message:focus {
-            box-shadow: 1px 1px 14px #646ee43b;
+            box-shadow: 1px 1px 14px #d1d4f53b;
         }
     }
 </style>

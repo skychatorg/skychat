@@ -8,34 +8,53 @@
     <!-- content -->
     <div class="page-content">
 
-        <!-- left col -->
-        <section id="left">
-            <player id="player"/>
-            <messages id="messages" class="scrollbar" />
-            <message-form id="message-form"/>
-        </section>
+        <template v-if="page === 'welcome'">
+            <auth-page @gotoroom="page = 'room'" id="auth-page"/>
+        </template>
 
-        <!-- right col -->
-        <section id="right" class="scrollbar">
-            <connected-list></connected-list>
-        </section>
+        <template v-if="page === 'room'">
+            <!-- left col -->
+            <section id="left">
+                <player id="player"/>
+                <messages id="messages" class="scrollbar" />
+                <typing-list id="typing-list" />
+                <message-form id="message-form"/>
+            </section>
+
+            <!-- right col -->
+            <section id="right" class="scrollbar">
+                <connected-list></connected-list>
+            </section>
+        </template>
+
     </div>
 </template>
 
 <script lang="ts">
     import Vue from "vue";
+    import AuthPage from "./AuthPage.vue";
     import Messages from "./Messages.vue";
+    import TypingList from "./TypingList.vue";
     import MessageForm from "./MessageForm.vue";
     import Player from "./Player.vue";
     import ConnectedList from "./ConnectedList.vue";
     export default Vue.extend({
-        components: {Player, Messages, MessageForm, ConnectedList}
+
+        components: {AuthPage, Player, Messages, TypingList, MessageForm, ConnectedList},
+
+        data: function() {
+            return {
+                page: 'welcome'
+            }
+        }
+
     });
 </script>
 
 <style lang="scss" scoped>
 
     .page-content {
+        font-size: 80%;
         width: 100%;
         height: 0;
         max-width: 1400px;
@@ -58,7 +77,7 @@
             }
             >#message-form {
                 width: 100%;
-                flex-basis: 55px;
+                flex-basis: 44px;
             }
         }
 

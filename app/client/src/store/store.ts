@@ -25,6 +25,7 @@ const store: StoreOptions<RootState> = {
         connectedList: [],
         messages: [],
         currentVideo: null,
+        typingList: [],
     },
     mutations: {
 
@@ -42,7 +43,11 @@ const store: StoreOptions<RootState> = {
 
         SET_CURRENT_VIDEO(state: RootState, currentVideo: SanitizedYoutubeVideo): void {
             state.currentVideo = currentVideo;
-        }
+        },
+
+        SET_TYPING_LIST(state:RootState, users: SanitizedUser[]): void {
+            state.typingList = users;
+        },
     }
 };
 
