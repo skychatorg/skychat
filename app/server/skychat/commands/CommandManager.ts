@@ -10,6 +10,7 @@ import {MotoPlugin} from "./impl/MotoPlugin";
 import {YoutubePlugin} from "./impl/YoutubePlugin";
 import {Room} from "../Room";
 import {HelpCommand} from "./impl/HelpCommand";
+import {ConnectedListPlugin} from "./impl/ConnectedListPlugin";
 
 
 /**
@@ -22,6 +23,7 @@ export class CommandManager {
      */
     public static readonly COMMANDS: Array<new (room: Room) => Command> = [
         AvatarPlugin,
+        ConnectedListPlugin,
         CursorPlugin,
         HelpCommand,
         MessageCommand,

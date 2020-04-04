@@ -1,11 +1,12 @@
 import Vue from "vue";
 import MainPage from "./components/MainPage.vue";
 import {SkyChatClient} from "./skychat/SkyChatClient";
-import {store} from "./store/store";
+import store from "./store/store";
 
 
 Vue.prototype.$store = store;
-Vue.prototype.$client = new SkyChatClient({host: 'localhost', port: 8080});
+Vue.prototype.$client = new SkyChatClient({host: 'localhost', port: 8080}, store);
+Vue.prototype.$client.connect();
 
 const app = new Vue({
     el: "#app",

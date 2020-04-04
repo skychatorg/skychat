@@ -1,13 +1,49 @@
-$header-size: 40px;
-$main-font: Lato;
-$default-font: sans-serif;
+@import 'abstract/util.scss';
 
-body, #app, #page {
-    width: 100vw;
-    height: 100vh;
+*,
+*::before,
+*::after {
     padding: 0;
     margin: 0;
-    background: #4e545f;
-    color: white;
-    font-family: $main-font, $default-font
+    box-sizing: border-box;
+}
+
+html,
+body {
+    width: 100vw;
+    height: 100vh;
+    font-family: 'Ubuntu', sans-serif;
+}
+
+body {
+    background-size: 100%;
+    background: #1d1e21 url(/assets/background.svg) no-repeat fixed bottom;
+}
+
+.image-bubble {
+    position: relative;
+    overflow: hidden;
+    border-radius: 50%;
+
+    >img {
+        object-fit: cover;
+        border-radius: 50%;
+        height: 100%;
+        width: 100%;
+    }
+}
+
+.scrollbar {
+    &::-webkit-scrollbar {
+        width: 10px;
+    }
+    &::-webkit-scrollbar-track {
+        background: #343434;
+    }
+    &::-webkit-scrollbar-thumb {
+        background: #555;
+    }
+    &::-webkit-scrollbar-thumb:hover {
+        background: #888;
+    }
 }

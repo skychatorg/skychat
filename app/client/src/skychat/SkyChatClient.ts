@@ -1,4 +1,7 @@
 import {EventEmitter} from "events";
+import {SanitizedUser} from "../../../server/skychat/User";
+import {SanitizedMessage} from "../../../server/skychat/Message";
+
 
 
 export interface SkyChatClientConfig {
@@ -13,18 +16,24 @@ export class SkyChatClient extends EventEmitter {
 
     private webSocket: WebSocket | null;
 
-    constructor(config: SkyChatClientConfig) {
+    private readonly store: any;
+
+    constructor(config: SkyChatClientConfig, store: any) {
         super();
         this.config = config;
         this.webSocket = null;
+        this.store = store;
     }
 
     /**
      * Connect to the server
      */
     public connect() {
-        this.webSocket = new WebSocket('ws://localhost:8080?debug');
+        this.webSocket = new WebSocket('ws://' + this.config.host + ':' + this.config.port);
         this.webSocket.addEventListener('message', this.onWebSocketMessage.bind(this));
+        this.on('message', this.onMessage.bind(this));
+        this.on('set-user', this.onSetUser.bind(this));
+        this.on('connected-list', this.onConnectedList.bind(this));
     }
 
     /**
@@ -36,5 +45,43 @@ export class SkyChatClient extends EventEmitter {
         const eventName = data.event;
         const eventPayload = data.data;
         this.emit(eventName, eventPayload);
+    }
+
+    /**
+     * Send a message to the server
+     * @param message
+     */
+    public sendMessage(message: string): void {
+        if (! this.webSocket) {
+            return;
+        }
+        this.webSocket.send(JSON.stringify({
+            event: 'message',
+            data: message
+        }));
+    }
+
+    /**
+     *
+     * @param message
+     */
+    private onMessage(message: SanitizedMessage): void {
+        this.store.commit('NEW_MESSAGE', message);
+    }
+
+    /**
+     *
+     * @param user
+     */
+    private onSetUser(user: SanitizedUser): void {
+        this.store.commit('SET_USER', user);
+    }
+
+    /**
+     *
+     * @param users
+     */
+    private onConnectedList(users: SanitizedUser[]): void {
+        this.store.commit('SET_CONNECTED_LIST', users);
     }
 }

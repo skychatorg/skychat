@@ -5,7 +5,7 @@ import {User} from "../../User";
 
 export class AvatarPlugin extends Plugin {
 
-    static readonly DEFAULT_AVATAR: string = 'https://redsky.fr/picts/galerie/uploaded/2016-01-12/23-55-40-7922eb94a59acfa11a5f-pusheen2.jpg';
+    static readonly DEFAULT_AVATAR: string = 'https://risibank.fr/cache/stickers/d216/21623-thumb.png';
 
     readonly defaultDataStorageValue = AvatarPlugin.DEFAULT_AVATAR;
 

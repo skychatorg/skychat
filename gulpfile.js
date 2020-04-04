@@ -77,6 +77,14 @@ gulp.task('build-client-typescript', function() {
                             'vue-style-loader',
                             'css-loader'
                         ]
+                    },
+                    {
+                        test: /\.scss$/,
+                        use: [
+                            'vue-style-loader',
+                            'css-loader',
+                            'sass-loader'
+                        ]
                     }
                 ]
             },
@@ -93,7 +101,7 @@ gulp.task('build-client-typescript', function() {
             performance: {
                 hints: false
             },
-            devtool: '#eval-source-map',
+            //devtool: '#eval-source-map',
             plugins: [
                 // make sure to include the plugin for the magic
                 new VueLoaderPlugin()
