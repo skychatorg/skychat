@@ -120,7 +120,9 @@ export class YoutubePlugin extends Plugin {
         }
         this.youtube = google.youtube({version: 'v3', auth: youtubeApiKey});
 
-        setInterval(this.tick.bind(this), 1000);
+        if (this.room) {
+            setInterval(this.tick.bind(this), 1000);
+        }
     }
 
     async run(alias: string, param: string, connection: Connection, session: Session, user: User, room: Room | null): Promise<void> {

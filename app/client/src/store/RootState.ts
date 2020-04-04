@@ -7,4 +7,5 @@ export interface RootState {
     connectedList: SanitizedUser[];
     messages: SanitizedMessage[];
     currentVideo: SanitizedYoutubeVideo | null;
+    typingList: SanitizedUser[];
 }

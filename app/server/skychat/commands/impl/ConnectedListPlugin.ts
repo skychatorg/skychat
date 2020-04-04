@@ -1,6 +1,7 @@
 import {Connection} from "../../Connection";
 import {Plugin} from "../Plugin";
 import {SanitizedUser} from "../../User";
+import {Room} from "../../Room";
 
 
 /**
@@ -12,9 +13,25 @@ export class ConnectedListPlugin extends Plugin {
 
     readonly minRight = -1;
 
+    constructor(room: Room) {
+        super(room);
+
+        if (this.room) {
+            setInterval(this.tick.bind(this), 10 * 1000);
+        }
+    }
+
     async run(alias: string, param: string, connection: Connection): Promise<void> { }
 
     async onConnectionJoinedRoom(connection: Connection): Promise<void> {
+        this.sync();
+    }
+
+    async onConnectionClosed(connection: Connection): Promise<void> {
+        this.sync();
+    }
+
+    private tick(): void {
         this.sync();
     }
 

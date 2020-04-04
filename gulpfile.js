@@ -101,11 +101,15 @@ gulp.task('build-client-typescript', function() {
             performance: {
                 hints: false
             },
-            //devtool: '#eval-source-map',
+            devtool: process.env.PRODUCTION ? false : '#eval-source-map',
             plugins: [
                 // make sure to include the plugin for the magic
                 new VueLoaderPlugin()
-            ]
+            ],
+            externals: {
+                vue: 'Vue',
+                vuex: 'Vuex',
+            }
         }))
         .pipe(gulp.dest(distPath));
 });

@@ -20,8 +20,22 @@
             messages: function() {
 
                 Vue.nextTick(() => {
-                    (this.$refs as any).messages.scrollTop = (this.$refs as any).messages.scrollHeight;
+                    this.scrollToBottom();
                 });
+            }
+        },
+        methods: {
+            scrollToBottom: function() {
+                this.scrollTick();
+            },
+            scrollTick: function() {
+                const messages = (this.$refs as any).messages;
+                messages.scrollTop += (messages.scrollHeight - messages.offsetHeight - messages.scrollTop) * .2;
+                if (Math.abs(messages.scrollHeight - messages.offsetHeight - messages.scrollTop) > 6) {
+                    setTimeout(this.scrollTick.bind(this), 16);
+                } else {
+                    messages.scrollTop = messages.scrollHeight;
+                }
             }
         },
         computed: {

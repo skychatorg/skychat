@@ -47,3 +47,38 @@ body {
         background: #888;
     }
 }
+
+.sticker {
+    max-width: 80px;
+    max-height: 80px;
+}
+
+.form-control {
+    width: 100%;
+    position: relative;
+    padding: 1em;
+    border-radius: 3px;
+    border: 1px solid #fff;
+    background: transparent;
+    margin: 0.5em 0 0.5em 0;
+    z-index: 1;
+    color: #fff;
+    font-weight: 700;
+    font-family: Work Sans,sans-serif;
+    outline: none;
+}
+.form-submit {
+    margin: .5em 0 .5em 0;
+    width: 100%;
+    text-align: center;
+    padding: 12px;
+    color: white;
+    display: inline-block;
+    cursor: pointer;
+    background: #3c9adf;
+    border-radius: 3px;
+    border: 0;
+    text-transform: uppercase;
+    font-size: 1em;
+    font-family: Work Sans,sans-serif;
+}
