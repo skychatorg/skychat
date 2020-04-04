@@ -1,5 +1,5 @@
 import Vue from "vue";
-import HelloComponent from "./components/Hello.vue";
+import MainPage from "./components/MainPage.vue";
 import {SkyChatClient} from "./skychat/SkyChatClient";
 import {store} from "./store/store";
 
@@ -11,10 +11,10 @@ const app = new Vue({
     el: "#app",
     template: `
     <div>
-        <hello-component/>
+        <main-page/>
     </div>
     `,
     components: {
-        HelloComponent
+        MainPage
     }
 });
