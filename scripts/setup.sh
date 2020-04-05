@@ -5,6 +5,9 @@ sqlite3 database.db < db/install.sql;
 ENV_FILE=".env.json";
 if [[ ! -e "$ENV_FILE" ]]; then
     echo '{
+        "location": "http://localhost:8080",
+        "hostname": "localhost",
+        "port": 8080,
         "ssl": {
             "certificate": "",
             "key": "",

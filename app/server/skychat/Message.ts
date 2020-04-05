@@ -1,5 +1,5 @@
 import {SanitizedUser, User} from "./User";
-import {StickerManager} from "./StickerManager";
+import {MessageFormatter} from "./MessageFormatter";
 
 export type SanitizedMessage = {
 
@@ -55,7 +55,7 @@ export class Message {
 
         this.id = ++ Message.ID;
         this.content = content;
-        this.formatted = StickerManager.getInstance().format(content);
+        this.formatted = MessageFormatter.getInstance().format(content);
         this.quoted = quoted || null;
         this.user = user;
         this.createdTime = typeof createdTime !== 'undefined' ? createdTime : new Date();

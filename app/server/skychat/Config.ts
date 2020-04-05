@@ -3,6 +3,12 @@ import * as fs from 'fs';
 
 export class Config {
 
+    public static LOCATION: string = '';
+
+    public static HOSTNAME: string = '';
+
+    public static PORT: number = 8080;
+
     public static USE_SSL: boolean = false;
 
     public static SSL_CERTIFICATE: string = '';
@@ -19,6 +25,9 @@ export class Config {
 
     public static initialize() {
         const config = JSON.parse(fs.readFileSync('.env.json').toString());
+        Config.LOCATION = config.location;
+        Config.HOSTNAME = config.hostname;
+        Config.PORT = config.port;
         Config.USE_SSL = !! config.ssl;
         if (Config.USE_SSL) {
             Config.SSL_CERTIFICATE = config.ssl.certificate;

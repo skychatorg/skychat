@@ -4,7 +4,7 @@
 
 
 <template>
-    <div @click="$emit('select')" class="message">
+    <div @contextmenu.prevent="$emit('select')" class="message">
         <div class="avatar image-bubble">
             <img :src="message.user.data.plugins.avatar">
         </div>
@@ -66,7 +66,6 @@
         -ms-transition: all 0.2s;
         -o-transition: all 0.2s;
         transition: all 0.2s;
-        cursor: pointer;
 
         &:hover {
             border-width: 0;

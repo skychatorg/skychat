@@ -4,7 +4,13 @@
 
 
 <template>
-    <div>
+    <div class="message-form">
+        <div class="image-upload">
+            <label for="file-input">
+                <img src="https://redsky.fr/picts/galerie/uploaded/2016-05-28/03-05-51-231dea597d8973819b31-psycho.gif"/>
+            </label>
+            <input ref="file" @change="upload" id="file-input" type="file" />
+        </div>
         <form class="form" onsubmit="return false">
             <input ref="input"
                    @keyup.enter="sendMessage"
@@ -66,6 +72,24 @@
             },
 
             /**
+             * Upload a file
+             */
+            upload: async function() {
+                const fileInput = this.$refs.file;
+                const file = fileInput.files[0];
+
+                const data = new FormData();
+                data.append('file', file);
+
+                const result = await (await fetch("./upload", {method: 'POST', body: data})).json();
+                if (result.status === 500) {
+                    alert(result.message);
+                    return;
+                }
+                this.setMessage(this.message + ' ' + document.location.href + result.path);
+            },
+
+            /**
              * Send the message
              */
             sendMessage: function() {
@@ -81,27 +105,49 @@
 
 <style lang="scss" scoped>
 
-    .form {
-        padding: 4px 10px 4px 10px;
+    .message-form {
         display: flex;
 
-        >.new-message {
-            flex-grow: 1;
-            padding: 10px;
-            border: none;
-            background: #2c2d31;
-            color: white;
-            outline-style: none;
-            box-shadow: none;
-            -webkit-transition: box-shadow 0.2s;
-            -moz-transition: box-shadow 0.2s;
-            -ms-transition: box-shadow 0.2s;
-            -o-transition: box-shadow 0.2s;
-            transition: box-shadow 0.2s;
+        .image-upload {
+            flex-basis: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            margin-left: 12px;
+
+            img {
+                width: 100%;
+                cursor: pointer;
+            }
+
+            >input {
+                display: none;
+            }
         }
 
-        >.new-message:focus {
-            box-shadow: 1px 1px 14px #d1d4f53b;
+        .form {
+            flex-grow: 1;
+            padding: 4px 10px 4px 10px;
+            display: flex;
+
+            >.new-message {
+                flex-grow: 1;
+                padding: 10px;
+                border: none;
+                background: #2c2d31;
+                color: white;
+                outline-style: none;
+                box-shadow: none;
+                -webkit-transition: box-shadow 0.2s;
+                -moz-transition: box-shadow 0.2s;
+                -ms-transition: box-shadow 0.2s;
+                -o-transition: box-shadow 0.2s;
+                transition: box-shadow 0.2s;
+            }
+
+            >.new-message:focus {
+                box-shadow: 1px 1px 14px #d1d4f53b;
+            }
         }
     }
 </style>
