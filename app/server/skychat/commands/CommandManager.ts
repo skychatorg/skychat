@@ -11,6 +11,7 @@ import {YoutubePlugin} from "./impl/YoutubePlugin";
 import {Room} from "../Room";
 import {HelpCommand} from "./impl/HelpCommand";
 import {ConnectedListPlugin} from "./impl/ConnectedListPlugin";
+import {PrivateMessagePlugin} from "./impl/PrivateMessagePlugin";
 
 
 /**
@@ -29,10 +30,12 @@ export class CommandManager {
         MessageCommand,
         MotoPlugin,
         MutePlugin,
+        PrivateMessagePlugin,
         SandalePlugin,
         TypingListPlugin,
         YoutubePlugin
     ];
+
 
     /**
      * Load all commands and plugins

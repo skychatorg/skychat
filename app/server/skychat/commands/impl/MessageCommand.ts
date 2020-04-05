@@ -13,6 +13,6 @@ export class MessageCommand extends Command {
     async run(alias: string, param: string, connection: Connection): Promise<void> {
 
         // Send the message to the room
-        connection.room!.sendMessage(param, connection.session.user);
+        this.room.sendMessage(param, connection.session.user);
     }
 }
