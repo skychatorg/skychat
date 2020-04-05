@@ -23,7 +23,7 @@ export class SkyChat {
     constructor() {
 
         // Create server instance
-        this.server = new Server({port: 8080}, this.getNewSession.bind(this));
+        this.server = new Server(this.getNewSession.bind(this));
 
         // Register hooks
         this.server.onConnectionCreated = this.onConnectionCreated.bind(this);

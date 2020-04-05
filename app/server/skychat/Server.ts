@@ -1,10 +1,12 @@
 import * as WebSocket from "ws";
 import * as http from "http";
-import {ServerOptions} from "ws";
+import * as https from "https";
 import {Connection} from "./Connection";
 import * as iof from "io-filter";
 import {Session} from "./Session";
 import * as express from "express";
+import {Config} from "./Config";
+import * as fs from "fs";
 
 
 
@@ -18,6 +20,7 @@ type EventsDescription = {
 
 
 
+
 /**
  * Generic server object. Handle typed event communication.
  */
@@ -27,8 +30,6 @@ export class Server {
      * List of accepted events.
      */
     private readonly events: EventsDescription = {};
-
-    private readonly serverConfig: ServerOptions;
 
     private readonly app: express.Application;
 
@@ -41,12 +42,19 @@ export class Server {
      */
     public sessionBuilder: (request: http.IncomingMessage) => Promise<Session>;
 
-    constructor(serverConfig: ServerOptions, sessionBuilder: (request: http.IncomingMessage) => Promise<Session>) {
-        this.serverConfig = serverConfig;
+    constructor(sessionBuilder: (request: http.IncomingMessage) => Promise<Session>) {
         this.sessionBuilder = sessionBuilder;
         this.app = express();
         this.app.use(express.static('dist'));
-        const server = http.createServer(this.app);
+        let server;
+        if (Config.USE_SSL) {
+            server = https.createServer({
+                cert: fs.readFileSync(Config.SSL_CERTIFICATE),
+                key: fs.readFileSync(Config.SSL_CERTIFICATE_KEY)
+            }, this.app);
+        } else {
+            server = http.createServer(this.app);
+        }
         this.wss = new WebSocket.Server({noServer: true});
         this.wss.on('connection', this.onConnection.bind(this));
         server.on('upgrade', (request, socket, head) => {
@@ -54,8 +62,8 @@ export class Server {
                 this.wss.emit('connection', ws, request);
             });
         });
-        server.listen(serverConfig.port, function() {
-            console.log('Listening on http://localhost:' + serverConfig.port);
+        server.listen(8080, function() {
+            console.log('Listening on :' + 8080);
         });
     }
 

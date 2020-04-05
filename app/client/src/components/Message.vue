@@ -24,7 +24,7 @@
             <div class="formatted" v-html="message.formatted"></div>
         </div>
         <div class="date">
-            {{new Date(message.createdTimestamp * 1000).toDateString()}}
+            {{formattedDate}}
         </div>
     </div>
 </template>
@@ -39,6 +39,16 @@
                 required: true,
             }
         },
+
+        computed: {
+            formattedDate: function() {
+                const date = new Date(this.message.createdTimestamp * 1000);
+                const hours = date.getHours().toString().padStart(2, '0');
+                const minutes = date.getMinutes().toString().padStart(2, '0');
+                const seconds = date.getSeconds().toString().padStart(2, '0');
+                return `${hours}:${minutes}:${seconds}`;
+            }
+        }
     });
 </script>
 

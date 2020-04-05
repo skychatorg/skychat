@@ -6,7 +6,7 @@ import store from "./store/store";
 
 Vue.prototype.$store = store;
 
-Vue.prototype.$client = new SkyChatClient({host: document.location.hostname, port: 8080}, store);
+Vue.prototype.$client = new SkyChatClient(store);
 Vue.prototype.$client.connect();
 
 const app = new Vue({

@@ -14,7 +14,7 @@
             <div class="user">{{user.username}}</div>
             <div class="moto">{{user.data.plugins.moto}}</div>
         </div>
-        <div class="stats">
+        <div class="stats" v-show="user.right >= 0">
             <div class="right">
                 level {{user.right}}
             </div>

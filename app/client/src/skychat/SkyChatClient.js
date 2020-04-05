@@ -3,9 +3,8 @@ import { EventEmitter } from "events";
 
 export class SkyChatClient extends EventEmitter {
 
-    constructor(config, store) {
+    constructor(store) {
         super();
-        this.config = config;
         this.webSocket = null;
         this.store = store;
         this.bind();
@@ -15,7 +14,8 @@ export class SkyChatClient extends EventEmitter {
      * Connect to the server
      */
     connect() {
-        this.webSocket = new WebSocket('ws://' + this.config.host + ':' + this.config.port);
+        const protocol = document.location.protocol === 'http:' ? 'ws' : 'wss';
+        this.webSocket = new WebSocket(protocol + '://' + document.location.host);
         this.webSocket.addEventListener('open', this.onWebSocketConnect.bind(this));
         this.webSocket.addEventListener('message', this.onWebSocketMessage.bind(this));
         this.webSocket.addEventListener('close', this.onWebSocketClose.bind(this));
