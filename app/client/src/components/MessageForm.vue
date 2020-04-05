@@ -16,7 +16,7 @@
     </div>
 </template>
 
-<script lang="ts">
+<script>
     import Vue from "vue";
 
     const MESSAGE_HISTORY_LENGTH = 100;
@@ -26,8 +26,8 @@
         data: function() {
             return {
                 message: '',
-                historyIndex: null as number | null,
-                sentMessageHistory: [] as string[]
+                historyIndex: null,
+                sentMessageHistory: []
             };
         },
 
@@ -47,8 +47,8 @@
             /**
              * Navigate into message history
              */
-            navigateIntoHistory: function(offset: number): void {
-                let index: number = this.historyIndex === null ? this.sentMessageHistory.length - 1 : this.historyIndex + offset;
+            navigateIntoHistory: function(offset) {
+                let index = this.historyIndex === null ? this.sentMessageHistory.length - 1 : this.historyIndex + offset;
                 if (typeof this.sentMessageHistory[index] === 'undefined') {
                     return;
                 }

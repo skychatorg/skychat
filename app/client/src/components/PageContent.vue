@@ -30,7 +30,7 @@
     </div>
 </template>
 
-<script lang="ts">
+<script>
     import Vue from "vue";
     import AuthPage from "./AuthPage.vue";
     import Messages from "./Messages.vue";
@@ -38,6 +38,7 @@
     import MessageForm from "./MessageForm.vue";
     import Player from "./Player.vue";
     import ConnectedList from "./ConnectedList.vue";
+
     export default Vue.extend({
 
         components: {AuthPage, Player, Messages, TypingList, MessageForm, ConnectedList},

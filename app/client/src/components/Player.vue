@@ -14,13 +14,17 @@
     </div>
 </template>
 
-<script lang="ts">
+<script>
     import Vue from "vue";
+
     export default Vue.extend({
         data: function() {
             return {
                 src: ''
             }
+        },
+        onBeforeMounted: function() {
+            this.$client.ytSync();
         },
         watch: {
             currentVideo: function() {

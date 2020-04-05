@@ -14,7 +14,7 @@ const VueLoaderPlugin = require('vue-loader/lib/plugin');
 const pugPaths = { pages: ['app/client/views/*.pug'] };
 const scssPaths = { pages: ['app/client/css/*.scss'] };
 const resPaths = { pages: ['app/client/assets/*'] };
-const srcPaths = ['app/client/src/index.ts'];
+const srcPaths = 'app/client/src/index.js';
 const serverSrcPaths = ['app/server/**/*.ts'];
 const distPath = 'dist';
 
@@ -33,12 +33,12 @@ gulp.task("build-client-scss", function () {
         .pipe(gulp.dest(distPath));
 });
 
-gulp.task('build-client-typescript', function() {
+gulp.task('build-client-javascript', function() {
     const webpackConfig = require('./webpack.config');
     delete webpackConfig.entry;
     delete webpackConfig.watch;
     return gulp
-        .src('app/client/src/index.ts')
+        .src(srcPaths)
         .pipe(webpack(webpackConfig))
         .pipe(gulp.dest(distPath));
 });
@@ -49,7 +49,7 @@ gulp.task('build-server-typescript', function() {
         .pipe(gulp.dest('build'));
 });
 
-gulp.task('build-client', gulp.parallel('build-client-views', 'build-client-scss', 'build-client-assets', 'build-client-typescript'));
+gulp.task('build-client', gulp.parallel('build-client-views', 'build-client-scss', 'build-client-assets', 'build-client-javascript'));
 gulp.task('build-server', gulp.parallel('build-server-typescript'));
 gulp.task('build', gulp.parallel('build-client', 'build-server'));
 
@@ -63,17 +63,17 @@ gulp.task('watch-server-typescript', function (done) {
     });
 });
 
-gulp.task('watch-client-typescript', function () {
+gulp.task('watch-client-javascript', function () {
     const webpackConfig = require('./webpack.config');
     delete webpackConfig.entry;
     webpackConfig.watch = true;
     return gulp
-        .src('app/client/src/index.ts')
+        .src(srcPaths)
         .pipe(webpack(webpackConfig))
         .pipe(gulp.dest(distPath));
 });
 
 gulp.task('watch-server', gulp.series('build-server', 'watch-server-typescript'));
-gulp.task('watch-client', gulp.series('build-client', 'watch-client-typescript'));
+gulp.task('watch-client', gulp.series('build-client', 'watch-client-javascript'));
 gulp.task('watch', gulp.parallel('watch-client', 'watch-server'));
 gulp.task('default', gulp.series('watch'));

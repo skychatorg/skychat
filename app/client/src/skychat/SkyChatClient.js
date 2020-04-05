@@ -1,27 +1,9 @@
-import {EventEmitter} from "events";
-import {SanitizedUser} from "../../../server/skychat/User";
-import {SanitizedMessage} from "../../../server/skychat/Message";
-import {SanitizedYoutubeVideo} from "../../../server/skychat/commands/impl/YoutubePlugin";
-
-
-
-export interface SkyChatClientConfig {
-    host: string,
-    port: number
-}
+import { EventEmitter } from "events";
 
 
 export class SkyChatClient extends EventEmitter {
 
-    public static readonly LOCAL_STORAGE_TOKEN_KEY: string = 'auth-token';
-
-    public readonly config: SkyChatClientConfig;
-
-    private webSocket: WebSocket | null;
-
-    private readonly store: any;
-
-    constructor(config: SkyChatClientConfig, store: any) {
+    constructor(config, store) {
         super();
         this.config = config;
         this.webSocket = null;
@@ -31,7 +13,7 @@ export class SkyChatClient extends EventEmitter {
     /**
      * Connect to the server
      */
-    public connect() {
+    connect() {
         this.webSocket = new WebSocket('ws://' + this.config.host + ':' + this.config.port);
         this.webSocket.addEventListener('open', this.onWebSocketConnect.bind(this));
         this.webSocket.addEventListener('message', this.onWebSocketMessage.bind(this));
@@ -46,7 +28,7 @@ export class SkyChatClient extends EventEmitter {
     /**
      * When the connection is made with the websocket server
      */
-    public onWebSocketConnect(): void {
+    onWebSocketConnect() {
         const authToken = localStorage.getItem(SkyChatClient.LOCAL_STORAGE_TOKEN_KEY);
         if (authToken) {
             this.sendEvent('set-token', JSON.parse(authToken));
@@ -57,7 +39,7 @@ export class SkyChatClient extends EventEmitter {
      * When a message is received on the websocket
      * @param message
      */
-    public onWebSocketMessage(message: any) {
+    onWebSocketMessage(message) {
         const data = JSON.parse(message.data);
         const eventName = data.event;
         const eventPayload = data.data;
@@ -69,8 +51,8 @@ export class SkyChatClient extends EventEmitter {
      * @param eventName
      * @param payload
      */
-    public sendEvent(eventName: string, payload: any): void {
-        if (! this.webSocket) {
+    sendEvent(eventName, payload) {
+        if (!this.webSocket) {
             return;
         }
         this.webSocket.send(JSON.stringify({
@@ -83,7 +65,7 @@ export class SkyChatClient extends EventEmitter {
      * Send a message to the server
      * @param message
      */
-    public sendMessage(message: string): void {
+    sendMessage(message) {
         this.sendEvent('message', message);
     }
 
@@ -91,8 +73,15 @@ export class SkyChatClient extends EventEmitter {
      * Set typing state
      * @param typing
      */
-    public setTyping(typing: boolean): void {
+    setTyping(typing) {
         this.sendMessage('/t ' + (typing ? 'on' : 'off'));
+    }
+
+    /**
+     * Synchronize the youtube player
+     */
+    ytSync() {
+        this.sendMessage('/yt sync');
     }
 
     /**
@@ -100,8 +89,8 @@ export class SkyChatClient extends EventEmitter {
      * @param username
      * @param password
      */
-    public login(username: string, password: string): void {
-        this.sendEvent('login', {username, password});
+    login(username, password) {
+        this.sendEvent('login', { username, password });
     }
 
     /**
@@ -109,15 +98,15 @@ export class SkyChatClient extends EventEmitter {
      * @param username
      * @param password
      */
-    public register(username: string, password: string): void {
-        this.sendEvent('register', {username, password});
+    register(username, password) {
+        this.sendEvent('register', { username, password });
     }
 
     /**
      *
      * @param token auth token
      */
-    private onAuthToken(token: any): void {
+    onAuthToken(token) {
         localStorage.setItem(SkyChatClient.LOCAL_STORAGE_TOKEN_KEY, JSON.stringify(token));
     }
 
@@ -125,7 +114,7 @@ export class SkyChatClient extends EventEmitter {
      *
      * @param message
      */
-    private onMessage(message: SanitizedMessage): void {
+    onMessage(message) {
         this.store.commit('NEW_MESSAGE', message);
     }
 
@@ -133,7 +122,7 @@ export class SkyChatClient extends EventEmitter {
      *
      * @param user
      */
-    private onSetUser(user: SanitizedUser): void {
+    onSetUser(user) {
         this.store.commit('SET_USER', user);
     }
 
@@ -141,7 +130,7 @@ export class SkyChatClient extends EventEmitter {
      *
      * @param users
      */
-    private onConnectedList(users: SanitizedUser[]): void {
+    onConnectedList(users) {
         this.store.commit('SET_CONNECTED_LIST', users);
     }
 
@@ -149,7 +138,7 @@ export class SkyChatClient extends EventEmitter {
      *
      * @param video
      */
-    private onYtSync(video: SanitizedYoutubeVideo): void {
+    onYtSync(video) {
         this.store.commit('SET_CURRENT_VIDEO', video);
     }
 
@@ -157,7 +146,10 @@ export class SkyChatClient extends EventEmitter {
      *
      * @param users
      */
-    private onTypingList(users: SanitizedUser[]): void {
+    onTypingList(users) {
         this.store.commit('SET_TYPING_LIST', users);
     }
 }
+
+SkyChatClient.LOCAL_STORAGE_TOKEN_KEY = 'auth-token';
+

@@ -9,9 +9,9 @@
     </div>
 </template>
 
-<script lang="ts">
+<script>
     import Vue from "vue";
-    import {SanitizedUser} from "../../../server/skychat/User";
+
     export default Vue.extend({
         computed: {
             typingList: function() {
@@ -19,18 +19,16 @@
             },
             typingListHtml: function() {
 
-                const typingList = (this as any).typingList;
-
-                if (typingList.length === 0) {
+                if (this.typingList.length === 0) {
                     return '';
                 }
 
-                if (typingList.length === 1) {
-                    return `${typingList[0].username} is typing..`;
+                if (this.typingList.length === 1) {
+                    return `${this.typingList[0].username} is typing..`;
                 }
 
-                if (typingList.length <= 3) {
-                    const usernames = typingList.map((user: SanitizedUser) => user.username);
+                if (this.typingList.length <= 3) {
+                    const usernames = this.typingList.map(user => user.username);
                     return `${usernames.join(', ')} are typing..`;
                 }
 

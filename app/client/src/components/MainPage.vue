@@ -10,7 +10,7 @@
     </div>
 </template>
 
-<script lang="ts">
+<script>
     import Vue from "vue";
     import PageHeader from "./PageHeader.vue";
     import PageContent from "./PageContent.vue";

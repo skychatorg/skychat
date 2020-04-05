@@ -10,9 +10,10 @@
     </div>
 </template>
 
-<script lang="ts">
+<script>
     import Vue from "vue";
     import ConnectedUser from "./ConnectedUser.vue";
+
     export default Vue.extend({
         components: {ConnectedUser},
         computed: {

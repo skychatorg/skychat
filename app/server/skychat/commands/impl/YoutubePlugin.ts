@@ -6,6 +6,7 @@ import {Connection} from "../../Connection";
 import {CommandEntryPointRule} from "../Command";
 import {google, youtube_v3} from "googleapis";
 import * as fs from "fs";
+import {IBroadcaster} from "../../IBroadcaster";
 
 
 /**
@@ -138,7 +139,7 @@ export class YoutubePlugin extends Plugin {
      * @param connection
      */
     async onConnectionJoinedRoom(connection: Connection): Promise<void> {
-        this.sync();
+        this.sync(connection);
     }
 
     /**
@@ -176,7 +177,7 @@ export class YoutubePlugin extends Plugin {
      * @param connection
      */
     private async handleYt(param: string, connection: Connection): Promise<void> {
-
+        this.sync(connection);
     }
 
     /**
@@ -206,7 +207,7 @@ export class YoutubePlugin extends Plugin {
 
                 // If there is no more video to play, sync clients (this will deactive the player)
                 if (this.queue.length === 0) {
-                    this.sync();
+                    this.sync(this.room);
                 }
             }
             return; // Wait until next tick
@@ -222,22 +223,22 @@ export class YoutubePlugin extends Plugin {
         }
         // Else, play this video
         this.currentVideo = {...nextVideo, startedDate: new Date()};
-        this.sync();
+        this.sync(this.room);
     }
 
     /**
      * Sync clients in the room
      */
-    public sync() {
+    public sync(broadcaster: IBroadcaster) {
         if (this.currentVideo) {
-            this.room.send('yt-sync', {
+            broadcaster.send('yt-sync', {
                 user: this.currentVideo.user.sanitized(),
                 video: this.currentVideo.video,
                 startedDate: this.currentVideo.startedDate.getTime() * 0.001,
                 cursor: Date.now() * 0.001 - this.currentVideo.startedDate.getTime() * 0.001
             });
         } else {
-            this.room.send('yt-sync', null);
+            broadcaster.send('yt-sync', null);
         }
     }
 }

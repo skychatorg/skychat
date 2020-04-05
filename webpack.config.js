@@ -23,14 +23,6 @@ module.exports = {
                 }
             },
             {
-                test: /\.tsx?$/,
-                loader: 'ts-loader',
-                exclude: /node_modules/,
-                options: {
-                    appendTsSuffixTo: [/\.vue$/],
-                }
-            },
-            {
                 test: /\.(png|jpg|gif|svg)$/,
                 loader: 'file-loader',
                 options: {
@@ -55,7 +47,7 @@ module.exports = {
         ]
     },
     resolve: {
-        extensions: ['.ts', '.js', '.vue', '.json'],
+        extensions: ['.js', '.vue', '.json'],
         alias: {
             'vue$': 'vue/dist/vue.esm.js'
         }
@@ -76,4 +68,4 @@ module.exports = {
         vue: 'Vue',
         vuex: 'Vuex',
     }
-}
+};

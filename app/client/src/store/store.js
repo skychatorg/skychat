@@ -1,12 +1,9 @@
 import Vue from "vue";
-import Vuex, { StoreOptions } from "vuex";
-import { RootState } from './RootState';
-import {SanitizedUser} from "../../../server/skychat/User";
-import {SanitizedMessage} from "../../../server/skychat/Message";
-import {SanitizedYoutubeVideo} from "../../../server/skychat/commands/impl/YoutubePlugin";
+import Vuex from "vuex";
 Vue.use(Vuex);
 
-const store: StoreOptions<RootState> = {
+
+const store = {
     state: {
         user: {
             id: 0,
@@ -28,27 +25,22 @@ const store: StoreOptions<RootState> = {
         typingList: [],
     },
     mutations: {
-
-        SET_USER(state: RootState, user: SanitizedUser): void {
+        SET_USER(state, user) {
             state.user = user;
         },
-
-        SET_CONNECTED_LIST(state: RootState, users: SanitizedUser[]): void {
+        SET_CONNECTED_LIST(state, users) {
             state.connectedList = users;
         },
-
-        NEW_MESSAGE(state: RootState, message: SanitizedMessage): void {
+        NEW_MESSAGE(state, message) {
             state.messages.push(message);
         },
-
-        SET_CURRENT_VIDEO(state: RootState, currentVideo: SanitizedYoutubeVideo): void {
+        SET_CURRENT_VIDEO(state, currentVideo) {
             state.currentVideo = currentVideo;
         },
-
-        SET_TYPING_LIST(state:RootState, users: SanitizedUser[]): void {
+        SET_TYPING_LIST(state, users) {
             state.typingList = users;
         },
     }
 };
 
-export default new Vuex.Store<RootState>(store);
+export default new Vuex.Store(store);
