@@ -7,8 +7,6 @@ export class MessageCommand extends Command {
 
     readonly name = 'message';
 
-    readonly aliases = ['m'];
-
     readonly minRight = -1;
 
     readonly rules = {minCount: 1};

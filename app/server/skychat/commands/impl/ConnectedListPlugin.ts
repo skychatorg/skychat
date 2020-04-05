@@ -9,7 +9,7 @@ import {Room} from "../../Room";
  */
 export class ConnectedListPlugin extends Plugin {
 
-    readonly name = 'connected_list';
+    readonly name = 'connectedlist';
 
     readonly minRight = -1;
 
@@ -39,7 +39,7 @@ export class ConnectedListPlugin extends Plugin {
         this.sync();
     }
 
-    private sync(): void {
+    public sync(): void {
         const connectedList: SanitizedUser[] = [];
         for (let connection of this.room.connections) {
             const user = connection.session.user;

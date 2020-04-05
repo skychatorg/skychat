@@ -12,6 +12,7 @@ import {Room} from "../Room";
 import {HelpCommand} from "./impl/HelpCommand";
 import {ConnectedListPlugin} from "./impl/ConnectedListPlugin";
 import {PrivateMessagePlugin} from "./impl/PrivateMessagePlugin";
+import {SetRightCommand} from "./impl/SetRightCommand";
 
 
 /**
@@ -32,6 +33,7 @@ export class CommandManager {
         MutePlugin,
         PrivateMessagePlugin,
         SandalePlugin,
+        SetRightCommand,
         TypingListPlugin,
         YoutubePlugin
     ];

@@ -8,13 +8,14 @@ export class SandalePlugin extends Plugin {
 
     readonly name = 'sandale';
 
-    readonly minRight = -1;
+    readonly minRight = 0;
 
     readonly roomRequired = true;
 
     readonly rules = {
         minCount: 1,
         maxCount: 1,
+        coolDown: 1000,
         params: [
             {
                 name: 'username',

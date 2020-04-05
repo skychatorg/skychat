@@ -188,8 +188,24 @@ export class User {
      * @param data
      */
     public static async savePluginData(user: User, pluginName: string, data: any): Promise<void> {
+        if (user.right < 0) {
+            throw new Error('You must be logged to save preferences');
+        }
         user.data.plugins[pluginName] = data;
-        await DatabaseHelper.db.run(SQL`update users set data=${JSON.stringify(user.data)} where id=${user.id}`);
+        await this.sync(user);
+    }
+
+    /**
+     * Sync an user to the the database
+     * @param user
+     */
+    public static async sync(user: User) {
+        await DatabaseHelper.db.run(SQL`update users set
+            money=${user.money},
+            xp=${user.xp},
+            right=${user.right},
+            data=${JSON.stringify(user.data)}            
+            where id=${user.id}`);
     }
 
     public readonly id: number;
@@ -198,13 +214,13 @@ export class User {
 
     private readonly password: string;
 
-    public readonly money: number;
+    public money: number;
 
-    public readonly xp: number;
+    public xp: number;
 
-    public readonly right: number;
+    public right: number;
 
-    public readonly data: UserData;
+    public data: UserData;
 
     constructor(id: number, username: string, password: string, money: number, xp: number, right: number, data?: UserData) {
         this.id = id;

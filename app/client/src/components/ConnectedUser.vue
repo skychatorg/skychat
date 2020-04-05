@@ -16,7 +16,7 @@
         </div>
         <div class="stats" v-show="user.right >= 0">
             <div class="right">
-                level {{user.right}}
+                lvl {{user.right}}
             </div>
             <div class="xp">
                 <span>xp {{user.xp}}</span>

@@ -90,6 +90,8 @@ export class YoutubePlugin extends Plugin {
         return duration;
     }
 
+    readonly defaultDataStorageValue = true;
+
     readonly name = 'yt';
 
     readonly aliases = ['play'];
@@ -98,7 +100,7 @@ export class YoutubePlugin extends Plugin {
         yt: {
             minCount: 1,
             maxCount: 1,
-            params: [{name: 'action', pattern: /^(sync)$/}]
+            params: [{name: 'action', pattern: /^(sync|off|on)$/}]
         },
         play: {
             minCount: 1,
@@ -129,6 +131,45 @@ export class YoutubePlugin extends Plugin {
         } else if (alias === 'play') {
             await this.handlePlay(param, connection);
         }
+    }
+
+    /**
+     * Handle generic actions on the yt plugin (eg sync)
+     * @param param
+     * @param connection
+     */
+    private async handleYt(param: string, connection: Connection): Promise<void> {
+
+        switch (param) {
+
+            case 'sync':
+                this.sync(connection);
+                break;
+
+            case 'on':
+            case 'off':
+                const newState = param === 'on';
+                await User.savePluginData(connection.session.user, this.name, newState);
+                if (newState) {
+                    this.sync(connection);
+                } else {
+                    connection.send('yt-sync', null);
+                }
+                break;
+        }
+    }
+
+    /**
+     * Play a video
+     * @param param
+     * @param connection
+     */
+    private async handlePlay(param: string, connection: Connection): Promise<void> {
+        const video = await this.getYoutubeVideoMeta(param);
+        this.queue.push({
+            user: connection.session.user,
+            video
+        });
     }
 
     /**
@@ -166,28 +207,6 @@ export class YoutubePlugin extends Plugin {
         const title = item.snippet.title;
         const thumb = item.snippet.thumbnails.medium.url;
         return {id, duration, title, thumb};
-    }
-
-    /**
-     * Handle generic actions on the yt plugin (eg sync)
-     * @param param
-     * @param connection
-     */
-    private async handleYt(param: string, connection: Connection): Promise<void> {
-        this.sync(connection);
-    }
-
-    /**
-     * Play a video
-     * @param param
-     * @param connection
-     */
-    private async handlePlay(param: string, connection: Connection): Promise<void> {
-        const video = await this.getYoutubeVideoMeta(param);
-        this.queue.push({
-            user: connection.session.user,
-            video
-        });
     }
 
     /**
