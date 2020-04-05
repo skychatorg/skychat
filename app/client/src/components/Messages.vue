@@ -6,6 +6,8 @@
 <template>
     <div class="messages scrollbar" ref="messages">
         <message v-for="message in messages"
+                 @select="$emit('select-message', message)"
+                 :key="message.id"
                  :message="message"
                  class="message"/>
     </div>
@@ -37,7 +39,7 @@
                 } else {
                     messages.scrollTop = messages.scrollHeight;
                 }
-            }
+            },
         },
         computed: {
             messages: function() {

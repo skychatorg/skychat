@@ -15,7 +15,6 @@ export class MotoPlugin extends Plugin {
 
     readonly rules = {
         minCount: 1,
-        maxCount: 1,
         params: [
             {
                 name: 'moto',

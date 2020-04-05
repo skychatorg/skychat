@@ -4,16 +4,27 @@
 
 
 <template>
-    <div class="message">
+    <div @click="$emit('select')" class="message">
         <div class="avatar image-bubble">
             <img :src="message.user.data.plugins.avatar">
         </div>
         <div class="content">
             <div class="user">{{message.user.username}}</div>
+
+            <!-- first quote -->
+            <div class="quote" v-if="message.quoted">
+                <div class="quote-user">{{message.quoted.user.username}}:</div>
+                <!-- second quote -->
+                <div class="quote" v-if="message.quoted.quoted">
+                    <div class="quote-user">{{message.quoted.quoted.user.username}}:</div>
+                    <div class="quote-content" v-html="message.quoted.quoted.formatted"></div>
+                </div>
+                <div class="quote-content" v-html="message.quoted.formatted"></div>
+            </div>
             <div class="formatted" v-html="message.formatted"></div>
         </div>
         <div class="date">
-            14:39:06
+            {{new Date(message.createdTimestamp * 1000).toDateString()}}
         </div>
     </div>
 </template>
@@ -69,8 +80,21 @@
 
             >.user {
                 display: inline;
-                width: 100px;
                 color: #a3a5b4;
+            }
+
+            .quote {
+                margin: 10px;
+                padding: 4px 10px;
+                border-left: 5px solid grey;
+
+                >.quote-user {
+                    font-size: 80%;
+                }
+                >.quote-content {
+                    margin-top: 5px;
+                    margin-left: 4px;
+                }
             }
 
             >.formatted {

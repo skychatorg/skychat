@@ -1,11 +1,9 @@
 import {Connection} from "./Connection";
-import {User} from "./User";
 import {IBroadcaster} from "./IBroadcaster";
 import {Message} from "./Message";
 import {Command} from "./commands/Command";
 import {Plugin} from "./commands/Plugin";
 import {CommandManager} from "./commands/CommandManager";
-import {awaitExpression} from "babel-types";
 
 
 export class Room implements IBroadcaster {
@@ -90,6 +88,15 @@ export class Room implements IBroadcaster {
     }
 
     /**
+     * Execute connection authenticated hook
+     * @param connection
+     */
+    public async executeConnectionAuthenticated(connection: Connection): Promise<void> {
+        for (const plugin of this.plugins) {
+            await plugin.onConnectionAuthenticated(connection);
+        }
+    }
+    /**
      * Execute room join hook
      * @param connection
      */
@@ -119,11 +126,17 @@ export class Room implements IBroadcaster {
     }
 
     /**
+     * Find a message from history by its unique id
+     */
+    public getMessageById(id: number): Message | null {
+        const message = this.messages.find(message => message.id === id);
+        return message || null;
+    }
+
+    /**
      * Send a new message to the room
      */
-    public sendMessage(messageContent: string, user: User): void {
-        // Create new message object
-        const message = new Message(messageContent, user);
+    public sendMessage(message: Message): void {
         // Send it to clients
         this.send('message', message.sanitized());
         // Add it to history

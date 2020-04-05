@@ -7,6 +7,7 @@ import {CommandEntryPointRule} from "../Command";
 import {google, youtube_v3} from "googleapis";
 import * as fs from "fs";
 import {IBroadcaster} from "../../IBroadcaster";
+import {Config} from "../../Config";
 
 
 /**
@@ -115,11 +116,7 @@ export class YoutubePlugin extends Plugin {
     constructor(room: Room) {
         super(room);
 
-        const youtubeApiKey = JSON.parse(fs.readFileSync('.env.json').toString()).youtube_api_key;
-        if (! youtubeApiKey) {
-            throw new Error("Youtube api key unset");
-        }
-        this.youtube = google.youtube({version: 'v3', auth: youtubeApiKey});
+        this.youtube = google.youtube({version: 'v3', auth: Config.YOUTUBE_API_KEY});
 
         if (this.room) {
             setInterval(this.tick.bind(this), 1000);

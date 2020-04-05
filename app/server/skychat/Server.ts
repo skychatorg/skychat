@@ -4,6 +4,7 @@ import {ServerOptions} from "ws";
 import {Connection} from "./Connection";
 import * as iof from "io-filter";
 import {Session} from "./Session";
+import * as express from "express";
 
 
 
@@ -29,6 +30,8 @@ export class Server {
 
     private readonly serverConfig: ServerOptions;
 
+    private readonly app: express.Application;
+
     private readonly wss: WebSocket.Server;
 
     public onConnectionCreated?: (connection: Connection) => Promise<void>;
@@ -41,8 +44,19 @@ export class Server {
     constructor(serverConfig: ServerOptions, sessionBuilder: (request: http.IncomingMessage) => Promise<Session>) {
         this.serverConfig = serverConfig;
         this.sessionBuilder = sessionBuilder;
-        this.wss = new WebSocket.Server(serverConfig);
+        this.app = express();
+        this.app.use(express.static('dist'));
+        const server = http.createServer(this.app);
+        this.wss = new WebSocket.Server({noServer: true});
         this.wss.on('connection', this.onConnection.bind(this));
+        server.on('upgrade', (request, socket, head) => {
+            this.wss.handleUpgrade(request, socket, head, (ws) => {
+                this.wss.emit('connection', ws, request);
+            });
+        });
+        server.listen(serverConfig.port, function() {
+            console.log('Listening on http://localhost:' + serverConfig.port);
+        });
     }
 
     /**

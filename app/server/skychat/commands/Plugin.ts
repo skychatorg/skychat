@@ -28,6 +28,13 @@ export abstract class Plugin extends Command {
     }
 
     /**
+     * When a connection successfully authenticated
+     * @param connection
+     */
+    public async onConnectionAuthenticated(connection: Connection): Promise<void> {
+
+    }
+    /**
      * Executed when a connection joins a room
      * @param connection
      */

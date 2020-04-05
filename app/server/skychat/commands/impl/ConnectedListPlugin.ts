@@ -23,6 +23,10 @@ export class ConnectedListPlugin extends Plugin {
 
     async run(alias: string, param: string, connection: Connection): Promise<void> { }
 
+    async onConnectionAuthenticated(connection: Connection): Promise<void> {
+        this.sync();
+    }
+
     async onConnectionJoinedRoom(connection: Connection): Promise<void> {
         this.sync();
     }

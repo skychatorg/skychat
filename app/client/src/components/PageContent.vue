@@ -16,9 +16,9 @@
             <!-- left col -->
             <section id="left">
                 <player id="player"/>
-                <messages id="messages" class="scrollbar" />
+                <messages @select-message="onSelectMessage" id="messages" class="scrollbar" />
                 <typing-list id="typing-list" />
-                <message-form id="message-form"/>
+                <message-form ref="messageForm" id="message-form"/>
             </section>
 
             <!-- right col -->
@@ -47,8 +47,13 @@
             return {
                 page: 'welcome'
             }
-        }
+        },
 
+        methods: {
+            onSelectMessage: function(message) {
+                this.$refs.messageForm.setMessage('@' + message.id + ' ');
+            }
+        }
     });
 </script>
 

@@ -8,6 +8,7 @@ export class SkyChatClient extends EventEmitter {
         this.config = config;
         this.webSocket = null;
         this.store = store;
+        this.bind();
     }
 
     /**
@@ -17,12 +18,20 @@ export class SkyChatClient extends EventEmitter {
         this.webSocket = new WebSocket('ws://' + this.config.host + ':' + this.config.port);
         this.webSocket.addEventListener('open', this.onWebSocketConnect.bind(this));
         this.webSocket.addEventListener('message', this.onWebSocketMessage.bind(this));
+        this.webSocket.addEventListener('close', this.onWebSocketClose.bind(this));
+    }
+
+    /**
+     * Bind own event listeners
+     */
+    bind() {
         this.on('message', this.onMessage.bind(this));
         this.on('set-user', this.onSetUser.bind(this));
         this.on('connected-list', this.onConnectedList.bind(this));
         this.on('yt-sync', this.onYtSync.bind(this));
         this.on('auth-token', this.onAuthToken.bind(this));
         this.on('typing-list', this.onTypingList.bind(this));
+        this.on('error', this.onError.bind(this));
     }
 
     /**
@@ -44,6 +53,13 @@ export class SkyChatClient extends EventEmitter {
         const eventName = data.event;
         const eventPayload = data.data;
         this.emit(eventName, eventPayload);
+    }
+
+    /**
+     *
+     */
+    onWebSocketClose(code, reason) {
+        setTimeout(this.connect.bind(this), 1000);
     }
 
     /**
@@ -107,7 +123,11 @@ export class SkyChatClient extends EventEmitter {
      * @param token auth token
      */
     onAuthToken(token) {
-        localStorage.setItem(SkyChatClient.LOCAL_STORAGE_TOKEN_KEY, JSON.stringify(token));
+        if (token) {
+            localStorage.setItem(SkyChatClient.LOCAL_STORAGE_TOKEN_KEY, JSON.stringify(token));
+        } else {
+            localStorage.removeItem(SkyChatClient.LOCAL_STORAGE_TOKEN_KEY);
+        }
     }
 
     /**
@@ -148,6 +168,13 @@ export class SkyChatClient extends EventEmitter {
      */
     onTypingList(users) {
         this.store.commit('SET_TYPING_LIST', users);
+    }
+
+    /**
+     *
+     */
+    onError(error) {
+        alert(error);
     }
 }
 

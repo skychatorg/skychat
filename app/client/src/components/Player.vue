@@ -23,9 +23,6 @@
                 src: ''
             }
         },
-        onBeforeMounted: function() {
-            this.$client.ytSync();
-        },
         watch: {
             currentVideo: function() {
                 if (! this.currentVideo) {

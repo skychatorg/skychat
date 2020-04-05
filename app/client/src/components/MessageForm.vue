@@ -6,7 +6,8 @@
 <template>
     <div>
         <form class="form" onsubmit="return false">
-            <input @keyup.enter="sendMessage"
+            <input ref="input"
+                   @keyup.enter="sendMessage"
                    @keyup.up="navigateIntoHistory(-1)"
                    @keyup.down="navigateIntoHistory(1)"
                    class="new-message"
@@ -43,6 +44,14 @@
         },
 
         methods: {
+
+            /**
+             * Set the message
+             */
+            setMessage: function(message) {
+                this.message = message;
+                this.$refs.input.focus();
+            },
 
             /**
              * Navigate into message history

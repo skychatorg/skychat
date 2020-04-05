@@ -3,6 +3,7 @@ import * as sha256 from "sha256";
 import {DatabaseHelper} from "./DatabaseHelper";
 import SQL from "sql-template-strings";
 import {CommandManager} from "./commands/CommandManager";
+import {Config} from "./Config";
 
 
 type UserData = {
@@ -59,17 +60,6 @@ export class User {
     public static AUTH_TOKEN_VALIDITY: number = 1000 * 60 * 60 * 6;
 
     /**
-     * Password salt defined in .env.json
-     */
-    private static passwordSalt: string = JSON.parse(fs.readFileSync('.env.json').toString()).users_passwords_salt;
-
-
-    /**
-     * Token salt defined in .env.json
-     */
-    private static tokenSalt: string = JSON.parse(fs.readFileSync('.env.json').toString()).users_token_salt;
-
-    /**
      * Static init block
      */
     static initialize() {
@@ -93,7 +83,7 @@ export class User {
         if (typeof userId !== 'number' || userId <= 0 || username.length === 0 || password.length === 0) {
             throw new Error('User and passwords must be supplied to compute password hash');
         }
-        return sha256(userId + password + User.passwordSalt + username.toLowerCase());
+        return sha256(userId + password + Config.USERS_PASSWORD_SALT + username.toLowerCase());
     }
 
     /**
@@ -163,7 +153,7 @@ export class User {
         return {
             userId,
             timestamp,
-            signature: sha256(userId + this.tokenSalt + timestamp)
+            signature: sha256(userId + Config.USERS_TOKEN_SALT + timestamp)
         };
     }
 
