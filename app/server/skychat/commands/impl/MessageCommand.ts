@@ -26,6 +26,14 @@ export class MessageCommand extends Command {
             }
         }
 
+        // If last message posted by same user, merge messages
+        const lastMessage = this.room.getLastSentMessage();
+        if (lastMessage && lastMessage.user.username === connection.session.user.username) {
+            lastMessage.append(content);
+            this.room.send('message-edit', lastMessage.sanitized());
+            return;
+        }
+
         // Send the message to the room
         const message = new Message(content, connection.session.user, quoted);
         this.room.sendMessage(message);

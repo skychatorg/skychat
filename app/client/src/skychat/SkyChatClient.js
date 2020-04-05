@@ -19,6 +19,7 @@ export class SkyChatClient extends EventEmitter {
         this.webSocket.addEventListener('open', this.onWebSocketConnect.bind(this));
         this.webSocket.addEventListener('message', this.onWebSocketMessage.bind(this));
         this.webSocket.addEventListener('close', this.onWebSocketClose.bind(this));
+        this.store.commit('SET_CONNECTION_STATE', WebSocket.CONNECTING);
     }
 
     /**
@@ -26,6 +27,7 @@ export class SkyChatClient extends EventEmitter {
      */
     bind() {
         this.on('message', this.onMessage.bind(this));
+        this.on('message-edit', this.onMessageEdit.bind(this));
         this.on('set-user', this.onSetUser.bind(this));
         this.on('connected-list', this.onConnectedList.bind(this));
         this.on('yt-sync', this.onYtSync.bind(this));
@@ -42,6 +44,7 @@ export class SkyChatClient extends EventEmitter {
         if (authToken) {
             this.sendEvent('set-token', JSON.parse(authToken));
         }
+        this.store.commit('SET_CONNECTION_STATE', WebSocket.OPEN);
     }
 
     /**
@@ -59,6 +62,7 @@ export class SkyChatClient extends EventEmitter {
      *
      */
     onWebSocketClose(code, reason) {
+        this.store.commit('SET_CONNECTION_STATE', WebSocket.CLOSED);
         setTimeout(this.connect.bind(this), 1000);
     }
 
@@ -110,6 +114,15 @@ export class SkyChatClient extends EventEmitter {
     }
 
     /**
+     * Logout
+     */
+    logout() {
+        localStorage.removeItem(SkyChatClient.LOCAL_STORAGE_TOKEN_KEY);
+        this.webSocket.close();
+        this.connect();
+    }
+
+    /**
      * Register
      * @param username
      * @param password
@@ -136,6 +149,14 @@ export class SkyChatClient extends EventEmitter {
      */
     onMessage(message) {
         this.store.commit('NEW_MESSAGE', message);
+    }
+
+    /**
+     *
+     * @param message
+     */
+    onMessageEdit(message) {
+        this.store.commit('MESSAGE_EDIT', message);
     }
 
     /**
@@ -174,7 +195,13 @@ export class SkyChatClient extends EventEmitter {
      *
      */
     onError(error) {
-        alert(error);
+        new Noty({
+            type: 'error',
+            layout: 'topCenter',
+            theme: 'nest',
+            text: error,
+            timeout: 2000
+        }).show();
     }
 }
 

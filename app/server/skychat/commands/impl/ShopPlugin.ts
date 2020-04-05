@@ -4,16 +4,35 @@ import {ColorPlugin} from "./ColorPlugin";
 import {Message} from "../../Message";
 import {User} from "../../User";
 import {ConnectedListPlugin} from "./ConnectedListPlugin";
+import * as striptags from "striptags";
+
+
+export type ShopItems = {
+    items: ShopItem[];
+    preview: string
+};
+
+export type ShopItem = {
+    id: number,
+    name: string,
+    value: string,
+    price: number
+}
 
 
 export class ShopPlugin extends Plugin {
 
-    public static readonly ITEMS: {[type: string]: {id: number, name: string, preview: string, value: string, price: number}[]} = {
-        colors: [
-            {id: 0, name: 'default', preview: '', value: ColorPlugin.DEFAULT_COLOR, price: 0},
-            {id: 1, name: 'white', preview: '', value: 'white', price: 0},
-            {id: 2, name: 'cyan', preview: '', value: 'cyan', price: 0},
-        ]
+    public static readonly ITEMS: {[type: string]: ShopItems} = {
+        colors: {
+            items: [
+                {id: 0, name: '#aaaaaa', value: ColorPlugin.DEFAULT_COLOR, price: 0},
+                {id: 1, name: 'white', value: '#ffffff', price: 0},
+                {id: 2, name: '#bf00ff', value: '#bf00ff', price: 0},
+                {id: 3, name: '#046380', value: '#046380', price: 0},
+                {id: 4, name: '#eda6c0', value: '#eda6c0', price: 0},
+            ],
+            preview: '<span style="color:{VALUE}">{USERNAME}</span>'
+        }
     };
 
     readonly defaultDataStorageValue: {[type: string]: number[]} = {colors: []};
@@ -26,7 +45,7 @@ export class ShopPlugin extends Plugin {
 
     readonly rules = {
         shoplist: {
-            minCount: 1,
+            minCount: 0,
             maxCount: 1,
             params: [
                 {name: 'type', pattern: /^(colors)$/}
@@ -94,20 +113,42 @@ export class ShopPlugin extends Plugin {
      * @param connection
      */
     private async handleShopList(param: string, connection: Connection): Promise<void> {
-        const items = ShopPlugin.ITEMS[param];
-        if (! items) {
+        if (! param) {
+            for (const type in ShopPlugin.ITEMS) {
+                await this.handleShopList(type, connection);
+            }
+            return;
+        }
+        const itemDefinition = ShopPlugin.ITEMS[param];
+        if (! itemDefinition) {
             throw new Error('Unknown item');
         }
-        connection.send('message', new Message('Available ' + param + ':', User.BOT_USER));
-        for (let item of items) {
-            let content: string = item.id + ': ' + item.name;
-            if (item.preview) {
-                content += ' -> ' + item.preview;
-            }
-            content += ' (' + item.value + '): $ ' + item.price;
-            connection.send('message', new Message(content, User.BOT_USER));
+        const message = new Message('Available ' + param + ':', User.BOT_USER);
+        let html = '<table>';
+        html += `
+            <tr>
+                <td>id</td>
+                <td>name</td>
+                <td>preview</td>
+                <td>value</td>
+                <td>price</td>
+            </tr>
+        `;
+        for (let item of itemDefinition.items) {
+            html += `
+                <tr>
+                    <td>${item.id}</td>
+                    <td>${item.name}</td>
+                    <td>${itemDefinition.preview.replace('{VALUE}', item.value).replace('{USERNAME}', connection.session.user.username)}</td>
+                    <td>${item.value}</td>
+                    <td>$ ${item.price / 100}</td>
+                </tr>
+            `;
         }
-        connection.send('message', new Message('Use /shopbuy  ' + param + ' {id} to buy an item' , User.BOT_USER));
+        html += '</table>';
+        message.append(striptags(html), html);
+        message.append('Use /shopbuy  ' + param + ' {id} to buy an item');
+        connection.send('message', message);
     }
 
     /**
@@ -119,11 +160,11 @@ export class ShopPlugin extends Plugin {
 
         const type = param.split(' ')[0];
         const id = parseInt(param.split(' ')[1]);
-        const items = ShopPlugin.ITEMS[type];
-        if (! items) {
+        const itemDefinition = ShopPlugin.ITEMS[type];
+        if (! itemDefinition) {
             throw new Error('Unknown item type');
         }
-        const item = items.find((i: any) => i.id === id);
+        const item = itemDefinition.items.find((i: any) => i.id === id);
         if (! item) {
             throw new Error('Item not found');
         }
@@ -152,11 +193,11 @@ export class ShopPlugin extends Plugin {
 
         const type = param.split(' ')[0];
         const id = parseInt(param.split(' ')[1]);
-        const items = ShopPlugin.ITEMS[type];
-        if (! items) {
+        const itemDefinition = ShopPlugin.ITEMS[type];
+        if (! itemDefinition) {
             throw new Error('Unknown item type');
         }
-        const item = items.find((i: any) => i.id === id);
+        const item = itemDefinition.items.find((i: any) => i.id === id);
         if (! item) {
             throw new Error('Item not found');
         }
@@ -175,5 +216,6 @@ export class ShopPlugin extends Plugin {
                 await (this.room.getPlugin('connectedlist') as ConnectedListPlugin).sync();
                 break;
         }
+        connection.send('message', new Message(':ok:', User.BOT_USER));
     }
 }

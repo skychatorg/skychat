@@ -43,9 +43,10 @@
 
         components: {AuthPage, Player, Messages, TypingList, MessageForm, ConnectedList},
 
-        data: function() {
-            return {
-                page: 'welcome'
+        props: {
+            page: {
+                type: String,
+                required: true
             }
         },
 
@@ -55,7 +56,7 @@
             },
 
             gotoRoom() {
-                this.page = 'room';
+                this.$emit('gotoroom');
                 this.$client.ytSync();
                 Vue.nextTick(() => {
                     this.$refs.messages.scrollToBottom();
@@ -64,7 +65,6 @@
         },
 
         computed: {
-
             currentVideo: function() {
                 return this.$store.state.currentVideo;
             }
@@ -75,7 +75,8 @@
 <style lang="scss" scoped>
 
     .page-content {
-        font-size: 80%;
+        font-family: Arial,Helvetica Neue,Helvetica,sans-serif;
+        font-size: 100%;
         width: 100%;
         height: 0;
         max-width: 1400px;

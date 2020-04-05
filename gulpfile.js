@@ -13,7 +13,7 @@ const VueLoaderPlugin = require('vue-loader/lib/plugin');
 
 const pugPaths = { pages: ['app/client/views/*.pug'] };
 const scssPaths = { pages: ['app/client/css/*.scss'] };
-const resPaths = { pages: ['app/client/assets/*'] };
+const resPaths = { pages: ['app/client/assets/**/*'] };
 const srcPaths = 'app/client/src/index.js';
 const serverSrcPaths = ['app/server/**/*.ts'];
 const distPath = 'dist';

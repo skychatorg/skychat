@@ -4,7 +4,7 @@ import {Plugin} from "../Plugin";
 
 export class ColorPlugin extends Plugin {
 
-    static readonly DEFAULT_COLOR: string = '#a3a5b4';
+    static readonly DEFAULT_COLOR: string = '#aaa';
 
     readonly defaultDataStorageValue = ColorPlugin.DEFAULT_COLOR;
 

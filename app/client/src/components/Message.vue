@@ -74,8 +74,8 @@
         }
 
         >.avatar {
-            width: 30px;
-            height: 30px;
+            width: 40px;
+            height: 40px;
             box-shadow: 1px 1px 10px 0px #ffffff78;
         }
 
@@ -90,6 +90,9 @@
             >.user {
                 display: inline;
                 color: #a3a5b4;
+                font-weight: 800;
+                margin-bottom: 4px;
+                font-size: 110%;
             }
 
             .quote {

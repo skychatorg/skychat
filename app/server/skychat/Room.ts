@@ -148,6 +148,16 @@ export class Room implements IBroadcaster {
     /**
      * Send a new message to the room
      */
+    public getLastSentMessage(): Message | null {
+        if (this.messages.length === 0) {
+            return null;
+        }
+        return this.messages[this.messages.length - 1];
+    }
+
+    /**
+     * Send a new message to the room
+     */
     public sendMessage(message: Message): void {
         // Send it to clients
         this.send('message', message.sanitized());

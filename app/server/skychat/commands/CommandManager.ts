@@ -15,6 +15,7 @@ import {PrivateMessagePlugin} from "./impl/PrivateMessagePlugin";
 import {SetRightCommand} from "./impl/SetRightCommand";
 import {ColorPlugin} from "./impl/ColorPlugin";
 import {ShopPlugin} from "./impl/ShopPlugin";
+import {PointFarmerPlugin} from "./impl/PointFarmerPlugin";
 
 
 /**
@@ -34,6 +35,7 @@ export class CommandManager {
         MessageCommand,
         MotoPlugin,
         MutePlugin,
+        PointFarmerPlugin,
         PrivateMessagePlugin,
         SandalePlugin,
         SetRightCommand,
