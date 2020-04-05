@@ -182,6 +182,19 @@ export class User {
     }
 
     /**
+     * Get a plugin stored data
+     * @param user
+     * @param amount
+     */
+    public static async buy(user: User, amount: number): Promise<void> {
+        if (amount > user.money) {
+            throw new Error('User has not enough money to buy this amount');
+        }
+        user.money -= amount;
+        await User.sync(user);
+    }
+
+    /**
      * Save plugin data
      * @param user
      * @param pluginName

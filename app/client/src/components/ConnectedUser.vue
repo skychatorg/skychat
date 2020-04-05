@@ -4,14 +4,14 @@
 
 
 <template>
-    <div class="connected-user">
+    <div class="connected-user" :style="{'border-left-color': user.data.plugins.color}">
         <div class="avatar">
             <div class="image-bubble">
                 <img :src="user.data.plugins.avatar">
             </div>
         </div>
         <div class="info">
-            <div class="user">{{user.username}}</div>
+            <div class="user" :style="{'color': user.data.plugins.color}">{{user.username}}</div>
             <div class="moto">{{user.data.plugins.moto}}</div>
         </div>
         <div class="stats" v-show="user.right >= 0">

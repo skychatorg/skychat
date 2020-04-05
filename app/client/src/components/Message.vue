@@ -4,12 +4,12 @@
 
 
 <template>
-    <div @contextmenu.prevent="$emit('select')" class="message">
+    <div @contextmenu.prevent="$emit('select')" class="message" :style="{'border-left-color': message.user.data.plugins.color}">
         <div class="avatar image-bubble">
             <img :src="message.user.data.plugins.avatar">
         </div>
         <div class="content">
-            <div class="user">{{message.user.username}}</div>
+            <div class="user" :style="{'color': message.user.data.plugins.color}">{{message.user.username}}</div>
 
             <!-- first quote -->
             <div class="quote" v-if="message.quoted">

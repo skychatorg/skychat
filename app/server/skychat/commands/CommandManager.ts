@@ -13,6 +13,8 @@ import {HelpCommand} from "./impl/HelpCommand";
 import {ConnectedListPlugin} from "./impl/ConnectedListPlugin";
 import {PrivateMessagePlugin} from "./impl/PrivateMessagePlugin";
 import {SetRightCommand} from "./impl/SetRightCommand";
+import {ColorPlugin} from "./impl/ColorPlugin";
+import {ShopPlugin} from "./impl/ShopPlugin";
 
 
 /**
@@ -25,6 +27,7 @@ export class CommandManager {
      */
     public static readonly COMMANDS: Array<new (room: Room) => Command> = [
         AvatarPlugin,
+        ColorPlugin,
         ConnectedListPlugin,
         CursorPlugin,
         HelpCommand,
@@ -34,6 +37,7 @@ export class CommandManager {
         PrivateMessagePlugin,
         SandalePlugin,
         SetRightCommand,
+        ShopPlugin,
         TypingListPlugin,
         YoutubePlugin
     ];
