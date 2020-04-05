@@ -1,6 +1,7 @@
 import {Connection} from "../../Connection";
 import {Plugin} from "../Plugin";
 import {User} from "../../User";
+import {ConnectedListPlugin} from "./ConnectedListPlugin";
 
 
 export class AvatarPlugin extends Plugin {
@@ -35,5 +36,6 @@ export class AvatarPlugin extends Plugin {
             throw new Error('You already have this avatar');
         }
         await User.savePluginData(connection.session.user, this.name, param);
+        await (this.room.getPlugin('connectedlist') as ConnectedListPlugin).sync();
     }
 }

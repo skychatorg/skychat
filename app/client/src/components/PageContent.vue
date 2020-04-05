@@ -9,16 +9,16 @@
     <div class="page-content">
 
         <template v-if="page === 'welcome'">
-            <auth-page @gotoroom="page = 'room'" id="auth-page"/>
+            <auth-page @gotoroom="gotoRoom" id="auth-page"/>
         </template>
 
         <template v-if="page === 'room'">
             <!-- left col -->
             <section id="left">
-                <player id="player"/>
-                <messages id="messages" class="scrollbar" />
+                <player id="player" v-show="currentVideo"/>
+                <messages ref="messages" @select-message="onSelectMessage" id="messages" class="scrollbar" />
                 <typing-list id="typing-list" />
-                <message-form id="message-form"/>
+                <message-form ref="messageForm" id="message-form"/>
             </section>
 
             <!-- right col -->
@@ -30,7 +30,7 @@
     </div>
 </template>
 
-<script lang="ts">
+<script>
     import Vue from "vue";
     import AuthPage from "./AuthPage.vue";
     import Messages from "./Messages.vue";
@@ -38,6 +38,7 @@
     import MessageForm from "./MessageForm.vue";
     import Player from "./Player.vue";
     import ConnectedList from "./ConnectedList.vue";
+
     export default Vue.extend({
 
         components: {AuthPage, Player, Messages, TypingList, MessageForm, ConnectedList},
@@ -46,8 +47,28 @@
             return {
                 page: 'welcome'
             }
-        }
+        },
 
+        methods: {
+            onSelectMessage: function(message) {
+                this.$refs.messageForm.setMessage('@' + message.id + ' ');
+            },
+
+            gotoRoom() {
+                this.page = 'room';
+                this.$client.ytSync();
+                Vue.nextTick(() => {
+                    this.$refs.messages.scrollToBottom();
+                });
+            }
+        },
+
+        computed: {
+
+            currentVideo: function() {
+                return this.$store.state.currentVideo;
+            }
+        }
     });
 </script>
 

@@ -42,7 +42,7 @@ export class Session implements IBroadcaster {
     }
 
     /**
-     * Unique session identifier
+     * Unique session identifier (lower case)
      */
     private _identifier!: string;
 

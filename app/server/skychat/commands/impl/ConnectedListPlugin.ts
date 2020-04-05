@@ -2,6 +2,7 @@ import {Connection} from "../../Connection";
 import {Plugin} from "../Plugin";
 import {SanitizedUser} from "../../User";
 import {Room} from "../../Room";
+import {Session} from "../../Session";
 
 
 /**
@@ -9,7 +10,7 @@ import {Room} from "../../Room";
  */
 export class ConnectedListPlugin extends Plugin {
 
-    readonly name = 'connected_list';
+    readonly name = 'connectedlist';
 
     readonly minRight = -1;
 
@@ -23,6 +24,10 @@ export class ConnectedListPlugin extends Plugin {
 
     async run(alias: string, param: string, connection: Connection): Promise<void> { }
 
+    async onConnectionAuthenticated(connection: Connection): Promise<void> {
+        this.sync();
+    }
+
     async onConnectionJoinedRoom(connection: Connection): Promise<void> {
         this.sync();
     }
@@ -35,15 +40,14 @@ export class ConnectedListPlugin extends Plugin {
         this.sync();
     }
 
-    private sync(): void {
-        const connectedList: SanitizedUser[] = [];
+    public sync(): void {
+        const sessions: {[identifier: string]: SanitizedUser} = {};
         for (let connection of this.room.connections) {
-            const user = connection.session.user;
-            if (connectedList.indexOf(user) !== -1) {
+            if (typeof sessions[connection.session.identifier] !== 'undefined') {
                 continue;
             }
-            connectedList.push(user.sanitized());
+            sessions[connection.session.identifier] = connection.session.user.sanitized();
         }
-        this.room.send('connected-list', connectedList);
+        this.room.send('connected-list', Object.values(sessions).sort((a, b) => b.right - a.right));
     }
 }

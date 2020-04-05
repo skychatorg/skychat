@@ -23,7 +23,7 @@ export class SkyChat {
     constructor() {
 
         // Create server instance
-        this.server = new Server({port: 8080}, this.getNewSession.bind(this));
+        this.server = new Server(this.getNewSession.bind(this));
 
         // Register hooks
         this.server.onConnectionCreated = this.onConnectionCreated.bind(this);
@@ -75,17 +75,21 @@ export class SkyChat {
 
     private async onRegister(payload: any, connection: Connection): Promise<void> {
         const user = await User.registerUser(payload.username, payload.password);
-        this.onAuthSuccessful(user, connection);
+        await this.onAuthSuccessful(user, connection);
     }
 
     private async onLogin(payload: any, connection: Connection): Promise<void> {
         const user = await User.login(payload.username, payload.password);
-        this.onAuthSuccessful(user, connection);
+        await this.onAuthSuccessful(user, connection);
     }
 
     private async onSetToken(payload: any, connection: Connection): Promise<void> {
-        const user = await User.verifyAuthToken(payload);
-        this.onAuthSuccessful(user, connection);
+        try {
+            const user = await User.verifyAuthToken(payload);
+            await this.onAuthSuccessful(user, connection);
+        } catch (e) {
+            connection.send('auth-token', null);
+        }
     }
 
     /**
@@ -93,7 +97,7 @@ export class SkyChat {
      * @param user
      * @param connection
      */
-    private onAuthSuccessful(user: User, connection: Connection): void {
+    private async onAuthSuccessful(user: User, connection: Connection): Promise<void> {
         // Find an existing session belonging to the same user
         const recycledSession = Session.getSessionByIdentifier(user.username.toLowerCase());
         if (recycledSession) {
@@ -104,6 +108,9 @@ export class SkyChat {
             connection.session.setUser(user);
         }
         connection.send('auth-token', User.getAuthToken(user.id));
+        if (connection.room) {
+            await connection.room.executeConnectionAuthenticated(connection);
+        }
     }
 
     /**

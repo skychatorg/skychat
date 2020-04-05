@@ -2,6 +2,7 @@ import {Connection} from "../Connection";
 import {Session} from "../Session";
 import {User} from "../User";
 import {Room} from "../Room";
+import {Config} from "../Config";
 
 
 /**
@@ -65,6 +66,11 @@ export abstract class Command {
     public readonly minRight: number = -1;
 
     /**
+     * Is the command reserved for op
+     */
+    public readonly opOnly?: boolean;
+
+    /**
      *
      * @param room
      */
@@ -90,6 +96,11 @@ export abstract class Command {
         // Check user right
         if (connection.session.user.right < this.minRight) {
             throw new Error('You don\'t have the right to execute this command');
+        }
+
+        // Check op
+        if (this.opOnly && Config.OP.indexOf(connection.session.identifier) === -1) {
+            throw new Error('Command is only for op');
         }
 
         // Check parameters

@@ -1,6 +1,7 @@
 import {Connection} from "../../Connection";
 import {Plugin} from "../Plugin";
 import {User} from "../../User";
+import {ConnectedListPlugin} from "./ConnectedListPlugin";
 
 
 export class MotoPlugin extends Plugin {
@@ -11,11 +12,10 @@ export class MotoPlugin extends Plugin {
 
     readonly name = 'moto';
 
-    readonly minRight = -1;
+    readonly minRight = 0;
 
     readonly rules = {
         minCount: 1,
-        maxCount: 1,
         params: [
             {
                 name: 'moto',
@@ -30,5 +30,6 @@ export class MotoPlugin extends Plugin {
             throw new Error('Moto too long');
         }
         await User.savePluginData(connection.session.user, this.name, param);
+        await (this.room.getPlugin('connectedlist') as ConnectedListPlugin).sync();
     }
 }

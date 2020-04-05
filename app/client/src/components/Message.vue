@@ -4,21 +4,32 @@
 
 
 <template>
-    <div class="message">
+    <div @contextmenu.prevent="$emit('select')" class="message" :style="{'border-left-color': message.user.data.plugins.color}">
         <div class="avatar image-bubble">
             <img :src="message.user.data.plugins.avatar">
         </div>
         <div class="content">
-            <div class="user">{{message.user.username}}</div>
+            <div class="user" :style="{'color': message.user.data.plugins.color}">{{message.user.username}}</div>
+
+            <!-- first quote -->
+            <div class="quote" v-if="message.quoted">
+                <div class="quote-user">{{message.quoted.user.username}}:</div>
+                <!-- second quote -->
+                <div class="quote" v-if="message.quoted.quoted">
+                    <div class="quote-user">{{message.quoted.quoted.user.username}}:</div>
+                    <div class="quote-content" v-html="message.quoted.quoted.formatted"></div>
+                </div>
+                <div class="quote-content" v-html="message.quoted.formatted"></div>
+            </div>
             <div class="formatted" v-html="message.formatted"></div>
         </div>
         <div class="date">
-            14:39:06
+            {{formattedDate}}
         </div>
     </div>
 </template>
 
-<script lang="ts">
+<script>
     import Vue from "vue";
     export default Vue.extend({
 
@@ -28,6 +39,16 @@
                 required: true,
             }
         },
+
+        computed: {
+            formattedDate: function() {
+                const date = new Date(this.message.createdTimestamp * 1000);
+                const hours = date.getHours().toString().padStart(2, '0');
+                const minutes = date.getMinutes().toString().padStart(2, '0');
+                const seconds = date.getSeconds().toString().padStart(2, '0');
+                return `${hours}:${minutes}:${seconds}`;
+            }
+        }
     });
 </script>
 
@@ -45,7 +66,6 @@
         -ms-transition: all 0.2s;
         -o-transition: all 0.2s;
         transition: all 0.2s;
-        cursor: pointer;
 
         &:hover {
             border-width: 0;
@@ -69,8 +89,21 @@
 
             >.user {
                 display: inline;
-                width: 100px;
                 color: #a3a5b4;
+            }
+
+            .quote {
+                margin: 10px;
+                padding: 4px 10px;
+                border-left: 5px solid grey;
+
+                >.quote-user {
+                    font-size: 80%;
+                }
+                >.quote-content {
+                    margin-top: 5px;
+                    margin-left: 4px;
+                }
             }
 
             >.formatted {

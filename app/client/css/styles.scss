@@ -48,9 +48,14 @@ body {
     }
 }
 
-.sticker {
-    max-width: 80px;
-    max-height: 80px;
+.skychat-sticker {
+    max-width: 120px;
+    max-height: 120px;
+}
+
+.skychat-image {
+    max-width: 160px;
+    max-height: 160px;
 }
 
 .form-control {

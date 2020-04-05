@@ -3,6 +3,7 @@ import * as sha256 from "sha256";
 import {DatabaseHelper} from "./DatabaseHelper";
 import SQL from "sql-template-strings";
 import {CommandManager} from "./commands/CommandManager";
+import {Config} from "./Config";
 
 
 type UserData = {
@@ -59,17 +60,6 @@ export class User {
     public static AUTH_TOKEN_VALIDITY: number = 1000 * 60 * 60 * 6;
 
     /**
-     * Password salt defined in .env.json
-     */
-    private static passwordSalt: string = JSON.parse(fs.readFileSync('.env.json').toString()).users_passwords_salt;
-
-
-    /**
-     * Token salt defined in .env.json
-     */
-    private static tokenSalt: string = JSON.parse(fs.readFileSync('.env.json').toString()).users_token_salt;
-
-    /**
      * Static init block
      */
     static initialize() {
@@ -93,7 +83,7 @@ export class User {
         if (typeof userId !== 'number' || userId <= 0 || username.length === 0 || password.length === 0) {
             throw new Error('User and passwords must be supplied to compute password hash');
         }
-        return sha256(userId + password + User.passwordSalt + username.toLowerCase());
+        return sha256(userId + password + Config.USERS_PASSWORD_SALT + username.toLowerCase());
     }
 
     /**
@@ -163,7 +153,7 @@ export class User {
         return {
             userId,
             timestamp,
-            signature: sha256(userId + this.tokenSalt + timestamp)
+            signature: sha256(userId + Config.USERS_TOKEN_SALT + timestamp)
         };
     }
 
@@ -192,14 +182,43 @@ export class User {
     }
 
     /**
+     * Get a plugin stored data
+     * @param user
+     * @param amount
+     */
+    public static async buy(user: User, amount: number): Promise<void> {
+        if (amount > user.money) {
+            throw new Error('User has not enough money to buy this amount');
+        }
+        user.money -= amount;
+        await User.sync(user);
+    }
+
+    /**
      * Save plugin data
      * @param user
      * @param pluginName
      * @param data
      */
     public static async savePluginData(user: User, pluginName: string, data: any): Promise<void> {
+        if (user.right < 0) {
+            throw new Error('You must be logged to save preferences');
+        }
         user.data.plugins[pluginName] = data;
-        await DatabaseHelper.db.run(SQL`update users set data=${JSON.stringify(user.data)} where id=${user.id}`);
+        await this.sync(user);
+    }
+
+    /**
+     * Sync an user to the the database
+     * @param user
+     */
+    public static async sync(user: User) {
+        await DatabaseHelper.db.run(SQL`update users set
+            money=${user.money},
+            xp=${user.xp},
+            right=${user.right},
+            data=${JSON.stringify(user.data)}            
+            where id=${user.id}`);
     }
 
     public readonly id: number;
@@ -208,13 +227,13 @@ export class User {
 
     private readonly password: string;
 
-    public readonly money: number;
+    public money: number;
 
-    public readonly xp: number;
+    public xp: number;
 
-    public readonly right: number;
+    public right: number;
 
-    public readonly data: UserData;
+    public data: UserData;
 
     constructor(id: number, username: string, password: string, money: number, xp: number, right: number, data?: UserData) {
         this.id = id;

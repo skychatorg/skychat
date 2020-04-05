@@ -14,7 +14,7 @@ const VueLoaderPlugin = require('vue-loader/lib/plugin');
 const pugPaths = { pages: ['app/client/views/*.pug'] };
 const scssPaths = { pages: ['app/client/css/*.scss'] };
 const resPaths = { pages: ['app/client/assets/*'] };
-const srcPaths = ['app/client/src/index.ts'];
+const srcPaths = 'app/client/src/index.js';
 const serverSrcPaths = ['app/server/**/*.ts'];
 const distPath = 'dist';
 
@@ -33,84 +33,13 @@ gulp.task("build-client-scss", function () {
         .pipe(gulp.dest(distPath));
 });
 
-gulp.task('build-client-typescript', function() {
+gulp.task('build-client-javascript', function() {
+    const webpackConfig = require('./webpack.config');
+    delete webpackConfig.entry;
+    delete webpackConfig.watch;
     return gulp
-        .src('app/client/src/index.ts')
-        .pipe(webpack({
-            output: {
-                filename: 'bundle.js'
-            },
-            module: {
-                rules: [
-                    {
-                        test: /\.vue$/,
-                        loader: 'vue-loader',
-                        options: {
-                            loaders: {
-                                // Since sass-loader (weirdly) has SCSS as its default parse mode, we map
-                                // the "scss" and "sass" values for the lang attribute to the right configs here.
-                                // other preprocessors should work out of the box, no loader config like this necessary.
-                                'scss': 'vue-style-loader!css-loader!sass-loader',
-                                'sass': 'vue-style-loader!css-loader!sass-loader?indentedSyntax',
-                            }
-                            // other vue-loader options go here
-                        }
-                    },
-                    {
-                        test: /\.tsx?$/,
-                        loader: 'ts-loader',
-                        exclude: /node_modules/,
-                        options: {
-                            appendTsSuffixTo: [/\.vue$/],
-                        }
-                    },
-                    {
-                        test: /\.(png|jpg|gif|svg)$/,
-                        loader: 'file-loader',
-                        options: {
-                            name: '[name].[ext]?[hash]'
-                        }
-                    },
-                    {
-                        test: /\.css$/,
-                        use: [
-                            'vue-style-loader',
-                            'css-loader'
-                        ]
-                    },
-                    {
-                        test: /\.scss$/,
-                        use: [
-                            'vue-style-loader',
-                            'css-loader',
-                            'sass-loader'
-                        ]
-                    }
-                ]
-            },
-            resolve: {
-                extensions: ['.ts', '.js', '.vue', '.json'],
-                alias: {
-                    'vue$': 'vue/dist/vue.esm.js'
-                }
-            },
-            devServer: {
-                historyApiFallback: true,
-                noInfo: true
-            },
-            performance: {
-                hints: false
-            },
-            devtool: process.env.PRODUCTION ? false : '#eval-source-map',
-            plugins: [
-                // make sure to include the plugin for the magic
-                new VueLoaderPlugin()
-            ],
-            externals: {
-                vue: 'Vue',
-                vuex: 'Vuex',
-            }
-        }))
+        .src(srcPaths)
+        .pipe(webpack(webpackConfig))
         .pipe(gulp.dest(distPath));
 });
 
@@ -120,11 +49,11 @@ gulp.task('build-server-typescript', function() {
         .pipe(gulp.dest('build'));
 });
 
-gulp.task('build-client', gulp.parallel('build-client-views', 'build-client-scss', 'build-client-assets', 'build-client-typescript'));
+gulp.task('build-client', gulp.parallel('build-client-views', 'build-client-scss', 'build-client-assets', 'build-client-javascript'));
 gulp.task('build-server', gulp.parallel('build-server-typescript'));
 gulp.task('build', gulp.parallel('build-client', 'build-server'));
 
-gulp.task('watch-server-monitor', function (done) {
+gulp.task('watch-server-typescript', function (done) {
     nodemon({
         script: 'build/server.js',
         watch: serverSrcPaths,
@@ -134,11 +63,17 @@ gulp.task('watch-server-monitor', function (done) {
     });
 });
 
-gulp.task('watch-client-monitor', function () {
-    return gulp.watch(['app/client/**/*'], gulp.series('build-client'));
+gulp.task('watch-client-javascript', function () {
+    const webpackConfig = require('./webpack.config');
+    delete webpackConfig.entry;
+    webpackConfig.watch = true;
+    return gulp
+        .src(srcPaths)
+        .pipe(webpack(webpackConfig))
+        .pipe(gulp.dest(distPath));
 });
 
-gulp.task('watch-server', gulp.series('build-server', 'watch-server-monitor'));
-gulp.task('watch-client', gulp.series('build-client', 'watch-client-monitor'));
+gulp.task('watch-server', gulp.series('build-server', 'watch-server-typescript'));
+gulp.task('watch-client', gulp.series('build-client', 'watch-client-javascript'));
 gulp.task('watch', gulp.parallel('watch-client', 'watch-server'));
 gulp.task('default', gulp.series('watch'));

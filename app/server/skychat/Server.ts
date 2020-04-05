@@ -1,9 +1,13 @@
 import * as WebSocket from "ws";
 import * as http from "http";
-import {ServerOptions} from "ws";
+import * as https from "https";
 import {Connection} from "./Connection";
 import * as iof from "io-filter";
 import {Session} from "./Session";
+import * as express from "express";
+import {Config} from "./Config";
+import * as fs from "fs";
+import * as fileUpload from "express-fileupload";
 
 
 
@@ -17,6 +21,7 @@ type EventsDescription = {
 
 
 
+
 /**
  * Generic server object. Handle typed event communication.
  */
@@ -27,7 +32,7 @@ export class Server {
      */
     private readonly events: EventsDescription = {};
 
-    private readonly serverConfig: ServerOptions;
+    private readonly app: express.Application;
 
     private readonly wss: WebSocket.Server;
 
@@ -38,11 +43,71 @@ export class Server {
      */
     public sessionBuilder: (request: http.IncomingMessage) => Promise<Session>;
 
-    constructor(serverConfig: ServerOptions, sessionBuilder: (request: http.IncomingMessage) => Promise<Session>) {
-        this.serverConfig = serverConfig;
+    constructor(sessionBuilder: (request: http.IncomingMessage) => Promise<Session>) {
         this.sessionBuilder = sessionBuilder;
-        this.wss = new WebSocket.Server(serverConfig);
+        this.app = express();
+        this.app.use(express.static('dist'));
+        this.app.use('/uploads', express.static('uploads'));
+        this.app.use(fileUpload({
+            limits: { fileSize: 5 * 1024 * 1024 },
+            createParentPath: true,
+            useTempFiles: true,
+            tempFileDir: '/tmp/'
+        }));
+        this.app.post('/upload', this.onFileUpload.bind(this));
+        this.app.get('*', function(req: express.Request, res: express.Response){
+            res.status(404).send('404');
+        });
+        let server;
+        if (Config.USE_SSL) {
+            server = https.createServer({
+                cert: fs.readFileSync(Config.SSL_CERTIFICATE),
+                key: fs.readFileSync(Config.SSL_CERTIFICATE_KEY)
+            }, this.app);
+        } else {
+            server = http.createServer(this.app);
+        }
+        this.wss = new WebSocket.Server({noServer: true});
         this.wss.on('connection', this.onConnection.bind(this));
+        server.on('upgrade', (request, socket, head) => {
+            this.wss.handleUpgrade(request, socket, head, (ws) => {
+                this.wss.emit('connection', ws, request);
+            });
+        });
+        server.listen(8080, function() {
+            console.log('Listening on :' + 8080);
+        });
+    }
+
+    /**
+     * On file upload
+     * @param req
+     * @param res
+     */
+    public onFileUpload(req: express.Request, res: express.Response): void {
+        const file: any = req.files ? req.files.file : undefined;
+        if (! file) {
+            res.send(JSON.stringify({"status": 500, "message": "File not found"}));
+            res.end();
+            return;
+        }
+        const date = new Date();
+        const mimeTypes: {[mimetype: string]: string} = {
+            'image/jpeg': 'jpg',
+            'image/jpg': 'jpg',
+            'image/png': 'png',
+            'image/gif': 'gif',
+        };
+        if (typeof mimeTypes[file.mimetype] === 'undefined') {
+            res.send(JSON.stringify({"status": 500, "message": "Invalid mimetype"}));
+            res.end();
+            return;
+        }
+        const extension = mimeTypes[file.mimetype];
+        const filePath = 'uploads/' + date.toISOString().substr(0, 19).replace(/(-|T)/g, '/').replace(/:/g, '-') + '-' + Math.floor(1000000000 * Math.random()) + '.' + extension;
+        file.mv(filePath);
+        res.send(JSON.stringify({"status": 200, "path": filePath}));
+        res.end();
     }
 
     /**

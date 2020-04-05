@@ -11,6 +11,10 @@ import {YoutubePlugin} from "./impl/YoutubePlugin";
 import {Room} from "../Room";
 import {HelpCommand} from "./impl/HelpCommand";
 import {ConnectedListPlugin} from "./impl/ConnectedListPlugin";
+import {PrivateMessagePlugin} from "./impl/PrivateMessagePlugin";
+import {SetRightCommand} from "./impl/SetRightCommand";
+import {ColorPlugin} from "./impl/ColorPlugin";
+import {ShopPlugin} from "./impl/ShopPlugin";
 
 
 /**
@@ -23,16 +27,21 @@ export class CommandManager {
      */
     public static readonly COMMANDS: Array<new (room: Room) => Command> = [
         AvatarPlugin,
+        ColorPlugin,
         ConnectedListPlugin,
         CursorPlugin,
         HelpCommand,
         MessageCommand,
         MotoPlugin,
         MutePlugin,
+        PrivateMessagePlugin,
         SandalePlugin,
+        SetRightCommand,
+        ShopPlugin,
         TypingListPlugin,
         YoutubePlugin
     ];
+
 
     /**
      * Load all commands and plugins

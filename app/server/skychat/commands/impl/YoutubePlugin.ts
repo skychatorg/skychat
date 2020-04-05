@@ -6,6 +6,8 @@ import {Connection} from "../../Connection";
 import {CommandEntryPointRule} from "../Command";
 import {google, youtube_v3} from "googleapis";
 import * as fs from "fs";
+import {IBroadcaster} from "../../IBroadcaster";
+import {Config} from "../../Config";
 
 
 /**
@@ -88,6 +90,8 @@ export class YoutubePlugin extends Plugin {
         return duration;
     }
 
+    readonly defaultDataStorageValue = true;
+
     readonly name = 'yt';
 
     readonly aliases = ['play'];
@@ -96,7 +100,7 @@ export class YoutubePlugin extends Plugin {
         yt: {
             minCount: 1,
             maxCount: 1,
-            params: [{name: 'action', pattern: /^(sync)$/}]
+            params: [{name: 'action', pattern: /^(sync|off|on)$/}]
         },
         play: {
             minCount: 1,
@@ -114,11 +118,7 @@ export class YoutubePlugin extends Plugin {
     constructor(room: Room) {
         super(room);
 
-        const youtubeApiKey = JSON.parse(fs.readFileSync('.env.json').toString()).youtube_api_key;
-        if (! youtubeApiKey) {
-            throw new Error("Youtube api key unset");
-        }
-        this.youtube = google.youtube({version: 'v3', auth: youtubeApiKey});
+        this.youtube = google.youtube({version: 'v3', auth: Config.YOUTUBE_API_KEY});
 
         if (this.room) {
             setInterval(this.tick.bind(this), 1000);
@@ -134,11 +134,50 @@ export class YoutubePlugin extends Plugin {
     }
 
     /**
+     * Handle generic actions on the yt plugin (eg sync)
+     * @param param
+     * @param connection
+     */
+    private async handleYt(param: string, connection: Connection): Promise<void> {
+
+        switch (param) {
+
+            case 'sync':
+                this.sync(connection);
+                break;
+
+            case 'on':
+            case 'off':
+                const newState = param === 'on';
+                await User.savePluginData(connection.session.user, this.name, newState);
+                if (newState) {
+                    this.sync(connection);
+                } else {
+                    connection.send('yt-sync', null);
+                }
+                break;
+        }
+    }
+
+    /**
+     * Play a video
+     * @param param
+     * @param connection
+     */
+    private async handlePlay(param: string, connection: Connection): Promise<void> {
+        const video = await this.getYoutubeVideoMeta(param);
+        this.queue.push({
+            user: connection.session.user,
+            video
+        });
+    }
+
+    /**
      * When client join the room, sync their yt player
      * @param connection
      */
     async onConnectionJoinedRoom(connection: Connection): Promise<void> {
-        this.sync();
+        this.sync(connection);
     }
 
     /**
@@ -171,28 +210,6 @@ export class YoutubePlugin extends Plugin {
     }
 
     /**
-     * Handle generic actions on the yt plugin (eg sync)
-     * @param param
-     * @param connection
-     */
-    private async handleYt(param: string, connection: Connection): Promise<void> {
-
-    }
-
-    /**
-     * Play a video
-     * @param param
-     * @param connection
-     */
-    private async handlePlay(param: string, connection: Connection): Promise<void> {
-        const video = await this.getYoutubeVideoMeta(param);
-        this.queue.push({
-            user: connection.session.user,
-            video
-        });
-    }
-
-    /**
      *
      */
     private async tick(): Promise<void> {
@@ -206,7 +223,7 @@ export class YoutubePlugin extends Plugin {
 
                 // If there is no more video to play, sync clients (this will deactive the player)
                 if (this.queue.length === 0) {
-                    this.sync();
+                    this.sync(this.room);
                 }
             }
             return; // Wait until next tick
@@ -222,22 +239,22 @@ export class YoutubePlugin extends Plugin {
         }
         // Else, play this video
         this.currentVideo = {...nextVideo, startedDate: new Date()};
-        this.sync();
+        this.sync(this.room);
     }
 
     /**
      * Sync clients in the room
      */
-    public sync() {
+    public sync(broadcaster: IBroadcaster) {
         if (this.currentVideo) {
-            this.room.send('yt-sync', {
+            broadcaster.send('yt-sync', {
                 user: this.currentVideo.user.sanitized(),
                 video: this.currentVideo.video,
                 startedDate: this.currentVideo.startedDate.getTime() * 0.001,
                 cursor: Date.now() * 0.001 - this.currentVideo.startedDate.getTime() * 0.001
             });
         } else {
-            this.room.send('yt-sync', null);
+            broadcaster.send('yt-sync', null);
         }
     }
 }

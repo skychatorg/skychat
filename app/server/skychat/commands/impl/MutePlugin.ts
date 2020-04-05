@@ -13,7 +13,7 @@ export class MutePlugin extends Plugin {
 
     readonly aliases = ['unmute'];
 
-    readonly minRight = -1; // @TODO set to >0
+    readonly minRight = 100;
 
     readonly rules = {
         mute: {
