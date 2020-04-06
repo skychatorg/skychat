@@ -71,7 +71,7 @@
             font-family: Russo One,sans-serif;
             text-align: center;
             color: white;
-            font-size: 260%;
+            font-size: 200%;
         }
 
         >.auth-modal {

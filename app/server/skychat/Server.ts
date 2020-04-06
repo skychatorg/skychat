@@ -74,8 +74,8 @@ export class Server {
                 this.wss.emit('connection', ws, request);
             });
         });
-        server.listen(8080, function() {
-            console.log('Listening on :' + 8080);
+        server.listen(Config.PORT, function() {
+            console.log('Listening on :' + Config.PORT);
         });
     }
 

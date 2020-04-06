@@ -76,7 +76,7 @@
 
     .page-content {
         font-family: Arial,Helvetica Neue,Helvetica,sans-serif;
-        font-size: 100%;
+        font-size: 80%;
         width: 100%;
         height: 0;
         max-width: 1400px;

@@ -72,6 +72,13 @@ export class Message {
     }
 
     /**
+     * Get the number of lines of the message
+     */
+    public getLineCount(): number {
+        return this.content.split("\n").length;
+    }
+
+    /**
      *
      */
     public sanitized(quoteDepth: number = 2): SanitizedMessage {

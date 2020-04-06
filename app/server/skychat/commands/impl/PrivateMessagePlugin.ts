@@ -27,6 +27,6 @@ export class PrivateMessagePlugin extends Plugin {
             throw new Error('User not found');
         }
 
-        session.send('message', new Message(param.split(' ').slice(1).join(' '), connection.session.user));
+        session.send('message', new Message(param.split(' ').slice(1).join(' '), connection.session.user).sanitized());
     }
 }

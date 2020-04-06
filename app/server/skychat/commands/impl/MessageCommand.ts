@@ -28,7 +28,7 @@ export class MessageCommand extends Command {
 
         // If last message posted by same user, merge messages
         const lastMessage = this.room.getLastSentMessage();
-        if (lastMessage && lastMessage.user.username === connection.session.user.username) {
+        if (lastMessage && lastMessage.user.username === connection.session.user.username && lastMessage.getLineCount() < 5 && new Date() < new Date(lastMessage.createdTime.getTime() + 1000 * 30)) {
             lastMessage.append(content);
             this.room.send('message-edit', lastMessage.sanitized());
             return;

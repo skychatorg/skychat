@@ -52,7 +52,6 @@
         margin-top: 4px;
         border-left: 4px solid #a3a5b4;
         transition: all 0.2s;
-        cursor: pointer;
 
         &:hover {
             border-width: 0;
@@ -72,6 +71,7 @@
         }
         >.info {
             padding-top: 6px;
+            padding-left: 4px;
             position: relative;
             flex-grow: 1;
             width: 0;
@@ -86,12 +86,11 @@
                 font-size: 110%;
             }
             >.moto {
-                font-size: 80%;
                 margin-left: 10px;
                 white-space: nowrap;
                 overflow: hidden;
                 text-overflow: ellipsis;
-                margin-top: 6px;
+                margin-top: 0;
             }
         }
         >.stats {
@@ -101,7 +100,8 @@
             justify-content: center;
             text-align: right;
             padding-right: 10px;
-            font-size: 80%;
+            font-size: 100%;
+            font-weight: 600;
 
             >* {
                 display: flex;
@@ -111,7 +111,7 @@
             >.right {
                 flex-grow: 1;
                 font-size: 80%;
-                color: #4484e4;
+                color: #a1c6ff;
             }
             >.money {
                 flex-grow: 1;

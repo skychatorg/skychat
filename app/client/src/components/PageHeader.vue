@@ -80,6 +80,7 @@
         display: flex;
 
         .nav-title {
+            text-decoration: none;
             display: flex;
             width: 200px;
             height: 100%;

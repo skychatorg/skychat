@@ -44,8 +44,13 @@ export class ShopPlugin extends Plugin {
     readonly minRight = 0;
 
     readonly rules = {
-        shoplist: {
+        shop: {
             minCount: 0,
+            maxCount: 0,
+            params: []
+        },
+        shoplist: {
+            minCount: 1,
             maxCount: 1,
             params: [
                 {name: 'type', pattern: /^(colors)$/}
@@ -104,7 +109,11 @@ export class ShopPlugin extends Plugin {
      * @param connection
      */
     private async handleShop(param: string, connection: Connection): Promise<void> {
-        return;
+        const message = new Message('Available items:', User.BOT_USER);
+        for (const type in ShopPlugin.ITEMS) {
+            message.append('/shoplist ' + type + ' :d) list all available ' + type);
+        }
+        connection.send('message', message.sanitized());
     }
 
     /**
@@ -147,8 +156,10 @@ export class ShopPlugin extends Plugin {
         }
         html += '</table>';
         message.append(striptags(html), html);
-        message.append('Use /shopbuy  ' + param + ' {id} to buy an item');
-        connection.send('message', message);
+        message.append('Buy a command:');
+        message.append('/shopbuy ' + param + ' {id} :d) Buy item {id}');
+        message.append('/shopset ' + param + ' {id} :d) Select item {id} (Must be bought beforehand)');
+        connection.send('message', message.sanitized());
     }
 
     /**
@@ -216,6 +227,6 @@ export class ShopPlugin extends Plugin {
                 await (this.room.getPlugin('connectedlist') as ConnectedListPlugin).sync();
                 break;
         }
-        connection.send('message', new Message(':ok:', User.BOT_USER));
+        connection.send('message', new Message(':ok:', User.BOT_USER).sanitized());
     }
 }

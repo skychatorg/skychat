@@ -6,7 +6,7 @@ import {ConnectedListPlugin} from "./ConnectedListPlugin";
 
 export class MotoPlugin extends Plugin {
 
-    private static MOTO_MAX_LENGTH: number = 32;
+    private static MOTO_MAX_LENGTH: number = 64;
 
     readonly defaultDataStorageValue = '';
 
