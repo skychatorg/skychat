@@ -8,6 +8,7 @@ import {google, youtube_v3} from "googleapis";
 import * as fs from "fs";
 import {IBroadcaster} from "../../IBroadcaster";
 import {Config} from "../../Config";
+import {Message} from "../../Message";
 
 
 /**
@@ -239,6 +240,7 @@ export class YoutubePlugin extends Plugin {
         }
         // Else, play this video
         this.currentVideo = {...nextVideo, startedDate: new Date()};
+        this.room.sendMessage(new Message('Now playing: ' + nextVideo.video.title + ', added by ' + nextVideo.user.username, User.BOT_USER));
         this.sync(this.room);
     }
 
