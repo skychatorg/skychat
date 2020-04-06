@@ -17,6 +17,7 @@ import {ColorPlugin} from "./impl/ColorPlugin";
 import {ShopPlugin} from "./impl/ShopPlugin";
 import {PointFarmerPlugin} from "./impl/PointFarmerPlugin";
 import {OfferMoney} from "./impl/OfferMoney";
+import {HistoryClearPlugin} from "./impl/HistoryClearPlugin";
 
 
 /**
@@ -33,6 +34,7 @@ export class CommandManager {
         ConnectedListPlugin,
         CursorPlugin,
         HelpCommand,
+        HistoryClearPlugin,
         MessageCommand,
         MotoPlugin,
         MutePlugin,
