@@ -1,5 +1,7 @@
 @import 'abstract/util.scss';
 
+$break-point-mobile: 800px;
+
 *,
 *::before,
 *::after {
@@ -19,6 +21,18 @@ body {
     background-size: 100%;
     background: #1d1e21 url(/assets/background.svg) no-repeat fixed bottom;
 }
+
+
+/**
+ * Patch for mobile users
+ */
+@media screen and (max-width: $break-point-mobile) {
+
+    .hide-mobile {
+        display: none;
+    }
+}
+
 
 .image-bubble {
     position: relative;

@@ -22,7 +22,7 @@
             </section>
 
             <!-- right col -->
-            <section id="right" class="scrollbar">
+            <section id="right" class="hide-mobile scrollbar">
                 <connected-list></connected-list>
             </section>
         </template>
