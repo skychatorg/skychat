@@ -27,6 +27,7 @@ export class SkyChatClient extends EventEmitter {
      */
     bind() {
         this.on('message', this.onMessage.bind(this));
+        this.on('private-message', this.onPrivateMessage.bind(this));
         this.on('message-edit', this.onMessageEdit.bind(this));
         this.on('set-user', this.onSetUser.bind(this));
         this.on('connected-list', this.onConnectedList.bind(this));
@@ -90,6 +91,15 @@ export class SkyChatClient extends EventEmitter {
     }
 
     /**
+     * Send a PM to the given username
+     * @param username
+     * @param message
+     */
+    sendPrivateMessage(username, message) {
+        return this.sendMessage('/mp ' + username + ' ' + message);
+    }
+
+    /**
      * Set typing state
      * @param typing
      */
@@ -149,6 +159,14 @@ export class SkyChatClient extends EventEmitter {
      */
     onMessage(message) {
         this.store.commit('NEW_MESSAGE', message);
+    }
+
+    /**
+     *
+     * @param privateMessage
+     */
+    onPrivateMessage(privateMessage) {
+        this.store.commit('NEW_PRIVATE_MESSAGE', privateMessage);
     }
 
     /**

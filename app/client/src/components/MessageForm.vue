@@ -5,7 +5,12 @@
 
 <template>
     <div class="message-form">
-        <div class="image-upload">
+        <div class="image-upload" v-show="uploading">
+            <label for="file-input">
+                <img src="https://i.gifer.com/origin/34/34338d26023e5515f6cc8969aa027bca_w200.gif"/>
+            </label>
+        </div>
+        <div class="image-upload" v-show="! uploading">
             <label for="file-input">
                 <img src="https://redsky.fr/picts/galerie/uploaded/2016-05-28/03-05-51-231dea597d8973819b31-psycho.gif"/>
             </label>
@@ -34,7 +39,8 @@
             return {
                 message: '',
                 historyIndex: null,
-                sentMessageHistory: []
+                sentMessageHistory: [],
+                uploading: false,
             };
         },
 
@@ -42,7 +48,7 @@
 
             message: function(newMessage, oldMessage) {
                 const oldTyping = oldMessage.length > 0 && oldMessage[0] !== '/';
-                const newTyping = newMessage.length > 0 && newMessage[0] !== '/';
+                const newTyping = ! this.$store.state.channel && newMessage.length > 0 && newMessage[0] !== '/';
                 if (newTyping !== oldTyping) {
                     this.$client.setTyping(newTyping);
                 }
@@ -75,24 +81,31 @@
              * Upload a file
              */
             upload: async function() {
+                if (this.uploading) {
+                    return;
+                }
                 const fileInput = this.$refs.file;
                 const file = fileInput.files[0];
-
-                const data = new FormData();
-                data.append('file', file);
-
-                const result = await (await fetch("./upload", {method: 'POST', body: data})).json();
-                if (result.status === 500) {
+                this.uploading = true;
+                try {
+                    const data = new FormData();
+                    data.append('file', file);
+                    const result = await (await fetch("./upload", {method: 'POST', body: data})).json();
+                    if (result.status === 500) {
+                        throw new Error('Unable to upload: ' + result.message);
+                    }
+                    this.setMessage(this.message + ' ' + document.location.href + result.path);
+                } catch (e) {
                     new Noty({
                         type: 'error',
                         layout: 'topCenter',
                         theme: 'nest',
-                        text: result.message,
+                        text: e.message,
                         timeout: 2000
                     }).show();
-                    return;
+                } finally {
+                    this.uploading = false;
                 }
-                this.setMessage(this.message + ' ' + document.location.href + result.path);
             },
 
             /**
@@ -103,7 +116,11 @@
                 this.sentMessageHistory.push(this.message);
                 this.sentMessageHistory.splice(0, this.sentMessageHistory.length - MESSAGE_HISTORY_LENGTH);
                 this.historyIndex = null;
-                this.$client.sendMessage(this.message);
+                if (this.$store.state.channel) {
+                    this.$client.sendPrivateMessage(this.$store.state.channel, this.message);
+                } else {
+                    this.$client.sendMessage(this.message);
+                }
                 this.message = '';
             }
         }

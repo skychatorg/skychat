@@ -6,7 +6,7 @@
 <template>
     <div class="page">
         <page-header @logout="logout" @login="login" id="header"/>
-        <page-content @gotoroom="gotoRoom" :page="page" id="content"/>
+        <page-content id="content"/>
     </div>
 </template>
 
@@ -17,23 +17,20 @@
 
     export default Vue.extend({
         components: {PageHeader, PageContent},
-        data: function() {
-            return {
-                page: 'welcome'
-            }
-        },
         methods: {
             logout: function() {
                 this.$client.logout();
-                this.page = 'welcome';
+                this.$store.commit('SET_PAGE', 'welcome');
             },
             login: function() {
-                this.page = 'welcome';
-            },
-            gotoRoom: function() {
-                this.page = 'room';
+                this.$store.commit('SET_PAGE', 'welcome');
             }
-        }
+        },
+        computed: {
+            page: function() {
+                return this.$store.state.page;
+            }
+        },
     });
 </script>
 

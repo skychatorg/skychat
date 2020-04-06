@@ -22,7 +22,7 @@
             </section>
 
             <!-- right col -->
-            <section id="right" class="scrollbar">
+            <section id="right" class="hide-mobile scrollbar">
                 <connected-list></connected-list>
             </section>
         </template>
@@ -40,35 +40,28 @@
     import ConnectedList from "./ConnectedList.vue";
 
     export default Vue.extend({
-
         components: {AuthPage, Player, Messages, TypingList, MessageForm, ConnectedList},
-
-        props: {
-            page: {
-                type: String,
-                required: true
-            }
-        },
-
         methods: {
             onSelectMessage: function(message) {
                 this.$refs.messageForm.setMessage('@' + message.id + ' ');
             },
 
             gotoRoom() {
-                this.$emit('gotoroom');
+                this.$store.commit('SET_PAGE', 'room');
                 this.$client.ytSync();
                 Vue.nextTick(() => {
                     this.$refs.messages.scrollToBottom();
                 });
-            }
+            },
         },
-
         computed: {
             currentVideo: function() {
                 return this.$store.state.currentVideo;
+            },
+            page: function() {
+                return this.$store.state.page;
             }
-        }
+        },
     });
 </script>
 

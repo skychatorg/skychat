@@ -3,6 +3,7 @@ import {Plugin} from "../Plugin";
 import {Session} from "../../Session";
 import {User} from "../../User";
 import {Message} from "../../Message";
+import {PrivateMessage} from "../../PrivateMessage";
 
 
 export class PrivateMessagePlugin extends Plugin {
@@ -27,6 +28,10 @@ export class PrivateMessagePlugin extends Plugin {
             throw new Error('User not found');
         }
 
-        session.send('message', new Message(param.split(' ').slice(1).join(' '), connection.session.user).sanitized());
+        const content = param.split(' ').slice(1).join(' ');
+
+        const privateMessage = new PrivateMessage(content, connection.session.user, session.user);
+        connection.session.send('private-message', privateMessage.sanitized());
+        session.send('private-message', privateMessage.sanitized());
     }
 }

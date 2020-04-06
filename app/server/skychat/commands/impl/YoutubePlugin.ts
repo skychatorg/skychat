@@ -8,6 +8,7 @@ import {google, youtube_v3} from "googleapis";
 import * as fs from "fs";
 import {IBroadcaster} from "../../IBroadcaster";
 import {Config} from "../../Config";
+import {Message} from "../../Message";
 
 
 /**
@@ -239,22 +240,31 @@ export class YoutubePlugin extends Plugin {
         }
         // Else, play this video
         this.currentVideo = {...nextVideo, startedDate: new Date()};
+        this.room.sendMessage(new Message('Now playing: ' + nextVideo.video.title + ', added by ' + nextVideo.user.username, User.BOT_USER));
         this.sync(this.room);
     }
 
     /**
      * Sync clients in the room
      */
-    public sync(broadcaster: IBroadcaster) {
-        if (this.currentVideo) {
-            broadcaster.send('yt-sync', {
-                user: this.currentVideo.user.sanitized(),
-                video: this.currentVideo.video,
-                startedDate: this.currentVideo.startedDate.getTime() * 0.001,
-                cursor: Date.now() * 0.001 - this.currentVideo.startedDate.getTime() * 0.001
-            });
-        } else {
-            broadcaster.send('yt-sync', null);
+    public sync(broadcaster: Connection | Room) {
+        if (broadcaster instanceof Room) {
+            for (const connection of broadcaster.connections) {
+                this.sync(connection);
+            }
+            return;
         }
+        // If the user has cursors disabled
+        if (! this.currentVideo || ! User.getPluginData(broadcaster.session.user, this.name)) {
+            // Abort
+            broadcaster.send('yt-sync', null);
+            return;
+        }
+        broadcaster.send('yt-sync', {
+            user: this.currentVideo.user.sanitized(),
+            video: this.currentVideo.video,
+            startedDate: this.currentVideo.startedDate.getTime() * 0.001,
+            cursor: Date.now() * 0.001 - this.currentVideo.startedDate.getTime() * 0.001
+        });
     }
 }

@@ -5,6 +5,8 @@ Vue.use(Vuex);
 
 const store = {
     state: {
+        page: 'welcome',
+        channel: null,
         connectionState: WebSocket.CLOSED,
         user: {
             id: 0,
@@ -22,10 +24,25 @@ const store = {
         },
         connectedList: [],
         messages: [],
+        privateMessages: {},
         currentVideo: null,
         typingList: [],
     },
     mutations: {
+        SET_PAGE(state, page) {
+            state.page = page;
+        },
+        SET_CHANNEL(state, channelName) {
+            channelName = channelName.toLowerCase();
+            if (typeof state.privateMessages[channelName] === 'undefined') {
+                Vue.set(state.privateMessages, channelName, {unreadCount: 0, messages: []});
+            }
+            state.channel = channelName;
+            state.privateMessages[channelName].unreadCount = 0;
+        },
+        GOTO_MAIN_CHANNEL(state) {
+            state.channel = null;
+        },
         SET_CONNECTION_STATE(state, connectionState) {
             state.connectionState = connectionState;
         },
@@ -37,6 +54,19 @@ const store = {
         },
         NEW_MESSAGE(state, message) {
             state.messages.push(message);
+        },
+        NEW_PRIVATE_MESSAGE(state, privateMessage) {
+            const fromUserName = privateMessage.user.username.toLowerCase();
+            const toUserName = privateMessage.to.username.toLowerCase();
+            const otherUserName = (fromUserName === state.user.username.toLowerCase() ? toUserName : fromUserName).toLowerCase();
+
+            if (typeof state.privateMessages[otherUserName] === 'undefined') {
+                Vue.set(state.privateMessages, otherUserName, {unreadCount: 0, messages: []});
+            }
+            state.privateMessages[otherUserName].messages.push(privateMessage);
+            if (state.channel !== otherUserName) {
+                state.privateMessages[otherUserName].unreadCount ++;
+            }
         },
         MESSAGE_EDIT(state, message) {
             const oldMessageIndex = state.messages.findIndex(m => m.id === message.id);

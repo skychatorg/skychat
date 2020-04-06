@@ -32,7 +32,9 @@ export class MessageFormatter {
     public format(message: string): string {
         message = escapeHtml(message);
         message = this.replaceImages(message);
+        message = this.replaceRisiBankStickers(message);
         message = this.replaceStickers(message);
+        message = this.replaceLinks(message);
         return message;
     }
 
@@ -46,10 +48,34 @@ export class MessageFormatter {
             return message;
         }
         for (const imageUrl of matches) {
-            const html = `<a href="${imageUrl}" target="_blank"><img class="skychat-image" src="${imageUrl}"></a>`;
+            const html = `<a class="skychat-image" href="${imageUrl}" target="_blank"><img src="${imageUrl}"></a>`;
             message = message.replace(new RegExp(imageUrl, 'g'), html);
         }
         return message;
+    }
+
+    /**
+     * Replace RisiBank images
+     * @param message
+     */
+    public replaceRisiBankStickers(message: string): string {
+        return message.replace(/https:\/\/api.risibank.fr\/cache\/stickers\/d([0-9]+)\/([0-9]+)-([A-Za-z0-9-_\[\]]+?)\.(jpg|jpeg|gif|png)/g, '<a class="skychat-risibank-sticker" href="//risibank.fr/stickers/$2-0" target="_blank"><img src="//api.risibank.fr/cache/stickers/d$1/$2-$3.$4"></a>');
+    }
+
+    /**
+     * Replace links in the message
+     * @param text
+     */
+    public replaceLinks(text: string): string {
+        let rex = /(^| )(https?:\/\/)(?:[-A-Za-z0-9+&*\^@#\/%\[\]?=~_|$!:,.;]+\.)+[-A-Za-z0-9+\[\]&*\^@#\/%?=~_|$!:,.;]+/ig;
+        text = text.replace(rex, ($0, $1) => {
+            if (/^https?:\/\/.+/i.test($0)) {
+                return ($1 ? $0 : `<a class="skychat-link" target="_blank" rel="nofollow" href="${$0}">${$0}</a>`);
+            } else {
+                return ($1 ? $0 : `<a class="skychat-link" target="_blank" rel="nofollow" href="http://${$0}">${$0}</a>`);
+            }
+        });
+        return text;
     }
 
     /**
@@ -68,7 +94,7 @@ export class MessageFormatter {
     public replaceStickers(message: string): string {
         for (const code in this.stickers) {
             const sticker = this.stickers[code];
-            message = message.replace(new RegExp(this.escapeRegExp(code), 'g'), `<img class="skychat-sticker" src="${sticker}">`);
+            message = message.replace(new RegExp(this.escapeRegExp(code), 'g'), `<img class="skychat-sticker" title="${code}" alt="${code}" src="${sticker}">`);
         }
         return message;
     }
