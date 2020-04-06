@@ -103,7 +103,11 @@
                 this.sentMessageHistory.push(this.message);
                 this.sentMessageHistory.splice(0, this.sentMessageHistory.length - MESSAGE_HISTORY_LENGTH);
                 this.historyIndex = null;
-                this.$client.sendMessage(this.message);
+                if (this.$store.state.channel) {
+                    this.$client.sendPrivateMessage(this.$store.state.channel, this.message);
+                } else {
+                    this.$client.sendMessage(this.message);
+                }
                 this.message = '';
             }
         }

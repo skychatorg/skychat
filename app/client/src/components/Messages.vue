@@ -43,6 +43,9 @@
         },
         computed: {
             messages: function() {
+                if (this.$store.state.channel) {
+                    return this.$store.state.privateMessages[this.$store.state.channel].messages;
+                }
                 return this.$store.state.messages;
             }
         }
