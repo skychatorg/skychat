@@ -66,6 +66,7 @@
         -ms-transition: all 0.2s;
         -o-transition: all 0.2s;
         transition: all 0.2s;
+        transition-property: border-width, margin-left;
 
         &:hover {
             border-width: 0;
@@ -74,8 +75,8 @@
         }
 
         >.avatar {
-            width: 30px;
-            height: 30px;
+            width: 40px;
+            height: 40px;
             box-shadow: 1px 1px 10px 0px #ffffff78;
         }
 
@@ -90,6 +91,8 @@
             >.user {
                 display: inline;
                 color: #a3a5b4;
+                font-weight: 800;
+                font-size: 110%;
             }
 
             .quote {
@@ -107,7 +110,7 @@
             }
 
             >.formatted {
-                margin-top: 3px;
+                margin-left: 4px;
             }
         }
         >.date {

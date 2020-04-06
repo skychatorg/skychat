@@ -83,7 +83,13 @@
 
                 const result = await (await fetch("./upload", {method: 'POST', body: data})).json();
                 if (result.status === 500) {
-                    alert(result.message);
+                    new Noty({
+                        type: 'error',
+                        layout: 'topCenter',
+                        theme: 'nest',
+                        text: result.message,
+                        timeout: 2000
+                    }).show();
                     return;
                 }
                 this.setMessage(this.message + ' ' + document.location.href + result.path);
@@ -93,6 +99,7 @@
              * Send the message
              */
             sendMessage: function() {
+                this.$client.setTyping(false);
                 this.sentMessageHistory.push(this.message);
                 this.sentMessageHistory.splice(0, this.sentMessageHistory.length - MESSAGE_HISTORY_LENGTH);
                 this.historyIndex = null;

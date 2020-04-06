@@ -53,20 +53,22 @@ export class MessageFormatter {
     }
 
     /**
+     * Escape a regexp
+     * @param string
+     */
+    public escapeRegExp(string: string): string {
+        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
+    }
+
+
+    /**
      * Replace stickers in a raw message
      * @param message
      */
     public replaceStickers(message: string): string {
-        const matches = message.match(/:[a-z0-9-_]+:/g);
-        if (! matches) {
-            return message;
-        }
-        for (const code of matches) {
+        for (const code in this.stickers) {
             const sticker = this.stickers[code];
-            if (typeof sticker === 'undefined') {
-                continue;
-            }
-            message = message.replace(new RegExp(code, 'g'), `<img class="skychat-sticker" src="${sticker}">`);
+            message = message.replace(new RegExp(this.escapeRegExp(code), 'g'), `<img class="skychat-sticker" src="${sticker}">`);
         }
         return message;
     }

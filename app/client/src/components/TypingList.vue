@@ -42,8 +42,9 @@
 
     .typing-list {
         color: white;
-        padding-left: 10px;
+        padding-left: 54px;
         padding-top: 4px;
-        flex-basis: 18px;
+        flex-basis: 20px;
+        font-size: 80%;
     }
 </style>

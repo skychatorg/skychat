@@ -33,9 +33,9 @@
             },
             scrollTick: function() {
                 const messages = this.$refs.messages;
-                messages.scrollTop += (messages.scrollHeight - messages.offsetHeight - messages.scrollTop) * .2;
+                messages.scrollTop += (messages.scrollHeight - messages.offsetHeight - messages.scrollTop) * .3;
                 if (Math.abs(messages.scrollHeight - messages.offsetHeight - messages.scrollTop) > 6) {
-                    setTimeout(this.scrollTick.bind(this), 16);
+                    setTimeout(this.scrollTick.bind(this), 10);
                 } else {
                     messages.scrollTop = messages.scrollHeight;
                 }
@@ -59,5 +59,6 @@
         overflow-y: scroll;
         display: flex;
         flex-direction: column;
+        margin-top: 12px;
     }
 </style>

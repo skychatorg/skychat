@@ -7,8 +7,8 @@
     <div class="auth-page">
         <div class="page-title">Login/Register</div>
         <div class="auth-modal">
-            <input v-model="username" class="form-control" type="text" placeholder="username">
-            <input v-model="password" class="form-control" type="password" placeholder="password">
+            <input @keyup.enter="onLogin" v-model="username" class="form-control" type="text" placeholder="username">
+            <input @keyup.enter="onLogin" v-model="password" class="form-control" type="password" placeholder="password">
             <button @click="onLogin" class="form-submit" type="submit">Login</button>
             <button @click="onRegister" class="form-submit" type="submit">Register</button>
             <button @click="onGuestLogin" class="form-submit" type="submit">Login as guest</button>
@@ -29,6 +29,13 @@
         watch: {
             user: function() {
                 if (this.user.right >= 0) {
+                    new Noty({
+                        type: 'success',
+                        layout: 'topCenter',
+                        theme: 'nest',
+                        text: "Welcome back, " + this.user.username,
+                        timeout: 2000
+                    }).show();
                     this.$emit('gotoroom');
                 }
             }
@@ -64,7 +71,7 @@
             font-family: Russo One,sans-serif;
             text-align: center;
             color: white;
-            font-size: 260%;
+            font-size: 200%;
         }
 
         >.auth-modal {

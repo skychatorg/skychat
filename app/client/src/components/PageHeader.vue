@@ -4,19 +4,21 @@
 
 
 <template>
-    <header>
+    <header :style="{'border-bottom-color': borderBottomColor}">
         <nav class="nav">
 
             <!-- logo top left -->
-            <div class="nav-title">
+            <a href="./" class="nav-title">
                 <img class="logo" src="assets/logo.png"/>
                 <p class="title">SkyChat</p>
-            </div>
+            </a>
 
             <!-- user info top right -->
             <div class="nav-user">
                 <div class="username">
                     <p>{{user.username}}</p>
+                    <span v-show="user.right === -1" @click="$emit('login')" class="logout-button">login</span>
+                    <span v-show="user.right >= 0" @click="$emit('logout')" class="logout-button">logout</span>
                 </div>
                 <div class="image-bubble nav-avatar">
                     <img :src="user.data.plugins.avatar">
@@ -34,7 +36,22 @@
         computed: {
             user: function() {
                 return this.$store.state.user;
-            }
+            },
+            borderBottomColor: function() {
+                const state = this.$store.state.connectionState;
+                switch (state) {
+
+                    case WebSocket.CONNECTING:
+                    case WebSocket.CLOSED:
+                        return 'red';
+
+                    case WebSocket.OPEN:
+                        return 'white';
+
+                    default:
+                        return 'yellow';
+                }
+            },
         }
     });
 </script>
@@ -63,6 +80,7 @@
         display: flex;
 
         .nav-title {
+            text-decoration: none;
             display: flex;
             width: 200px;
             height: 100%;
@@ -93,6 +111,11 @@
                 color: white;
                 padding-right: 20px;
                 padding-top: 10px;
+
+                .logout-button {
+                    font-size: 70%;
+                    cursor: pointer;
+                }
             }
 
             .image-bubble.nav-avatar {

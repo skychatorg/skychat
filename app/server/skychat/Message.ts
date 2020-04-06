@@ -41,9 +41,9 @@ export class Message {
 
     public readonly id: number;
 
-    public readonly content: string;
+    public content: string;
 
-    public readonly formatted: string;
+    public formatted: string;
 
     public readonly quoted: Message | null;
 
@@ -59,6 +59,23 @@ export class Message {
         this.quoted = quoted || null;
         this.user = user;
         this.createdTime = typeof createdTime !== 'undefined' ? createdTime : new Date();
+    }
+
+    /**
+     * Append raw text to the message
+     * @param content
+     * @param formatted If set, will not be built from the content
+     */
+    public append(content: string, formatted?: string) {
+        this.content += "\n" + content;
+        this.formatted += formatted ? formatted : ("<br>\n" + MessageFormatter.getInstance().format(content));
+    }
+
+    /**
+     * Get the number of lines of the message
+     */
+    public getLineCount(): number {
+        return this.content.split("\n").length;
     }
 
     /**

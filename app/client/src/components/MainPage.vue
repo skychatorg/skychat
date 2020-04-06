@@ -5,8 +5,8 @@
 
 <template>
     <div class="page">
-        <page-header id="header"/>
-        <page-content id="content"/>
+        <page-header @logout="logout" @login="login" id="header"/>
+        <page-content @gotoroom="gotoRoom" :page="page" id="content"/>
     </div>
 </template>
 
@@ -16,9 +16,23 @@
     import PageContent from "./PageContent.vue";
 
     export default Vue.extend({
-        components: {
-            PageHeader,
-            PageContent,
+        components: {PageHeader, PageContent},
+        data: function() {
+            return {
+                page: 'welcome'
+            }
+        },
+        methods: {
+            logout: function() {
+                this.$client.logout();
+                this.page = 'welcome';
+            },
+            login: function() {
+                this.page = 'welcome';
+            },
+            gotoRoom: function() {
+                this.page = 'room';
+            }
         }
     });
 </script>
