@@ -4,14 +4,25 @@
 
 
 <template>
-    <div class="connected-user" :style="{'border-left-color': user.data.plugins.color}">
+    <div class="connected-user"
+         :style="{'border-left-color': user.data.plugins.color}"
+         :class="{
+            'selected': isChanSelected(user.username),
+            'has-unread': getUnreadCount(user.username) > 0
+          }">
         <div class="avatar">
             <div class="image-bubble">
                 <img :src="user.data.plugins.avatar">
             </div>
         </div>
         <div class="info">
-            <div class="user" :style="{'color': user.data.plugins.color}">{{user.username}}</div>
+            <div class="user"
+                 :style="{'color': user.data.plugins.color}">
+                {{user.username}}
+                <sup>
+                    <span v-show="getUnreadCount(user.username) > 0" class="unread-count">{{getUnreadCount(user.username)}}️</span>
+                </sup>
+            </div>
             <div class="moto">{{user.data.plugins.moto}}</div>
         </div>
         <div class="stats" v-show="user.right >= 0">
@@ -38,6 +49,19 @@
                 type: Object
             }
         },
+
+        methods: {
+            isChanSelected(channelName) {
+                return channelName.toLowerCase() === this.$store.state.channel;
+            },
+            getUnreadCount(channelName) {
+                channelName = channelName.toLowerCase();
+                if (typeof this.$store.state.privateMessages[channelName] === 'undefined') {
+                    return 0;
+                }
+                return this.$store.state.privateMessages[channelName].unreadCount;
+            },
+        }
     });
 </script>
 
@@ -53,7 +77,16 @@
         border-left: 4px solid #a3a5b4;
         transition: all 0.2s;
 
-        &:hover {
+        &.has-unread {
+            background: #503f29;
+        }
+
+        &.selected {
+            margin-left: 10px;
+            background: #424248;
+        }
+
+        &:hover:not(.selected) {
             border-width: 0;
             margin-left: 4px;
             background: #313235;
@@ -84,6 +117,10 @@
                 font-weight: 800;
                 margin-bottom: 4px;
                 font-size: 110%;
+
+                .unread-count {
+                    color: #ff9898;
+                }
             }
             >.moto {
                 margin-left: 10px;

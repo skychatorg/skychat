@@ -1,7 +1,7 @@
 import {SanitizedUser, User} from "./User";
 import {MessageFormatter} from "./MessageFormatter";
 
-export type SanitizedMessage = {
+export interface SanitizedMessage {
 
     /**
      * Message unique id
@@ -32,7 +32,7 @@ export type SanitizedMessage = {
      * Timestamp in seconds
      */
     createdTimestamp: number;
-};
+}
 
 
 export class Message {
