@@ -2,6 +2,8 @@ import {Connection} from "../../Connection";
 import {Plugin} from "../Plugin";
 import {User} from "../../User";
 import {ConnectedListPlugin} from "./ConnectedListPlugin";
+import {Config} from "../../Config";
+import {MessageFormatter} from "../../MessageFormatter";
 
 
 export class AvatarPlugin extends Plugin {
@@ -23,7 +25,7 @@ export class AvatarPlugin extends Plugin {
         params: [
             {
                 name: 'avatar',
-                pattern: /^https:\/\/redsky.fr\/picts\/galerie\/uploaded\/(.+?).(jpg|png|gif|jpeg|webp)$/,
+                pattern: new RegExp('^' + MessageFormatter.getInstance().escapeRegExp(Config.LOCATION) + '\/uploads\/([0-9a-zA-Z/-]+)\.(jpg|jpeg|png|gif|webp)$'),
                 info: 'Image link'
             }
         ]

@@ -54,8 +54,15 @@ body {
 }
 
 .skychat-image {
-    max-width: 100px;
-    max-height: 100px;
+    img {
+        max-width: 100px;
+        max-height: 100px;
+    }
+}
+
+.skychat-link {
+    text-decoration: none;
+    color: white;
 }
 
 .form-control {
