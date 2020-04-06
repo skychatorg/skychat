@@ -12,7 +12,7 @@ Vue.prototype.$client.connect();
 const app = new Vue({
     el: "#app",
     template: `
-    <div>
+    <div id="root">
         <main-page/>
     </div>
     `,
@@ -20,3 +20,11 @@ const app = new Vue({
         MainPage
     }
 });
+
+
+const resize = () => {
+    document.body.style.height = window.innerHeight + 'px';
+};
+
+window.addEventListener('resize', resize);
+resize();

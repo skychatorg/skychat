@@ -26,11 +26,11 @@ export class ShopPlugin extends Plugin {
         colors: {
             items: [
                 {id: 0, name: '#aaaaaa', value: ColorPlugin.DEFAULT_COLOR, price: 0},
-                {id: 2, name: 'darkgray', value: '#888888', price: 5},
-                {id: 3, name: 'white', value: '#ffffff', price: 5},
-                {id: 4, name: '#bf00ff', value: '#bf00ff', price: 200},
-                {id: 5, name: '#046380', value: '#046380', price: 200},
-                {id: 6, name: '#eda6c0', value: '#eda6c0', price: 200},
+                {id: 2, name: 'darkgray', value: '#888888', price: 500},
+                {id: 3, name: 'white', value: '#ffffff', price: 500},
+                {id: 4, name: '#bf00ff', value: '#bf00ff', price: 20000},
+                {id: 5, name: '#046380', value: '#046380', price: 20000},
+                {id: 6, name: '#eda6c0', value: '#eda6c0', price: 20000},
             ],
             preview: '<span style="color:{VALUE}">{USERNAME}</span>'
         }
