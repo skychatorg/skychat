@@ -16,6 +16,7 @@ import {SetRightCommand} from "./impl/SetRightCommand";
 import {ColorPlugin} from "./impl/ColorPlugin";
 import {ShopPlugin} from "./impl/ShopPlugin";
 import {PointFarmerPlugin} from "./impl/PointFarmerPlugin";
+import {OfferMoney} from "./impl/OfferMoney";
 
 
 /**
@@ -35,6 +36,7 @@ export class CommandManager {
         MessageCommand,
         MotoPlugin,
         MutePlugin,
+        OfferMoney,
         PointFarmerPlugin,
         PrivateMessagePlugin,
         SandalePlugin,
