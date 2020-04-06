@@ -79,7 +79,7 @@
         font-size: 80%;
         width: 100%;
         height: 0;
-        max-width: 1400px;
+        max-width: 1100px;
         margin: 0 auto;
 
         display: flex;

@@ -66,6 +66,7 @@
         -ms-transition: all 0.2s;
         -o-transition: all 0.2s;
         transition: all 0.2s;
+        transition-property: border-width, margin-left;
 
         &:hover {
             border-width: 0;
@@ -91,7 +92,6 @@
                 display: inline;
                 color: #a3a5b4;
                 font-weight: 800;
-                margin-bottom: 4px;
                 font-size: 110%;
             }
 
@@ -110,7 +110,7 @@
             }
 
             >.formatted {
-                margin-top: 3px;
+                margin-left: 4px;
             }
         }
         >.date {

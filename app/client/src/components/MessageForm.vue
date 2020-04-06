@@ -99,6 +99,7 @@
              * Send the message
              */
             sendMessage: function() {
+                this.$client.setTyping(false);
                 this.sentMessageHistory.push(this.message);
                 this.sentMessageHistory.splice(0, this.sentMessageHistory.length - MESSAGE_HISTORY_LENGTH);
                 this.historyIndex = null;
