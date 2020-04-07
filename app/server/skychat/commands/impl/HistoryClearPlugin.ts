@@ -1,5 +1,7 @@
 import {Command} from "../Command";
 import {Connection} from "../../Connection";
+import {MessageFormatter} from "../../MessageFormatter";
+import {Config} from "../../Config";
 
 
 export class HistoryClearPlugin extends Command {
@@ -9,6 +11,11 @@ export class HistoryClearPlugin extends Command {
     readonly aliases = ['hc'];
 
     readonly minRight = 10;
+
+    readonly rules = {
+        historyclear: {coolDown: 10000,},
+        hc: {coolDown: 10000,},
+    };
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
         this.room.messages.forEach(message => {

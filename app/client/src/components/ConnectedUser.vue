@@ -23,7 +23,11 @@
                     <span v-show="getUnreadCount(user.username) > 0" class="unread-count">{{getUnreadCount(user.username)}}️</span>
                 </sup>
             </div>
-            <div class="moto">{{user.data.plugins.moto}}</div>
+            <div class="moto">{{user.data.plugins.moto}}&nbsp;</div>
+            <div class="meta">
+                <i class="material-icons md-14 icon-yt" v-show="user.data.plugins.yt" title="Youtube enabled">movie</i>
+                <i class="material-icons md-14 icon-cursor" v-show="user.data.plugins.cursor" title="Cursors enabled">mouse</i>
+            </div>
         </div>
         <div class="stats" v-show="user.right >= 0">
             <div class="right">
@@ -33,7 +37,7 @@
                 <span>{{user.xp}}</span>
             </div>
             <div class="money">
-                $ {{user.money / 100}}
+                $ {{(user.money / 100).toFixed(2)}}
             </div>
         </div>
     </div>
@@ -128,6 +132,17 @@
                 overflow: hidden;
                 text-overflow: ellipsis;
                 margin-top: 0;
+            }
+            >.meta {
+
+                margin-top: 5px;
+
+                >.icon-yt {
+                    color: #ff9d8f;
+                }
+                >.icon-cursor {
+                    color: #9292d4;
+                }
             }
         }
         >.stats {

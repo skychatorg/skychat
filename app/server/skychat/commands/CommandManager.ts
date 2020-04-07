@@ -19,6 +19,7 @@ import {PointFarmerPlugin} from "./impl/PointFarmerPlugin";
 import {OfferMoney} from "./impl/OfferMoney";
 import {HistoryClearPlugin} from "./impl/HistoryClearPlugin";
 import {MessageEditCommand} from "./impl/MessageEditCommand";
+import {StickerPlugin} from "./impl/StickerPlugin";
 
 
 /**
@@ -46,6 +47,7 @@ export class CommandManager {
         SandalePlugin,
         SetRightCommand,
         ShopPlugin,
+        StickerPlugin,
         TypingListPlugin,
         YoutubePlugin
     ];

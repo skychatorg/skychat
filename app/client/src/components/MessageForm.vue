@@ -12,9 +12,9 @@
         </div>
         <div class="image-upload" v-show="! uploading">
             <label for="file-input">
-                <img src="https://redsky.fr/picts/galerie/uploaded/2016-05-28/03-05-51-231dea597d8973819b31-psycho.gif"/>
+                <i class="upload-icon material-icons md-28">publish</i>
             </label>
-            <input ref="file" @change="upload" id="file-input" type="file" />
+            <input ref="file" @change="onFileInputChange" id="file-input" type="file" />
         </div>
         <form class="form" onsubmit="return false">
             <input ref="input"
@@ -25,6 +25,11 @@
                    v-model="message"
                    placeholder="Message.."/>
         </form>
+        <div @click="onMobileShowList" class="show-mobile">
+            <div class="goto-list">
+                <i class="material-icons md-28">keyboard_arrow_right</i>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -44,6 +49,10 @@
             };
         },
 
+        created: function() {
+            window.addEventListener('paste', this.onPaste);
+        },
+
         watch: {
 
             message: function(newMessage, oldMessage) {
@@ -52,6 +61,10 @@
                 if (newTyping !== oldTyping) {
                     this.$client.setTyping(newTyping);
                 }
+            },
+
+            focused: function() {
+                this.$refs.input.focus();
             }
         },
 
@@ -79,14 +92,32 @@
             },
 
             /**
-             * Upload a file
+             * On paste event
              */
-            upload: async function() {
+            onPaste: async function(event) {
+                const files = event.clipboardData.files;
+                for (const file of files) {
+                    await this.upload(file);
+                }
+            },
+
+            /**
+             * On file input change
+             */
+            onFileInputChange: async function() {
+                const fileInput = this.$refs.file;
+                for (const file of fileInput.files) {
+                    await this.upload(file);
+                }
+            },
+
+            /**
+             * Upload a given file
+             */
+            upload: async function(file) {
                 if (this.uploading) {
                     return;
                 }
-                const fileInput = this.$refs.file;
-                const file = fileInput.files[0];
                 this.uploading = true;
                 try {
                     const data = new FormData();
@@ -113,6 +144,9 @@
              * Send the message
              */
             sendMessage: function() {
+                if (this.message === "") {
+                    return;
+                }
                 this.$client.setTyping(false);
                 this.sentMessageHistory.push(this.message);
                 this.sentMessageHistory.splice(0, this.sentMessageHistory.length - MESSAGE_HISTORY_LENGTH);
@@ -123,6 +157,19 @@
                     this.$client.sendMessage(this.message);
                 }
                 this.message = '';
+            },
+
+            /**
+             * When clicking the arrow to show the connect list on mobile phones
+             */
+            onMobileShowList: function() {
+                this.$store.commit('SET_MOBILE_PAGE', 'list');
+            }
+        },
+
+        computed: {
+            focused: function() {
+                return this.$store.state.focused;
             }
         }
     });
@@ -134,15 +181,21 @@
         display: flex;
 
         .image-upload {
-            flex-basis: 30px;
+            flex-basis: 24px;
             display: flex;
             flex-direction: column;
             justify-content: center;
             margin-left: 12px;
+            color: #cccccc;
+
+            .upload-icon {
+                width: 100%;
+                cursor: pointer;
+            }
 
             img {
                 width: 100%;
-                cursor: pointer;
+                cursor: wait;
             }
 
             >input {
@@ -173,6 +226,15 @@
             >.new-message:focus {
                 box-shadow: 1px 1px 14px #d1d4f53b;
             }
+        }
+
+        .goto-list {
+            color: #cccccc;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            margin-right: 10px;
         }
     }
 </style>

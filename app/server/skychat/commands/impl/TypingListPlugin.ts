@@ -13,10 +13,14 @@ export class TypingListPlugin extends Plugin {
     readonly minRight = -1;
 
     readonly rules = {
-        minCount: 1,
-        maxCount: 1,
-        params: [{name: "action", pattern: /^(on|off)$/}]
+        t: {
+            minCount: 1,
+            maxCount: 1,
+            params: [{name: "action", pattern: /^(on|off)$/}]
+        }
     };
+
+    readonly hidden = true;
 
     /**
      * Identifiers that are currently typing and the associated date when they started typing

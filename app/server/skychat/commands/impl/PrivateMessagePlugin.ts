@@ -10,14 +10,14 @@ export class PrivateMessagePlugin extends Plugin {
 
     readonly name = 'mp';
 
-    readonly aliases = ['pm'];
-
     readonly minRight = -1;
 
     readonly rules = {
-        minCount: 2,
-        coolDown: 50,
-        params: [{name: 'username', pattern: User.USERNAME_REGEXP}]
+        mp: {
+            minCount: 2,
+            coolDown: 50,
+            params: [{name: 'username', pattern: User.USERNAME_REGEXP}]
+        }
     };
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {

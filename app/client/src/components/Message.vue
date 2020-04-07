@@ -21,7 +21,7 @@
                 </div>
                 <div class="quote-content" v-html="message.quoted.formatted"></div>
             </div>
-            <div class="formatted" v-html="message.formatted"></div>
+            <div ref="formatted" class="formatted" v-html="message.formatted"></div>
         </div>
         <div class="date">
             {{formattedDate}}
@@ -32,14 +32,31 @@
 <script>
     import Vue from "vue";
     export default Vue.extend({
-
         props: {
             message: {
                 type: Object,
                 required: true,
             }
         },
-
+        watch: {
+            'message.formatted': function() {
+                this.bindContentLoaded();
+            }
+        },
+        mounted: function() {
+            this.bindContentLoaded();
+        },
+        methods: {
+            bindContentLoaded: function() {
+                // Get images
+                const images = Array.from(this.$refs.formatted.getElementsByTagName('img'));
+                for (const image of images) {
+                    image.addEventListener('load', () => {
+                        this.$emit('content-loaded');
+                    });
+                }
+            }
+        },
         computed: {
             formattedDate: function() {
                 const date = new Date(this.message.createdTimestamp * 1000);

@@ -11,6 +11,7 @@ const store = {
         documentTitle: DEFAULT_DOCUMENT_TITLE,
         documentTitleBlinking: false,
         page: 'welcome',
+        mobileCurrentPage: 'tchat',
         channel: null,
         connectionState: WebSocket.CLOSED,
         user: {
@@ -44,6 +45,9 @@ const store = {
         },
         SET_PAGE(state, page) {
             state.page = page;
+        },
+        SET_MOBILE_PAGE(state, mobilePage) {
+            state.mobileCurrentPage = mobilePage;
         },
         SET_CHANNEL(state, channelName) {
             channelName = channelName.toLowerCase();

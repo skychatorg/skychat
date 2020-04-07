@@ -15,10 +15,12 @@ export class OfferMoney extends Plugin {
     readonly opOnly = true;
 
     readonly rules = {
-        minCount: 2,
-        maxCount: 2,
-        coolDown: 50,
-        params: [{name: 'username', pattern: User.USERNAME_REGEXP}, {name: 'amount', pattern: /^([0-9]+)$/}]
+        offermoney: {
+            minCount: 2,
+            maxCount: 2,
+            coolDown: 50,
+            params: [{name: 'username', pattern: User.USERNAME_REGEXP}, {name: 'amount', pattern: /^([0-9]+)$/}]
+        }
     };
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {

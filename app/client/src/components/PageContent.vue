@@ -14,7 +14,7 @@
 
         <template v-if="page === 'room'">
             <!-- left col -->
-            <section id="left">
+            <section id="left" class="hide-mobile-list">
                 <player id="player" v-show="currentVideo"/>
                 <messages ref="messages" @select-message="onSelectMessage" id="messages" class="scrollbar" />
                 <typing-list id="typing-list" />
@@ -22,7 +22,7 @@
             </section>
 
             <!-- right col -->
-            <section id="right" class="hide-mobile scrollbar">
+            <section id="right" class="hide-mobile-tchat scrollbar">
                 <connected-list></connected-list>
             </section>
         </template>
@@ -45,21 +45,14 @@
 
             onSelectMessage: function(message) {
 
-                const editText = '/edit ' + message.id + ' ';
-                const editWithText = editText + message.content.replace(/\n/g, " ");
+                const editText = '/edit ' + message.id + ' ' + message.content;
+                const deleteText = '/delete ' + message.id;
                 const quoteText = '@' + message.id + ' ';
+                const rotation = [quoteText, editText, deleteText];
                 const currentContent = this.$refs.messageForm.getMessage();
-
-                let newMessage = '';
-                if (currentContent === editWithText) {
-                    newMessage = editText;
-                } else if(currentContent === quoteText) {
-                    newMessage = editWithText;
-                } else {
-                    newMessage = quoteText + currentContent;
-                }
-
-                this.$refs.messageForm.setMessage(newMessage);
+                const currentPosition = rotation.indexOf(currentContent);
+                const newPosition = (currentPosition + 1) % rotation.length;
+                this.$refs.messageForm.setMessage(rotation[newPosition]);
             },
 
             gotoRoom() {

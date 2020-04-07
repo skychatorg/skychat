@@ -23,6 +23,10 @@ export class Config {
 
     public static OP: string[] = [];
 
+    public static isOP(identifier: string): boolean {
+        return Config.OP.indexOf(identifier.toLowerCase()) >= 0;
+    }
+
     public static initialize() {
         const config = JSON.parse(fs.readFileSync('.env.json').toString());
         Config.LOCATION = config.location;

@@ -48,6 +48,8 @@ export class Session implements IBroadcaster {
 
     public connections: Connection[];
 
+    public lastMessageDate: Date;
+
     /**
      * Associated user (if logged session)
      */
@@ -58,6 +60,7 @@ export class Session implements IBroadcaster {
         this.connections = [];
         this.identifier = identifier;
         this.user = new User(0, identifier, '', 0, 0, -1);
+        this.lastMessageDate = new Date(0);
     }
 
     /**

@@ -12,6 +12,12 @@
                 @click.native="() => onJoinPrivateChannel(user.username)"
                 :key="user.username"
                 :user="user"/>
+
+        <div @click="onMobileShowTchat" class="show-mobile">
+            <div class="goto-tchat">
+                <i class="material-icons md-28">keyboard_arrow_left</i>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -28,6 +34,9 @@
                 } else {
                     this.$store.commit('SET_CHANNEL', username);
                 }
+            },
+            onMobileShowTchat: function() {
+                this.$store.commit('SET_MOBILE_PAGE', 'tchat');
             }
         },
         computed: {
@@ -46,5 +55,8 @@
         padding-top: 40px;
         color: white;
         cursor: pointer;
+    }
+    .goto-tchat {
+        margin-top: 10px;
     }
 </style>
