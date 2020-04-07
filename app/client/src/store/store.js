@@ -3,8 +3,13 @@ import Vuex from "vuex";
 Vue.use(Vuex);
 
 
+const DEFAULT_DOCUMENT_TITLE = "~ SkyChat";
+
 const store = {
     state: {
+        focused: true,
+        documentTitle: DEFAULT_DOCUMENT_TITLE,
+        documentTitleBlinking: false,
         page: 'welcome',
         channel: null,
         connectionState: WebSocket.CLOSED,
@@ -29,6 +34,14 @@ const store = {
         typingList: [],
     },
     mutations: {
+        FOCUS(state) {
+            state.focused = true;
+            state.documentTitle = DEFAULT_DOCUMENT_TITLE;
+            state.documentTitleBlinking = false;
+        },
+        BLUR(state) {
+            state.focused = false;
+        },
         SET_PAGE(state, page) {
             state.page = page;
         },
@@ -54,6 +67,10 @@ const store = {
         },
         NEW_MESSAGE(state, message) {
             state.messages.push(message);
+            if (! state.focused) {
+                state.documentTitle = `New message by ${message.user.username}`;
+                state.documentTitleBlinking = true;
+            }
         },
         NEW_PRIVATE_MESSAGE(state, privateMessage) {
             const fromUserName = privateMessage.user.username.toLowerCase();
@@ -66,6 +83,10 @@ const store = {
             state.privateMessages[otherUserName].messages.push(privateMessage);
             if (state.channel !== otherUserName) {
                 state.privateMessages[otherUserName].unreadCount ++;
+            }
+            if (! state.focused) {
+                state.documentTitle = `New message by ${message.user.username}`;
+                state.documentTitleBlinking = true;
             }
         },
         MESSAGE_EDIT(state, message) {

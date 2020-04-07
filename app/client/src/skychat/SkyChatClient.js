@@ -14,6 +14,9 @@ export class SkyChatClient extends EventEmitter {
      * Connect to the server
      */
     connect() {
+        if (this.webSocket) {
+            this.webSocket.close();
+        }
         const protocol = document.location.protocol === 'http:' ? 'ws' : 'wss';
         this.webSocket = new WebSocket(protocol + '://' + document.location.host);
         this.webSocket.addEventListener('open', this.onWebSocketConnect.bind(this));

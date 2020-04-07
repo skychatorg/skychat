@@ -18,6 +18,7 @@ import {ShopPlugin} from "./impl/ShopPlugin";
 import {PointFarmerPlugin} from "./impl/PointFarmerPlugin";
 import {OfferMoney} from "./impl/OfferMoney";
 import {HistoryClearPlugin} from "./impl/HistoryClearPlugin";
+import {MessageEditCommand} from "./impl/MessageEditCommand";
 
 
 /**
@@ -36,6 +37,7 @@ export class CommandManager {
         HelpCommand,
         HistoryClearPlugin,
         MessageCommand,
+        MessageEditCommand,
         MotoPlugin,
         MutePlugin,
         OfferMoney,

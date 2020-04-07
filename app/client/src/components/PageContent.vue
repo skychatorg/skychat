@@ -42,8 +42,21 @@
     export default Vue.extend({
         components: {AuthPage, Player, Messages, TypingList, MessageForm, ConnectedList},
         methods: {
+
             onSelectMessage: function(message) {
-                this.$refs.messageForm.setMessage('@' + message.id + ' ');
+
+                const quoteText = '@' + message.id + ' ';
+                const editText = '/edit ' + message.id + ' ' + message.content.replace(/\n/g, " ");
+                const currentContent = this.$refs.messageForm.getMessage();
+
+                let newMessage = '';
+                if (currentContent === quoteText) {
+                    newMessage = editText;
+                } else {
+                    newMessage = quoteText;
+                }
+
+                this.$refs.messageForm.setMessage(newMessage);
             },
 
             gotoRoom() {
