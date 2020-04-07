@@ -22,7 +22,7 @@ export class MessageFormatter {
     public stickers: {[code: string]: string} = {};
 
     constructor() {
-        this.load();
+        this.loadStickers();
     }
 
     /**
@@ -99,20 +99,47 @@ export class MessageFormatter {
     /**
      * Load stickers from storage
      */
-    public load(): void {
+    public loadStickers(): void {
         try {
             this.stickers = JSON.parse(fs.readFileSync(MessageFormatter.STICKERS_JSON).toString());
         } catch (e) {
             console.warn("stickers.json did NOT exist. It has been created automatically.");
             this.stickers = {};
-            this.save();
+            this.saveStickers();
         }
+    }
+
+    /**
+     * Add a sticker
+     * @param code
+     * @param url
+     */
+    public addSticker(code: string, url: string): void {
+        code = code.toLowerCase();
+        if (typeof this.stickers[code] !== 'undefined') {
+            throw new Error('This sticker already exist');
+        }
+        this.stickers[code] = url;
+        this.saveStickers();
+    }
+
+    /**
+     * Delete a sticker
+     * @param code
+     */
+    public deleteSticker(code: string): void {
+        code = code.toLowerCase();
+        if (typeof this.stickers[code] === 'undefined') {
+            throw new Error('This sticker does not exist');
+        }
+        delete this.stickers[code];
+        this.saveStickers();
     }
 
     /**
      * Save current sticker list to storage
      */
-    public save(): void {
+    public saveStickers(): void {
         fs.writeFileSync(MessageFormatter.STICKERS_JSON, JSON.stringify(this.stickers));
     }
 }
