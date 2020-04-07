@@ -131,7 +131,7 @@
             }
         }
         >.stats {
-            flex-basis: 45px;
+            flex-basis: 65px;
             display: flex;
             flex-direction: column;
             justify-content: center;

@@ -67,13 +67,10 @@ export class MessageFormatter {
      * @param text
      */
     public replaceLinks(text: string): string {
-        let rex = /(^| )(https?:\/\/)(?:[-A-Za-z0-9+&*\^@#\/%\[\]?=~_|$!:,.;]+\.)+[-A-Za-z0-9+\[\]&*\^@#\/%?=~_|$!:,.;]+/ig;
-        text = text.replace(rex, ($0, $1) => {
-            if (/^https?:\/\/.+/i.test($0)) {
-                return ($1 ? $0 : `<a class="skychat-link" target="_blank" rel="nofollow" href="${$0}">${$0}</a>`);
-            } else {
-                return ($1 ? $0 : `<a class="skychat-link" target="_blank" rel="nofollow" href="http://${$0}">${$0}</a>`);
-            }
+        let regExp = /(?:^|[ ])((http|https):\/\/[\w?=&.\/-;#~%-]+(?![\w\s?&.\/;#~%"=-]*>))/ig;
+        text = text.replace(regExp, ($0, $1, $2, $3, $4, $5, $6) => {
+            const start = $0[0] === 'h' ? '' : ' ';
+            return `${start}<a class="skychat-link" target="_blank" rel="nofollow" href="${$1}">${$1}</a>`;
         });
         return text;
     }

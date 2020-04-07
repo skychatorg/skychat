@@ -62,6 +62,16 @@ export class Message {
     }
 
     /**
+     * Edit a message content
+     * @param content
+     * @param formatted
+     */
+    public edit(content: string, formatted?: string) {
+        this.content = content;
+        this.formatted = formatted ? formatted : (MessageFormatter.getInstance().format(content));
+    }
+
+    /**
      * Append raw text to the message
      * @param content
      * @param formatted If set, will not be built from the content

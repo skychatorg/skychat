@@ -182,7 +182,7 @@ export class User {
     }
 
     /**
-     * Get a plugin stored data
+     * Remove money from an user account
      * @param user
      * @param amount
      */
@@ -191,6 +191,19 @@ export class User {
             throw new Error('User has not enough money to buy this amount');
         }
         user.money -= amount;
+        await User.sync(user);
+    }
+
+    /**
+     * Give money to an user
+     * @param user
+     * @param amount
+     */
+    public static async giveMoney(user: User, amount: number): Promise<void> {
+        if (amount < 0) {
+            throw new Error('Can\'t give negative amount');
+        }
+        user.money += amount;
         await User.sync(user);
     }
 

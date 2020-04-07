@@ -4,7 +4,7 @@
 
 
 <template>
-    <div class="messages scrollbar" ref="messages">
+    <div class="messages scrollbar" ref="messages" @scroll="onScroll">
         <message v-for="message in messages"
                  @select="$emit('select-message', message)"
                  :key="message.id"
@@ -19,16 +19,39 @@
 
     export default Vue.extend({
         components: {Message},
+        data: function() {
+            return {
+                autoScroll: true,
+                autoScrolling: false,
+            };
+        },
         watch: {
             messages: function() {
-
                 Vue.nextTick(() => {
-                    this.scrollToBottom();
+                    if (this.autoScroll) {
+                        this.scrollToBottom();
+                    }
                 });
             }
         },
         methods: {
+            onScroll: function() {
+                if (this.autoScrolling) {
+                    return;
+                }
+                const distanceToBottom = this.$refs.messages.scrollHeight - this.$refs.messages.offsetHeight - this.$refs.messages.scrollTop;
+                if (distanceToBottom > 120) {
+                    // Stop auto scroll
+                    this.autoScroll = false;
+                } else if (distanceToBottom < 20) {
+                    this.autoScroll = true;
+                }
+            },
             scrollToBottom: function() {
+                if (this.autoScrolling) {
+                    return;
+                }
+                this.autoScrolling = true;
                 this.scrollTick();
             },
             scrollTick: function() {
@@ -38,6 +61,7 @@
                     setTimeout(this.scrollTick.bind(this), 10);
                 } else {
                     messages.scrollTop = messages.scrollHeight;
+                    this.autoScrolling = false;
                 }
             },
         },

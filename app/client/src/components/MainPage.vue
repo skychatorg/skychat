@@ -36,10 +36,11 @@
 
 <style lang="scss" scoped>
     .page {
-        width: 100vw;
-        height: 100vh;
+        width: 100%;
+        height: 100%;
         margin: 0 auto;
         overflow: hidden;
+        flex-grow: 1;
         display: flex;
         flex-direction: column;
 

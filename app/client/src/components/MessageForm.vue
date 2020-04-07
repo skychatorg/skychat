@@ -57,9 +57,10 @@
 
         methods: {
 
-            /**
-             * Set the message
-             */
+            getMessage: function() {
+                return this.message;
+            },
+
             setMessage: function(message) {
                 this.message = message;
                 this.$refs.input.focus();

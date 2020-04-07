@@ -165,4 +165,11 @@ export class Room implements IBroadcaster {
         this.messages.push(message);
         this.messages.splice(0, this.messages.length - Room.MESSAGE_HISTORY_LENGTH);
     }
+
+    /**
+     * Clear message history
+     */
+    public clearHistory(): void {
+        this.messages.splice(0);
+    }
 }

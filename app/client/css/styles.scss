@@ -11,9 +11,10 @@ $break-point-mobile: 800px;
 }
 
 html,
-body {
-    width: 100vw;
-    height: 100vh;
+body,
+#root {
+    display: flex;
+    flex-grow: 1;
     font-family: 'Ubuntu', sans-serif;
 }
 
