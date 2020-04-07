@@ -10,9 +10,7 @@ export class ColorPlugin extends Plugin {
 
     readonly name = 'color';
 
-    readonly minRight = 0;
-
-    readonly rules = {minCount: -1};
+    readonly callable = false;
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
         throw new Error('This command can not be run');

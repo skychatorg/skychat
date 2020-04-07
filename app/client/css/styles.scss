@@ -95,6 +95,20 @@ body {
     color: white;
 }
 
+.skychat-table {
+    text-align: left;
+    width: 100%;
+    border-collapse: collapse;
+
+    tr {
+        border-bottom: 1pt solid #4e4e4e;
+
+        td,th {
+            padding: 2px;
+        }
+    }
+}
+
 .form-control {
     width: 100%;
     position: relative;

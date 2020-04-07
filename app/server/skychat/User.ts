@@ -47,12 +47,12 @@ export class User {
     /**
      * Username regexp (including guests)
      */
-    public static USERNAME_REGEXP: RegExp = /^\*?[a-zA-Z0-9]{3,16}$/;
+    public static USERNAME_REGEXP: RegExp = /^\*?[a-zA-Z0-9_]{3,16}$/;
 
     /**
      * Valid username regexp
      */
-    public static USERNAME_LOGGED_REGEXP: RegExp = /^[a-zA-Z0-9]{3,16}$/;
+    public static USERNAME_LOGGED_REGEXP: RegExp = /^[a-zA-Z0-9_]{3,16}$/;
 
     /**
      * Validity of the auth token in seconds

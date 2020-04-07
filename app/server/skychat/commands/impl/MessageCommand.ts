@@ -9,7 +9,9 @@ export class MessageCommand extends Command {
 
     readonly minRight = -1;
 
-    readonly rules = {minCount: 1};
+    readonly rules = {
+        message: {minCount: 1}
+    };
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
 

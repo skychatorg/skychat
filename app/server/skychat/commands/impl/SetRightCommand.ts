@@ -12,12 +12,14 @@ export class SetRightCommand extends Command {
     readonly minRight = 0;
 
     readonly rules = {
-        minCount: 2,
-        maxCount: 2,
-        params: [
-            {name: "username", pattern: User.USERNAME_LOGGED_REGEXP},
-            {name: "right", pattern: /^([0-9]+)$/},
-        ]
+        setright: {
+            minCount: 2,
+            maxCount: 2,
+            params: [
+                {name: "username", pattern: User.USERNAME_LOGGED_REGEXP},
+                {name: "right", pattern: /^([0-9]+)$/},
+            ]
+        }
     };
 
     readonly opOnly = true;

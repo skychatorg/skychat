@@ -7,6 +7,7 @@
     <div class="messages scrollbar" ref="messages" @scroll="onScroll">
         <message v-for="message in messages"
                  @select="$emit('select-message', message)"
+                 @content-loaded="onContentLoaded"
                  :key="message.id"
                  :message="message"
                  class="message"/>
@@ -35,6 +36,9 @@
             }
         },
         methods: {
+            onContentLoaded: function() {
+                this.scrollToBottom();
+            },
             onScroll: function() {
                 if (this.autoScrolling) {
                     return;

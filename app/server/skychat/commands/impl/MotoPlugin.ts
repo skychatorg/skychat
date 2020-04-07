@@ -15,14 +15,16 @@ export class MotoPlugin extends Plugin {
     readonly minRight = 0;
 
     readonly rules = {
-        minCount: 1,
-        params: [
-            {
-                name: 'moto',
-                pattern: /./,
-                info: 'Be inspired'
-            }
-        ]
+        moto: {
+            minCount: 1,
+            params: [
+                {
+                    name: 'moto',
+                    pattern: /./,
+                    info: 'Be inspired'
+                }
+            ]
+        }
     };
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {

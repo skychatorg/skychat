@@ -19,16 +19,18 @@ export class AvatarPlugin extends Plugin {
     readonly minRight = 0;
 
     readonly rules = {
-        minCount: 1,
-        maxCount: 1,
-        coolDown: 1000,
-        params: [
-            {
-                name: 'avatar',
-                pattern: new RegExp('^' + MessageFormatter.getInstance().escapeRegExp(Config.LOCATION) + '\/uploads\/([0-9a-zA-Z/-]+)\.(jpg|jpeg|png|gif|webp)$'),
-                info: 'Image link'
-            }
-        ]
+        avatar: {
+            minCount: 1,
+            maxCount: 1,
+            coolDown: 1000,
+            params: [
+                {
+                    name: 'avatar',
+                    pattern: new RegExp('^' + MessageFormatter.getInstance().escapeRegExp(Config.LOCATION) + '\/uploads\/([0-9a-zA-Z/-]+)\.(jpg|jpeg|png|gif|webp)$'),
+                    info: 'Image link'
+                }
+            ]
+        }
     };
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {

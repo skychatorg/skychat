@@ -1,7 +1,6 @@
 import {Connection} from "../../Connection";
 import {Plugin} from "../Plugin";
 import {Server} from "../../Server";
-import {Config} from "../../Config";
 import {MessageFormatter} from "../../MessageFormatter";
 
 

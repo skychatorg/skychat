@@ -13,6 +13,8 @@ export class ConnectedListPlugin extends Plugin {
 
     readonly minRight = -1;
 
+    readonly callable = false;
+
     constructor(room: Room) {
         super(room);
 

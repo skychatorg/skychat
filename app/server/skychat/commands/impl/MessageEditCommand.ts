@@ -8,19 +8,31 @@ export class MessageEditCommand extends Command {
 
     readonly name = 'edit';
 
-    readonly minRight = -1;
+    readonly aliases = ['delete'];
+
+    readonly minRight = 0;
 
     readonly rules = {
-        minCount: 2,
-        params: [
-            {pattern: /^([0-9]+)$/, name: 'id'},
-            {pattern: /./, name: 'message'},
-        ]
+        edit: {
+            minCount: 2,
+            coolDown: 100,
+            params: [
+                {pattern: /^([0-9]+)$/, name: 'id'},
+                {pattern: /./, name: 'message'},
+            ]
+        },
+        delete: {
+            minCount: 1,
+            maxCount: 1,
+            coolDown: 100,
+            params: [
+                {pattern: /^([0-9]+)$/, name: 'id'},
+            ]
+        }
     };
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
         const id = parseInt(param.split(' ')[0]);
-        const content = param.split(' ').slice(1).join(' ');
 
         // Find message
         const message = this.room.getMessageById(id);
@@ -34,7 +46,12 @@ export class MessageEditCommand extends Command {
         }
 
         // Edit message
-        message.edit(content);
+        if (alias === 'edit') {
+            const content = param.split(' ').slice(1).join(' ');
+            message.edit(content);
+        } else {
+            message.edit('deleted', `<i>deleted</i>`);
+        }
         this.room.send('message-edit', message.sanitized());
     }
 }

@@ -58,7 +58,7 @@ export abstract class Command {
     /**
      * Define command rules, ie expected parameters and cooldown. Can be defined globally or per command alias.
      */
-    public readonly rules?: CommandEntryPointRule | {[alias: string]: CommandEntryPointRule};
+    public readonly rules?: {[alias: string]: CommandEntryPointRule};
 
     /**
      * Minimum right to execute this function
@@ -69,6 +69,16 @@ export abstract class Command {
      * Is the command reserved for op
      */
     public readonly opOnly?: boolean;
+
+    /**
+     * Whether this command can be invoked using /{alias}
+     */
+    public readonly callable: boolean = true;
+
+    /**
+     * Whether this command should be hidden from the /help
+     */
+    public readonly hidden: boolean = false;
 
     /**
      *
@@ -104,10 +114,10 @@ export abstract class Command {
         }
 
         // Check parameters
-        if (this.rules && (typeof this.rules.minCount !== 'undefined' || typeof (this.rules as any)[alias] === 'object')) {
+        if (this.rules && typeof this.rules[alias] === 'object') {
 
             // Get rule object
-            const entryPointRule: CommandEntryPointRule = typeof this.rules.minCount !== 'undefined' ? this.rules : (this.rules as any)[alias];
+            const entryPointRule = this.rules[alias];
             const minParamCount = entryPointRule.minCount || 0;
             const maxParamCount = entryPointRule.maxCount || Infinity;
             const coolDown = entryPointRule.coolDown || 0;

@@ -11,7 +11,7 @@ export class PointFarmerPlugin extends Plugin {
 
     readonly minRight = -1;
 
-    readonly rules = {maxCount: -1};
+    readonly callable = false;
 
     constructor(room: Room) {
         super(room);

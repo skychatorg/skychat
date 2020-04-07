@@ -13,16 +13,18 @@ export class SandalePlugin extends Plugin {
     readonly roomRequired = true;
 
     readonly rules = {
-        minCount: 1,
-        maxCount: 1,
-        coolDown: 1000,
-        params: [
-            {
-                name: 'username',
-                pattern: User.USERNAME_REGEXP,
-                info: 'Target username'
-            }
-        ]
+        sandale: {
+            minCount: 1,
+            maxCount: 1,
+            coolDown: 1000,
+            params: [
+                {
+                    name: 'username',
+                    pattern: User.USERNAME_REGEXP,
+                    info: 'Target username'
+                }
+            ]
+        }
     };
 
     private sandales: {[username: string]: number} = {};
