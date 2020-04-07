@@ -10,7 +10,7 @@ if [[ ! -e "$ENV_FILE" ]]; then
         "port": 8080,
         "ssl": {
             "certificate": "",
-            "key": "",
+            "key": ""
         },
         "users_passwords_salt": "",
         "users_token_salt":"",
