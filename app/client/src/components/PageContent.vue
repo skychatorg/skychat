@@ -45,15 +45,18 @@
 
             onSelectMessage: function(message) {
 
+                const editText = '/edit ' + message.id + ' ';
+                const editWithText = editText + message.content.replace(/\n/g, " ");
                 const quoteText = '@' + message.id + ' ';
-                const editText = '/edit ' + message.id + ' ' + message.content.replace(/\n/g, " ");
                 const currentContent = this.$refs.messageForm.getMessage();
 
                 let newMessage = '';
-                if (currentContent === quoteText) {
+                if (currentContent === editWithText) {
                     newMessage = editText;
+                } else if(currentContent === quoteText) {
+                    newMessage = editWithText;
                 } else {
-                    newMessage = quoteText;
+                    newMessage = quoteText + currentContent;
                 }
 
                 this.$refs.messageForm.setMessage(newMessage);
