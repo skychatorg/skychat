@@ -4,7 +4,7 @@
 
 
 <template>
-    <div class="page">
+    <div class="page" :class="'mobile-page-' + mobileCurrentPage">
         <page-header @logout="logout" @login="login" id="header"/>
         <page-content id="content"/>
     </div>
@@ -29,6 +29,9 @@
         computed: {
             page: function() {
                 return this.$store.state.page;
+            },
+            mobileCurrentPage: function() {
+                return this.$store.state.mobileCurrentPage;
             }
         },
     });

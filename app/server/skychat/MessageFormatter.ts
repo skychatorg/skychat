@@ -103,7 +103,7 @@ export class MessageFormatter {
         try {
             this.stickers = JSON.parse(fs.readFileSync(MessageFormatter.STICKERS_JSON).toString());
         } catch (e) {
-            console.warn(e);
+            console.warn("stickers.json did NOT exist. It has been created automatically.");
             this.stickers = {};
             this.save();
         }

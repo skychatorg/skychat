@@ -26,13 +26,21 @@ export class PointFarmerPlugin extends Plugin {
     }
 
     private async tick(): Promise<void> {
-        const users = Array.from(new Set(this.room.connections.map(connection => connection.session.user)));
-        for (const user of users) {
-            if (user.right < 0) {
+        // Get rooms in the session
+        const sessions = Array.from(new Set(this.room.connections.map(connection => connection.session)));
+        // For each session in the room
+        for (const session of sessions) {
+            // If it's not a logged session, continue
+            if (session.user.right < 0) {
                 continue;
             }
-            user.money ++;
-            await User.sync(user);
+            // If user inactive for more than 20min, continue
+            if (session.lastMessageDate.getTime() + 60 * 30 * 1000 < new Date().getTime()) {
+                continue;
+            }
+            // Give 0.01$ to this brave man
+            session.user.money ++;
+            await User.sync(session.user);
         }
         await (this.room.getPlugin('connectedlist') as ConnectedListPlugin).sync();
     }

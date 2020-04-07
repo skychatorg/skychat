@@ -14,7 +14,7 @@
 
         <template v-if="page === 'room'">
             <!-- left col -->
-            <section id="left">
+            <section id="left" class="hide-mobile-list">
                 <player id="player" v-show="currentVideo"/>
                 <messages ref="messages" @select-message="onSelectMessage" id="messages" class="scrollbar" />
                 <typing-list id="typing-list" />
@@ -22,7 +22,7 @@
             </section>
 
             <!-- right col -->
-            <section id="right" class="hide-mobile scrollbar">
+            <section id="right" class="hide-mobile-tchat scrollbar">
                 <connected-list></connected-list>
             </section>
         </template>

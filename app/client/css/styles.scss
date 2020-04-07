@@ -27,10 +27,25 @@ body {
 /**
  * Patch for mobile users
  */
+.show-mobile { display: none !important; }
 @media screen and (max-width: $break-point-mobile) {
 
-    .hide-mobile {
-        display: none;
+    .show-mobile { display: unset !important; }
+    .hide-mobile { display: none !important; }
+
+    .mobile-page-tchat {
+        .hide-mobile-tchat { display: none !important; }
+    }
+    .mobile-page-list {
+        .hide-mobile-list { display: none !important; }
+    }
+
+    .mobile-page-list {
+
+        #right {
+            flex-grow: 1;
+            padding: 0 20px;
+        }
     }
 }
 
