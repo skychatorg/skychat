@@ -127,7 +127,7 @@
                 }
             }
             >.moto {
-                margin-left: 10px;
+                margin-left: 0px;
                 white-space: nowrap;
                 overflow: hidden;
                 text-overflow: ellipsis;
