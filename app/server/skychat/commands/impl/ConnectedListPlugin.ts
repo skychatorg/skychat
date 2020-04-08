@@ -2,6 +2,7 @@ import {Connection} from "../../Connection";
 import {Plugin} from "../Plugin";
 import {SanitizedUser} from "../../User";
 import {Room} from "../../Room";
+import {SanitizedSession} from "../../Session";
 
 
 /**
@@ -42,13 +43,13 @@ export class ConnectedListPlugin extends Plugin {
     }
 
     public sync(): void {
-        const sessions: {[identifier: string]: SanitizedUser} = {};
+        const sessions: {[identifier: string]: SanitizedSession} = {};
         for (let connection of this.room.connections) {
             if (typeof sessions[connection.session.identifier] !== 'undefined') {
                 continue;
             }
-            sessions[connection.session.identifier] = connection.session.user.sanitized();
+            sessions[connection.session.identifier] = connection.session.sanitized();
         }
-        this.room.send('connected-list', Object.values(sessions).sort((a, b) => b.right - a.right));
+        this.room.send('connected-list', Object.values(sessions).sort((a, b) => b.user.right - a.user.right));
     }
 }

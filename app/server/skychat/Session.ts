@@ -1,7 +1,18 @@
-import {User} from "./User";
+import {SanitizedUser, User} from "./User";
 import {Connection} from "./Connection";
 import {IBroadcaster} from "./IBroadcaster";
 
+
+export type SanitizedSession = {
+
+    identifier: string;
+
+    connectionCount: number;
+
+    lastMessageTime: number;
+
+    user: SanitizedUser;
+}
 
 /**
  * A SkyChatSession represents a connected user, who has an account or not
@@ -60,7 +71,7 @@ export class Session implements IBroadcaster {
         this.connections = [];
         this.identifier = identifier;
         this.user = new User(0, identifier, '', 0, 0, -1);
-        this.lastMessageDate = new Date(0);
+        this.lastMessageDate = new Date();
     }
 
     /**
@@ -125,5 +136,17 @@ export class Session implements IBroadcaster {
      */
     public send(event: string, payload: any): void {
         this.connections.forEach(connection => connection.send(event, payload));
+    }
+
+    /**
+     * Sanitize this object to send it to clients
+     */
+    public sanitized(): SanitizedSession {
+        return {
+            identifier: this.identifier,
+            connectionCount: this.connections.length,
+            lastMessageTime: this.lastMessageDate.getTime() * 0.001,
+            user: this.user.sanitized()
+        }
     }
 }

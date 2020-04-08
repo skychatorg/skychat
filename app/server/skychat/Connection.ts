@@ -71,6 +71,7 @@ export class Connection extends EventEmitter implements IBroadcaster {
      */
     private async onClose(code?: number, reason?: string): Promise<void> {
 
+        this.session.detachConnection(this);
         if (this.room) {
             await this.room.executeOnConnectionClosed(this);
             this.room.detachConnection(this);
