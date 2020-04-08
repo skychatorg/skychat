@@ -51,3 +51,4 @@ setInterval(() => {
     document.title = chars[newPosition] + ' ' + store.state.documentTitle;
 
 }, 300);
+

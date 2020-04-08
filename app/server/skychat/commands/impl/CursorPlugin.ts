@@ -26,6 +26,7 @@ export class CursorPlugin extends Plugin {
         c: {
             minCount: 2,
             maxCount: 2,
+            coolDown: 50,
             params: [{name: "x", pattern: /^\d+(\.\d+)?$/}, {name: "y", pattern: /^\d+(\.\d+)?$/}]
         }
     };
@@ -62,13 +63,17 @@ export class CursorPlugin extends Plugin {
                 // Abort
                 continue;
             }
+            // Do not send cursor events to the owner
+            if (conn.session.identifier === connection.session.identifier) {
+                continue;
+            }
             // Else, unpack cursor position
             const [x, y] = param.split(' ');
             // And send it to this client
             conn.send('cursor', {
                 x: parseFloat(x),
                 y: parseFloat(y),
-                user: conn.session.user.sanitized()
+                user: connection.session.user.sanitized()
             })
         }
     }

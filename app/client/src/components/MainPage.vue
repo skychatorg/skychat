@@ -5,18 +5,21 @@
 
 <template>
     <div class="page" :class="'mobile-page-' + mobileCurrentPage">
+        <cursor-layer id="cursor-layer"/>
         <page-header @logout="logout" @login="login" id="header"/>
         <page-content id="content"/>
     </div>
 </template>
 
+
 <script>
     import Vue from "vue";
     import PageHeader from "./PageHeader.vue";
     import PageContent from "./PageContent.vue";
+    import CursorLayer from "./CursorLayer.vue";
 
     export default Vue.extend({
-        components: {PageHeader, PageContent},
+        components: {PageHeader, PageContent, CursorLayer},
         methods: {
             logout: function() {
                 this.$client.logout();
@@ -46,6 +49,11 @@
         flex-grow: 1;
         display: flex;
         flex-direction: column;
+        position: relative;
+
+        >#cursor-layer {
+            position: absolute;
+        }
 
         >#content {
             flex-grow: 1;
