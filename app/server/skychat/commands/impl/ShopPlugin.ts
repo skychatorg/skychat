@@ -31,6 +31,9 @@ export class ShopPlugin extends Plugin {
                 {id: 4, name: '#bf00ff', value: '#bf00ff', price: 20000},
                 {id: 5, name: '#046380', value: '#046380', price: 20000},
                 {id: 6, name: '#eda6c0', value: '#eda6c0', price: 20000},
+                {id: 7, name: '#64dd17', value: '#64dd17', price: 20000},
+                {id: 8, name: '#ba000d', value: '#ba000d', price: 20000},
+                {id: 9, name: '#62efff', value: '#62efff', price: 20000},
             ],
             preview: '<span style="color:{VALUE}">{USERNAME}</span>'
         }
@@ -134,7 +137,7 @@ export class ShopPlugin extends Plugin {
             throw new Error('Unknown item');
         }
         const message = new Message('Available ' + param + ':', User.BOT_USER);
-        let html = '<table>';
+        let html = '<table class="skychat-table">';
         html += `
             <tr>
                 <td>id</td>
