@@ -2,6 +2,7 @@ import {Command} from "../Command";
 import {Connection} from "../../Connection";
 import {MessageFormatter} from "../../MessageFormatter";
 import {Config} from "../../Config";
+import {User} from "../../User";
 
 
 export class HistoryClearPlugin extends Command {
@@ -18,6 +19,7 @@ export class HistoryClearPlugin extends Command {
     };
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
+        await User.buy(connection.session.user, 100);
         this.room.messages.forEach(message => {
             message.edit('deleted', `<i>deleted</i>`);
             this.room.send('message-edit', message.sanitized());

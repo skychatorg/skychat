@@ -20,6 +20,7 @@ import {OfferMoney} from "./impl/OfferMoney";
 import {HistoryClearPlugin} from "./impl/HistoryClearPlugin";
 import {MessageEditCommand} from "./impl/MessageEditCommand";
 import {StickerPlugin} from "./impl/StickerPlugin";
+import {IpPlugin} from "./impl/IpPlugin";
 
 
 /**
@@ -37,6 +38,7 @@ export class CommandManager {
         CursorPlugin,
         HelpCommand,
         HistoryClearPlugin,
+        IpPlugin,
         MessageCommand,
         MessageEditCommand,
         MotoPlugin,
