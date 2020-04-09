@@ -4,6 +4,7 @@ import {User} from "../../User";
 import {Session} from "../../Session";
 import {Message} from "../../Message";
 import * as striptags from "striptags";
+import {UserController} from "../../UserController";
 
 
 export class IpPlugin extends Command {
@@ -50,7 +51,7 @@ export class IpPlugin extends Command {
                 </tr>`;
         }
         content += `</table>`;
-        const message = new Message('', User.BOT_USER);
+        const message = new Message('', UserController.getNeutralUser());
         message.edit(striptags(content), content);
         connection.send('message', message.sanitized());
     }

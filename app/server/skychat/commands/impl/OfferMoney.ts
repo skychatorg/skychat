@@ -4,6 +4,7 @@ import {Session} from "../../Session";
 import {User} from "../../User";
 import {Message} from "../../Message";
 import {ConnectedListPlugin} from "./ConnectedListPlugin";
+import {UserController} from "../../UserController";
 
 
 export class OfferMoney extends Plugin {
@@ -32,8 +33,8 @@ export class OfferMoney extends Plugin {
         }
 
         const amount = parseInt(param.split(' ')[1]);
-        await User.giveMoney(session.user, amount);
-        session.send('message', new Message(connection.session.user.username + ' sent you $ ' + amount, User.BOT_USER).sanitized());
+        await UserController.giveMoney(session.user, amount);
+        session.send('message', new Message(connection.session.user.username + ' sent you $ ' + amount, UserController.getNeutralUser()).sanitized());
         await (this.room.getPlugin('connectedlist') as ConnectedListPlugin).sync();
     }
 }

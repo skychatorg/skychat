@@ -2,6 +2,7 @@ import {Connection} from "../../Connection";
 import {Plugin} from "../Plugin";
 import {User} from "../../User";
 import {Message} from "../../Message";
+import {UserController} from "../../UserController";
 
 
 /**
@@ -46,8 +47,8 @@ export class CursorPlugin extends Plugin {
      */
     async handleToggle(param: string, connection: Connection): Promise<void> {
         const cursorEnabled = param === 'on';
-        await User.savePluginData(connection.session.user, this.name, cursorEnabled);
-        connection.send('message', new Message('Cursor: ' + param, User.BOT_USER).sanitized());
+        await UserController.savePluginData(connection.session.user, this.name, cursorEnabled);
+        connection.send('message', new Message('Cursor: ' + param, UserController.getNeutralUser()).sanitized());
     }
 
     /**
@@ -59,7 +60,7 @@ export class CursorPlugin extends Plugin {
         // For every connection in the room
         for (const conn of connection.room!.connections) {
             // If the user has cursors disabled
-            if (! User.getPluginData(conn.session.user, this.name)) {
+            if (! UserController.getPluginData(conn.session.user, this.name)) {
                 // Abort
                 continue;
             }

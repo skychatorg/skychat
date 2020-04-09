@@ -3,6 +3,7 @@ import {Plugin} from "../Plugin";
 import {Room} from "../../Room";
 import {User} from "../../User";
 import {ConnectedListPlugin} from "./ConnectedListPlugin";
+import {UserController} from "../../UserController";
 
 
 export class PointFarmerPlugin extends Plugin {
@@ -19,7 +20,7 @@ export class PointFarmerPlugin extends Plugin {
         super(room);
 
         if (this.room) {
-            setInterval(this.tick.bind(this), 30 * 1000);
+            setInterval(this.tick.bind(this), 60 * 1000);
         }
     }
 
@@ -42,7 +43,7 @@ export class PointFarmerPlugin extends Plugin {
             }
             // Give 0.01$ to this brave man
             session.user.money ++;
-            await User.sync(session.user);
+            await UserController.sync(session.user);
         }
         await (this.room.getPlugin('connectedlist') as ConnectedListPlugin).sync();
     }

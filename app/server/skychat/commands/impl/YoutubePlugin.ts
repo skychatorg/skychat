@@ -9,6 +9,7 @@ import * as fs from "fs";
 import {IBroadcaster} from "../../IBroadcaster";
 import {Config} from "../../Config";
 import {Message} from "../../Message";
+import {UserController} from "../../UserController";
 
 
 /**
@@ -150,7 +151,7 @@ export class YoutubePlugin extends Plugin {
             case 'on':
             case 'off':
                 const newState = param === 'on';
-                await User.savePluginData(connection.session.user, this.name, newState);
+                await UserController.savePluginData(connection.session.user, this.name, newState);
                 if (newState) {
                     this.sync(connection);
                 } else {
@@ -240,7 +241,7 @@ export class YoutubePlugin extends Plugin {
         }
         // Else, play this video
         this.currentVideo = {...nextVideo, startedDate: new Date()};
-        this.room.sendMessage(new Message('Now playing: ' + nextVideo.video.title + ', added by ' + nextVideo.user.username, User.BOT_USER));
+        this.room.sendMessage(new Message('Now playing: ' + nextVideo.video.title + ', added by ' + nextVideo.user.username, UserController.getNeutralUser()));
         this.sync(this.room);
     }
 
@@ -255,7 +256,7 @@ export class YoutubePlugin extends Plugin {
             return;
         }
         // If the user has cursors disabled
-        if (! this.currentVideo || ! User.getPluginData(broadcaster.session.user, this.name)) {
+        if (! this.currentVideo || ! UserController.getPluginData(broadcaster.session.user, this.name)) {
             // Abort
             broadcaster.send('yt-sync', null);
             return;

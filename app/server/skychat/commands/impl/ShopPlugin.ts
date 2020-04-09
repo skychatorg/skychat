@@ -5,6 +5,7 @@ import {Message} from "../../Message";
 import {User} from "../../User";
 import {ConnectedListPlugin} from "./ConnectedListPlugin";
 import * as striptags from "striptags";
+import {UserController} from "../../UserController";
 
 
 export type ShopItems = {
@@ -113,7 +114,7 @@ export class ShopPlugin extends Plugin {
      * @param connection
      */
     private async handleShop(param: string, connection: Connection): Promise<void> {
-        const message = new Message('Available items:', User.BOT_USER);
+        const message = new Message('Available items:', UserController.getNeutralUser());
         for (const type in ShopPlugin.ITEMS) {
             message.append('/shoplist ' + type + ' :d) list all available ' + type);
         }
@@ -136,7 +137,7 @@ export class ShopPlugin extends Plugin {
         if (! itemDefinition) {
             throw new Error('Unknown item');
         }
-        const message = new Message('Available ' + param + ':', User.BOT_USER);
+        const message = new Message('Available ' + param + ':', UserController.getNeutralUser());
         let html = '<table class="skychat-table">';
         html += `
             <tr>
@@ -183,7 +184,7 @@ export class ShopPlugin extends Plugin {
         if (! item) {
             throw new Error('Item not found');
         }
-        let data: any = User.getPluginData(connection.session.user, this.name);
+        let data: any = UserController.getPluginData(connection.session.user, this.name);
         if (! data) {
             data = {};
         }
@@ -194,9 +195,9 @@ export class ShopPlugin extends Plugin {
         if (typeof ownedItems.find((id: number) => id === item.id) !== 'undefined') {
             throw new Error('You already own this item');
         }
-        await User.buy(connection.session.user, item.price);
+        await UserController.buy(connection.session.user, item.price);
         data[type].push(item.id);
-        await User.savePluginData(connection.session.user, this.name, data);
+        await UserController.savePluginData(connection.session.user, this.name, data);
     }
 
     /**
@@ -216,7 +217,7 @@ export class ShopPlugin extends Plugin {
         if (! item) {
             throw new Error('Item not found');
         }
-        const data = User.getPluginData(connection.session.user, this.name);
+        const data = UserController.getPluginData(connection.session.user, this.name);
         if (! data[type]) {
             data[type] = [];
         }
@@ -227,10 +228,10 @@ export class ShopPlugin extends Plugin {
 
         switch (type) {
             case 'colors':
-                await User.savePluginData(connection.session.user, 'color', item.value);
+                await UserController.savePluginData(connection.session.user, 'color', item.value);
                 await (this.room.getPlugin('connectedlist') as ConnectedListPlugin).sync();
                 break;
         }
-        connection.send('message', new Message(':ok:', User.BOT_USER).sanitized());
+        connection.send('message', new Message(':ok:', UserController.getNeutralUser()).sanitized());
     }
 }
