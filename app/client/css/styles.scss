@@ -64,6 +64,15 @@ body {
 }
 
 .scrollbar {
+
+    /** Firefox */
+    scrollbar-color: #555 #343434;
+    scrollbar-width: 10px;
+    &:hover {
+        scrollbar-color: #888 #343434;
+    }
+
+    /** Chrome */
     &::-webkit-scrollbar {
         width: 10px;
     }
