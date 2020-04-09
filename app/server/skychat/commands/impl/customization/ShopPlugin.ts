@@ -1,11 +1,11 @@
-import {Connection} from "../../Connection";
-import {Plugin} from "../Plugin";
+import {Connection} from "../../../Connection";
+import {Plugin} from "../../Plugin";
 import {ColorPlugin} from "./ColorPlugin";
-import {Message} from "../../Message";
-import {User} from "../../User";
-import {ConnectedListPlugin} from "./ConnectedListPlugin";
+import {Message} from "../../../Message";
+import {User} from "../../../User";
+import {ConnectedListPlugin} from "../core/ConnectedListPlugin";
 import * as striptags from "striptags";
-import {UserController} from "../../UserController";
+import {UserController} from "../../../UserController";
 
 
 export type ShopItems = {

@@ -1,12 +1,12 @@
-import {Connection} from "../../Connection";
-import {Plugin} from "../Plugin";
-import {Room} from "../../Room";
-import {User} from "../../User";
+import {Connection} from "../../../Connection";
+import {Plugin} from "../../Plugin";
+import {Room} from "../../../Room";
+import {User} from "../../../User";
 import {ConnectedListPlugin} from "./ConnectedListPlugin";
-import {UserController} from "../../UserController";
+import {UserController} from "../../../UserController";
 
 
-export class PointFarmerPlugin extends Plugin {
+export class MoneyFarmerPlugin extends Plugin {
 
     public static readonly MAX_INACTIVITY_DURATION_MS: number = 5 * 60 * 1000;
 
@@ -38,7 +38,7 @@ export class PointFarmerPlugin extends Plugin {
                 continue;
             }
             // If user inactive for too long, continue
-            if (session.lastMessageDate.getTime() + PointFarmerPlugin.MAX_INACTIVITY_DURATION_MS < new Date().getTime()) {
+            if (session.lastMessageDate.getTime() + MoneyFarmerPlugin.MAX_INACTIVITY_DURATION_MS < new Date().getTime()) {
                 continue;
             }
             // Give 0.01$ to this brave man

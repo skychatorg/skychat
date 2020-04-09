@@ -1,26 +1,26 @@
 import {Command} from "./Command";
 import {Plugin} from "./Plugin";
-import {MessageCommand} from "./impl/MessageCommand";
-import {SandalePlugin} from "./impl/SandalePlugin";
-import {AvatarPlugin} from "./impl/AvatarPlugin";
-import {CursorPlugin} from "./impl/CursorPlugin";
-import {MutePlugin} from "./impl/MutePlugin";
-import {TypingListPlugin} from "./impl/TypingListPlugin";
-import {MotoPlugin} from "./impl/MotoPlugin";
-import {YoutubePlugin} from "./impl/YoutubePlugin";
+import {MessageCommand} from "./impl/core/MessageCommand";
+import {SandalePlugin} from "./impl/entertainment/SandalePlugin";
+import {AvatarPlugin} from "./impl/customization/AvatarPlugin";
+import {CursorPlugin} from "./impl/customization/CursorPlugin";
+import {MutePlugin} from "./impl/moderation/MutePlugin";
+import {TypingListPlugin} from "./impl/core/TypingListPlugin";
+import {MotoPlugin} from "./impl/customization/MotoPlugin";
+import {YoutubePlugin} from "./impl/youtube/YoutubePlugin";
 import {Room} from "../Room";
-import {HelpCommand} from "./impl/HelpCommand";
-import {ConnectedListPlugin} from "./impl/ConnectedListPlugin";
-import {PrivateMessagePlugin} from "./impl/PrivateMessagePlugin";
-import {SetRightCommand} from "./impl/SetRightCommand";
-import {ColorPlugin} from "./impl/ColorPlugin";
-import {ShopPlugin} from "./impl/ShopPlugin";
-import {PointFarmerPlugin} from "./impl/PointFarmerPlugin";
-import {OfferMoney} from "./impl/OfferMoney";
-import {HistoryClearPlugin} from "./impl/HistoryClearPlugin";
-import {MessageEditCommand} from "./impl/MessageEditCommand";
-import {StickerPlugin} from "./impl/StickerPlugin";
-import {IpPlugin} from "./impl/IpPlugin";
+import {HelpCommand} from "./impl/core/HelpCommand";
+import {ConnectedListPlugin} from "./impl/core/ConnectedListPlugin";
+import {PrivateMessagePlugin} from "./impl/core/PrivateMessagePlugin";
+import {SetRightCommand} from "./impl/moderation/SetRightCommand";
+import {ColorPlugin} from "./impl/customization/ColorPlugin";
+import {ShopPlugin} from "./impl/customization/ShopPlugin";
+import {MoneyFarmerPlugin} from "./impl/core/MoneyFarmerPlugin";
+import {OfferMoney} from "./impl/moderation/OfferMoney";
+import {HistoryClearPlugin} from "./impl/moderation/HistoryClearPlugin";
+import {MessageEditCommand} from "./impl/core/MessageEditCommand";
+import {StickerPlugin} from "./impl/moderation/StickerPlugin";
+import {IpPlugin} from "./impl/moderation/IpPlugin";
 
 
 /**
@@ -44,7 +44,7 @@ export class CommandManager {
         MotoPlugin,
         MutePlugin,
         OfferMoney,
-        PointFarmerPlugin,
+        MoneyFarmerPlugin,
         PrivateMessagePlugin,
         SandalePlugin,
         SetRightCommand,

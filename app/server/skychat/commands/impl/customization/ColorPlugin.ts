@@ -1,5 +1,5 @@
-import {Connection} from "../../Connection";
-import {Plugin} from "../Plugin";
+import {Connection} from "../../../Connection";
+import {Plugin} from "../../Plugin";
 
 
 export class ColorPlugin extends Plugin {

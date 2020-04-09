@@ -1,9 +1,9 @@
-import {Command} from "../Command";
-import {Connection} from "../../Connection";
-import {User} from "../../User";
-import {Session} from "../../Session";
-import {ConnectedListPlugin} from "./ConnectedListPlugin";
-import {UserController} from "../../UserController";
+import {Command} from "../../Command";
+import {Connection} from "../../../Connection";
+import {User} from "../../../User";
+import {Session} from "../../../Session";
+import {ConnectedListPlugin} from "../core/ConnectedListPlugin";
+import {UserController} from "../../../UserController";
 
 
 export class SetRightCommand extends Command {

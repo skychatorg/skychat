@@ -1,8 +1,8 @@
-import {Connection} from "../../Connection";
-import {Plugin} from "../Plugin";
-import {User} from "../../User";
-import {Message} from "../../Message";
-import {UserController} from "../../UserController";
+import {Connection} from "../../../Connection";
+import {Plugin} from "../../Plugin";
+import {User} from "../../../User";
+import {Message} from "../../../Message";
+import {UserController} from "../../../UserController";
 
 
 /**

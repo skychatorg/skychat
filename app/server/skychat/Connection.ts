@@ -24,14 +24,21 @@ export class Connection extends EventEmitter implements IBroadcaster {
      */
     public readonly request: http.IncomingMessage;
 
+    public readonly origin: string;
+
     public readonly userAgent: string;
+
+    public readonly ip: string;
 
     constructor(session: Session, webSocket: WebSocket, request: http.IncomingMessage) {
         super();
 
         this.webSocket = webSocket;
         this.request = request;
+
+        this.origin = typeof request.headers['origin'] === 'string' ? request.headers['origin'] : '';
         this.userAgent = new UAParser(request.headers["user-agent"]).getBrowser().name || '';
+        this.ip = typeof request.headers['X-FORWARDED-FOR'] === 'string' ? request.headers['X-FORWARDED-FOR'] : (request.connection.remoteAddress || '');
 
         session.attachConnection(this);
         this.webSocket.on('message', message => this.onMessage(message));

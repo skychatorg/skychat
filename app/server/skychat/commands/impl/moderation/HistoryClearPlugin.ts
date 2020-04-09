@@ -1,9 +1,9 @@
-import {Command} from "../Command";
-import {Connection} from "../../Connection";
-import {MessageFormatter} from "../../MessageFormatter";
-import {Config} from "../../Config";
-import {User} from "../../User";
-import {UserController} from "../../UserController";
+import {Command} from "../../Command";
+import {Connection} from "../../../Connection";
+import {MessageFormatter} from "../../../MessageFormatter";
+import {Config} from "../../../Config";
+import {User} from "../../../User";
+import {UserController} from "../../../UserController";
 
 
 export class HistoryClearPlugin extends Command {
