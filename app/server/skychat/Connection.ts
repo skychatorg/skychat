@@ -5,6 +5,7 @@ import {EventEmitter} from "events";
 import {Room} from "./Room";
 import {Session} from "./Session";
 import {IBroadcaster} from "./IBroadcaster";
+import {UAParser} from "ua-parser-js";
 
 
 /**
@@ -14,20 +15,23 @@ export class Connection extends EventEmitter implements IBroadcaster {
 
     public session!: Session;
 
-    private readonly webSocket: WebSocket;
+    public readonly webSocket: WebSocket;
 
     public room: Room | null = null;
 
     /**
      * Handshake request object
      */
-    private readonly request: http.IncomingMessage;
+    public readonly request: http.IncomingMessage;
+
+    public readonly userAgent: string;
 
     constructor(session: Session, webSocket: WebSocket, request: http.IncomingMessage) {
         super();
 
         this.webSocket = webSocket;
         this.request = request;
+        this.userAgent = new UAParser(request.headers["user-agent"]).getBrowser().name || '';
 
         session.attachConnection(this);
         this.webSocket.on('message', message => this.onMessage(message));
@@ -71,6 +75,7 @@ export class Connection extends EventEmitter implements IBroadcaster {
      */
     private async onClose(code?: number, reason?: string): Promise<void> {
 
+        this.session.detachConnection(this);
         if (this.room) {
             await this.room.executeOnConnectionClosed(this);
             this.room.detachConnection(this);

@@ -3,6 +3,7 @@ import {Connection} from "../../Connection";
 import {User} from "../../User";
 import {Session} from "../../Session";
 import {ConnectedListPlugin} from "./ConnectedListPlugin";
+import {UserController} from "../../UserController";
 
 
 export class SetRightCommand extends Command {
@@ -36,7 +37,7 @@ export class SetRightCommand extends Command {
 
         const user = session.user;
         user.right = right;
-        await User.sync(user);
+        await UserController.sync(user);
         await (this.room.getPlugin('connectedlist') as ConnectedListPlugin).sync();
     }
 }

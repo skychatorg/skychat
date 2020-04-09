@@ -8,10 +8,10 @@
 
         <h2 class="mt-2">In this room:</h2>
         <connected-user
-                v-for="user in users"
-                @click.native="() => onJoinPrivateChannel(user.username)"
-                :key="user.username"
-                :user="user"/>
+                v-for="session in sessions"
+                @click.native="() => onJoinPrivateChannel(session.identifier)"
+                :key="session.identifier"
+                :session="session"/>
 
         <div @click="onMobileShowTchat" class="show-mobile">
             <div class="goto-tchat">
@@ -40,7 +40,7 @@
             }
         },
         computed: {
-            users: function() {
+            sessions: function() {
                 return this.$store.state.connectedList;
             },
             privateMessages: function() {

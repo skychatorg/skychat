@@ -5,6 +5,7 @@ import {User} from "../../User";
 import * as striptags from "striptags";
 import {Config} from "../../Config";
 import {commentanalyzer_v1alpha1} from "googleapis";
+import {UserController} from "../../UserController";
 
 
 export class HelpCommand extends Command {
@@ -55,7 +56,7 @@ export class HelpCommand extends Command {
             `;
         }
         content += `</table>`;
-        const message = new Message(content, User.BOT_USER);
+        const message = new Message(content, UserController.getNeutralUser());
         message.edit(striptags(content), content);
         connection.send('message', message.sanitized());
     }

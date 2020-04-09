@@ -3,9 +3,12 @@ import {Plugin} from "../Plugin";
 import {Room} from "../../Room";
 import {User} from "../../User";
 import {ConnectedListPlugin} from "./ConnectedListPlugin";
+import {UserController} from "../../UserController";
 
 
 export class PointFarmerPlugin extends Plugin {
+
+    public static readonly MAX_INACTIVITY_DURATION_MS: number = 5 * 60 * 1000;
 
     readonly name = 'points';
 
@@ -17,7 +20,7 @@ export class PointFarmerPlugin extends Plugin {
         super(room);
 
         if (this.room) {
-            setInterval(this.tick.bind(this), 30 * 1000);
+            setInterval(this.tick.bind(this), 60 * 1000);
         }
     }
 
@@ -34,13 +37,13 @@ export class PointFarmerPlugin extends Plugin {
             if (session.user.right < 0) {
                 continue;
             }
-            // If user inactive for more than 20min, continue
-            if (session.lastMessageDate.getTime() + 60 * 30 * 1000 < new Date().getTime()) {
+            // If user inactive for too long, continue
+            if (session.lastMessageDate.getTime() + PointFarmerPlugin.MAX_INACTIVITY_DURATION_MS < new Date().getTime()) {
                 continue;
             }
             // Give 0.01$ to this brave man
             session.user.money ++;
-            await User.sync(session.user);
+            await UserController.sync(session.user);
         }
         await (this.room.getPlugin('connectedlist') as ConnectedListPlugin).sync();
     }

@@ -7,6 +7,7 @@ import {User} from "./User";
 import * as iof from "io-filter";
 import {Room} from "./Room";
 import {CommandManager} from "./commands/CommandManager";
+import {UserController} from "./UserController";
 
 
 /**
@@ -74,18 +75,18 @@ export class SkyChat {
     }
 
     private async onRegister(payload: any, connection: Connection): Promise<void> {
-        const user = await User.registerUser(payload.username, payload.password);
+        const user = await UserController.registerUser(payload.username, payload.password);
         await this.onAuthSuccessful(user, connection);
     }
 
     private async onLogin(payload: any, connection: Connection): Promise<void> {
-        const user = await User.login(payload.username, payload.password);
+        const user = await UserController.login(payload.username, payload.password);
         await this.onAuthSuccessful(user, connection);
     }
 
     private async onSetToken(payload: any, connection: Connection): Promise<void> {
         try {
-            const user = await User.verifyAuthToken(payload);
+            const user = await UserController.verifyAuthToken(payload);
             await this.onAuthSuccessful(user, connection);
         } catch (e) {
             connection.send('auth-token', null);
@@ -107,7 +108,7 @@ export class SkyChat {
             // Else, update this session
             connection.session.setUser(user);
         }
-        connection.send('auth-token', User.getAuthToken(user.id));
+        connection.send('auth-token', UserController.getAuthToken(user.id));
         if (connection.room) {
             await connection.room.executeConnectionAuthenticated(connection);
         }

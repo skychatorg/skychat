@@ -2,6 +2,7 @@ import {Connection} from "../../Connection";
 import {Plugin} from "../Plugin";
 import {User} from "../../User";
 import {Session} from "../../Session";
+import {UserController} from "../../UserController";
 
 
 export class SandalePlugin extends Plugin {
@@ -78,6 +79,7 @@ export class SandalePlugin extends Plugin {
         if (! Session.sessionExists(identifier)) {
             throw new Error('User ' + identifier + ' does not exist');
         }
+        await UserController.buy(connection.session.user, (1 + this.getSandaleCount(identifier)) * 100);
         this.addSandale(identifier, 1);
     }
 

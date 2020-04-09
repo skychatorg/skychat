@@ -37,6 +37,7 @@ export class SkyChatClient extends EventEmitter {
         this.on('yt-sync', this.onYtSync.bind(this));
         this.on('auth-token', this.onAuthToken.bind(this));
         this.on('typing-list', this.onTypingList.bind(this));
+        this.on('cursor', this.onCursor.bind(this));
         this.on('error', this.onError.bind(this));
     }
 
@@ -83,6 +84,15 @@ export class SkyChatClient extends EventEmitter {
             event: eventName,
             data: payload
         }));
+    }
+
+    /**
+     * Send cursor position
+     * @param x
+     * @param y
+     */
+    sendCursor(x, y) {
+        this.sendMessage('/c ' + x + ' ' + y);
     }
 
     /**
@@ -210,6 +220,13 @@ export class SkyChatClient extends EventEmitter {
      */
     onTypingList(users) {
         this.store.commit('SET_TYPING_LIST', users);
+    }
+
+    /**
+     *
+     */
+    onCursor(cursor) {
+        this.store.commit('NEW_CURSOR', cursor);
     }
 
     /**

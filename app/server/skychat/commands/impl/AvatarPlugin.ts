@@ -4,6 +4,7 @@ import {User} from "../../User";
 import {ConnectedListPlugin} from "./ConnectedListPlugin";
 import {Config} from "../../Config";
 import {MessageFormatter} from "../../MessageFormatter";
+import {UserController} from "../../UserController";
 
 
 export class AvatarPlugin extends Plugin {
@@ -35,11 +36,11 @@ export class AvatarPlugin extends Plugin {
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
 
-        const data = User.getPluginData(connection.session.user, this.name);
+        const data = UserController.getPluginData(connection.session.user, this.name);
         if (data === param) {
             throw new Error('You already have this avatar');
         }
-        await User.savePluginData(connection.session.user, this.name, param);
+        await UserController.savePluginData(connection.session.user, this.name, param);
         await (this.room.getPlugin('connectedlist') as ConnectedListPlugin).sync();
     }
 }

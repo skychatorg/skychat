@@ -2,6 +2,7 @@ import {Connection} from "../../Connection";
 import {Plugin} from "../Plugin";
 import {User} from "../../User";
 import {ConnectedListPlugin} from "./ConnectedListPlugin";
+import {UserController} from "../../UserController";
 
 
 export class MotoPlugin extends Plugin {
@@ -31,7 +32,7 @@ export class MotoPlugin extends Plugin {
         if (param.length > MotoPlugin.MOTO_MAX_LENGTH) {
             throw new Error('Moto too long');
         }
-        await User.savePluginData(connection.session.user, this.name, param);
+        await UserController.savePluginData(connection.session.user, this.name, param);
         await (this.room.getPlugin('connectedlist') as ConnectedListPlugin).sync();
     }
 }

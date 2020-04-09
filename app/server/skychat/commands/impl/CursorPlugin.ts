@@ -2,6 +2,7 @@ import {Connection} from "../../Connection";
 import {Plugin} from "../Plugin";
 import {User} from "../../User";
 import {Message} from "../../Message";
+import {UserController} from "../../UserController";
 
 
 /**
@@ -26,6 +27,7 @@ export class CursorPlugin extends Plugin {
         c: {
             minCount: 2,
             maxCount: 2,
+            coolDown: 50,
             params: [{name: "x", pattern: /^\d+(\.\d+)?$/}, {name: "y", pattern: /^\d+(\.\d+)?$/}]
         }
     };
@@ -45,8 +47,8 @@ export class CursorPlugin extends Plugin {
      */
     async handleToggle(param: string, connection: Connection): Promise<void> {
         const cursorEnabled = param === 'on';
-        await User.savePluginData(connection.session.user, this.name, cursorEnabled);
-        connection.send('message', new Message('Cursor: ' + param, User.BOT_USER).sanitized());
+        await UserController.savePluginData(connection.session.user, this.name, cursorEnabled);
+        connection.send('message', new Message('Cursor: ' + param, UserController.getNeutralUser()).sanitized());
     }
 
     /**
@@ -58,8 +60,12 @@ export class CursorPlugin extends Plugin {
         // For every connection in the room
         for (const conn of connection.room!.connections) {
             // If the user has cursors disabled
-            if (! User.getPluginData(conn.session.user, this.name)) {
+            if (! UserController.getPluginData(conn.session.user, this.name)) {
                 // Abort
+                continue;
+            }
+            // Do not send cursor events to the owner
+            if (conn.session.identifier === connection.session.identifier) {
                 continue;
             }
             // Else, unpack cursor position
@@ -68,7 +74,7 @@ export class CursorPlugin extends Plugin {
             conn.send('cursor', {
                 x: parseFloat(x),
                 y: parseFloat(y),
-                user: conn.session.user.sanitized()
+                user: connection.session.user.sanitized()
             })
         }
     }

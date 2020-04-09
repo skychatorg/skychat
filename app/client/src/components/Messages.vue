@@ -37,6 +37,7 @@
         },
         methods: {
             onContentLoaded: function() {
+                this.autoScrolling = false;
                 this.scrollToBottom();
             },
             onScroll: function() {

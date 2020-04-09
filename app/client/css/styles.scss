@@ -64,6 +64,15 @@ body {
 }
 
 .scrollbar {
+
+    /** Firefox */
+    scrollbar-color: #555 #343434;
+    scrollbar-width: 10px;
+    &:hover {
+        scrollbar-color: #888 #343434;
+    }
+
+    /** Chrome */
     &::-webkit-scrollbar {
         width: 10px;
     }
@@ -85,6 +94,7 @@ body {
 
 .skychat-image {
     img {
+        min-height: 60px;
         max-width: 100px;
         max-height: 100px;
     }
