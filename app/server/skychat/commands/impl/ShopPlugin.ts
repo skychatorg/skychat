@@ -26,17 +26,22 @@ export class ShopPlugin extends Plugin {
     public static readonly ITEMS: {[type: string]: ShopItems} = {
         colors: {
             items: [
-                {id: 0, name: '#aaaaaa', value: ColorPlugin.DEFAULT_COLOR, price: 0},
-                {id: 2, name: 'darkgray', value: '#888888', price: 500},
-                {id: 3, name: 'white', value: '#ffffff', price: 500},
-                {id: 4, name: '#bf00ff', value: '#bf00ff', price: 20000},
-                {id: 5, name: '#046380', value: '#046380', price: 20000},
-                {id: 6, name: '#eda6c0', value: '#eda6c0', price: 20000},
-                {id: 7, name: '#64dd17', value: '#64dd17', price: 20000},
-                {id: 8, name: '#ba000d', value: '#ba000d', price: 20000},
-                {id: 9, name: '#62efff', value: '#62efff', price: 20000},
+                {id: 0, name: 'gray', value: ColorPlugin.DEFAULT_COLOR, price: 0},
+                {id: 2, name: 'darkgray', value: '#888888', price: 1000},
+                {id: 3, name: 'white', value: '#ffffff', price: 5000},
+                {id: 6, name: 'pink', value: '#eda6c0', price: 20000},
+                {id: 7, name: 'lime', value: '#64dd17', price: 30000},
+                {id: 9, name: 'lightcyan', value: '#62efff', price: 30000},
+                {id: 5, name: 'darkcyan', value: '#046380', price: 40000},
+                {id: 12, name: 'orange', value: '#e67e00', price: 50000},
+                {id: 10, name: 'blue', value: '#0287bd', price: 50000},
+                {id: 11, name: 'purple', value: '#ae1e68', price: 50000},
+                {id: 14, name: 'green', value: '#388e3c', price: 50000},
+                {id: 13, name: 'yellow', value: '#ffd700', price: 60000},
+                {id: 4, name: 'violet', value: '#bf00ff', price: 70000},
+                {id: 8, name: 'red', value: '#ba000d', price: 99999},
             ],
-            preview: '<span style="color:{VALUE}">{USERNAME}</span>'
+            preview: '<b style="color:{VALUE}">{USERNAME}</b>'
         }
     };
 
