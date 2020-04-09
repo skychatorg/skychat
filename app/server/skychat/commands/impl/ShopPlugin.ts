@@ -28,19 +28,19 @@ export class ShopPlugin extends Plugin {
                 {id: 0, name: 'gray', value: ColorPlugin.DEFAULT_COLOR, price: 0},
                 {id: 2, name: 'darkgray', value: '#888888', price: 1000},
                 {id: 3, name: 'white', value: '#ffffff', price: 5000},
-                {id: 6, name: 'pink', value: '#eda6c0', price: 10000},
-                {id: 7, name: 'lime', value: '#64dd17', price: 20000},
-                {id: 9, name: 'lightcyan', value: '#62efff', price: 20000},
-                {id: 13, name: 'yellow', value: '#ffd700', price: 20000},
-                {id: 5, name: 'darkcyan', value: '#046380', price: 30000},
-                {id: 12, name: 'orange', value: '#e67e00', price: 30000},
-                {id: 10, name: 'blue', value: '#0287bd', price: 40000},
-                {id: 11, name: 'purple', value: '#ae1e68', price: 40000},
-                {id: 14, name: 'green', value: '#388e3c', price: 40000},
-                {id: 4, name: 'violet', value: '#bf00ff', price: 50000},
-                {id: 8, name: 'red', value: '#ba000d', price: 80000},
+                {id: 6, name: 'pink', value: '#eda6c0', price: 20000},
+                {id: 7, name: 'lime', value: '#64dd17', price: 30000},
+                {id: 9, name: 'lightcyan', value: '#62efff', price: 30000},
+                {id: 5, name: 'darkcyan', value: '#046380', price: 40000},
+                {id: 12, name: 'orange', value: '#e67e00', price: 50000},
+                {id: 10, name: 'blue', value: '#0287bd', price: 50000},
+                {id: 11, name: 'purple', value: '#ae1e68', price: 50000},
+                {id: 14, name: 'green', value: '#388e3c', price: 50000},
+                {id: 13, name: 'yellow', value: '#ffd700', price: 60000},
+                {id: 4, name: 'violet', value: '#bf00ff', price: 70000},
+                {id: 8, name: 'red', value: '#ba000d', price: 99999},
             ],
-            preview: '<span style="color:{VALUE}">{USERNAME}</span>'
+            preview: '<b style="color:{VALUE}">{USERNAME}</b>'
         }
     };
 
