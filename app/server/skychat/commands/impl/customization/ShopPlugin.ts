@@ -119,7 +119,7 @@ export class ShopPlugin extends Plugin {
      * @param connection
      */
     private async handleShop(param: string, connection: Connection): Promise<void> {
-        const message = new Message('Available items:', UserController.getNeutralUser());
+        const message = new Message('Available items:', null, UserController.getNeutralUser());
         for (const type in ShopPlugin.ITEMS) {
             message.append('/shoplist ' + type + ' :d) list all available ' + type);
         }
@@ -142,7 +142,7 @@ export class ShopPlugin extends Plugin {
         if (! itemDefinition) {
             throw new Error('Unknown item type');
         }
-        const message = new Message('Available ' + param + ':', UserController.getNeutralUser());
+        const message = new Message('Available ' + param + ':', null, UserController.getNeutralUser());
         let html = '<table class="skychat-table">';
         html += `
             <tr>
@@ -197,7 +197,7 @@ export class ShopPlugin extends Plugin {
         await UserController.buy(connection.session.user, item.price);
         await this.userAddOwnedItem(connection.session.user, type, id);
 
-        connection.send('message', new Message(':ok:', UserController.getNeutralUser()).sanitized());
+        connection.send('message', new Message(':ok:', null, UserController.getNeutralUser()).sanitized());
     }
 
     /**
@@ -229,7 +229,7 @@ export class ShopPlugin extends Plugin {
                 break;
         }
 
-        connection.send('message', new Message(':ok:', UserController.getNeutralUser()).sanitized());
+        connection.send('message', new Message(':ok:', null, UserController.getNeutralUser()).sanitized());
     }
 
     /**

@@ -96,13 +96,13 @@ export class YoutubePlugin extends Plugin {
 
     readonly name = 'yt';
 
-    readonly aliases = ['play'];
+    readonly aliases = ['play', '~'];
 
     readonly rules: {[alias: string]: CommandEntryPointRule} = {
         yt: {
             minCount: 1,
             maxCount: 1,
-            params: [{name: 'action', pattern: /^(sync|off|on|list)$/}]
+            params: [{name: 'action', pattern: /^(sync|off|on|list|skip)$/}]
         },
         play: {
             minCount: 1,
@@ -132,6 +132,8 @@ export class YoutubePlugin extends Plugin {
             await this.handleYt(param, connection);
         } else if (alias === 'play') {
             await this.handlePlay(param, connection);
+        } else if (alias === '~') {
+            await this.handleSearchAndPlay(param, connection);
         }
     }
 
@@ -158,8 +160,16 @@ export class YoutubePlugin extends Plugin {
                     connection.send('yt-sync', null);
                 }
                 break;
+
             case 'list':
                 await this.handleYtList(connection);
+                break;
+
+            case 'skip':
+                if (! Config.isOP(connection.session.identifier)) {
+                    throw new Error('You are not OP');
+                }
+                await this.handleYtSkip(connection);
                 break;
 		}
     }
@@ -170,7 +180,36 @@ export class YoutubePlugin extends Plugin {
      * @param connection
      */
     private async handlePlay(param: string, connection: Connection): Promise<void> {
-        const video = await this.getYoutubeVideoMeta(param);
+        let id;
+        let match;
+        if (match = param.match(/v=([a-zA-Z0-9-_]+)/)) {
+            id = match[1];
+        } else {
+            id = param;
+        }
+        const video = await this.getYoutubeVideoMeta(id);
+        this.queue.push({
+            user: connection.session.user,
+            video
+        });
+    }
+
+    /**
+     * Search + play a video
+     * @param param
+     * @param connection
+     */
+    private async handleSearchAndPlay(param: string, connection: Connection): Promise<void> {
+        const result = await this.youtube.search.list({
+            'part': 'snippet',
+            'q': param,
+            'type': 'video'
+        });
+        if (! result || ! result.data || ! result.data.items || result.data.items.length === 0 || ! result.data.items[0].id || ! result.data.items[0].id.videoId) {
+            throw new Error('No result found for ' + param);
+        }
+        const videoId = result.data.items[0].id.videoId;
+        const video = await this.getYoutubeVideoMeta(videoId);
         this.queue.push({
             user: connection.session.user,
             video
@@ -182,11 +221,20 @@ export class YoutubePlugin extends Plugin {
      * @param connection
      */
     private async handleYtList(connection: Connection): Promise<void> {
-        const message = new Message('Videos in the queue:', UserController.getNeutralUser());
+        const message = new Message('Videos in the queue:', null, UserController.getNeutralUser());
         for (const pending of this.queue) {
             message.append(' - ' + pending.video.title + ', added by ' +pending.user.username);
         }
         connection.send('message', message.sanitized());
+    }
+
+    /**
+     * @param connection
+     */
+    private async handleYtSkip(connection: Connection): Promise<void> {
+        if (this.currentVideo) {
+            this.currentVideo.startedDate = new Date(0);
+        }
     }
 
     /**
@@ -256,7 +304,7 @@ export class YoutubePlugin extends Plugin {
         }
         // Else, play this video
         this.currentVideo = {...nextVideo, startedDate: new Date()};
-        this.room.sendMessage(new Message('Now playing: ' + nextVideo.video.title + ', added by ' + nextVideo.user.username, UserController.getNeutralUser()));
+        await this.room.sendMessage('Now playing: ' + nextVideo.video.title + ', added by ' + nextVideo.user.username, UserController.getNeutralUser(), null);
         this.sync(this.room);
     }
 

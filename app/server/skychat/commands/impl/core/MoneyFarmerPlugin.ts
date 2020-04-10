@@ -24,9 +24,7 @@ export class MoneyFarmerPlugin extends Plugin {
         }
     }
 
-    async run(alias: string, param: string, connection: Connection): Promise<void> {
-        throw new Error('This plugin is private');
-    }
+    async run(alias: string, param: string, connection: Connection): Promise<void> { }
 
     private async tick(): Promise<void> {
         // Get rooms in the session

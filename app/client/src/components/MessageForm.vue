@@ -17,14 +17,16 @@
             <input ref="file" @change="onFileInputChange" id="file-input" type="file" />
         </div>
         <form class="form" onsubmit="return false">
-            <input ref="input"
-                   @keyup.enter="sendMessage"
-                   @keyup.up="navigateIntoHistory(-1)"
-                   @keyup.down="navigateIntoHistory(1)"
-                   @keydown.tab.prevent="onKeyUpTab"
-                   class="new-message"
-                   v-model="message"
-                   placeholder="Message.."/>
+            <textarea ref="input"
+                      rows="1"
+                      @keydown.enter.exact.prevent
+                      @keydown.enter.exact="sendMessage"
+                      @keyup.up="navigateIntoHistory(-1)"
+                      @keyup.down="navigateIntoHistory(1)"
+                      @keydown.tab.prevent="onKeyUpTab"
+                      class="new-message"
+                      v-model="message"
+                      placeholder="Message.."></textarea>
         </form>
         <div @click="onMobileShowList" class="show-mobile">
             <div class="goto-list">
@@ -233,11 +235,13 @@
             >.new-message {
                 flex-grow: 1;
                 padding: 10px;
+                resize: none;
                 border: none;
                 background: #2c2d31;
                 color: white;
                 outline-style: none;
                 box-shadow: none;
+                font-family: inherit;
                 -webkit-transition: box-shadow 0.2s;
                 -moz-transition: box-shadow 0.2s;
                 -ms-transition: box-shadow 0.2s;

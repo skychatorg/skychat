@@ -31,6 +31,7 @@ export class MessageFormatter {
      */
     public format(message: string): string {
         message = escapeHtml(message);
+        message = message.replace(/\n/g, "<br>");
         message = this.replaceImages(message);
         message = this.replaceRisiBankStickers(message);
         message = this.replaceStickers(message);

@@ -128,6 +128,11 @@ export class SkyChat {
                 throw new Error('Messages event should be sent in rooms');
             }
 
+            // Handle default command (/message)
+            if (payload[0] !== '/') {
+                payload = '/message ' + payload;
+            }
+
             payload = await connection.room.executeNewMessageHook(payload, connection);
 
             // Parse command name and message content
