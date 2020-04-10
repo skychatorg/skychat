@@ -28,7 +28,7 @@ export class IpPlugin extends Command {
         if (! session) {
             throw new Error('Username not found');
         }
-        let content = `<p>List of ${connection.session.identifier}'s connections:</p>`;
+        let content = `<p>List of ${session.identifier}'s connections:</p>`;
         content += `<table class="skychat-table">`;
         content += `
             <tr>

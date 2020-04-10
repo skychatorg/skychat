@@ -140,7 +140,7 @@ export class ShopPlugin extends Plugin {
         }
         const itemDefinition = ShopPlugin.ITEMS[param];
         if (! itemDefinition) {
-            throw new Error('Unknown item');
+            throw new Error('Unknown item type');
         }
         const message = new Message('Available ' + param + ':', UserController.getNeutralUser());
         let html = '<table class="skychat-table">';
@@ -181,28 +181,23 @@ export class ShopPlugin extends Plugin {
 
         const type = param.split(' ')[0];
         const id = parseInt(param.split(' ')[1]);
-        const itemDefinition = ShopPlugin.ITEMS[type];
-        if (! itemDefinition) {
-            throw new Error('Unknown item type');
-        }
-        const item = itemDefinition.items.find((i: any) => i.id === id);
+
+        // Check item existence
+        const item = this.getItem(type, id);
         if (! item) {
             throw new Error('Item not found');
         }
-        let data: any = UserController.getPluginData(connection.session.user, this.name);
-        if (! data) {
-            data = {};
+
+        // Check ownership
+        if (this.userOwnsItem(connection.session.user, type, id)) {
+            throw new Error('You don\'t own this item');
         }
-        if (! data[type]) {
-            data[type] = [];
-        }
-        const ownedItems = data[type];
-        if (typeof ownedItems.find((id: number) => id === item.id) !== 'undefined') {
-            throw new Error('You already own this item');
-        }
+
+        // Buy item
         await UserController.buy(connection.session.user, item.price);
-        data[type].push(item.id);
-        await UserController.savePluginData(connection.session.user, this.name, data);
+        await this.userAddOwnedItem(connection.session.user, type, id);
+
+        connection.send('message', new Message(':ok:', UserController.getNeutralUser()).sanitized());
     }
 
     /**
@@ -214,29 +209,69 @@ export class ShopPlugin extends Plugin {
 
         const type = param.split(' ')[0];
         const id = parseInt(param.split(' ')[1]);
-        const itemDefinition = ShopPlugin.ITEMS[type];
-        if (! itemDefinition) {
-            throw new Error('Unknown item type');
-        }
-        const item = itemDefinition.items.find((i: any) => i.id === id);
+
+        // Check item existence
+        const item = this.getItem(type, id);
         if (! item) {
             throw new Error('Item not found');
         }
-        const data = UserController.getPluginData(connection.session.user, this.name);
-        if (! data[type]) {
-            data[type] = [];
-        }
-        const ownedItems = data[type];
-        if (typeof ownedItems.find((id: number) => id === item.id) === 'undefined') {
+
+        // Check ownership
+        if (! this.userOwnsItem(connection.session.user, type, id)) {
             throw new Error('You don\'t own this item');
         }
 
+        // Set item
         switch (type) {
             case 'colors':
                 await UserController.savePluginData(connection.session.user, 'color', item.value);
                 await (this.room.getPlugin('connectedlist') as ConnectedListPlugin).sync();
                 break;
         }
+
         connection.send('message', new Message(':ok:', UserController.getNeutralUser()).sanitized());
+    }
+
+    /**
+     * @param type
+     * @param itemId
+     */
+    public getItem(type: string, itemId: number): undefined | ShopItem {
+        const itemDefinitions = ShopPlugin.ITEMS[type];
+        if (! itemDefinitions) {
+            return;
+        }
+        return itemDefinitions.items.find((item: ShopItem) => item.id === itemId);
+    }
+
+    /**
+     * Tells whether an user owns a specific item
+     * @param user
+     * @param type
+     * @param itemId
+     */
+    public userOwnsItem(user: User, type: string, itemId: number): boolean {
+        const storage = user.storage || {shop: {owned: {}}};
+        storage.shop = storage.shop || {};
+        storage.shop.ownedItems = storage.shop.ownedItems || {};
+        storage.shop.ownedItems[type] = storage.shop.ownedItems[type] || [];
+        const index = storage.shop.ownedItems[type].findIndex((ownedItemId: number) => ownedItemId === itemId);
+        return index !== -1;
+    }
+
+    /**
+     * Tells whether an user owns a specific item
+     * @param user
+     * @param type
+     * @param itemId
+     */
+    public async userAddOwnedItem(user: User, type: string, itemId: number): Promise<void> {
+        const storage = user.storage || {shop: {owned: {}}};
+        storage.shop = storage.shop || {};
+        storage.shop.ownedItems = storage.shop.ownedItems || {};
+        storage.shop.ownedItems[type] = storage.shop.ownedItems[type] || [];
+        storage.shop.ownedItems[type].push(itemId);
+        user.storage = storage;
+        await UserController.sync(user);
     }
 }

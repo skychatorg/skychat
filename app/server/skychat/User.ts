@@ -58,7 +58,9 @@ export class User {
 
     public data: UserData;
 
-    constructor(id: number, username: string, password: string, money: number, xp: number, right: number, data?: UserData) {
+    public storage: any;
+
+    constructor(id: number, username: string, password: string, money: number, xp: number, right: number, data?: UserData, storage?: any) {
         this.id = id;
         this.username = username;
         this.password = password;
@@ -67,6 +69,7 @@ export class User {
         this.right = right;
         this.data = typeof data !== 'undefined' ? data : JSON.parse(JSON.stringify(User.DEFAULT_DATA_OBJECT));
         this.data.plugins = Object.assign(this.data.plugins || {}, _.cloneDeep(UserController.getPluginsDefaultData()));
+        this.storage = storage || {};
     }
 
     /**
