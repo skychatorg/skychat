@@ -158,11 +158,9 @@ export class YoutubePlugin extends Plugin {
                     connection.send('yt-sync', null);
                 }
                 break;
-			case 'list':
-				for (let j=0; j<this.queue.length; j++) {
-					this.room.sendMessage(new Message(this.queue[j].video.title + ', added by ' + this.queue[j].user.username, UserController.getNeutralUser()));
-				}
-				break;
+            case 'list':
+                await this.handleYtList(connection);
+                break;
 		}
     }
 
@@ -177,6 +175,18 @@ export class YoutubePlugin extends Plugin {
             user: connection.session.user,
             video
         });
+    }
+
+    /**
+     *
+     * @param connection
+     */
+    private async handleYtList(connection: Connection): Promise<void> {
+        const message = new Message('Videos in the queue:', UserController.getNeutralUser());
+        for (const pending of this.queue) {
+            message.append(' - ' + pending.video.title + ', added by ' +pending.user.username);
+        }
+        connection.send('message', message.sanitized());
     }
 
     /**
