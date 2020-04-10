@@ -1,15 +1,15 @@
-import {Plugin} from "../Plugin";
-import {Room} from "../../Room";
-import {SanitizedUser, User} from "../../User";
-import {Session} from "../../Session";
-import {Connection} from "../../Connection";
-import {CommandEntryPointRule} from "../Command";
+import {Plugin} from "../../Plugin";
+import {Room} from "../../../Room";
+import {SanitizedUser, User} from "../../../User";
+import {Session} from "../../../Session";
+import {Connection} from "../../../Connection";
+import {CommandEntryPointRule} from "../../Command";
 import {google, youtube_v3} from "googleapis";
 import * as fs from "fs";
-import {IBroadcaster} from "../../IBroadcaster";
-import {Config} from "../../Config";
-import {Message} from "../../Message";
-import {UserController} from "../../UserController";
+import {IBroadcaster} from "../../../IBroadcaster";
+import {Config} from "../../../Config";
+import {Message} from "../../../Message";
+import {UserController} from "../../../UserController";
 
 
 /**

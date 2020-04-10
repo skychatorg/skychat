@@ -1,11 +1,11 @@
-import {Command, CommandEntryPointRule} from "../Command";
-import {Connection} from "../../Connection";
-import {Message} from "../../Message";
-import {User} from "../../User";
+import {Command, CommandEntryPointRule} from "../../Command";
+import {Connection} from "../../../Connection";
+import {Message} from "../../../Message";
+import {User} from "../../../User";
 import * as striptags from "striptags";
-import {Config} from "../../Config";
+import {Config} from "../../../Config";
 import {commentanalyzer_v1alpha1} from "googleapis";
-import {UserController} from "../../UserController";
+import {UserController} from "../../../UserController";
 
 
 export class HelpCommand extends Command {

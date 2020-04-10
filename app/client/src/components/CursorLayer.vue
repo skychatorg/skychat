@@ -18,7 +18,7 @@
 <script>
     import Vue from "vue";
 
-    const CURSOR_POSITION_DELAY_MS = 100;
+    const CURSOR_POSITION_DELAY_MS = 150;
 
     /**
      * Reference to the timeout that sends cursor position
