@@ -68,7 +68,7 @@ export class User {
         this.xp = xp;
         this.right = right;
         this.data = typeof data !== 'undefined' ? data : JSON.parse(JSON.stringify(User.DEFAULT_DATA_OBJECT));
-        this.data.plugins = Object.assign(this.data.plugins || {}, _.cloneDeep(UserController.getPluginsDefaultData()));
+        this.data.plugins = Object.assign(_.cloneDeep(UserController.getPluginsDefaultData()), this.data.plugins || {});
         this.storage = storage || {};
     }
 

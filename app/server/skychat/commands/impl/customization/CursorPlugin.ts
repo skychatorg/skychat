@@ -27,7 +27,7 @@ export class CursorPlugin extends Plugin {
         c: {
             minCount: 2,
             maxCount: 2,
-            coolDown: 50,
+            coolDown: 40,
             params: [{name: "x", pattern: /^\d+(\.\d+)?$/}, {name: "y", pattern: /^\d+(\.\d+)?$/}]
         }
     };
