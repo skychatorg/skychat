@@ -241,6 +241,7 @@
                 color: white;
                 outline-style: none;
                 box-shadow: none;
+                font-family: inherit;
                 -webkit-transition: box-shadow 0.2s;
                 -moz-transition: box-shadow 0.2s;
                 -ms-transition: box-shadow 0.2s;

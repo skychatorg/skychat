@@ -27,7 +27,7 @@ export class AvatarPlugin extends Plugin {
             params: [
                 {
                     name: 'avatar',
-                    pattern: new RegExp('^' + MessageFormatter.getInstance().escapeRegExp(Config.LOCATION) + '\/uploads\/([0-9a-zA-Z/-]+)\.(jpg|jpeg|png|gif|webp)$'),
+                    pattern: new RegExp('^' + MessageFormatter.getInstance().escapeRegExp(Config.LOCATION) + '\/uploads\/([0-9a-zA-Z/-]+)\.(jpg|jpeg|png|webp)$'),
                     info: 'Image link'
                 }
             ]
