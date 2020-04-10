@@ -230,7 +230,8 @@ export class UserController {
             money=${user.money},
             xp=${user.xp},
             right=${user.right},
-            data=${JSON.stringify(user.data)}            
+            data=${JSON.stringify(user.data)},
+            storage=${JSON.stringify(user.storage)}            
             where id=${user.id}`);
     }
 }
