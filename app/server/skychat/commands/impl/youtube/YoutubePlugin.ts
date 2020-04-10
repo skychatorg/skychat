@@ -102,7 +102,7 @@ export class YoutubePlugin extends Plugin {
         yt: {
             minCount: 1,
             maxCount: 1,
-            params: [{name: 'action', pattern: /^(sync|off|on)$/}]
+            params: [{name: 'action', pattern: /^(sync|off|on|list)$/}]
         },
         play: {
             minCount: 1,
@@ -158,7 +158,10 @@ export class YoutubePlugin extends Plugin {
                     connection.send('yt-sync', null);
                 }
                 break;
-        }
+            case 'list':
+                await this.handleYtList(connection);
+                break;
+		}
     }
 
     /**
@@ -172,6 +175,18 @@ export class YoutubePlugin extends Plugin {
             user: connection.session.user,
             video
         });
+    }
+
+    /**
+     *
+     * @param connection
+     */
+    private async handleYtList(connection: Connection): Promise<void> {
+        const message = new Message('Videos in the queue:', UserController.getNeutralUser());
+        for (const pending of this.queue) {
+            message.append(' - ' + pending.video.title + ', added by ' +pending.user.username);
+        }
+        connection.send('message', message.sanitized());
     }
 
     /**
