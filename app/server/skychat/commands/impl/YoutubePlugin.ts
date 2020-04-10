@@ -102,7 +102,7 @@ export class YoutubePlugin extends Plugin {
         yt: {
             minCount: 1,
             maxCount: 1,
-            params: [{name: 'action', pattern: /^(sync|off|on)$/}]
+            params: [{name: 'action', pattern: /^(sync|off|on|list)$/}]
         },
         play: {
             minCount: 1,
@@ -158,7 +158,12 @@ export class YoutubePlugin extends Plugin {
                     connection.send('yt-sync', null);
                 }
                 break;
-        }
+			case 'list':
+				for (let j=0; j<this.queue.length; j++) {
+					this.room.sendMessage(new Message(this.queue[j].video.title + ', added by ' + this.queue[j].user.username, UserController.getNeutralUser()));
+				}
+				break;
+		}
     }
 
     /**
