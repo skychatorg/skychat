@@ -11,8 +11,6 @@ export class SandalePlugin extends Plugin {
 
     readonly minRight = 0;
 
-    readonly roomRequired = true;
-
     readonly rules = {
         sandale: {
             minCount: 1,
@@ -89,11 +87,14 @@ export class SandalePlugin extends Plugin {
      * @param connection
      */
     public async onNewMessageHook(message: string, connection: Connection): Promise<string> {
+        if (message.indexOf('/message') !== 0) {
+            return message;
+        }
         const username = connection.session.identifier;
         const sandales = this.getSandaleCount(username);
         if (sandales > 0) {
             this.removeSandale(username, 1);
-            return ':sandale:'.repeat(sandales);
+            return '/message :sandale:'.repeat(sandales);
         }
         return message;
     }

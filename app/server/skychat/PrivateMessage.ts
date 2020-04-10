@@ -11,8 +11,8 @@ export class PrivateMessage extends Message {
 
     private readonly to: User;
 
-    constructor(content: string, from: User, to: User) {
-        super(content, from, null);
+    constructor(content: string, formatted: string | null, from: User, to: User) {
+        super(content, formatted, from, null);
 
         this.to = to;
     }

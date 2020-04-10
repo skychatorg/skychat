@@ -56,7 +56,7 @@ export class HelpCommand extends Command {
             `;
         }
         content += `</table>`;
-        const message = new Message(content, UserController.getNeutralUser());
+        const message = new Message(content, null, UserController.getNeutralUser());
         message.edit(striptags(content), content);
         connection.send('message', message.sanitized());
     }

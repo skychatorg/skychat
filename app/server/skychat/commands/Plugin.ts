@@ -1,5 +1,6 @@
 import {Command} from "./Command";
 import {Connection} from "../Connection";
+import {Message} from "../Message";
 
 
 /**
@@ -48,5 +49,14 @@ export abstract class Plugin extends Command {
      */
     public async onConnectionClosed(connection: Connection): Promise<void> {
 
+    }
+
+    /**
+     * Executed before broadcasting a message to the room
+     * @param message
+     * @param connection
+     */
+    public async onBeforeMessageBroadcastHook(message: Message, connection?: Connection): Promise<Message> {
+        return message;
     }
 }

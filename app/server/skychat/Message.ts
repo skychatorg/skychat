@@ -51,11 +51,11 @@ export class Message {
 
     public readonly createdTime: Date;
 
-    constructor(content: string, user: User, quoted?: Message | null, createdTime?: Date) {
+    constructor(content: string, formatted: string | null, user: User, quoted?: Message | null, createdTime?: Date) {
 
         this.id = ++ Message.ID;
         this.content = content;
-        this.formatted = MessageFormatter.getInstance().format(content);
+        this.formatted = typeof formatted === 'string' ? formatted : MessageFormatter.getInstance().format(content);
         this.quoted = quoted || null;
         this.user = user;
         this.createdTime = typeof createdTime !== 'undefined' ? createdTime : new Date();

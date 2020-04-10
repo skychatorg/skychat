@@ -21,6 +21,7 @@ import {HistoryClearPlugin} from "./impl/moderation/HistoryClearPlugin";
 import {MessageEditCommand} from "./impl/core/MessageEditCommand";
 import {StickerPlugin} from "./impl/moderation/StickerPlugin";
 import {IpPlugin} from "./impl/moderation/IpPlugin";
+import {RisiBankPlugin} from "./impl/entertainment/RisiBankPlugin";
 
 
 /**
@@ -46,6 +47,7 @@ export class CommandManager {
         OfferMoney,
         MoneyFarmerPlugin,
         PrivateMessagePlugin,
+        RisiBankPlugin,
         SandalePlugin,
         SetRightCommand,
         ShopPlugin,
@@ -91,9 +93,6 @@ export class CommandManager {
      */
     public static parseMessage(message: string): {param: string, commandName: string} {
         message = message.trim();
-        if (message[0] !== '/') {
-            message = '/message ' + message;
-        }
         const commandName = message.split(' ')[0].substr(1).toLowerCase();
         const param = message.substr(commandName.length + 2);
         return {param, commandName};

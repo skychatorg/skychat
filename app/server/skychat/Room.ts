@@ -4,6 +4,7 @@ import {Message} from "./Message";
 import {Command} from "./commands/Command";
 import {Plugin} from "./commands/Plugin";
 import {CommandManager} from "./commands/CommandManager";
+import {User} from "./User";
 
 
 export class Room implements IBroadcaster {
@@ -139,6 +140,18 @@ export class Room implements IBroadcaster {
     }
 
     /**
+     * Execute on before mesasge broadcast hooks
+     * @param message
+     * @param connection
+     */
+    public async executeOnBeforeMessageBroadcastHook(message: Message, connection?: Connection): Promise<Message> {
+        for (const plugin of this.plugins) {
+            message = await plugin.onBeforeMessageBroadcastHook(message, connection);
+        }
+        return message;
+    }
+
+    /**
      * Send to all sessions
      * @param event
      * @param payload
@@ -167,13 +180,21 @@ export class Room implements IBroadcaster {
 
     /**
      * Send a new message to the room
+     * @param content Message content (string)
+     * @param user User that created the message
+     * @param quoted
+     * @param connection Connection that created the message. Let undefined if sent by server.
      */
-    public sendMessage(message: Message): void {
+    public async sendMessage(content: string, user: User, quoted: Message | null, connection?: Connection): Promise<Message> {
+        let message = new Message(content, null, user, quoted);
+        message = await this.executeOnBeforeMessageBroadcastHook(message, connection);
         // Send it to clients
         this.send('message', message.sanitized());
         // Add it to history
         this.messages.push(message);
         this.messages.splice(0, this.messages.length - Room.MESSAGE_HISTORY_LENGTH);
+        // Return created message
+        return message;
     }
 
     /**

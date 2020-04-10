@@ -49,7 +49,7 @@ export class IpPlugin extends Command {
                 </tr>`;
         }
         content += `</table>`;
-        const message = new Message('', UserController.getNeutralUser());
+        const message = new Message('', null, UserController.getNeutralUser());
         message.edit(striptags(content), content);
         connection.send('message', message.sanitized());
     }
