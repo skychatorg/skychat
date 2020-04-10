@@ -87,7 +87,7 @@ export class UserController {
         if (! userObject) {
             throw new Error('User does not exist');
         }
-        return new User(userObject.id, userObject.username_custom, userObject.password, userObject.money, userObject.xp, userObject.right, JSON.parse(userObject.data));
+        return this.userRowToObject(userObject);
     }
 
     /**
@@ -99,7 +99,15 @@ export class UserController {
         if (! userObject) {
             throw new Error('User does not exist');
         }
-        return new User(userObject.id, userObject.username_custom, userObject.password, userObject.money, userObject.xp, userObject.right, JSON.parse(userObject.data));
+        return this.userRowToObject(userObject);
+    }
+
+    /**
+     * Convert a user row fetched from sqlite to an user object
+     * @param row
+     */
+    public static userRowToObject(row: any): User {
+        return new User(row.id, row.username_custom, row.password, row.money, row.xp, row.right, JSON.parse(row.data), JSON.parse(row.storage));
     }
 
     /**
@@ -170,7 +178,7 @@ export class UserController {
      * @param pluginName
      */
     public static getPluginData<T>(user: User, pluginName: string): any {
-        return user.data.plugins[pluginName];
+        return typeof user.data.plugins[pluginName] === 'undefined' ? this.getPluginDefaultData(pluginName) : user.data.plugins[pluginName];
     }
 
     /**

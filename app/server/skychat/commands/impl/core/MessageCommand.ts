@@ -1,6 +1,6 @@
-import {Command} from "../Command";
-import {Connection} from "../../Connection";
-import {Message} from "../../Message";
+import {Command} from "../../Command";
+import {Connection} from "../../../Connection";
+import {Message} from "../../../Message";
 
 
 export class MessageCommand extends Command {

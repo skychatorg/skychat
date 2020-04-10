@@ -1,8 +1,8 @@
-import {Connection} from "../../Connection";
-import {Plugin} from "../Plugin";
-import {User} from "../../User";
-import {ConnectedListPlugin} from "./ConnectedListPlugin";
-import {UserController} from "../../UserController";
+import {Connection} from "../../../Connection";
+import {Plugin} from "../../Plugin";
+import {User} from "../../../User";
+import {ConnectedListPlugin} from "../core/ConnectedListPlugin";
+import {UserController} from "../../../UserController";
 
 
 export class MotoPlugin extends Plugin {

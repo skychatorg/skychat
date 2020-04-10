@@ -1,7 +1,7 @@
-import {Connection} from "../../Connection";
-import {Plugin} from "../Plugin";
-import {Server} from "../../Server";
-import {MessageFormatter} from "../../MessageFormatter";
+import {Connection} from "../../../Connection";
+import {Plugin} from "../../Plugin";
+import {Server} from "../../../Server";
+import {MessageFormatter} from "../../../MessageFormatter";
 
 
 export class StickerPlugin extends Plugin {

@@ -21,6 +21,7 @@
                    @keyup.enter="sendMessage"
                    @keyup.up="navigateIntoHistory(-1)"
                    @keyup.down="navigateIntoHistory(1)"
+                   @keydown.tab.prevent="onKeyUpTab"
                    class="new-message"
                    v-model="message"
                    placeholder="Message.."/>
@@ -164,12 +165,33 @@
              */
             onMobileShowList: function() {
                 this.$store.commit('SET_MOBILE_PAGE', 'list');
+            },
+
+            /**
+             * When tab is pressed
+             */
+            onKeyUpTab: function() {
+                const messageMatch = this.message.match(/([*a-zA-Z0-9_-]+)$/);
+                const username = messageMatch ? messageMatch[0].toLowerCase() : null;
+                if (! username) {
+                    return;
+                }
+                const matches = this.connectedList
+                    .map(entry => entry.identifier)
+                    .filter(identifier => identifier.indexOf(username) === 0);
+                if (matches.length !== 1) {
+                    return;
+                }
+                this.message = this.message.substr(0, this.message.length - username.length) + matches[0];
             }
         },
 
         computed: {
             focused: function() {
                 return this.$store.state.focused;
+            },
+            connectedList: function() {
+                return this.$store.state.connectedList;
             }
         }
     });

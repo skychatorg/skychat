@@ -1,9 +1,9 @@
-import {Connection} from "../../Connection";
-import {Plugin} from "../Plugin";
-import {Session} from "../../Session";
-import {User} from "../../User";
-import {Message} from "../../Message";
-import {PrivateMessage} from "../../PrivateMessage";
+import {Connection} from "../../../Connection";
+import {Plugin} from "../../Plugin";
+import {Session} from "../../../Session";
+import {User} from "../../../User";
+import {Message} from "../../../Message";
+import {PrivateMessage} from "../../../PrivateMessage";
 
 
 export class PrivateMessagePlugin extends Plugin {

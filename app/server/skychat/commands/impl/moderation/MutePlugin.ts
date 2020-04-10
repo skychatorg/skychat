@@ -1,7 +1,7 @@
-import {Connection} from "../../Connection";
-import {Plugin} from "../Plugin";
-import {User} from "../../User";
-import {Session} from "../../Session";
+import {Connection} from "../../../Connection";
+import {Plugin} from "../../Plugin";
+import {User} from "../../../User";
+import {Session} from "../../../Session";
 
 
 /**

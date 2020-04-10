@@ -1,10 +1,10 @@
-import {Command} from "../Command";
-import {Connection} from "../../Connection";
-import {User} from "../../User";
-import {Session} from "../../Session";
-import {Message} from "../../Message";
+import {Command} from "../../Command";
+import {Connection} from "../../../Connection";
+import {User} from "../../../User";
+import {Session} from "../../../Session";
+import {Message} from "../../../Message";
 import * as striptags from "striptags";
-import {UserController} from "../../UserController";
+import {UserController} from "../../../UserController";
 
 
 export class IpPlugin extends Command {
@@ -28,7 +28,8 @@ export class IpPlugin extends Command {
         if (! session) {
             throw new Error('Username not found');
         }
-        let content = `<table class="skychat-table">`;
+        let content = `<p>List of ${session.identifier}'s connections:</p>`;
+        content += `<table class="skychat-table">`;
         content += `
             <tr>
                 <th>room</th>
@@ -39,15 +40,12 @@ export class IpPlugin extends Command {
         `;
         for (const connection of session.connections) {
             const roomId = connection.room ? connection.room.id : 'none';
-            const origin = connection.request.headers['origin'] || '';
-            const userAgent = connection.userAgent;
-            const ip = connection.request.connection.remoteAddress;
             content += `
                 <tr>
                     <td>${roomId}</td>
-                    <td>${origin}</td>
-                    <td>${userAgent}</td>
-                    <td>${ip}</td>
+                    <td>${connection.origin}</td>
+                    <td>${connection.userAgent}</td>
+                    <td>${connection.ip}</td>
                 </tr>`;
         }
         content += `</table>`;
