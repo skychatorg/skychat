@@ -1,0 +1,9 @@
+{
+    "name": "~ SkyChat",
+    "short_name": "SkyChat",
+    "theme_color": "#212121",
+    "background_color": "#212121",
+    "description" : "Install the SkyChat in your homescreen",
+    "start_url": "/",
+    "display": "fullscreen"
+}

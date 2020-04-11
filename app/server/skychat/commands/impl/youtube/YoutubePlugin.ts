@@ -166,9 +166,6 @@ export class YoutubePlugin extends Plugin {
                 break;
 
             case 'skip':
-                if (! Config.isOP(connection.session.identifier)) {
-                    throw new Error('You are not OP');
-                }
                 await this.handleYtSkip(connection);
                 break;
 		}
@@ -232,9 +229,15 @@ export class YoutubePlugin extends Plugin {
      * @param connection
      */
     private async handleYtSkip(connection: Connection): Promise<void> {
-        if (this.currentVideo) {
-            this.currentVideo.startedDate = new Date(0);
+        if (! this.currentVideo) {
+            return;
         }
+        if (! Config.isOP(connection.session.identifier)
+            && this.currentVideo.user.id !== connection.session.user.id
+            && this.room.containsUser(this.currentVideo.user.id)) {
+            throw new Error('You do not have the right to skip this song');
+        }
+        this.currentVideo.startedDate = new Date(0);
     }
 
     /**

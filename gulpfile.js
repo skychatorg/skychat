@@ -24,7 +24,7 @@ gulp.task("build-client-views", () => {
         .pipe(htmlmin({ collapseWhitespace: true }))
         .pipe(gulp.dest(distPath))
 });
-gulp.task("build-client-assets", () => gulp.src(resPaths.pages) .pipe(gulp.dest(distPath + '/assets')));
+gulp.task("build-client-assets", () => gulp.src(resPaths.pages) .pipe(gulp.dest(distPath)));
 
 gulp.task("build-client-scss", function () {
     return gulp.src(scssPaths.pages)

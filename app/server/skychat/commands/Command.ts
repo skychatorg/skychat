@@ -21,9 +21,14 @@ export type CommandEntryPointRule = {
     maxCount?: number;
 
     /**
-     * Cooldown in milliseconds
+     * Minimum duration between two consecutive calls
      */
     coolDown?: number;
+
+    /**
+     * Maximum number of time this function can be called within a 10 second window
+     */
+    maxCallsPer10Seconds?: number;
 
     /**
      * Expected parameters
@@ -84,7 +89,7 @@ export abstract class Command {
      *
      * @param room
      */
-    private readonly coolDownEntries: {[identifier: string]: Date} = {};
+    private readonly coolDownEntries: {[identifier: string]: {first: Date, last: Date, count: number}} = {};
 
     constructor(room: Room) {
         this.room = room;
@@ -121,19 +126,37 @@ export abstract class Command {
             const minParamCount = entryPointRule.minCount || 0;
             const maxParamCount = entryPointRule.maxCount || Infinity;
             const coolDown = entryPointRule.coolDown || 0;
+            const maxCallsPer10Seconds = entryPointRule.maxCallsPer10Seconds || Infinity;
             const params = entryPointRule.params || [];
 
             // Check cool down
-            if (coolDown > 0) {
-                const identifier = connection.session.identifier;
-                // If a cool down entry exists
-                if (typeof this.coolDownEntries[identifier] !== 'undefined') {
-                    // If cool down still applies
-                    if (new Date() < new Date(this.coolDownEntries[identifier].getTime() + coolDown)) {
-                        throw new Error('Cool down for ' + alias + ' still applies');
+            const identifier = connection.session.identifier;
+            // 1. Check
+            if (typeof this.coolDownEntries[identifier] !== 'undefined') {
+                // If cool down still applies
+                if (new Date() < new Date(this.coolDownEntries[identifier].last.getTime() + coolDown)) {
+                    throw new Error('Cool down for ' + alias + ' still applies');
+                }
+                // If 10 second window entry still valid
+                if (this.coolDownEntries[identifier].first.getTime() + 10 * 1000 > new Date().getTime()) {
+                    // If maximum number of calls per 10 seconds reached
+                    if (this.coolDownEntries[identifier].count > maxCallsPer10Seconds) {
+                        throw new Error('10 seconds window cool down still applies');
                     }
                 }
-                this.coolDownEntries[identifier] = new Date();
+            }
+            // 2. Update cool down entry
+            if (typeof this.coolDownEntries[identifier] !== 'undefined') {
+                // If entry expired
+                if (this.coolDownEntries[identifier].first.getTime() + 10 * 1000 < new Date().getTime()) {
+                    delete this.coolDownEntries[identifier];
+                }
+            }
+            if (typeof this.coolDownEntries[identifier] === 'undefined') {
+                this.coolDownEntries[identifier] = {first: new Date(), last: new Date(), count: 1};
+            } else {
+                this.coolDownEntries[identifier].last = new Date();
+                this.coolDownEntries[identifier].count ++;
             }
 
             // Check parameter count

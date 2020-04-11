@@ -87,6 +87,14 @@ export class Room implements IBroadcaster {
     }
 
     /**
+     *
+     * @param userId
+     */
+    public containsUser(userId: number) {
+        return this.connections.findIndex(connection => connection.session.user.id === userId) > -1;
+    }
+
+    /**
      * Get a plugin instance by its name
      * @param name
      */
