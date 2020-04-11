@@ -145,9 +145,6 @@ export class SkyChat {
             }
 
             await command.execute(commandName, param, connection);
-
-            // Update the date of the last sent message
-            connection.session.lastMessageDate = new Date();
         } catch (e) {
 
             connection.sendError(e);
