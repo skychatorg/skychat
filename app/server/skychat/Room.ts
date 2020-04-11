@@ -79,11 +79,18 @@ export class Room implements IBroadcaster {
         // Attach the connection to this room
         connection.room = this;
         this.connections.push(connection);
+        await this.executeConnectionJoinedRoom(connection);
+    }
+
+    /**
+     * Send the history of last messages to a specific connection
+     * @param connection
+     */
+    public sendHistory(connection: Connection): void {
         // Send message history to the connection that just joined this room
         for (let i = Math.max(0, this.messages.length - Room.MESSAGE_HISTORY_VISIBLE_LENGTH); i < this.messages.length; ++ i) {
             connection.send('message', this.messages[i].sanitized());
         }
-        await this.executeConnectionJoinedRoom(connection);
     }
 
     /**
@@ -123,6 +130,9 @@ export class Room implements IBroadcaster {
      * @param connection
      */
     public async executeConnectionAuthenticated(connection: Connection): Promise<void> {
+        if (connection.session.user.right >= 10) {
+            this.sendHistory(connection);
+        }
         for (const plugin of this.plugins) {
             await plugin.onConnectionAuthenticated(connection);
         }

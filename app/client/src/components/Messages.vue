@@ -45,7 +45,7 @@
                     return;
                 }
                 const distanceToBottom = this.$refs.messages.scrollHeight - this.$refs.messages.offsetHeight - this.$refs.messages.scrollTop;
-                if (distanceToBottom > 120) {
+                if (distanceToBottom > 22) {
                     // Stop auto scroll
                     this.autoScroll = false;
                 } else if (distanceToBottom < 20) {
