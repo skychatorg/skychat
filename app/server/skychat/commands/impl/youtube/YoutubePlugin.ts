@@ -178,7 +178,7 @@ export class YoutubePlugin extends Plugin {
                 break;
 
             case 'shuffle':
-                this.queue.sort(() => Math.random() - .5);
+                this.shuffleQueue();
                 break;
 
             case 'flush':
@@ -205,6 +205,7 @@ export class YoutubePlugin extends Plugin {
         }
         const video = await this.getYoutubeVideoMeta(id);
         this.queue.push({user: connection.session.user, video});
+        this.shuffleQueue();
     }
 
     /**
@@ -231,6 +232,7 @@ export class YoutubePlugin extends Plugin {
             const video = await this.getYoutubeVideoMeta(videoId);
             this.queue.push({user: connection.session.user, video});
         }
+        this.shuffleQueue();
     }
 
     /**
@@ -249,10 +251,8 @@ export class YoutubePlugin extends Plugin {
         }
         const videoId = result.data.items[0].id.videoId;
         const video = await this.getYoutubeVideoMeta(videoId);
-        this.queue.push({
-            user: connection.session.user,
-            video
-        });
+        this.queue.push({user: connection.session.user, video});
+        this.shuffleQueue();
     }
 
     /**
@@ -280,6 +280,34 @@ export class YoutubePlugin extends Plugin {
             throw new Error('You do not have the right to skip this song');
         }
         this.currentVideo.startedDate = new Date(0);
+    }
+
+    /**
+     * Shuffle the queue fairly
+     */
+    private shuffleQueue(): void {
+        // store pending videos by owner
+        const entries: {[username: string]: PendingYoutubeVideo[]} = {};
+        this.queue.forEach((entry: PendingYoutubeVideo) => {
+            if (typeof entries[entry.user.username.toLowerCase()] === 'undefined') {
+                entries[entry.user.username.toLowerCase()] = [];
+            }
+            entries[entry.user.username.toLowerCase()].push(entry);
+        });
+        // re organise queue
+        let remainingCount = this.queue.length;
+        this.queue = [];
+        while (remainingCount > 0) {
+            // for each username
+            for (const username of Object.keys(entries)) {
+                if (entries[username].length === 0) {
+                    continue;
+                }
+                // add one of his video to the list
+                this.queue.push(entries[username].splice(0, 1)[0]);
+                remainingCount --;
+            }
+        }
     }
 
     /**
