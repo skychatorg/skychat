@@ -48,6 +48,11 @@
                         title: "Browse shop",
                         icon: 'shopping_cart'
                     },
+                    {
+                        id: 'guess',
+                        title: "Start a guess the number round",
+                        icon: 'casino'
+                    },
                 ]
             }
         },
@@ -56,25 +61,29 @@
             getActionText: function(id) {
                 switch (id) {
                     case 'yt-toggle':
-                        return `<b>${this.user.data.plugins.yt ? 'ON' : 'OFF'}</b>`;
-                    case 'yt-queue':
-                        return `<b>QUEUE</b>`;
+                        return `<b>> ${this.user.data.plugins.yt ? 'on' : 'off'}</b>`;
                     case 'cursor-toggle':
-                        return `<b>${this.user.data.plugins.cursor ? 'ON' : 'OFF'}</b>`;
+                        return `<b>> ${this.user.data.plugins.cursor ? 'on' : 'off'}</b>`;
+                    case 'yt-queue':
+                        return `<b>Yt queue</b>`;
                     case 'shop':
-                        return `<b>SHOP</b>`;
+                        return `<b>Shop</b>`;
+                    case 'guess':
+                        return `<b>Guess</b>`;
                 }
             },
             onActivate: function(id) {
                 switch (id) {
                     case 'yt-toggle':
                         return this.$client.ytSetState(! this.user.data.plugins.yt);
-                    case 'yt-queue':
-                        return this.$client.sendMessage('/yt list');
                     case 'cursor-toggle':
                         return this.$client.cursorSetState(! this.user.data.plugins.cursor);
+                    case 'yt-queue':
+                        return this.$client.sendMessage('/yt list');
                     case 'shop':
                         return this.$client.sendMessage('/shop');
+                    case 'guess':
+                        return this.$client.sendMessage('/guess start');
                 }
             },
         },
@@ -141,6 +150,9 @@
         }
         .action-shop .icon {
             color: #e0a067;
+        }
+        .action-guess .icon {
+            color: #6ee067;
         }
     }
 </style>

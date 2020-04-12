@@ -22,6 +22,7 @@ import {MessageEditCommand} from "./impl/core/MessageEditCommand";
 import {StickerPlugin} from "./impl/moderation/StickerPlugin";
 import {IpPlugin} from "./impl/moderation/IpPlugin";
 import {RisiBankPlugin} from "./impl/entertainment/RisiBankPlugin";
+import {GuessTheNumberPlugin} from "./impl/entertainment/GuessTheNumberPlugin";
 
 
 /**
@@ -47,6 +48,7 @@ export class CommandManager {
         OfferMoney,
         MoneyFarmerPlugin,
         PrivateMessagePlugin,
+        GuessTheNumberPlugin,
         RisiBankPlugin,
         SandalePlugin,
         SetRightCommand,
