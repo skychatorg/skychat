@@ -126,6 +126,16 @@ export class Session implements IBroadcaster {
     public setUser(user: User): void {
         this.identifier = user.username.toLowerCase();
         this.user = user;
+        this.syncUserData();
+    }
+
+    /**
+     * Sync user data with connections
+     */
+    public syncUserData(): void {
+        if (! this.user) {
+            return;
+        }
         this.connections.forEach(connection => connection.send('set-user', this.user.sanitized()));
     }
 

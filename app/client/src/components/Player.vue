@@ -25,7 +25,7 @@
         },
         watch: {
             currentVideo: function() {
-                if (! this.currentVideo) {
+                if (! this.currentVideo || ! this.currentVideo.enabled) {
                     this.src = '';
                     return;
                 }

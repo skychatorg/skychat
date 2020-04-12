@@ -128,6 +128,22 @@ export class SkyChatClient extends EventEmitter {
     }
 
     /**
+     * Set youtube state
+     * @param {boolean} state
+     */
+    ytSetState(state) {
+        this.sendMessage('/yt ' + (state ? 'on' : 'off'));
+    }
+
+    /**
+     * Set cursor state
+     * @param state
+     */
+    cursorSetState(state) {
+        this.sendMessage('/cursor ' + (state ? 'on' : 'off'));
+    }
+
+    /**
      * Login
      * @param username
      * @param password

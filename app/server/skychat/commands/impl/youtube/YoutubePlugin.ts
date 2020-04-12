@@ -5,8 +5,6 @@ import {Session} from "../../../Session";
 import {Connection} from "../../../Connection";
 import {CommandEntryPointRule} from "../../Command";
 import {google, youtube_v3} from "googleapis";
-import * as fs from "fs";
-import {IBroadcaster} from "../../../IBroadcaster";
 import {Config} from "../../../Config";
 import {Message} from "../../../Message";
 import {UserController} from "../../../UserController";
@@ -96,17 +94,25 @@ export class YoutubePlugin extends Plugin {
 
     readonly name = 'yt';
 
-    readonly aliases = ['play', '~'];
+    readonly aliases = ['play', 'playpl', '~'];
 
     readonly rules: {[alias: string]: CommandEntryPointRule} = {
         yt: {
             minCount: 1,
             maxCount: 1,
-            params: [{name: 'action', pattern: /^(sync|off|on|list|skip)$/}]
+            maxCallsPer10Seconds: 10,
+            params: [{name: 'action', pattern: /^(sync|off|on|list|skip|shuffle|flush)$/}]
         },
         play: {
             minCount: 1,
             maxCount: 1,
+            maxCallsPer10Seconds: 5,
+            params: [{name: 'video id', pattern: /./}]
+        },
+        playpl: {
+            minCount: 1,
+            maxCount: 1,
+            coolDown: 1000,
             params: [{name: 'video id', pattern: /./}]
         }
     };
@@ -134,6 +140,8 @@ export class YoutubePlugin extends Plugin {
             await this.handlePlay(param, connection);
         } else if (alias === '~') {
             await this.handleSearchAndPlay(param, connection);
+        } else if (alias === 'playpl') {
+            await this.handlePlayPlaylist(param, connection);
         }
     }
 
@@ -154,11 +162,8 @@ export class YoutubePlugin extends Plugin {
             case 'off':
                 const newState = param === 'on';
                 await UserController.savePluginData(connection.session.user, this.name, newState);
-                if (newState) {
-                    this.sync(connection);
-                } else {
-                    connection.send('yt-sync', null);
-                }
+                this.sync(connection);
+                connection.session.syncUserData();
                 break;
 
             case 'list':
@@ -168,7 +173,18 @@ export class YoutubePlugin extends Plugin {
             case 'skip':
                 await this.handleYtSkip(connection);
                 break;
-		}
+
+            case 'shuffle':
+                this.shuffleQueue();
+                break;
+
+            case 'flush':
+                if (! Config.isOP(connection.session.identifier)) {
+                    throw new Error('You need to be OP to flush the youtube queue');
+                }
+                this.queue.splice(0);
+                break;
+        }
     }
 
     /**
@@ -185,10 +201,35 @@ export class YoutubePlugin extends Plugin {
             id = param;
         }
         const video = await this.getYoutubeVideoMeta(id);
-        this.queue.push({
-            user: connection.session.user,
-            video
-        });
+        this.queue.push({user: connection.session.user, video});
+        this.shuffleQueue();
+    }
+
+    /**
+     * Play a whole playlist
+     * @param param
+     * @param connection
+     */
+    private async handlePlayPlaylist(param: string, connection: Connection): Promise<void> {
+        let id;
+        let match;
+        if (match = param.match(/list=([a-zA-Z0-9-_]+)/)) {
+            id = match[1];
+        } else {
+            id = param;
+        }
+        const result = await this.youtube.playlistItems.list({part: 'contentDetails', playlistId: id, maxResults: 50});
+        if (! result || ! result.data || ! result.data.items || result.data.items.length === 0) {
+            throw new Error('No result found for ' + param);
+        }
+        const videoIds: string[] = result.data.items
+            .filter(item => item.contentDetails && item.contentDetails.videoId)
+            .map(item => item.contentDetails!.videoId as string);
+        for (const videoId of videoIds) {
+            const video = await this.getYoutubeVideoMeta(videoId);
+            this.queue.push({user: connection.session.user, video});
+        }
+        this.shuffleQueue();
     }
 
     /**
@@ -207,10 +248,8 @@ export class YoutubePlugin extends Plugin {
         }
         const videoId = result.data.items[0].id.videoId;
         const video = await this.getYoutubeVideoMeta(videoId);
-        this.queue.push({
-            user: connection.session.user,
-            video
-        });
+        this.queue.push({user: connection.session.user, video});
+        this.shuffleQueue();
     }
 
     /**
@@ -238,6 +277,34 @@ export class YoutubePlugin extends Plugin {
             throw new Error('You do not have the right to skip this song');
         }
         this.currentVideo.startedDate = new Date(0);
+    }
+
+    /**
+     * Shuffle the queue fairly
+     */
+    private shuffleQueue(): void {
+        // store pending videos by owner
+        const entries: {[username: string]: PendingYoutubeVideo[]} = {};
+        this.queue.forEach((entry: PendingYoutubeVideo) => {
+            if (typeof entries[entry.user.username.toLowerCase()] === 'undefined') {
+                entries[entry.user.username.toLowerCase()] = [];
+            }
+            entries[entry.user.username.toLowerCase()].push(entry);
+        });
+        // re organise queue
+        let remainingCount = this.queue.length;
+        this.queue = [];
+        while (remainingCount > 0) {
+            // for each username
+            for (const username of Object.keys(entries)) {
+                if (entries[username].length === 0) {
+                    continue;
+                }
+                // add one of his video to the list
+                this.queue.push(entries[username].splice(0, 1)[0]);
+                remainingCount --;
+            }
+        }
     }
 
     /**
@@ -321,13 +388,14 @@ export class YoutubePlugin extends Plugin {
             }
             return;
         }
-        // If the user has cursors disabled
-        if (! this.currentVideo || ! UserController.getPluginData(broadcaster.session.user, this.name)) {
+        // If no video is playing
+        if (! this.currentVideo) {
             // Abort
             broadcaster.send('yt-sync', null);
             return;
         }
         broadcaster.send('yt-sync', {
+            enabled: UserController.getPluginData(broadcaster.session.user, this.name),
             user: this.currentVideo.user.sanitized(),
             video: this.currentVideo.video,
             startedDate: this.currentVideo.startedDate.getTime() * 0.001,
