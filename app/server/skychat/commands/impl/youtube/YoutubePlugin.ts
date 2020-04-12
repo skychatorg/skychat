@@ -163,6 +163,7 @@ export class YoutubePlugin extends Plugin {
                 const newState = param === 'on';
                 await UserController.savePluginData(connection.session.user, this.name, newState);
                 this.sync(connection);
+                connection.session.syncUserData();
                 break;
 
             case 'list':

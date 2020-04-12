@@ -48,7 +48,7 @@ export class CursorPlugin extends Plugin {
     async handleToggle(param: string, connection: Connection): Promise<void> {
         const cursorEnabled = param === 'on';
         await UserController.savePluginData(connection.session.user, this.name, cursorEnabled);
-        connection.send('message', new Message('Cursor: ' + param, null, UserController.getNeutralUser()).sanitized());
+        connection.session.syncUserData();
     }
 
     /**
