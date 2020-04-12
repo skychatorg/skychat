@@ -4,22 +4,26 @@
 
 
 <template>
-    <div class="messages scrollbar" ref="messages" @scroll="onScroll">
-        <message v-for="message in messages"
-                 @select="$emit('select-message', message)"
-                 @content-loaded="onContentLoaded"
-                 :key="message.id"
-                 :message="message"
-                 class="message"/>
+    <div class="messages">
+        <player class="player" v-show="currentVideo && currentVideo.enabled"/>
+        <div class="messages-feed scrollbar" ref="messages" @scroll="onScroll">
+            <message v-for="message in messages"
+                     @select="$emit('select-message', message)"
+                     @content-loaded="onContentLoaded"
+                     :key="message.id"
+                     :message="message"
+                     class="message"/>
+        </div>
     </div>
 </template>
 
 <script>
     import Vue from "vue";
     import Message from "./Message.vue";
+    import Player from "./Player.vue";
 
     export default Vue.extend({
-        components: {Message},
+        components: {Player, Message},
         data: function() {
             return {
                 autoScroll: true,
@@ -76,7 +80,10 @@
                     return this.$store.state.privateMessages[this.$store.state.channel].messages;
                 }
                 return this.$store.state.messages;
-            }
+            },
+            currentVideo: function() {
+                return this.$store.state.currentVideo;
+            },
         }
     });
 </script>
@@ -85,12 +92,24 @@
 
     .messages {
         flex-grow: 1;
-        margin-left: 10px;
-        margin-right: 10px;
-        height: 0;
-        overflow-y: scroll;
         display: flex;
         flex-direction: column;
-        margin-top: 12px;
+
+        .player {
+            width: 100%;
+            height: 40%;
+            max-height: 350px;
+        }
+
+        .messages-feed {
+            flex-grow: 1;
+            margin-left: 10px;
+            margin-right: 10px;
+            height: 0;
+            overflow-y: scroll;
+            display: flex;
+            flex-direction: column;
+            margin-top: 12px;
+        }
     }
 </style>

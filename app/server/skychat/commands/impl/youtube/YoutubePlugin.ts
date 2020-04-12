@@ -162,11 +162,7 @@ export class YoutubePlugin extends Plugin {
             case 'off':
                 const newState = param === 'on';
                 await UserController.savePluginData(connection.session.user, this.name, newState);
-                if (newState) {
-                    this.sync(connection);
-                } else {
-                    connection.send('yt-sync', null);
-                }
+                this.sync(connection);
                 break;
 
             case 'list':
@@ -391,13 +387,14 @@ export class YoutubePlugin extends Plugin {
             }
             return;
         }
-        // If the user has cursors disabled
-        if (! this.currentVideo || ! UserController.getPluginData(broadcaster.session.user, this.name)) {
+        // If no video is playing
+        if (! this.currentVideo) {
             // Abort
             broadcaster.send('yt-sync', null);
             return;
         }
         broadcaster.send('yt-sync', {
+            enabled: UserController.getPluginData(broadcaster.session.user, this.name),
             user: this.currentVideo.user.sanitized(),
             video: this.currentVideo.video,
             startedDate: this.currentVideo.startedDate.getTime() * 0.001,

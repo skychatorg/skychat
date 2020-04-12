@@ -15,7 +15,6 @@
         <template v-if="page === 'room'">
             <!-- left col -->
             <section id="left" class="hide-mobile-list">
-                <player id="player" v-show="currentVideo"/>
                 <messages ref="messages" @select-message="onSelectMessage" id="messages" class="scrollbar" />
                 <typing-list id="typing-list" />
                 <message-form ref="messageForm" id="message-form"/>
@@ -23,6 +22,7 @@
 
             <!-- right col -->
             <section id="right" class="hide-mobile-tchat scrollbar">
+                <player-preview></player-preview>
                 <connected-list></connected-list>
             </section>
         </template>
@@ -36,11 +36,11 @@
     import Messages from "./Messages.vue";
     import TypingList from "./TypingList.vue";
     import MessageForm from "./MessageForm.vue";
-    import Player from "./Player.vue";
+    import PlayerPreview from "./PlayerPreview.vue";
     import ConnectedList from "./ConnectedList.vue";
 
     export default Vue.extend({
-        components: {AuthPage, Player, Messages, TypingList, MessageForm, ConnectedList},
+        components: {AuthPage, Messages, TypingList, MessageForm, PlayerPreview, ConnectedList},
         methods: {
 
             onSelectMessage: function(message) {
@@ -64,9 +64,6 @@
             },
         },
         computed: {
-            currentVideo: function() {
-                return this.$store.state.currentVideo;
-            },
             page: function() {
                 return this.$store.state.page;
             }
@@ -94,11 +91,6 @@
             display: flex;
             flex-direction: column;
 
-            >#player {
-                width: 100%;
-                height: 40%;
-                max-height: 350px;
-            }
             >#message-form {
                 width: 100%;
                 flex-basis: 44px;
