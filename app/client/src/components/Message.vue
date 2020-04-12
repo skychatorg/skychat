@@ -55,6 +55,13 @@
                         this.$emit('content-loaded');
                     });
                 }
+                // Get buttons
+                const buttons = Array.from(this.$refs.formatted.getElementsByClassName('skychat-button'));
+                for (const button of buttons) {
+                    button.addEventListener('click', () => {
+                        this.$client.sendMessage(button.dataset.action);
+                    });
+                }
             }
         },
         computed: {
