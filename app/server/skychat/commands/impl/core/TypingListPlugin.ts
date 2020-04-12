@@ -8,6 +8,8 @@ import {User} from "../../../User";
  */
 export class TypingListPlugin extends Plugin {
 
+    public static readonly CLEAR_MIN_RIGHT: number = 20;
+
     readonly name = 't';
 
     readonly minRight = -1;
@@ -16,7 +18,7 @@ export class TypingListPlugin extends Plugin {
         t: {
             minCount: 1,
             maxCount: 1,
-            params: [{name: "action", pattern: /^(on|off)$/}]
+            params: [{name: "action", pattern: /^(on|off|clear)$/}]
         }
     };
 
@@ -25,11 +27,19 @@ export class TypingListPlugin extends Plugin {
     /**
      * Identifiers that are currently typing and the associated date when they started typing
      */
-    private readonly typingList: {[identifier: string]: {startedDate: Date, user: User}} = {};
+    private typingList: {[identifier: string]: {startedDate: Date, user: User}} = {};
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
 
-        if (param === 'on') {
+        if (param === 'clear') {
+            // Check rights
+            if (connection.session.user.right < TypingListPlugin.CLEAR_MIN_RIGHT) {
+                throw new Error('You do not have the right to clear the typing list');
+            }
+            this.typingList = {};
+
+        } else if (param === 'on') {
+
             // Register typer
             this.typingList[connection.session.identifier] = {
                 startedDate: new Date(),
@@ -37,6 +47,7 @@ export class TypingListPlugin extends Plugin {
             };
 
         } else {
+
             // Remove typer
             delete this.typingList[connection.session.identifier];
         }
