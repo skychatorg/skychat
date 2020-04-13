@@ -3,6 +3,7 @@ import * as escapeHtml from "escape-html";
 import {Config} from "./Config";
 
 
+
 /**
  * Singleton helper to format messages
  */
@@ -32,10 +33,33 @@ export class MessageFormatter {
     public format(message: string): string {
         message = escapeHtml(message);
         message = message.replace(/\n/g, "<br>");
+        message = this.replaceButtons(message);
         message = this.replaceImages(message);
         message = this.replaceRisiBankStickers(message);
         message = this.replaceStickers(message);
         message = this.replaceLinks(message);
+        return message;
+    }
+
+    /**
+     * Replace buttons
+     * @param message
+     */
+    public replaceButtons(message: string): string {
+        const regexStr = '\\[\\[(.+?)\/(.+)\\]\\]';
+        const matches = message.match(new RegExp(regexStr, 'g'));
+        if (! matches) {
+            return message;
+        }
+        for (const rawCode of matches) {
+            const codeDetail = rawCode.match(new RegExp(regexStr));
+            if (! codeDetail) {
+                // Weird: not supposed to happen
+                continue;
+            }
+            const buttonCode = this.getButtonHtml(codeDetail[1], codeDetail[2], true);
+            message = message.replace(rawCode, buttonCode);
+        }
         return message;
     }
 
@@ -84,6 +108,19 @@ export class MessageFormatter {
         return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
     }
 
+    /**
+     * Get the html code of a button
+     * @param title
+     * @param action
+     * @param escape
+     */
+    public getButtonHtml(title: string, action: string, escape: boolean) {
+        if (escape) {
+            title = escapeHtml(title);
+            action = escapeHtml(action);
+        }
+        return `<button class="skychat-button" title="${action}" data-action="${action}">${title}</button>`;
+    }
 
     /**
      * Replace stickers in a raw message

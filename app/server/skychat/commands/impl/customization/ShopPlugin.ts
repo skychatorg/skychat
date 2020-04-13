@@ -6,6 +6,7 @@ import {User} from "../../../User";
 import {ConnectedListPlugin} from "../core/ConnectedListPlugin";
 import * as striptags from "striptags";
 import {UserController} from "../../../UserController";
+import {MessageFormatter} from "../../../MessageFormatter";
 
 
 export type ShopItems = {
@@ -119,9 +120,9 @@ export class ShopPlugin extends Plugin {
      * @param connection
      */
     private async handleShop(param: string, connection: Connection): Promise<void> {
-        const message = new Message('Available items:', null, UserController.getNeutralUser());
+        const message = new Message('', null, UserController.getNeutralUser());
         for (const type in ShopPlugin.ITEMS) {
-            message.append('/shoplist ' + type + ' :d) list all available ' + type);
+            message.append(`[[list all available ${type}//shoplist ${type}]]`);
         }
         connection.send('message', message.sanitized());
     }
@@ -143,6 +144,7 @@ export class ShopPlugin extends Plugin {
             throw new Error('Unknown item type');
         }
         const message = new Message('Available ' + param + ':', null, UserController.getNeutralUser());
+        const formatter = MessageFormatter.getInstance();
         let html = '<table class="skychat-table">';
         html += `
             <tr>
@@ -151,9 +153,13 @@ export class ShopPlugin extends Plugin {
                 <td>preview</td>
                 <td>value</td>
                 <td>price</td>
+                <td></td>
             </tr>
         `;
         for (let item of itemDefinition.items) {
+            const itemOwned = this.userOwnsItem(connection.session.user, param, item.id);
+            const actionTitle = itemOwned ? 'set' : 'buy';
+            const actionPayload = (itemOwned ? '/shopset' : '/shopbuy') + ' ' + param + ' ' + item.id;
             html += `
                 <tr>
                     <td>${item.id}</td>
@@ -161,14 +167,12 @@ export class ShopPlugin extends Plugin {
                     <td>${itemDefinition.preview.replace('{VALUE}', item.value).replace('{USERNAME}', connection.session.user.username)}</td>
                     <td>${item.value}</td>
                     <td>$ ${item.price / 100}</td>
+                    <td>${formatter.getButtonHtml(actionTitle, actionPayload, true)}</td>
                 </tr>
             `;
         }
         html += '</table>';
         message.append(striptags(html), html);
-        message.append('Buy a command:');
-        message.append('/shopbuy ' + param + ' {id} :d) Buy item {id}');
-        message.append('/shopset ' + param + ' {id} :d) Select item {id} (Must be bought beforehand)');
         connection.send('message', message.sanitized());
     }
 
@@ -196,8 +200,7 @@ export class ShopPlugin extends Plugin {
         // Buy item
         await UserController.buy(connection.session.user, item.price);
         await this.userAddOwnedItem(connection.session.user, type, id);
-
-        connection.send('message', new Message(':ok:', null, UserController.getNeutralUser()).sanitized());
+        await this.handleShopList(type, connection);
     }
 
     /**
@@ -228,8 +231,7 @@ export class ShopPlugin extends Plugin {
                 await (this.room.getPlugin('connectedlist') as ConnectedListPlugin).sync();
                 break;
         }
-
-        connection.send('message', new Message(':ok:', null, UserController.getNeutralUser()).sanitized());
+        await this.handleShopList(type, connection);
     }
 
     /**
