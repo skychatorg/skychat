@@ -46,7 +46,7 @@ export class MessageFormatter {
      * @param message
      */
     public replaceButtons(message: string): string {
-        const regexStr = '\\[\\[(.+?)\/(.+)\\]\\]';
+        const regexStr = '\\[\\[(.+?)\/(.+?)\\]\\]';
         const matches = message.match(new RegExp(regexStr, 'g'));
         if (! matches) {
             return message;

@@ -53,6 +53,11 @@
                         title: "Start a guess the number round",
                         icon: 'casino'
                     },
+                    {
+                        id: 'roll',
+                        title: "Start a game of roulette",
+                        icon: 'casino'
+                    },
                 ]
             }
         },
@@ -70,6 +75,8 @@
                         return `<b>Shop</b>`;
                     case 'guess':
                         return `<b>Guess</b>`;
+                    case 'roll':
+                        return `<b>Roll</b>`;
                 }
             },
             onActivate: function(id) {
@@ -84,6 +91,8 @@
                         return this.$client.sendMessage('/shop');
                     case 'guess':
                         return this.$client.sendMessage('/guess start');
+                    case 'roll':
+                        return this.$client.sendMessage('/roulette start');
                 }
             },
         },
@@ -152,6 +161,9 @@
             color: #e0a067;
         }
         .action-guess .icon {
+            color: #6ee067;
+        }
+        .action-roll .icon {
             color: #6ee067;
         }
     }
