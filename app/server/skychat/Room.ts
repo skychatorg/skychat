@@ -199,12 +199,13 @@ export class Room implements IBroadcaster {
     /**
      * Send a new message to the room
      * @param content Message content (string)
+     * @param formatted
      * @param user User that created the message
      * @param quoted
      * @param connection Connection that created the message. Let undefined if sent by server.
      */
-    public async sendMessage(content: string, user: User, quoted: Message | null, connection?: Connection): Promise<Message> {
-        let message = new Message(content, null, user, quoted);
+    public async sendMessage(content: string, formatted: string | null, user: User, quoted: Message | null, connection?: Connection): Promise<Message> {
+        let message = new Message(content, formatted, user, quoted);
         message = await this.executeOnBeforeMessageBroadcastHook(message, connection);
         // Send it to clients
         this.send('message', message.sanitized());
