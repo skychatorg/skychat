@@ -91,6 +91,10 @@ export class GuessTheNumberPlugin extends Plugin {
         // If not enough participants
         if (this.currentGame.participants.length <= 1) {
             await this.room.sendMessage(`Not enough participants. Aborting.`, UserController.getNeutralUser(), null);
+            // Refund users
+            for (const session of this.currentGame.participants) {
+                await UserController.giveMoney(session.user, GuessTheNumberPlugin.ENTRY_COST);
+            }
             this.currentGame = null;
             return;
         }
@@ -98,10 +102,6 @@ export class GuessTheNumberPlugin extends Plugin {
         // Start actual round
         this.currentGame.state = 'running';
         await this.room.sendMessage(`:alerte: Round started :alerte:\nGuess the number between 0 and 1000 by sending ./guess {nb}\nExample:\n/guess 423`, UserController.getNeutralUser(), this.currentGame.participantListMessage);
-        // Remove money from every participants
-        for (const session of this.currentGame.participants) {
-            await UserController.buy(session.user, GuessTheNumberPlugin.ENTRY_COST);
-        }
 
         // Wait for people to guess the number
         await waitTimeout(15 * 1000);
@@ -162,6 +162,7 @@ export class GuessTheNumberPlugin extends Plugin {
         if (this.currentGame.participants.indexOf(connection.session) >= 0) {
             throw new Error('You are already in this round');
         }
+        await UserController.buy(connection.session.user, GuessTheNumberPlugin.ENTRY_COST);
         this.currentGame.participants.push(connection.session);
         this.currentGame.participantListMessage.append('- ' + connection.session.user.username);
         this.room.send('message-edit', this.currentGame.participantListMessage.sanitized());
