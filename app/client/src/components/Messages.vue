@@ -33,6 +33,7 @@
         watch: {
             messages: function() {
                 Vue.nextTick(() => {
+                    console.log('scroll: new message', this.autoScroll ? 'scrolling to bottom' : 'doing nothing since auto scroll is false');
                     if (this.autoScroll) {
                         this.scrollToBottom();
                     }
@@ -41,29 +42,38 @@
         },
         methods: {
             onContentLoaded: function() {
-                this.autoScrolling = false;
-                this.scrollToBottom();
+                console.log('scroll: content loaded', this.autoScroll ? 'scrolling to bottom' : 'doing nothing since auto scroll is false');
+                if (this.autoScroll) {
+                    this.scrollToBottom();
+                }
             },
             onScroll: function() {
+                console.log('scroll: on scroll event');
                 if (this.autoScrolling) {
+                    console.log('scroll: on scroll event', 'aborting since currently scrolling');
                     return;
                 }
                 const distanceToBottom = this.$refs.messages.scrollHeight - this.$refs.messages.offsetHeight - this.$refs.messages.scrollTop;
                 if (distanceToBottom > 22) {
                     // Stop auto scroll
                     this.autoScroll = false;
+                    console.log('scroll: on scroll event', 'set auto scroll to false due to manual scroll');
                 } else if (distanceToBottom < 20) {
                     this.autoScroll = true;
+                    console.log('scroll: on scroll event', 'set auto scroll to true due to manual scroll');
                 }
             },
             scrollToBottom: function() {
+                console.log('scroll: action: scroll to bottom');
                 if (this.autoScrolling) {
+                    console.log('scroll: action: scroll to bottom', 'aborting because already auto scrolling');
                     return;
                 }
                 this.autoScrolling = true;
                 this.scrollTick();
             },
             scrollTick: function() {
+                console.log('scroll: scroll tick', 'scrolling');
                 const messages = this.$refs.messages;
                 messages.scrollTop += (messages.scrollHeight - messages.offsetHeight - messages.scrollTop) * .3;
                 if (Math.abs(messages.scrollHeight - messages.offsetHeight - messages.scrollTop) > 6) {
@@ -71,6 +81,7 @@
                 } else {
                     messages.scrollTop = messages.scrollHeight;
                     this.autoScrolling = false;
+                    console.log('scroll: scroll tick', 'scroll complete');
                 }
             },
         },
