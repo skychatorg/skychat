@@ -120,7 +120,7 @@
             overflow-y: scroll;
             display: flex;
             flex-direction: column;
-            margin-top: 12px;
+            margin-top: 5px;
         }
     }
 </style>

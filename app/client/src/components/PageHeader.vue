@@ -58,7 +58,7 @@
 
 <style lang="scss" scoped>
 
-    $header-height: 60px;
+    $header-height: 50px;
 
     header {
         background: #18191c;
@@ -74,7 +74,7 @@
     }
     .nav {
         width: 100%;
-        max-width: 1400px;
+        max-width: 1100px;
         margin: 0 auto;
         height: 100%;
         display: flex;
@@ -96,7 +96,7 @@
                 text-transform: uppercase;
                 letter-spacing: .1em;
                 font-size: 1.2em;
-                margin-top: 10px;
+                margin-top: 5px;
                 margin-left: 10px;
             }
         }
@@ -110,7 +110,6 @@
                 text-align: right;
                 color: white;
                 padding-right: 20px;
-                padding-top: 10px;
 
                 .logout-button {
                     font-size: 70%;
@@ -121,8 +120,8 @@
             .image-bubble.nav-avatar {
                 box-shadow: 1px 1px 13px #ffffff38;
                 border: 1px solid #ffffff47;
-                width: 42px;
-                height: 42px;
+                width: 32px;
+                height: 32px;
             }
         }
     }
