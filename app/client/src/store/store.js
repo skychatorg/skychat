@@ -76,6 +76,9 @@ const store = {
                 state.documentTitle = `New message by ${message.user.username}`;
                 state.documentTitleBlinking = true;
             }
+            if (message.content.match(new RegExp('@' + state.user.username.toLowerCase(), 'i'))) {
+                new Audio('/assets/sound/notification.mp3').play();
+            }
         },
         NEW_PRIVATE_MESSAGE(state, privateMessage) {
             const fromUserName = privateMessage.user.username.toLowerCase();
