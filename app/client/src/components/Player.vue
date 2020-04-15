@@ -49,6 +49,6 @@
     .player {
         width: 100%;
         height: 100%;
-        padding: 10px 10px 0;
+        padding: 5px 5px 0;
     }
 </style>

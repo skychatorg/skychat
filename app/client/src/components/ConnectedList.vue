@@ -53,6 +53,8 @@
 <style lang="scss" scoped>
     .connected-list {
         padding-top: 40px;
+        padding-right: 20px;
+        padding-left: 6px;
         color: white;
         cursor: pointer;
     }

@@ -84,7 +84,7 @@
         background: #2b2b2f;
         margin-top: 4px;
         border-left: 4px solid #a3a5b4;
-        padding: 10px 10px 10px 12px;
+        padding: 6px 10px 6px 12px;
         -webkit-transition: all 0.2s;
         -moz-transition: all 0.2s;
         -ms-transition: all 0.2s;
@@ -117,6 +117,7 @@
                 color: #a3a5b4;
                 font-weight: 800;
                 font-size: 110%;
+                margin-bottom: 4px;
             }
 
             .quote {
@@ -131,10 +132,6 @@
                     margin-top: 5px;
                     margin-left: 4px;
                 }
-            }
-
-            >.formatted {
-                margin-left: 4px;
             }
         }
         >.date {
