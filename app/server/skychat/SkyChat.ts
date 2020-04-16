@@ -62,7 +62,7 @@ export class SkyChat {
      * Build a new session object when there is a new connection
      */
     private async getNewSession(request: http.IncomingMessage): Promise<Session> {
-        const identifier = '*Hamster' + (++ SkyChat.CURRENT_GUEST_ID);
+        const identifier = '*Loutre' + (++ SkyChat.CURRENT_GUEST_ID);
         return new Session(identifier);
     }
 

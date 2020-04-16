@@ -64,7 +64,7 @@ export class UserController {
     public static getNeutralUser(): User {
         return new User(0, '~Server', '', 0, 0, 0, {
             plugins: {
-                avatar: 'https://skychat.redsky.fr/uploads/2020/04/13/16-44-51-303429300.png',
+                avatar: Config.LOCATION + '/assets/images/server-avatar.png',
                 color: 'rgb(255, 255, 255)'
             }
         });
