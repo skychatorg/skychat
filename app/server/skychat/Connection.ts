@@ -38,7 +38,7 @@ export class Connection extends EventEmitter implements IBroadcaster {
 
         this.origin = typeof request.headers['origin'] === 'string' ? request.headers['origin'] : '';
         this.userAgent = new UAParser(request.headers["user-agent"]).getBrowser().name || '';
-        this.ip = typeof request.headers['X-FORWARDED-FOR'] === 'string' ? request.headers['X-FORWARDED-FOR'] : (request.connection.remoteAddress || '');
+        this.ip = typeof request.headers['x-forwarded-for'] === 'string' ? request.headers['x-forwarded-for'] : (request.connection.remoteAddress || '');
 
         session.attachConnection(this);
         this.webSocket.on('message', message => this.onMessage(message));
