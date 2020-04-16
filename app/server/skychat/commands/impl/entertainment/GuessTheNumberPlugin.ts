@@ -115,30 +115,34 @@ export class GuessTheNumberPlugin extends Plugin {
         await this.room.sendMessage(content, null, UserController.getNeutralUser(), null);
 
         // Find winner
-        let currentWinner: string = '';
+        let currentWinners: string[] = [];
         let currentWinnerDistance: number = Infinity;
         for (const identifier of Object.keys(this.currentGame.guesses)) {
             const guess = this.currentGame.guesses[identifier];
-            if (guess > this.currentGame.secretNumber) {
-                continue;
-            }
-            const distance = this.currentGame.secretNumber - guess;
-            if (distance < currentWinnerDistance) {
-                currentWinner = identifier;
+            const distance = Math.abs(this.currentGame.secretNumber - guess);
+            if (distance === currentWinnerDistance) {
+                currentWinners.push(identifier);
+            } else if (distance < currentWinnerDistance) {
+                currentWinners = [identifier];
                 currentWinnerDistance = distance;
             }
         }
 
-        if (! currentWinner) {
+        if (currentWinners.length === 0) {
             // If no winner
             await this.room.sendMessage(`No winner this time :)`, null, UserController.getNeutralUser(), null);
 
         } else {
+            const jackpot = Math.floor(this.currentGame.participants.length * GuessTheNumberPlugin.ENTRY_COST / currentWinners.length);
             // If winner
-            const session = this.currentGame.participants.find(session => session.identifier === currentWinner);
-            const jackpot = this.currentGame.participants.length * GuessTheNumberPlugin.ENTRY_COST;
-            await UserController.giveMoney(session!.user, jackpot);
-            await this.room.sendMessage(`${session!.identifier} won this round :) He earned \$${jackpot / 100}`, null, UserController.getNeutralUser(), null);
+            for (const identifier of currentWinners) {
+                const session = this.currentGame.participants.find(session => session.identifier === identifier);
+                if (! session) {
+                    continue;
+                }
+                await UserController.giveMoney(session.user, jackpot);
+            }
+            await this.room.sendMessage(`${currentWinners.join(', ')} won this round :) ${currentWinners.length > 1 ? 'They' : 'He'} earned \$${jackpot / 100}`, null, UserController.getNeutralUser(), null);
         }
 
         await this.room.sendMessage(`Round ended`, null, UserController.getNeutralUser(), null);

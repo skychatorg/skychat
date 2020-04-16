@@ -66,8 +66,18 @@ export class SkyChatClient extends EventEmitter {
     /**
      *
      */
-    onWebSocketClose(code, reason) {
+    onWebSocketClose(event) {
         this.store.commit('SET_CONNECTION_STATE', WebSocket.CLOSED);
+        if (event.code === 4403) {
+            new Noty({
+                type: 'error',
+                layout: 'topCenter',
+                theme: 'nest',
+                text: event.reason,
+                timeout: 2000
+            }).show();
+            return;
+        }
         setTimeout(this.connect.bind(this), 1000);
     }
 

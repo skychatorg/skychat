@@ -220,6 +220,9 @@ export class Room implements IBroadcaster {
      * Clear message history
      */
     public clearHistory(): void {
-        this.messages.splice(0);
+        this.messages.forEach(message => {
+            message.edit('deleted', `<i>deleted</i>`);
+            this.send('message-edit', message.sanitized());
+        });
     }
 }

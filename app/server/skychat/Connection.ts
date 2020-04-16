@@ -38,7 +38,7 @@ export class Connection extends EventEmitter implements IBroadcaster {
 
         this.origin = typeof request.headers['origin'] === 'string' ? request.headers['origin'] : '';
         this.userAgent = new UAParser(request.headers["user-agent"]).getBrowser().name || '';
-        this.ip = typeof request.headers['X-FORWARDED-FOR'] === 'string' ? request.headers['X-FORWARDED-FOR'] : (request.connection.remoteAddress || '');
+        this.ip = typeof request.headers['x-forwarded-for'] === 'string' ? request.headers['x-forwarded-for'] : (request.connection.remoteAddress || '');
 
         session.attachConnection(this);
         this.webSocket.on('message', message => this.onMessage(message));
@@ -110,5 +110,12 @@ export class Connection extends EventEmitter implements IBroadcaster {
             event: 'error',
             data: error.message
         }));
+    }
+
+    /**
+     * Close the underlying websocket connection
+     */
+    public close(): void {
+        this.webSocket.close(4403, "You have been kicked");
     }
 }

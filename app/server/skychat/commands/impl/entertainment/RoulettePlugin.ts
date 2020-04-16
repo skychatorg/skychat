@@ -31,7 +31,7 @@ export class RoulettePlugin extends Plugin {
 
     public static readonly ENTRY_COST: number = 100;
 
-    public static readonly REWARD_AMOUNT: number = 1002;
+    public static readonly REWARD_AMOUNT: number = 1004;
 
     readonly name = 'roulette';
 
@@ -49,6 +49,10 @@ export class RoulettePlugin extends Plugin {
     private currentGame: GameObject | null = null;
 
     private lastGameFinishedDate: Date = new Date(0);
+
+    private lastGameResults: number[] = Array.from({length: 10}).map(() => 0);
+
+    private totalGameCount: number = 0;
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
 
@@ -119,8 +123,8 @@ export class RoulettePlugin extends Plugin {
         this.updateGameMessage();
 
         // The timeout will increase randomly until reaching maxTimeout
-        let currentTimeout: number = 1;
-        const maxTimeout: number = 1000;
+        let currentTimeout: number = 50;
+        const maxTimeout: number = 2000;
         while (currentTimeout < maxTimeout) {
 
             // Move ball to next slot
@@ -130,7 +134,7 @@ export class RoulettePlugin extends Plugin {
             this.updateGameMessage();
 
             // Increase timeout
-            currentTimeout += currentTimeout * (.25 * Math.random());
+            currentTimeout += currentTimeout * (.20 * Math.random());
 
             // Wait a bit
             await waitTimeout(currentTimeout);
@@ -156,8 +160,10 @@ export class RoulettePlugin extends Plugin {
         }
         this.currentGame.rouletteMessage.append(content);
         this.room.send('message-edit', this.currentGame.rouletteMessage.sanitized());
-        this.currentGame = null;
+        this.lastGameResults[this.currentGame.ballPosition] ++;
         this.lastGameFinishedDate = new Date();
+        this.totalGameCount ++;
+        this.currentGame = null;
     }
 
     /**
@@ -173,14 +179,21 @@ export class RoulettePlugin extends Plugin {
             content += `- ${session.user.username} (${this.currentGame.bets[session.identifier]})<br>`;
         }
         const ballPosition = this.currentGame.ballPosition;
+        const bets = Object.values(this.currentGame.bets);
         content += `
         <br>
         <table class="skychat-table">
             <tr>
-                ${Array.from({length:10}).map((_: any, i: number) => `<td>${i === ballPosition ? '&nbsp;&nbsp;&nbsp;x' : ''}</td>`).join(' ')}
+                ${Array.from({length:10}).map((_: any, i: number) => `<td>${i === ballPosition ? '&nbsp;&nbsp;&nbsp;↓' : ''}</td>`).join(' ')}
             </tr>
             <tr>
                 ${Array.from({length:10}).map((_: any, i: number) => `<td>slot ${i}</td>`).join(' ')}
+            </tr>
+            <tr>
+                ${Array.from({length:10}).map((_: any, i: number) => `<td>${bets.filter(bet => bet === i).length === 0 ? '' : ('&nbsp;&nbsp;&nbsp;' + bets.filter(bet => bet === i).length)}</td>`).join(' ')}
+            </tr>
+            <tr>
+                ${Array.from({length:10}).map((_: any, i: number) => `<td>${Math.floor(100 * (this.lastGameResults[i] / (this.totalGameCount || 1)))}%</td>`).join(' ')}
             </tr>
         </table>`;
         // Update message
