@@ -21,10 +21,6 @@ export class HistoryClearPlugin extends Command {
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
         await UserController.buy(connection.session.user, 100);
-        this.room.messages.forEach(message => {
-            message.edit('deleted', `<i>deleted</i>`);
-            this.room.send('message-edit', message.sanitized());
-        });
         this.room.clearHistory();
     }
 }
