@@ -68,7 +68,7 @@ export class MessageFormatter {
      * @param message
      */
     public replaceImages(message: string): string {
-        const matches = message.match(new RegExp(Config.LOCATION + '/uploads/([-\\/._a-zA-Z0-9]+)', 'g'));
+        const matches = message.match(new RegExp(Config.LOCATION + '/uploads/([-\\/._a-zA-Z0-9]+)\\.(png|jpg|jpeg|gif)', 'g'));
         if (! matches) {
             return message;
         }
