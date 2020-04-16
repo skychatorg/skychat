@@ -1,8 +1,3 @@
-<!--
-    Auth page
--->
-
-
 <template>
     <div class="auth-page">
         <div class="page-title">Login/Register</div>

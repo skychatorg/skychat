@@ -1,8 +1,3 @@
-<!--
-    Player
--->
-
-
 <template>
     <div class="connected-session"
          :style="{'border-left-color': session.user.data.plugins.color}"
@@ -28,7 +23,7 @@
                 <i class="material-icons md-14 icon-yt" v-show="session.user.data.plugins.yt" title="Youtube enabled">movie</i>
                 <i class="material-icons md-14 icon-cursor" v-show="session.user.data.plugins.cursor" title="Cursors enabled">mouse</i>
                 <template v-if="minutesSinceLastMessage > 0">
-                    <i title="New messages" class="material-icons md-14 icon-active-time">schedule</i>
+                    <i title="Last activity" class="material-icons md-14 icon-active-time">schedule</i>
                     <span class="text-active-time">{{minutesSinceLastMessage > 30 ? 'afk' : (minutesSinceLastMessage + 'm')}}</span>
                 </template>
                 <template v-if="getUnreadCount(session.user.username) > 0">
@@ -38,13 +33,13 @@
             </div>
         </div>
         <div class="stats" v-show="session.user.right >= 0">
-            <div class="right">
+            <div class="right" title="Right level">
                 <span>{{session.user.right}}</span>
             </div>
-            <div class="xp">
+            <div class="xp" title="User xp">
                 <span>{{session.user.xp}}</span>
             </div>
-            <div class="money">
+            <div class="money" title="Money">
                 $ {{(session.user.money / 100).toFixed(2)}}
             </div>
         </div>

@@ -1,8 +1,3 @@
-<!--
-    Cursor Layer
--->
-
-
 <template>
     <div class="cursor-container" v-show="showCursors">
         <div class="cursor"

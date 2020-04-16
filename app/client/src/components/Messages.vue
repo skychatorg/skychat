@@ -1,8 +1,3 @@
-<!--
-    Player
--->
-
-
 <template>
     <div class="messages">
         <player class="player" v-show="currentVideo && currentVideo.enabled"/>

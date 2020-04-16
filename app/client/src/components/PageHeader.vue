@@ -1,8 +1,3 @@
-<!--
-    Global page header
--->
-
-
 <template>
     <header :style="{'border-bottom-color': borderBottomColor}">
         <nav class="nav">

@@ -1,8 +1,3 @@
-<!--
-    Main component
--->
-
-
 <template>
     <div class="page" :class="'mobile-page-' + mobileCurrentPage">
         <cursor-layer id="cursor-layer"/>

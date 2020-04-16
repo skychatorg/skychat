@@ -1,8 +1,3 @@
-<!--
-    Page content
--->
-
-
 <template>
 
     <!-- content -->
