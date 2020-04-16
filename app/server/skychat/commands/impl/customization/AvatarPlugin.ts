@@ -9,7 +9,7 @@ import {UserController} from "../../../UserController";
 
 export class AvatarPlugin extends Plugin {
 
-    static readonly DEFAULT_AVATAR: string = 'https://risibank.fr/cache/stickers/d216/21623-thumb.png';
+    static readonly DEFAULT_AVATAR: string = Config.LOCATION + '/assets/images/otter.png';
 
     readonly defaultDataStorageValue = AvatarPlugin.DEFAULT_AVATAR;
 
