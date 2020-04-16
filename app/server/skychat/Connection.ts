@@ -111,4 +111,11 @@ export class Connection extends EventEmitter implements IBroadcaster {
             data: error.message
         }));
     }
+
+    /**
+     * Close the underlying websocket connection
+     */
+    public close(): void {
+        this.webSocket.close(4403, "You have been kicked");
+    }
 }

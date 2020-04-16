@@ -24,6 +24,7 @@ import {IpPlugin} from "./impl/moderation/IpPlugin";
 import {RisiBankPlugin} from "./impl/entertainment/RisiBankPlugin";
 import {GuessTheNumberPlugin} from "./impl/entertainment/GuessTheNumberPlugin";
 import {RoulettePlugin} from "./impl/entertainment/RoulettePlugin";
+import {KickPlugin} from "./impl/moderation/KickPlugin";
 
 
 /**
@@ -42,6 +43,7 @@ export class CommandManager {
         HelpCommand,
         HistoryClearPlugin,
         IpPlugin,
+        KickPlugin,
         MessageCommand,
         MessageEditCommand,
         MotoPlugin,
