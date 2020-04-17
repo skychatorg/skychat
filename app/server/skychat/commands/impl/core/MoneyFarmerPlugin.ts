@@ -20,7 +20,7 @@ export class MoneyFarmerPlugin extends Plugin {
         super(room);
 
         if (this.room) {
-            setInterval(this.tick.bind(this), 60 * 1000);
+            setInterval(this.tick.bind(this), 300 * 1000);
         }
     }
 
