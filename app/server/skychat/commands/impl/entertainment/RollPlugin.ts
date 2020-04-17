@@ -10,7 +10,7 @@ import {MessageFormatter} from "../../../MessageFormatter";
 type GameObject = {
     state: 'pending' | 'running';
     ballPosition: number;
-    rouletteMessage: Message | null;
+    rollMessage: Message | null;
     participants: Session[],
     bets: {[identifier: string]: number};
     finalPosition: number | null;
@@ -27,18 +27,18 @@ const waitTimeout = (delay: number) => {
 };
 
 
-export class RoulettePlugin extends Plugin {
+export class RollPlugin extends Plugin {
 
     public static readonly ENTRY_COST: number = 100;
 
     public static readonly REWARD_AMOUNT: number = 1006;
 
-    readonly name = 'roulette';
+    readonly name = 'roll';
 
     readonly minRight = 20;
 
     readonly rules = {
-        roulette: {
+        roll: {
             minCount: 1,
             maxCount: 1,
             coolDown: 500,
@@ -83,7 +83,7 @@ export class RoulettePlugin extends Plugin {
         this.currentGame = {
             state: 'pending',
             ballPosition: 0,
-            rouletteMessage: null,
+            rollMessage: null,
             bets: {},
             participants: [],
             finalPosition: null
@@ -92,18 +92,18 @@ export class RoulettePlugin extends Plugin {
         // Build and send the intro message
         let introMessageContent = ``;
         introMessageContent += `
-        -> New round (roulette). To bet on a specific slot, click on one of the button below:<br>
+        -> New round (roll). To bet on a specific slot, click on one of the button below:<br>
         <table class="skychat-table">
             <tr>
                 ${Array.from({length:10}).map((_: any, i: number) => `<td>[[slot ${i}//${this.name} ${i}]]</td>`).join(' ')}
             </tr>
         </table>`;
         const formatter = MessageFormatter.getInstance();
-        introMessageContent = formatter.replaceButtons(introMessageContent);
+        introMessageContent = formatter.replaceButtons(introMessageContent, true);
         const introMessage = await this.room.sendMessage(striptags(introMessageContent), introMessageContent, UserController.getNeutralUser(), null);
 
         // Wait for participants
-        this.currentGame.rouletteMessage = await this.room.sendMessage(`...`, null, UserController.getNeutralUser(), null);
+        this.currentGame.rollMessage = await this.room.sendMessage(`...`, null, UserController.getNeutralUser(), null);
         this.updateGameMessage();
         await waitTimeout(30 * 1000);
 
@@ -141,7 +141,7 @@ export class RoulettePlugin extends Plugin {
         }
 
         // Get winner list
-        this.currentGame.rouletteMessage.append(`\nRound ended. Ball position: ${this.currentGame.ballPosition}`);
+        this.currentGame.rollMessage.append(`\nRound ended. Ball position: ${this.currentGame.ballPosition}`);
         let content = `Results:\n`;
         for (const identifier of Object.keys(this.currentGame.bets)) {
             const session = this.currentGame.participants.find(session => session.identifier === identifier);
@@ -152,14 +152,14 @@ export class RoulettePlugin extends Plugin {
             const bet = this.currentGame.bets[identifier];
             const won = bet === this.currentGame.ballPosition;
             if (won) {
-                await UserController.giveMoney(session.user, RoulettePlugin.REWARD_AMOUNT);
-                content += `- ${identifier} won $${RoulettePlugin.REWARD_AMOUNT / 100}\n`;
+                await UserController.giveMoney(session.user, RollPlugin.REWARD_AMOUNT);
+                content += `- ${identifier} won $${RollPlugin.REWARD_AMOUNT / 100}\n`;
             } else {
                 content += `- ${identifier} lost\n`;
             }
         }
-        this.currentGame.rouletteMessage.append(content);
-        this.room.send('message-edit', this.currentGame.rouletteMessage.sanitized());
+        this.currentGame.rollMessage.append(content);
+        this.room.send('message-edit', this.currentGame.rollMessage.sanitized());
         this.lastGameResults[this.currentGame.ballPosition] ++;
         this.lastGameFinishedDate = new Date();
         this.totalGameCount ++;
@@ -170,7 +170,7 @@ export class RoulettePlugin extends Plugin {
      *
      */
     private updateGameMessage(): void {
-        if (! this.currentGame || ! this.currentGame.rouletteMessage) {
+        if (! this.currentGame || ! this.currentGame.rollMessage) {
             return;
         }
         // Display participants
@@ -197,8 +197,8 @@ export class RoulettePlugin extends Plugin {
             </tr>
         </table>`;
         // Update message
-        this.currentGame.rouletteMessage.edit(striptags(content), content);
-        this.room.send('message-edit', this.currentGame.rouletteMessage.sanitized());
+        this.currentGame.rollMessage.edit(striptags(content), content);
+        this.room.send('message-edit', this.currentGame.rollMessage.sanitized());
     }
 
     /**
@@ -220,7 +220,7 @@ export class RoulettePlugin extends Plugin {
         if (bet < 0 || bet > 10) {
             throw new Error('Number should be between 0 and 1000');
         }
-        await UserController.buy(connection.session.user, RoulettePlugin.ENTRY_COST);
+        await UserController.buy(connection.session.user, RollPlugin.ENTRY_COST);
         this.currentGame.participants.push(connection.session);
         this.currentGame.bets[connection.session.identifier] = bet;
         this.updateGameMessage();

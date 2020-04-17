@@ -19,8 +19,6 @@ export class GiveMoneyPlugin extends Plugin {
 
     readonly minRight = 0;
 
-    readonly opOnly = true;
-
     readonly rules = {
         give: {
             minCount: 2,

@@ -23,7 +23,7 @@ import {StickerPlugin} from "./impl/moderation/StickerPlugin";
 import {IpPlugin} from "./impl/moderation/IpPlugin";
 import {RisiBankPlugin} from "./impl/entertainment/RisiBankPlugin";
 import {GuessTheNumberPlugin} from "./impl/entertainment/GuessTheNumberPlugin";
-import {RoulettePlugin} from "./impl/entertainment/RoulettePlugin";
+import {RollPlugin} from "./impl/entertainment/RollPlugin";
 import {KickPlugin} from "./impl/moderation/KickPlugin";
 import {GiveMoneyPlugin} from "./impl/core/GiveMoneyPlugin";
 
@@ -55,7 +55,7 @@ export class CommandManager {
         PrivateMessagePlugin,
         GuessTheNumberPlugin,
         RisiBankPlugin,
-        RoulettePlugin,
+        RollPlugin,
         SandalePlugin,
         SetRightCommand,
         ShopPlugin,

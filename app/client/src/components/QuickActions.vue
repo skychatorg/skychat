@@ -86,7 +86,7 @@
                     case 'guess':
                         return this.$client.sendMessage('/guess start');
                     case 'roll':
-                        return this.$client.sendMessage('/roulette start');
+                        return this.$client.sendMessage('/roll start');
                 }
             },
         },

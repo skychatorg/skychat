@@ -167,7 +167,7 @@ export class ShopPlugin extends Plugin {
                     <td>${itemDefinition.preview.replace('{VALUE}', item.value).replace('{USERNAME}', connection.session.user.username)}</td>
                     <td>${item.value}</td>
                     <td>$ ${item.price / 100}</td>
-                    <td>${formatter.getButtonHtml(actionTitle, actionPayload, true)}</td>
+                    <td>${formatter.getButtonHtml(actionTitle, actionPayload, true, true)}</td>
                 </tr>
             `;
         }
