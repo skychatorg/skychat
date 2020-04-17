@@ -1,8 +1,3 @@
-<!--
-    Typing list
--->
-
-
 <template>
     <div class="typing-list">
         <p v-html="typingListHtml"></p>

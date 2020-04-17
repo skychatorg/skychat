@@ -31,7 +31,7 @@ export class GuessTheNumberPlugin extends Plugin {
 
     readonly name = 'guess';
 
-    readonly minRight = 0;
+    readonly minRight = 20;
 
     readonly rules = {
         guess: {

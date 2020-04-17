@@ -1,8 +1,3 @@
-<!--
-    Player
--->
-
-
 <template>
     <div class="message-form">
         <div class="image-upload" v-show="uploading">

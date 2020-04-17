@@ -31,11 +31,11 @@ export class RoulettePlugin extends Plugin {
 
     public static readonly ENTRY_COST: number = 100;
 
-    public static readonly REWARD_AMOUNT: number = 1004;
+    public static readonly REWARD_AMOUNT: number = 1006;
 
     readonly name = 'roulette';
 
-    readonly minRight = 0;
+    readonly minRight = 20;
 
     readonly rules = {
         roulette: {

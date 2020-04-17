@@ -1,12 +1,7 @@
-<!--
-    Connected list
--->
-
-
 <template>
     <div class="connected-list">
 
-        <h2>In this room:</h2>
+        <h3>In this room:</h3>
         <connected-user
                 v-for="session in sessions"
                 @click.native="() => onJoinPrivateChannel(session.identifier)"

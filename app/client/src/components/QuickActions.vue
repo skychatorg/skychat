@@ -1,11 +1,5 @@
-<!--
-    Connected list
--->
-
-
 <template>
     <div class="quick-actions">
-
         <div v-for="action in actions"
              @click="onActivate(action.id)"
              class="quick-action"

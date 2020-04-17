@@ -1,4 +1,15 @@
-Hello *Hamster381
+# SkyChat
+
+The SkyChat is a modern-looking discussion platform with a few original features:
+- A shared youtube player (If you are familiar with plug.dj, that's exactly it)
+- Real-time visualisation of everyone's cursor
+
+And many customisation/entertainment features such as:
+- Custom colors to be bought
+- Mini-games (Casino roulette, guess the number)
+- Custom avatars
+
+<img src="./doc/screenshot.png">
 
 ## How to install
 

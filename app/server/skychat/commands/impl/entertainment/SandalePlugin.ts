@@ -77,7 +77,7 @@ export class SandalePlugin extends Plugin {
         if (! Session.sessionExists(identifier)) {
             throw new Error('User ' + identifier + ' does not exist');
         }
-        await UserController.buy(connection.session.user, (1 + this.getSandaleCount(identifier)) * 100);
+        await UserController.buy(connection.session.user, (1 + this.getSandaleCount(identifier)));
         this.addSandale(identifier, 1);
     }
 

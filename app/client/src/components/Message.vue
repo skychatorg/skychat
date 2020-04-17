@@ -1,8 +1,3 @@
-<!--
-    Player
--->
-
-
 <template>
     <div @contextmenu.prevent="$emit('select')" class="message" :style="{'border-left-color': message.user.data.plugins.color}">
         <div class="avatar image-bubble">
