@@ -51,7 +51,6 @@
         padding-right: 20px;
         padding-left: 6px;
         color: white;
-        cursor: pointer;
     }
     .goto-tchat {
         margin-top: 10px;

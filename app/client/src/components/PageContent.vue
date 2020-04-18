@@ -18,6 +18,7 @@
             <!-- right col -->
             <section id="right" class="hide-mobile-tchat scrollbar">
                 <player-preview></player-preview>
+                <polls></polls>
                 <connected-list></connected-list>
                 <quick-actions></quick-actions>
             </section>
@@ -32,12 +33,13 @@
     import Messages from "./Messages.vue";
     import TypingList from "./TypingList.vue";
     import MessageForm from "./MessageForm.vue";
+    import Polls from "./Polls.vue";
     import PlayerPreview from "./PlayerPreview.vue";
     import ConnectedList from "./ConnectedList.vue";
     import QuickActions from "./QuickActions.vue";
 
     export default Vue.extend({
-        components: {AuthPage, Messages, TypingList, MessageForm, PlayerPreview, ConnectedList, QuickActions},
+        components: {AuthPage, Messages, TypingList, MessageForm, Polls, PlayerPreview, ConnectedList, QuickActions},
         methods: {
 
             onSelectMessage: function(message) {

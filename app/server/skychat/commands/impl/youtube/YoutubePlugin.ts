@@ -12,6 +12,7 @@ import {PendingYoutubeVideo} from "./PendingYoutubeVideo";
 import {YoutubeVideoMeta} from "./YoutubeVideoMeta";
 import {CurrentYoutubeVideo, SanitizedCurrentYoutubeVideo} from "./CurrentYoutubeVideo";
 import {YoutubeHelper} from "./YoutubeHelper";
+import {PollPlugin} from "../poll/PollPlugin";
 
 
 
@@ -46,6 +47,8 @@ export class YoutubePlugin extends Plugin {
             params: [{name: 'video id', pattern: /./}]
         }
     };
+
+    private skipVoteInProgress: boolean = false;
 
     private queue: PendingYoutubeVideo[] = [];
 
@@ -201,10 +204,43 @@ export class YoutubePlugin extends Plugin {
         if (! this.currentVideo) {
             return;
         }
-        if (! Config.isOP(connection.session.identifier)
-            && this.currentVideo.user.id !== connection.session.user.id
-            && this.room.containsUser(this.currentVideo.user.id)) {
-            throw new Error('You do not have the right to skip this song');
+        if (Config.isOP(connection.session.identifier)) {
+            this.skip();
+            return;
+        }
+        if (this.currentVideo.user.id === connection.session.user.id) {
+            this.skip();
+            return;
+        }
+        if (! this.room.containsUser(this.currentVideo.user.id)) {
+            this.skip();
+            return;
+        }
+        const timeLeftMs = this.currentVideo.video.duration * 1000 - (new Date().getTime() - this.currentVideo.startedDate.getTime());
+        if (timeLeftMs < 30 * 1000) {
+            throw new Error(`You can't skip this video. It will end soon anyway.`);
+        }
+        if (this.skipVoteInProgress) {
+            throw new Error('A vote to skip the current video is already in progress');
+        }
+        this.skipVoteInProgress = true;
+        const pollPlugin = this.room.getPlugin('poll') as PollPlugin;
+        const poll = await pollPlugin.poll('Skip song: ' + this.currentVideo.video.title, 'Do you want to skip the current video?', {
+            timeout: 15 * 1000,
+            defaultValue: false
+        });
+        if (poll.getResult()) {
+            this.skip();
+        }
+        this.skipVoteInProgress = false;
+    }
+
+    /**
+     * Skip the current song
+     */
+    private skip(): void {
+        if (! this.currentVideo) {
+            return;
         }
         this.currentVideo.startedDate = new Date(0);
     }
@@ -280,7 +316,7 @@ export class YoutubePlugin extends Plugin {
     }
 
     /**
-     * Sync clients in the room
+     * Sync clients
      */
     public sync(broadcaster: Connection | Room) {
         if (broadcaster instanceof Room) {

@@ -26,6 +26,7 @@ import {GuessTheNumberPlugin} from "./impl/entertainment/GuessTheNumberPlugin";
 import {RollPlugin} from "./impl/entertainment/RollPlugin";
 import {KickPlugin} from "./impl/moderation/KickPlugin";
 import {GiveMoneyPlugin} from "./impl/core/GiveMoneyPlugin";
+import {PollPlugin} from "./impl/poll/PollPlugin";
 
 
 /**
@@ -60,6 +61,7 @@ export class CommandManager {
         SetRightCommand,
         ShopPlugin,
         StickerPlugin,
+        PollPlugin,
         TypingListPlugin,
         YoutubePlugin
     ];

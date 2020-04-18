@@ -46,6 +46,11 @@ export type CommandEntryPointRule = {
 export abstract class Command {
 
     /**
+     * Helper regexp used by sub classes
+     */
+    public static readonly POSITIVE_INTEGER_REGEXP: RegExp = /^([0-9]+)$/;
+
+    /**
      * A command is attached to a specific room
      */
     public readonly room: Room;
