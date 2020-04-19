@@ -30,7 +30,7 @@ export class ShopPlugin extends Plugin {
                 {id: 0, name: 'gray', value: ColorPlugin.DEFAULT_COLOR, price: 0},
                 {id: 2, name: 'darkgray', value: '#888888', price: 1000},
                 {id: 3, name: 'white', value: '#ffffff', price: 5000},
-                {id: 6, name: 'pink', value: '#eda6c0', price: 20000},
+                {id: 6, name: 'pink', value: '#f268ae', price: 20000},
                 {id: 7, name: 'lime', value: '#64dd17', price: 30000},
                 {id: 9, name: 'lightblue', value: '#99ccff', price: 30000},
                 {id: 5, name: 'darkcyan', value: '#046380', price: 40000},
