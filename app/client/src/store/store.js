@@ -110,6 +110,9 @@ const store = {
             state.currentVideo = currentVideo;
         },
         SET_POLLS(state, polls) {
+            if (polls.length > state.polls.length) {
+                new Audio('/assets/sound/new-poll.ogg').play();
+            }
             state.polls = polls;
         },
         SET_POLL_RESULT(state, pollResult) {
