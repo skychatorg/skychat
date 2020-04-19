@@ -94,7 +94,7 @@ export class SandalePlugin extends Plugin {
         const sandales = this.getSandaleCount(username);
         if (sandales > 0) {
             this.removeSandale(username, 1);
-            return '/message :sandale:'.repeat(sandales);
+            return '/message ' + ':sandale:'.repeat(sandales);
         }
         return message;
     }

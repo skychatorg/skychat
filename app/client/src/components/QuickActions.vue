@@ -38,6 +38,11 @@
                         icon: 'movie'
                     },
                     {
+                        id: 'yt-skip',
+                        title: "Skip current video",
+                        icon: 'movie'
+                    },
+                    {
                         id: 'shop',
                         title: "Browse shop",
                         icon: 'shopping_cart'
@@ -60,11 +65,13 @@
             getActionText: function(id) {
                 switch (id) {
                     case 'yt-toggle':
-                        return `<b>> ${this.user.data.plugins.yt ? 'on' : 'off'}</b>`;
+                        return `<b>${this.user.data.plugins.yt ? 'On' : 'Off'}</b>`;
                     case 'cursor-toggle':
-                        return `<b>> ${this.user.data.plugins.cursor ? 'on' : 'off'}</b>`;
+                        return `<b>${this.user.data.plugins.cursor ? 'On' : 'Off'}</b>`;
                     case 'yt-queue':
-                        return `<b>Yt queue</b>`;
+                        return `<b>List</b>`;
+                    case 'yt-skip':
+                        return `<b>Skip</b>`;
                     case 'shop':
                         return `<b>Shop</b>`;
                     case 'guess':
@@ -81,12 +88,14 @@
                         return this.$client.cursorSetState(! this.user.data.plugins.cursor);
                     case 'yt-queue':
                         return this.$client.sendMessage('/yt list');
+                    case 'yt-skip':
+                        return this.$client.sendMessage('/yt skip');
                     case 'shop':
                         return this.$client.sendMessage('/shop');
                     case 'guess':
                         return this.$client.sendMessage('/guess start');
                     case 'roll':
-                        return this.$client.sendMessage('/roulette start');
+                        return this.$client.sendMessage('/roll start');
                 }
             },
         },
@@ -142,10 +151,9 @@
             }
         }
 
-        .action-yt-toggle .icon {
-            color: #ff8f8f;
-        }
-        .action-yt-queue .icon {
+        .action-yt-toggle .icon,
+        .action-yt-queue .icon,
+        .action-yt-skip .icon {
             color: #ff8f8f;
         }
         .action-cursor-toggle .icon {

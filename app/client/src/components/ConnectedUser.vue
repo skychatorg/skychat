@@ -90,6 +90,7 @@
         margin-top: 4px;
         border-left: 4px solid #a3a5b4;
         transition: all 0.2s;
+        cursor: pointer;
 
         &.has-unread {
             background: #e2b14152;

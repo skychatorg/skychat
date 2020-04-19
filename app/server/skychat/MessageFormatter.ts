@@ -33,7 +33,7 @@ export class MessageFormatter {
     public format(message: string): string {
         message = escapeHtml(message);
         message = message.replace(/\n/g, "<br>");
-        message = this.replaceButtons(message);
+        message = this.replaceButtons(message, false);
         message = this.replaceImages(message);
         message = this.replaceRisiBankStickers(message);
         message = this.replaceStickers(message);
@@ -44,8 +44,9 @@ export class MessageFormatter {
     /**
      * Replace buttons
      * @param message
+     * @param trusted
      */
-    public replaceButtons(message: string): string {
+    public replaceButtons(message: string, trusted: boolean): string {
         const regexStr = '\\[\\[(.+?)\/(.+?)\\]\\]';
         const matches = message.match(new RegExp(regexStr, 'g'));
         if (! matches) {
@@ -57,7 +58,7 @@ export class MessageFormatter {
                 // Weird: not supposed to happen
                 continue;
             }
-            const buttonCode = this.getButtonHtml(codeDetail[1], codeDetail[2], true);
+            const buttonCode = this.getButtonHtml(codeDetail[1], codeDetail[2], true, trusted);
             message = message.replace(rawCode, buttonCode);
         }
         return message;
@@ -113,11 +114,15 @@ export class MessageFormatter {
      * @param title
      * @param action
      * @param escape
+     * @param trusted
      */
-    public getButtonHtml(title: string, action: string, escape: boolean) {
+    public getButtonHtml(title: string, action: string, escape: boolean, trusted: boolean) {
         if (escape) {
             title = escapeHtml(title);
             action = escapeHtml(action);
+        }
+        if (action[0] === '/' && ! trusted) {
+            title += ' <span class="skychat-button-info">(' + escapeHtml(action.split(' ')[0]) + ')</span>';
         }
         return `<button class="skychat-button" title="${action}" data-action="${action}">${title}</button>`;
     }

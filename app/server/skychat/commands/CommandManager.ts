@@ -16,15 +16,17 @@ import {SetRightCommand} from "./impl/moderation/SetRightCommand";
 import {ColorPlugin} from "./impl/customization/ColorPlugin";
 import {ShopPlugin} from "./impl/customization/ShopPlugin";
 import {MoneyFarmerPlugin} from "./impl/core/MoneyFarmerPlugin";
-import {OfferMoney} from "./impl/moderation/OfferMoney";
+import {OfferMoneyPlugin} from "./impl/moderation/OfferMoneyPlugin";
 import {HistoryClearPlugin} from "./impl/moderation/HistoryClearPlugin";
 import {MessageEditCommand} from "./impl/core/MessageEditCommand";
 import {StickerPlugin} from "./impl/moderation/StickerPlugin";
 import {IpPlugin} from "./impl/moderation/IpPlugin";
 import {RisiBankPlugin} from "./impl/entertainment/RisiBankPlugin";
 import {GuessTheNumberPlugin} from "./impl/entertainment/GuessTheNumberPlugin";
-import {RoulettePlugin} from "./impl/entertainment/RoulettePlugin";
+import {RollPlugin} from "./impl/entertainment/RollPlugin";
 import {KickPlugin} from "./impl/moderation/KickPlugin";
+import {GiveMoneyPlugin} from "./impl/core/GiveMoneyPlugin";
+import {PollPlugin} from "./impl/poll/PollPlugin";
 
 
 /**
@@ -39,6 +41,7 @@ export class CommandManager {
         AvatarPlugin,
         ColorPlugin,
         ConnectedListPlugin,
+        GiveMoneyPlugin,
         CursorPlugin,
         HelpCommand,
         HistoryClearPlugin,
@@ -48,16 +51,17 @@ export class CommandManager {
         MessageEditCommand,
         MotoPlugin,
         MutePlugin,
-        OfferMoney,
+        OfferMoneyPlugin,
         MoneyFarmerPlugin,
         PrivateMessagePlugin,
         GuessTheNumberPlugin,
         RisiBankPlugin,
-        RoulettePlugin,
+        RollPlugin,
         SandalePlugin,
         SetRightCommand,
         ShopPlugin,
         StickerPlugin,
+        PollPlugin,
         TypingListPlugin,
         YoutubePlugin
     ];

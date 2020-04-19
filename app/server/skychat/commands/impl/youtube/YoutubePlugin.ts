@@ -1,6 +1,6 @@
 import {Plugin} from "../../Plugin";
 import {Room} from "../../../Room";
-import {SanitizedUser, User} from "../../../User";
+import {User} from "../../../User";
 import {Session} from "../../../Session";
 import {Connection} from "../../../Connection";
 import {CommandEntryPointRule} from "../../Command";
@@ -8,87 +8,18 @@ import {google, youtube_v3} from "googleapis";
 import {Config} from "../../../Config";
 import {Message} from "../../../Message";
 import {UserController} from "../../../UserController";
+import {PendingYoutubeVideo} from "./PendingYoutubeVideo";
+import {YoutubeVideoMeta} from "./YoutubeVideoMeta";
+import {CurrentYoutubeVideo, SanitizedCurrentYoutubeVideo} from "./CurrentYoutubeVideo";
+import {YoutubeHelper} from "./YoutubeHelper";
+import {PollPlugin} from "../poll/PollPlugin";
 
 
-/**
- * Something that can be played
- */
-interface YoutubeVideoMeta {
-
-    /**
-     * Youtube video id
-     */
-    id: string;
-
-    /**
-     * Preview image url
-     */
-    thumb: string;
-
-    /**
-     * Description name
-     */
-    title: string
-
-    /**
-     * Duration in seconds
-     */
-    duration: number;
-}
-
-/**
- * A pending youtube videoin the queue
- */
-interface PendingYoutubeVideo {
-    user: User;
-    video: YoutubeVideoMeta;
-}
-
-export type SanitizedYoutubeVideo = {
-    user: SanitizedUser,
-    video: YoutubeVideoMeta,
-    startedDate: number,
-    cursor: number
-}
-
-/**
- * A currently playing video
- */
-interface CurrentYoutubeVideo extends PendingYoutubeVideo {
-    /**
-     * Date when the video has been started
-     */
-    startedDate: Date;
-}
 
 /**
  * Youtube plugin for the skychat
  */
 export class YoutubePlugin extends Plugin {
-
-    /**
-     * Get the duration in seconds from the youtube duration
-     * @param durationStr
-     */
-    private static youtubeDurationToSeconds(durationStr: string): number {
-        if (durationStr.substr(0, 2) !== "PT") {
-            return 0;
-        }
-        durationStr = durationStr.substr(2);
-        const all_titles: {[key: string]: number} = {
-            "h": 3600,
-            "m": 60,
-            "s": 1
-        };
-        let duration = 0;
-        for (const i in all_titles) {
-            const match = durationStr.match(new RegExp(`([0-9]+)${i}`, "i"))
-            if (match) {
-                duration += all_titles[i] * parseInt(match[1]);
-            }
-        }
-        return duration;
-    }
 
     readonly defaultDataStorageValue = true;
 
@@ -116,6 +47,8 @@ export class YoutubePlugin extends Plugin {
             params: [{name: 'video id', pattern: /./}]
         }
     };
+
+    private skipVoteInProgress: boolean = false;
 
     private queue: PendingYoutubeVideo[] = [];
 
@@ -200,7 +133,7 @@ export class YoutubePlugin extends Plugin {
         } else {
             id = param;
         }
-        const video = await this.getYoutubeVideoMeta(id);
+        const video = await YoutubeHelper.getYoutubeVideoMeta(this.youtube, id);
         this.queue.push({user: connection.session.user, video});
         this.shuffleQueue();
     }
@@ -226,7 +159,7 @@ export class YoutubePlugin extends Plugin {
             .filter(item => item.contentDetails && item.contentDetails.videoId)
             .map(item => item.contentDetails!.videoId as string);
         for (const videoId of videoIds) {
-            const video = await this.getYoutubeVideoMeta(videoId);
+            const video = await YoutubeHelper.getYoutubeVideoMeta(this.youtube, videoId);
             this.queue.push({user: connection.session.user, video});
         }
         this.shuffleQueue();
@@ -247,7 +180,7 @@ export class YoutubePlugin extends Plugin {
             throw new Error('No result found for ' + param);
         }
         const videoId = result.data.items[0].id.videoId;
-        const video = await this.getYoutubeVideoMeta(videoId);
+        const video = await YoutubeHelper.getYoutubeVideoMeta(this.youtube, videoId);
         this.queue.push({user: connection.session.user, video});
         this.shuffleQueue();
     }
@@ -271,10 +204,43 @@ export class YoutubePlugin extends Plugin {
         if (! this.currentVideo) {
             return;
         }
-        if (! Config.isOP(connection.session.identifier)
-            && this.currentVideo.user.id !== connection.session.user.id
-            && this.room.containsUser(this.currentVideo.user.id)) {
-            throw new Error('You do not have the right to skip this song');
+        if (Config.isOP(connection.session.identifier)) {
+            this.skip();
+            return;
+        }
+        if (this.currentVideo.user.id === connection.session.user.id) {
+            this.skip();
+            return;
+        }
+        if (! this.room.containsUser(this.currentVideo.user.id)) {
+            this.skip();
+            return;
+        }
+        const timeLeftMs = this.currentVideo.video.duration * 1000 - (new Date().getTime() - this.currentVideo.startedDate.getTime());
+        if (timeLeftMs < 30 * 1000) {
+            throw new Error(`You can't skip this video. It will end soon anyway.`);
+        }
+        if (this.skipVoteInProgress) {
+            throw new Error('A vote to skip the current video is already in progress');
+        }
+        this.skipVoteInProgress = true;
+        const pollPlugin = this.room.getPlugin('poll') as PollPlugin;
+        const poll = await pollPlugin.poll('Skip song: ' + this.currentVideo.video.title, 'Do you want to skip the current video?', {
+            timeout: 15 * 1000,
+            defaultValue: false
+        });
+        if (poll.getResult()) {
+            this.skip();
+        }
+        this.skipVoteInProgress = false;
+    }
+
+    /**
+     * Skip the current song
+     */
+    private skip(): void {
+        if (! this.currentVideo) {
+            return;
         }
         this.currentVideo.startedDate = new Date(0);
     }
@@ -316,35 +282,6 @@ export class YoutubePlugin extends Plugin {
     }
 
     /**
-     * Get a video metadata from its id
-     * @param id
-     */
-    private async getYoutubeVideoMeta(id: string): Promise<YoutubeVideoMeta> {
-        // Fetch youtube api
-        const result = await this.youtube.videos.list({
-            id: encodeURIComponent(id),
-            part: 'snippet,contentDetails',
-            maxResults: 1,
-            fields: 'items(snippet(title,thumbnails),contentDetails,id),pageInfo',
-        });
-        // If no result
-        if (! result.data.items || result.data.items.length === 0) {
-            throw new Error('Video not found');
-        }
-        // Get item object
-        const item = result.data.items[0];
-        // If data is missing
-        if (! item.contentDetails || ! item.contentDetails.duration || ! item.snippet || ! item.snippet.title || ! item.snippet.thumbnails || ! item.snippet.thumbnails.medium || ! item.snippet.thumbnails.medium.url) {
-            throw new Error('Unable to load item info');
-        }
-        // Get important video data & return it
-        const duration = YoutubePlugin.youtubeDurationToSeconds(item.contentDetails.duration);
-        const title = item.snippet.title;
-        const thumb = item.snippet.thumbnails.medium.url;
-        return {id, duration, title, thumb};
-    }
-
-    /**
      *
      */
     private async tick(): Promise<void> {
@@ -379,7 +316,7 @@ export class YoutubePlugin extends Plugin {
     }
 
     /**
-     * Sync clients in the room
+     * Sync clients
      */
     public sync(broadcaster: Connection | Room) {
         if (broadcaster instanceof Room) {
@@ -394,12 +331,13 @@ export class YoutubePlugin extends Plugin {
             broadcaster.send('yt-sync', null);
             return;
         }
-        broadcaster.send('yt-sync', {
+        const syncObject: SanitizedCurrentYoutubeVideo = {
             enabled: UserController.getPluginData(broadcaster.session.user, this.name),
             user: this.currentVideo.user.sanitized(),
             video: this.currentVideo.video,
             startedDate: this.currentVideo.startedDate.getTime() * 0.001,
             cursor: Date.now() * 0.001 - this.currentVideo.startedDate.getTime() * 0.001
-        });
+        };
+        broadcaster.send('yt-sync', syncObject);
     }
 }

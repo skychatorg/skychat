@@ -29,6 +29,10 @@
         },
         methods: {
             updateCurrentDuration: function() {
+                if (! this.currentVideo) {
+                    this.cursorPercent = 0;
+                    return;
+                }
                 let pct = (new Date().getTime() / 1000 - this.currentVideo.startedDate) / this.currentVideo.video.duration;
                 pct = Math.max(0, pct);
                 pct = Math.min(1, pct);

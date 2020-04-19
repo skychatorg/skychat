@@ -34,6 +34,8 @@ const store = {
         privateMessages: {},
         currentVideo: null,
         typingList: [],
+        polls: [],
+        pollResult: null,
     },
     mutations: {
         FOCUS(state) {
@@ -106,6 +108,15 @@ const store = {
         },
         SET_CURRENT_VIDEO(state, currentVideo) {
             state.currentVideo = currentVideo;
+        },
+        SET_POLLS(state, polls) {
+            state.polls = polls;
+        },
+        SET_POLL_RESULT(state, pollResult) {
+            state.pollResult = pollResult;
+        },
+        CLEAR_POLL_RESULT(state) {
+            state.pollResult = null;
         },
         SET_TYPING_LIST(state, users) {
             state.typingList = users;

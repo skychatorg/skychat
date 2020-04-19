@@ -7,7 +7,7 @@ import {ConnectedListPlugin} from "../core/ConnectedListPlugin";
 import {UserController} from "../../../UserController";
 
 
-export class OfferMoney extends Plugin {
+export class OfferMoneyPlugin extends Plugin {
 
     readonly name = 'offermoney';
 
