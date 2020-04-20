@@ -26,7 +26,7 @@ export class StickerPlugin extends Plugin {
             minCount: 1,
             maxCount: 1,
             params: [
-                {name: 'code', pattern: /^:([a-z0-9]+):$/},
+                {name: 'code', pattern: MessageFormatter.STICKER_CODE_REGEXP},
             ]
         }
     };
