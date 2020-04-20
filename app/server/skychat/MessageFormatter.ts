@@ -11,6 +11,8 @@ export class MessageFormatter {
 
     public static readonly STICKERS_JSON: string = './stickers.json';
 
+    public static readonly STICKER_CODE_REGEXP: RegExp = /^:([a-z0-9-_]+):$/;
+
     private static instance?: MessageFormatter;
 
     public static getInstance(): MessageFormatter {
