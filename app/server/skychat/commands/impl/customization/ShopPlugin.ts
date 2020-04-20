@@ -41,7 +41,10 @@ export class ShopPlugin extends Plugin {
                 {id: 13, name: 'yellow', value: '#ffd700', price: 60000},
                 {id: 15, name: 'oldblue', value: '#4c80bb', price: 60000},
                 {id: 4, name: 'violet', value: '#bf00ff', price: 70000},
-                {id: 8, name: 'red', value: '#ba000d', price: 99999},
+                {id: 8, name: 'firebrick', value: '#b22222', price: 99999},
+                {id: 1, name: 'crimson', value: '#ed143d', price: 199999},
+                {id: 16, name: 'indianred', value: '#cd5c5c', price: 199999},
+                {id: 17, name: 'bestred', value: '#ff2424', price: 299999},
             ],
             preview: '<b style="color:{VALUE}">{USERNAME}</b>'
         }
