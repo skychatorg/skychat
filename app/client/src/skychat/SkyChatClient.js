@@ -283,8 +283,11 @@ export class SkyChatClient extends EventEmitter {
         this.store.commit('NEW_CURSOR', cursor);
     }
 
+    /**
+     *
+     */
     onRoll(roll) {
-        this.store.commit("ROLLING", roll.rolling);
+        this.store.commit("SET_ROLL_STATE", roll.state);
     }
 
     /**

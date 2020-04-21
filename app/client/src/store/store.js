@@ -139,25 +139,21 @@ const store = {
                 }
             }
         },
-        ROLLING(state, rolling) {
-            if (state.rolling == rolling) {
+        SET_ROLL_STATE(state, rollState) {
+            if (state.rollState === rollState) {
                 return;
             }
-            state.rolling = rolling;
+            state.rollState = rollState;
 
-            if(rolling) {
-                state.roll_sound = new Audio('/assets/sound/roll.ogg');
-                state.roll_sound.loop = true;
-                state.roll_sound.volume = 0.1;
-                state.roll_sound.play();
+            if (rollState) {
+                const rollSound = new Audio('/assets/sound/roll.ogg');
+                rollSound.volume = 0.2;
+                rollSound.play();
             } else {
-                if(state.roll_sound) {
-                    state.roll_sound.pause();
-                }
 
-                const end_sound = new Audio('/assets/sound/roll_end.ogg');
-                end_sound.volume = 0.1;
-                end_sound.play();
+                const rollEndSound = new Audio('/assets/sound/roll_end.ogg');
+                rollEndSound.volume = 0.1;
+                rollEndSound.play();
             }
         }
     }
