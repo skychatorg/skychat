@@ -26,42 +26,44 @@ export class ShopPlugin extends Plugin {
 
     public static readonly COLORS_TIER_0_COST: number = 0;
     public static readonly COLORS_TIER_1_COST: number = 500;
-    public static readonly COLORS_TIER_2_COST: number = 30000;
-    public static readonly COLORS_TIER_3_COST: number = 50000;
-    public static readonly COLORS_TIER_4_COST: number = 100000;
+    public static readonly COLORS_TIER_2_COST: number = 1500;
+    public static readonly COLORS_TIER_3_COST: number = 3000;
+    public static readonly COLORS_TIER_4_COST: number = 5000;
 
     public static readonly ITEMS: {[type: string]: ShopItems} = {
         colors: {
             items: [
                 {id: 0, name: 'default', value: {main: ColorPlugin.DEFAULT_MAIN, secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_0_COST},
-                {id: 1, name: 'purewhite', value: {main: '#FFFFFF', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_1_COST},
-                {id: 2, name: 'darkgray', value: {main: '#656565', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_1_COST},
-
-                {id: 4, name: 'lavender', value: {main: '#9494e0', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_2_COST},
-                {id: 5, name: 'turquoise', value: {main: '#40E0D0', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_2_COST},
-                {id: 6, name: 'lightcyan', value: {main: '#82e2e2', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_2_COST},
-                {id: 7, name: 'lavenderblush', value: {main: '#e6a2b9', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_2_COST},
-                {id: 8, name: 'mistyrose', value: {main: '#d29f99', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_2_COST},
-                {id: 9, name: 'palevioletred', value: {main: '#DB7093', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_2_COST},
-                {id: 10, name: 'crimson', value: {main: '#ec375a', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_2_COST},
-
-                {id: 11, name: 'purple', value: {main: '#ae1e68', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_3_COST},
-                {id: 12, name: 'rebeccapurple', value: {main: '#a348ff', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_3_COST},
-                {id: 13, name: 'lightpurple', value: {main: '#ea5fea', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_3_COST},
-                {id: 14, name: 'steelblue', value: {main: '#4b9fd5', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_3_COST},
-                {id: 15, name: 'darkcyan', value: {main: '#046380', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_3_COST},
-                {id: 16, name: 'teal', value: {main: '#008080', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_3_COST},
-                {id: 17, name: 'orange', value: {main: '#e67e00', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_3_COST},
-                {id: 18, name: 'salmon', value: {main: '#FA8072', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_3_COST},
-                {id: 19, name: 'tan', value: {main: '#F4A460', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_3_COST},
-                {id: 20, name: 'olive', value: {main: '#808000', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_3_COST},
+ 
+                {id: 1, name: 'darkgray', value: {main: '#656565', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_1_COST},
+                {id: 2, name: 'purewhite', value: {main: '#ffffff', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_1_COST},
+ 
+                {id: 3, name: 'crimson', value: {main: '#ec375a', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_2_COST},
+                {id: 4, name: 'palevioletred', value: {main: '#db7093', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_2_COST},
+                {id: 5, name: 'lavenderblush', value: {main: '#e6a2b9', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_2_COST},
+                {id: 6, name: 'lightpurple', value: {main: '#ea5fea', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_2_COST},
+                {id: 7, name: 'lavender', value: {main: '#9494e0', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_2_COST},
+                {id: 8, name: 'steelblue', value: {main: '#4b9fd5', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_2_COST},
+                {id: 9, name: 'teal', value: {main: '#008080', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_2_COST},
+                {id: 10, name: 'lightcyan', value: {main: '#82e2e2', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_2_COST},
+                {id: 11, name: 'springgreen', value: {main: '#00ff7f', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_2_COST},
+                {id: 12, name: 'olive', value: {main: '#808000', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_2_COST},
+                {id: 13, name: 'lemonchiffon', value: {main: '#fffacd', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_2_COST},
+                {id: 14, name: 'tan', value: {main: '#f4a460', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_2_COST},
+ 
+                {id: 15, name: 'purple', value: {main: '#ae1e68', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_3_COST},
+                {id: 16, name: 'rebeccapurple', value: {main: '#a348ff', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_3_COST},
+                {id: 17, name: 'royalblue', value: {main: '#4169e1', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_3_COST},
+                {id: 18, name: 'oldblue', value: {main: '#4c80bb', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_3_COST},
+                {id: 19, name: 'darkcyan', value: {main: '#046380', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_3_COST},
+                {id: 20, name: 'turquoise', value: {main: '#40e0d0', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_3_COST},
                 {id: 21, name: 'green', value: {main: '#388e3c', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_3_COST},
-                {id: 22, name: 'springgreen', value: {main: '#00FF7F', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_3_COST},
+                {id: 22, name: 'limegreen', value: {main: '#32cd32', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_3_COST},
                 {id: 23, name: 'yellow', value: {main: '#e4e400', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_3_COST},
-                {id: 24, name: 'lemonchiffon', value: {main: '#FFFACD', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_3_COST},
-                {id: 25, name: 'oldblue', value: {main: '#4c80bb', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_3_COST},
+                {id: 24, name: 'orange', value: {main: '#e67e00', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_3_COST},
+                {id: 25, name: 'orangered', value: {main: '#ff4500', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_3_COST},
                 {id: 26, name: 'bestred', value: {main: '#ff2424', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_3_COST},
-
+               
                 {id: 1000, name: 'admin', value: {main: '#ff2424', secondary: '#ff2424'}, price: ShopPlugin.COLORS_TIER_4_COST},
             ],
             preview: (value, user) => `
