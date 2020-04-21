@@ -138,6 +138,22 @@ const store = {
                     }
                 }
             }
+        },
+        SET_ROLL_STATE(state, rollState) {
+            if (state.rollState === rollState) {
+                return;
+            }
+            state.rollState = rollState;
+
+            if (rollState) {
+                const rollSound = new Audio('/assets/sound/roll.ogg');
+                rollSound.load();
+                setTimeout(() => rollSound.play(), 100);
+            } else {
+
+                const rollEndSound = new Audio('/assets/sound/roll-end.ogg');
+                rollEndSound.play();
+            }
         }
     }
 };

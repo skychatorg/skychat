@@ -41,6 +41,7 @@ export class SkyChatClient extends EventEmitter {
         this.on('typing-list', this.onTypingList.bind(this));
         this.on('cursor', this.onCursor.bind(this));
         this.on('error', this.onError.bind(this));
+        this.on('roll', this.onRoll.bind(this));
     }
 
     /**
@@ -280,6 +281,13 @@ export class SkyChatClient extends EventEmitter {
      */
     onCursor(cursor) {
         this.store.commit('NEW_CURSOR', cursor);
+    }
+
+    /**
+     *
+     */
+    onRoll(roll) {
+        this.store.commit("SET_ROLL_STATE", roll.state);
     }
 
     /**

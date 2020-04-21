@@ -33,6 +33,30 @@ export class RollPlugin extends Plugin {
 
     public static readonly REWARD_AMOUNT: number = 1006;
 
+    public static readonly GLOBAL_COOLDOWN: number = 4 * 60 * 1000;
+
+    public static readonly TICK_MS: number[] = Array.from({length: 3000 / 150})
+        .map((_, i) => (1 + i) * 150)
+        .concat([
+            3048,
+            3180,
+            3307,
+            3440,
+            3576,
+            3723,
+            3881,
+            4040,
+            4209,
+            4398,
+            4603,
+            4834,
+            5084,
+            5372,
+            5744,
+            6413,
+            7621
+        ]);
+
     readonly name = 'roll';
 
     readonly minRight = 20;
@@ -75,14 +99,14 @@ export class RollPlugin extends Plugin {
         }
 
         // If last game finished less than 4 minute before
-        if (this.lastGameFinishedDate.getTime() + 4 * 60 * 1000 > new Date().getTime()) {
+        if (this.lastGameFinishedDate.getTime() + RollPlugin.GLOBAL_COOLDOWN > new Date().getTime()) {
             throw new Error('A game was launched in the last 4 minutes. Wait a bit.');
         }
 
         // Initialize game object
         this.currentGame = {
             state: 'pending',
-            ballPosition: 0,
+            ballPosition: -1,
             rollMessage: null,
             bets: {},
             participants: [],
@@ -118,27 +142,27 @@ export class RollPlugin extends Plugin {
         introMessage.edit('deleted', `<i>deleted</i>`);
         this.room.send('message-edit', introMessage.sanitized());
         this.currentGame.state = 'running';
+        this.currentGame.ballPosition = Math.floor(Math.random() * 10);
 
         // Initialize board
         this.updateGameMessage();
+        this.room.send('roll', { state: true });
+        await waitTimeout(100);
 
         // The timeout will increase randomly until reaching maxTimeout
-        let currentTimeout: number = 50;
-        const maxTimeout: number = 2000;
-        while (currentTimeout < maxTimeout) {
+        for (const tickMs of RollPlugin.TICK_MS) {
+            setTimeout(() => {
 
-            // Move ball to next slot
-            this.currentGame.ballPosition = (++this.currentGame.ballPosition) % 10;
+                // Move ball to next slot
+                this.currentGame!.ballPosition = (++this.currentGame!.ballPosition) % 10;
 
-            // Redraw game
-            this.updateGameMessage();
-
-            // Increase timeout
-            currentTimeout += currentTimeout * (.20 * Math.random());
-
-            // Wait a bit
-            await waitTimeout(currentTimeout);
+                // Redraw game
+                this.updateGameMessage();
+            }, tickMs);
         }
+
+        // Wait for latest tick to complete
+        await waitTimeout(RollPlugin.TICK_MS[RollPlugin.TICK_MS.length - 1]);
 
         // Get winner list
         this.currentGame.rollMessage.append(`\nRound ended. Ball position: ${this.currentGame.ballPosition}`);
@@ -160,6 +184,7 @@ export class RollPlugin extends Plugin {
         }
         this.currentGame.rollMessage.append(content);
         this.room.send('message-edit', this.currentGame.rollMessage.sanitized());
+        this.room.send('roll', { state: false });
         this.lastGameResults[this.currentGame.ballPosition] ++;
         this.lastGameFinishedDate = new Date();
         this.totalGameCount ++;
