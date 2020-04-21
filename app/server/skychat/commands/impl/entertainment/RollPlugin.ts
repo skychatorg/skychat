@@ -33,8 +33,29 @@ export class RollPlugin extends Plugin {
 
     public static readonly REWARD_AMOUNT: number = 1006;
 
-    //public static readonly GLOBAL_COOLDOWN: number = 4 * 60 * 1000;
-    public static readonly GLOBAL_COOLDOWN: number = 0;
+    public static readonly GLOBAL_COOLDOWN: number = 4 * 60 * 1000;
+
+    public static readonly TICK_MS: number[] = Array.from({length: 3000 / 150})
+        .map((_, i) => (1 + i) * 150)
+        .concat([
+            3048,
+            3180,
+            3307,
+            3440,
+            3576,
+            3723,
+            3881,
+            4040,
+            4209,
+            4398,
+            4603,
+            4834,
+            5084,
+            5372,
+            5744,
+            6413,
+            7621
+        ]);
 
     readonly name = 'roll';
 
@@ -108,7 +129,7 @@ export class RollPlugin extends Plugin {
         // Wait for participants
         this.currentGame.rollMessage = await this.room.sendMessage(`...`, null, UserController.getNeutralUser(), null);
         this.updateGameMessage();
-        await waitTimeout(3 * 1000);
+        await waitTimeout(30 * 1000);
 
         // If not enough participants
         if (this.currentGame.participants.length === 0) {
@@ -124,27 +145,24 @@ export class RollPlugin extends Plugin {
         this.currentGame.ballPosition = Math.floor(Math.random() * 10);
 
         // Initialize board
+        this.updateGameMessage();
         this.room.send('roll', { state: true });
         await waitTimeout(100);
-        this.updateGameMessage();
 
         // The timeout will increase randomly until reaching maxTimeout
-        let currentTimeout: number = 100;
-        const maxTimeout: number = 600;
-        while (currentTimeout < maxTimeout) {
+        for (const tickMs of RollPlugin.TICK_MS) {
+            setTimeout(() => {
 
-            // Move ball to next slot
-            this.currentGame.ballPosition = (++this.currentGame.ballPosition) % 10;
+                // Move ball to next slot
+                this.currentGame!.ballPosition = (++this.currentGame!.ballPosition) % 10;
 
-            // Redraw game
-            this.updateGameMessage();
-
-            // Increase timeout
-            currentTimeout += currentTimeout * 0.078; // this value will synchronize the roll duration with
-
-            // Wait a bit
-            await waitTimeout(currentTimeout);
+                // Redraw game
+                this.updateGameMessage();
+            }, tickMs);
         }
+
+        // Wait for latest tick to complete
+        await waitTimeout(RollPlugin.TICK_MS[RollPlugin.TICK_MS.length - 1]);
 
         // Get winner list
         this.currentGame.rollMessage.append(`\nRound ended. Ball position: ${this.currentGame.ballPosition}`);

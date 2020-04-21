@@ -147,12 +147,11 @@ const store = {
 
             if (rollState) {
                 const rollSound = new Audio('/assets/sound/roll.ogg');
-                rollSound.volume = 0.2;
-                rollSound.play();
+                rollSound.load();
+                setTimeout(() => rollSound.play(), 100);
             } else {
 
-                const rollEndSound = new Audio('/assets/sound/roll_end.ogg');
-                rollEndSound.volume = 0.1;
+                const rollEndSound = new Audio('/assets/sound/roll-end.ogg');
                 rollEndSound.play();
             }
         }
