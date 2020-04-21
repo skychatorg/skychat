@@ -132,6 +132,7 @@ export class RollPlugin extends Plugin {
 
             // Redraw game
             this.updateGameMessage();
+            this.room.send('roll', { rolling: true });
 
             // Increase timeout
             currentTimeout += currentTimeout * (.20 * Math.random());
@@ -160,6 +161,7 @@ export class RollPlugin extends Plugin {
         }
         this.currentGame.rollMessage.append(content);
         this.room.send('message-edit', this.currentGame.rollMessage.sanitized());
+        this.room.send('roll', { rolling: false });
         this.lastGameResults[this.currentGame.ballPosition] ++;
         this.lastGameFinishedDate = new Date();
         this.totalGameCount ++;

@@ -138,6 +138,27 @@ const store = {
                     }
                 }
             }
+        },
+        ROLLING(state, rolling) {
+            if (state.rolling == rolling) {
+                return;
+            }
+            state.rolling = rolling;
+
+            if(rolling) {
+                state.roll_sound = new Audio('/assets/sound/roll.ogg');
+                state.roll_sound.loop = true;
+                state.roll_sound.volume = 0.1;
+                state.roll_sound.play();
+            } else {
+                if(state.roll_sound) {
+                    state.roll_sound.pause();
+                }
+
+                const end_sound = new Audio('/assets/sound/roll_end.ogg');
+                end_sound.volume = 0.1;
+                end_sound.play();
+            }
         }
     }
 };
