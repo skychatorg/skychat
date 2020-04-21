@@ -1,6 +1,6 @@
 <template>
     <div class="connected-session"
-         :style="{'border-left-color': session.user.data.plugins.color}"
+         :style="{'border-left-color': session.user.data.plugins.color.main}"
          :class="{
             'selected': isChanSelected(session.user.username),
             'has-unread': getUnreadCount(session.user.username) > 0
@@ -12,7 +12,7 @@
         </div>
         <div class="info">
             <div class="session"
-                 :style="{'color': session.user.data.plugins.color}">
+                 :style="{'color': session.user.data.plugins.color.main}">
                 {{session.user.username}}
                 <sup v-show="session.connectionCount > 1">
                     {{session.connectionCount}}
