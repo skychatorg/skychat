@@ -1,18 +1,18 @@
 <template>
     <div class="connected-session"
-         :style="{'border-left-color': session.user.data.plugins.color}"
+         :style="{'border-left-color': session.user.data.plugins.color.main}"
          :class="{
             'selected': isChanSelected(session.user.username),
             'has-unread': getUnreadCount(session.user.username) > 0
           }">
         <div class="avatar">
-            <div class="image-bubble">
+            <div class="image-bubble" :style="{'box-shadow': '1px 1px 10px 0 ' + session.user.data.plugins.color.secondary}">
                 <img :src="session.user.data.plugins.avatar">
             </div>
         </div>
         <div class="info">
             <div class="session"
-                 :style="{'color': session.user.data.plugins.color}">
+                 :style="{'color': session.user.data.plugins.color.main}">
                 {{session.user.username}}
                 <sup v-show="session.connectionCount > 1">
                     {{session.connectionCount}}
