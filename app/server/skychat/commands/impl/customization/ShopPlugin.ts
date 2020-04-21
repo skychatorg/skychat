@@ -28,52 +28,76 @@ export class ShopPlugin extends Plugin {
     public static readonly COLORS_TIER_1_COST: number = 500;
     public static readonly COLORS_TIER_2_COST: number = 1500;
     public static readonly COLORS_TIER_3_COST: number = 3000;
-    public static readonly COLORS_TIER_4_COST: number = 5000;
 
     public static readonly ITEMS: {[type: string]: ShopItems} = {
-        colors: {
+        'color.main': {
             items: [
-                {id: 0, name: 'default', value: {main: ColorPlugin.DEFAULT_MAIN, secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_0_COST},
- 
-                {id: 1, name: 'darkgray', value: {main: '#656565', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_1_COST},
-                {id: 2, name: 'purewhite', value: {main: '#ffffff', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_1_COST},
- 
-                {id: 3, name: 'crimson', value: {main: '#ec375a', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_2_COST},
-                {id: 4, name: 'palevioletred', value: {main: '#db7093', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_2_COST},
-                {id: 5, name: 'lavenderblush', value: {main: '#e6a2b9', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_2_COST},
-                {id: 6, name: 'lightpurple', value: {main: '#ea5fea', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_2_COST},
-                {id: 7, name: 'lavender', value: {main: '#9494e0', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_2_COST},
-                {id: 8, name: 'steelblue', value: {main: '#4b9fd5', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_2_COST},
-                {id: 9, name: 'teal', value: {main: '#008080', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_2_COST},
-                {id: 10, name: 'lightcyan', value: {main: '#82e2e2', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_2_COST},
-                {id: 11, name: 'springgreen', value: {main: '#00ff7f', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_2_COST},
-                {id: 12, name: 'olive', value: {main: '#808000', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_2_COST},
-                {id: 13, name: 'lemonchiffon', value: {main: '#fffacd', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_2_COST},
-                {id: 14, name: 'tan', value: {main: '#f4a460', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_2_COST},
- 
-                {id: 15, name: 'purple', value: {main: '#ae1e68', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_3_COST},
-                {id: 16, name: 'rebeccapurple', value: {main: '#a348ff', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_3_COST},
-                {id: 17, name: 'royalblue', value: {main: '#4169e1', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_3_COST},
-                {id: 18, name: 'oldblue', value: {main: '#4c80bb', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_3_COST},
-                {id: 19, name: 'darkcyan', value: {main: '#046380', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_3_COST},
-                {id: 20, name: 'turquoise', value: {main: '#40e0d0', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_3_COST},
-                {id: 21, name: 'green', value: {main: '#388e3c', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_3_COST},
-                {id: 22, name: 'limegreen', value: {main: '#32cd32', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_3_COST},
-                {id: 23, name: 'yellow', value: {main: '#e4e400', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_3_COST},
-                {id: 24, name: 'orange', value: {main: '#e67e00', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_3_COST},
-                {id: 25, name: 'orangered', value: {main: '#ff4500', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_3_COST},
-                {id: 26, name: 'bestred', value: {main: '#ff2424', secondary: ColorPlugin.DEFAULT_SECONDARY}, price: ShopPlugin.COLORS_TIER_3_COST},
-               
-                {id: 1000, name: 'admin', value: {main: '#ff2424', secondary: '#ff2424'}, price: ShopPlugin.COLORS_TIER_4_COST},
+                {id: 0, name: 'default', value: ColorPlugin.DEFAULT_MAIN, price: ShopPlugin.COLORS_TIER_0_COST},
+
+                {id: 1, name: 'darkgray', value: '#656565', price: ShopPlugin.COLORS_TIER_1_COST},
+                {id: 2, name: 'purewhite', value: '#ffffff', price: ShopPlugin.COLORS_TIER_1_COST},
+
+                {id: 3, name: 'crimson', value: '#ec375a', price: ShopPlugin.COLORS_TIER_2_COST},
+                {id: 4, name: 'palevioletred', value: '#db7093', price: ShopPlugin.COLORS_TIER_2_COST},
+                {id: 5, name: 'lavenderblush', value: '#e6a2b9', price: ShopPlugin.COLORS_TIER_2_COST},
+                {id: 6, name: 'lightpurple', value: '#ea5fea', price: ShopPlugin.COLORS_TIER_2_COST},
+                {id: 7, name: 'lavender', value: '#9494e0', price: ShopPlugin.COLORS_TIER_2_COST},
+                {id: 8, name: 'steelblue', value: '#4b9fd5', price: ShopPlugin.COLORS_TIER_2_COST},
+                {id: 9, name: 'teal', value: '#008080', price: ShopPlugin.COLORS_TIER_2_COST},
+                {id: 10, name: 'lightcyan', value: '#82e2e2', price: ShopPlugin.COLORS_TIER_2_COST},
+                {id: 11, name: 'springgreen', value: '#00ff7f', price: ShopPlugin.COLORS_TIER_2_COST},
+                {id: 12, name: 'olive', value: '#808000', price: ShopPlugin.COLORS_TIER_2_COST},
+                {id: 13, name: 'lemonchiffon', value: '#fffacd', price: ShopPlugin.COLORS_TIER_2_COST},
+                {id: 14, name: 'tan', value: '#f4a460', price: ShopPlugin.COLORS_TIER_2_COST},
+
+                {id: 15, name: 'purple', value: '#ae1e68', price: ShopPlugin.COLORS_TIER_3_COST},
+                {id: 16, name: 'rebeccapurple', value: '#a348ff', price: ShopPlugin.COLORS_TIER_3_COST},
+                {id: 17, name: 'royalblue', value: '#4169e1', price: ShopPlugin.COLORS_TIER_3_COST},
+                {id: 18, name: 'oldblue', value: '#4c80bb', price: ShopPlugin.COLORS_TIER_3_COST},
+                {id: 19, name: 'darkcyan', value: '#046380', price: ShopPlugin.COLORS_TIER_3_COST},
+                {id: 20, name: 'turquoise', value: '#40e0d0', price: ShopPlugin.COLORS_TIER_3_COST},
+                {id: 21, name: 'green', value: '#388e3c', price: ShopPlugin.COLORS_TIER_3_COST},
+                {id: 22, name: 'limegreen', value: '#32cd32', price: ShopPlugin.COLORS_TIER_3_COST},
+                {id: 23, name: 'yellow', value: '#e4e400', price: ShopPlugin.COLORS_TIER_3_COST},
+                {id: 24, name: 'orange', value: '#e67e00', price: ShopPlugin.COLORS_TIER_3_COST},
+                {id: 25, name: 'orangered', value: '#ff4500', price: ShopPlugin.COLORS_TIER_3_COST},
+                {id: 26, name: 'bestred', value: '#ff2424', price: ShopPlugin.COLORS_TIER_3_COST},
             ],
             preview: (value, user) => `
-                <div style="color:${value.main};border-left: 4px solid ${value.main};padding-left: 6px;">
-                    <div style="width:14px;height:14px;border-radius:50%;background:transparent;display:inline-block;margin-right:4px;box-shadow:1px 1px 3px 1px ${value.secondary}">&nbsp;</div>
+                <div style="color:${value};border-left: 4px solid ${value};padding-left: 6px;">
+                    <div style="border:1px solid white;width:14px;height:14px;border-radius:50%;background:transparent;display:inline-block;margin-right:4px;box-shadow:2px 2px 3px 2px ${user.data.plugins.color.secondary}">&nbsp;</div>
+                    <b>${user.username}</div>
+                </div>
+            `
+        },
+        'color.secondary': {
+            items: [
+                {id: 0, name: 'default', value: ColorPlugin.DEFAULT_SECONDARY, price: ShopPlugin.COLORS_TIER_0_COST},
+
+                {id: 1, name: 'white', value: '#ffffff', price: ShopPlugin.COLORS_TIER_1_COST},
+                {id: 2, name: 'black', value: '#000000', price: ShopPlugin.COLORS_TIER_1_COST},
+
+                {id: 3, name: 'purple', value: '#ae1e68', price: ShopPlugin.COLORS_TIER_3_COST},
+                {id: 4, name: 'rebeccapurple', value: '#a348ff', price: ShopPlugin.COLORS_TIER_3_COST},
+                {id: 5, name: 'royalblue', value: '#4169e1', price: ShopPlugin.COLORS_TIER_3_COST},
+                {id: 6, name: 'oldblue', value: '#4c80bb', price: ShopPlugin.COLORS_TIER_3_COST},
+                {id: 7, name: 'turquoise', value: '#40e0d0', price: ShopPlugin.COLORS_TIER_3_COST},
+                {id: 8, name: 'limegreen', value: '#32cd32', price: ShopPlugin.COLORS_TIER_3_COST},
+                {id: 9, name: 'yellow', value: '#e4e400', price: ShopPlugin.COLORS_TIER_3_COST},
+                {id: 10, name: 'orange', value: '#e67e00', price: ShopPlugin.COLORS_TIER_3_COST},
+                {id: 11, name: 'orangered', value: '#ff4500', price: ShopPlugin.COLORS_TIER_3_COST},
+                {id: 12, name: 'bestred', value: '#ff2424', price: ShopPlugin.COLORS_TIER_3_COST},
+            ],
+            preview: (value, user) => `
+                <div style="color:${user.data.plugins.color.main};border-left: 4px solid ${user.data.plugins.color.main};padding-left: 6px;">
+                    <div style="border:1px solid white;width:14px;height:14px;border-radius:50%;background:transparent;display:inline-block;margin-right:4px;box-shadow:2px 2px 3px 2px ${value}">&nbsp;</div>
                     <b>${user.username}</div>
                 </div>
             `
         }
     };
+
+    public static readonly TYPE_REGEXP: RegExp = /^(color\.main|color\.secondary)$/;
 
     readonly defaultDataStorageValue: {[type: string]: number[]} = {colors: []};
 
@@ -93,14 +117,14 @@ export class ShopPlugin extends Plugin {
             minCount: 1,
             maxCount: 1,
             params: [
-                {name: 'type', pattern: /^(colors)$/}
+                {name: 'type', pattern: ShopPlugin.TYPE_REGEXP}
             ]
         },
         shopbuy: {
             minCount: 2,
             maxCount: 2,
             params: [
-                {name: 'type', pattern: /^(colors)$/},
+                {name: 'type', pattern: ShopPlugin.TYPE_REGEXP},
                 {name: 'item', pattern: /^([0-9]+)$/},
             ]
         },
@@ -108,7 +132,7 @@ export class ShopPlugin extends Plugin {
             minCount: 2,
             maxCount: 2,
             params: [
-                {name: 'type', pattern: /^(colors)$/},
+                {name: 'type', pattern: ShopPlugin.TYPE_REGEXP},
                 {name: 'item', pattern: /^([0-9]+)$/},
             ]
         },
@@ -181,18 +205,18 @@ export class ShopPlugin extends Plugin {
                 <td>preview</td>
                 <td>price</td>
                 <td></td>
+                <td></td>
             </tr>
         `;
         for (let item of itemDefinition.items) {
             const itemOwned = this.userOwnsItem(connection.session.user, param, item.id);
-            const actionTitle = itemOwned ? 'set' : 'buy';
-            const actionPayload = (itemOwned ? '/shopset' : '/shopbuy') + ' ' + param + ' ' + item.id;
             html += `
                 <tr>
                     <td>${item.name}</td>
                     <td>${itemDefinition.preview(item.value, connection.session.user)}</td>
-                    <td>$ ${item.price / 100}</td>
-                    <td>${formatter.getButtonHtml(actionTitle, actionPayload, true, true)}</td>
+                    <td>${'$ ' + (item.price / 100)}</td>
+                    <td>${itemOwned ? '' : formatter.getButtonHtml('buy', '/shopbuy ' + param + ' ' + item.id, true, true)}</td>
+                    <td>${formatter.getButtonHtml('set', '/shopset ' + param + ' ' + item.id, true, true)}</td>
                 </tr>
             `;
         }
@@ -225,7 +249,6 @@ export class ShopPlugin extends Plugin {
         // Buy item
         await UserController.buy(connection.session.user, item.price);
         await this.userAddOwnedItem(connection.session.user, type, id);
-        await this.handleShopList(type, connection);
     }
 
     /**
@@ -251,12 +274,14 @@ export class ShopPlugin extends Plugin {
 
         // Set item
         switch (type) {
-            case 'colors':
-                await UserController.savePluginData(connection.session.user, 'color', item.value);
+            case 'color.main':
+            case 'color.secondary':
+                const data = await UserController.getPluginData(connection.session.user, 'color');
+                data[type.split('.')[1]] = item.value;
+                await UserController.savePluginData(connection.session.user, 'color', data);
                 await (this.room.getPlugin('connectedlist') as ConnectedListPlugin).sync();
                 break;
         }
-        await this.handleShopList(type, connection);
     }
 
     /**

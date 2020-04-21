@@ -6,7 +6,7 @@
             'has-unread': getUnreadCount(session.user.username) > 0
           }">
         <div class="avatar">
-            <div class="image-bubble">
+            <div class="image-bubble" :style="{'box-shadow': '1px 1px 10px 0 ' + session.user.data.plugins.color.secondary}">
                 <img :src="session.user.data.plugins.avatar">
             </div>
         </div>
