@@ -101,6 +101,7 @@ export class Server {
             'image/gif': 'gif',
             'application/pdf': 'pdf',
             'video/mp4': 'mp4',
+            'video/webm': 'webm',
         };
         if (typeof mimeTypes[file.mimetype] === 'undefined') {
             res.send(JSON.stringify({"status": 500, "message": "Invalid mimetype"}));
