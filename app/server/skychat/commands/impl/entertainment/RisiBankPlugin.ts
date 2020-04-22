@@ -40,7 +40,9 @@ export class RisiBankPlugin extends Plugin {
         const index = parseInt(matches[3] || '0');
         let stickers;
         try {
+            console.log('risibank', 'searching', tags);
             stickers = await this.risibank.searchStickers(tags);
+            console.log('risibank', 'searched', stickers.length);
         } catch (e) {
             console.warn(e);
         }
