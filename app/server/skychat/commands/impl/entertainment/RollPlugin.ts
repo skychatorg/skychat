@@ -31,9 +31,11 @@ export class RollPlugin extends Plugin {
 
     public static readonly ENTRY_COST: number = 100;
 
-    public static readonly REWARD_AMOUNT: number = 1006;
+    public static readonly BASE_JACKPOT: number = 1000;
 
-    public static readonly GLOBAL_COOLDOWN: number = 4 * 60 * 1000;
+    public static readonly JACKPOT_INCREASE_AMOUNT: number = 100;
+
+    public static readonly GLOBAL_COOL_DOWN: number = 4 * 60 * 1000;
 
     public static readonly TICK_MS: number[] = Array.from({length: 3000 / 150})
         .map((_, i) => (1 + i) * 150)
@@ -76,6 +78,8 @@ export class RollPlugin extends Plugin {
 
     private lastGameResults: number[] = Array.from({length: 10}).map(() => 0);
 
+    private currentJackpot: number = RollPlugin.BASE_JACKPOT;
+
     private totalGameCount: number = 0;
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
@@ -99,7 +103,7 @@ export class RollPlugin extends Plugin {
         }
 
         // If last game finished less than 4 minute before
-        if (this.lastGameFinishedDate.getTime() + RollPlugin.GLOBAL_COOLDOWN > new Date().getTime()) {
+        if (this.lastGameFinishedDate.getTime() + RollPlugin.GLOBAL_COOL_DOWN > new Date().getTime()) {
             throw new Error('A game was launched in the last 4 minutes. Wait a bit.');
         }
 
@@ -167,6 +171,7 @@ export class RollPlugin extends Plugin {
         // Get winner list
         this.currentGame.rollMessage.append(`\nRound ended. Ball position: ${this.currentGame.ballPosition}`);
         let content = `Results:\n`;
+        let winnerCount = 0;
         for (const identifier of Object.keys(this.currentGame.bets)) {
             const session = this.currentGame.participants.find(session => session.identifier === identifier);
             if (! session) {
@@ -176,11 +181,20 @@ export class RollPlugin extends Plugin {
             const bet = this.currentGame.bets[identifier];
             const won = bet === this.currentGame.ballPosition;
             if (won) {
-                await UserController.giveMoney(session.user, RollPlugin.REWARD_AMOUNT);
-                content += `- ${identifier} won $${RollPlugin.REWARD_AMOUNT / 100}\n`;
+                await UserController.giveMoney(session.user, this.currentJackpot);
+                content += `- ${identifier} won $${this.currentJackpot / 100}\n`;
+                winnerCount ++;
             } else {
                 content += `- ${identifier} lost\n`;
             }
+        }
+        // If no winner and enough participants, increase jackpot
+        if (winnerCount === 0 && this.currentGame.participants.length > 1) {
+            this.currentJackpot += RollPlugin.JACKPOT_INCREASE_AMOUNT;
+        }
+        // If winners, reset jackpot
+        if (winnerCount > 0) {
+            this.currentJackpot = RollPlugin.BASE_JACKPOT;
         }
         this.currentGame.rollMessage.append(content);
         this.room.send('message-edit', this.currentGame.rollMessage.sanitized());
@@ -198,8 +212,9 @@ export class RollPlugin extends Plugin {
         if (! this.currentGame || ! this.currentGame.rollMessage) {
             return;
         }
-        // Display participants
-        let content = `Participants:<br>`;
+        // Display information about current round
+        let content = `Current jackpot: $${this.currentJackpot / 100}<br>`;
+        content += `Participants:<br>`;
         for (const session of this.currentGame.participants) {
             content += `- ${session.user.username} (${this.currentGame.bets[session.identifier]})<br>`;
         }
