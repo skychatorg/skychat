@@ -3,6 +3,7 @@ import {Plugin} from "../../Plugin";
 import {User} from "../../../User";
 import {Session} from "../../../Session";
 import {UserController} from "../../../UserController";
+import {Room} from "../../../Room";
 
 
 export class SandalePlugin extends Plugin {
@@ -26,7 +27,14 @@ export class SandalePlugin extends Plugin {
         }
     };
 
-    private sandales: {[username: string]: number} = {};
+    protected storage: {sandales: {[username: string]: number}} = {
+        sandales: {}
+    };
+
+    constructor(room: Room) {
+        super(room);
+        this.loadStorage();
+    }
 
     /**
      * Get the number of sandales associated to an username
@@ -34,7 +42,7 @@ export class SandalePlugin extends Plugin {
      */
     private getSandaleCount(username: string): number {
         username = username.toLowerCase();
-        return this.sandales[username] || 0;
+        return this.storage.sandales[username] || 0;
     }
 
     /**
@@ -44,13 +52,14 @@ export class SandalePlugin extends Plugin {
      */
     private removeSandale(username: string, count: number): void {
         username = username.toLowerCase();
-        if (typeof this.sandales[username] === 'undefined' || this.sandales[username] <= 0) {
+        if (typeof this.storage.sandales[username] === 'undefined' || this.storage.sandales[username] <= 0) {
             return;
         }
-        this.sandales[username] -= count;
-        if (this.sandales[username] <= 0) {
-            delete this.sandales[username];
+        this.storage.sandales[username] -= count;
+        if (this.storage.sandales[username] <= 0) {
+            delete this.storage.sandales[username];
         }
+        this.syncStorage();
     }
 
     /**
@@ -60,10 +69,11 @@ export class SandalePlugin extends Plugin {
      */
     private addSandale(username: string, count: number): void {
         username = username.toLowerCase();
-        if (typeof this.sandales[username] === 'undefined') {
-            this.sandales[username] = 0;
+        if (typeof this.storage.sandales[username] === 'undefined') {
+            this.storage.sandales[username] = 0;
         }
-        this.sandales[username] += count;
+        this.storage.sandales[username] += count;
+        this.syncStorage();
     }
 
     /**
@@ -80,6 +90,7 @@ export class SandalePlugin extends Plugin {
         await UserController.buy(connection.session.user, (1 + this.getSandaleCount(identifier)));
         this.addSandale(identifier, 1);
     }
+
 
     /**
      * Intercept all messages and replace its content by a sandale if the user is sandalized

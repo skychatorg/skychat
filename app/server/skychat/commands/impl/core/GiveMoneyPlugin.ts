@@ -5,6 +5,7 @@ import {User} from "../../../User";
 import {Message} from "../../../Message";
 import {ConnectedListPlugin} from "../core/ConnectedListPlugin";
 import {UserController} from "../../../UserController";
+import {fitness} from "googleapis/build/src/apis/fitness";
 
 
 export class GiveMoneyPlugin extends Plugin {
@@ -56,12 +57,12 @@ export class GiveMoneyPlugin extends Plugin {
         await UserController.giveMoney(receiverSession.user, givenAmount);
 
         // Notify the receiver & sender
+        this.room.send('give', {sender: senderSession.user.sanitized(), receiver: receiverSession.user.sanitized(), givenAmount: givenAmount, commission: commission});
         let message = senderSession.user.username + ' sent $' + givenAmount / 100 + ' to ' + receiverSession.user.username;
         if (commission > 0) {
             message += ' (- $' + (commission / 100) + ' commission)';
         }
-        receiverSession.send('message', new Message(message, null, UserController.getNeutralUser()).sanitized());
-        senderSession.send('message', new Message(message, null, UserController.getNeutralUser()).sanitized());
+        await this.room.sendMessage(message, null, UserController.getNeutralUser(), null);
         await (this.room.getPlugin('connectedlist') as ConnectedListPlugin).sync();
     }
 }
