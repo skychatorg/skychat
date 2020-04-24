@@ -11,9 +11,9 @@ export class MoneyFarmerPlugin extends Plugin {
     public static readonly MAX_INACTIVITY_DURATION_MS: number = 5 * 60 * 1000;
 
     public static readonly TICK_AMOUNTS_LIMITS: {limit: number, amount: number}[] = [
-        {limit: 15 * 100, amount: 0.03},
-        {limit: 30 * 100, amount: 0.02},
-        {limit: 100 * 100, amount: 0.01},
+        {limit: 15 * 100, amount: 3},
+        {limit: 30 * 100, amount: 2},
+        {limit: 100 * 100, amount: 1},
     ];
 
     readonly name = 'points';
@@ -58,6 +58,7 @@ export class MoneyFarmerPlugin extends Plugin {
             }
 
             const amount = this.getTickAmount(session.user);
+            console.log(session.user, amount);
             if (amount === 0) {
                 continue
             }
