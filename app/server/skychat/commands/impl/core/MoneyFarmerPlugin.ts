@@ -58,7 +58,6 @@ export class MoneyFarmerPlugin extends Plugin {
             }
 
             const amount = this.getTickAmount(session.user);
-            console.log(session.user, amount);
             if (amount === 0) {
                 continue
             }
