@@ -10,6 +10,12 @@ export class MoneyFarmerPlugin extends Plugin {
 
     public static readonly MAX_INACTIVITY_DURATION_MS: number = 5 * 60 * 1000;
 
+    public static readonly TICK_AMOUNTS_LIMITS: {limit: number, amount: number}[] = [
+        {limit: 15 * 100, amount: 0.03},
+        {limit: 30 * 100, amount: 0.02},
+        {limit: 100 * 100, amount: 0.01},
+    ];
+
     readonly name = 'points';
 
     readonly minRight = -1;
@@ -26,6 +32,17 @@ export class MoneyFarmerPlugin extends Plugin {
 
     async run(alias: string, param: string, connection: Connection): Promise<void> { }
 
+    /**
+     * Get the amount to give to a specific user for this tick
+     * @param user
+     */
+    private getTickAmount(user: User): number {
+        const entry = MoneyFarmerPlugin
+            .TICK_AMOUNTS_LIMITS
+            .filter(entry => entry.limit >= user.money)[0];
+        return entry ? entry.amount : 0;
+    }
+
     private async tick(): Promise<void> {
         // Get rooms in the session
         const sessions = Array.from(new Set(this.room.connections.map(connection => connection.session)));
@@ -39,8 +56,12 @@ export class MoneyFarmerPlugin extends Plugin {
             if (session.lastMessageDate.getTime() + MoneyFarmerPlugin.MAX_INACTIVITY_DURATION_MS < new Date().getTime()) {
                 continue;
             }
-            // Give 0.01$ to this brave man
-            session.user.money ++;
+
+            const amount = this.getTickAmount(session.user);
+            if (amount === 0) {
+                continue
+            }
+            session.user.money += amount;
             await UserController.sync(session.user);
         }
         await (this.room.getPlugin('connectedlist') as ConnectedListPlugin).sync();
