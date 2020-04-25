@@ -3,6 +3,7 @@ import {Plugin} from "../../Plugin";
 import {UserController} from "../../../UserController";
 import {Message} from "../../../Message";
 import {Session} from "../../../Session";
+import {RandomGenerator} from "../../../RandomGenerator";
 
 
 type GameObject = {
@@ -75,7 +76,7 @@ export class GuessTheNumberPlugin extends Plugin {
         this.currentGame = {
             state: 'pending',
             startedDate: new Date(),
-            secretNumber: Math.floor(Math.random() * 1000),
+            secretNumber: Math.floor(RandomGenerator.random(8) * 1000),
             participants: [],
             participantListMessage: null,
             guesses: {}
