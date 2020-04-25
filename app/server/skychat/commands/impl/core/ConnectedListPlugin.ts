@@ -1,6 +1,5 @@
 import {Connection} from "../../../Connection";
 import {Plugin} from "../../Plugin";
-import {SanitizedUser} from "../../../User";
 import {Room} from "../../../Room";
 import {SanitizedSession} from "../../../Session";
 
@@ -50,6 +49,8 @@ export class ConnectedListPlugin extends Plugin {
             }
             sessions[connection.session.identifier] = connection.session.sanitized();
         }
-        this.room.send('connected-list', Object.values(sessions).sort((a, b) => b.user.right - a.user.right));
+        const sortedSessions = Object.values(sessions)
+            .sort((a, b) => a.user.right === b.user.right ? (b.user.xp - a.user.xp) : (b.user.right - a.user.right));
+        this.room.send('connected-list', sortedSessions);
     }
 }
