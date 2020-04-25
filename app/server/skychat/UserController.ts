@@ -213,6 +213,19 @@ export class UserController {
     }
 
     /**
+     * Give XP to an user
+     * @param user
+     * @param amount
+     */
+    public static async giveXP(user: User, amount: number): Promise<void> {
+        if (amount < 0) {
+            throw new Error('Can\'t give negative amount');
+        }
+        user.xp += amount;
+        await UserController.sync(user);
+    }
+
+    /**
      * Save plugin data
      * @param user
      * @param pluginName

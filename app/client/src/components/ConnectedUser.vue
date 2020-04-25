@@ -20,16 +20,21 @@
             </div>
             <div class="moto">{{session.user.data.plugins.moto}}&nbsp;</div>
             <div class="meta">
-                <i class="material-icons md-14 icon-yt" v-show="session.user.data.plugins.yt" title="Youtube enabled">movie</i>
-                <i class="material-icons md-14 icon-cursor" v-show="session.user.data.plugins.cursor" title="Cursors enabled">mouse</i>
-                <template v-if="minutesSinceLastMessage > 0">
-                    <i title="Last activity" class="material-icons md-14 icon-active-time">schedule</i>
-                    <span class="text-active-time">{{minutesSinceLastMessage > 30 ? 'afk' : (minutesSinceLastMessage + 'm')}}</span>
-                </template>
-                <template v-if="getUnreadCount(session.user.username) > 0">
-                    <i title="New messages" class="material-icons md-14 icon-unread-count">email</i>
-                    <span class="text-unread-count">{{getUnreadCount(session.user.username)}}️</span>
-                </template>
+                <span class="rank">
+                    <img :src="'/assets/images/' + session.user.rank">
+                </span>
+                <div class="icons">
+                    <i class="material-icons md-14 icon-yt" v-show="session.user.data.plugins.yt" title="Youtube enabled">movie</i>
+                    <i class="material-icons md-14 icon-cursor" v-show="session.user.data.plugins.cursor" title="Cursors enabled">mouse</i>
+                    <template v-if="minutesSinceLastMessage > 0">
+                        <i title="Last activity" class="material-icons md-14 icon-active-time">schedule</i>
+                        <span class="text-active-time">{{minutesSinceLastMessage > 30 ? 'afk' : (minutesSinceLastMessage + 'm')}}</span>
+                    </template>
+                    <template v-if="getUnreadCount(session.user.username) > 0">
+                        <i title="New messages" class="material-icons md-14 icon-unread-count">email</i>
+                        <span class="text-unread-count">{{getUnreadCount(session.user.username)}}️</span>
+                    </template>
+                </div>
             </div>
         </div>
         <div class="stats" v-show="session.user.right >= 0">
@@ -141,27 +146,39 @@
             }
             >.meta {
 
+                display: flex;
                 margin-top: 5px;
 
-                >.icon-yt {
-                    color: #ff8f8f;
+                >.rank {
+                    height: 24px;
+                    >img {
+                        height: 100%;
+                    }
                 }
-                >.icon-cursor {
-                    color: #9b71b9;
-                }
-                >.icon-active-time {
-                    color: #8ecfff;
-                }
-                >.text-active-time {
-                    color: #8ecfff;
-                    vertical-align: top;
-                }
-                >.icon-unread-count {
-                    color: #acff98;
-                }
-                >.text-unread-count {
-                    color: #acff98;
-                    vertical-align: top;
+                >.icons {
+                    margin-left: 5px;
+                    margin-top: 5px;
+
+                    >.icon-yt {
+                        color: #ff8f8f;
+                    }
+                    >.icon-cursor {
+                        color: #9b71b9;
+                    }
+                    >.icon-active-time {
+                        color: #8ecfff;
+                    }
+                    >.text-active-time {
+                        color: #8ecfff;
+                        vertical-align: top;
+                    }
+                    >.icon-unread-count {
+                        color: #acff98;
+                    }
+                    >.text-unread-count {
+                        color: #acff98;
+                        vertical-align: top;
+                    }
                 }
             }
         }
