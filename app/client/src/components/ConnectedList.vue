@@ -1,7 +1,6 @@
 <template>
     <div class="connected-list">
 
-        <h3>In this room:</h3>
         <connected-user
                 v-for="session in sessions"
                 @click.native="() => onJoinPrivateChannel(session.identifier)"
@@ -47,7 +46,7 @@
 
 <style lang="scss" scoped>
     .connected-list {
-        padding-top: 40px;
+        padding-top: 20px;
         padding-right: 20px;
         padding-left: 6px;
         color: white;
