@@ -6,6 +6,8 @@ import {Session} from "../../../Session";
 import * as striptags from "striptags";
 import {MessageFormatter} from "../../../MessageFormatter";
 import {Room} from "../../../Room";
+import {RandomGenerator} from "../../../RandomGenerator";
+
 
 
 type GameObject = {
@@ -152,7 +154,7 @@ export class RollPlugin extends Plugin {
         introMessage.edit('deleted', `<i>deleted</i>`);
         this.room.send('message-edit', introMessage.sanitized());
         this.currentGame.state = 'running';
-        this.currentGame.ballPosition = Math.floor(Math.random() * 10);
+        this.currentGame.ballPosition = Math.floor(RandomGenerator.random(8) * 10);
 
         // Initialize board
         this.updateGameMessage();

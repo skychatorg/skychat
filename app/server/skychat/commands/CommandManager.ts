@@ -27,6 +27,7 @@ import {RollPlugin} from "./impl/entertainment/RollPlugin";
 import {KickPlugin} from "./impl/moderation/KickPlugin";
 import {GiveMoneyPlugin} from "./impl/core/GiveMoneyPlugin";
 import {PollPlugin} from "./impl/poll/PollPlugin";
+import {XPFarmerPlugin} from "./impl/core/XPFarmerPlugin";
 
 
 /**
@@ -49,6 +50,7 @@ export class CommandManager {
         KickPlugin,
         MessageCommand,
         MessageEditCommand,
+        XPFarmerPlugin,
         MotoPlugin,
         MutePlugin,
         OfferMoneyPlugin,

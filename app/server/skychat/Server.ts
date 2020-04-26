@@ -8,6 +8,7 @@ import * as express from "express";
 import {Config} from "./Config";
 import * as fs from "fs";
 import * as fileUpload from "express-fileupload";
+import {RandomGenerator} from "./RandomGenerator";
 
 
 
@@ -109,7 +110,7 @@ export class Server {
             return;
         }
         const extension = mimeTypes[file.mimetype];
-        const filePath = 'uploads/' + date.toISOString().substr(0, 19).replace(/(-|T)/g, '/').replace(/:/g, '-') + '-' + Math.floor(1000000000 * Math.random()) + '.' + extension;
+        const filePath = 'uploads/' + date.toISOString().substr(0, 19).replace(/(-|T)/g, '/').replace(/:/g, '-') + '-' + Math.floor(1000000000 * RandomGenerator.random(8)) + '.' + extension;
         file.mv(filePath);
         res.send(JSON.stringify({"status": 200, "path": filePath}));
         res.end();
