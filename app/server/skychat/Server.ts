@@ -27,7 +27,7 @@ type EventsDescription = {
  */
 export class Server {
 
-    public static readonly UPLOADED_FILE_REGEXP: RegExp = new RegExp(Config.LOCATION + '/uploads/([-\\/._a-zA-Z0-9]+)', 'g');
+    public static readonly UPLOADED_FILE_REGEXP: RegExp = new RegExp(Config.LOCATION + '/uploads/([-\\/._a-zA-Z0-9]+)');
 
     /**
      * List of accepted events.
