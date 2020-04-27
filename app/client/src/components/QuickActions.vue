@@ -51,17 +51,22 @@
                         ]
                     },
                     {
-                        name: "Misc",
+                        name: "Shop",
                         actions: [
-                            {
-                                id: 'cursor-toggle',
-                                title: "Enable/disable cursors",
-                                icon: 'mouse'
-                            },
                             {
                                 id: 'shop',
                                 title: "Browse shop",
                                 icon: 'shopping_cart'
+                            },
+                            {
+                                id: 'shop-color',
+                                title: "Browse shop colors",
+                                icon: 'palette'
+                            },
+                            {
+                                id: 'shop-halo',
+                                title: "Browse shop halo colors",
+                                icon: 'brush'
                             },
                         ]
                     },
@@ -80,6 +85,21 @@
                             },
                         ]
                     },
+                    {
+                        name: "Misc",
+                        actions: [
+                            {
+                                id: 'cursor-toggle',
+                                title: "Enable/disable cursors",
+                                icon: 'mouse'
+                            },
+                            {
+                                id: 'help',
+                                title: "See available commands",
+                                icon: 'help'
+                            },
+                        ]
+                    },
                 ]
             }
         },
@@ -88,19 +108,25 @@
             getActionText: function(id) {
                 switch (id) {
                     case 'yt-toggle':
-                        return `<b>${this.user.data.plugins.yt ? 'On' : 'Off'}</b>`;
+                        return `<i class="material-icons md-16" style="color:${this.user.data.plugins.yt ? '' : 'gray'}">toggle_${this.user.data.plugins.yt ? 'on' : 'off'}</i>`;
                     case 'cursor-toggle':
-                        return `<b>${this.user.data.plugins.cursor ? 'On' : 'Off'}</b>`;
+                        return `<i class="material-icons md-16" style="color:${this.user.data.plugins.cursor ? '' : 'gray'}">toggle_${this.user.data.plugins.cursor ? 'on' : 'off'}</i>`;
                     case 'yt-queue':
                         return `<b>List</b>`;
                     case 'yt-skip':
                         return `<b>Skip</b>`;
                     case 'shop':
                         return `<b>Shop</b>`;
+                    case 'shop-color':
+                        return `<b>Color</b>`;
+                    case 'shop-halo':
+                        return `<b>Halo</b>`;
                     case 'guess':
                         return `<b>Guess</b>`;
                     case 'roll':
                         return `<b>Roll</b>`;
+                    case 'help':
+                        return `<b>Help</b>`;
                 }
             },
             onActivate: function(id) {
@@ -115,10 +141,16 @@
                         return this.$client.sendMessage('/yt skip');
                     case 'shop':
                         return this.$client.sendMessage('/shop');
+                    case 'shop-color':
+                        return this.$client.sendMessage('/shoplist color.main');
+                    case 'shop-halo':
+                        return this.$client.sendMessage('/shoplist color.secondary');
                     case 'guess':
                         return this.$client.sendMessage('/guess start');
                     case 'roll':
                         return this.$client.sendMessage('/roll start');
+                    case 'help':
+                        return this.$client.sendMessage('/help');
                 }
             },
         },
@@ -180,30 +212,38 @@
                         flex-direction: column;
                         justify-content: center;
                     }
-                }
-            }
-        }
 
-        .action-yt-toggle,
-        .action-yt-queue,
-        .action-yt-skip {
-            border-left-color: #ff8f8f !important;
-            .icon {
-                color: #ff8f8f;
-            }
-        }
-        .action-cursor-toggle,
-        .action-shop {
-            border-left-color: #9b71b9 !important;
-            .icon {
-                color: #9b71b9;
-            }
-        }
-        .action-guess ,
-        .action-roll {
-            border-left-color: #6ee067 !important;
-            .icon {
-                color: #6ee067;
+                    &.action-yt-toggle,
+                    &.action-yt-queue,
+                    &.action-yt-skip {
+                        border-left-color: #ff8f8f !important;
+                        .icon {
+                            color: #ff8f8f;
+                        }
+                    }
+                    &.action-shop,
+                    &.action-shop-color,
+                    &.action-shop-halo {
+                        border-left-color: #9b71b9 !important;
+                        .icon {
+                            color: #9b71b9;
+                        }
+                    }
+                    &.action-help,
+                    &.action-cursor-toggle {
+                        border-left-color: #e0a067 !important;
+                        .icon {
+                            color: #e0a067;
+                        }
+                    }
+                    &.action-guess ,
+                    &.action-roll {
+                        border-left-color: #6ee067 !important;
+                        .icon {
+                            color: #6ee067;
+                        }
+                    }
+                }
             }
         }
     }
