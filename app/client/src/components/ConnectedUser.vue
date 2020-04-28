@@ -88,7 +88,7 @@
 
     .connected-session {
         width: 100%;
-        height: 70px;
+        height: 75px;
         display: flex;
         color: white;
         background: #2b2b2f;
@@ -137,12 +137,14 @@
                 font-weight: 800;
                 margin-bottom: 4px;
                 font-size: 110%;
+                flex-basis: 20px;
             }
             >.moto {
                 white-space: nowrap;
                 overflow: hidden;
                 text-overflow: ellipsis;
                 margin-top: 0;
+                flex-basis: 20px;
             }
             >.meta {
 

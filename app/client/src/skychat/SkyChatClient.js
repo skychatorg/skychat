@@ -14,9 +14,6 @@ export class SkyChatClient extends EventEmitter {
      * Connect to the server
      */
     connect() {
-        if (this.webSocket) {
-            this.webSocket.close();
-        }
         const protocol = document.location.protocol === 'http:' ? 'ws' : 'wss';
         this.webSocket = new WebSocket(protocol + '://' + document.location.host);
         this.webSocket.addEventListener('open', this.onWebSocketConnect.bind(this));
@@ -170,8 +167,9 @@ export class SkyChatClient extends EventEmitter {
      */
     logout() {
         localStorage.removeItem(SkyChatClient.LOCAL_STORAGE_TOKEN_KEY);
-        this.webSocket.close();
-        this.connect();
+        if (this.webSocket) {
+            this.webSocket.close();
+        }
     }
 
     /**

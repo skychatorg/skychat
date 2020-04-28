@@ -58,7 +58,7 @@
 
 <style lang="scss" scoped>
     .youtube-preview {
-        padding-top: 40px;
+        padding-top: 20px;
         padding-right: 20px;
         padding-left: 6px;
         color: white;
