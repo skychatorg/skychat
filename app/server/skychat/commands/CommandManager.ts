@@ -28,6 +28,7 @@ import {KickPlugin} from "./impl/moderation/KickPlugin";
 import {GiveMoneyPlugin} from "./impl/core/GiveMoneyPlugin";
 import {PollPlugin} from "./impl/poll/PollPlugin";
 import {XPFarmerPlugin} from "./impl/core/XPFarmerPlugin";
+import {BanPlugin} from "./impl/moderation/BanPlugin";
 
 
 /**
@@ -45,6 +46,7 @@ export class CommandManager {
         GiveMoneyPlugin,
         CursorPlugin,
         HelpCommand,
+        BanPlugin,
         HistoryClearPlugin,
         IpPlugin,
         KickPlugin,
