@@ -31,7 +31,7 @@ export class KickPlugin extends Plugin {
             throw new Error('Username not found');
         }
         for (const connection of session.connections) {
-            connection.close();
+            connection.close(4403, "You have been kicked");
         }
     }
 }
