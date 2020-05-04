@@ -1,6 +1,6 @@
 <template>
     <div @contextmenu.prevent="$emit('select')" class="message" :style="{'border-left-color': message.user.data.plugins.color.main}">
-        <div class="avatar image-bubble" :style="{'box-shadow': '1px 1px 10px 0 ' + message.user.data.plugins.color.secondary}">
+        <div class="avatar image-bubble" :style="{'box-shadow': '0 0 4px 4px ' + message.user.data.plugins.color.secondary}">
             <img :src="message.user.data.plugins.avatar">
         </div>
         <div class="content">
