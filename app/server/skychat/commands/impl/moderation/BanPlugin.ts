@@ -85,7 +85,7 @@ export class BanPlugin extends Plugin {
         for (const connection of session.connections) {
             connection.close(4403, "You have been banned");
         }
-        connection.send('message', new Message('User has been banned', null, UserController.getNeutralUser(), null));
+        connection.send('message', new Message('User has been banned', null, UserController.getNeutralUser(), null).sanitized());
     }
 
     async handleUnban(param: string, connection: Connection) {
@@ -101,7 +101,7 @@ export class BanPlugin extends Plugin {
             }
         }
         this.syncStorage();
-        connection.send('message', new Message('User has been unbanned', null, UserController.getNeutralUser(), null));
+        connection.send('message', new Message('User has been unbanned', null, UserController.getNeutralUser(), null).sanitized());
     }
 
     async handleBanList(param: string, connection: Connection) {
