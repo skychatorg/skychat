@@ -29,6 +29,7 @@ import {GiveMoneyPlugin} from "./impl/core/GiveMoneyPlugin";
 import {PollPlugin} from "./impl/poll/PollPlugin";
 import {XPFarmerPlugin} from "./impl/core/XPFarmerPlugin";
 import {BanPlugin} from "./impl/moderation/BanPlugin";
+import {UsurpPlugin} from "./impl/moderation/UsurpPlugin";
 
 
 /**
@@ -65,6 +66,7 @@ export class CommandManager {
         SetRightCommand,
         ShopPlugin,
         StickerPlugin,
+        UsurpPlugin,
         PollPlugin,
         TypingListPlugin,
         YoutubePlugin
