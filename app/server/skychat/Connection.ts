@@ -28,6 +28,8 @@ export class Connection extends EventEmitter implements IBroadcaster {
 
     public readonly userAgent: string;
 
+    public readonly device: string;
+
     public readonly ip: string;
 
     constructor(session: Session, webSocket: WebSocket, request: http.IncomingMessage) {
@@ -36,8 +38,10 @@ export class Connection extends EventEmitter implements IBroadcaster {
         this.webSocket = webSocket;
         this.request = request;
 
+        const ua = new UAParser(request.headers["user-agent"]);
         this.origin = typeof request.headers['origin'] === 'string' ? request.headers['origin'] : '';
-        this.userAgent = new UAParser(request.headers["user-agent"]).getBrowser().name || '';
+        this.userAgent = ua.getBrowser().name || '';
+        this.device = ua.getDevice().type || '';
         this.ip = typeof request.headers['x-forwarded-for'] === 'string' ? request.headers['x-forwarded-for'] : (request.connection.remoteAddress || '');
 
         session.attachConnection(this);

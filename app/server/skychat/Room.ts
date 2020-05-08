@@ -1,6 +1,6 @@
 import {Connection} from "./Connection";
 import {IBroadcaster} from "./IBroadcaster";
-import {Message} from "./Message";
+import {Message, MessageMeta} from "./Message";
 import {Command} from "./commands/Command";
 import {Plugin} from "./commands/Plugin";
 import {CommandManager} from "./commands/CommandManager";
@@ -251,7 +251,11 @@ export class Room implements IBroadcaster {
      * @param connection Connection that created the message. Let undefined if sent by server.
      */
     public async sendMessage(content: string, formatted: string | null, user: User, quoted: Message | null, connection?: Connection): Promise<Message> {
-        let message = new Message(content, formatted, user, quoted);
+        let meta: Partial<MessageMeta> = {};
+        if (connection) {
+            meta.device = connection.device;
+        }
+        let message = new Message(content, formatted, user, quoted, undefined, meta);
         message = await this.executeOnBeforeMessageBroadcastHook(message, connection);
         // Send it to clients
         this.send('message', message.sanitized());
