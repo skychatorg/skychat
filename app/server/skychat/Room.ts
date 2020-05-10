@@ -1,18 +1,24 @@
 import {Connection} from "./Connection";
 import {IBroadcaster} from "./IBroadcaster";
-import {Message} from "./Message";
+import {Message, MessageMeta} from "./Message";
 import {Command} from "./commands/Command";
 import {Plugin} from "./commands/Plugin";
 import {CommandManager} from "./commands/CommandManager";
 import {User} from "./User";
+import * as fs from "fs";
+
+
+export type StoredRoom = {
+
+}
 
 
 export class Room implements IBroadcaster {
 
     /**
-     * Current room id
+     * Base path for rooms persistent storage
      */
-    private static ID: number = 0;
+    public static readonly STORAGE_BASE_PATH: string = 'storage/rooms';
 
     /**
      * Number of messages kept in memory
@@ -25,9 +31,9 @@ export class Room implements IBroadcaster {
     static readonly MESSAGE_HISTORY_VISIBLE_LENGTH = 128;
 
     /**
-     * Connections that are within this room
+     * This room's unique id
      */
-    public readonly id: number = ++ Room.ID;
+    public readonly id: number;
 
     /**
      * Connections that are within this room
@@ -50,9 +56,49 @@ export class Room implements IBroadcaster {
      */
     public readonly plugins: Plugin[];
 
-    constructor() {
+    constructor(id: number) {
+        this.id = id;
         this.commands = CommandManager.instantiateCommands(this);
         this.plugins = CommandManager.extractPlugins(this.commands);
+        this.load();
+    }
+
+    /**
+     * Get this room own storage path
+     */
+    public getStoragePath(): string {
+        return `${Room.STORAGE_BASE_PATH}/${this.id}.json`;
+    }
+
+    /**
+     * Try to load this room's data from disk
+     */
+    private load(): void {
+        try {
+
+            // Load data from disk
+            const data = JSON.parse(fs.readFileSync(this.getStoragePath()).toString()) as StoredRoom;
+            // @TODO save room settings
+
+        } catch (e) {
+
+            // If an error happens, reset this room's storage
+            this.save();
+        }
+    }
+
+    /**
+     * Save this room's data to disk
+     */
+    private save(): boolean {
+        try {
+            // @TODO build room storage object
+            const data: StoredRoom = {};
+            fs.writeFileSync(this.getStoragePath(), JSON.stringify(data));
+            return true;
+        } catch (e) {
+            return false;
+        }
     }
 
     /**
@@ -205,7 +251,11 @@ export class Room implements IBroadcaster {
      * @param connection Connection that created the message. Let undefined if sent by server.
      */
     public async sendMessage(content: string, formatted: string | null, user: User, quoted: Message | null, connection?: Connection): Promise<Message> {
-        let message = new Message(content, formatted, user, quoted);
+        let meta: Partial<MessageMeta> = {};
+        if (connection) {
+            meta.device = connection.device;
+        }
+        let message = new Message(content, formatted, user, quoted, undefined, meta);
         message = await this.executeOnBeforeMessageBroadcastHook(message, connection);
         // Send it to clients
         this.send('message', message.sanitized());

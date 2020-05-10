@@ -32,6 +32,15 @@ export interface SanitizedMessage {
      * Timestamp in seconds
      */
     createdTimestamp: number;
+
+    /**
+     * Message metadata
+     */
+    meta: MessageMeta;
+}
+
+export type MessageMeta = {
+    device: string
 }
 
 
@@ -51,7 +60,9 @@ export class Message {
 
     public readonly createdTime: Date;
 
-    constructor(content: string, formatted: string | null, user: User, quoted?: Message | null, createdTime?: Date) {
+    public readonly meta: MessageMeta;
+
+    constructor(content: string, formatted: string | null, user: User, quoted?: Message | null, createdTime?: Date, meta?: Partial<MessageMeta>) {
 
         this.id = ++ Message.ID;
         this.content = content;
@@ -59,6 +70,9 @@ export class Message {
         this.quoted = quoted || null;
         this.user = user;
         this.createdTime = typeof createdTime !== 'undefined' ? createdTime : new Date();
+        this.meta = Object.assign({
+            device: ''
+        }, meta || {});
     }
 
     /**
@@ -98,7 +112,8 @@ export class Message {
             quoted: this.quoted && quoteDepth > 0 ? this.quoted.sanitized(quoteDepth - 1) : null,
             formatted: this.formatted,
             user: this.user.sanitized(),
-            createdTimestamp: this.createdTime.getTime() * 0.001
+            createdTimestamp: this.createdTime.getTime() * 0.001,
+            meta: this.meta
         };
     }
 }
