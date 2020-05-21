@@ -1,5 +1,6 @@
 .env.json
 database.db
+config.json
 stickers.json
 build/
 dist/
