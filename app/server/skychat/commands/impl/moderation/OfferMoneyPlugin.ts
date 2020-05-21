@@ -20,7 +20,7 @@ export class OfferMoneyPlugin extends Plugin {
             minCount: 2,
             maxCount: 2,
             coolDown: 50,
-            params: [{name: 'username', pattern: User.USERNAME_REGEXP}, {name: 'amount', pattern: /^([0-9]+)$/}]
+            params: [{name: 'username', pattern: User.USERNAME_LOGGED_REGEXP}, {name: 'amount', pattern: /^([0-9]+)$/}]
         }
     };
 
