@@ -1,6 +1,10 @@
 import * as fs from 'fs';
 
 
+export type Preferences = {
+    guestNames: string[]
+}
+
 export class Config {
 
     public static LOCATION: string = '';
@@ -23,24 +27,32 @@ export class Config {
 
     public static OP: string[] = [];
 
+    public static PREFERENCES: Preferences;
+
     public static isOP(identifier: string): boolean {
         return Config.OP.indexOf(identifier.toLowerCase()) >= 0;
     }
 
+    public static getRandomGuestName(): string {
+        const index = Math.floor(Math.random() * Config.PREFERENCES.guestNames.length);
+        return Config.PREFERENCES.guestNames[index];
+    }
+
     public static initialize() {
-        const config = JSON.parse(fs.readFileSync('.env.json').toString());
-        Config.LOCATION = config.location;
-        Config.HOSTNAME = config.hostname;
-        Config.PORT = config.port;
-        Config.USE_SSL = !! config.ssl;
+        const env = JSON.parse(fs.readFileSync('.env.json').toString());
+        Config.LOCATION = env.location;
+        Config.HOSTNAME = env.hostname;
+        Config.PORT = env.port;
+        Config.USE_SSL = !! env.ssl;
         if (Config.USE_SSL) {
-            Config.SSL_CERTIFICATE = config.ssl.certificate;
-            Config.SSL_CERTIFICATE_KEY = config.ssl.key;
+            Config.SSL_CERTIFICATE = env.ssl.certificate;
+            Config.SSL_CERTIFICATE_KEY = env.ssl.key;
         }
-        Config.USERS_PASSWORD_SALT = config.users_passwords_salt;
-        Config.USERS_TOKEN_SALT = config.users_token_salt;
-        Config.YOUTUBE_API_KEY = config.youtube_api_key;
-        Config.OP = config.op;
+        Config.USERS_PASSWORD_SALT = env.users_passwords_salt;
+        Config.USERS_TOKEN_SALT = env.users_token_salt;
+        Config.YOUTUBE_API_KEY = env.youtube_api_key;
+        Config.OP = env.op;
+        Config.PREFERENCES = JSON.parse(fs.readFileSync('config.json').toString());
     }
 }
 
