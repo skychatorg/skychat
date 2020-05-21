@@ -5,24 +5,38 @@ import {Session} from "./Session";
 import {DatabaseHelper} from "./DatabaseHelper";
 import {User} from "./User";
 import * as iof from "io-filter";
-import {Room} from "./Room";
+import {Room, StoredRoom} from "./Room";
 import {CommandManager} from "./commands/CommandManager";
 import {UserController} from "./UserController";
 import {Config} from "./Config";
+import * as fs from "fs";
+import {Message} from "./Message";
 
+
+export type StoredSkyChat = {
+    guestId: number;
+    messageId: number;
+}
 
 /**
  * The base server class for the skychat
  */
 export class SkyChat {
 
+    public static readonly STORAGE_BASE_PATH: string = 'storage/skychat.json';
+
+    private static TICK_INTERVAL: number = 5 * 1000;
+
     private static CURRENT_GUEST_ID: number = 0;
 
-    private readonly room: Room = new Room();
+    private readonly room: Room = new Room(0);
 
     private readonly server: Server;
 
     constructor() {
+
+        // Try to load this instance's settings from storage
+        this.load();
 
         // Create server instance
         this.server = new Server(this.getNewSession.bind(this));
@@ -57,6 +71,51 @@ export class SkyChat {
                 // On message sent
                 this.server.registerEvent('message', this.onMessage.bind(this), 'string');
             });
+
+        setInterval(this.tick.bind(this), SkyChat.TICK_INTERVAL);
+    }
+
+    /**
+     * Try to load this room's data from disk
+     */
+    private load(): void {
+        try {
+
+            // Load data from disk
+            const data = JSON.parse(fs.readFileSync(SkyChat.STORAGE_BASE_PATH).toString()) as StoredSkyChat;
+            SkyChat.CURRENT_GUEST_ID = data.guestId || 0;
+            Message.ID = data.messageId || 0;
+
+        } catch (e) {
+
+            // If an error happens, reset this room's storage
+            this.save();
+        }
+    }
+
+    /**
+     * Save this room's data to disk
+     */
+    private save(): boolean {
+        try {
+            // Build storage object
+            const data: StoredSkyChat = {
+                guestId: SkyChat.CURRENT_GUEST_ID,
+                messageId: Message.ID
+            };
+
+            fs.writeFileSync(SkyChat.STORAGE_BASE_PATH, JSON.stringify(data));
+            return true;
+        } catch (e) {
+            return false;
+        }
+    }
+
+    /**
+     * Clean-up function, executed once in a while
+     */
+    private tick(): void {
+        this.save();
     }
 
     /**

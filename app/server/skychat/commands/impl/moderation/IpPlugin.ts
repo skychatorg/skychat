@@ -11,7 +11,7 @@ export class IpPlugin extends Command {
 
     readonly name = 'ip';
 
-    readonly minRight = 100;
+    readonly minRight = 30;
 
     readonly rules = {
         ip: {

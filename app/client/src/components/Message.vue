@@ -4,7 +4,10 @@
             <img :src="message.user.data.plugins.avatar">
         </div>
         <div class="content">
-            <div class="user" :style="{'color': message.user.data.plugins.color.main}">{{message.user.username}}</div>
+            <div class="user" :style="{'color': message.user.data.plugins.color.main}">
+                {{message.user.username}}
+                <i v-show="message.meta.device === 'mobile'" class="material-icons user-device md-14">smartphone</i>
+            </div>
 
             <!-- first quote -->
             <div class="quote" v-if="message.quoted">
