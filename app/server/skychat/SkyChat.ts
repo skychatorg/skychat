@@ -122,7 +122,11 @@ export class SkyChat {
      * Build a new session object when there is a new connection
      */
     private async getNewSession(request: http.IncomingMessage): Promise<Session> {
-        const identifier = '*' + Config.getRandomGuestName() + (++ SkyChat.CURRENT_GUEST_ID);
+        if (SkyChat.CURRENT_GUEST_ID >= Math.pow(10, 10)) {
+            SkyChat.CURRENT_GUEST_ID = 0;
+        }
+        const guestId = ++ SkyChat.CURRENT_GUEST_ID;
+        const identifier = '*' + Config.getRandomGuestName() + '#' + guestId;
         const session = new Session(identifier);
         session.user.data.plugins.avatar = 'https://api.adorable.io/avatars/285/' + SkyChat.CURRENT_GUEST_ID + '.png';
         return session;
