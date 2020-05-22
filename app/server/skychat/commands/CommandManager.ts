@@ -30,6 +30,7 @@ import {PollPlugin} from "./impl/poll/PollPlugin";
 import {XPFarmerPlugin} from "./impl/core/XPFarmerPlugin";
 import {BanPlugin} from "./impl/moderation/BanPlugin";
 import {UsurpPlugin} from "./impl/moderation/UsurpPlugin";
+import {AccountPlugin} from "./impl/core/AccountPlugin";
 
 
 /**
@@ -41,6 +42,7 @@ export class CommandManager {
      * Available commands and plugins
      */
     public static readonly COMMANDS: Array<new (room: Room) => Command> = [
+        AccountPlugin,
         AvatarPlugin,
         ColorPlugin,
         ConnectedListPlugin,

@@ -62,7 +62,7 @@ export class UserController {
      * Get a neutral user used for sending information messages
      */
     public static getNeutralUser(): User {
-        return new User(0, '~Server', '', 0, 0, 0, {
+        return new User(0, '~Server', null, '', 0, 0, 0, {
             plugins: {
                 avatar: Config.LOCATION + '/assets/images/server-avatar.png',
                 color: 'rgb(255, 255, 255)'
@@ -112,7 +112,7 @@ export class UserController {
      * @param row
      */
     public static userRowToObject(row: any): User {
-        return new User(row.id, row.username_custom, row.password, row.money, row.xp, row.right, JSON.parse(row.data), JSON.parse(row.storage));
+        return new User(row.id, row.username_custom, row.email, row.password, row.money, row.xp, row.right, JSON.parse(row.data), JSON.parse(row.storage));
     }
 
     /**
@@ -245,6 +245,7 @@ export class UserController {
      */
     public static async sync(user: User) {
         await DatabaseHelper.db.run(SQL`update users set
+            email=${user.email},
             money=${user.money},
             xp=${user.xp},
             right=${user.right},

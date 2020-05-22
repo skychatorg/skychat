@@ -69,9 +69,16 @@ export class User {
      */
     public static USERNAME_LOGGED_REGEXP: RegExp = /^[a-zA-Z0-9_]{3,16}$/;
 
+    /**
+     * Valid email regexp
+     */
+    public static EMAIL_REGEXP: RegExp = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+
     public readonly id: number;
 
     public readonly username: string;
+
+    public email: string | null;
 
     private readonly password: string;
 
@@ -85,9 +92,10 @@ export class User {
 
     public storage: any;
 
-    constructor(id: number, username: string, password: string, money: number, xp: number, right: number, data?: UserData, storage?: any) {
+    constructor(id: number, username: string, email: string | null, password: string, money: number, xp: number, right: number, data?: UserData, storage?: any) {
         this.id = id;
         this.username = username;
+        this.email = email;
         this.password = password;
         this.money = money;
         this.xp = xp;
