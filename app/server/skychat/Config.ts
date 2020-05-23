@@ -1,6 +1,5 @@
 import * as fs from 'fs';
 import * as Mail from "nodemailer/lib/mailer";
-import {Mailer} from "./Mailer";
 
 
 export type Preferences = {

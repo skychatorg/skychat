@@ -31,6 +31,7 @@ import {XPFarmerPlugin} from "./impl/core/XPFarmerPlugin";
 import {BanPlugin} from "./impl/moderation/BanPlugin";
 import {UsurpPlugin} from "./impl/moderation/UsurpPlugin";
 import {AccountPlugin} from "./impl/core/AccountPlugin";
+import {MailPlugin} from "./impl/core/MailPlugin";
 
 
 /**
@@ -49,6 +50,7 @@ export class CommandManager {
         GiveMoneyPlugin,
         CursorPlugin,
         HelpCommand,
+        MailPlugin,
         BanPlugin,
         HistoryClearPlugin,
         IpPlugin,
