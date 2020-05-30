@@ -2,10 +2,8 @@ import {Connection} from "../../../Connection";
 import {Plugin} from "../../Plugin";
 import {Session} from "../../../Session";
 import {User} from "../../../User";
-import {Message} from "../../../Message";
 import {ConnectedListPlugin} from "../core/ConnectedListPlugin";
 import {UserController} from "../../../UserController";
-import {fitness} from "googleapis/build/src/apis/fitness";
 
 
 export class GiveMoneyPlugin extends Plugin {

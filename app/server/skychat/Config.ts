@@ -1,4 +1,5 @@
 import * as fs from 'fs';
+import * as Mail from "nodemailer/lib/mailer";
 
 
 export type Preferences = {
@@ -27,6 +28,8 @@ export class Config {
 
     public static OP: string[] = [];
 
+    public static EMAIL_TRANSPORT: Mail | null = null;
+
     public static PREFERENCES: Preferences;
 
     public static isOP(identifier: string): boolean {
@@ -52,6 +55,9 @@ export class Config {
         Config.USERS_TOKEN_SALT = env.users_token_salt;
         Config.YOUTUBE_API_KEY = env.youtube_api_key;
         Config.OP = env.op;
+        if (typeof env.email_transport === 'object') {
+            Config.EMAIL_TRANSPORT = env.email_transport;
+        }
         Config.PREFERENCES = JSON.parse(fs.readFileSync('config.json').toString());
     }
 }

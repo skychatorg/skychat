@@ -70,7 +70,7 @@ export class Session implements IBroadcaster {
     constructor(identifier: string) {
         this.connections = [];
         this.identifier = identifier;
-        this.user = new User(0, identifier, '', 0, 0, -1);
+        this.user = new User(0, identifier, null, '', 0, 0, -1);
         this.lastMessageDate = new Date();
     }
 

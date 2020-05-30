@@ -4,6 +4,7 @@ CREATE TABLE `users` (
   `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
   `username` varchar(32) NOT NULL,
   `username_custom` varchar(32) NOT NULL,
+  `email` varchar(128),
   `password` varchar(256) NOT NULL,
   `money` int NOT NULL,
   `xp` int NOT NULL,
