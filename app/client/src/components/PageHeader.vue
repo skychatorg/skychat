@@ -15,11 +15,12 @@
                     <span v-show="user.right === -1" @click="$emit('login')" class="logout-button">login</span>
                     <span v-show="user.right >= 0" @click="$emit('logout')" class="logout-button">logout</span>
                 </div>
-                <div class="image-bubble nav-avatar">
+                <div class="image-bubble nav-avatar" @click="onAvatarClick" title="Change avatar">
                     <img :src="user.data.plugins.avatar">
                 </div>
             </div>
         </nav>
+        <input ref="file" @change="setAvatar" type="file" style="position: fixed; top: -2000px; left: -2000px;" />
     </header>
 </template>
 
@@ -27,6 +28,33 @@
     import Vue from "vue";
 
     export default Vue.extend({
+
+        methods: {
+
+            onAvatarClick: function() {
+                this.$refs.file.click();
+            },
+
+            setAvatar: async function() {
+                try {
+                    const data = new FormData();
+                    data.append('file', this.$refs.file.files[0]);
+                    const result = await (await fetch("./upload", {method: 'POST', body: data})).json();
+                    if (result.status === 500) {
+                        throw new Error('Unable to upload: ' + result.message);
+                    }
+                    this.$client.setAvatar(document.location.href + result.path);
+                } catch (e) {
+                    new Noty({
+                        type: 'error',
+                        layout: 'topCenter',
+                        theme: 'nest',
+                        text: e.message,
+                        timeout: 2000
+                    }).show();
+                }
+            },
+        },
 
         computed: {
             user: function() {
@@ -113,6 +141,7 @@
             }
 
             .image-bubble.nav-avatar {
+                cursor: pointer;
                 box-shadow: 1px 1px 13px #ffffff38;
                 border: 1px solid #ffffff47;
                 width: 32px;

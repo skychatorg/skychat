@@ -131,6 +131,14 @@ export class SkyChatClient extends EventEmitter {
     }
 
     /**
+     * Set this user's avatar
+     * @param avatar
+     */
+    setAvatar(avatar) {
+        this.sendMessage('/avatar ' + avatar);
+    }
+
+    /**
      * Synchronize the youtube player
      */
     ytSync() {
