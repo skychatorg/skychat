@@ -4,7 +4,7 @@
              v-for="entry in cursors"
              :key="entry.cursor.user.id"
              :style="{left: (entry.cursor.x * window.innerWidth) + 'px', top: (entry.cursor.y * window.innerHeight) + 'px'}">
-            <img src="https://skychat.redsky.fr/uploads/2020/04/08/19-52-22-875289187.gif">
+            <img src="/assets/images/cursor.gif">
             <span>{{entry.cursor.user.username}}</span>
         </div>
     </div>
