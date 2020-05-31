@@ -70,6 +70,22 @@
     .search-item {
         display: flex;
         margin: 10px;
+        background-color: #2b2b2f;
+        border-left: 4px solid white;
+        padding: 4px 4px 4px 8px;
+        -webkit-transition: all 0.2s;
+        -moz-transition: all 0.2s;
+        -ms-transition: all 0.2s;
+        -o-transition: all 0.2s;
+        transition: all 0.2s;
+        transition-property: border-width, margin-left;
+        cursor: pointer;
+
+        &:hover {
+            background-color: #313235;
+            border-width: 0;
+            margin-left: 14px;
+        }
 
         .thumb {
             display: flex;

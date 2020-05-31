@@ -39,11 +39,11 @@
                                 title: "Enable/disable youtube",
                                 icon: 'movie'
                             },
-                            {
+                            /*{
                                 id: 'yt-queue',
                                 title: "See youtube queue",
                                 icon: 'queue_music'
-                            },
+                            },*/
                             {
                                 id: 'yt-skip',
                                 title: "Skip current video",
