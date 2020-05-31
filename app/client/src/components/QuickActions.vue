@@ -45,14 +45,14 @@
                                 icon: 'queue_music'
                             },*/
                             {
-                                id: 'yt-skip',
-                                title: "Skip current video",
-                                icon: 'skip_next'
-                            },
-                            {
                                 id: 'yt-play',
                                 title: "Play a youtube video",
                                 icon: 'play_arrow'
+                            },
+                            {
+                                id: 'yt-skip',
+                                title: "Skip current video",
+                                icon: 'skip_next'
                             },
                         ]
                     },
