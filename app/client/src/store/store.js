@@ -36,6 +36,7 @@ const store = {
         typingList: [],
         polls: [],
         pollResult: null,
+        ytApiSearchResults: []
     },
     mutations: {
         FOCUS(state) {
@@ -154,6 +155,9 @@ const store = {
                 const rollEndSound = new Audio('/assets/sound/roll-end.ogg');
                 rollEndSound.play();
             }
+        },
+        SET_YT_API_SEARCH_RESULTS(state, items) {
+            state.ytApiSearchResults = items;
         }
     }
 };
