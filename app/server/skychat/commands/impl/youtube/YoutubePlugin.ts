@@ -31,7 +31,7 @@ export class YoutubePlugin extends Plugin {
 
     readonly name = 'yt';
 
-    readonly aliases = ['play', 'playpl', '~'];
+    readonly aliases = ['play', 'playpl', 'ytapi', 'ytapi:search', '~'];
 
     readonly rules: {[alias: string]: CommandEntryPointRule} = {
         yt: {
@@ -51,6 +51,11 @@ export class YoutubePlugin extends Plugin {
             maxCount: 1,
             coolDown: 1000,
             params: [{name: 'video id', pattern: /./}]
+        },
+        ytapisearch: {
+            minCount: 1,
+            coolDown: 1000,
+            params: [{name: 'search', pattern: /./}]
         }
     };
 
@@ -82,6 +87,8 @@ export class YoutubePlugin extends Plugin {
             await this.handleSearchAndPlay(param, connection);
         } else if (alias === 'playpl') {
             await this.handlePlayPlaylist(param, connection);
+        } else if (alias === 'ytapi:search') {
+            await this.handleApiSearch(param, connection);
         }
     }
 
@@ -173,6 +180,25 @@ export class YoutubePlugin extends Plugin {
     }
 
     /**
+     * Play a whole playlist
+     * @param param
+     * @param connection
+     */
+    private async handleApiSearch(param: string, connection: Connection): Promise<void> {
+        const result = await this.youtube.search.list({
+            'part': 'snippet',
+            'q': param,
+            'type': 'video',
+            'maxResults': 20
+        });
+        const items = result?.data?.items;
+        if (! items) {
+            throw new Error('No result found');
+        }
+        connection.send('ytapi:search', items);
+    }
+
+    /**
      * Search + play a video
      * @param param
      * @param connection
@@ -181,12 +207,13 @@ export class YoutubePlugin extends Plugin {
         const result = await this.youtube.search.list({
             'part': 'snippet',
             'q': param,
-            'type': 'video'
+            'type': 'video',
+            'maxResults': 1
         });
-        if (! result || ! result.data || ! result.data.items || result.data.items.length === 0 || ! result.data.items[0].id || ! result.data.items[0].id.videoId) {
+        const videoId = (result?.data?.items || [])[0]?.id?.videoId;
+        if (! videoId) {
             throw new Error('No result found for ' + param);
         }
-        const videoId = result.data.items[0].id.videoId;
         const video = await YoutubeHelper.getYoutubeVideoMeta(this.youtube, videoId);
         this.storage.queue.push({user: connection.session.user, video});
         this.shuffleQueue();

@@ -2,7 +2,9 @@ import Vue from "vue";
 import MainPage from "./components/MainPage.vue";
 import {SkyChatClient} from "./skychat/SkyChatClient";
 import store from "./store/store";
+import VModal from 'vue-js-modal';
 
+Vue.use(VModal, { dynamic: true, injectModalsContainer: true });
 
 Vue.prototype.$store = store;
 

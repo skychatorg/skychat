@@ -23,6 +23,7 @@
 
 <script>
     import Vue from "vue";
+    import YoutubeVideoSearcher from "./YoutubeVideoSearcher.vue";
 
     export default Vue.extend({
 
@@ -47,6 +48,11 @@
                                 id: 'yt-skip',
                                 title: "Skip current video",
                                 icon: 'skip_next'
+                            },
+                            {
+                                id: 'yt-play',
+                                title: "Play a youtube video",
+                                icon: 'play_arrow'
                             },
                         ]
                     },
@@ -115,6 +121,8 @@
                         return `<b>List</b>`;
                     case 'yt-skip':
                         return `<b>Skip</b>`;
+                    case 'yt-play':
+                        return `<b>Play</b>`;
                     case 'shop':
                         return `<b>Shop</b>`;
                     case 'shop-color':
@@ -139,6 +147,9 @@
                         return this.$client.sendMessage('/yt list');
                     case 'yt-skip':
                         return this.$client.sendMessage('/yt skip');
+                    case 'yt-play':
+                        this.$modal.show(YoutubeVideoSearcher);
+                        return;
                     case 'shop':
                         return this.$client.sendMessage('/shop');
                     case 'shop-color':
@@ -215,7 +226,8 @@
 
                     &.action-yt-toggle,
                     &.action-yt-queue,
-                    &.action-yt-skip {
+                    &.action-yt-skip,
+                    &.action-yt-play {
                         border-left-color: #ff8f8f !important;
                         .icon {
                             color: #ff8f8f;

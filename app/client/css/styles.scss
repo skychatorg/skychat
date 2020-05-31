@@ -159,3 +159,13 @@ body {
     font-size: 1em;
     font-family: Work Sans,sans-serif;
 }
+
+/**
+ * vue-js-modal
+ */
+body .vm--modal {
+    background: #18191c;
+    color: #fff;
+    padding: 10px;
+    border: 1px solid white;
+}

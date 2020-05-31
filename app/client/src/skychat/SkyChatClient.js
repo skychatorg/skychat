@@ -39,6 +39,7 @@ export class SkyChatClient extends EventEmitter {
         this.on('cursor', this.onCursor.bind(this));
         this.on('error', this.onError.bind(this));
         this.on('roll', this.onRoll.bind(this));
+        this.on('ytapi:search', this.onYtApiSearchResults.bind(this));
     }
 
     /**
@@ -294,6 +295,13 @@ export class SkyChatClient extends EventEmitter {
      */
     onRoll(roll) {
         this.store.commit("SET_ROLL_STATE", roll.state);
+    }
+
+    /**
+     *
+     */
+    onYtApiSearchResults(items) {
+        this.store.commit("SET_YT_API_SEARCH_RESULTS", items);
     }
 
     /**
