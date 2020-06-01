@@ -30,6 +30,7 @@
         "io-filter": "^2.1.2",
         "jsonwebtoken": "^8.5.1",
         "lodash": "^4.17.15",
+        "mousetrap": "^1.6.5",
         "nodemailer": "^6.4.6",
         "risibank": "^1.0.2",
         "sha256": "^0.2.0",

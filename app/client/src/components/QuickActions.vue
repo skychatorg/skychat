@@ -8,7 +8,7 @@
                      @click="onActivate(action.id)"
                      class="quick-action"
                      :class="'action-' + action.id"
-                     :title="group.name + ': ' + action.title">
+                     :title="group.name + ': ' + action.title + (action.shortcuts ? ' ' + action.shortcuts.map(shortcut => '['+shortcut+']').join(', ') : '')">
 
                     <div class="icon">
                         <i class="material-icons md-14">{{action.icon}}</i>
@@ -37,7 +37,8 @@
                             {
                                 id: 'yt-toggle',
                                 title: "Enable/disable youtube",
-                                icon: 'movie'
+                                icon: 'movie',
+                                shortcuts: ['ctrl+y']
                             },
                             /*{
                                 id: 'yt-queue',
@@ -47,12 +48,14 @@
                             {
                                 id: 'yt-play',
                                 title: "Play a youtube video",
-                                icon: 'play_arrow'
+                                icon: 'play_arrow',
+                                shortcuts: ['ctrl+p']
                             },
                             {
                                 id: 'yt-skip',
                                 title: "Skip current video",
-                                icon: 'skip_next'
+                                icon: 'skip_next',
+                                shortcuts: ['ctrl+right']
                             },
                         ]
                     },
@@ -62,17 +65,20 @@
                             {
                                 id: 'shop',
                                 title: "Browse shop",
-                                icon: 'shopping_cart'
+                                icon: 'shopping_cart',
+                                shortcuts: ['ctrl+s']
                             },
                             {
                                 id: 'shop-color',
                                 title: "Browse shop colors",
-                                icon: 'palette'
+                                icon: 'palette',
+                                shortcuts: ['ctrl+s+1']
                             },
                             {
                                 id: 'shop-halo',
                                 title: "Browse shop halo colors",
-                                icon: 'brush'
+                                icon: 'brush',
+                                shortcuts: ['ctrl+s+2']
                             },
                         ]
                     },
@@ -82,12 +88,14 @@
                             {
                                 id: 'guess',
                                 title: "Start a guess the number round",
-                                icon: 'not_listed_location'
+                                icon: 'not_listed_location',
+                                shortcuts: ['ctrl+g']
                             },
                             {
                                 id: 'roll',
                                 title: "Start a game of roulette",
-                                icon: 'casino'
+                                icon: 'casino',
+                                shortcuts: ['ctrl+r']
                             },
                         ]
                     },
@@ -97,16 +105,32 @@
                             {
                                 id: 'cursor-toggle',
                                 title: "Enable/disable cursors",
-                                icon: 'mouse'
+                                icon: 'mouse',
+                                shortcuts: ['ctrl+c']
                             },
                             {
                                 id: 'help',
                                 title: "See available commands",
-                                icon: 'help'
+                                icon: 'help',
+                                shortcuts: ['ctrl+h']
                             },
                         ]
                     },
                 ]
+            }
+        },
+
+        created: function() {
+
+            for (const actionGroup of this.actions) {
+                for (const action of actionGroup.actions) {
+                    for (const shortcut of action.shortcuts || []) {
+                        this.$mousetrap.bind(shortcut, (event) => {
+                            event.preventDefault();
+                            this.onActivate(action.id);
+                        });
+                    }
+                }
             }
         },
 

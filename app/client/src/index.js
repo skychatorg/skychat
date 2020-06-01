@@ -3,6 +3,8 @@ import MainPage from "./components/MainPage.vue";
 import {SkyChatClient} from "./skychat/SkyChatClient";
 import store from "./store/store";
 import VModal from 'vue-js-modal';
+import Mousetrap from "mousetrap";
+
 
 Vue.use(VModal, {
     dynamic: true,
@@ -19,6 +21,8 @@ Vue.prototype.$store = store;
 
 Vue.prototype.$client = new SkyChatClient(store);
 Vue.prototype.$client.connect();
+
+Vue.prototype.$mousetrap = new Mousetrap();
 
 const app = new Vue({
     el: "#app",
