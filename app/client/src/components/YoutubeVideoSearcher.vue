@@ -1,7 +1,7 @@
 <template>
     <div class="youtube-video-searcher">
         <div class="search-form">
-            <input v-model="searchInput" type="text" placeholder="Search" class="form-control" @keyup.enter.stop="search(searchInput)">
+            <input v-model="searchInput" ref="searchInput" type="text" placeholder="Search" class="form-control" @keyup.enter.stop="search(searchInput)">
         </div>
         <div class="search-results">
 
@@ -34,6 +34,9 @@
             return {
                 searchInput: ''
             }
+        },
+        mounted: function() {
+            this.$refs.searchInput.focus();
         },
         methods: {
             search: function(search) {
