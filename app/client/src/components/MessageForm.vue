@@ -19,7 +19,7 @@
                       @keyup.up="navigateIntoHistory(-1)"
                       @keyup.down="navigateIntoHistory(1)"
                       @keydown.tab.prevent="onKeyUpTab"
-                      class="new-message"
+                      class="new-message mousetrap"
                       v-model="message"
                       placeholder="Message.."></textarea>
         </form>
