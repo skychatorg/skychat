@@ -36,7 +36,7 @@ const store = {
         typingList: [],
         polls: [],
         pollResult: null,
-        ytApiSearchResults: []
+        ytApiSearchResult: {}
     },
     mutations: {
         FOCUS(state) {
@@ -156,8 +156,8 @@ const store = {
                 rollEndSound.play();
             }
         },
-        SET_YT_API_SEARCH_RESULTS(state, items) {
-            state.ytApiSearchResults = items;
+        SET_YT_API_SEARCH_RESULTS(state, result) {
+            state.ytApiSearchResult = result;
         }
     }
 };

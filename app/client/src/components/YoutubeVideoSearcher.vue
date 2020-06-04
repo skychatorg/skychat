@@ -3,12 +3,20 @@
         <div class="search-form">
             <input v-model="searchInput" ref="searchInput" type="text" placeholder="Search" class="form-control" @keyup.enter.stop="search(searchInput)">
         </div>
+        <div class="search-form">
+            <button v-for="type in searchTypes"
+                    @click="searchType = type.id"
+                    class="button"
+                    :class="type.id === searchType ? 'active' : ''">
+                {{type.name}}
+            </button>
+        </div>
         <div class="search-results">
 
             <!-- 1 item -->
-            <div v-for="item in searchResults"
+            <div v-for="item in searchResult.items"
                  :key="item.etag"
-                 @click="playVideo(item.id.videoId)"
+                 @click="play(item)"
                  class="search-item">
 
                 <!-- thumb -->
@@ -32,24 +40,40 @@
     export default Vue.extend({
         data: function() {
             return {
-                searchInput: ''
+                searchInput: '',
+                searchType: 'video',
+                searchTypes: [
+                    {id: 'video', name: 'Video'},
+                    {id: 'playlist', name: 'Playlist'}
+                ]
             }
         },
         mounted: function() {
             this.$refs.searchInput.focus();
         },
+        watch: {
+            'searchType': function() {
+                if (this.searchInput.length > 0) {
+                    this.search(this.searchInput);
+                }
+            }
+        },
         methods: {
             search: function(search) {
-                this.$client.sendMessage(`/ytapi:search ${search}`);
+                this.$client.sendMessage(`/ytapi:search ${this.searchType} ${search}`);
             },
-            playVideo: function(video) {
-                this.$client.sendMessage(`/play ${video}`);
+            play: function(item) {
+                if (this.searchResult.type === 'video') {
+                    this.$client.sendMessage(`/play ${item.id.videoId}`);
+                } else {
+                    this.$client.sendMessage(`/playpl ${item.id.playlistId}`);
+                }
                 this.$emit('close');
             }
         },
         computed: {
-            searchResults: function() {
-                return this.$store.state.ytApiSearchResults;
+            searchResult: function() {
+                return this.$store.state.ytApiSearchResult;
             }
         }
     });
@@ -62,7 +86,31 @@
         height: 100%;
 
         .search-form {
+            display: flex;
 
+            input {
+                margin: 5px;
+            }
+
+            .button {
+                flex-grow: 1;
+                padding: 4px;
+                background-color: #18191c;
+                border: 1px solid white;
+                border-radius: 4px;
+                color: white;
+                cursor: pointer;
+                margin: 5px;
+                outline: none;
+                font-size: 100%;
+
+                &:hover {
+                    background-color: #32373a;
+                }
+                &.active {
+                    background-color: #3e4448;
+                }
+            }
         }
         .search-results {
             flex-grow: 1;

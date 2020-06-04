@@ -52,10 +52,11 @@ export class YoutubePlugin extends Plugin {
             coolDown: 1000,
             params: [{name: 'video id', pattern: /./}]
         },
-        ytapisearch: {
-            minCount: 1,
-            coolDown: 1000,
-            params: [{name: 'search', pattern: /./}]
+        'ytapi:search': {
+            minCount: 2,
+            coolDown: 500,
+            maxCallsPer10Seconds: 5,
+            params: [{name: 'type', pattern: /^(video|playlist)$/}, {name: 'search', pattern: /./}]
         }
     };
 
@@ -185,17 +186,19 @@ export class YoutubePlugin extends Plugin {
      * @param connection
      */
     private async handleApiSearch(param: string, connection: Connection): Promise<void> {
+        const type = param.split(' ')[0];
+        const query = param.split(' ').slice(1).join(' ');
         const result = await this.youtube.search.list({
             'part': 'snippet',
-            'q': param,
-            'type': 'video',
+            'q': query,
+            'type': type,
             'maxResults': 20
         });
         const items = result?.data?.items;
         if (! items) {
             throw new Error('No result found');
         }
-        connection.send('ytapi:search', items);
+        connection.send('ytapi:search', {type, items});
     }
 
     /**
