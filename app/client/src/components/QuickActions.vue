@@ -38,7 +38,7 @@
                                 id: 'yt-toggle',
                                 title: "Enable/disable youtube",
                                 icon: 'movie',
-                                shortcuts: ['ctrl+y']
+                                shortcuts: ['ctrl+shift+y']
                             },
                             /*{
                                 id: 'yt-queue',
@@ -55,7 +55,7 @@
                                 id: 'yt-skip',
                                 title: "Skip current video",
                                 icon: 'skip_next',
-                                shortcuts: ['ctrl+right']
+                                shortcuts: ['ctrl+shift+right']
                             },
                         ]
                     },
@@ -106,7 +106,7 @@
                                 id: 'cursor-toggle',
                                 title: "Enable/disable cursors",
                                 icon: 'mouse',
-                                shortcuts: ['ctrl+c']
+                                shortcuts: ['ctrl+shift+c']
                             },
                             {
                                 id: 'help',
