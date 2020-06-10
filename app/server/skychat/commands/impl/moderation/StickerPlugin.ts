@@ -59,6 +59,7 @@ export class StickerPlugin extends Plugin {
      */
     private async handleStickerAdd(param: string, connection: Connection): Promise<void> {
         const [code, url] = param.split(' ');
+        console.log(code, url, param.split(' '));
         this.formatter.addSticker(code, url);
     }
 
