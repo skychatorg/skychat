@@ -9,7 +9,7 @@ export class HistoryClearPlugin extends Command {
 
     readonly aliases = ['hc'];
 
-    readonly minRight = 10;
+    readonly minRight = 30;
 
     readonly rules = {
         historyclear: {coolDown: 10000,},

@@ -25,6 +25,8 @@ export class MailPlugin extends Plugin {
         }
     };
 
+    readonly minRight = 30;
+
     private readonly transporter: Mail;
 
     constructor(room: Room) {

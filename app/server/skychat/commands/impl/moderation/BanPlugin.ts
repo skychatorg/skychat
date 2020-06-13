@@ -32,7 +32,7 @@ export class BanPlugin extends Plugin {
         [BanPlugin.BANLIST_COMMAND]: {minCount: 0, maxCount: 0,},
     };
 
-    readonly minRight = 30;
+    readonly minRight = 40;
 
     /**
      * List of banned ips

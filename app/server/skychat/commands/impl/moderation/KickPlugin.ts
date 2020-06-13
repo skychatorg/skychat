@@ -13,7 +13,7 @@ export class KickPlugin extends Plugin {
 
     readonly aliases = ['kick'];
 
-    readonly minRight = 100;
+    readonly minRight = 40;
 
     readonly rules = {
         kick: {
