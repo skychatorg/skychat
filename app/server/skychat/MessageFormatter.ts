@@ -71,10 +71,11 @@ export class MessageFormatter {
      * @param message
      */
     public replaceImages(message: string): string {
-        const matches = message.match(new RegExp(Config.LOCATION + '/uploads/([-\\/._a-zA-Z0-9]+)\\.(png|jpg|jpeg|gif)', 'g'));
+        let matches = message.match(new RegExp(Config.LOCATION + '/uploads/([-\\/._a-zA-Z0-9]+)\\.(png|jpg|jpeg|gif)', 'g'));
         if (! matches) {
             return message;
         }
+        matches = Array.from(new Set(matches));
         for (const imageUrl of matches) {
             const html = `<a class="skychat-image" href="${imageUrl}" target="_blank"><img src="${imageUrl}"></a>`;
             message = message.replace(new RegExp(imageUrl, 'g'), html);
