@@ -25,6 +25,7 @@ jobs:
     # Runs a set of commands using the runners shell
     - name: Install deps & setup project & build
       run: |
+        sudo apt update
         sudo apt install sqlite3
         sudo apt install nodejs
         npm i
