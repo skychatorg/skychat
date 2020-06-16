@@ -141,15 +141,21 @@ export class YoutubePlugin extends Plugin {
      * @param connection
      */
     private async handlePlay(param: string, connection: Connection): Promise<void> {
-        let id;
+        let id, start;
         let match;
         if (match = param.match(/v=([a-zA-Z0-9-_]+)/)) {
             id = match[1];
         } else {
             id = param;
         }
+        if (match = param.match(/(t|time_continue|start)=([0-9hms]+)/)) {
+            start = parseInt(match[2]) || 0;
+        } else {
+            start = 0;
+        }
         const video = await YoutubeHelper.getYoutubeVideoMeta(this.youtube, id);
-        this.storage.queue.push({user: connection.session.user, video});
+        const queueElement = {user: connection.session.user, video, start};
+        this.storage.queue.push(queueElement);
         this.shuffleQueue();
     }
 
@@ -175,7 +181,7 @@ export class YoutubePlugin extends Plugin {
             .map(item => item.contentDetails!.videoId as string);
         for (const videoId of videoIds) {
             const video = await YoutubeHelper.getYoutubeVideoMeta(this.youtube, videoId);
-            this.storage.queue.push({user: connection.session.user, video});
+            this.storage.queue.push({user: connection.session.user, video, start: 0});
         }
         this.shuffleQueue();
     }
@@ -218,7 +224,7 @@ export class YoutubePlugin extends Plugin {
             throw new Error('No result found for ' + param);
         }
         const video = await YoutubeHelper.getYoutubeVideoMeta(this.youtube, videoId);
-        this.storage.queue.push({user: connection.session.user, video});
+        this.storage.queue.push({user: connection.session.user, video, start: 0});
         this.shuffleQueue();
     }
 
@@ -327,7 +333,7 @@ export class YoutubePlugin extends Plugin {
         if (this.storage.currentVideo) {
 
             // If video has finished
-            if (new Date() > new Date(this.storage.currentVideo.startedDate.getTime() + this.storage.currentVideo.video.duration * 1000 + 2000)) {
+            if (new Date() > new Date(this.storage.currentVideo.startedDate.getTime() + (this.storage.currentVideo.video.duration - this.storage.currentVideo.start) * 1000 + 2000)) {
                 this.storage.currentVideo = null;
 
                 // If there is no more video to play, sync clients (this will deactive the player)
@@ -372,8 +378,9 @@ export class YoutubePlugin extends Plugin {
             enabled: UserController.getPluginData(broadcaster.session.user, this.name),
             user: this.storage.currentVideo.user.sanitized(),
             video: this.storage.currentVideo.video,
+            start: this.storage.currentVideo.start,
             startedDate: this.storage.currentVideo.startedDate.getTime() * 0.001,
-            cursor: Date.now() * 0.001 - this.storage.currentVideo.startedDate.getTime() * 0.001
+            cursor: Date.now() * 0.001 - this.storage.currentVideo.startedDate.getTime() * 0.001 + this.storage.currentVideo.start
         };
         broadcaster.send('yt-sync', syncObject);
     }

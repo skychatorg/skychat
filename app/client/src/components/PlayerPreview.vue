@@ -2,13 +2,15 @@
     <div class="youtube-preview" v-if="currentVideo">
         <div>
             <h3 class="preview-title">{{currentVideo.video.title}}</h3>
-            <div class="progress"><div class="progress-bar progress-bar-top" :class="'progress-bar-' + progressBarColor" :style="{'width': (100 * cursorPercent) + '%'}"></div></div>
+            <div class="progress"><div class="progress-bar progress-bar-top" :class="'custom-color-' + progressBarColor" :style="{'width': (100 * cursorPercent) + '%'}"></div></div>
             <div class="image-container">
-                <div class="progress-vertical"><div class="progress-bar progress-bar-left" :class="'progress-bar-' + progressBarColor" :style="{'height': (100 * cursorPercent) + '%'}"></div></div>
+                <div class="sliding-window up" :class="{['custom-color-' + progressBarColor]: true, closed: cursorPercent >= 1}"></div>
+                <div class="progress-vertical"><div class="progress-bar progress-bar-left" :class="'custom-color-' + progressBarColor" :style="{'height': (100 * cursorPercent) + '%'}"></div></div>
                 <img class="preview-thumb" :src="currentVideo.video.thumb">
-                <div class="progress-vertical"><div class="progress-bar progress-bar-right" :class="'progress-bar-' + progressBarColor" :style="{'height': (100 * cursorPercent) + '%'}"></div></div>
+                <div class="progress-vertical"><div class="progress-bar progress-bar-right" :class="'custom-color-' + progressBarColor" :style="{'height': (100 * cursorPercent) + '%'}"></div></div>
+                <div class="sliding-window down" :class="{['custom-color-' + progressBarColor]: true, closed: cursorPercent >= 1}"></div>
             </div>
-            <div class="progress"><div class="progress-bar progress-bar-bottom" :class="'progress-bar-' + progressBarColor" :style="{'width': (100 * cursorPercent) + '%'}"></div></div>
+            <div class="progress"><div class="progress-bar progress-bar-bottom" :class="'custom-color-' + progressBarColor" :style="{'width': (100 * cursorPercent) + '%'}"></div></div>
         </div>
     </div>
 </template>
@@ -25,7 +27,7 @@
         },
         mounted: function() {
             setInterval(this.updateCurrentDuration, 2000);
-            setInterval(this.updateProgressBarColor, 10 * 1000);
+            setInterval(this.updateProgressBarColor, 6 * 1000);
         },
         methods: {
             updateCurrentDuration: function() {
@@ -33,7 +35,7 @@
                     this.cursorPercent = 0;
                     return;
                 }
-                let pct = (new Date().getTime() / 1000 - this.currentVideo.startedDate) / this.currentVideo.video.duration;
+                let pct = (new Date().getTime() / 1000 - this.currentVideo.startedDate + this.currentVideo.start) / this.currentVideo.video.duration;
                 pct = Math.max(0, pct);
                 pct = Math.min(1, pct);
                 this.cursorPercent = pct;
@@ -75,6 +77,29 @@
             display: flex;
             height: 176px;
             width: 100%;
+            position: relative;
+
+            >.sliding-window {
+                width: 100%;
+                position: absolute;
+                left: 0;
+                height: 0;
+                -webkit-transition: all 1s ease-in-out;
+                -moz-transition: all 1s ease-in-out;
+                -ms-transition: all 1s ease-in-out;
+                -o-transition: all 1s ease-in-out;
+                transition: all 1s ease-in-out;
+
+                &.up {
+                    top: 0;
+                }
+                &.down {
+                    bottom: 0;
+                }
+                &.closed {
+                    height: 50%;
+                }
+            }
 
             >.progress-vertical {
                 flex-basis: 2px;
@@ -118,22 +143,22 @@
             }
         }
 
-        .progress-bar-white {
+        .custom-color-white {
             background-color: white;
         }
-        .progress-bar-red {
+        .custom-color-red {
             background-color: #ff8f8f;
         }
-        .progress-bar-cyan {
+        .custom-color-cyan {
             background-color: #8ecfff;
         }
-        .progress-bar-green {
+        .custom-color-green {
             background-color: #6ee067;
         }
-        .progress-bar-orange {
+        .custom-color-orange {
             background-color: #e0a067;
         }
-        .progress-bar-purple {
+        .custom-color-purple {
             background-color: #9b71b9;
         }
     }

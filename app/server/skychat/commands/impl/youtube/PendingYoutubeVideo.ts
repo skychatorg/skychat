@@ -14,6 +14,11 @@ export interface PendingYoutubeVideo {
     user: User;
 
     /**
+     * Shift from the start of the video, in seconds
+     */
+    start: number;
+
+    /**
      * The video details
      */
     video: YoutubeVideoMeta;

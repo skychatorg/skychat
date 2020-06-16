@@ -1,22 +1,13 @@
 import {SanitizedUser, User} from "../../../User";
 import {YoutubeVideoMeta} from "./YoutubeVideoMeta";
+import {PendingYoutubeVideo} from "./PendingYoutubeVideo";
 
 
 
 /**
  * A currently playing video
  */
-export interface CurrentYoutubeVideo {
-
-    /**
-     * The user that added the youtube video
-     */
-    user: User;
-
-    /**
-     * The video details
-     */
-    video: YoutubeVideoMeta;
+export interface CurrentYoutubeVideo extends PendingYoutubeVideo {
 
     /**
      * Date when the video has been started
@@ -44,6 +35,11 @@ export type SanitizedCurrentYoutubeVideo = {
      * Video meta
      */
     video: YoutubeVideoMeta,
+
+    /**
+     * Shift from the start of the video in seconds
+     */
+    start: number,
 
     /**
      * Date when the video started playing
