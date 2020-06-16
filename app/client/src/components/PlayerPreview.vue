@@ -33,7 +33,7 @@
                     this.cursorPercent = 0;
                     return;
                 }
-                let pct = (new Date().getTime() / 1000 - this.currentVideo.startedDate) / this.currentVideo.video.duration;
+                let pct = (new Date().getTime() / 1000 - this.currentVideo.startedDate + this.currentVideo.start) / this.currentVideo.video.duration;
                 pct = Math.max(0, pct);
                 pct = Math.min(1, pct);
                 this.cursorPercent = pct;
