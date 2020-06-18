@@ -1,6 +1,6 @@
 <template>
     <div class="youtube-preview" v-if="playerState">
-        <div>
+        <div class="current-video">
             <div class="progress"><div class="progress-bar progress-bar-top" :class="'custom-color-' + progressBarColor" :style="{'width': (100 * cursorPercent) + '%'}"></div></div>
             <div class="image-container">
                 <h3 class="preview-title">{{playerState.video.title}}</h3>
@@ -14,22 +14,25 @@
         </div>
         <div class="queue" v-show="nextVideos.length > 0">
             <div class="vertical-bar" :class="'custom-color-' + progressBarColor"></div>
-            <div v-for="video, videoIndex in nextVideos"
-                 class="video-in-queue">
-                <div class="image avatar">
-                    <div class="image-bubble" :style="'box-shadow: #' + progressBarColor +' 0 0 4px 0;'">
-                        <img data-v-193da69e="" :src="video.video.thumb">
+            <transition-group name="list" tag="div">
+                <div v-for="video, videoIndex in nextVideos"
+                     class="video-in-queue"
+                    :key="video.video.id">
+                    <div class="image avatar">
+                        <div class="image-bubble" :style="'box-shadow: #' + progressBarColor +' 0 0 4px 0;'">
+                            <img data-v-193da69e="" :src="video.video.thumb">
+                        </div>
+                    </div>
+                    <svg height="60" width="60">
+                        <circle cx="30" cy="30" r="25" fill="none" stroke="black"></circle>
+                        <circle cx="30" cy="30" r="25" :class="'custom-color-' + progressBarColor" :stroke-dashoffset="- (queueWaitDurations[videoIndex]) * 2 * Math.PI * 25"></circle>
+                    </svg>
+                    <div class="info">
+                        <div class="title">{{video.video.title}}</div>
+                        <div class="user">- {{video.user.username}}</div>
                     </div>
                 </div>
-                <svg height="60" width="60">
-                    <circle cx="30" cy="30" r="25" fill="none" stroke="black"></circle>
-                    <circle cx="30" cy="30" r="25" :class="'custom-color-' + progressBarColor" :stroke-dashoffset="- (queueWaitDurations[videoIndex]) * 2 * Math.PI * 25"></circle>
-                </svg>
-                <div class="info">
-                    <div class="title">{{video.video.title}}</div>
-                    <div class="user">- {{video.user.username}}</div>
-                </div>
-            </div>
+            </transition-group>
         </div>
     </div>
 </template>
@@ -116,7 +119,6 @@
         padding-right: 20px;
         padding-left: 6px;
         color: white;
-        position: relative;
 
         .preview-title {
             position: absolute;
@@ -136,6 +138,7 @@
             width: 100%;
             position: relative;
             overflow: hidden;
+            z-index: 1;
 
             >.sliding-window {
                 width: 100%;
@@ -234,19 +237,20 @@
             padding-right: 30px;
             padding-left: 30px;
             padding-bottom: 10px;
+            max-height: 260px;
 
             .vertical-bar {
                 position: absolute;
                 transition: all 1s ease-in-out;
                 width: 2px;
-                height: calc(100% - 15px);
+                height: calc(100% - 60px);
                 left: 55px;
             }
             .video-in-queue {
                 display: flex;
                 width: 100%;
                 height: 40px;
-                margin: 10px 0 10px 0;
+                margin: 20px 0 10px 0;
                 position: relative;
 
                 .image {
@@ -293,6 +297,17 @@
                     }
                 }
             }
+        }
+
+        .list-enter-active, .list-leave-active {
+            transition: all 1s;
+        }
+        .list-leave-to {
+            margin-top: -60px !important;
+            margin-bottom: 40px !important;
+        }
+        .list-enter {
+            opacity: 0;
         }
     }
 </style>
