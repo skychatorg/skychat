@@ -13,6 +13,7 @@
             <div class="progress"><div class="progress-bar progress-bar-bottom" :class="'custom-color-' + progressBarColor" :style="{'width': (100 * cursorPercent) + '%'}"></div></div>
         </div>
         <div class="queue">
+            <div class="vertical-bar" :class="'custom-color-' + progressBarColor"></div>
             <div v-for="video, videoIndex in nextVideos"
                  class="video-in-queue">
                 <div class="image avatar">
@@ -229,7 +230,15 @@
             flex-direction: column;
             margin-right: 30px;
             margin-left: 30px;
+            position: relative;
 
+            .vertical-bar {
+                position: absolute;
+                transition: all 1s ease-in-out;
+                width: 2px;
+                height: 100%;
+                left: 25px;
+            }
             .video-in-queue {
                 display: flex;
                 width: 100%;
@@ -257,7 +266,7 @@
                         stroke-width: 2px;
                         stroke-dasharray: 1000;
                         transform-origin: center center;
-                        transform: rotate(-90deg);
+                        transform: rotate(-85deg);
                         animation: rotate 60s linear infinite;
                     }
 
