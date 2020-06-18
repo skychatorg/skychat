@@ -13,7 +13,7 @@
             <div class="progress"><div class="progress-bar progress-bar-bottom" :class="'custom-color-' + progressBarColor" :style="{'width': (100 * cursorPercent) + '%'}"></div></div>
         </div>
         <div class="queue">
-            <div v-for="video in playerState.queue"
+            <div v-for="video in nextVideos"
                  class="video-in-queue">
                 <div class="image avatar">
                     <div class="image-bubble" style="box-shadow: rgb(255, 255, 255) 0 0 4px 1px;">
@@ -68,6 +68,9 @@
             playerState: function() {
                 return this.$store.state.playerState;
             },
+            nextVideos: function() {
+                return this.playerState.queue.slice(0, 4);
+            }
         }
     });
 </script>
