@@ -1,4 +1,4 @@
-import {User} from "../../../User";
+import {SanitizedUser, User} from "../../../User";
 import {YoutubeVideoMeta} from "./YoutubeVideoMeta";
 
 
@@ -12,6 +12,25 @@ export interface PendingYoutubeVideo {
      * The user that added the youtube video
      */
     user: User;
+
+    /**
+     * Shift from the start of the video, in seconds
+     */
+    start: number;
+
+    /**
+     * The video details
+     */
+    video: YoutubeVideoMeta;
+}
+
+
+export interface SanitizedPendingYoutubeVideo {
+
+    /**
+     * The user that added the youtube video
+     */
+    user: SanitizedUser;
 
     /**
      * Shift from the start of the video, in seconds
