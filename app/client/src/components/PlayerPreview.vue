@@ -13,15 +13,21 @@
             <div class="progress"><div class="progress-bar progress-bar-bottom" :class="'custom-color-' + progressBarColor" :style="{'width': (100 * cursorPercent) + '%'}"></div></div>
         </div>
         <div class="queue">
-            <div v-for="video in nextVideos"
+            <div v-for="video, videoIndex in nextVideos"
                  class="video-in-queue">
                 <div class="image avatar">
-                    <div class="image-bubble" style="box-shadow: rgb(255, 255, 255) 0 0 4px 1px;">
+                    <div class="image-bubble" :style="'box-shadow: #' + progressBarColor +' 0 0 4px 0;'">
                         <img data-v-193da69e="" :src="video.video.thumb">
                     </div>
                 </div>
+                <svg height="60" width="60">
+                    <circle cx="30" cy="30" r="25" fill="none" stroke="black"></circle>
+                    <circle cx="30" cy="30" r="25" :class="'custom-color-' + progressBarColor" :stroke-dashoffset="- (queueWaitDurations[videoIndex]) * 125"></circle>
+                </svg>
                 <div class="info">
-                    <div class="title">{{video.video.title}}</div>
+                    <div class="title">
+                        {{video.video.title}}
+                    </div>
                     <div class="user">- {{video.user.username}}</div>
                 </div>
             </div>
@@ -36,14 +42,43 @@
         data: function() {
             return {
                 cursorPercent: 0,
-                progressBarColor: 'white'
+                progressBarColor: 'ffffff',
+                queueWaitDurations: []
             }
         },
         mounted: function() {
+            this.updateCurrentDuration();
+            this.updateQueueWaitDurations();
+            this.updateProgressBarColor();
             setInterval(this.updateCurrentDuration, 2000);
+            setInterval(this.updateQueueWaitDurations, 2000);
             setInterval(this.updateProgressBarColor, 6 * 1000);
         },
+        watch: {
+            'nextVideos': {
+                deep: true,
+                handler: function() {
+                    this.updateQueueWaitDurations();
+                }
+            }
+        },
         methods: {
+            updateQueueWaitDurations: function() {
+                let waitDuration = 0;
+                if (this.playerState && this.playerState.video) {
+                    waitDuration += this.playerState.video.duration - (new Date().getTime() / 1000 - this.playerState.startedDate);
+                }
+                let waitDurations = [];
+                for (let videoIndex = 0; videoIndex < this.nextVideos.length; ++ videoIndex) {
+                    const video = this.nextVideos[videoIndex];
+                    waitDurations.push(waitDuration);
+                    if (videoIndex < this.nextVideos.length - 1) {
+                        waitDuration += video.video.duration - video.start;
+                    }
+                }
+                waitDurations = waitDurations.map(duration => Math.max(0, duration / waitDuration));
+                this.queueWaitDurations = waitDurations;
+            },
             updateCurrentDuration: function() {
                 if (! this.playerState) {
                     this.cursorPercent = 0;
@@ -58,7 +93,7 @@
                 if (! this.playerState) {
                     return;
                 }
-                const colors = ['white', 'red', 'cyan', 'green', 'orange', 'purple'];
+                const colors = ['ffffff', 'ff8f8f', '8ecfff', '6ee067', 'e0a067', '9b71b9'];
                 const indexOf = colors.indexOf(this.progressBarColor);
                 const newIndex = (indexOf + 1) % colors.length;
                 this.progressBarColor = colors[newIndex];
@@ -69,7 +104,11 @@
                 return this.$store.state.playerState;
             },
             nextVideos: function() {
-                return this.playerState.queue.slice(0, 4);
+                if (this.playerState) {
+                    return this.playerState.queue.slice(0, 4);
+                } else {
+                    return [];
+                }
             }
         }
     });
@@ -160,23 +199,29 @@
             }
         }
 
-        .custom-color-white {
+        .custom-color-ffffff {
             background-color: white;
+            stroke: white;
         }
-        .custom-color-red {
+        .custom-color-ff8f8f {
             background-color: #ff8f8f;
+            stroke: #ff8f8f;
         }
-        .custom-color-cyan {
+        .custom-color-8ecfff {
             background-color: #8ecfff;
+            stroke: #8ecfff;
         }
-        .custom-color-green {
+        .custom-color-6ee067 {
             background-color: #6ee067;
+            stroke: #6ee067;
         }
-        .custom-color-orange {
+        .custom-color-e0a067 {
             background-color: #e0a067;
+            stroke: #e0a067;
         }
-        .custom-color-purple {
+        .custom-color-9b71b9 {
             background-color: #9b71b9;
+            stroke: #9b71b9;
         }
 
         .queue {
@@ -189,12 +234,37 @@
                 display: flex;
                 width: 100%;
                 height: 40px;
-                margin: 10px 0 0 0;
+                margin: 10px 0 10px 0;
+                position: relative;
 
                 .image {
-                    width: 40px;
-                    height: 40px;
+                    width: 50px;
+                    height: 50px;
                     display: flex;
+
+                    .image-bubble {
+                        transition: all 1s ease-in-out;
+                    }
+                }
+                svg {
+                    position: absolute;
+                    top: -5px;
+                    left: -5px;
+
+                    circle {
+                        fill: none;
+                        transition: all 1s ease-in-out;
+                        stroke-width: 2px;
+                        stroke-dasharray: 1000;
+                        transform-origin: center center;
+                        transform: rotate(-90deg);
+                        animation: rotate 60s linear infinite;
+                    }
+
+                    @keyframes rotate {
+                        to {
+                        }
+                    }
                 }
                 .info {
                     width: 0;
