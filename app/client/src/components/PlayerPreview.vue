@@ -1,9 +1,9 @@
 <template>
     <div class="youtube-preview" v-if="playerState">
         <div>
-            <h3 class="preview-title">{{playerState.video.title}}</h3>
             <div class="progress"><div class="progress-bar progress-bar-top" :class="'custom-color-' + progressBarColor" :style="{'width': (100 * cursorPercent) + '%'}"></div></div>
             <div class="image-container">
+                <h3 class="preview-title">{{playerState.video.title}}</h3>
                 <div class="sliding-window up" :class="{['custom-color-' + progressBarColor]: true, closed: cursorPercent >= 1}"></div>
                 <div class="progress-vertical"><div class="progress-bar progress-bar-left" :class="'custom-color-' + progressBarColor" :style="{'height': (100 * cursorPercent) + '%'}"></div></div>
                 <img class="preview-thumb" :src="playerState.video.thumb">
@@ -12,7 +12,7 @@
             </div>
             <div class="progress"><div class="progress-bar progress-bar-bottom" :class="'custom-color-' + progressBarColor" :style="{'width': (100 * cursorPercent) + '%'}"></div></div>
         </div>
-        <div class="queue">
+        <div class="queue" v-show="nextVideos.length > 0">
             <div class="vertical-bar" :class="'custom-color-' + progressBarColor"></div>
             <div v-for="video, videoIndex in nextVideos"
                  class="video-in-queue">
@@ -23,12 +23,10 @@
                 </div>
                 <svg height="60" width="60">
                     <circle cx="30" cy="30" r="25" fill="none" stroke="black"></circle>
-                    <circle cx="30" cy="30" r="25" :class="'custom-color-' + progressBarColor" :stroke-dashoffset="- (queueWaitDurations[videoIndex]) * 125"></circle>
+                    <circle cx="30" cy="30" r="25" :class="'custom-color-' + progressBarColor" :stroke-dashoffset="- (queueWaitDurations[videoIndex]) * 2 * Math.PI * 25"></circle>
                 </svg>
                 <div class="info">
-                    <div class="title">
-                        {{video.video.title}}
-                    </div>
+                    <div class="title">{{video.video.title}}</div>
                     <div class="user">- {{video.user.username}}</div>
                 </div>
             </div>
@@ -70,12 +68,9 @@
                     waitDuration += this.playerState.video.duration - (new Date().getTime() / 1000 - this.playerState.startedDate);
                 }
                 let waitDurations = [];
-                for (let videoIndex = 0; videoIndex < this.nextVideos.length; ++ videoIndex) {
-                    const video = this.nextVideos[videoIndex];
+                for (const video of this.nextVideos) {
                     waitDurations.push(waitDuration);
-                    if (videoIndex < this.nextVideos.length - 1) {
-                        waitDuration += video.video.duration - video.start;
-                    }
+                    waitDuration += video.video.duration - video.start;
                 }
                 waitDurations = waitDurations.map(duration => Math.max(0, duration / waitDuration));
                 this.queueWaitDurations = waitDurations;
@@ -121,13 +116,18 @@
         padding-right: 20px;
         padding-left: 6px;
         color: white;
+        position: relative;
 
         .preview-title {
+            position: absolute;
+            left: 10px;
+            top: 3px;
             white-space: nowrap;
             overflow: hidden;
             -ms-text-overflow: ellipsis;
             text-overflow: ellipsis;
             margin-bottom: 2px;
+            width: 100%;
         }
 
         .image-container {
@@ -135,6 +135,7 @@
             height: 176px;
             width: 100%;
             position: relative;
+            overflow: hidden;
 
             >.sliding-window {
                 width: 100%;
@@ -228,16 +229,18 @@
         .queue {
             display: flex;
             flex-direction: column;
-            margin-right: 30px;
-            margin-left: 30px;
             position: relative;
+            background: #2b2b2f;
+            padding-right: 30px;
+            padding-left: 30px;
+            padding-bottom: 10px;
 
             .vertical-bar {
                 position: absolute;
                 transition: all 1s ease-in-out;
                 width: 2px;
-                height: 100%;
-                left: 25px;
+                height: calc(100% - 15px);
+                left: 55px;
             }
             .video-in-queue {
                 display: flex;
