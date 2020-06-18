@@ -9,7 +9,6 @@ import {Config} from "../../../Config";
 import {Message} from "../../../Message";
 import {UserController} from "../../../UserController";
 import {PendingYoutubeVideo} from "./PendingYoutubeVideo";
-import {YoutubeVideoMeta} from "./YoutubeVideoMeta";
 import {CurrentYoutubeVideo, SyncPlayerStateObject} from "./CurrentYoutubeVideo";
 import {YoutubeHelper} from "./YoutubeHelper";
 import {PollPlugin} from "../poll/PollPlugin";

@@ -19,21 +19,22 @@
             }
         },
         watch: {
-            currentVideo: function() {
-                if (! this.currentVideo || ! this.currentVideo.enabled) {
+            playerState: function() {
+                console.log('prout', this.playerState);
+                if (! this.playerState || ! this.playerState.enabled) {
                     this.src = '';
                     return;
                 }
-                let src = 'https://www.youtube.com/embed/' + this.currentVideo.video.id;
+                let src = 'https://www.youtube.com/embed/' + this.playerState.video.id;
                 src += '?autoplay=1';
                 src += '&origin=' + document.location.origin;
-                src += '&start=' + parseInt(this.currentVideo.cursor);
+                src += '&start=' + parseInt(this.playerState.cursor);
                 this.src = src;
             }
         },
         computed: {
-            currentVideo: function() {
-                return this.$store.state.currentVideo;
+            playerState: function() {
+                return this.$store.state.playerState;
             }
         }
     });

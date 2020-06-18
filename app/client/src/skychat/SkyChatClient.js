@@ -253,10 +253,10 @@ export class SkyChatClient extends EventEmitter {
 
     /**
      *
-     * @param video
+     * @param playerState
      */
-    onYtSync(video) {
-        this.store.commit('SET_CURRENT_VIDEO', video);
+    onYtSync(playerState) {
+        this.store.commit('SET_PLAYER_STATE', playerState);
     }
 
     /**
