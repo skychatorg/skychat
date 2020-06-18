@@ -1,6 +1,6 @@
 <template>
     <div class="messages">
-        <player class="player" v-show="currentVideo && currentVideo.enabled"/>
+        <player class="player" v-show="playerState && playerState.enabled"/>
         <div class="messages-feed scrollbar" ref="messages" @scroll="onScroll">
             <message v-for="message in messages"
                      @select="$emit('select-message', message)"
@@ -77,8 +77,8 @@
                 }
                 return this.$store.state.messages;
             },
-            currentVideo: function() {
-                return this.$store.state.currentVideo;
+            playerState: function() {
+                return this.$store.state.playerState;
             },
         }
     });

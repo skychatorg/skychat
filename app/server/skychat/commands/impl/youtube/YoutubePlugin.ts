@@ -9,8 +9,7 @@ import {Config} from "../../../Config";
 import {Message} from "../../../Message";
 import {UserController} from "../../../UserController";
 import {PendingYoutubeVideo} from "./PendingYoutubeVideo";
-import {YoutubeVideoMeta} from "./YoutubeVideoMeta";
-import {CurrentYoutubeVideo, SanitizedCurrentYoutubeVideo} from "./CurrentYoutubeVideo";
+import {CurrentYoutubeVideo, SyncPlayerStateObject} from "./CurrentYoutubeVideo";
 import {YoutubeHelper} from "./YoutubeHelper";
 import {PollPlugin} from "../poll/PollPlugin";
 
@@ -131,6 +130,7 @@ export class YoutubePlugin extends Plugin {
                     throw new Error('You need to be OP to flush the youtube queue');
                 }
                 this.storage.queue.splice(0);
+                this.sync(this.room);
                 break;
         }
     }
@@ -314,6 +314,7 @@ export class YoutubePlugin extends Plugin {
                 remainingCount --;
             }
         }
+        this.sync(this.room);
     }
 
     /**
@@ -374,13 +375,20 @@ export class YoutubePlugin extends Plugin {
             broadcaster.send('yt-sync', null);
             return;
         }
-        const syncObject: SanitizedCurrentYoutubeVideo = {
+        const syncObject: SyncPlayerStateObject = {
             enabled: UserController.getPluginData(broadcaster.session.user, this.name),
             user: this.storage.currentVideo.user.sanitized(),
             video: this.storage.currentVideo.video,
             start: this.storage.currentVideo.start,
             startedDate: this.storage.currentVideo.startedDate.getTime() * 0.001,
-            cursor: Date.now() * 0.001 - this.storage.currentVideo.startedDate.getTime() * 0.001 + this.storage.currentVideo.start
+            cursor: Date.now() * 0.001 - this.storage.currentVideo.startedDate.getTime() * 0.001 + this.storage.currentVideo.start,
+            queue: this.storage.queue.map(pendingVideo => {
+                return {
+                    user: pendingVideo.user.sanitized(),
+                    start: pendingVideo.start,
+                    video: pendingVideo.video
+                };
+            })
         };
         broadcaster.send('yt-sync', syncObject);
     }

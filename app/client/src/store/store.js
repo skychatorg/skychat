@@ -32,7 +32,7 @@ const store = {
         cursors: {},
         messages: [],
         privateMessages: {},
-        currentVideo: null,
+        playerState: null,
         typingList: [],
         polls: [],
         pollResult: null,
@@ -107,8 +107,8 @@ const store = {
             }
             Vue.set(state.messages, oldMessageIndex, message);
         },
-        SET_CURRENT_VIDEO(state, currentVideo) {
-            state.currentVideo = currentVideo;
+        SET_PLAYER_STATE(state, playerState) {
+            state.playerState = playerState;
         },
         SET_POLLS(state, polls) {
             if (polls.length > state.polls.length) {

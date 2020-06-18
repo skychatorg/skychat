@@ -15,25 +15,31 @@
     export default Vue.extend({
         data: function() {
             return {
-                src: ''
+                src: '',
+                previousPlayedId: null
             }
         },
         watch: {
-            currentVideo: function() {
-                if (! this.currentVideo || ! this.currentVideo.enabled) {
+            playerState: function() {
+                if (! this.playerState || ! this.playerState.enabled) {
                     this.src = '';
+                    this.previousPlayedId = null;
                     return;
                 }
-                let src = 'https://www.youtube.com/embed/' + this.currentVideo.video.id;
+                if (this.playerState.video.id === this.previousPlayedId) {
+                    return;
+                }
+                let src = 'https://www.youtube.com/embed/' + this.playerState.video.id;
                 src += '?autoplay=1';
                 src += '&origin=' + document.location.origin;
-                src += '&start=' + parseInt(this.currentVideo.cursor);
+                src += '&start=' + parseInt(this.playerState.cursor);
                 this.src = src;
+                this.previousPlayedId = this.playerState.video.id;
             }
         },
         computed: {
-            currentVideo: function() {
-                return this.$store.state.currentVideo;
+            playerState: function() {
+                return this.$store.state.playerState;
             }
         }
     });

@@ -1,16 +1,30 @@
 <template>
-    <div class="youtube-preview" v-if="currentVideo">
+    <div class="youtube-preview" v-if="playerState">
         <div>
-            <h3 class="preview-title">{{currentVideo.video.title}}</h3>
+            <h3 class="preview-title">{{playerState.video.title}}</h3>
             <div class="progress"><div class="progress-bar progress-bar-top" :class="'custom-color-' + progressBarColor" :style="{'width': (100 * cursorPercent) + '%'}"></div></div>
             <div class="image-container">
                 <div class="sliding-window up" :class="{['custom-color-' + progressBarColor]: true, closed: cursorPercent >= 1}"></div>
                 <div class="progress-vertical"><div class="progress-bar progress-bar-left" :class="'custom-color-' + progressBarColor" :style="{'height': (100 * cursorPercent) + '%'}"></div></div>
-                <img class="preview-thumb" :src="currentVideo.video.thumb">
+                <img class="preview-thumb" :src="playerState.video.thumb">
                 <div class="progress-vertical"><div class="progress-bar progress-bar-right" :class="'custom-color-' + progressBarColor" :style="{'height': (100 * cursorPercent) + '%'}"></div></div>
                 <div class="sliding-window down" :class="{['custom-color-' + progressBarColor]: true, closed: cursorPercent >= 1}"></div>
             </div>
             <div class="progress"><div class="progress-bar progress-bar-bottom" :class="'custom-color-' + progressBarColor" :style="{'width': (100 * cursorPercent) + '%'}"></div></div>
+        </div>
+        <div class="queue">
+            <div v-for="video in nextVideos"
+                 class="video-in-queue">
+                <div class="image avatar">
+                    <div class="image-bubble" style="box-shadow: rgb(255, 255, 255) 0 0 4px 1px;">
+                        <img data-v-193da69e="" :src="video.video.thumb">
+                    </div>
+                </div>
+                <div class="info">
+                    <div class="title">{{video.video.title}}</div>
+                    <div class="user">- {{video.user.username}}</div>
+                </div>
+            </div>
         </div>
     </div>
 </template>
@@ -31,17 +45,17 @@
         },
         methods: {
             updateCurrentDuration: function() {
-                if (! this.currentVideo) {
+                if (! this.playerState) {
                     this.cursorPercent = 0;
                     return;
                 }
-                let pct = (new Date().getTime() / 1000 - this.currentVideo.startedDate + this.currentVideo.start) / this.currentVideo.video.duration;
+                let pct = (new Date().getTime() / 1000 - this.playerState.startedDate + this.playerState.start) / this.playerState.video.duration;
                 pct = Math.max(0, pct);
                 pct = Math.min(1, pct);
                 this.cursorPercent = pct;
             },
             updateProgressBarColor: function() {
-                if (! this.currentVideo) {
+                if (! this.playerState) {
                     return;
                 }
                 const colors = ['white', 'red', 'cyan', 'green', 'orange', 'purple'];
@@ -51,9 +65,12 @@
             }
         },
         computed: {
-            currentVideo: function() {
-                return this.$store.state.currentVideo;
+            playerState: function() {
+                return this.$store.state.playerState;
             },
+            nextVideos: function() {
+                return this.playerState.queue.slice(0, 4);
+            }
         }
     });
 </script>
@@ -160,6 +177,40 @@
         }
         .custom-color-purple {
             background-color: #9b71b9;
+        }
+
+        .queue {
+            display: flex;
+            flex-direction: column;
+            margin-right: 30px;
+            margin-left: 30px;
+
+            .video-in-queue {
+                display: flex;
+                width: 100%;
+                height: 40px;
+                margin: 10px 0 0 0;
+
+                .image {
+                    width: 40px;
+                    height: 40px;
+                    display: flex;
+                }
+                .info {
+                    width: 0;
+                    flex-grow: 1;
+                    display: flex;
+                    flex-direction: column;
+                    padding: 5px;
+                    margin-left: 6px;
+
+                    >.title {
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                    }
+                }
+            }
         }
     }
 </style>
