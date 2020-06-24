@@ -9,11 +9,11 @@ if [[ ! -e .env.json ]]; then
 fi
 
 # Initialize stickers.json
-if [[ ! -e .env.json ]]; then
+if [[ ! -e stickers.json ]]; then
     cp stickers.json.template stickers.json;
 fi
 
 # Initialize config.json
-if [[ ! -e .env.json ]]; then
+if [[ ! -e config.json ]]; then
     cp config.json.template config.json;
 fi
