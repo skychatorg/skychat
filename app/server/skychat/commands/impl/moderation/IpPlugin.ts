@@ -5,6 +5,7 @@ import {Session} from "../../../Session";
 import {Message} from "../../../Message";
 import * as striptags from "striptags";
 import {UserController} from "../../../UserController";
+import * as geoip from "geoip-lite";
 
 
 export class IpPlugin extends Command {
@@ -49,10 +50,13 @@ export class IpPlugin extends Command {
                 <th>origin</th>
                 <th>browser</th>
                 <th>ip</th>
+                <th>geoip</th>
             </tr>
         `;
         for (const connection of connections) {
             const roomId = connection.room ? connection.room.id : 'none';
+            const geoIp: geoip.Lookup | null = geoip.lookup(connection.ip);
+            const geoIpLink = geoIp ? `https://www.google.com/maps/place/${geoIp.ll[0]},%20${geoIp.ll[1]}` : ``;
             content += `
                 <tr>
                     <td>${roomId}</td>
@@ -60,6 +64,7 @@ export class IpPlugin extends Command {
                     <td>${connection.origin}</td>
                     <td>${connection.userAgent}</td>
                     <td>${connection.ip}</td>
+                    <td>${geoIp ? `<a class="skychat-link" href="${geoIpLink}" rel="nofollow" target="_blank">${geoIp.country + ' / ' + geoIp.city}</a>` : ''}</td>
                 </tr>`;
         }
         content += `</table>`;
