@@ -56,6 +56,7 @@ export class IpPlugin extends Command {
         for (const connection of connections) {
             const roomId = connection.room ? connection.room.id : 'none';
             const geoIp: geoip.Lookup | null = geoip.lookup(connection.ip);
+            const geoIpLink = geoIp ? `https://www.google.com/maps/place/${geoIp.ll[0]},%20${geoIp.ll[1]}` : ``;
             content += `
                 <tr>
                     <td>${roomId}</td>
@@ -63,7 +64,7 @@ export class IpPlugin extends Command {
                     <td>${connection.origin}</td>
                     <td>${connection.userAgent}</td>
                     <td>${connection.ip}</td>
-                    <td>${geoIp ? geoIp.country + ' / ' + geoIp.region + ' / ' + geoIp.city : ''}</td>
+                    <td>${geoIp ? `<a class="skychat-link" href="${geoIpLink}" rel="nofollow" target="_blank">${geoIp.country + ' / ' + geoIp.city}</a>` : ''}</td>
                 </tr>`;
         }
         content += `</table>`;
