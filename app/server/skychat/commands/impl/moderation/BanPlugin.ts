@@ -6,23 +6,31 @@ import {Message} from "../../../Message";
 import {UserController} from "../../../UserController";
 import * as striptags from "striptags";
 import {MessageFormatter} from "../../../MessageFormatter";
+import {PollPlugin} from "../poll/PollPlugin";
 
 
 export class BanPlugin extends Plugin {
 
     public static readonly BAN_COMMAND: string = 'ban';
+    public static readonly VOTEBAN_COMMAND: string = 'voteban';
     public static readonly UNBAN_COMMAND: string = 'unban';
     public static readonly BANLIST_COMMAND: string = 'banlist';
 
     readonly name = BanPlugin.BAN_COMMAND;
 
-    readonly aliases = [BanPlugin.UNBAN_COMMAND, BanPlugin.BANLIST_COMMAND];
+    readonly aliases = [BanPlugin.VOTEBAN_COMMAND, BanPlugin.UNBAN_COMMAND, BanPlugin.BANLIST_COMMAND];
 
     readonly rules = {
         [BanPlugin.BAN_COMMAND]: {
             minCount: 2,
             maxCount: 2,
             params: [{name: "username", pattern: User.USERNAME_REGEXP}, {name: "duration (s)", pattern: /^\d+$/}]
+        },
+        [BanPlugin.VOTEBAN_COMMAND]: {
+            coolDown: 100 * 1000,
+            minCount: 1,
+            maxCount: 1,
+            params: [{name: "username", pattern: User.USERNAME_REGEXP}]
         },
         [BanPlugin.UNBAN_COMMAND]: {
             minCount: 1,
@@ -32,7 +40,7 @@ export class BanPlugin extends Plugin {
         [BanPlugin.BANLIST_COMMAND]: {minCount: 0, maxCount: 0,},
     };
 
-    readonly minRight = 40;
+    readonly minRight = 20;
 
     /**
      * List of banned ips
@@ -46,14 +54,27 @@ export class BanPlugin extends Plugin {
         switch (alias) {
 
             case BanPlugin.BAN_COMMAND:
+                if (connection.session.user.right < 30) {
+                    throw new Error(`You don't have the right to use this command`);
+                }
                 await this.handleBan(param, connection);
                 break;
 
+            case BanPlugin.VOTEBAN_COMMAND:
+                await this.handleVoteBan(param, connection);
+                break;
+
             case BanPlugin.UNBAN_COMMAND:
+                if (connection.session.user.right < 30) {
+                    throw new Error(`You don't have the right to use this command`);
+                }
                 await this.handleUnban(param, connection);
                 break;
 
             case BanPlugin.BANLIST_COMMAND:
+                if (connection.session.user.right < 30) {
+                    throw new Error(`You don't have the right to use this command`);
+                }
                 await this.handleBanList(param, connection);
                 break;
         }
@@ -86,6 +107,36 @@ export class BanPlugin extends Plugin {
             connection.close(4403, "You have been banned");
         }
         connection.send('message', new Message('User has been banned', null, UserController.getNeutralUser(), null).sanitized());
+    }
+
+    async handleVoteBan(param: string, connection: Connection) {
+        const identifier = Session.autocompleteIdentifier(param.split(' ')[0]);
+        const duration = 60 * 60;
+        const session = Session.getSessionByIdentifier(identifier);
+        if (! session) {
+            throw new Error('User ' + identifier + ' does not exist');
+        }
+
+        // Vote ban
+        const pollPlugin = this.room.getPlugin('poll') as PollPlugin;
+        const poll = await pollPlugin.poll('Ban ' + identifier, 'Poll by ' + connection.session.user.username, {
+            timeout: 20 * 1000,
+            defaultValue: false
+        });
+        if (! poll.getResult()) {
+            return;
+        }
+
+        const banEntry = {source: session.identifier, until: new Date(Date.now() + duration * 1000).getTime()};
+        this.storage.banned['username:' + session.identifier] = banEntry;
+        for (const connection of session.connections) {
+            this.storage.banned['ip:' + connection.ip] = banEntry;
+        }
+        this.syncStorage();
+        for (const connection of session.connections) {
+            connection.close(4403, "You have been banned");
+        }
+        this.room.send('message', new Message('User has been banned', null, UserController.getNeutralUser(), null).sanitized());
     }
 
     async handleUnban(param: string, connection: Connection) {
