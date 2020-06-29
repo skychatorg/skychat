@@ -32,6 +32,7 @@ import {BanPlugin} from "./impl/moderation/BanPlugin";
 import {UsurpPlugin} from "./impl/moderation/UsurpPlugin";
 import {AccountPlugin} from "./impl/core/AccountPlugin";
 import {MailPlugin} from "./impl/core/MailPlugin";
+import {TrackerPlugin} from "./impl/moderation/TrackerPlugin";
 
 
 /**
@@ -70,6 +71,7 @@ export class CommandManager {
         SetRightCommand,
         ShopPlugin,
         StickerPlugin,
+        TrackerPlugin,
         UsurpPlugin,
         PollPlugin,
         TypingListPlugin,
