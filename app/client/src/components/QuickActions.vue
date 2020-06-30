@@ -55,7 +55,7 @@
                                 id: 'yt-skip',
                                 title: "Skip current video",
                                 icon: 'skip_next',
-                                shortcuts: ['ctrl+shift+right']
+                                shortcuts: ['ctrl+shift+delete']
                             },
                         ]
                     },
