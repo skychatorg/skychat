@@ -65,5 +65,5 @@ setInterval(() => {
     const newPosition = (indexOf + 1) % chars.length;
     document.title = chars[newPosition] + ' ' + store.state.documentTitle;
 
-}, 300);
+}, 1000);
 
