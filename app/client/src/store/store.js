@@ -28,6 +28,7 @@ const store = {
                 }
             }
         },
+        currentRoom: null,
         connectedList: [],
         cursors: {},
         messages: [],
@@ -66,6 +67,9 @@ const store = {
         },
         SET_CONNECTION_STATE(state, connectionState) {
             state.connectionState = connectionState;
+        },
+        SET_CURRENT_ROOM(state, currentRoom) {
+            state.currentRoom = currentRoom;
         },
         SET_USER(state, user) {
             state.user = user;

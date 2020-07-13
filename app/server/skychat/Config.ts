@@ -3,7 +3,8 @@ import * as Mail from "nodemailer/lib/mailer";
 
 
 export type Preferences = {
-    guestNames: string[]
+    fakeMessages: string[],
+    guestNames: string[],
 }
 
 export class Config {

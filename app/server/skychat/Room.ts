@@ -123,7 +123,7 @@ export class Room implements IBroadcaster {
             connection.room.detachConnection(connection);
         }
         // Attach the connection to this room
-        connection.room = this;
+        connection.setRoom(this);
         this.connections.push(connection);
         await this.executeConnectionJoinedRoom(connection);
     }
@@ -176,9 +176,6 @@ export class Room implements IBroadcaster {
      * @param connection
      */
     public async executeConnectionAuthenticated(connection: Connection): Promise<void> {
-        if (connection.session.user.right >= 10) {
-            this.sendHistory(connection);
-        }
         for (const plugin of this.plugins) {
             await plugin.onConnectionAuthenticated(connection);
         }
