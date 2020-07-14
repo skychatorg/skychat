@@ -33,6 +33,11 @@
                     }).show();
                     this.$emit('gotoroom');
                 }
+            },
+            currentRoom: function() {
+                if (this.currentRoom !== null) {
+                    this.$emit('gotoroom');
+                }
             }
         },
         methods: {
@@ -43,12 +48,15 @@
                 this.$client.register(this.username, this.password);
             },
             onGuestLogin: function() {
-                this.$emit('gotoroom');
+                this.$client.joinRoom(0);
             }
         },
         computed: {
             user: function() {
                 return this.$store.state.user;
+            },
+            currentRoom: function() {
+                return this.$store.state.currentRoom;
             }
         }
     });

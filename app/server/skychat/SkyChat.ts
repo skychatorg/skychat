@@ -68,6 +68,11 @@ export class SkyChat {
                     signature: new iof.ValueTypeFilter('string'),
                 }));
 
+                // Join a room
+                this.server.registerEvent('join-room', this.onJoinRoom.bind(this), new iof.ObjectFilter({
+                    roomId: new iof.NumberFilter(0, 0, false),
+                }));
+
                 // On message sent
                 this.server.registerEvent('message', this.onMessage.bind(this), 'string');
             });
@@ -137,7 +142,7 @@ export class SkyChat {
      * @param connection
      */
     private async onConnectionCreated(connection: Connection): Promise<void> {
-        await this.room.attachConnection(connection);
+
     }
 
     private async onRegister(payload: any, connection: Connection): Promise<void> {
@@ -159,6 +164,10 @@ export class SkyChat {
         }
     }
 
+    private async onJoinRoom(payload: {roomId: number}, connection: Connection): Promise<void> {
+        await this.room.attachConnection(connection);
+    }
+
     /**
      * When an auth attempt is completed
      * @param user
@@ -175,9 +184,8 @@ export class SkyChat {
             connection.session.setUser(user);
         }
         connection.send('auth-token', UserController.getAuthToken(user.id));
-        if (connection.room) {
-            await connection.room.executeConnectionAuthenticated(connection);
-        }
+        await this.room.attachConnection(connection);
+        await this.room.executeConnectionAuthenticated(connection);
     }
 
     /**

@@ -33,6 +33,7 @@ import {UsurpPlugin} from "./impl/moderation/UsurpPlugin";
 import {AccountPlugin} from "./impl/core/AccountPlugin";
 import {MailPlugin} from "./impl/core/MailPlugin";
 import {TrackerPlugin} from "./impl/moderation/TrackerPlugin";
+import {MessageHistoryPlugin} from "./impl/core/MessageHistoryPlugin";
 
 
 /**
@@ -58,6 +59,7 @@ export class CommandManager {
         KickPlugin,
         MessageCommand,
         MessageEditCommand,
+        MessageHistoryPlugin,
         XPFarmerPlugin,
         MotoPlugin,
         MutePlugin,

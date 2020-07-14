@@ -6,6 +6,7 @@ export class SkyChatClient extends EventEmitter {
     constructor(store) {
         super();
         this.webSocket = null;
+        this.firstConnection = true;
         this.store = store;
         this.bind();
     }
@@ -26,6 +27,7 @@ export class SkyChatClient extends EventEmitter {
      * Bind own event listeners
      */
     bind() {
+        this.on('join-room', this.onJoinRoom.bind(this));
         this.on('message', this.onMessage.bind(this));
         this.on('private-message', this.onPrivateMessage.bind(this));
         this.on('message-edit', this.onMessageEdit.bind(this));
@@ -50,7 +52,11 @@ export class SkyChatClient extends EventEmitter {
         if (authToken) {
             this.sendEvent('set-token', JSON.parse(authToken));
         }
+        if (! this.firstConnection) {
+            this.sendEvent('join-room', {roomId: 0});
+        }
         this.store.commit('SET_CONNECTION_STATE', WebSocket.OPEN);
+        this.firstConnection = false;
     }
 
     /**
@@ -163,6 +169,14 @@ export class SkyChatClient extends EventEmitter {
     }
 
     /**
+     * Join a specific room
+     * @param roomId
+     */
+    joinRoom(roomId) {
+        this.sendEvent('join-room', { roomId });
+    }
+
+    /**
      * Login
      * @param username
      * @param password
@@ -209,6 +223,14 @@ export class SkyChatClient extends EventEmitter {
         } else {
             localStorage.removeItem(SkyChatClient.LOCAL_STORAGE_TOKEN_KEY);
         }
+    }
+
+    /**
+     *
+     * @param roomId
+     */
+    onJoinRoom(roomId) {
+        this.store.commit('SET_CURRENT_ROOM', roomId);
     }
 
     /**

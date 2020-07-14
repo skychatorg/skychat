@@ -47,6 +47,8 @@ export class Connection extends EventEmitter implements IBroadcaster {
         session.attachConnection(this);
         this.webSocket.on('message', message => this.onMessage(message));
         this.webSocket.on('close', (code, message) => this.onClose(code, message));
+
+        this.setRoom(null);
     }
 
     /**
@@ -91,6 +93,15 @@ export class Connection extends EventEmitter implements IBroadcaster {
             await this.room.executeOnConnectionClosed(this);
             this.room.detachConnection(this);
         }
+    }
+
+    /**
+     * Set this connection's room
+     * @param room
+     */
+    public setRoom(room: Room | null) {
+        this.room = room;
+        this.send('join-room', room ? room.id : null);
     }
 
     /**

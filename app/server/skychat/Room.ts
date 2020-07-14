@@ -23,12 +23,12 @@ export class Room implements IBroadcaster {
     /**
      * Number of messages kept in memory
      */
-    static readonly MESSAGE_HISTORY_LENGTH = 256;
+    static readonly MESSAGE_HISTORY_LENGTH = 400;
 
     /**
      * Number of messages sent to clients that join the room. Must be lower than message history length.
      */
-    static readonly MESSAGE_HISTORY_VISIBLE_LENGTH = 128;
+    static readonly MESSAGE_HISTORY_VISIBLE_LENGTH = 200;
 
     /**
      * This room's unique id
@@ -123,7 +123,7 @@ export class Room implements IBroadcaster {
             connection.room.detachConnection(connection);
         }
         // Attach the connection to this room
-        connection.room = this;
+        connection.setRoom(this);
         this.connections.push(connection);
         await this.executeConnectionJoinedRoom(connection);
     }
@@ -176,9 +176,6 @@ export class Room implements IBroadcaster {
      * @param connection
      */
     public async executeConnectionAuthenticated(connection: Connection): Promise<void> {
-        if (connection.session.user.right >= 10) {
-            this.sendHistory(connection);
-        }
         for (const plugin of this.plugins) {
             await plugin.onConnectionAuthenticated(connection);
         }
