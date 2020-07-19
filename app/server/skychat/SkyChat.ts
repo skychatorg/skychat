@@ -47,7 +47,7 @@ export class SkyChat {
         // Load database then register server events
         DatabaseHelper
             .load()
-            .then(() => {
+            .then(async () => {
 
                 // On register
                 this.server.registerEvent('register', this.onRegister.bind(this), new iof.ObjectFilter({

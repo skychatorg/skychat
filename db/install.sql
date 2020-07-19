@@ -15,3 +15,14 @@ CREATE TABLE `users` (
   `tms_last_seen` int NOT NULL,
   CONSTRAINT username_unique UNIQUE(username)
 );
+
+DROP TABLE IF EXISTS `messages`;
+CREATE TABLE `messages` (
+  `id` INTEGER PRIMARY KEY NOT NULL,
+  `room_id` INTEGER KEY NOT NULL,
+  `user_id` INTEGER KEY NOT NULL,
+  `quoted_message_id` INTEGER KEY DEFAULT NULL,
+  `content` varchar(2048) NOT NULL,
+  `date` datetime KEY NOT NULL DEFAULT '0000-00-00 00:00:00' DEFAULT CURRENT_TIMESTAMP,
+  `ip` varchar(39) DEFAULT NULL
+);

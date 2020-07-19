@@ -61,7 +61,7 @@ export abstract class Plugin extends Command {
     }
 
     /**
-     * Executed when a new
+     * Executed when a new messages comes in
      * @param message
      * @param connection
      */

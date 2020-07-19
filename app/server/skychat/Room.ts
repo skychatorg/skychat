@@ -6,6 +6,8 @@ import {Plugin} from "./commands/Plugin";
 import {CommandManager} from "./commands/CommandManager";
 import {User} from "./User";
 import * as fs from "fs";
+import SQL from "sql-template-strings";
+import {DatabaseHelper} from "./DatabaseHelper";
 
 
 export type StoredRoom = {
@@ -259,6 +261,12 @@ export class Room implements IBroadcaster {
         // Add it to history
         this.messages.push(message);
         this.messages.splice(0, this.messages.length - Room.MESSAGE_HISTORY_LENGTH);
+        // Store it into the database
+        const sqlQuery = SQL`insert into messages
+            (\`id\`, \`room_id\`, \`user_id\`, \`quoted_message_id\`, \`content\`, \`date\`, \`ip\`) values
+            (${message.id}, ${this.id}, ${user.id}, ${quoted ? quoted.id : null}, ${message.content}, ${message.createdTime}, ${connection ? connection.ip : null})`;
+        await DatabaseHelper.db.run(sqlQuery);
+        console.log(sqlQuery);
         // Return created message
         return message;
     }
