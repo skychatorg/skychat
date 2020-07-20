@@ -44,6 +44,15 @@ export type MessageMeta = {
 }
 
 
+export type MessageConstructorOptions = {
+    content: string;
+    formatted?: string | null;
+    user: User;
+    quoted?: Message | null;
+    createdTime?: Date | null;
+    meta?: Partial<MessageMeta> | null;
+}
+
 export class Message {
 
     public static ID: number = 1;
@@ -62,17 +71,16 @@ export class Message {
 
     public readonly meta: MessageMeta;
 
-    constructor(content: string, formatted: string | null, user: User, quoted?: Message | null, createdTime?: Date, meta?: Partial<MessageMeta>) {
-
+    constructor(options: MessageConstructorOptions) {
         this.id = ++ Message.ID;
-        this.content = content;
-        this.formatted = typeof formatted === 'string' ? formatted : MessageFormatter.getInstance().format(content);
-        this.quoted = quoted || null;
-        this.user = user;
-        this.createdTime = typeof createdTime !== 'undefined' ? createdTime : new Date();
+        this.content = options.content;
+        this.formatted = typeof options.formatted === 'string' ? options.formatted : MessageFormatter.getInstance().format(options.content);
+        this.quoted = options.quoted || null;
+        this.user = options.user;
+        this.createdTime = options.createdTime instanceof Date ? options.createdTime : new Date();
         this.meta = Object.assign({
             device: ''
-        }, meta || {});
+        }, options.meta || {});
     }
 
     /**

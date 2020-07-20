@@ -233,7 +233,7 @@ export class YoutubePlugin extends Plugin {
      * @param connection
      */
     private async handleYtList(connection: Connection): Promise<void> {
-        const message = new Message('Videos in the queue:', null, UserController.getNeutralUser());
+        const message = UserController.createNeutralMessage('Videos in the queue:');
         for (const pending of this.storage.queue) {
             message.append(' - ' + pending.video.title + ', added by ' +pending.user.username);
         }

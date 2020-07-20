@@ -55,7 +55,7 @@ export class AccountPlugin extends Plugin {
         }
 
         // Send confirmation back to the user
-        const message = new Message(`Your ${field} is now '${value}'`, null, UserController.getNeutralUser());
+        const message = UserController.createNeutralMessage(`Your ${field} is now '${value}'`);
         connection.send('message', message.sanitized());
     }
 
@@ -66,11 +66,11 @@ export class AccountPlugin extends Plugin {
             return;
         }
 
-        const message = new Message(`Your email is not set!
+        const message = UserController.createNeutralMessage(`Your email is not set!
             Use:
             /set email your@email.com
             
-            To set your email address`, null, UserController.getNeutralUser());
+            To set your email address`);
         connection.send('message', message.sanitized());
     }
 }

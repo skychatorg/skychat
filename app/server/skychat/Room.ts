@@ -254,7 +254,13 @@ export class Room implements IBroadcaster {
         if (connection) {
             meta.device = connection.device;
         }
-        let message = new Message(content, formatted, user, quoted, undefined, meta);
+        let message = new Message({
+            content,
+            formatted,
+            user,
+            quoted,
+            meta
+        });
         message = await this.executeOnBeforeMessageBroadcastHook(message, connection);
         // Send it to clients
         this.send('message', message.sanitized());
@@ -266,7 +272,6 @@ export class Room implements IBroadcaster {
             (\`id\`, \`room_id\`, \`user_id\`, \`quoted_message_id\`, \`content\`, \`date\`, \`ip\`) values
             (${message.id}, ${this.id}, ${user.id}, ${quoted ? quoted.id : null}, ${message.content}, ${message.createdTime}, ${connection ? connection.ip : null})`;
         await DatabaseHelper.db.run(sqlQuery);
-        console.log(sqlQuery);
         // Return created message
         return message;
     }
