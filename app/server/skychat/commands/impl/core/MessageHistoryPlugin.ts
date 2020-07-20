@@ -4,6 +4,7 @@ import {Message} from "../../../Message";
 import {Room} from "../../../Room";
 import {Config} from "../../../Config";
 import {MessageFormatter} from "../../../MessageFormatter";
+import {UserController} from "../../../UserController";
 
 
 export class MessageHistoryPlugin extends Plugin {
@@ -47,7 +48,7 @@ export class MessageHistoryPlugin extends Plugin {
             }
 
             // Build the message object and send it
-            const fakeMessage = new Message(fakeText, null, this.room.messages[i].user, null);
+            const fakeMessage = new Message({content: fakeText, user: this.room.messages[i].user});
             connection.send('message', fakeMessage.sanitized());
         }
     }

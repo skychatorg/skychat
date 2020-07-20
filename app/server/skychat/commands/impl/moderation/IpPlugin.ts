@@ -70,7 +70,7 @@ export class IpPlugin extends Command {
         content += `</table>`;
 
         // Send the message
-        const message = new Message('', null, UserController.getNeutralUser());
+        const message = UserController.createNeutralMessage('');
         message.edit(striptags(content), content);
         connection.send('message', message.sanitized());
     }

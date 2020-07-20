@@ -30,7 +30,7 @@ export class PrivateMessagePlugin extends Plugin {
 
         const content = param.split(' ').slice(1).join(' ');
 
-        const privateMessage = new PrivateMessage(content, null, connection.session.user, session.user);
+        const privateMessage = new PrivateMessage({content, user: connection.session.user, to: session.user});
         connection.session.send('private-message', privateMessage.sanitized());
         session.send('private-message', privateMessage.sanitized());
     }

@@ -136,16 +136,26 @@ export class RollPlugin extends Plugin {
         </table>`;
         const formatter = MessageFormatter.getInstance();
         introMessageContent = formatter.replaceButtons(introMessageContent, true);
-        const introMessage = await this.room.sendMessage(striptags(introMessageContent), introMessageContent, UserController.getNeutralUser(), null);
+        const introMessage = await this.room.sendMessage({
+            content: striptags(introMessageContent),
+            formatted: introMessageContent,
+            user: UserController.getNeutralUser()
+        });
 
         // Wait for participants
-        this.currentGame.rollMessage = await this.room.sendMessage(`...`, null, UserController.getNeutralUser(), null);
+        this.currentGame.rollMessage = await this.room.sendMessage({
+            content: `...`,
+            user: UserController.getNeutralUser()
+        });
         this.updateGameMessage();
         await waitTimeout(30 * 1000);
 
         // If not enough participants
         if (this.currentGame.participants.length === 0) {
-            await this.room.sendMessage(`Not enough participants. Aborting.`, null, UserController.getNeutralUser(), null);
+            await this.room.sendMessage({
+                content: `Not enough participants. Aborting.`,
+                user: UserController.getNeutralUser()
+            });
             this.currentGame = null;
             return;
         }

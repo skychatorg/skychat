@@ -1,9 +1,13 @@
 import {SanitizedUser, User} from "./User";
-import {Message, SanitizedMessage} from "./Message";
+import {Message, MessageConstructorOptions, SanitizedMessage} from "./Message";
 
 export interface SanitizedPrivateMessage extends SanitizedMessage {
 
     to: SanitizedUser;
+}
+
+export interface PrivateMessageConstructorOptions extends MessageConstructorOptions {
+    to: User;
 }
 
 
@@ -11,10 +15,10 @@ export class PrivateMessage extends Message {
 
     private readonly to: User;
 
-    constructor(content: string, formatted: string | null, from: User, to: User) {
-        super(content, formatted, from, null);
+    constructor(options: PrivateMessageConstructorOptions) {
+        super(options);
 
-        this.to = to;
+        this.to = options.to;
     }
 
     /**

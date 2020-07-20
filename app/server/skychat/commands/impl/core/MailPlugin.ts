@@ -49,7 +49,7 @@ export class MailPlugin extends Plugin {
         const result = await this.sendMailToUsername(username, 'New mail from ' + Config.LOCATION, message);
 
         // Send back notification
-        connection.send('message', new Message(result.response, null, UserController.getNeutralUser()).sanitized());
+        connection.send('message', UserController.createNeutralMessage(result.response).sanitized());
     }
 
     /**

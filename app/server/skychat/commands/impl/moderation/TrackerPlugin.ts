@@ -88,7 +88,11 @@ export class TrackerPlugin extends Plugin {
         }
         html += '</table>';
 
-        connection.send('message', new Message(striptags(html), html, UserController.getNeutralUser(), null).sanitized());
+        connection.send('message', new Message({
+            content: striptags(html),
+            formatted: html,
+            user: UserController.getNeutralUser()
+        }).sanitized());
     }
 
     public registerAssociation(node1: Node, node2: Node): void {

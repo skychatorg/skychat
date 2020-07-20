@@ -173,7 +173,7 @@ export class ShopPlugin extends Plugin {
      * @param connection
      */
     private async handleShop(param: string, connection: Connection): Promise<void> {
-        const message = new Message('', null, UserController.getNeutralUser());
+        const message = UserController.createNeutralMessage('');
         for (const type in ShopPlugin.ITEMS) {
             message.append(`[[list all available ${type}//shoplist ${type}]]`);
         }
@@ -196,7 +196,7 @@ export class ShopPlugin extends Plugin {
         if (! itemDefinition) {
             throw new Error('Unknown item type');
         }
-        const message = new Message('Available ' + param + ':', null, UserController.getNeutralUser());
+        const message = UserController.createNeutralMessage('Available ' + param + ':');
         const formatter = MessageFormatter.getInstance();
         let html = '<table class="skychat-table">';
         html += `

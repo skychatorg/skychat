@@ -5,6 +5,8 @@ import {DatabaseHelper} from "./DatabaseHelper";
 import {AuthToken, User} from "./User";
 import SQL from "sql-template-strings";
 import {Plugin} from "./commands/Plugin";
+import {Message, MessageConstructorOptions, MessageMeta} from "./Message";
+import {content} from "googleapis/build/src/apis/content";
 
 
 export class UserController {
@@ -67,6 +69,22 @@ export class UserController {
                 avatar: Config.LOCATION + '/assets/images/server-avatar.png',
                 color: 'rgb(255, 255, 255)'
             }
+        });
+    }
+
+    /**
+     * Create a neutral message
+     * @param optionsOrContent
+     */
+    public static createNeutralMessage(optionsOrContent: Partial<MessageConstructorOptions> | string): Message {
+        const options = typeof optionsOrContent === 'string' ? {content: optionsOrContent} : optionsOrContent;
+        return new Message({
+            content: options.content || '',
+            formatted: options.formatted,
+            user: UserController.getNeutralUser(),
+            quoted: options.quoted,
+            createdTime: options.createdTime,
+            meta: options.meta,
         });
     }
 

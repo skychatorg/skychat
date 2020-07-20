@@ -233,7 +233,7 @@ export class YoutubePlugin extends Plugin {
      * @param connection
      */
     private async handleYtList(connection: Connection): Promise<void> {
-        const message = new Message('Videos in the queue:', null, UserController.getNeutralUser());
+        const message = UserController.createNeutralMessage('Videos in the queue:');
         for (const pending of this.storage.queue) {
             message.append(' - ' + pending.video.title + ', added by ' +pending.user.username);
         }
@@ -355,7 +355,10 @@ export class YoutubePlugin extends Plugin {
         }
         // Else, play this video
         this.storage.currentVideo = {...nextVideo, startedDate: new Date()};
-        await this.room.sendMessage('Now playing: ' + nextVideo.video.title + ', added by ' + nextVideo.user.username, null, UserController.getNeutralUser(), null);
+        await this.room.sendMessage({
+            content: 'Now playing: ' + nextVideo.video.title + ', added by ' + nextVideo.user.username,
+            user: UserController.getNeutralUser()
+        });
         this.sync(this.room);
     }
 
