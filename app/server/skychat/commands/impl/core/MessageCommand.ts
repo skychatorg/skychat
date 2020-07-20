@@ -28,7 +28,7 @@ export class MessageCommand extends Command {
         }
 
         // Send the message to the room
-        await this.room.sendMessage(content, null, connection.session.user, quoted, connection);
+        await this.room.sendMessage({content, user: connection.session.user, quoted, connection});
 
         // Update the date of the last sent message
         connection.session.lastMessageDate = new Date();

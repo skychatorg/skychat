@@ -355,7 +355,10 @@ export class YoutubePlugin extends Plugin {
         }
         // Else, play this video
         this.storage.currentVideo = {...nextVideo, startedDate: new Date()};
-        await this.room.sendMessage('Now playing: ' + nextVideo.video.title + ', added by ' + nextVideo.user.username, null, UserController.getNeutralUser(), null);
+        await this.room.sendMessage({
+            content: 'Now playing: ' + nextVideo.video.title + ', added by ' + nextVideo.user.username,
+            user: UserController.getNeutralUser()
+        });
         this.sync(this.room);
     }
 

@@ -1,6 +1,6 @@
 import {Connection} from "./Connection";
 import {IBroadcaster} from "./IBroadcaster";
-import {Message, MessageMeta} from "./Message";
+import {Message, MessageConstructorOptions, MessageMeta} from "./Message";
 import {Command} from "./commands/Command";
 import {Plugin} from "./commands/Plugin";
 import {CommandManager} from "./commands/CommandManager";
@@ -243,25 +243,15 @@ export class Room implements IBroadcaster {
 
     /**
      * Send a new message to the room
-     * @param content Message content (string)
-     * @param formatted
-     * @param user User that created the message
-     * @param quoted
-     * @param connection Connection that created the message. Let undefined if sent by server.
+     * @param options
      */
-    public async sendMessage(content: string, formatted: string | null, user: User, quoted: Message | null, connection?: Connection): Promise<Message> {
+    public async sendMessage(options: MessageConstructorOptions & {connection?: Connection}): Promise<Message> {
         let meta: Partial<MessageMeta> = {};
-        if (connection) {
-            meta.device = connection.device;
+        if (options.connection) {
+            meta.device = options.connection.device;
         }
-        let message = new Message({
-            content,
-            formatted,
-            user,
-            quoted,
-            meta
-        });
-        message = await this.executeOnBeforeMessageBroadcastHook(message, connection);
+        let message = new Message(options);
+        message = await this.executeOnBeforeMessageBroadcastHook(message, options.connection);
         // Send it to clients
         this.send('message', message.sanitized());
         // Add it to history
@@ -270,7 +260,7 @@ export class Room implements IBroadcaster {
         // Store it into the database
         const sqlQuery = SQL`insert into messages
             (\`id\`, \`room_id\`, \`user_id\`, \`quoted_message_id\`, \`content\`, \`date\`, \`ip\`) values
-            (${message.id}, ${this.id}, ${user.id}, ${quoted ? quoted.id : null}, ${message.content}, ${message.createdTime}, ${connection ? connection.ip : null})`;
+            (${message.id}, ${this.id}, ${options.user.id}, ${options.quoted ? options.quoted.id : null}, ${message.content}, ${message.createdTime}, ${options.connection ? options.connection.ip : null})`;
         await DatabaseHelper.db.run(sqlQuery);
         // Return created message
         return message;
