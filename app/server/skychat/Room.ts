@@ -246,9 +246,9 @@ export class Room implements IBroadcaster {
      * @param options
      */
     public async sendMessage(options: MessageConstructorOptions & {connection?: Connection}): Promise<Message> {
-        let meta: Partial<MessageMeta> = {};
         if (options.connection) {
-            meta.device = options.connection.device;
+            options.meta = options.meta || {};
+            options.meta.device = options.connection.device;
         }
         let message = new Message(options);
         message = await this.executeOnBeforeMessageBroadcastHook(message, options.connection);
