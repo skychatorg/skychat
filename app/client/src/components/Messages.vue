@@ -28,14 +28,23 @@
         },
         watch: {
             messages: function() {
+                this.scrollToBottomIfAutoScroll();
+            },
+            lastMessageSeenIds: {
+                deep: true,
+                handler: function() {
+                    this.scrollToBottomIfAutoScroll();
+                }
+            }
+        },
+        methods: {
+            scrollToBottomIfAutoScroll: function() {
                 Vue.nextTick(() => {
                     if (this.autoScroll) {
                         this.scrollToBottom();
                     }
                 });
-            }
-        },
-        methods: {
+            },
             onContentLoaded: function() {
                 if (this.autoScroll) {
                     this.scrollToBottom();

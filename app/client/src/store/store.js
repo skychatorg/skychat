@@ -90,7 +90,7 @@ const store = {
                 if (! id) {
                     continue;
                 }
-                if (typeof lastSeen[id]) {
+                if (typeof lastSeen[id] === 'undefined') {
                     lastSeen[id] = [];
                 }
                 lastSeen[id].push(entry.user);

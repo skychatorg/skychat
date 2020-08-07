@@ -1,7 +1,6 @@
 import {Plugin} from "../../Plugin";
 import {Connection} from "../../../Connection";
 import {UserController} from "../../../UserController";
-import {ConnectedListPlugin} from "./ConnectedListPlugin";
 
 
 export class MessageSeenPlugin extends Plugin {
