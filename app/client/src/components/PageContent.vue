@@ -57,9 +57,6 @@
             gotoRoom() {
                 this.$store.commit('SET_PAGE', 'room');
                 this.$client.ytSync();
-                Vue.nextTick(() => {
-                    this.$refs.messages.scrollToBottom();
-                });
             },
         },
         computed: {

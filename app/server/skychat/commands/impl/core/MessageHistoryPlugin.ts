@@ -34,6 +34,7 @@ export class MessageHistoryPlugin extends Plugin {
          * @param connection
          */
         // Send message history to the connection that just joined this room
+        const fakeMessages = [];
         for (let i = Math.max(0, this.room.messages.length - Room.MESSAGE_HISTORY_VISIBLE_LENGTH); i < this.room.messages.length; ++ i) {
 
             // Build a fake message
@@ -48,8 +49,8 @@ export class MessageHistoryPlugin extends Plugin {
             }
 
             // Build the message object and send it
-            const fakeMessage = new Message({content: fakeText, user: this.room.messages[i].user});
-            connection.send('message', fakeMessage.sanitized());
+            fakeMessages.push(new Message({content: fakeText, user: this.room.messages[i].user}).sanitized());
         }
+        connection.send('messages', fakeMessages);
     }
 }

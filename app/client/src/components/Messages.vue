@@ -5,7 +5,9 @@
         <DynamicScroller
                 class="messages-feed scrollbar"
                 :items="messages"
-                :min-item-size="54"
+                :min-item-size="52"
+                :style="smoothScroll ? 'scroll-behavior: smooth;' : ''"
+                :buffer="200"
                 ref="scroller"
                 @scroll.native="onScroll">
 
@@ -43,26 +45,28 @@
         data: function() {
             return {
                 autoScroll: true,
+                smoothScroll: true,
                 autoScrolling: false,
             };
         },
         watch: {
             messages: function() {
                 this.scrollToBottomIfAutoScroll();
-            },
-            lastMessageSeenIds: {
-                deep: true,
-                handler: function() {
-                    this.scrollToBottomIfAutoScroll();
-                }
             }
         },
         methods: {
             scrollToBottomIfAutoScroll: function() {
+                if (! this.autoScroll) {
+                    return;
+                }
+                const previousScrollHeight = this.$refs.scroller.$el.scrollHeight;
+                // We need to wait 2 ticks for the dynamic scroller and for our own renderer
                 Vue.nextTick(() => {
-                    if (this.autoScroll) {
-                        this.scrollToBottom();
-                    }
+                    Vue.nextTick(() => {
+                        const deltaScrollHeight = this.$refs.scroller.$el.scrollHeight - previousScrollHeight;
+                        console.log('delta', deltaScrollHeight);
+                        this.scrollToBottom(deltaScrollHeight > 200);
+                    });
                 });
             },
             onContentLoaded: function() {
@@ -70,29 +74,55 @@
                     this.scrollToBottom();
                 }
             },
+            distanceToBottom: function() {
+                return this.$refs.scroller.$el.scrollHeight - this.$refs.scroller.$el.offsetHeight - this.$refs.scroller.$el.scrollTop;
+            },
             onScroll: function() {
                 if (this.autoScrolling) {
                     return;
                 }
-                const distanceToBottom = this.$refs.scroller.scrollHeight - this.$refs.scroller.offsetHeight - this.$refs.scroller.scrollTop;
-                if (distanceToBottom > 22) {
+                const distanceToBottom = this.distanceToBottom();
+                if (distanceToBottom > 200) {
                     // Stop auto scroll
                     this.autoScroll = false;
-                } else if (distanceToBottom < 20) {
+                } else if (distanceToBottom < 30) {
                     this.autoScroll = true;
                 }
             },
-            scrollToBottom: function() {
+            scrollToBottom: function(immediate) {
+                // If already auto scrolling, abort
                 if (this.autoScrolling) {
                     return;
                 }
+                // Set scrolling state to true
                 this.autoScrolling = true;
-                this.scrollTick();
-            },
-            scrollTick: function() {
-                const scroller = this.$refs.scroller;
-                scroller.scrollToBottom();
-                this.autoScrolling = false;
+                // If in immediate mode
+                if (immediate) {
+                    // Disable smooth scroll
+                    this.smoothScroll = false;
+                    // Wait for smooth scroll to be disabled
+                    Vue.nextTick(() => {
+                        // Scroll directly to bottom
+                        this.$refs.scroller.scrollToBottom();
+                        // Re-enable smooth scroll
+                        this.smoothScroll = true;
+                        // Update scrolling state
+                        this.autoScrolling = false;
+                    });
+                } else {
+                    // Smoothly scroll to bottom
+                    this.$refs.scroller.scrollToBottom();
+                    // In a few ms, check if still need to scroll
+                    setTimeout(() => {
+                        // Update state
+                        this.autoScrolling = false;
+                        // If still need to scroll
+                        const distance = this.distanceToBottom();
+                        if (distance > 1) {
+                            this.scrollToBottom(false);
+                        }
+                    }, 500);
+                }
             },
         },
         computed: {
@@ -127,7 +157,6 @@
 
         .messages-feed {
             flex-grow: 1;
-            scroll-behavior: smooth;
             margin-left: 10px;
             margin-right: 10px;
             height: 0;

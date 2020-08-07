@@ -25,12 +25,12 @@ export class Room implements IBroadcaster {
     /**
      * Number of messages kept in memory
      */
-    static readonly MESSAGE_HISTORY_LENGTH = 400;
+    static readonly MESSAGE_HISTORY_LENGTH = 1000;
 
     /**
      * Number of messages sent to clients that join the room. Must be lower than message history length.
      */
-    static readonly MESSAGE_HISTORY_VISIBLE_LENGTH = 200;
+    static readonly MESSAGE_HISTORY_VISIBLE_LENGTH = 80;
 
     /**
      * This room's unique id
@@ -136,9 +136,11 @@ export class Room implements IBroadcaster {
      */
     public sendHistory(connection: Connection): void {
         // Send message history to the connection that just joined this room
+        const messages = [];
         for (let i = Math.max(0, this.messages.length - Room.MESSAGE_HISTORY_VISIBLE_LENGTH); i < this.messages.length; ++ i) {
-            connection.send('message', this.messages[i].sanitized());
+            messages.push(this.messages[i].sanitized());
         }
+        connection.send('messages', messages);
     }
 
     /**

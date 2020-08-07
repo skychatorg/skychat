@@ -122,6 +122,21 @@ const store = {
                 new Audio('/assets/sound/notification.mp3').play();
             }
         },
+        NEW_MESSAGES(state, messages) {
+            if (messages.length === 0) {
+                return;
+            }
+            state.messages.push(...messages);
+            const lastMessage = messages[messages.length - 1];
+            if (! state.focused) {
+                state.documentTitle = `New message by ${lastMessage.user.username}`;
+                state.documentTitleBlinking = true;
+                state.lastMissedMessage = lastMessage;
+            }
+            if (lastMessage.content.match(new RegExp('@' + state.user.username.toLowerCase(), 'i'))) {
+                new Audio('/assets/sound/notification.mp3').play();
+            }
+        },
         NEW_PRIVATE_MESSAGE(state, privateMessage) {
             const fromUserName = privateMessage.user.username.toLowerCase();
             const toUserName = privateMessage.to.username.toLowerCase();
