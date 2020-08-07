@@ -7,6 +7,7 @@
                      @content-loaded="onContentLoaded"
                      :key="message.id"
                      :message="message"
+                     :seen-users="lastMessageSeenIds[message.id] || []"
                      class="message"/>
         </div>
     </div>
@@ -80,6 +81,9 @@
             playerState: function() {
                 return this.$store.state.playerState;
             },
+            lastMessageSeenIds: function() {
+                return this.$store.state.lastMessageSeenIds;
+            }
         }
     });
 </script>

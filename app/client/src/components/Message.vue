@@ -21,8 +21,17 @@
             </div>
             <div ref="formatted" class="formatted" v-html="message.formatted"></div>
         </div>
-        <div class="date">
-            {{formattedDate}}
+        <div class="meta">
+            <div class="date">
+                {{formattedDate}}
+            </div>
+            <div class="seen-users">
+                <div v-for="seenUser of seenUsers"
+                     class="avatar image-bubble"
+                     :title="'Seen by ' + seenUser.username">
+                    <img :src="seenUser.data.plugins.avatar">
+                </div>
+            </div>
         </div>
     </div>
 </template>
@@ -34,6 +43,10 @@
             message: {
                 type: Object,
                 required: true,
+            },
+            seenUsers: {
+                type: Array,
+                required: true
             }
         },
         watch: {
@@ -132,8 +145,28 @@
                 }
             }
         }
-        >.date {
+        >.meta {
             font-size: 70%;
+            display: flex;
+            flex-direction: column;
+            width: 34px;
+
+            >.date {
+
+            }
+
+            >.seen-users {
+                display: flex;
+                flex-wrap: wrap;
+                margin-top: 6px;
+                justify-content: center;
+
+                >.avatar {
+                    width: 14px;
+                    height: 14px;
+                    margin: 1px;
+                }
+            }
         }
     }
 </style>

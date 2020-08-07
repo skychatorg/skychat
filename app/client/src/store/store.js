@@ -30,6 +30,13 @@ const store = {
         },
         currentRoom: null,
         connectedList: [],
+
+        /**
+         * Mapping from message ids to users whose last seen message id is this message.
+         * Generated from the list of connected users.
+         */
+        lastMessageSeenIds: {},
+
         cursors: {},
         messages: [],
         privateMessages: {},
@@ -74,8 +81,21 @@ const store = {
         SET_USER(state, user) {
             state.user = user;
         },
-        SET_CONNECTED_LIST(state, users) {
-            state.connectedList = users;
+        SET_CONNECTED_LIST(state, entries) {
+            state.connectedList = entries;
+            // Update last seen message ids
+            const lastSeen = {};
+            for (const entry of entries) {
+                const id = entry.user.data.plugins.lastseen;
+                if (! id) {
+                    continue;
+                }
+                if (typeof lastSeen[id]) {
+                    lastSeen[id] = [];
+                }
+                lastSeen[id].push(entry.user);
+            }
+            state.lastMessageSeenIds = lastSeen;
         },
         NEW_MESSAGE(state, message) {
             state.messages.push(message);
@@ -100,7 +120,7 @@ const store = {
                 state.privateMessages[otherUserName].unreadCount ++;
             }
             if (! state.focused) {
-                state.documentTitle = `New message by ${message.user.username}`;
+                state.documentTitle = `New message by ${privateMessage.user.username}`;
                 state.documentTitleBlinking = true;
             }
         },

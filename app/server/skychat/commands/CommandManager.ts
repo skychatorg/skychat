@@ -34,6 +34,7 @@ import {AccountPlugin} from "./impl/core/AccountPlugin";
 import {MailPlugin} from "./impl/core/MailPlugin";
 import {TrackerPlugin} from "./impl/moderation/TrackerPlugin";
 import {MessageHistoryPlugin} from "./impl/core/MessageHistoryPlugin";
+import {MessageSeenPlugin} from "./impl/core/MessageSeenPlugin";
 
 
 /**
@@ -60,6 +61,7 @@ export class CommandManager {
         MessageCommand,
         MessageEditCommand,
         MessageHistoryPlugin,
+        MessageSeenPlugin,
         XPFarmerPlugin,
         MotoPlugin,
         MutePlugin,

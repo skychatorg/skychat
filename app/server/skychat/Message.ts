@@ -40,7 +40,8 @@ export interface SanitizedMessage {
 }
 
 export type MessageMeta = {
-    device: string
+
+    device: string;
 }
 
 

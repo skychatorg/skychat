@@ -239,6 +239,10 @@ export class SkyChatClient extends EventEmitter {
      */
     onMessage(message) {
         this.store.commit('NEW_MESSAGE', message);
+
+        if (this.store.state.user.right >= 0) {
+            this.sendMessage(`/lastseen ${message.id}`)
+        }
     }
 
     /**

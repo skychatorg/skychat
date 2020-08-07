@@ -19,7 +19,7 @@ export class ConnectedListPlugin extends Plugin {
         super(room);
 
         if (this.room) {
-            setInterval(this.tick.bind(this), 10 * 1000);
+            setInterval(this.tick.bind(this), 6 * 1000);
         }
     }
 
