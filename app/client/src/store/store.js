@@ -83,9 +83,17 @@ const store = {
         },
         SET_CONNECTED_LIST(state, entries) {
             state.connectedList = entries;
+            this.commit('GENERATE_LAST_MESSAGE_SEEN_IDS');
+        },
+        MESSAGE_SEEN(state, data) {
+            const entry = state.connectedList.find(e => e.user.id === data.user);
+            entry.user.data.plugins.lastseen = data.message;
+            this.commit('GENERATE_LAST_MESSAGE_SEEN_IDS');
+        },
+        GENERATE_LAST_MESSAGE_SEEN_IDS(state) {
             // Update last seen message ids
             const lastSeen = {};
-            for (const entry of entries) {
+            for (const entry of state.connectedList) {
                 const id = entry.user.data.plugins.lastseen;
                 if (! id) {
                     continue;

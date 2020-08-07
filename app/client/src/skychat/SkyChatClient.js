@@ -31,6 +31,7 @@ export class SkyChatClient extends EventEmitter {
         this.on('message', this.onMessage.bind(this));
         this.on('private-message', this.onPrivateMessage.bind(this));
         this.on('message-edit', this.onMessageEdit.bind(this));
+        this.on('message-seen', this.onMessageSeen.bind(this));
         this.on('set-user', this.onSetUser.bind(this));
         this.on('connected-list', this.onConnectedList.bind(this));
         this.on('yt-sync', this.onYtSync.bind(this));
@@ -259,6 +260,14 @@ export class SkyChatClient extends EventEmitter {
      */
     onMessageEdit(message) {
         this.store.commit('MESSAGE_EDIT', message);
+    }
+
+    /**
+     *
+     * @param data
+     */
+    onMessageSeen(data) {
+        this.store.commit('MESSAGE_SEEN', data);
     }
 
     /**

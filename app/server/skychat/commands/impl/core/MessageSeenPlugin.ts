@@ -37,6 +37,6 @@ export class MessageSeenPlugin extends Plugin {
             return;
         }
         await UserController.savePluginData(connection.session.user, this.name, message.id);
-        //await (this.room.getPlugin('connectedlist') as ConnectedListPlugin).sync();
+        this.room.send('message-seen', {user: connection.session.user.id, message: message.id});
     }
 }
