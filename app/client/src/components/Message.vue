@@ -119,7 +119,7 @@
             flex-grow: 1;
             margin-left: 16px;
             width: 0;
-            word-break: break-all;
+            word-break: break-word;
             display: flex;
             flex-direction: column;
 
@@ -149,7 +149,8 @@
             font-size: 70%;
             display: flex;
             flex-direction: column;
-            width: 34px;
+            width: 66px;
+            text-align: center;
 
             >.date {
 
