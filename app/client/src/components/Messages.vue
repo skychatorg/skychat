@@ -1,15 +1,35 @@
 <template>
     <div class="messages">
         <player class="player" v-show="playerState && playerState.enabled"/>
-        <div class="messages-feed scrollbar" ref="messages" @scroll="onScroll">
-            <message v-for="message in messages"
-                     @select="$emit('select-message', message)"
-                     @content-loaded="onContentLoaded"
-                     :key="message.id"
-                     :message="message"
-                     :seen-users="lastMessageSeenIds[message.id] || []"
-                     class="message"/>
-        </div>
+
+        <DynamicScroller
+                class="messages-feed scrollbar"
+                :items="messages"
+                :min-item-size="54"
+                ref="scroller"
+                @scroll.native="onScroll">
+
+            <template v-slot="{ item, index, active }">
+                <DynamicScrollerItem
+                    :item="item"
+                    :active="active"
+                    :watchData="true"
+                    :data-index="index"
+                >
+                    <div style="padding-top: 2px; background-color: #2a2a2f78;">
+                        <message @select="$emit('select-message', item)"
+                                 @content-loaded="onContentLoaded"
+                                 :key="item.id"
+                                 :message="item"
+                                 :seen-users="lastMessageSeenIds[item.id] || []"
+                                 class="message"/>
+                    </div>
+
+                </DynamicScrollerItem>
+            </template>
+
+
+        </DynamicScroller>
     </div>
 </template>
 
@@ -54,7 +74,7 @@
                 if (this.autoScrolling) {
                     return;
                 }
-                const distanceToBottom = this.$refs.messages.scrollHeight - this.$refs.messages.offsetHeight - this.$refs.messages.scrollTop;
+                const distanceToBottom = this.$refs.scroller.scrollHeight - this.$refs.scroller.offsetHeight - this.$refs.scroller.scrollTop;
                 if (distanceToBottom > 22) {
                     // Stop auto scroll
                     this.autoScroll = false;
@@ -70,14 +90,9 @@
                 this.scrollTick();
             },
             scrollTick: function() {
-                const messages = this.$refs.messages;
-                messages.scrollTop += (messages.scrollHeight - messages.offsetHeight - messages.scrollTop) * .3;
-                if (Math.abs(messages.scrollHeight - messages.offsetHeight - messages.scrollTop) > 6) {
-                    setTimeout(this.scrollTick.bind(this), 10);
-                } else {
-                    messages.scrollTop = messages.scrollHeight;
-                    this.autoScrolling = false;
-                }
+                const scroller = this.$refs.scroller;
+                scroller.scrollToBottom();
+                this.autoScrolling = false;
             },
         },
         computed: {
@@ -112,13 +127,13 @@
 
         .messages-feed {
             flex-grow: 1;
+            scroll-behavior: smooth;
             margin-left: 10px;
             margin-right: 10px;
             height: 0;
             overflow-y: scroll;
             display: flex;
             flex-direction: column;
-            margin-top: 5px;
         }
     }
 </style>
