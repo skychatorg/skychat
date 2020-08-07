@@ -17,9 +17,11 @@ Vue.use(VModal, {
     }
 });
 
+const client = new SkyChatClient(store);
+
 Vue.prototype.$store = store;
 
-Vue.prototype.$client = new SkyChatClient(store);
+Vue.prototype.$client = client;
 Vue.prototype.$client.connect();
 
 Vue.prototype.$mousetrap = new Mousetrap();
@@ -48,6 +50,9 @@ window.addEventListener('blur', () => {
     store.commit('BLUR');
 });
 window.addEventListener('focus', () => {
+    if (store.state.lastMissedMessage) {
+        client.notifySeenMessage(store.state.lastMissedMessage.id);
+    }
     store.commit('FOCUS');
 });
 setInterval(() => {

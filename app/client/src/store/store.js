@@ -37,6 +37,11 @@ const store = {
          */
         lastMessageSeenIds: {},
 
+        /**
+         * Last message missed because the windows was not focused, if any
+         */
+        lastMissedMessage: null,
+
         cursors: {},
         messages: [],
         privateMessages: {},
@@ -51,6 +56,7 @@ const store = {
             state.focused = true;
             state.documentTitle = DEFAULT_DOCUMENT_TITLE;
             state.documentTitleBlinking = false;
+            state.lastMissedMessage = null;
         },
         BLUR(state) {
             state.focused = false;
@@ -110,6 +116,7 @@ const store = {
             if (! state.focused) {
                 state.documentTitle = `New message by ${message.user.username}`;
                 state.documentTitleBlinking = true;
+                state.lastMissedMessage = message;
             }
             if (message.content.match(new RegExp('@' + state.user.username.toLowerCase(), 'i'))) {
                 new Audio('/assets/sound/notification.mp3').play();
