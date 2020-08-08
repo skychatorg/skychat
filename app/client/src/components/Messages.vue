@@ -2,36 +2,18 @@
     <div class="messages">
         <player class="player" v-show="playerState && playerState.enabled"/>
 
-        <DynamicScroller
-                class="messages-feed scrollbar"
-                :items="messages"
-                :min-item-size="52"
-                :style="smoothScroll ? 'scroll-behavior: smooth;' : ''"
-                :buffer="200"
-                ref="scroller"
-                @scroll.native="onScroll">
-
-            <template v-slot="{ item, index, active }">
-                <DynamicScrollerItem
-                    :item="item"
-                    :active="active"
-                    :watchData="true"
-                    :data-index="index"
-                >
-                    <div style="padding-top: 2px; background-color: #2a2a2f78;">
-                        <message @select="$emit('select-message', item)"
-                                 @content-loaded="onContentLoaded"
-                                 :key="item.id"
-                                 :message="item"
-                                 :seen-users="lastMessageSeenIds[item.id] || []"
-                                 class="message"/>
-                    </div>
-
-                </DynamicScrollerItem>
-            </template>
-
-
-        </DynamicScroller>
+        <div class="messages-feed scrollbar"
+             ref="scroller"
+             @scroll="onScroll"
+             :style="smoothScroll ? 'scroll-behavior: smooth' : ''">
+            <message v-for="item in messages"
+                     @select="$emit('select-message', item)"
+                     @content-loaded="onContentLoaded"
+                     :key="item.id"
+                     :message="item"
+                     :seen-users="lastMessageSeenIds[item.id] || []"
+                     class="message"/>
+        </div>
     </div>
 </template>
 
@@ -59,14 +41,11 @@
                 if (! this.autoScroll) {
                     return;
                 }
-                const previousScrollHeight = this.$refs.scroller.$el.scrollHeight;
-                // We need to wait 2 ticks for the dynamic scroller and for our own renderer
+                const previousScrollHeight = this.$refs.scroller.scrollHeight;
+                // We need to wait 1 tick for the message to be rendered
                 Vue.nextTick(() => {
-                    Vue.nextTick(() => {
-                        const deltaScrollHeight = this.$refs.scroller.$el.scrollHeight - previousScrollHeight;
-                        console.log('delta', deltaScrollHeight);
-                        this.scrollToBottom(deltaScrollHeight > 200);
-                    });
+                    const deltaScrollHeight = this.$refs.scroller.scrollHeight - previousScrollHeight;
+                    this.scrollToBottom(deltaScrollHeight > 200);
                 });
             },
             onContentLoaded: function() {
@@ -75,14 +54,14 @@
                 }
             },
             distanceToBottom: function() {
-                return this.$refs.scroller.$el.scrollHeight - this.$refs.scroller.$el.offsetHeight - this.$refs.scroller.$el.scrollTop;
+                return this.$refs.scroller.scrollHeight - this.$refs.scroller.offsetHeight - this.$refs.scroller.scrollTop;
             },
             onScroll: function() {
                 if (this.autoScrolling) {
                     return;
                 }
                 const distanceToBottom = this.distanceToBottom();
-                if (distanceToBottom > 200) {
+                if (distanceToBottom > 60) {
                     // Stop auto scroll
                     this.autoScroll = false;
                 } else if (distanceToBottom < 30) {
@@ -103,7 +82,7 @@
                     // Wait for smooth scroll to be disabled
                     Vue.nextTick(() => {
                         // Scroll directly to bottom
-                        this.$refs.scroller.scrollToBottom();
+                        this.$refs.scroller.scrollTop = this.$refs.scroller.scrollHeight;
                         // Re-enable smooth scroll
                         this.smoothScroll = true;
                         // Update scrolling state
@@ -111,7 +90,7 @@
                     });
                 } else {
                     // Smoothly scroll to bottom
-                    this.$refs.scroller.scrollToBottom();
+                    this.$refs.scroller.scrollTop = this.$refs.scroller.scrollHeight;
                     // In a few ms, check if still need to scroll
                     setTimeout(() => {
                         // Update state
@@ -121,7 +100,7 @@
                         if (distance > 1) {
                             this.scrollToBottom(false);
                         }
-                    }, 500);
+                    }, 100);
                 }
             },
         },
