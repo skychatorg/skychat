@@ -29,8 +29,10 @@ export class SkyChatClient extends EventEmitter {
     bind() {
         this.on('join-room', this.onJoinRoom.bind(this));
         this.on('message', this.onMessage.bind(this));
+        this.on('messages', this.onMessages.bind(this));
         this.on('private-message', this.onPrivateMessage.bind(this));
         this.on('message-edit', this.onMessageEdit.bind(this));
+        this.on('message-seen', this.onMessageSeen.bind(this));
         this.on('set-user', this.onSetUser.bind(this));
         this.on('connected-list', this.onConnectedList.bind(this));
         this.on('yt-sync', this.onYtSync.bind(this));
@@ -239,6 +241,28 @@ export class SkyChatClient extends EventEmitter {
      */
     onMessage(message) {
         this.store.commit('NEW_MESSAGE', message);
+        if (this.store.state.user.right >= 0 && this.store.state.focused) {
+            this.notifySeenMessage(message.id);
+        }
+    }
+
+    /**
+     *
+     * @param messages
+     */
+    onMessages(messages) {
+        this.store.commit('NEW_MESSAGES', messages);
+        if (this.store.state.user.right >= 0 && this.store.state.focused && messages.length > 0) {
+            this.notifySeenMessage(messages[messages.length - 1].id);
+        }
+    }
+
+    /**
+     * Send a last message seen notification
+     * @param {number} messageId
+     */
+    notifySeenMessage(messageId) {
+        this.sendMessage(`/lastseen ${messageId}`);
     }
 
     /**
@@ -255,6 +279,14 @@ export class SkyChatClient extends EventEmitter {
      */
     onMessageEdit(message) {
         this.store.commit('MESSAGE_EDIT', message);
+    }
+
+    /**
+     *
+     * @param data
+     */
+    onMessageSeen(data) {
+        this.store.commit('MESSAGE_SEEN', data);
     }
 
     /**

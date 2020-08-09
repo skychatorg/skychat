@@ -1,12 +1,17 @@
 <template>
     <div class="messages">
         <player class="player" v-show="playerState && playerState.enabled"/>
-        <div class="messages-feed scrollbar" ref="messages" @scroll="onScroll">
-            <message v-for="message in messages"
-                     @select="$emit('select-message', message)"
+
+        <div class="messages-feed scrollbar"
+             ref="scroller"
+             @scroll="onScroll"
+             :style="smoothScroll ? 'scroll-behavior: smooth' : ''">
+            <message v-for="item in messages"
+                     @select="$emit('select-message', item)"
                      @content-loaded="onContentLoaded"
-                     :key="message.id"
-                     :message="message"
+                     :key="item.id"
+                     :message="item"
+                     :seen-users="lastMessageSeenIds[item.id] || []"
                      class="message"/>
         </div>
     </div>
@@ -22,51 +27,80 @@
         data: function() {
             return {
                 autoScroll: true,
+                smoothScroll: true,
                 autoScrolling: false,
             };
         },
         watch: {
             messages: function() {
-                Vue.nextTick(() => {
-                    if (this.autoScroll) {
-                        this.scrollToBottom();
-                    }
-                });
+                this.scrollToBottomIfAutoScroll();
             }
         },
         methods: {
+            scrollToBottomIfAutoScroll: function() {
+                if (! this.autoScroll) {
+                    return;
+                }
+                const previousScrollHeight = this.$refs.scroller.scrollHeight;
+                // We need to wait 1 tick for the message to be rendered
+                Vue.nextTick(() => {
+                    const deltaScrollHeight = this.$refs.scroller.scrollHeight - previousScrollHeight;
+                    this.scrollToBottom(deltaScrollHeight > 200);
+                });
+            },
             onContentLoaded: function() {
                 if (this.autoScroll) {
                     this.scrollToBottom();
                 }
             },
+            distanceToBottom: function() {
+                return this.$refs.scroller.scrollHeight - this.$refs.scroller.offsetHeight - this.$refs.scroller.scrollTop;
+            },
             onScroll: function() {
                 if (this.autoScrolling) {
                     return;
                 }
-                const distanceToBottom = this.$refs.messages.scrollHeight - this.$refs.messages.offsetHeight - this.$refs.messages.scrollTop;
-                if (distanceToBottom > 22) {
+                const distanceToBottom = this.distanceToBottom();
+                if (distanceToBottom > 60) {
                     // Stop auto scroll
                     this.autoScroll = false;
-                } else if (distanceToBottom < 20) {
+                } else if (distanceToBottom < 30) {
                     this.autoScroll = true;
                 }
             },
-            scrollToBottom: function() {
+            scrollToBottom: function(immediate) {
+                // If already auto scrolling, abort
                 if (this.autoScrolling) {
                     return;
                 }
+                // Set scrolling state to true
                 this.autoScrolling = true;
-                this.scrollTick();
-            },
-            scrollTick: function() {
-                const messages = this.$refs.messages;
-                messages.scrollTop += (messages.scrollHeight - messages.offsetHeight - messages.scrollTop) * .3;
-                if (Math.abs(messages.scrollHeight - messages.offsetHeight - messages.scrollTop) > 6) {
-                    setTimeout(this.scrollTick.bind(this), 10);
+                // If in immediate mode
+                if (immediate) {
+                    // Disable smooth scroll
+                    this.smoothScroll = false;
+                    // Wait for smooth scroll to be disabled
+                    Vue.nextTick(() => {
+                        // Scroll directly to bottom
+                        this.$refs.scroller.scrollTop = this.$refs.scroller.scrollHeight;
+                        // Re-enable smooth scroll
+                        this.smoothScroll = true;
+                        // Update scrolling state
+                        this.autoScrolling = false;
+                    });
                 } else {
-                    messages.scrollTop = messages.scrollHeight;
-                    this.autoScrolling = false;
+                    // Smoothly scroll to bottom
+                    this.$refs.scroller.scrollTop = this.$refs.scroller.scrollHeight;
+                    // In a few ms, check if still need to scroll
+                    setTimeout(() => {
+                        // Update state
+                        this.autoScrolling = false;
+                        // If still need to scroll
+                        const distance = this.distanceToBottom();
+                        if (distance > 1) {
+                            this.scrollToBottom(false);
+                        }
+                    }, 100);
                 }
             },
         },
@@ -80,6 +114,9 @@
             playerState: function() {
                 return this.$store.state.playerState;
             },
+            lastMessageSeenIds: function() {
+                return this.$store.state.lastMessageSeenIds;
+            }
         }
     });
 </script>
@@ -105,7 +142,6 @@
             overflow-y: scroll;
             display: flex;
             flex-direction: column;
-            margin-top: 5px;
         }
     }
 </style>

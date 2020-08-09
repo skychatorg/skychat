@@ -229,6 +229,7 @@
 
             >.new-message {
                 flex-grow: 1;
+                height: 38px;
                 padding: 10px;
                 resize: none;
                 border: none;

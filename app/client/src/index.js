@@ -4,7 +4,11 @@ import {SkyChatClient} from "./skychat/SkyChatClient";
 import store from "./store/store";
 import VModal from 'vue-js-modal';
 import Mousetrap from "mousetrap";
+import VueVirtualScroller from 'vue-virtual-scroller';
+import 'vue-virtual-scroller/dist/vue-virtual-scroller.css';
 
+
+Vue.use(VueVirtualScroller);
 
 Vue.use(VModal, {
     dynamic: true,
@@ -17,9 +21,11 @@ Vue.use(VModal, {
     }
 });
 
+const client = new SkyChatClient(store);
+
 Vue.prototype.$store = store;
 
-Vue.prototype.$client = new SkyChatClient(store);
+Vue.prototype.$client = client;
 Vue.prototype.$client.connect();
 
 Vue.prototype.$mousetrap = new Mousetrap();
@@ -48,6 +54,9 @@ window.addEventListener('blur', () => {
     store.commit('BLUR');
 });
 window.addEventListener('focus', () => {
+    if (store.state.lastMissedMessage) {
+        client.notifySeenMessage(store.state.lastMissedMessage.id);
+    }
     store.commit('FOCUS');
 });
 setInterval(() => {
@@ -66,4 +75,3 @@ setInterval(() => {
     document.title = chars[newPosition] + ' ' + store.state.documentTitle;
 
 }, 1000);
-

@@ -30,6 +30,18 @@ const store = {
         },
         currentRoom: null,
         connectedList: [],
+
+        /**
+         * Mapping from message ids to users whose last seen message id is this message.
+         * Generated from the list of connected users.
+         */
+        lastMessageSeenIds: {},
+
+        /**
+         * Last message missed because the windows was not focused, if any
+         */
+        lastMissedMessage: null,
+
         cursors: {},
         messages: [],
         privateMessages: {},
@@ -44,6 +56,7 @@ const store = {
             state.focused = true;
             state.documentTitle = DEFAULT_DOCUMENT_TITLE;
             state.documentTitleBlinking = false;
+            state.lastMissedMessage = null;
         },
         BLUR(state) {
             state.focused = false;
@@ -74,16 +87,53 @@ const store = {
         SET_USER(state, user) {
             state.user = user;
         },
-        SET_CONNECTED_LIST(state, users) {
-            state.connectedList = users;
+        SET_CONNECTED_LIST(state, entries) {
+            state.connectedList = entries;
+            this.commit('GENERATE_LAST_MESSAGE_SEEN_IDS');
+        },
+        MESSAGE_SEEN(state, data) {
+            const entry = state.connectedList.find(e => e.user.id === data.user);
+            entry.user.data.plugins.lastseen = data.message;
+            this.commit('GENERATE_LAST_MESSAGE_SEEN_IDS');
+        },
+        GENERATE_LAST_MESSAGE_SEEN_IDS(state) {
+            // Update last seen message ids
+            const lastSeen = {};
+            for (const entry of state.connectedList) {
+                const id = entry.user.data.plugins.lastseen;
+                if (! id) {
+                    continue;
+                }
+                if (typeof lastSeen[id] === 'undefined') {
+                    lastSeen[id] = [];
+                }
+                lastSeen[id].push(entry.user);
+            }
+            state.lastMessageSeenIds = lastSeen;
         },
         NEW_MESSAGE(state, message) {
             state.messages.push(message);
             if (! state.focused) {
                 state.documentTitle = `New message by ${message.user.username}`;
                 state.documentTitleBlinking = true;
+                state.lastMissedMessage = message;
             }
             if (message.content.match(new RegExp('@' + state.user.username.toLowerCase(), 'i'))) {
+                new Audio('/assets/sound/notification.mp3').play();
+            }
+        },
+        NEW_MESSAGES(state, messages) {
+            if (messages.length === 0) {
+                return;
+            }
+            state.messages.push(...messages);
+            const lastMessage = messages[messages.length - 1];
+            if (! state.focused) {
+                state.documentTitle = `New message by ${lastMessage.user.username}`;
+                state.documentTitleBlinking = true;
+                state.lastMissedMessage = lastMessage;
+            }
+            if (lastMessage.content.match(new RegExp('@' + state.user.username.toLowerCase(), 'i'))) {
                 new Audio('/assets/sound/notification.mp3').play();
             }
         },
@@ -100,7 +150,7 @@ const store = {
                 state.privateMessages[otherUserName].unreadCount ++;
             }
             if (! state.focused) {
-                state.documentTitle = `New message by ${message.user.username}`;
+                state.documentTitle = `New message by ${privateMessage.user.username}`;
                 state.documentTitleBlinking = true;
             }
         },
