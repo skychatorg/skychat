@@ -13,6 +13,14 @@ import {UAParser} from "ua-parser-js";
  */
 export class Connection extends EventEmitter implements IBroadcaster {
 
+    public static readonly PING_INTERVAL_MS: number = 2000;
+
+    public static readonly MAXIMUM_MISSED_PING: number = 1;
+
+    public static readonly CLOSE_PING_TIMEOUT: number = 4504;
+
+    public static readonly CLOSE_KICKED: number = 4403;
+
     public session!: Session;
 
     public readonly webSocket: WebSocket;
@@ -32,6 +40,8 @@ export class Connection extends EventEmitter implements IBroadcaster {
 
     public readonly ip: string;
 
+    private lastPingDate: Date;
+
     constructor(session: Session, webSocket: WebSocket, request: http.IncomingMessage) {
         super();
 
@@ -43,12 +53,44 @@ export class Connection extends EventEmitter implements IBroadcaster {
         this.userAgent = ua.getBrowser().name || '';
         this.device = ua.getDevice().type || '';
         this.ip = typeof request.headers['x-forwarded-for'] === 'string' ? request.headers['x-forwarded-for'] : (request.connection.remoteAddress || '');
+        this.lastPingDate = new Date();
 
         session.attachConnection(this);
         this.webSocket.on('message', message => this.onMessage(message));
         this.webSocket.on('close', (code, message) => this.onClose(code, message));
 
+        setTimeout(this.sendPing.bind(this), Connection.PING_INTERVAL_MS);
+        this.on('ping', this.sendPong.bind(this));
+
         this.setRoom(null);
+    }
+
+    /**
+     * Send a ping to the client
+     */
+    private async sendPing(): Promise<void> {
+
+        // If websocket is not open, ignore
+        if (this.webSocket.readyState !== WebSocket.OPEN) {
+            return;
+        }
+
+        // If last pings did not came back
+        if (new Date().getTime() - this.lastPingDate.getTime() >= (1 + Connection.MAXIMUM_MISSED_PING) * Connection.PING_INTERVAL_MS) {
+            this.webSocket.close(Connection.CLOSE_PING_TIMEOUT);
+            return;
+        }
+
+        this.lastPingDate = new Date();
+        this.send('ping', null);
+        setTimeout(this.sendPing.bind(this), Connection.PING_INTERVAL_MS);
+    }
+
+    /**
+     * Send a pong to the client
+     */
+    private async sendPong(): Promise<void> {
+        this.send('pong', null);
     }
 
     /**

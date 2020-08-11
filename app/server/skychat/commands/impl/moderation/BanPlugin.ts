@@ -104,7 +104,7 @@ export class BanPlugin extends Plugin {
         }
         this.syncStorage();
         for (const connection of session.connections) {
-            connection.close(4403, "You have been banned");
+            connection.close(Connection.CLOSE_KICKED, "You have been banned");
         }
         connection.send('message', UserController.createNeutralMessage('User has been banned').sanitized());
     }
@@ -134,7 +134,7 @@ export class BanPlugin extends Plugin {
         }
         this.syncStorage();
         for (const connection of session.connections) {
-            connection.close(4403, "You have been banned");
+            connection.close(Connection.CLOSE_KICKED, "You have been banned");
         }
         this.room.send('message', UserController.createNeutralMessage('User has been banned').sanitized());
     }
@@ -185,7 +185,7 @@ export class BanPlugin extends Plugin {
 
     private checkBan(connection: Connection): void {
         if (this.isBanned(connection)) {
-            connection.close(4403, 'You are banned from this server');
+            connection.close(Connection.CLOSE_KICKED, 'You are banned from this server');
         }
     }
 
