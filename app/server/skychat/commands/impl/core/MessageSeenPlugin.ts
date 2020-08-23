@@ -3,6 +3,11 @@ import {Connection} from "../../../Connection";
 import {UserController} from "../../../UserController";
 
 
+export type MessageSeenEventData = {
+    user: number;
+    message: number;
+};
+
 export class MessageSeenPlugin extends Plugin {
 
     readonly name = 'lastseen';
@@ -37,6 +42,6 @@ export class MessageSeenPlugin extends Plugin {
             return;
         }
         await UserController.savePluginData(connection.session.user, this.name, message.id);
-        this.room.send('message-seen', {user: connection.session.user.id, message: message.id});
+        this.room.send('message-seen', {user: connection.session.user.id, message: message.id} as MessageSeenEventData);
     }
 }
