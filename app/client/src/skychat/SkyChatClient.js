@@ -8,6 +8,7 @@ export class SkyChatClient extends EventEmitter {
         this.webSocket = null;
         this.firstConnection = true;
         this.store = store;
+        this.lastPingDate = new Date();
         this.bind();
     }
 
@@ -44,6 +45,36 @@ export class SkyChatClient extends EventEmitter {
         this.on('error', this.onError.bind(this));
         this.on('roll', this.onRoll.bind(this));
         this.on('ytapi:search', this.onYtApiSearchResults.bind(this));
+
+        this.on('ping', this.sendPong.bind(this));
+    }
+
+    /**
+     * Send a ping
+     */
+    sendPing() {
+
+        // If websocket is not open, ignore
+        if (this.webSocket.readyState !== WebSocket.OPEN) {
+            return;
+        }
+
+        // If last pings did not came back
+        if (new Date().getTime() - this.lastPingDate.getTime() >= (1 + SkyChatClient.MAXIMUM_MISSED_PING) * SkyChatClient.PING_INTERVAL_MS) {
+            this.webSocket.close();
+            return;
+        }
+
+        this.lastPingDate = new Date();
+        this.sendEvent('ping', null);
+        setTimeout(this.sendPing.bind(this), SkyChatClient.PING_INTERVAL_MS);
+    }
+
+    /**
+     * Respond to a ping
+     */
+    sendPong() {
+        this.sendEvent('pong', null);
     }
 
     /**
@@ -54,9 +85,8 @@ export class SkyChatClient extends EventEmitter {
         if (authToken) {
             this.sendEvent('set-token', JSON.parse(authToken));
         }
-        if (! this.firstConnection) {
-            this.sendEvent('join-room', {roomId: 0});
-        }
+        this.lastPingDate = new Date();
+        setTimeout(this.sendPing.bind(this), SkyChatClient.PING_INTERVAL_MS);
         this.store.commit('SET_CONNECTION_STATE', WebSocket.OPEN);
         this.firstConnection = false;
     }
@@ -373,4 +403,5 @@ export class SkyChatClient extends EventEmitter {
 }
 
 SkyChatClient.LOCAL_STORAGE_TOKEN_KEY = 'auth-token';
-
+SkyChatClient.PING_INTERVAL_MS = 2000;
+SkyChatClient.MAXIMUM_MISSED_PING = 1;

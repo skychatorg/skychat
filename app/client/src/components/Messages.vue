@@ -41,11 +41,9 @@
                 if (! this.autoScroll) {
                     return;
                 }
-                const previousScrollHeight = this.$refs.scroller.scrollHeight;
                 // We need to wait 1 tick for the message to be rendered
                 Vue.nextTick(() => {
-                    const deltaScrollHeight = this.$refs.scroller.scrollHeight - previousScrollHeight;
-                    this.scrollToBottom(deltaScrollHeight > 200);
+                    this.scrollToBottom(this.distanceToBottom() > 200);
                 });
             },
             onContentLoaded: function() {
@@ -98,7 +96,7 @@
                         // If still need to scroll
                         const distance = this.distanceToBottom();
                         if (distance > 1) {
-                            this.scrollToBottom(false);
+                            this.scrollToBottom(distance > 200);
                         }
                     }, 100);
                 }
