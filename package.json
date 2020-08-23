@@ -1,8 +1,10 @@
 {
     "name": "skychat",
-    "private": true,
-    "version": "0.0.0",
+    "private": false,
+    "version": "0.0.1",
     "description": "",
+    "types": "build/index.d.ts",
+    "main": "build/index.js",
     "scripts": {
         "setup": "bash scripts/setup.sh",
         "clean:client": "rm -rf dist",

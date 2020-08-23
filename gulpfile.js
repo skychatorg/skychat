@@ -15,7 +15,7 @@ const pugPaths = { pages: ['app/client/views/*.pug'] };
 const scssPaths = { pages: ['app/client/css/*.scss'] };
 const resPaths = { pages: ['app/client/assets/**/*'] };
 const srcPaths = 'app/client/src/index.js';
-const serverSrcPaths = ['app/server/**/*.ts'];
+const serverSrcPaths = ['app/server/**/*.ts', 'app/server/index.ts'];
 const distPath = 'dist';
 
 gulp.task("build-client-views", () => {
