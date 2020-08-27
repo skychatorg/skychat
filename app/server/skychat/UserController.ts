@@ -6,7 +6,6 @@ import {AuthToken, User} from "./User";
 import SQL from "sql-template-strings";
 import {Plugin} from "./commands/Plugin";
 import {Message, MessageConstructorOptions, MessageMeta} from "./Message";
-import {content} from "googleapis/build/src/apis/content";
 
 
 export class UserController {
@@ -274,16 +273,22 @@ export class UserController {
 
     /**
      * Change one's username
-     * @param userId
+     * @param user
      * @param newUsername
      * @param currentPassword
      */
-    public static async changeUsername(userId: number, newUsername: string, currentPassword: string) {
+    public static async changeUsername(user: User, newUsername: string, currentPassword: string) {
+        // Compute new password
+        const newHashedPassword = UserController.hashPassword(user.id, newUsername.toLowerCase(), currentPassword);
+        // Update user object
+        user.username = newUsername;
+        user.setHashedPassword(newHashedPassword);
+        // Update database
         await DatabaseHelper.db.run(SQL`update users set
-            username=${newUsername.toLowerCase()},
-            username_custom=${newUsername},
-            password=${UserController.hashPassword(userId, newUsername.toLowerCase(), currentPassword)}
-            where id=${userId}`);
+            username=${user.username.toLowerCase()},
+            username_custom=${user.username},
+            password=${newHashedPassword}
+            where id=${user.id}`);
     }
 }
 

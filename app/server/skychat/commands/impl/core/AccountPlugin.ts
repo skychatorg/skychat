@@ -93,14 +93,11 @@ export class AccountPlugin extends Plugin {
 
         await UserController.buy(user, AccountPlugin.CHANGE_USERNAME_PRICE);
 
-        const message = UserController.createNeutralMessage(`Your username has been changed to ${username}'`);
+        const message = UserController.createNeutralMessage(`Your username has been changed to ${username}`);
         connection.send('message', message.sanitized());
 
-        await UserController.changeUsername(user.id, username, password);
-
-        for (const conn of connection.session.connections) {
-            conn.close();
-        }
+        await UserController.changeUsername(user, username, password);
+        connection.session.identifier = user.username.toLowerCase();
     }
 
     async onConnectionAuthenticated(connection: Connection): Promise<void> {

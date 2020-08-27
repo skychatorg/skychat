@@ -76,11 +76,11 @@ export class User {
 
     public readonly id: number;
 
-    public readonly username: string;
+    public username: string;
 
     public email: string | null;
 
-    private readonly password: string;
+    private password: string;
 
     public money: number;
 
@@ -111,6 +111,14 @@ export class User {
      */
     public testHashedPassword(hashed: string): boolean {
         return hashed === this.password;
+    }
+
+    /**
+     * Set new password
+     * @param newHashedPassword
+     */
+    public setHashedPassword(newHashedPassword: string): void {
+        this.password = newHashedPassword;
     }
 
     /**
