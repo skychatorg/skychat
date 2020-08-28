@@ -32,7 +32,9 @@
                 let src = 'https://www.youtube.com/embed/' + this.playerState.video.id;
                 src += '?autoplay=1';
                 src += '&origin=' + document.location.origin;
-                src += '&start=' + parseInt(this.playerState.cursor);
+                if (this.playerState.video.duration > 0) {
+                    src += '&start=' + parseInt(this.playerState.cursor);
+                }
                 this.src = src;
                 this.previousPlayedId = this.playerState.video.id;
             }
