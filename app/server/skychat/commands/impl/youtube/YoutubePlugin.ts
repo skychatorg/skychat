@@ -334,7 +334,7 @@ export class YoutubePlugin extends Plugin {
         if (this.storage.currentVideo) {
 
             // If video has finished
-            if (new Date() > new Date(this.storage.currentVideo.startedDate.getTime() + (this.storage.currentVideo.video.duration - this.storage.currentVideo.start) * 1000 + 2000)) {
+            if (this.storage.currentVideo.video.duration > 0 && new Date() > new Date(this.storage.currentVideo.startedDate.getTime() + (this.storage.currentVideo.video.duration - this.storage.currentVideo.start) * 1000 + 2000)) {
                 this.storage.currentVideo = null;
 
                 // If there is no more video to play, sync clients (this will deactive the player)
