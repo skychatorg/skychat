@@ -52,7 +52,7 @@ export class Server {
         this.app.use(express.static('dist'));
         this.app.use('/uploads', express.static('uploads'));
         this.app.use(fileUpload({
-            limits: { fileSize: 5 * 1024 * 1024 },
+            limits: { fileSize: 10 * 1024 * 1024 },
             createParentPath: true,
             useTempFiles: true,
             tempFileDir: '/tmp/'

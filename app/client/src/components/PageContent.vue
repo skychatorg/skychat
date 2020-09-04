@@ -9,14 +9,14 @@
 
         <template v-if="page === 'room'">
 
-            <template v-if="true">
+            <template v-if="false">
                 <section id="cinema" class="scrollbar">
                     <player-background class="player-background"></player-background>
                     <messages-overlay class="messages-overlay"></messages-overlay>
                 </section>
             </template>
 
-            <template v-if="false">
+            <template v-if="true">
 
                 <section class="default-container">
                     <!-- left col -->
