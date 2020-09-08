@@ -4,11 +4,7 @@ import {SkyChatClient} from "./skychat/SkyChatClient";
 import store from "./store/store";
 import VModal from 'vue-js-modal';
 import Mousetrap from "mousetrap";
-import VueVirtualScroller from 'vue-virtual-scroller';
-import 'vue-virtual-scroller/dist/vue-virtual-scroller.css';
 
-
-Vue.use(VueVirtualScroller);
 
 Vue.use(VModal, {
     dynamic: true,
