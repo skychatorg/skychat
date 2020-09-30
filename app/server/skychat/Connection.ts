@@ -13,7 +13,7 @@ import {UAParser} from "ua-parser-js";
  */
 export class Connection extends EventEmitter implements IBroadcaster {
 
-    public static readonly PING_INTERVAL_MS: number = 2000;
+    public static readonly PING_INTERVAL_MS: number = 10 * 1000;
 
     public static readonly MAXIMUM_MISSED_PING: number = 1;
 
@@ -60,7 +60,8 @@ export class Connection extends EventEmitter implements IBroadcaster {
         this.webSocket.on('close', (code, message) => this.onClose(code, message));
 
         setTimeout(this.sendPing.bind(this), Connection.PING_INTERVAL_MS);
-        this.on('ping', this.sendPong.bind(this));
+        this.on('pong', this.onPong.bind(this));
+        this.on('ping', this.onPing.bind(this));
 
         this.setRoom(null);
     }
@@ -70,26 +71,35 @@ export class Connection extends EventEmitter implements IBroadcaster {
      */
     private async sendPing(): Promise<void> {
 
+        return;
+
         // If websocket is not open, ignore
         if (this.webSocket.readyState !== WebSocket.OPEN) {
             return;
         }
 
         // If last pings did not came back
-        if (new Date().getTime() - this.lastPingDate.getTime() >= (1 + Connection.MAXIMUM_MISSED_PING) * Connection.PING_INTERVAL_MS) {
+        const missedPings = (new Date().getTime() - this.lastPingDate.getTime()) / Connection.PING_INTERVAL_MS - 1;
+        if (missedPings > Connection.MAXIMUM_MISSED_PING) {
             this.webSocket.close(Connection.CLOSE_PING_TIMEOUT);
             return;
         }
 
-        this.lastPingDate = new Date();
         this.send('ping', null);
         setTimeout(this.sendPing.bind(this), Connection.PING_INTERVAL_MS);
     }
 
     /**
+     * When the pong comes back
+     */
+    private async onPong(): Promise<void> {
+        this.lastPingDate = new Date();
+    }
+
+    /**
      * Send a pong to the client
      */
-    private async sendPong(): Promise<void> {
+    private async onPing(): Promise<void> {
         this.send('pong', null);
     }
 
