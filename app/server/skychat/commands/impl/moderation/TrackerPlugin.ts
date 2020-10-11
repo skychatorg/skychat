@@ -60,8 +60,8 @@ export class TrackerPlugin extends Plugin {
         // Fix the `count` and `lastRegistered` field that has been added recently
         for (const relations of Object.values(this.storage)) {
             for (const relation of relations) {
-                relation.count = relation.count || 0;
-                relation.lastRegistered = relation.lastRegistered || new Date().getTime();
+                relation.count = relation.count || 1;
+                relation.lastRegistered = relation.lastRegistered || 0;
             }
         }
     }
@@ -82,7 +82,7 @@ export class TrackerPlugin extends Plugin {
         const type = param.split(' ')[0] as NodeType;
         const value = param.slice(type.length + 1);
         const nodes = this.storage[TrackerPlugin.nodeToKey(type, value)] || [];
-        const sortedNodes = nodes.sort((a, b) => a.count - b.count);
+        const sortedNodes = nodes.sort((a, b) => b.count - a.count);
 
         const formatter = MessageFormatter.getInstance();
         let html = '<table class="skychat-table">';
