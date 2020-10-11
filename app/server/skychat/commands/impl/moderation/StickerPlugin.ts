@@ -10,7 +10,7 @@ export class StickerPlugin extends Plugin {
 
     readonly aliases = ['stickeradd', 'stickerdel'];
 
-    readonly minRight = 30;
+    readonly minRight = 40;
 
     readonly rules = {
         sticker: { maxCount: 0 },

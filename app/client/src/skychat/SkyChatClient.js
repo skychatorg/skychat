@@ -8,7 +8,7 @@ export class SkyChatClient extends EventEmitter {
         this.webSocket = null;
         this.firstConnection = true;
         this.store = store;
-        this.lastPingDate = new Date();
+        this.lastPingDate = null;
         this.bind();
     }
 
@@ -46,7 +46,8 @@ export class SkyChatClient extends EventEmitter {
         this.on('roll', this.onRoll.bind(this));
         this.on('ytapi:search', this.onYtApiSearchResults.bind(this));
 
-        this.on('ping', this.sendPong.bind(this));
+        this.on('pong', this.onPong.bind(this));
+        this.on('ping', this.onPing.bind(this));
     }
 
     /**
@@ -54,26 +55,35 @@ export class SkyChatClient extends EventEmitter {
      */
     sendPing() {
 
+        return;
+
         // If websocket is not open, ignore
         if (this.webSocket.readyState !== WebSocket.OPEN) {
             return;
         }
 
         // If last pings did not came back
-        if (new Date().getTime() - this.lastPingDate.getTime() >= (1 + SkyChatClient.MAXIMUM_MISSED_PING) * SkyChatClient.PING_INTERVAL_MS) {
+        const missedPings = (new Date().getTime() - this.lastPingDate.getTime()) / SkyChatClient.PING_INTERVAL_MS - 1;
+        if (missedPings > SkyChatClient.MAXIMUM_MISSED_PING) {
             this.webSocket.close();
             return;
         }
 
-        this.lastPingDate = new Date();
         this.sendEvent('ping', null);
         setTimeout(this.sendPing.bind(this), SkyChatClient.PING_INTERVAL_MS);
     }
 
     /**
+     * When the ping event comes back
+     */
+    onPong() {
+        this.lastPingDate = new Date();
+    }
+
+    /**
      * Respond to a ping
      */
-    sendPong() {
+    onPing() {
         this.sendEvent('pong', null);
     }
 
@@ -403,5 +413,5 @@ export class SkyChatClient extends EventEmitter {
 }
 
 SkyChatClient.LOCAL_STORAGE_TOKEN_KEY = 'auth-token';
-SkyChatClient.PING_INTERVAL_MS = 2000;
+SkyChatClient.PING_INTERVAL_MS = 5 * 1000;
 SkyChatClient.MAXIMUM_MISSED_PING = 1;
