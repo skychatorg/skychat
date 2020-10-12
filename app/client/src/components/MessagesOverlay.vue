@@ -1,5 +1,6 @@
 <template>
     <div class="messages-overlay">
+        <quick-actions class="quick-actions"></quick-actions>
         <messages :hide-player="true" ref="messages" @select-message="onSelectMessage" class="messages scrollbar" />
         <typing-list class="typing-list" />
         <message-form ref="messageForm" class="message-form"/>
@@ -11,9 +12,10 @@
     import Messages from "./Messages.vue";
     import TypingList from "./TypingList.vue";
     import MessageForm from "./MessageForm.vue";
+    import QuickActions from "./QuickActions.vue";
 
     export default Vue.extend({
-        components: {Messages, TypingList, MessageForm},
+        components: {Messages, TypingList, MessageForm, QuickActions},
         methods: {
             onSelectMessage: function() {
 
@@ -26,6 +28,10 @@
 
 <style lang="scss" scoped>
 .messages-overlay {
+
+    .quick-actions {
+        margin-left: 6px;
+    }
 
     .messages {
         height: 200px;

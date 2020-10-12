@@ -9,14 +9,7 @@
 
         <template v-if="page === 'room'">
 
-            <template v-if="false">
-                <section id="cinema" class="scrollbar">
-                    <player-background class="player-background"></player-background>
-                    <messages-overlay class="messages-overlay"></messages-overlay>
-                </section>
-            </template>
-
-            <template v-if="true">
+            <template v-if="! cinemaMode">
 
                 <section class="default-container">
                     <!-- left col -->
@@ -33,6 +26,13 @@
                         <connected-list></connected-list>
                         <quick-actions></quick-actions>
                     </section>
+                </section>
+            </template>
+
+            <template v-if="cinemaMode">
+                <section id="cinema" class="scrollbar">
+                    <player-background class="player-background"></player-background>
+                    <messages-overlay class="messages-overlay"></messages-overlay>
                 </section>
             </template>
         </template>
@@ -54,6 +54,13 @@
 
     export default Vue.extend({
         components: {AuthPage, Messages, TypingList, MessageForm, Polls, PlayerPreview, PlayerBackground, ConnectedList, QuickActions, MessagesOverlay},
+        watch: {
+            cinemaMode: function() {
+
+                console.log('cinema mode changed', this.cinemaMode);
+                this.$client.ytSync();
+            },
+        },
         methods: {
 
             onSelectMessage: function(message) {
@@ -76,7 +83,10 @@
         computed: {
             page: function() {
                 return this.$store.state.page;
-            }
+            },
+            cinemaMode: function() {
+                return this.$store.state.cinemaMode;
+            },
         },
     });
 </script>

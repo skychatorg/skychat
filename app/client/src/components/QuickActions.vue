@@ -2,9 +2,13 @@
 
     <div class="quick-actions">
 
-        <div class="quick-actions-group" v-for="group in actions">
+        <div class="quick-actions-group"
+            v-for="group in actions"
+            :key="group.name"
+            v-show="(cinemaMode && group.showInCinema) || (! cinemaMode && group.showInNonCinema)">
             <div class="quick-actions-group-content">
                 <div v-for="action in group.actions"
+                     :key="action.id"
                      @click="onActivate(action.id)"
                      class="quick-action"
                      :class="'action-' + action.id"
@@ -33,6 +37,8 @@
                 actions: [
                     {
                         name: "Youtube",
+                        showInCinema: false,
+                        showInNonCinema: true,
                         actions: [
                             {
                                 id: 'yt-toggle',
@@ -60,7 +66,47 @@
                         ]
                     },
                     {
+                        name: "Misc",
+                        showInCinema: false,
+                        showInNonCinema: true,
+                        actions: [
+                            {
+                                id: 'cursor-toggle',
+                                title: "Enable/disable cursors",
+                                icon: 'mouse',
+                                shortcuts: ['ctrl+shift+c']
+                            },
+                            {
+                                id: 'cinema-mode',
+                                title: "Toggle cinema mode",
+                                icon: 'tv',
+                                shortcuts: ['alt+enter']
+                            },
+                            {
+                                id: 'help',
+                                title: "See available commands",
+                                icon: 'help',
+                                shortcuts: ['ctrl+h']
+                            },
+                        ]
+                    },
+                    {
+                        name: "Misc (Cinema)",
+                        showInCinema: true,
+                        showInNonCinema: false,
+                        actions: [
+                            {
+                                id: 'cinema-mode',
+                                title: "Toggle cinema mode",
+                                icon: 'tv',
+                                shortcuts: []
+                            },
+                        ]
+                    },
+                    {
                         name: "Shop",
+                        showInCinema: false,
+                        showInNonCinema: true,
                         actions: [
                             {
                                 id: 'shop',
@@ -84,6 +130,8 @@
                     },
                     {
                         name: "Games",
+                        showInCinema: false,
+                        showInNonCinema: true,
                         actions: [
                             {
                                 id: 'guess',
@@ -96,23 +144,6 @@
                                 title: "Start a game of roulette",
                                 icon: 'casino',
                                 shortcuts: ['ctrl+r']
-                            },
-                        ]
-                    },
-                    {
-                        name: "Misc",
-                        actions: [
-                            {
-                                id: 'cursor-toggle',
-                                title: "Enable/disable cursors",
-                                icon: 'mouse',
-                                shortcuts: ['ctrl+shift+c']
-                            },
-                            {
-                                id: 'help',
-                                title: "See available commands",
-                                icon: 'help',
-                                shortcuts: ['ctrl+h']
                             },
                         ]
                     },
@@ -159,6 +190,8 @@
                         return `<b>Roll</b>`;
                     case 'help':
                         return `<b>Help</b>`;
+                    case 'cinema-mode':
+                        return `<i class="material-icons md-16" style="color:${this.cinemaMode ? '' : 'gray'}">toggle_${this.cinemaMode ? 'on' : 'off'}</i>`;
                 }
             },
             onActivate: function(id) {
@@ -186,11 +219,16 @@
                         return this.$client.sendMessage('/roll start');
                     case 'help':
                         return this.$client.sendMessage('/help');
+                    case 'cinema-mode':
+                        return this.$store.commit('TOGGLE_CINEMA_MODE'); 
                 }
             },
         },
 
         computed: {
+            cinemaMode: function() {
+                return this.$store.state.cinemaMode;
+            },
             user: function() {
                 return this.$store.state.user;
             }
@@ -266,6 +304,7 @@
                         }
                     }
                     &.action-help,
+                    &.action-cinema-mode,
                     &.action-cursor-toggle {
                         border-left-color: #e0a067 !important;
                         .icon {
