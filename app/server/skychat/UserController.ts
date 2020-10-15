@@ -6,7 +6,6 @@ import {AuthToken, User} from "./User";
 import SQL from "sql-template-strings";
 import {Plugin} from "./commands/Plugin";
 import {Message, MessageConstructorOptions, MessageMeta} from "./Message";
-import {content} from "googleapis/build/src/apis/content";
 
 
 export class UserController {
@@ -105,12 +104,9 @@ export class UserController {
      * Get an user in the database from its id
      * @param username
      */
-    public static async getUserByUsername(username: string): Promise<User> {
+    public static async getUserByUsername(username: string): Promise<User | null> {
         const userObject = await DatabaseHelper.db.get(SQL`SELECT * FROM users WHERE username = ${username.toLowerCase()}`);
-        if (! userObject) {
-            throw new Error('User does not exist');
-        }
-        return this.userRowToObject(userObject);
+        return userObject ? this.userRowToObject(userObject) : null;
     }
 
     /**
@@ -160,6 +156,9 @@ export class UserController {
      */
     public static async login(username: string, password: string): Promise<User> {
         const user = await UserController.getUserByUsername(username);
+        if (! user) {
+            throw new Error('User does not exist');
+        }
         if (! user.testHashedPassword(UserController.hashPassword(user.id, user.username, password))) {
             throw new Error('Incorrect password');
         }
@@ -269,6 +268,26 @@ export class UserController {
             right=${user.right},
             data=${JSON.stringify(user.data)},
             storage=${JSON.stringify(user.storage)}            
+            where id=${user.id}`);
+    }
+
+    /**
+     * Change one's username
+     * @param user
+     * @param newUsername
+     * @param currentPassword
+     */
+    public static async changeUsername(user: User, newUsername: string, currentPassword: string) {
+        // Compute new password
+        const newHashedPassword = UserController.hashPassword(user.id, newUsername.toLowerCase(), currentPassword);
+        // Update user object
+        user.username = newUsername;
+        user.setHashedPassword(newHashedPassword);
+        // Update database
+        await DatabaseHelper.db.run(SQL`update users set
+            username=${user.username.toLowerCase()},
+            username_custom=${user.username},
+            password=${newHashedPassword}
             where id=${user.id}`);
     }
 }

@@ -6,6 +6,7 @@ import {Message} from "../../../Message";
 import * as striptags from "striptags";
 import {UserController} from "../../../UserController";
 import * as geoip from "geoip-lite";
+import {MessageFormatter} from "../../../MessageFormatter";
 
 
 export class IpPlugin extends Command {
@@ -24,6 +25,8 @@ export class IpPlugin extends Command {
     };
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
+
+        const formatter = MessageFormatter.getInstance();
 
         // List of connections to be included
         let connections;
@@ -60,10 +63,10 @@ export class IpPlugin extends Command {
             content += `
                 <tr>
                     <td>${roomId}</td>
-                    <td>${connection.session.identifier}</td>
+                    <td>${formatter.getButtonHtml(connection.session.identifier, '/track username ' + connection.session.identifier, true, true)}</td>
                     <td>${connection.origin}</td>
                     <td>${connection.userAgent}</td>
-                    <td>${connection.ip}</td>
+                    <td>${formatter.getButtonHtml(connection.ip, '/track ip ' + connection.ip, true, true)}</td>
                     <td>${geoIp ? `<a class="skychat-link" href="${geoIpLink}" rel="nofollow" target="_blank">${geoIp.country + ' / ' + geoIp.city}</a>` : ''}</td>
                 </tr>`;
         }

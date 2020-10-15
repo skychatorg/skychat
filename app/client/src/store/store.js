@@ -12,6 +12,7 @@ const store = {
         documentTitleBlinking: false,
         page: 'welcome',
         mobileCurrentPage: 'tchat',
+        cinemaMode: false,
         channel: null,
         connectionState: WebSocket.CLOSED,
         user: {
@@ -66,6 +67,9 @@ const store = {
         },
         SET_MOBILE_PAGE(state, mobilePage) {
             state.mobileCurrentPage = mobilePage;
+        },
+        TOGGLE_CINEMA_MODE(state) {
+            state.cinemaMode = ! state.cinemaMode;
         },
         SET_CHANNEL(state, channelName) {
             channelName = channelName.toLowerCase();

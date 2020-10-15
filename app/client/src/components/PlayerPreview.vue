@@ -83,6 +83,10 @@
                     this.cursorPercent = 0;
                     return;
                 }
+                if (this.playerState.video.duration === 0) {
+                    this.cursorPercent = 0;
+                    return;
+                }
                 let pct = (new Date().getTime() / 1000 - this.playerState.startedDate + this.playerState.start) / this.playerState.video.duration;
                 pct = Math.max(0, pct);
                 pct = Math.min(1, pct);

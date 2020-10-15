@@ -10,7 +10,9 @@ import {MessageFormatter} from "../../../MessageFormatter";
 type NodeType = 'username' | 'ip';
 type Node = {
     type: NodeType,
-    value: string
+    value: string,
+    count: number,
+    lastRegistered: number,
 }
 
 type StorageObject = {
@@ -21,8 +23,10 @@ export class TrackerPlugin extends Plugin {
 
     public static readonly SOURCE_TYPES: NodeType[] = ['username', 'ip'];
 
-    public static stringifyNode(node: Node): string {
-        return `${node.type}:${node.value}`;
+    public static readonly COUNT_INCREMENT_COOLDOWN_MS: number = 24 * 60 * 60 * 1000;
+
+    public static nodeToKey(type: NodeType, value: string): string {
+        return `${type}:${value}`;
     }
 
     readonly name = 'track';
@@ -47,6 +51,21 @@ export class TrackerPlugin extends Plugin {
         this.loadStorage();
     }
 
+    /**
+     * Fix storage data for old versions
+     */
+    protected loadStorage(): void {
+        super.loadStorage();
+
+        // Fix the `count` and `lastRegistered` field that has been added recently
+        for (const relations of Object.values(this.storage)) {
+            for (const relation of relations) {
+                relation.count = relation.count || 1;
+                relation.lastRegistered = relation.lastRegistered || 0;
+            }
+        }
+    }
+
     async run(alias: string, param: string, connection: Connection): Promise<void> {
 
         if (alias === 'track') {
@@ -62,7 +81,8 @@ export class TrackerPlugin extends Plugin {
     async handleTrack(param: string, connection: Connection): Promise<void> {
         const type = param.split(' ')[0] as NodeType;
         const value = param.slice(type.length + 1);
-        const nodes = this.storage[TrackerPlugin.stringifyNode({type, value})] || [];
+        const nodes = this.storage[TrackerPlugin.nodeToKey(type, value)] || [];
+        const sortedNodes = nodes.sort((a, b) => b.count - a.count);
 
         const formatter = MessageFormatter.getInstance();
         let html = '<table class="skychat-table">';
@@ -72,17 +92,17 @@ export class TrackerPlugin extends Plugin {
                 <td>source value</td>
                 <td>target type</td>
                 <td>target value</td>
-                <td></td>
+                <td>count</td>
             </tr>
         `;
-        for (let node of nodes) {
+        for (let node of sortedNodes) {
             html += `
                 <tr>
                     <td>${type}</td>
                     <td>${value}</td>
                     <td>${node.type}</td>
-                    <td>${node.value}</td>
-                    <td>${formatter.getButtonHtml('search', '/track ' + node.type + ' ' + node.value, true, true)}</td>
+                    <td>${formatter.getButtonHtml(node.value, '/track ' + node.type + ' ' + node.value, true, true)}</td>
+                    <td>${node.count}</td>
                 </tr>
             `;
         }
@@ -95,44 +115,74 @@ export class TrackerPlugin extends Plugin {
         }).sanitized());
     }
 
-    public registerAssociation(node1: Node, node2: Node): void {
+    public registerAssociation(type1: NodeType, value1: string, type2: NodeType, value2: string): void {
+
+        // Build keys
+        const key1 = TrackerPlugin.nodeToKey(type1, value1);
+        const key2 = TrackerPlugin.nodeToKey(type2, value2);
 
         // If there is no entry for node1 yet, create the array
-        if (! this.storage[TrackerPlugin.stringifyNode(node1)]) {
-            this.storage[TrackerPlugin.stringifyNode(node1)] = [];
+        if (! this.storage[key1]) {
+            this.storage[key1] = [];
         }
 
         // Add the entry node1 -> node2 if it does not exist yet
-        const stringifiedNode1 = TrackerPlugin.stringifyNode(node1);
-        const match1 = this.storage[stringifiedNode1].find(node => TrackerPlugin.stringifyNode(node) === TrackerPlugin.stringifyNode(node2));
+        // Then add 1 to the association counter if the cooldown as passed
+        let match1 = this.storage[key1].find(node => TrackerPlugin.nodeToKey(node.type, node.value) === key2);
         if (! match1) {
-            this.storage[stringifiedNode1].push(node2);
+            match1 = {
+                type: type2,
+                value: value2,
+                count: 1,
+                lastRegistered: new Date().getTime(),
+            };
+            this.storage[key1].push(match1);
+        }
+        if (new Date().getTime() > match1.lastRegistered + TrackerPlugin.COUNT_INCREMENT_COOLDOWN_MS) {
+            match1.count ++;
+            match1.lastRegistered = new Date().getTime();
         }
 
         // If there is no entry for node2 yet, create the array
-        if (! this.storage[TrackerPlugin.stringifyNode(node2)]) {
-            this.storage[TrackerPlugin.stringifyNode(node2)] = [];
+        if (! this.storage[key2]) {
+            this.storage[key2] = [];
         }
 
         // Add the entry node2 -> node1 if it does not exist yet
-        const stringifiedNode2 = TrackerPlugin.stringifyNode(node2);
-        const match2 = this.storage[stringifiedNode2].find(node => TrackerPlugin.stringifyNode(node) === TrackerPlugin.stringifyNode(node1));
+        // Then add 1 to the association counter if the cooldown as passed
+        let match2 = this.storage[key2].find(node => TrackerPlugin.nodeToKey(node.type, node.value) === key1);
         if (! match2) {
-            this.storage[stringifiedNode2].push(node1);
+            match2 = {
+                type: type1,
+                value: value1,
+                count: 1,
+                lastRegistered: new Date().getTime(),
+            };
+            this.storage[key2].push(match2);
+        }
+        if (new Date().getTime() > match2.lastRegistered + TrackerPlugin.COUNT_INCREMENT_COOLDOWN_MS) {
+            match2.count ++;
+            match2.lastRegistered = new Date().getTime();
         }
     }
 
     public async onConnectionJoinedRoom(connection: Connection): Promise<void> {
-        const node1: Node = {type: 'username', value: connection.session.user.id === 0 ? '*guest' : connection.session.identifier};
-        const node2: Node = {type: 'ip', value: connection.ip};
-        this.registerAssociation(node1, node2);
+        this.registerAssociation(
+            'username',
+            connection.session.user.id === 0 ? '*guest' : connection.session.identifier,
+            'ip',
+            connection.ip
+        );
         this.syncStorage();
     }
 
     public async onConnectionAuthenticated(connection: Connection): Promise<void> {
-        const node1: Node = {type: 'username', value: connection.session.user.id === 0 ? '*guest' : connection.session.identifier};
-        const node2: Node = {type: 'ip', value: connection.ip};
-        this.registerAssociation(node1, node2);
+        this.registerAssociation(
+            'username',
+            connection.session.user.id === 0 ? '*guest' : connection.session.identifier,
+            'ip',
+            connection.ip
+        );
         this.syncStorage();
     }
 }

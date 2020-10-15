@@ -259,8 +259,9 @@ export class YoutubePlugin extends Plugin {
             this.skip();
             return;
         }
+        const isLive = this.storage.currentVideo.video.duration === 0;
         const timeLeftMs = this.storage.currentVideo.video.duration * 1000 - (new Date().getTime() - this.storage.currentVideo.startedDate.getTime());
-        if (timeLeftMs < 30 * 1000) {
+        if (! isLive && timeLeftMs < 30 * 1000) {
             throw new Error(`You can't skip this video. It will end soon anyway.`);
         }
         if (this.skipVoteInProgress) {
@@ -285,7 +286,7 @@ export class YoutubePlugin extends Plugin {
         if (! this.storage.currentVideo) {
             return;
         }
-        this.storage.currentVideo.startedDate = new Date(0);
+        this.storage.currentVideo = null;
     }
 
     /**
@@ -334,7 +335,7 @@ export class YoutubePlugin extends Plugin {
         if (this.storage.currentVideo) {
 
             // If video has finished
-            if (new Date() > new Date(this.storage.currentVideo.startedDate.getTime() + (this.storage.currentVideo.video.duration - this.storage.currentVideo.start) * 1000 + 2000)) {
+            if (this.storage.currentVideo.video.duration > 0 && new Date() > new Date(this.storage.currentVideo.startedDate.getTime() + (this.storage.currentVideo.video.duration - this.storage.currentVideo.start) * 1000 + 2000)) {
                 this.storage.currentVideo = null;
 
                 // If there is no more video to play, sync clients (this will deactive the player)
@@ -384,7 +385,7 @@ export class YoutubePlugin extends Plugin {
             video: this.storage.currentVideo.video,
             start: this.storage.currentVideo.start,
             startedDate: this.storage.currentVideo.startedDate.getTime() * 0.001,
-            cursor: Date.now() * 0.001 - this.storage.currentVideo.startedDate.getTime() * 0.001 + this.storage.currentVideo.start,
+            cursor: this.storage.currentVideo.video.duration > 0 ? Date.now() * 0.001 - this.storage.currentVideo.startedDate.getTime() * 0.001 + this.storage.currentVideo.start : 0,
             queue: this.storage.queue.map(pendingVideo => {
                 return {
                     user: pendingVideo.user.sanitized(),

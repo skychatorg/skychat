@@ -1,6 +1,6 @@
 <template>
     <div class="messages">
-        <player class="player" v-show="playerState && playerState.enabled"/>
+        <player v-if="! hidePlayer" class="player" v-show="playerState && playerState.enabled"/>
 
         <div class="messages-feed scrollbar"
              ref="scroller"
@@ -30,6 +30,13 @@
                 smoothScroll: true,
                 autoScrolling: false,
             };
+        },
+        props: {
+            hidePlayer: {
+                required: false,
+                default: false,
+                type: Boolean
+            }
         },
         watch: {
             messages: function() {

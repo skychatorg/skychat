@@ -8,22 +8,34 @@
         </template>
 
         <template v-if="page === 'room'">
-            <!-- left col -->
-            <section id="left" class="hide-mobile-list">
-                <messages ref="messages" @select-message="onSelectMessage" id="messages" class="scrollbar" />
-                <typing-list id="typing-list" />
-                <message-form ref="messageForm" id="message-form"/>
-            </section>
 
-            <!-- right col -->
-            <section id="right" class="hide-mobile-tchat scrollbar">
-                <player-preview></player-preview>
-                <polls></polls>
-                <connected-list></connected-list>
-                <quick-actions></quick-actions>
-            </section>
+            <template v-if="! cinemaMode">
+
+                <section class="default-container">
+                    <!-- left col -->
+                    <section class="left hide-mobile-list">
+                        <messages ref="messages" @select-message="onSelectMessage" class="scrollbar" />
+                        <typing-list id="typing-list" />
+                        <message-form ref="messageForm" id="message-form"/>
+                    </section>
+
+                    <!-- right col -->
+                    <section class="right hide-mobile-tchat scrollbar">
+                        <player-preview></player-preview>
+                        <polls></polls>
+                        <connected-list></connected-list>
+                        <quick-actions></quick-actions>
+                    </section>
+                </section>
+            </template>
+
+            <template v-if="cinemaMode">
+                <section id="cinema" class="scrollbar">
+                    <player-background class="player-background"></player-background>
+                    <messages-overlay class="messages-overlay"></messages-overlay>
+                </section>
+            </template>
         </template>
-
     </div>
 </template>
 
@@ -35,11 +47,20 @@
     import MessageForm from "./MessageForm.vue";
     import Polls from "./Polls.vue";
     import PlayerPreview from "./PlayerPreview.vue";
+    import PlayerBackground from "./PlayerBackground.vue";
     import ConnectedList from "./ConnectedList.vue";
     import QuickActions from "./QuickActions.vue";
+    import MessagesOverlay from "./MessagesOverlay.vue";
 
     export default Vue.extend({
-        components: {AuthPage, Messages, TypingList, MessageForm, Polls, PlayerPreview, ConnectedList, QuickActions},
+        components: {AuthPage, Messages, TypingList, MessageForm, Polls, PlayerPreview, PlayerBackground, ConnectedList, QuickActions, MessagesOverlay},
+        watch: {
+            cinemaMode: function() {
+
+                console.log('cinema mode changed', this.cinemaMode);
+                this.$client.ytSync();
+            },
+        },
         methods: {
 
             onSelectMessage: function(message) {
@@ -62,7 +83,10 @@
         computed: {
             page: function() {
                 return this.$store.state.page;
-            }
+            },
+            cinemaMode: function() {
+                return this.$store.state.cinemaMode;
+            },
         },
     });
 </script>
@@ -74,30 +98,62 @@
         font-size: 80%;
         width: 100%;
         height: 0;
-        max-width: 1100px;
         margin: 0 auto;
 
         display: flex;
+        justify-content: center;
 
-        >#left {
+        >#cinema {
             flex-grow: 1;
-            padding-bottom: 6px;
             height: 100%;
-            background: #2a2a2f78;
-            display: flex;
-            flex-direction: column;
+            position: relative;
 
-            >#message-form {
+            >.player-background {
+                position: absolute;
                 width: 100%;
-                flex-basis: 44px;
+                height: 100%;
+                z-index: 0;
+            }
+            >.messages-overlay {
+                position: absolute;
+                right: 20px;
+                bottom: 50px;
+                width: 100%;
+                max-width: 380px;
+                background-color: #222223;
+                opacity: 0.4;
+
+                &:hover {
+                    opacity: 1;
+                }
             }
         }
 
-        >#right {
-            width: 340px;
-            height: 100%;
-            overflow-y: auto;
-            background: #25262b85;
+        .default-container {
+            max-width: 1100px;
+            flex-grow: 1;
+            display: flex;
+
+            .left {
+                flex-grow: 1;
+                padding-bottom: 6px;
+                height: 100%;
+                background: #2a2a2f78;
+                display: flex;
+                flex-direction: column;
+
+                >#message-form {
+                    width: 100%;
+                    flex-basis: 44px;
+                }
+            }
+
+            .right {
+                width: 340px;
+                height: 100%;
+                overflow-y: auto;
+                background: #25262b85;
+            }
         }
     }
 </style>
