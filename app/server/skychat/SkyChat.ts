@@ -131,9 +131,10 @@ export class SkyChat {
             SkyChat.CURRENT_GUEST_ID = 0;
         }
         const guestId = ++ SkyChat.CURRENT_GUEST_ID;
-        const identifier = '*' + Config.getRandomGuestName() + '#' + guestId;
+        const randomName = Config.getRandomGuestName();
+        const identifier = '*' + randomName + '#' + guestId;
         const session = new Session(identifier);
-        session.user.data.plugins.avatar = 'https://api.adorable.io/avatars/285/' + SkyChat.CURRENT_GUEST_ID + '.png';
+        session.user.data.plugins.avatar = 'https://eu.ui-avatars.com/api/?name=' + randomName;
         return session;
     }
 
