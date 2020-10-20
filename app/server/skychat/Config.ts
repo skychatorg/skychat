@@ -3,6 +3,7 @@ import * as Mail from "nodemailer/lib/mailer";
 
 
 export type Preferences = {
+    plugins: string[],
     fakeMessages: string[],
     guestNames: string[],
 }
@@ -40,6 +41,10 @@ export class Config {
     public static getRandomGuestName(): string {
         const index = Math.floor(Math.random() * Config.PREFERENCES.guestNames.length);
         return Config.PREFERENCES.guestNames[index];
+    }
+
+    public static getPlugins(): string[] {
+        return Config.PREFERENCES.plugins;
     }
 
     public static initialize() {
