@@ -1,3 +1,4 @@
+import { Config } from "../../../Config";
 
 
 export type PollState =  'pending' | 'started' | 'finished';
@@ -23,6 +24,7 @@ export type SanitizedPoll = {
     result: undefined | boolean,
     yesCount: number,
     noCount: number,
+    opVote: undefined | boolean,
 }
 
 export class Poll {
@@ -39,7 +41,9 @@ export class Poll {
 
     public readonly options: PollOptions;
 
-    public readonly votes: {[identifier: string]: boolean} = {};
+    public opVote?: boolean;
+
+    public votes: {[identifier: string]: boolean} = {};
 
     constructor(title: string, content: string, options: PollOptions) {
         this.id = ++ Poll.CURRENT_POLL_ID;
@@ -54,6 +58,15 @@ export class Poll {
      * @param vote
      */
     public registerVote(identifier: string, vote: boolean) {
+        // If the user is OP, his vote cancels all the others
+        if (Config.isOP(identifier)) {
+            this.opVote = vote;
+            this.votes = {};
+        }
+        // If the user is anyone else, register his vote only if an OP did not vote before
+        if (typeof this.opVote === 'boolean') {
+            return false;
+        }
         this.votes[identifier] = vote;
     }
 
@@ -61,6 +74,11 @@ export class Poll {
      * Get the result of the poll. Boolean if a response is chosen, undefined if not enough voters
      */
     public getResult(): boolean | undefined {
+        // If an OP voted
+        if (typeof this.opVote === 'boolean') {
+            // Return its vote
+            return this.opVote;
+        }
         const votes = Object.values(this.votes);
         if (votes.length === 0) {
             return undefined;
@@ -103,7 +121,8 @@ export class Poll {
             content: this.content,
             result: this.getResult(),
             yesCount: yesCount,
-            noCount: noCount
+            noCount: noCount,
+            opVote: this.opVote
         }
     }
 }
