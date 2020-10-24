@@ -23,9 +23,10 @@
                             <img data-v-193da69e="" :src="video.video.thumb">
                         </div>
                     </div>
-                    <svg height="60" width="60">
-                        <circle cx="30" cy="30" r="25" fill="none" stroke="black"></circle>
-                        <circle cx="30" cy="30" r="25" :class="'custom-color-' + progressBarColor" :stroke-dashoffset="- (queueWaitDurations[videoIndex]) * 2 * Math.PI * 25"></circle>
+                    <!-- the svg has -5px left and top to avoid the circles being truncated -->
+                    <svg height="80" width="80">
+                        <circle cx="40" cy="40" r="35" fill="none" stroke="black"></circle>
+                        <circle cx="40" cy="40" r="35" :class="'custom-color-' + progressBarColor" :stroke-dashoffset="- (queueWaitDurations[videoIndex]) * 2 * Math.PI * 25"></circle>
                     </svg>
                     <div class="info">
                         <div class="title">{{video.video.title}}</div>
@@ -241,25 +242,24 @@
             padding-right: 30px;
             padding-left: 30px;
             padding-bottom: 10px;
-            max-height: 260px;
 
             .vertical-bar {
                 position: absolute;
                 transition: all 1s ease-in-out;
                 width: 2px;
                 height: calc(100% - 60px);
-                left: 55px;
+                left: 65px;
             }
             .video-in-queue {
                 display: flex;
                 width: 100%;
-                height: 40px;
+                height: 60px;
                 margin: 20px 0 10px 0;
                 position: relative;
 
                 .image {
-                    width: 50px;
-                    height: 50px;
+                    width: 70px;
+                    height: 70px;
                     display: flex;
 
                     .image-bubble {
