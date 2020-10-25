@@ -5,6 +5,7 @@ export {CursorPlugin} from "./customization/CursorPlugin";
 export {MutePlugin} from "./moderation/MutePlugin";
 export {TypingListPlugin} from "./core/TypingListPlugin";
 export {MotoPlugin} from "./customization/MotoPlugin";
+export {PinnedIconPlugin} from "./customization/PinnedIconPlugin";
 export {YoutubePlugin} from "./youtube/YoutubePlugin";
 export {HelpCommand} from "./core/HelpCommand";
 export {ConnectedListPlugin} from "./core/ConnectedListPlugin";

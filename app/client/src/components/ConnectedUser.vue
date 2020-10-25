@@ -13,6 +13,7 @@
         <div class="info">
             <div class="session"
                  :style="{'color': session.user.data.plugins.color.main}">
+                <i v-show="session.user.data.plugins.pinnedicon" class="pinned-icon material-icons md-14">{{session.user.data.plugins.pinnedicon}}</i>
                 {{session.user.username}}
                 <sup v-show="session.connectionCount > 1">
                     {{session.connectionCount}}

@@ -18,6 +18,7 @@
         "MessageSeenPlugin",
         "XPFarmerPlugin",
         "MotoPlugin",
+        "PinnedIconPlugin",
         "MutePlugin",
         "OfferMoneyPlugin",
         "MoneyFarmerPlugin",

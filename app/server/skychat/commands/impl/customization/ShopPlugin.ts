@@ -66,7 +66,7 @@ export class ShopPlugin extends Plugin {
             preview: (value, user) => `
                 <div style="color:${value};border-left: 4px solid ${value};padding-left: 6px;">
                     <div style="border:1px solid white;width:14px;height:14px;border-radius:50%;background:transparent;display:inline-block;margin-right:4px;box-shadow:2px 2px 3px 2px ${user.data.plugins.color.secondary}">&nbsp;</div>
-                    <b>${user.username}</div>
+                    <b>${user.username}</b>
                 </div>
             `
         },
@@ -90,14 +90,94 @@ export class ShopPlugin extends Plugin {
             ],
             preview: (value, user) => `
                 <div style="color:${user.data.plugins.color.main};border-left: 4px solid ${user.data.plugins.color.main};padding-left: 6px;">
-                    <div style="border:1px solid white;width:14px;height:14px;border-radius:50%;background:transparent;display:inline-block;margin-right:4px;box-shadow:2px 2px 3px 2px ${value}">&nbsp;</div>
-                    <b>${user.username}</div>
+                    <div style="border:1px solid white;width:14px;height:14px;border-radius:50%;background:transparent;display:inline-block;margin-right:4px;box-shadow:2px 2px 3px 2px ${user.data.plugins.color.secondary}">
+                        &nbsp;
+                    </div>
+                    <b>${user.username}</b>
+                </div>
+            `
+        },
+        'pinnedicon': {
+            items: [
+                '',
+                'accessibility',
+                'accessible',
+                'accessible_forward',
+                'not_accessible', 
+                'api',
+                'biotech',
+                'account_balance',
+                'face',
+                'whatshot',
+                'psychology',
+                'sentiment_very_satisfied',
+                'sentiment_very_dissatisfied',
+                'monetization_on',
+                'sick',
+                'masks',
+                'military_tech',
+                'self_improvement',
+                'sports_volleyball',
+                'sports_tennis',
+                'sports_soccer',
+                'sports_rugby',
+                'sports_motorsports',
+                'sports_mma',
+                'sports_hockey',
+                'sports_handball',
+                'sports_football',
+                'sports_bar',
+                'pregnant_woman',
+                'anchor',
+                'pan_tool',
+                'pets',
+                'visibility',
+                'album',
+                'highlight',
+                'monetization_on',
+                'memory',
+                'security',
+                'sim_card',
+                'airplanemode_inactive',
+                'videogame_asset',
+                'router',
+                'bedtime',
+                'trending_down',
+                'trending_up',
+                'blur_circular',
+                'brightness_7',
+                'camera',
+                'laptop',
+                'flash_on',
+                'local_fire_department',
+                'my_location',
+                'navigation',
+                'ac_unit',
+                'grass',
+                'spa',
+                'smoking_rooms',
+                'fireplace',
+                'coronavirus',
+                'science',
+                'star',
+                'gamepad',
+                'bubble_chart',
+            ].map((iconText: string, index: number) => ({
+                id: index,
+                name: iconText,
+                value: iconText,
+                price: iconText === '' ? 0 : 5000
+            })),
+            preview: (value, user) => `
+                <div style="color:${user.data.plugins.color.main};border-left: 4px solid ${user.data.plugins.color.main};padding-left: 6px;">
+                    <div style="border:1px solid white;width:14px;height:14px;border-radius:50%;background:transparent;display:inline-block;margin-right:4px;box-shadow:2px 2px 3px 2px ${user.data.plugins.color.secondary}">&nbsp;</div>
+                    <i class="material-icons md-14" style="margin-right: 6px">${value}</i> <b>${user.username}</b>
                 </div>
             `
         }
     };
 
-    public static readonly TYPE_REGEXP: RegExp = /^(color\.main|color\.secondary)$/;
+    public static readonly TYPE_REGEXP: RegExp = /^(color\.main|color\.secondary|pinnedicon)$/;
 
     readonly defaultDataStorageValue: {[type: string]: number[]} = {colors: []};
 
@@ -279,6 +359,11 @@ export class ShopPlugin extends Plugin {
                 const data = await UserController.getPluginData(connection.session.user, 'color');
                 data[type.split('.')[1]] = item.value;
                 await UserController.savePluginData(connection.session.user, 'color', data);
+                await (this.room.getPlugin('connectedlist') as ConnectedListPlugin).sync();
+                break;
+            
+            case 'pinnedicon':
+                await UserController.savePluginData(connection.session.user, 'pinnedicon', item.value);
                 await (this.room.getPlugin('connectedlist') as ConnectedListPlugin).sync();
                 break;
         }
