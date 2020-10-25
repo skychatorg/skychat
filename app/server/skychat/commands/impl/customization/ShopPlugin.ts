@@ -66,7 +66,7 @@ export class ShopPlugin extends Plugin {
             preview: (value, user) => `
                 <div style="color:${value};border-left: 4px solid ${value};padding-left: 6px;">
                     <div style="border:1px solid white;width:14px;height:14px;border-radius:50%;background:transparent;display:inline-block;margin-right:4px;box-shadow:2px 2px 3px 2px ${user.data.plugins.color.secondary}">&nbsp;</div>
-                    <b>${user.username}</div>
+                    <b>${user.username}</b>
                 </div>
             `
         },
@@ -90,14 +90,93 @@ export class ShopPlugin extends Plugin {
             ],
             preview: (value, user) => `
                 <div style="color:${user.data.plugins.color.main};border-left: 4px solid ${user.data.plugins.color.main};padding-left: 6px;">
-                    <div style="border:1px solid white;width:14px;height:14px;border-radius:50%;background:transparent;display:inline-block;margin-right:4px;box-shadow:2px 2px 3px 2px ${value}">&nbsp;</div>
-                    <b>${user.username}</div>
+                    <div style="border:1px solid white;width:14px;height:14px;border-radius:50%;background:transparent;display:inline-block;margin-right:4px;box-shadow:2px 2px 3px 2px ${user.data.plugins.color.secondary}">
+                        &nbsp;
+                    </div>
+                    <b>${user.username}</b>
+                </div>
+            `
+        },
+        'pinnedicon': {
+            items: [
+                [ 0, '' ],
+                [ 1, 'accessibility' ],
+                [ 2, 'accessible' ],
+                [ 3, 'accessible_forward' ],
+                [ 4, 'not_accessible' ],
+                [ 5, 'api' ],
+                [ 6, 'biotech' ],
+                [ 7, 'account_balance' ],
+                [ 8, 'face' ],
+                [ 9, 'whatshot' ],
+                [ 10, 'psychology' ],
+                [ 11, 'sentiment_very_satisfied' ],
+                [ 12, 'sentiment_very_dissatisfied' ],
+                [ 13, 'monetization_on' ],
+                [ 14, 'sick' ],
+                [ 15, 'masks' ],
+                [ 16, 'military_tech' ],
+                [ 17, 'self_improvement' ],
+                [ 18, 'sports_volleyball' ],
+                [ 19, 'sports_tennis' ],
+                [ 20, 'sports_soccer' ],
+                [ 21, 'sports_rugby' ],
+                [ 22, 'sports_motorsports' ],
+                [ 23, 'sports_mma' ],
+                [ 24, 'sports_hockey' ],
+                [ 25, 'sports_handball' ],
+                [ 26, 'sports_football' ],
+                [ 27, 'sports_bar' ],
+                [ 28, 'pregnant_woman' ],
+                [ 29, 'anchor' ],
+                [ 30, 'pan_tool' ],
+                [ 31, 'pets' ],
+                [ 32, 'visibility' ],
+                [ 33, 'album' ],
+                [ 34, 'highlight' ],
+                [ 35, 'monetization_on' ],
+                [ 36, 'memory' ],
+                [ 37, 'security' ],
+                [ 38, 'sim_card' ],
+                [ 39, 'airplanemode_inactive' ],
+                [ 40, 'videogame_asset' ],
+                [ 41, 'router' ],
+                [ 42, 'bedtime' ],
+                [ 43, 'trending_down' ],
+                [ 44, 'trending_up' ],
+                [ 45, 'blur_circular' ],
+                [ 46, 'brightness_7' ],
+                [ 47, 'camera' ],
+                [ 48, 'laptop' ],
+                [ 49, 'flash_on' ],
+                [ 50, 'local_fire_department' ],
+                [ 51, 'my_location' ],
+                [ 52, 'navigation' ],
+                [ 53, 'ac_unit' ],
+                [ 54, 'grass' ],
+                [ 55, 'spa' ],
+                [ 56, 'smoking_rooms' ],
+                [ 58, 'coronavirus' ],
+                [ 59, 'science' ],
+                [ 60, 'star' ],
+                [ 61, 'gamepad' ],
+                [ 62, 'bubble_chart' ]
+            ].map((data: any[], index: number) => ({
+                id: data[0],
+                name: data[1],
+                value: data[1],
+                price: data[1] === '' ? 0 : 5000
+            })),
+            preview: (value, user) => `
+                <div style="color:${user.data.plugins.color.main};border-left: 4px solid ${user.data.plugins.color.main};padding-left: 6px;">
+                    <div style="border:1px solid white;width:14px;height:14px;border-radius:50%;background:transparent;display:inline-block;margin-right:4px;box-shadow:2px 2px 3px 2px ${user.data.plugins.color.secondary}">&nbsp;</div>
+                    <i class="material-icons md-14" style="margin-right: 6px">${value}</i> <b>${user.username}</b>
                 </div>
             `
         }
     };
 
-    public static readonly TYPE_REGEXP: RegExp = /^(color\.main|color\.secondary)$/;
+    public static readonly TYPE_REGEXP: RegExp = /^(color\.main|color\.secondary|pinnedicon)$/;
 
     readonly defaultDataStorageValue: {[type: string]: number[]} = {colors: []};
 
@@ -279,6 +358,11 @@ export class ShopPlugin extends Plugin {
                 const data = await UserController.getPluginData(connection.session.user, 'color');
                 data[type.split('.')[1]] = item.value;
                 await UserController.savePluginData(connection.session.user, 'color', data);
+                await (this.room.getPlugin('connectedlist') as ConnectedListPlugin).sync();
+                break;
+            
+            case 'pinnedicon':
+                await UserController.savePluginData(connection.session.user, 'pinnedicon', item.value);
                 await (this.room.getPlugin('connectedlist') as ConnectedListPlugin).sync();
                 break;
         }

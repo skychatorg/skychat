@@ -1,40 +1,8 @@
-import {Command} from "./Command";
-import {Plugin} from "./Plugin";
-import {MessageCommand} from "./impl/core/MessageCommand";
-import {SandalePlugin} from "./impl/entertainment/SandalePlugin";
-import {AvatarPlugin} from "./impl/customization/AvatarPlugin";
-import {CursorPlugin} from "./impl/customization/CursorPlugin";
-import {MutePlugin} from "./impl/moderation/MutePlugin";
-import {TypingListPlugin} from "./impl/core/TypingListPlugin";
-import {MotoPlugin} from "./impl/customization/MotoPlugin";
-import {YoutubePlugin} from "./impl/youtube/YoutubePlugin";
-import {Room} from "../Room";
-import {HelpCommand} from "./impl/core/HelpCommand";
-import {ConnectedListPlugin} from "./impl/core/ConnectedListPlugin";
-import {PrivateMessagePlugin} from "./impl/core/PrivateMessagePlugin";
-import {SetRightCommand} from "./impl/moderation/SetRightCommand";
-import {ColorPlugin} from "./impl/customization/ColorPlugin";
-import {ShopPlugin} from "./impl/customization/ShopPlugin";
-import {MoneyFarmerPlugin} from "./impl/core/MoneyFarmerPlugin";
-import {OfferMoneyPlugin} from "./impl/moderation/OfferMoneyPlugin";
-import {HistoryClearPlugin} from "./impl/moderation/HistoryClearPlugin";
-import {MessageEditCommand} from "./impl/core/MessageEditCommand";
-import {StickerPlugin} from "./impl/moderation/StickerPlugin";
-import {IpPlugin} from "./impl/moderation/IpPlugin";
-import {RisiBankPlugin} from "./impl/entertainment/RisiBankPlugin";
-import {GuessTheNumberPlugin} from "./impl/entertainment/GuessTheNumberPlugin";
-import {RollPlugin} from "./impl/entertainment/RollPlugin";
-import {KickPlugin} from "./impl/moderation/KickPlugin";
-import {GiveMoneyPlugin} from "./impl/core/GiveMoneyPlugin";
-import {PollPlugin} from "./impl/poll/PollPlugin";
-import {XPFarmerPlugin} from "./impl/core/XPFarmerPlugin";
-import {BanPlugin} from "./impl/moderation/BanPlugin";
-import {UsurpPlugin} from "./impl/moderation/UsurpPlugin";
-import {AccountPlugin} from "./impl/core/AccountPlugin";
-import {MailPlugin} from "./impl/core/MailPlugin";
-import {TrackerPlugin} from "./impl/moderation/TrackerPlugin";
-import {MessageHistoryPlugin} from "./impl/core/MessageHistoryPlugin";
-import {MessageSeenPlugin} from "./impl/core/MessageSeenPlugin";
+import { Command } from "./Command";
+import { Plugin } from "./Plugin";
+import { Room } from "../Room";
+import { Config } from "../Config";
+const impl = require('./impl/');
 
 
 /**
@@ -45,42 +13,7 @@ export class CommandManager {
     /**
      * Available commands and plugins
      */
-    public static readonly COMMANDS: Array<new (room: Room) => Command> = [
-        AccountPlugin,
-        AvatarPlugin,
-        ColorPlugin,
-        ConnectedListPlugin,
-        GiveMoneyPlugin,
-        CursorPlugin,
-        HelpCommand,
-        MailPlugin,
-        BanPlugin,
-        HistoryClearPlugin,
-        IpPlugin,
-        KickPlugin,
-        MessageCommand,
-        MessageEditCommand,
-        MessageHistoryPlugin,
-        MessageSeenPlugin,
-        XPFarmerPlugin,
-        MotoPlugin,
-        MutePlugin,
-        OfferMoneyPlugin,
-        MoneyFarmerPlugin,
-        PrivateMessagePlugin,
-        GuessTheNumberPlugin,
-        RisiBankPlugin,
-        RollPlugin,
-        SandalePlugin,
-        SetRightCommand,
-        ShopPlugin,
-        StickerPlugin,
-        TrackerPlugin,
-        UsurpPlugin,
-        PollPlugin,
-        TypingListPlugin,
-        YoutubePlugin
-    ];
+    public static readonly COMMANDS: Array<new (room: Room) => Command> = Config.getPlugins().map(pluginName => impl[pluginName]);
 
 
     /**

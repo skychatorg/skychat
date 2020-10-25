@@ -10,8 +10,9 @@
                     </div>
                     <div class="poll-content">
                         {{pollResult.content}}<br>
-                        <br>
-                        RESULT: {{typeof pollResult.result === 'undefined' ? 'NONE' : (pollResult.result ? 'YES' : 'NO')}}
+                        <div>
+                            RESULT: {{typeof pollResult.result === 'undefined' ? 'NONE' : (pollResult.result ? 'YES' : 'NO')}}
+                        </div>
                     </div>
                     <div class="poll-actions">
                         <button @click="clear" class="skychat-button">
@@ -23,15 +24,20 @@
         </div>
 
         <div v-show="polls.length > 0">
-            <div v-for="poll in polls" class="poll pending">
+            <div
+                v-for="poll in polls"
+                class="poll pending">
                 <div class="info">
                     <div class="poll-title">
                         {{poll.title}}
                     </div>
                     <div class="poll-content">
                         {{poll.content}}
+                        <div v-if="typeof poll.opVote === 'boolean'">
+                            OP Vote: {{poll.opVote ? 'YES' : 'NO'}}
+                        </div>
                     </div>
-                    <div class="poll-actions">
+                    <div class="poll-actions" v-show="typeof poll.opVote !== 'boolean'">
                         <button @click="vote(poll, true)" class="skychat-button">
                             YES ({{poll.yesCount}})
                         </button>

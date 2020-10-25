@@ -13,15 +13,16 @@
         <div class="info">
             <div class="session"
                  :style="{'color': session.user.data.plugins.color.main}">
+                <i v-show="session.user.data.plugins.pinnedicon" class="pinned-icon material-icons md-14">{{session.user.data.plugins.pinnedicon}}</i>
                 {{session.user.username}}
                 <sup v-show="session.connectionCount > 1">
                     {{session.connectionCount}}
                 </sup>
             </div>
-            <div class="moto">{{session.user.data.plugins.moto}}&nbsp;</div>
+            <div class="moto" :title="session.user.data.plugins.moto">{{session.user.data.plugins.moto}}&nbsp;</div>
             <div class="meta">
                 <span class="rank">
-                    <img :src="'/assets/images/' + session.user.rank">
+                    <img title="User rank" :src="'/assets/images/' + session.user.rank">
                 </span>
                 <div class="icons">
                     <i class="material-icons md-14 icon-yt" v-show="session.user.data.plugins.yt" title="Youtube enabled">movie</i>
@@ -88,7 +89,7 @@
 
     .connected-session {
         width: 100%;
-        height: 75px;
+        height: 85px;
         display: flex;
         color: white;
         background: #2b2b2f;
@@ -113,8 +114,8 @@
         }
 
         >.avatar {
-            width: 70px;
-            height: 70px;
+            width: 80px;
+            height: 80px;
             padding: 10px;
 
             >.image-bubble{
@@ -185,7 +186,7 @@
             }
         }
         >.stats {
-            flex-basis: 65px;
+            flex-basis: 70px;
             display: flex;
             flex-direction: column;
             justify-content: center;

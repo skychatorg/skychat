@@ -149,7 +149,7 @@
             }
 
             .right {
-                width: 340px;
+                width: 360px;
                 height: 100%;
                 overflow-y: auto;
                 background: #25262b85;
