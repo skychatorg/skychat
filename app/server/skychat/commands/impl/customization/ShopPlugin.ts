@@ -170,7 +170,7 @@ export class ShopPlugin extends Plugin {
             preview: (value, user) => `
                 <div style="color:${user.data.plugins.color.main};border-left: 4px solid ${user.data.plugins.color.main};padding-left: 6px;">
                     <div style="border:1px solid white;width:14px;height:14px;border-radius:50%;background:transparent;display:inline-block;margin-right:4px;box-shadow:2px 2px 3px 2px ${user.data.plugins.color.secondary}">&nbsp;</div>
-                    <i class="material-icons md-14" style="margin-right: 6px">${value}</i> <b>${user.username}</b>
+                    <i class="material-icons md-14">${value}</i> <b>${user.username}</b>
                 </div>
             `
         }
