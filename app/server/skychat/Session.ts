@@ -19,7 +19,9 @@ export type SanitizedSession = {
  */
 export class Session implements IBroadcaster {
 
-    static readonly DEAD_SESSION_CLEANUP_DELAY_MS = 60 * 3 * 1000;
+    static readonly DEAD_GUEST_SESSION_CLEANUP_DELAY_MS = 15 * 1000;
+
+    static readonly DEAD_USER_SESSION_CLEANUP_DELAY_MS = 60 * 10 * 1000;
 
     /**
      * Object mapping all active sessions
@@ -54,7 +56,7 @@ export class Session implements IBroadcaster {
         return typeof Session.getSessionByIdentifier(identifier) !== 'undefined';
     }
 
-    public static cleanUpSession(identifier: string, cleanUpDelayMs: number): boolean {
+    public static cleanUpSession(identifier: string, immediate?: boolean): boolean {
         const session = Session.getSessionByIdentifier(identifier);
         // If session does not exist
         if (! session) {
@@ -65,7 +67,8 @@ export class Session implements IBroadcaster {
             return false;
         }
         // If session is dead since less than cleanUpDelayMs millis
-        if (new Date().getTime() - session.deadSince.getTime() < cleanUpDelayMs) {
+        const defaultCleanUpDelay = session.getDefaultCleanUpDelay();
+        if (! immediate && new Date().getTime() - session.deadSince.getTime() < defaultCleanUpDelay) {
             return false;
         }
         // Clean the session
@@ -73,13 +76,13 @@ export class Session implements IBroadcaster {
         return true;
     }
 
-    public static cleanUpAllSessions(cleanUpDelayMs: number): void {
+    public static cleanUpAllSessions(immediate?: boolean): void {
         for (const identifier of Object.keys(Session.sessions)) {
-            Session.cleanUpSession(identifier, cleanUpDelayMs);
+            Session.cleanUpSession(identifier, immediate);
         }
     }
 
-    public static cleanUpInterval = setInterval(() => Session.cleanUpAllSessions(Session.DEAD_SESSION_CLEANUP_DELAY_MS), 5 * 1000);
+    public static cleanUpInterval = setInterval(Session.cleanUpAllSessions, 5 * 1000);
 
     /**
      * Unique session identifier (lower case)
@@ -107,6 +110,10 @@ export class Session implements IBroadcaster {
         this.user = new User(0, identifier, null, '', 0, 0, -1);
         this.lastMessageDate = new Date();
         this.deadSince = null;
+    }
+
+    public getDefaultCleanUpDelay(): number {
+        return this.user.id === 0 ? Session.DEAD_GUEST_SESSION_CLEANUP_DELAY_MS : Session.DEAD_USER_SESSION_CLEANUP_DELAY_MS;
     }
 
     /**
@@ -152,7 +159,7 @@ export class Session implements IBroadcaster {
         if (connection.session) {
             const oldIdentifier = connection.session.identifier;
             connection.session.detachConnection(connection);
-            Session.cleanUpSession(oldIdentifier, 0);
+            Session.cleanUpSession(oldIdentifier, true);
         }
         connection.session = this;
         this.connections.push(connection);
