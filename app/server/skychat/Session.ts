@@ -19,10 +19,12 @@ export type SanitizedSession = {
  */
 export class Session implements IBroadcaster {
 
+    static readonly DEAD_SESSION_CLEANUP_DELAY_MS = 60 * 3 * 1000;
+
     /**
      * Object mapping all active sessions
      */
-     static sessions: {[identifier: string]: Session} = {};
+    static sessions: {[identifier: string]: Session} = {};
 
     /**
      * Find an existing session using its identifier
@@ -52,6 +54,33 @@ export class Session implements IBroadcaster {
         return typeof Session.getSessionByIdentifier(identifier) !== 'undefined';
     }
 
+    public static cleanUpSession(identifier: string, cleanUpDelayMs: number): boolean {
+        const session = Session.getSessionByIdentifier(identifier);
+        // If session does not exist
+        if (! session) {
+            return false;
+        }
+        // If session still has active connections
+        if (! session.deadSince) {
+            return false;
+        }
+        // If session is dead since less than cleanUpDelayMs millis
+        if (new Date().getTime() - session.deadSince.getTime() < cleanUpDelayMs) {
+            return false;
+        }
+        // Clean the session
+        delete Session.sessions[identifier];
+        return true;
+    }
+
+    public static cleanUpAllSessions(cleanUpDelayMs: number): void {
+        for (const identifier of Object.keys(Session.sessions)) {
+            Session.cleanUpSession(identifier, cleanUpDelayMs);
+        }
+    }
+
+    public static cleanUpInterval = setInterval(() => Session.cleanUpAllSessions(Session.DEAD_SESSION_CLEANUP_DELAY_MS), 5 * 1000);
+
     /**
      * Unique session identifier (lower case)
      */
@@ -60,6 +89,11 @@ export class Session implements IBroadcaster {
     public connections: Connection[];
 
     public lastMessageDate: Date;
+
+    /**
+     * Date since the last active connection has disconnected. 
+     */
+    public deadSince: Date | null;
 
     /**
      * Associated user (if logged session)
@@ -72,6 +106,7 @@ export class Session implements IBroadcaster {
         this.identifier = identifier;
         this.user = new User(0, identifier, null, '', 0, 0, -1);
         this.lastMessageDate = new Date();
+        this.deadSince = null;
     }
 
     /**
@@ -80,6 +115,10 @@ export class Session implements IBroadcaster {
      */
     public detachConnection(connection: Connection): void {
         this.connections = this.connections.filter(c => c !== connection);
+        // If the last active connection leaves, mark this object as dead
+        if (this.connections.length === 0) {
+            this.deadSince = new Date();
+        }
     }
 
     /**
@@ -111,10 +150,14 @@ export class Session implements IBroadcaster {
             return;
         }
         if (connection.session) {
+            const oldIdentifier = connection.session.identifier;
             connection.session.detachConnection(connection);
+            Session.cleanUpSession(oldIdentifier, 0);
         }
         connection.session = this;
         this.connections.push(connection);
+        // If this session was marked as dead, mark it as alive
+        this.deadSince = null;
 
         connection.send('set-user', this.user.sanitized())
     }

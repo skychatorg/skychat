@@ -21,21 +21,28 @@
             </div>
             <div class="moto" :title="session.user.data.plugins.moto">{{session.user.data.plugins.moto}}&nbsp;</div>
             <div class="meta">
-                <span class="rank">
-                    <img title="User rank" :src="'/assets/images/' + session.user.rank">
-                </span>
-                <div class="icons">
-                    <i class="material-icons md-14 icon-yt" v-show="session.user.data.plugins.yt" title="Youtube enabled">movie</i>
-                    <i class="material-icons md-14 icon-cursor" v-show="session.user.data.plugins.cursor" title="Cursors enabled">mouse</i>
-                    <template v-if="minutesSinceLastMessage > 0">
-                        <i title="Last activity" class="material-icons md-14 icon-active-time">schedule</i>
-                        <span class="text-active-time">{{minutesSinceLastMessage > 30 ? 'afk' : (minutesSinceLastMessage + 'm')}}</span>
-                    </template>
-                    <template v-if="getUnreadCount(session.user.username) > 0">
-                        <i title="New messages" class="material-icons md-14 icon-unread-count">email</i>
-                        <span class="text-unread-count">{{getUnreadCount(session.user.username)}}️</span>
-                    </template>
-                </div>
+                <template v-if="session.connectionCount === 0">
+                    <div class="icons">
+                        <i title="User has disconnected" class="material-icons md-14 icon-disconnected">link_off</i>
+                    </div>
+                </template>
+                <template v-else>
+                    <span class="rank">
+                        <img title="User rank" :src="'/assets/images/' + session.user.rank">
+                    </span>
+                    <div class="icons">
+                        <i class="material-icons md-14 icon-yt" v-show="session.user.data.plugins.yt" title="Youtube enabled">movie</i>
+                        <i class="material-icons md-14 icon-cursor" v-show="session.user.data.plugins.cursor" title="Cursors enabled">mouse</i>
+                        <template v-if="minutesSinceLastMessage > 0">
+                            <i title="Last activity" class="material-icons md-14 icon-active-time">schedule</i>
+                            <span class="text-active-time">{{minutesSinceLastMessage > 30 ? 'afk' : (minutesSinceLastMessage + 'm')}}</span>
+                        </template>
+                        <template v-if="getUnreadCount(session.user.username) > 0">
+                            <i title="New messages" class="material-icons md-14 icon-unread-count">email</i>
+                            <span class="text-unread-count">{{getUnreadCount(session.user.username)}}️</span>
+                        </template>
+                    </div>
+                </template>
             </div>
         </div>
         <div class="stats" v-show="session.user.right >= 0">
@@ -170,6 +177,9 @@
                     }
                     >.icon-active-time {
                         color: #8ecfff;
+                    }
+                    >.icon-disconnected {
+                        color: #ff8f8f;
                     }
                     >.text-active-time {
                         color: #8ecfff;
