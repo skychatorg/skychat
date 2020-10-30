@@ -181,25 +181,28 @@ export class TrackerPlugin extends Plugin {
      */
     async handleAutoTrack(param: string, connection: Connection): Promise<void> {
         const value = param.trim();
-        const entries = this.getAllRelatedNodesRecursive('username', value);
+        const entries = this
+            .getAllRelatedNodesRecursive(
+                'username',
+                value,
+                (node: Node) => node.type !== 'username' || node.value !== '*guest'
+            )
+            .filter(entry => entry.node.type === 'username');
 
         const formatter = MessageFormatter.getInstance();
-        let html = '<table class="skychat-table">';
+        let html = `Associations for ${value}:<br>`;
+        html += '<table class="skychat-table">';
         html += `
             <tr>
-                <td>source</td>
-                <td>target</td>
-                <td>depth</td>
+                <td style="min-width: 80px">target</td>
                 <td>path</td>
             </tr>
         `;
         for (const entry of entries) {
-            let pathStr = entry.path.slice(0, entry.path.length - 1).map(node => `${node.value}`).join(' → ');
+            let pathStr = value + ' → ' + entry.path.map(node => `${node.value}`).join(' → ');
             html += `
                 <tr>
-                    <td>${value}</td>
                     <td>${entry.node.value}</td>
-                    <td>${entry.path.length}</td>
                     <td>${pathStr}</td>
                 </tr>
             `;
