@@ -23,7 +23,7 @@ export class Session implements IBroadcaster {
 
     static readonly DEAD_GUEST_SESSION_CLEANUP_DELAY_MS = 30 * 1000;
 
-    static readonly DEAD_USER_SESSION_CLEANUP_DELAY_MS = 25 * 60 * 1000;
+    static readonly DEAD_USER_SESSION_CLEANUP_DELAY_MS = 60 * 60 * 1000;
 
     /**
      * Object mapping all active sessions

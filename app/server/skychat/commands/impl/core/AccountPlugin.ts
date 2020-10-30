@@ -131,7 +131,7 @@ export class AccountPlugin extends Plugin {
         }
 
         const session = Session.getSessionByIdentifier(username);
-        if (! session) {
+        if (session && session.connections.length > 0) {
             throw new Error('User must not be currently connected');
         }
 
