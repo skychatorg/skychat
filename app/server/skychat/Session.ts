@@ -9,6 +9,8 @@ export type SanitizedSession = {
 
     connectionCount: number;
 
+    deadSinceTime?: number;
+
     lastMessageTime: number;
 
     user: SanitizedUser;
@@ -19,9 +21,9 @@ export type SanitizedSession = {
  */
 export class Session implements IBroadcaster {
 
-    static readonly DEAD_GUEST_SESSION_CLEANUP_DELAY_MS = 15 * 1000;
+    static readonly DEAD_GUEST_SESSION_CLEANUP_DELAY_MS = 30 * 1000;
 
-    static readonly DEAD_USER_SESSION_CLEANUP_DELAY_MS = 60 * 10 * 1000;
+    static readonly DEAD_USER_SESSION_CLEANUP_DELAY_MS = 25 * 60 * 1000;
 
     /**
      * Object mapping all active sessions
@@ -205,6 +207,7 @@ export class Session implements IBroadcaster {
         return {
             identifier: this.identifier,
             connectionCount: this.connections.length,
+            deadSinceTime: this.deadSince ? this.deadSince.getTime() * 0.001 : undefined,
             lastMessageTime: this.lastMessageDate.getTime() * 0.001,
             user: this.user.sanitized()
         }

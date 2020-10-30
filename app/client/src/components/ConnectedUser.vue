@@ -23,7 +23,8 @@
             <div class="meta">
                 <template v-if="session.connectionCount === 0">
                     <div class="icons">
-                        <i title="User has disconnected" class="material-icons md-14 icon-disconnected">link_off</i>
+                        <i :title="'User has disconnected ' + durationSinceDead + ' ago'" class="material-icons md-14 icon-disconnected">link_off</i>
+                        <span :title="'User has disconnected ' + durationSinceDead + ' ago'" class="text-disconnected">{{durationSinceDead}}</span>
                     </div>
                 </template>
                 <template v-else>
@@ -87,6 +88,16 @@
             minutesSinceLastMessage: function() {
                 const duration = new Date().getTime() * 0.001 - this.session.lastMessageTime;
                 return Math.floor(duration / 60);
+            },
+            durationSinceDead: function() {
+                if (! this.session.deadSinceTime) {
+                    return '';
+                }
+                const duration = new Date().getTime() * 0.001 - this.session.deadSinceTime;
+                if (duration > 60) {
+                    return Math.floor(duration / 60) + 'm';
+                }
+                return Math.floor(duration) + 's';
             }
         }
     });
@@ -180,6 +191,10 @@
                     }
                     >.icon-disconnected {
                         color: #ff8f8f;
+                    }
+                    >.text-disconnected {
+                        color: #ff8f8f;
+                        vertical-align: top;
                     }
                     >.text-active-time {
                         color: #8ecfff;
