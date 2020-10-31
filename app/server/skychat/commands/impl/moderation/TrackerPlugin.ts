@@ -5,6 +5,7 @@ import {Message} from "../../../Message";
 import {UserController} from "../../../UserController";
 import * as striptags from "striptags";
 import {MessageFormatter} from "../../../MessageFormatter";
+import {Config} from "../../../Config";
 
 
 type NodeType = 'username' | 'ip';
@@ -32,7 +33,7 @@ export class TrackerPlugin extends Plugin {
 
     readonly name = 'track';
 
-    readonly aliases = ['autotrack'];
+    readonly aliases = ['autotrack', 'trackdelete'];
 
     readonly minRight = 40;
 
@@ -43,6 +44,16 @@ export class TrackerPlugin extends Plugin {
             params: [
                 {name: 'type', pattern: new RegExp('^' + TrackerPlugin.SOURCE_TYPES.join('|') + '$')},
                 {name: 'value', pattern: /./},
+            ]
+        },
+        trackdelete: {
+            minCount: 4,
+            maxCount: 4,
+            params: [
+                {name: 'type1', pattern: new RegExp('^' + TrackerPlugin.SOURCE_TYPES.join('|') + '$')},
+                {name: 'value1', pattern: /./},
+                {name: 'type2', pattern: new RegExp('^' + TrackerPlugin.SOURCE_TYPES.join('|') + '$')},
+                {name: 'value2', pattern: /./},
             ]
         },
         autotrack: {
@@ -125,6 +136,11 @@ export class TrackerPlugin extends Plugin {
             return;
         }
 
+        if (alias === 'trackdelete') {
+            await this.handleTrackDelete(param, connection);
+            return;
+        }
+
         if (alias === 'autotrack') {
             await this.handleAutoTrack(param, connection);
             return;
@@ -179,6 +195,33 @@ export class TrackerPlugin extends Plugin {
      * @param param
      * @param connection
      */
+    async handleTrackDelete(param: string, connection: Connection): Promise<void> {
+        const type1 = param.split(' ')[0] as NodeType;
+        const value1 = param.split(' ')[1];
+        const type2 = param.split(' ')[2] as NodeType;
+        const value2 = param.split(' ')[3];
+
+        // Right check
+        if (! Config.isOP(connection.session.identifier)) {
+            throw new Error('Only OP can delete track entries');
+        }
+
+        // Actually delete the association
+        this.deleteAssociation(type1, value1, type2, value2);
+        this.syncStorage();
+
+        // Send confirmation
+        connection.send('message', new Message({
+            content: `Association ${TrackerPlugin.nodeToKey(type1, value1)} to ${TrackerPlugin.nodeToKey(type2, value2)} deleted`,
+            user: UserController.getNeutralUser()
+        }).sanitized());
+    }
+
+    /**
+     * Handle a track request
+     * @param param
+     * @param connection
+     */
     async handleAutoTrack(param: string, connection: Connection): Promise<void> {
         const value = param.trim();
         const entries = this
@@ -214,6 +257,20 @@ export class TrackerPlugin extends Plugin {
             formatted: html,
             user: UserController.getNeutralUser()
         }).sanitized());
+    }
+
+    public deleteAssociation(type1: NodeType, value1: string, type2: NodeType, value2: string): void {
+
+        // Build keys
+        const key1 = TrackerPlugin.nodeToKey(type1, value1);
+        const key2 = TrackerPlugin.nodeToKey(type2, value2);
+
+        if (this.storage[key1]) {
+            this.storage[key1] = this.storage[key1].filter(node => node.type !== type2 || node.value !== value2);
+        }
+        if (this.storage[key2]) {
+            this.storage[key2] = this.storage[key2].filter(node => node.type !== type1 || node.value !== value1);
+        }
     }
 
     public registerAssociation(type1: NodeType, value1: string, type2: NodeType, value2: string): void {
