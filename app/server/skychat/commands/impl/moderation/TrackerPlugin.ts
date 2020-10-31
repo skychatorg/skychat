@@ -83,7 +83,7 @@ export class TrackerPlugin extends Plugin {
          * @param type 
          * @param value 
          * @param visited Hashmap of visited node keys
-         * @param path 
+         * @param path Path to the current node
          */
         const lookup = (type: NodeType, value: string, visited?: {[nodeKey: string]: boolean}, path?: Node[]) => {
 
@@ -176,7 +176,10 @@ export class TrackerPlugin extends Plugin {
                     <td>${type}</td>
                     <td>${value}</td>
                     <td>${node.type}</td>
-                    <td>${formatter.getButtonHtml(node.value, '/track ' + node.type + ' ' + node.value, true, true)}</td>
+                    <td>
+                        ${formatter.getButtonHtml(node.value, '/track ' + node.type + ' ' + node.value, true, true)}
+                        ${formatter.getButtonHtml('A', '/autotrack ' + node.value, true, true)}
+                    </td>
                     <td>${node.count} (${(100 * node.count / sumOfCounts).toFixed(2)}%)</td>
                 </tr>
             `;
@@ -224,29 +227,51 @@ export class TrackerPlugin extends Plugin {
      */
     async handleAutoTrack(param: string, connection: Connection): Promise<void> {
         const value = param.trim();
+        const type = this.inferTypeFromValue(value);
+        if (! type) {
+            throw new Error('No entry for ' + value);
+        }
         const entries = this
             .getAllRelatedNodesRecursive(
-                'username',
+                type,
                 value,
                 (node: Node) => node.type !== 'username' || node.value !== '*guest'
             )
             .filter(entry => entry.node.type === 'username');
 
         const formatter = MessageFormatter.getInstance();
-        let html = `Associations for ${value}:<br>`;
+        let html = `<div>Associations for ${value} (${type}):</div><br>`;
         html += '<table class="skychat-table">';
-        html += `
-            <tr>
-                <td style="min-width: 80px">target</td>
-                <td>path</td>
-            </tr>
-        `;
         for (const entry of entries) {
-            let pathStr = value + ' → ' + entry.path.map(node => `${node.value}`).join(' → ');
+            let arrowSpan = `<span style="color: #888;"> → </span>`;
+            let pathStr;
+            let path;
+            if (entry.path.length % 2 === 0) {
+                pathStr = `<div style="padding-left: 8px">${arrowSpan}${value}</div>`;
+                path = entry.path.slice(0);
+            } else {
+                pathStr = '';
+                path = entry.path.slice(0);
+                path.unshift({type, value, count: NaN, lastRegistered: 0} as Node);
+            }
+            let i = 0;
+            while (i < path.length) {
+                pathStr += `<div style="padding-left: 8px">`;
+                const node1 = path[i];
+                pathStr += arrowSpan;
+                pathStr += node1.value;
+                pathStr += node1.count ? ` <sup style="color: #ff809d;">x${node1.count}</sup>` : '';
+                const node2 = path[i + 1];
+                pathStr += arrowSpan;
+                pathStr += node2.value;
+                pathStr += node2.count ? ` <sup style="color: #ff809d;">x${node2.count}</sup>` : '';
+                pathStr += `</div>`;
+                i += 2;
+            }
             html += `
                 <tr>
-                    <td>${entry.node.value}</td>
                     <td>${pathStr}</td>
+                    <td>${formatter.getButtonHtml(entry.node.value, '/track username ' + entry.node.value, true, true)}</td>
                 </tr>
             `;
         }
@@ -257,6 +282,12 @@ export class TrackerPlugin extends Plugin {
             formatted: html,
             user: UserController.getNeutralUser()
         }).sanitized());
+    }
+
+    public inferTypeFromValue(value: string): NodeType | undefined {
+        return TrackerPlugin.SOURCE_TYPES.find((type: NodeType) => {
+            return typeof this.storage[TrackerPlugin.nodeToKey(type, value)] !== 'undefined'
+        });
     }
 
     public deleteAssociation(type1: NodeType, value1: string, type2: NodeType, value2: string): void {
