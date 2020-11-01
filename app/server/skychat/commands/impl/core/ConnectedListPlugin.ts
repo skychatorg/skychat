@@ -44,7 +44,15 @@ export class ConnectedListPlugin extends Plugin {
     public sync(): void {
         const sessions = Object.values(Session.sessions)
             .map(sess => sess.sanitized())
-            .sort((a, b) => a.user.right === b.user.right ? (b.user.xp - a.user.xp) : (b.user.right - a.user.right));
+            .sort((a, b) => {
+                if (a.connectionCount === 0 || b.connectionCount === 0) {
+                    return b.connectionCount - a.connectionCount;
+                }
+                if (a.user.right !== b.user.right) {
+                    return b.user.right - a.user.right;
+                }
+                return b.user.xp - a.user.xp;
+            });
         this.room.send('connected-list', sessions);
     }
 }
