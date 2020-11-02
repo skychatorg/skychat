@@ -111,7 +111,7 @@ export abstract class Command {
         }
 
         // Split message
-        const splitParams = param.split(' ');
+        const splitParams = param.length === 0 ? [] : param.split(' ');
 
         // Check user right
         if (connection.session.user.right < this.minRight) {
