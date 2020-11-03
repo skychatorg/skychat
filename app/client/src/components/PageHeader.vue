@@ -105,7 +105,7 @@
         .nav-title {
             text-decoration: none;
             display: flex;
-            width: 200px;
+            width: 160px;
             height: 100%;
 
             .logo {

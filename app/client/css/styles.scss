@@ -42,9 +42,13 @@ body {
 
     .mobile-page-list {
 
-        #right {
-            flex-grow: 1;
-            padding: 0 20px;
+        .default-container > .right {
+            flex-basis: 100% !important;
+            padding: 0 0 0 10px;
+
+            .connected-session .moto {
+                flex-basis: calc(100% - 110px) !important;
+            }
         }
     }
 }

@@ -19,7 +19,6 @@
                     {{session.connectionCount}}
                 </sup>
             </div>
-            <div class="moto" :title="session.user.data.plugins.moto">{{session.user.data.plugins.moto}}&nbsp;</div>
             <div class="meta">
                 <template v-if="session.connectionCount === 0">
                     <div class="icons">
@@ -43,6 +42,7 @@
                             <span class="text-unread-count">{{getUnreadCount(session.user.username)}}️</span>
                         </template>
                     </div>
+                    <div class="moto" :title="session.user.data.plugins.moto">{{session.user.data.plugins.moto}}&nbsp;</div>
                 </template>
             </div>
         </div>
@@ -107,7 +107,7 @@
 
     .connected-session {
         width: 100%;
-        height: 85px;
+        height: 55px;
         display: flex;
         color: white;
         background: #2b2b2f;
@@ -132,8 +132,8 @@
         }
 
         >.avatar {
-            width: 80px;
-            height: 80px;
+            width: 55px;
+            height: 55px;
             padding: 10px;
 
             >.image-bubble{
@@ -154,21 +154,15 @@
                 display: inline;
                 color: #a3a5b4;
                 font-weight: 800;
-                margin-bottom: 4px;
                 font-size: 110%;
                 flex-basis: 20px;
-            }
-            >.moto {
-                white-space: nowrap;
                 overflow: hidden;
                 text-overflow: ellipsis;
-                margin-top: 0;
-                flex-basis: 20px;
+                margin-bottom: 4px;
             }
             >.meta {
 
                 display: flex;
-                margin-top: 5px;
 
                 >.rank {
                     height: 24px;
@@ -179,6 +173,7 @@
                 >.icons {
                     margin-left: 5px;
                     margin-top: 5px;
+                    flex-grow: 1;
 
                     >.icon-yt {
                         color: #ff8f8f;
@@ -208,6 +203,14 @@
                         vertical-align: top;
                     }
                 }
+                >.moto {
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    margin-top: 5px;
+                    flex-basis: 110px;
+                    text-align: right;
+                }
             }
         }
         >.stats {
@@ -219,6 +222,8 @@
             padding-right: 10px;
             font-size: 100%;
             font-weight: 600;
+            padding-top: 4px;
+            padding-bottom: 4px;
 
             >* {
                 display: flex;
