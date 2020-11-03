@@ -6,6 +6,9 @@
             'has-unread': getUnreadCount(session.user.username) > 0
           }">
         <div class="avatar">
+            <span class="rank">
+                <img title="User rank" :src="'/assets/images/' + session.user.rank">
+            </span>
             <div class="image-bubble" :style="{'box-shadow': '0 0 4px 4px ' + session.user.data.plugins.color.secondary}">
                 <img :src="session.user.data.plugins.avatar">
             </div>
@@ -27,9 +30,6 @@
                     </div>
                 </template>
                 <template v-else>
-                    <span class="rank">
-                        <img title="User rank" :src="'/assets/images/' + session.user.rank">
-                    </span>
                     <div class="icons">
                         <i class="material-icons md-14 icon-yt" v-show="session.user.data.plugins.yt" title="Youtube enabled">movie</i>
                         <i class="material-icons md-14 icon-cursor" v-show="session.user.data.plugins.cursor" title="Cursors enabled">mouse</i>
@@ -135,7 +135,19 @@
             width: 55px;
             height: 55px;
             padding: 10px;
+            position: relative;
 
+            >.rank {
+                position: absolute;
+                left: 6px;
+                bottom: 4px;
+                z-index: 10;
+                height: 18px;
+
+                >img {
+                    height: 100%;
+                }
+            }
             >.image-bubble{
                 width: 100%;
                 height: 100%;
@@ -164,12 +176,6 @@
 
                 display: flex;
 
-                >.rank {
-                    height: 24px;
-                    >img {
-                        height: 100%;
-                    }
-                }
                 >.icons {
                     margin-left: 5px;
                     margin-top: 5px;
@@ -208,7 +214,7 @@
                     overflow: hidden;
                     text-overflow: ellipsis;
                     margin-top: 5px;
-                    flex-basis: 110px;
+                    flex-basis: calc(100% - 90px)!important;
                     text-align: right;
                 }
             }
