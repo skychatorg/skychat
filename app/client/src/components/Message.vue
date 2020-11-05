@@ -5,7 +5,7 @@
         </div>
         <div class="content">
             <div class="user" :style="{'color': message.user.data.plugins.color.main}">
-                <i v-show="message.user.data.plugins.pinnedicon" class="material-icons md-12">{{message.user.data.plugins.pinnedicon}}</i>
+                <i v-show="message.user.data.plugins.pinnedicon" class="material-icons md-14">{{message.user.data.plugins.pinnedicon}}</i>
                  {{message.user.username}}
                 <i v-show="message.meta.device === 'mobile'" class="material-icons user-device md-14">smartphone</i>
             </div>
