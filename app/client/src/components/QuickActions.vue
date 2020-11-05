@@ -208,9 +208,9 @@
                         this.$modal.show(YoutubeVideoSearcher);
                         return;
                     case 'shop-color':
-                        return this.$client.sendMessage('/shoplist color.main');
+                        return this.$client.sendMessage('/shoplist color');
                     case 'shop-halo':
-                        return this.$client.sendMessage('/shoplist color.secondary');
+                        return this.$client.sendMessage('/shoplist halo');
                     case 'shop-pinnedicon':
                         return this.$client.sendMessage('/shoplist pinnedicon');
                     case 'guess':

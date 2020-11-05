@@ -31,7 +31,7 @@ export class ShopPlugin extends Plugin {
     public static readonly COLORS_TIER_3_COST: number = 3000;
 
     public static readonly ITEMS: {[type: string]: ShopItems} = {
-        'color.main': {
+        'color': {
             items: [
                 {id: 0, name: 'default', value: ColorPlugin.DEFAULT_MAIN, price: ShopPlugin.COLORS_TIER_0_COST},
 
@@ -70,35 +70,22 @@ export class ShopPlugin extends Plugin {
                     <b>${user.username}</b>
                 </div>
             `,
-            sellRatio: 0.5,
+            sellRatio: 0.4,
         },
-        'color.secondary': {
+        'halo': {
             items: [
-                {id: 0, name: 'default', value: ColorPlugin.DEFAULT_SECONDARY, price: ShopPlugin.COLORS_TIER_0_COST},
-
-                {id: 1, name: 'white', value: '#ffffff', price: ShopPlugin.COLORS_TIER_1_COST},
-                {id: 2, name: 'black', value: '#000000', price: ShopPlugin.COLORS_TIER_1_COST},
-
-                {id: 3, name: 'purple', value: '#ae1e68', price: ShopPlugin.COLORS_TIER_3_COST},
-                {id: 4, name: 'rebeccapurple', value: '#a348ff', price: ShopPlugin.COLORS_TIER_3_COST},
-                {id: 5, name: 'royalblue', value: '#4169e1', price: ShopPlugin.COLORS_TIER_3_COST},
-                {id: 6, name: 'oldblue', value: '#4c80bb', price: ShopPlugin.COLORS_TIER_3_COST},
-                {id: 7, name: 'turquoise', value: '#40e0d0', price: ShopPlugin.COLORS_TIER_3_COST},
-                {id: 8, name: 'limegreen', value: '#32cd32', price: ShopPlugin.COLORS_TIER_3_COST},
-                {id: 9, name: 'yellow', value: '#e4e400', price: ShopPlugin.COLORS_TIER_3_COST},
-                {id: 10, name: 'orange', value: '#e67e00', price: ShopPlugin.COLORS_TIER_3_COST},
-                {id: 11, name: 'orangered', value: '#ff4500', price: ShopPlugin.COLORS_TIER_3_COST},
-                {id: 12, name: 'bestred', value: '#ff2424', price: ShopPlugin.COLORS_TIER_3_COST},
+                {id: 0, name: 'no halo', value: false, price: 0},
+                {id: 1, name: 'halo', value: true, price: ShopPlugin.COLORS_TIER_3_COST},
             ],
             preview: (value, user) => `
-                <div style="color:${user.data.plugins.color.main};border-left: 4px solid ${user.data.plugins.color.main};padding-left: 6px;">
-                    <div style="border:1px solid white;width:14px;height:14px;border-radius:50%;background:transparent;display:inline-block;margin-right:4px;box-shadow:2px 2px 3px 2px ${user.data.plugins.color.secondary}">
+                <div style="color:${user.data.plugins.color};border-left: 4px solid ${user.data.plugins.color};padding-left: 6px;">
+                    <div style="border:1px solid white;width:14px;height:14px;border-radius:50%;background:transparent;display:inline-block;margin-right:4px;box-shadow:${value ? '2px 2px 3px 2px ' + user.data.plugins.color : 'unset'}">
                         &nbsp;
                     </div>
                     <b>${user.username}</b>
                 </div>
             `,
-            sellRatio: 0.5,
+            sellRatio: 0.4,
         },
         'pinnedicon': {
             items: [
@@ -170,11 +157,11 @@ export class ShopPlugin extends Plugin {
                     <i class="material-icons md-14">${value}</i> <b>${user.username}</b>
                 </div>
             `,
-            sellRatio: 0.5,
+            sellRatio: 0.4,
         }
     };
 
-    public static readonly TYPE_REGEXP: RegExp = /^(color\.main|color\.secondary|pinnedicon)$/;
+    public static readonly TYPE_REGEXP: RegExp = /^(color|halo|pinnedicon)$/;
 
     readonly defaultDataStorageValue: {[type: string]: number[]} = {colors: []};
 
@@ -415,15 +402,10 @@ export class ShopPlugin extends Plugin {
         }
 
         switch (type) {
-            case 'color.main':
-            case 'color.secondary':
-                const data = await UserController.getPluginData(user, 'color');
-                data[type.split('.')[1]] = item.value;
-                await UserController.savePluginData(user, 'color', data);
-                break;
-            
+            case 'color':
+            case 'halo':
             case 'pinnedicon':
-                await UserController.savePluginData(user, 'pinnedicon', item.value);
+                await UserController.savePluginData(user, type, item.value);
                 break;
         }
     }
@@ -443,13 +425,10 @@ export class ShopPlugin extends Plugin {
         }
 
         switch (type) {
-            case 'color.main':
-            case 'color.secondary':
-                const subCategory = type.split('.')[1];
-                return (await UserController.getPluginData(user, 'color'))[subCategory] === item.value;
-            
+            case 'color':
+            case 'halo':
             case 'pinnedicon':
-                return (await UserController.getPluginData(user, 'pinnedicon')) === item.value;
+                return (await UserController.getPluginData(user, type)) === item.value;
         }
     }
 

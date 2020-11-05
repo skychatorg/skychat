@@ -12,6 +12,7 @@ export {ConnectedListPlugin} from "./core/ConnectedListPlugin";
 export {PrivateMessagePlugin} from "./core/PrivateMessagePlugin";
 export {SetRightCommand} from "./moderation/SetRightCommand";
 export {ColorPlugin} from "./customization/ColorPlugin";
+export {HaloPlugin} from "./customization/HaloPlugin";
 export {ShopPlugin} from "./customization/ShopPlugin";
 export {MoneyFarmerPlugin} from "./core/MoneyFarmerPlugin";
 export {OfferMoneyPlugin} from "./moderation/OfferMoneyPlugin";
