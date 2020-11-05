@@ -11,15 +11,16 @@ import {MessageFormatter} from "../../../MessageFormatter";
 
 export type ShopItems = {
     items: ShopItem[];
-    preview: (value: any, user: User) => string
+    preview: (value: any, user: User) => string;
+    sellRatio: number;
 };
 
 export type ShopItem = {
-    id: number,
-    name: string,
-    value: any,
-    price: number
-}
+    id: number;
+    name: string;
+    value: any;
+    price: number;
+};
 
 
 export class ShopPlugin extends Plugin {
@@ -68,7 +69,8 @@ export class ShopPlugin extends Plugin {
                     <div style="border:1px solid white;width:14px;height:14px;border-radius:50%;background:transparent;display:inline-block;margin-right:4px;box-shadow:2px 2px 3px 2px ${user.data.plugins.color.secondary}">&nbsp;</div>
                     <b>${user.username}</b>
                 </div>
-            `
+            `,
+            sellRatio: 0.5,
         },
         'color.secondary': {
             items: [
@@ -95,7 +97,8 @@ export class ShopPlugin extends Plugin {
                     </div>
                     <b>${user.username}</b>
                 </div>
-            `
+            `,
+            sellRatio: 0.5,
         },
         'pinnedicon': {
             items: [
@@ -166,7 +169,8 @@ export class ShopPlugin extends Plugin {
                     <div style="border:1px solid white;width:14px;height:14px;border-radius:50%;background:transparent;display:inline-block;margin-right:4px;box-shadow:2px 2px 3px 2px ${user.data.plugins.color.secondary}">&nbsp;</div>
                     <i class="material-icons md-14">${value}</i> <b>${user.username}</b>
                 </div>
-            `
+            `,
+            sellRatio: 0.5,
         }
     };
 
@@ -176,7 +180,7 @@ export class ShopPlugin extends Plugin {
 
     readonly name = 'shop';
 
-    readonly aliases = ['shoplist', 'shopbuy', 'shopset'];
+    readonly aliases = ['shoplist', 'shopbuy', 'shopsell', 'shopset'];
 
     readonly minRight = 0;
 
@@ -191,6 +195,14 @@ export class ShopPlugin extends Plugin {
             maxCount: 1,
             params: [
                 {name: 'type', pattern: ShopPlugin.TYPE_REGEXP}
+            ]
+        },
+        shopsell: {
+            minCount: 2,
+            maxCount: 2,
+            params: [
+                {name: 'type', pattern: ShopPlugin.TYPE_REGEXP},
+                {name: 'item', pattern: /^([0-9]+)$/},
             ]
         },
         shopbuy: {
@@ -226,6 +238,11 @@ export class ShopPlugin extends Plugin {
 
         if (alias === 'shoplist') {
             await this.handleShopList(param, connection);
+            return;
+        }
+
+        if (alias === 'shopsell') {
+            await this.handleShopSell(param, connection);
             return;
         }
 
@@ -288,7 +305,7 @@ export class ShopPlugin extends Plugin {
                     <td>${item.name}</td>
                     <td>${itemDefinition.preview(item.value, connection.session.user)}</td>
                     <td>${'$ ' + (item.price / 100)}</td>
-                    <td>${itemOwned ? '' : formatter.getButtonHtml('buy', '/shopbuy ' + param + ' ' + item.id, true, true)}</td>
+                    <td>${itemOwned ? formatter.getButtonHtml('sell', '/shopsell ' + param + ' ' + item.id, true, true) : formatter.getButtonHtml('buy', '/shopbuy ' + param + ' ' + item.id, true, true)}</td>
                     <td>${formatter.getButtonHtml('set', '/shopset ' + param + ' ' + item.id, true, true)}</td>
                 </tr>
             `;
@@ -296,6 +313,37 @@ export class ShopPlugin extends Plugin {
         html += '</table>';
         message.append(striptags(html), html);
         connection.send('message', message.sanitized());
+    }
+
+    /**
+     * Sell an item
+     * @param param
+     * @param connection
+     */
+    private async handleShopSell(param: string, connection: Connection): Promise<void> {
+
+        const type = param.split(' ')[0];
+        const id = parseInt(param.split(' ')[1]);
+
+        // Check item existence
+        const item = this.getItem(type, id);
+        if (! item) {
+            throw new Error('Item not found');
+        }
+
+        // Check ownership
+        if (! this.userOwnsItem(connection.session.user, type, id)) {
+            throw new Error('You don\'t own this item');
+        }
+
+        // Check that the item is not currently set
+        if (await this.userHasItemSet(connection.session.user, type, id)) {
+            throw new Error('Unset this item before selling it');
+        }
+
+        // Buy item
+        await UserController.giveMoney(connection.session.user, Math.floor(item.price * ShopPlugin.ITEMS[type].sellRatio));
+        await this.userRemoveOwnedItem(connection.session.user, type, id);
     }
 
     /**
@@ -316,7 +364,7 @@ export class ShopPlugin extends Plugin {
 
         // Check ownership
         if (this.userOwnsItem(connection.session.user, type, id)) {
-            throw new Error('You don\'t own this item');
+            throw new Error('You already own this item');
         }
 
         // Buy item
@@ -346,19 +394,62 @@ export class ShopPlugin extends Plugin {
         }
 
         // Set item
+        await this.userSetItem(connection.session.user, type, id);
+        
+        // Notify other users
+        (this.room.getPlugin('connectedlist') as ConnectedListPlugin).sync();
+    }
+
+    /**
+     * Set an item
+     * @param user 
+     * @param type 
+     * @param itemId 
+     */
+    public async userSetItem(user: User, type: string, itemId: number) {
+    
+        // Find item object
+        const item = this.getItem(type, itemId);
+        if (! item) {
+            throw new Error('Item not found');
+        }
+
         switch (type) {
             case 'color.main':
             case 'color.secondary':
-                const data = await UserController.getPluginData(connection.session.user, 'color');
+                const data = await UserController.getPluginData(user, 'color');
                 data[type.split('.')[1]] = item.value;
-                await UserController.savePluginData(connection.session.user, 'color', data);
-                await (this.room.getPlugin('connectedlist') as ConnectedListPlugin).sync();
+                await UserController.savePluginData(user, 'color', data);
                 break;
             
             case 'pinnedicon':
-                await UserController.savePluginData(connection.session.user, 'pinnedicon', item.value);
-                await (this.room.getPlugin('connectedlist') as ConnectedListPlugin).sync();
+                await UserController.savePluginData(user, 'pinnedicon', item.value);
                 break;
+        }
+    }
+
+    /**
+     * Whether an user currently has an item set
+     * @param user 
+     * @param type 
+     * @param itemId 
+     */
+    public async userHasItemSet(user: User, type: string, itemId: number) {
+    
+        // Find item object
+        const item = this.getItem(type, itemId);
+        if (! item) {
+            throw new Error('Item not found');
+        }
+
+        switch (type) {
+            case 'color.main':
+            case 'color.secondary':
+                const subCategory = type.split('.')[1];
+                return (await UserController.getPluginData(user, 'color'))[subCategory] === item.value;
+            
+            case 'pinnedicon':
+                return (await UserController.getPluginData(user, 'pinnedicon')) === item.value;
         }
     }
 
@@ -390,7 +481,7 @@ export class ShopPlugin extends Plugin {
     }
 
     /**
-     * Tells whether an user owns a specific item
+     * Add an owned item to an user
      * @param user
      * @param type
      * @param itemId
@@ -401,6 +492,22 @@ export class ShopPlugin extends Plugin {
         storage.shop.ownedItems = storage.shop.ownedItems || {};
         storage.shop.ownedItems[type] = storage.shop.ownedItems[type] || [];
         storage.shop.ownedItems[type].push(itemId);
+        user.storage = storage;
+        await UserController.sync(user);
+    }
+
+    /**
+     * Remvoed an owned item
+     * @param user
+     * @param type
+     * @param itemId
+     */
+    public async userRemoveOwnedItem(user: User, type: string, itemId: number): Promise<void> {
+        const storage = user.storage || {shop: {owned: {}}};
+        storage.shop = storage.shop || {};
+        storage.shop.ownedItems = storage.shop.ownedItems || {};
+        storage.shop.ownedItems[type] = storage.shop.ownedItems[type] || [];
+        storage.shop.ownedItems[type] = storage.shop.ownedItems[type].filter((ownedItemId: number) => ownedItemId != itemId);
         user.storage = storage;
         await UserController.sync(user);
     }
