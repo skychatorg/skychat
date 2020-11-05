@@ -66,7 +66,7 @@ export class ShopPlugin extends Plugin {
             ],
             preview: (value, user) => `
                 <div style="color:${value};border-left: 4px solid ${value};padding-left: 6px;">
-                    <div style="border:1px solid white;width:14px;height:14px;border-radius:50%;background:transparent;display:inline-block;margin-right:4px;box-shadow:2px 2px 3px 2px ${user.data.plugins.color.secondary}">&nbsp;</div>
+                    <div style="border:1px solid white;width:14px;height:14px;border-radius:50%;background:transparent;display:inline-block;margin-right:4px;box-shadow:${user.data.plugins.halo ? '2px 2px 3px 2px ' + value : 'unset'}">&nbsp;</div>
                     <b>${user.username}</b>
                 </div>
             `,
@@ -152,8 +152,10 @@ export class ShopPlugin extends Plugin {
                 price: data[1] === '' ? 0 : 5000
             })),
             preview: (value, user) => `
-                <div style="color:${user.data.plugins.color.main};border-left: 4px solid ${user.data.plugins.color.main};padding-left: 6px;">
-                    <div style="border:1px solid white;width:14px;height:14px;border-radius:50%;background:transparent;display:inline-block;margin-right:4px;box-shadow:2px 2px 3px 2px ${user.data.plugins.color.secondary}">&nbsp;</div>
+                <div style="color:${user.data.plugins.color};border-left: 4px solid ${user.data.plugins.color};padding-left: 6px;">
+                    <div style="border:1px solid white;width:14px;height:14px;border-radius:50%;background:transparent;display:inline-block;margin-right:4px;box-shadow:${user.data.plugins.halo ? '2px 2px 3px 2px ' + user.data.plugins.color : 'unset'}">
+                        &nbsp;
+                    </div>
                     <i class="material-icons md-14">${value}</i> <b>${user.username}</b>
                 </div>
             `,
