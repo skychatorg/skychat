@@ -9,6 +9,8 @@ export type SanitizedSession = {
 
     connectionCount: number;
 
+    deadSinceTime?: number;
+
     lastMessageTime: number;
 
     user: SanitizedUser;
@@ -19,10 +21,14 @@ export type SanitizedSession = {
  */
 export class Session implements IBroadcaster {
 
+    static readonly DEAD_GUEST_SESSION_CLEANUP_DELAY_MS = 30 * 1000;
+
+    static readonly DEAD_USER_SESSION_CLEANUP_DELAY_MS = 60 * 60 * 1000;
+
     /**
      * Object mapping all active sessions
      */
-     static sessions: {[identifier: string]: Session} = {};
+    static sessions: {[identifier: string]: Session} = {};
 
     /**
      * Find an existing session using its identifier
@@ -52,6 +58,34 @@ export class Session implements IBroadcaster {
         return typeof Session.getSessionByIdentifier(identifier) !== 'undefined';
     }
 
+    public static cleanUpSession(identifier: string, immediate?: boolean): boolean {
+        const session = Session.getSessionByIdentifier(identifier);
+        // If session does not exist
+        if (! session) {
+            return false;
+        }
+        // If session still has active connections
+        if (! session.deadSince) {
+            return false;
+        }
+        // If session is dead since less than cleanUpDelayMs millis
+        const defaultCleanUpDelay = session.getDefaultCleanUpDelay();
+        if (! immediate && new Date().getTime() - session.deadSince.getTime() < defaultCleanUpDelay) {
+            return false;
+        }
+        // Clean the session
+        delete Session.sessions[identifier];
+        return true;
+    }
+
+    public static cleanUpAllSessions(immediate?: boolean): void {
+        for (const identifier of Object.keys(Session.sessions)) {
+            Session.cleanUpSession(identifier, immediate);
+        }
+    }
+
+    public static cleanUpInterval = setInterval(Session.cleanUpAllSessions, 5 * 1000);
+
     /**
      * Unique session identifier (lower case)
      */
@@ -60,6 +94,11 @@ export class Session implements IBroadcaster {
     public connections: Connection[];
 
     public lastMessageDate: Date;
+
+    /**
+     * Date since the last active connection has disconnected. 
+     */
+    public deadSince: Date | null;
 
     /**
      * Associated user (if logged session)
@@ -72,6 +111,11 @@ export class Session implements IBroadcaster {
         this.identifier = identifier;
         this.user = new User(0, identifier, null, '', 0, 0, -1);
         this.lastMessageDate = new Date();
+        this.deadSince = null;
+    }
+
+    public getDefaultCleanUpDelay(): number {
+        return this.user.id === 0 ? Session.DEAD_GUEST_SESSION_CLEANUP_DELAY_MS : Session.DEAD_USER_SESSION_CLEANUP_DELAY_MS;
     }
 
     /**
@@ -80,6 +124,10 @@ export class Session implements IBroadcaster {
      */
     public detachConnection(connection: Connection): void {
         this.connections = this.connections.filter(c => c !== connection);
+        // If the last active connection leaves, mark this object as dead
+        if (this.connections.length === 0) {
+            this.deadSince = new Date();
+        }
     }
 
     /**
@@ -111,10 +159,14 @@ export class Session implements IBroadcaster {
             return;
         }
         if (connection.session) {
+            const oldIdentifier = connection.session.identifier;
             connection.session.detachConnection(connection);
+            Session.cleanUpSession(oldIdentifier, true);
         }
         connection.session = this;
         this.connections.push(connection);
+        // If this session was marked as dead, mark it as alive
+        this.deadSince = null;
 
         connection.send('set-user', this.user.sanitized())
     }
@@ -155,6 +207,7 @@ export class Session implements IBroadcaster {
         return {
             identifier: this.identifier,
             connectionCount: this.connections.length,
+            deadSinceTime: this.deadSince ? this.deadSince.getTime() * 0.001 : undefined,
             lastMessageTime: this.lastMessageDate.getTime() * 0.001,
             user: this.user.sanitized()
         }

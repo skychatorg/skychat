@@ -109,12 +109,6 @@
                         showInNonCinema: true,
                         actions: [
                             {
-                                id: 'shop',
-                                title: "Browse shop",
-                                icon: 'shopping_cart',
-                                shortcuts: ['ctrl+s']
-                            },
-                            {
                                 id: 'shop-color',
                                 title: "Browse shop colors",
                                 icon: 'palette',
@@ -125,6 +119,12 @@
                                 title: "Browse shop halo colors",
                                 icon: 'brush',
                                 shortcuts: ['ctrl+s+2']
+                            },
+                            {
+                                id: 'shop-pinnedicon',
+                                title: "Browse shop",
+                                icon: 'info',
+                                shortcuts: ['ctrl+s+3']
                             },
                         ]
                     },
@@ -178,12 +178,12 @@
                         return `<b>Skip</b>`;
                     case 'yt-play':
                         return `<b>Play</b>`;
-                    case 'shop':
-                        return `<b>Shop</b>`;
                     case 'shop-color':
                         return `<b>Color</b>`;
                     case 'shop-halo':
                         return `<b>Halo</b>`;
+                    case 'shop-pinnedicon':
+                        return `<b>Icon</b>`;
                     case 'guess':
                         return `<b>Guess</b>`;
                     case 'roll':
@@ -207,12 +207,12 @@
                     case 'yt-play':
                         this.$modal.show(YoutubeVideoSearcher);
                         return;
-                    case 'shop':
-                        return this.$client.sendMessage('/shop');
                     case 'shop-color':
                         return this.$client.sendMessage('/shoplist color.main');
                     case 'shop-halo':
                         return this.$client.sendMessage('/shoplist color.secondary');
+                    case 'shop-pinnedicon':
+                        return this.$client.sendMessage('/shoplist pinnedicon');
                     case 'guess':
                         return this.$client.sendMessage('/guess start');
                     case 'roll':
@@ -295,7 +295,7 @@
                             color: #ff8f8f;
                         }
                     }
-                    &.action-shop,
+                    &.action-shop-pinnedicon,
                     &.action-shop-color,
                     &.action-shop-halo {
                         border-left-color: #9b71b9 !important;

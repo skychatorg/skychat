@@ -178,7 +178,7 @@ export class SkyChat {
         // Find an existing session belonging to the same user
         const recycledSession = Session.getSessionByIdentifier(user.username.toLowerCase());
         if (recycledSession) {
-            // If such session exists, attach this connection to the active session
+            // If such session exists, attach the recycled one
             recycledSession.attachConnection(connection);
         } else {
             // Else, update this session

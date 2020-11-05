@@ -290,5 +290,19 @@ export class UserController {
             password=${newHashedPassword}
             where id=${user.id}`);
     }
-}
 
+    /**
+     * Change one's password
+     * @param user
+     * @param newUsername
+     * @param currentPassword
+     */
+    public static async changePassword(user: User, newPassword: string) {
+        // Compute new password
+        const newHashedPassword = UserController.hashPassword(user.id, user.username.toLowerCase(), newPassword);
+        // Update user object
+        user.setHashedPassword(newHashedPassword);
+        // Update database
+        await DatabaseHelper.db.run(SQL`update users set password=${newHashedPassword} where id=${user.id}`);
+    }
+}

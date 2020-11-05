@@ -16,7 +16,7 @@
             <div class="vertical-bar" :class="'custom-color-' + progressBarColor"></div>
             <transition-group name="list" tag="div">
                 <div v-for="video, videoIndex in nextVideos"
-                     class="video-in-queue"
+                    class="video-in-queue"
                     :key="video.video.id">
                     <div class="image avatar">
                         <div class="image-bubble" :style="'box-shadow: #' + progressBarColor +' 0 0 4px 0;'">
@@ -24,9 +24,9 @@
                         </div>
                     </div>
                     <!-- the svg has -5px left and top to avoid the circles being truncated -->
-                    <svg height="80" width="80">
-                        <circle cx="40" cy="40" r="35" fill="none" stroke="black"></circle>
-                        <circle cx="40" cy="40" r="35" :class="'custom-color-' + progressBarColor" :stroke-dashoffset="- (queueWaitDurations[videoIndex]) * 2 * Math.PI * 25"></circle>
+                    <svg height="50" width="50">
+                        <circle cx="25" cy="25" r="20" fill="none" stroke="black"></circle>
+                        <circle cx="25" cy="25" r="20" :class="'custom-color-' + progressBarColor" :stroke-dashoffset="- (queueWaitDurations[videoIndex]) * 2 * Math.PI * 25"></circle>
                     </svg>
                     <div class="info">
                         <div class="title">{{video.video.title}}</div>
@@ -240,26 +240,26 @@
             position: relative;
             background: #2b2b2f;
             padding-right: 30px;
-            padding-left: 30px;
+            padding-left: 10px;
             padding-bottom: 10px;
 
             .vertical-bar {
                 position: absolute;
                 transition: all 1s ease-in-out;
                 width: 2px;
-                height: calc(100% - 60px);
-                left: 65px;
+                height: calc(100% - 30px);
+                left: 30px;
             }
             .video-in-queue {
                 display: flex;
                 width: 100%;
-                height: 60px;
-                margin: 20px 0 10px 0;
+                height: 40px;
+                margin: 10px 0 5px 0;
                 position: relative;
 
                 .image {
-                    width: 70px;
-                    height: 70px;
+                    width: 40px;
+                    height: 40px;
                     display: flex;
 
                     .image-bubble {

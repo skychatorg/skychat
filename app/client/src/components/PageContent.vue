@@ -149,7 +149,7 @@
             }
 
             .right {
-                width: 360px;
+                flex-basis: 400px;
                 height: 100%;
                 overflow-y: auto;
                 background: #25262b85;
