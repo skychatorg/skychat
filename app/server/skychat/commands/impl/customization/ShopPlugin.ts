@@ -26,9 +26,9 @@ export type ShopItem = {
 export class ShopPlugin extends Plugin {
 
     public static readonly COLORS_TIER_0_COST: number = 0;
-    public static readonly COLORS_TIER_1_COST: number = 500;
-    public static readonly COLORS_TIER_2_COST: number = 1500;
-    public static readonly COLORS_TIER_3_COST: number = 3000;
+    public static readonly COLORS_TIER_1_COST: number = 2 * 100;
+    public static readonly COLORS_TIER_2_COST: number = 25 * 100;
+    public static readonly COLORS_TIER_3_COST: number = 50 * 100;
 
     public static readonly ITEMS: {[type: string]: ShopItems} = {
         'color': {
@@ -75,7 +75,7 @@ export class ShopPlugin extends Plugin {
         'halo': {
             items: [
                 {id: 0, name: 'no halo', value: false, price: 0},
-                {id: 1, name: 'halo', value: true, price: ShopPlugin.COLORS_TIER_3_COST},
+                {id: 1, name: 'halo', value: true, price: 50 * 100},
             ],
             preview: (value, user) => `
                 <div style="color:${user.data.plugins.color};border-left: 4px solid ${user.data.plugins.color};padding-left: 6px;">
