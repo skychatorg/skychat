@@ -29,6 +29,7 @@ export {PollPlugin} from "./poll/PollPlugin";
 export {XPFarmerPlugin} from "./core/XPFarmerPlugin";
 export {BanPlugin} from "./moderation/BanPlugin";
 export {UsurpPlugin} from "./moderation/UsurpPlugin";
+export {LogFuzzerPlugin} from "./optional/LogFuzzerPlugin";
 export {AccountPlugin} from "./core/AccountPlugin";
 export {MailPlugin} from "./core/MailPlugin";
 export {TrackerPlugin} from "./moderation/TrackerPlugin";
