@@ -121,7 +121,7 @@
                 width: 100%;
                 max-width: 380px;
                 background-color: #222223;
-                opacity: 0.4;
+                opacity: 0.75;
 
                 &:hover {
                     opacity: 1;
