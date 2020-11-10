@@ -12,6 +12,7 @@ const store = {
         documentTitleBlinking: false,
         page: 'welcome',
         mobileCurrentPage: 'tchat',
+        config: null,
         cinemaMode: false,
         channel: null,
         connectionState: WebSocket.CLOSED,
@@ -81,6 +82,9 @@ const store = {
         },
         GOTO_MAIN_CHANNEL(state) {
             state.channel = null;
+        },
+        SET_CONFIG(state, config) {
+            state.config = config;
         },
         SET_CONNECTION_STATE(state, connectionState) {
             state.connectionState = connectionState;

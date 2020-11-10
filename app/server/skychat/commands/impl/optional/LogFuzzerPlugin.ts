@@ -65,7 +65,6 @@ export class LogFuzzerPlugin extends Plugin {
         }
         if (messages.length > 0) {
             const maxId = Math.max(...messages.map(message => message.id));
-            console.log(messages.length, maxId, messages[0]);
             this.storage.lastId = maxId;
             this.syncStorage();
         }

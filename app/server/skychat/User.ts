@@ -1,5 +1,6 @@
 import * as _ from "lodash"
-import {UserController} from "./UserController"; // Import the entire lodash library
+import { UserController } from "./UserController";
+import { Config } from "./Config";
 
 
 export type UserData = {
@@ -35,19 +36,7 @@ export class User {
         plugins: {}
     };
 
-
-    public static readonly RANK_LIMITS: {limit: number, rank: string}[] = [
-        {limit: 100000, rank: 'rank_9.gif'},
-        {limit: 65000, rank: 'rank_8.png'},
-        {limit: 50000, rank: 'rank_7.png'},
-        {limit: 35000, rank: 'rank_6.png'},
-        {limit: 20000, rank: 'rank_5.png'},
-        {limit: 10000, rank: 'rank_4.png'},
-        {limit: 4000, rank: 'rank_3.png'},
-        {limit: 800, rank: 'rank_2.png'},
-        {limit: 200, rank: 'rank_1.png'},
-        {limit: 0, rank: 'rank_0.png'},
-    ];
+    public static readonly RANK_LIMITS: {limit: number, rank: string}[] = Config.PREFERENCES.ranks;
 
     /**
      * Get the rank image of this user from an xp amount

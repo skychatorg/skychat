@@ -21,6 +21,7 @@
 
                     <!-- right col -->
                     <section class="right hide-mobile-tchat scrollbar">
+                        <user-preview></user-preview>
                         <player-preview></player-preview>
                         <polls></polls>
                         <connected-list></connected-list>
@@ -46,6 +47,7 @@
     import TypingList from "./TypingList.vue";
     import MessageForm from "./MessageForm.vue";
     import Polls from "./Polls.vue";
+    import UserPreview from "./UserPreview.vue";
     import PlayerPreview from "./PlayerPreview.vue";
     import PlayerBackground from "./PlayerBackground.vue";
     import ConnectedList from "./ConnectedList.vue";
@@ -53,7 +55,7 @@
     import MessagesOverlay from "./MessagesOverlay.vue";
 
     export default Vue.extend({
-        components: {AuthPage, Messages, TypingList, MessageForm, Polls, PlayerPreview, PlayerBackground, ConnectedList, QuickActions, MessagesOverlay},
+        components: {AuthPage, Messages, TypingList, MessageForm, Polls, UserPreview, PlayerPreview, PlayerBackground, ConnectedList, QuickActions, MessagesOverlay},
         watch: {
             cinemaMode: function() {
 
