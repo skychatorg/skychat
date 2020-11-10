@@ -36,7 +36,7 @@
                 if (! this.nextRank) {
                     return 0;                
                 }
-                return Math.floor(100 * (this.user.xp - this.currentRank.limit) / (this.nextRank.limit - this.currentRank.limit));
+                return Math.max(1, Math.floor(100 * (this.user.xp - this.currentRank.limit) / (this.nextRank.limit - this.currentRank.limit)));
             },
             currentRank: function() {
                 return this.config.ranks.filter(rank => this.user.xp >= rank.limit)[0];
