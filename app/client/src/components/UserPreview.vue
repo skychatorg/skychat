@@ -1,18 +1,31 @@
 <template>
 
-    <div class="mt-2 pr-2 pl-1">
+    <div class="user-preview pr-2 pl-1 mt-1">
 
-        <!-- rank progress bar -->
-        <div class="progress-bar">
-
-            <!-- Progress bar -->
-            <div class="progress-bar-progress" :style="{width: xpProgressPct + '%'}"></div>
-
-            <!-- Rank icons -->
-            <div class="rank current-rank" :title="'Current rank unlocked at ' + currentRank.limit + ' xp'"><img :src="'/assets/images/' + currentRank.rank"></div>
-            <div class="rank next-rank" :title="'Next rank at ' + nextRank.limit + ' xp'" v-if="nextRank"><img :src="'/assets/images/' + nextRank.rank"></div>
+        <div class="user-preview-avatar">
+            <div class="image-bubble" >
+                <img :src="user.data.plugins.avatar">
+            </div>
         </div>
 
+        <div class="user-preview-info">
+            
+            <div class="session"
+                 :style="{'color': user.data.plugins.color}">
+                {{user.username}}
+            </div>
+
+            <!-- rank progress bar -->
+            <div class="progress-bar">
+
+                <!-- Progress bar -->
+                <div class="progress-bar-progress" :style="{width: xpProgressPct + '%'}"></div>
+
+                <!-- Rank icons -->
+                <div class="rank current-rank" :title="'Current rank unlocked at ' + currentRank.limit + ' xp'"><img :src="'/assets/images/' + currentRank.rank"></div>
+                <div class="rank next-rank" :title="'Next rank at ' + nextRank.limit + ' xp'" v-if="nextRank"><img :src="'/assets/images/' + nextRank.rank"></div>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -54,36 +67,73 @@
 
 <style lang="scss" scoped>
 
-.progress-bar {
-    width: 100%;
-    border: 4px solid #2c2d31;
-    background-color: #2c2d31;
-    border-radius: 22px;
-    height: 18px;
-    position: relative;
+.user-preview {
 
-    >.rank {
-        position: absolute;
-        top: -10px;
+    display: flex;
 
-        &.current-rank {
-            left: 0;
-        }
-        
-        &.next-rank {
-            right: 0;
+    > .user-preview-avatar {
+        width: 65px;
+        height: 65px;
+        padding: 10px;
+        position: relative;
+
+        >.image-bubble{
+            width: 100%;
+            height: 100%;
         }
     }
 
-    .progress-bar-progress {
-        position: absolute;
-        top: 0;
-        left: 0;
-        height: 100%;
-        background-color: #8b3742;
-        border-top-left-radius: 22px;
-        border-bottom-left-radius: 22px;
+    > .user-preview-info {
+
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        padding-top: 8px;
+        padding-left: 12px;
+        padding-right: 22px;
+
+        >.session {
+            display: inline;
+            color: #a3a5b4;
+            font-weight: 800;
+            font-size: 110%;
+            flex-basis: 20px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 6px;
+        }
+
+        > .progress-bar {
+            width: 100%;
+            border: 4px solid #2c2d31;
+            background-color: #2c2d31;
+            border-radius: 22px;
+            height: 18px;
+            position: relative;
+
+            >.rank {
+                position: absolute;
+                top: -10px;
+
+                &.current-rank {
+                    left: 0;
+                }
+                
+                &.next-rank {
+                    right: 0;
+                }
+            }
+
+            .progress-bar-progress {
+                position: absolute;
+                top: 0;
+                left: 0;
+                height: 100%;
+                background-color: #8b3742;
+                border-top-left-radius: 22px;
+                border-bottom-left-radius: 22px;
+            }
+        }
     }
 }
-
 </style>
