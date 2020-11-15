@@ -15,6 +15,8 @@ export class MessageHistoryPlugin extends Plugin {
 
     readonly name = 'welcomer';
 
+    private readonly formatter: MessageFormatter = MessageFormatter.getInstance();
+
     async run(alias: string, param: string, connection: Connection): Promise<void> { }
 
     /**
@@ -42,10 +44,9 @@ export class MessageHistoryPlugin extends Plugin {
 
             // Randomly add a sticker
             if (Math.random() < .7) {
-                const formatter = MessageFormatter.getInstance();
-                const stickers = Object.keys(formatter.stickers);
-                const sticker = stickers[Math.floor(stickers.length * Math.random())];
-                fakeText += ' ' + sticker;
+                const stickers = Object.keys(this.formatter.stickers);
+                const sticker = stickers.length ? ' ' + stickers[Math.floor(stickers.length * Math.random())] : '';
+                fakeText += sticker;
             }
 
             // Build the message object and send it
