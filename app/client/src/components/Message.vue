@@ -92,7 +92,7 @@
 
     .message {
         display: flex;
-	flex: 0 0 auto;
+        flex: 0 0 auto;
         color: white;
         background: #2b2b2f;
         margin-top: 4px;
