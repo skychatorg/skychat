@@ -37,16 +37,15 @@ export class MessageHistoryPlugin extends Plugin {
          */
         // Send message history to the connection that just joined this room
         const fakeMessages = [];
+        const stickers = Object.keys(this.formatter.stickers);
         for (let i = Math.max(0, this.room.messages.length - Room.MESSAGE_HISTORY_VISIBLE_LENGTH); i < this.room.messages.length; ++ i) {
 
             // Build a fake message
             let fakeText = Config.PREFERENCES.fakeMessages[Math.floor(Math.random() * Config.PREFERENCES.fakeMessages.length)];
 
             // Randomly add a sticker
-            if (Math.random() < .7) {
-                const stickers = Object.keys(this.formatter.stickers);
-                const sticker = stickers.length ? ' ' + stickers[Math.floor(stickers.length * Math.random())] : '';
-                fakeText += sticker;
+            if (stickers.length && Math.random() < .7) {
+                fakeText += ' ' + stickers[Math.floor(stickers.length * Math.random())];
             }
 
             // Build the message object and send it
