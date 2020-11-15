@@ -11,20 +11,19 @@ const impl = require('./impl/');
 export class CommandManager {
 
     /**
-     * Available commands and plugins
-     */
-    public static readonly COMMANDS: Array<new (room: Room) => Command> = Config.getPlugins().map(pluginName => impl[pluginName]);
-
-
-    /**
      * Load all commands and plugins
      */
     public static instantiateCommands(room: Room) {
         // Initialize command and plugin instances
         const commands: {[commandName: string]: Command} = {};
         // For every command/plugin
-        for (let CommandConstructor of CommandManager.COMMANDS) {
+        for (let commandName of Config.getPlugins()) {
+            // Check if the command/plugin exists
+            if (typeof impl[commandName] !== 'function') {
+                throw new Error(`Unable to load command/plugin ${commandName}. Ensure the corresponding file is there and the plugin class exported.`);
+            }
             // Instantiate it
+            const CommandConstructor = impl[commandName];
             const command = new CommandConstructor(room);
             // Add it in the command object with its name and all its aliases
             commands[command.name] = command;
