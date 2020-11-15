@@ -28,6 +28,7 @@ export class SkyChatClient extends EventEmitter {
      * Bind own event listeners
      */
     bind() {
+        this.on('config', this.onConfig.bind(this));
         this.on('join-room', this.onJoinRoom.bind(this));
         this.on('message', this.onMessage.bind(this));
         this.on('messages', this.onMessages.bind(this));
@@ -85,6 +86,13 @@ export class SkyChatClient extends EventEmitter {
      */
     onPing() {
         this.sendEvent('pong', null);
+    }
+
+    /**
+     * When receiving config object from server
+     */
+    onConfig(config) {
+        this.store.commit('SET_CONFIG', config);
     }
 
     /**

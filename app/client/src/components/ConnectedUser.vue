@@ -1,6 +1,6 @@
 <template>
     <div class="connected-session"
-         :style="{'border-left-color': session.user.data.plugins.color.main}"
+         :style="{'border-left-color': session.user.data.plugins.color}"
          :class="{
             'selected': isChanSelected(session.user.username),
             'has-unread': getUnreadCount(session.user.username) > 0
@@ -9,13 +9,13 @@
             <span class="rank">
                 <img title="User rank" :src="'/assets/images/' + session.user.rank">
             </span>
-            <div class="image-bubble" :style="{'box-shadow': '0 0 4px 4px ' + session.user.data.plugins.color.secondary}">
+            <div class="image-bubble" :style="{'box-shadow': session.user.data.plugins.halo ? '0 0 4px 4px ' + session.user.data.plugins.color : 'unset'}">
                 <img :src="session.user.data.plugins.avatar">
             </div>
         </div>
         <div class="info">
             <div class="session"
-                 :style="{'color': session.user.data.plugins.color.main}">
+                 :style="{'color': session.user.data.plugins.color}">
                 <i v-show="session.user.data.plugins.pinnedicon" class="pinned-icon material-icons md-14">{{session.user.data.plugins.pinnedicon}}</i>
                 {{session.user.username}}
                 <sup v-show="session.connectionCount > 1">

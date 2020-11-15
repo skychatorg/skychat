@@ -1,10 +1,10 @@
 <template>
-    <div @contextmenu.prevent="$emit('select')" class="message" :style="{'border-left-color': message.user.data.plugins.color.main}">
-        <div class="avatar image-bubble" :style="{'box-shadow': '0 0 4px 4px ' + message.user.data.plugins.color.secondary}">
+    <div @contextmenu.prevent="$emit('select')" class="message" :style="{'border-left-color': message.user.data.plugins.color}">
+        <div class="avatar image-bubble" :style="{'box-shadow': message.user.data.plugins.halo ? '0 0 4px 4px ' + message.user.data.plugins.color : 'unset'}">
             <img :src="message.user.data.plugins.avatar">
         </div>
         <div class="content">
-            <div class="user" :style="{'color': message.user.data.plugins.color.main}">
+            <div class="user" :style="{'color': message.user.data.plugins.color}">
                 <i v-show="message.user.data.plugins.pinnedicon" class="material-icons md-14">{{message.user.data.plugins.pinnedicon}}</i>
                  {{message.user.username}}
                 <i v-show="message.meta.device === 'mobile'" class="material-icons user-device md-14">smartphone</i>

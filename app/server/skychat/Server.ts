@@ -143,15 +143,15 @@ export class Server {
         // Create a new connection object & attach it to the session
         const connection = new Connection(session, webSocket, request);
 
+        if (typeof this.onConnectionCreated === 'function') {
+            await this.onConnectionCreated(connection);
+        }
+
         // For every registered event
         Object.keys(this.events).forEach(eventName => {
             // Register it on the connection object
             connection.on(eventName, (payload: any) => this.onConnectionEvent(eventName, payload, connection));
         });
-
-        if (typeof this.onConnectionCreated === 'function') {
-            await this.onConnectionCreated(connection);
-        }
     }
 
     /**

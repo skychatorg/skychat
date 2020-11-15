@@ -12,15 +12,15 @@
             <template v-if="! cinemaMode">
 
                 <section class="default-container">
+
                     <!-- left col -->
                     <section class="left hide-mobile-list">
-                        <messages ref="messages" @select-message="onSelectMessage" class="scrollbar" />
-                        <typing-list id="typing-list" />
-                        <message-form ref="messageForm" id="message-form"/>
+                        <left-column></left-column>
                     </section>
 
                     <!-- right col -->
                     <section class="right hide-mobile-tchat scrollbar">
+                        <user-preview></user-preview>
                         <player-preview></player-preview>
                         <polls></polls>
                         <connected-list></connected-list>
@@ -42,10 +42,9 @@
 <script>
     import Vue from "vue";
     import AuthPage from "./AuthPage.vue";
-    import Messages from "./Messages.vue";
-    import TypingList from "./TypingList.vue";
-    import MessageForm from "./MessageForm.vue";
+    import LeftColumn from "./LeftColumn.vue";
     import Polls from "./Polls.vue";
+    import UserPreview from "./UserPreview.vue";
     import PlayerPreview from "./PlayerPreview.vue";
     import PlayerBackground from "./PlayerBackground.vue";
     import ConnectedList from "./ConnectedList.vue";
@@ -53,7 +52,7 @@
     import MessagesOverlay from "./MessagesOverlay.vue";
 
     export default Vue.extend({
-        components: {AuthPage, Messages, TypingList, MessageForm, Polls, PlayerPreview, PlayerBackground, ConnectedList, QuickActions, MessagesOverlay},
+        components: {AuthPage, LeftColumn, Polls, UserPreview, PlayerPreview, PlayerBackground, ConnectedList, QuickActions, MessagesOverlay},
         watch: {
             cinemaMode: function() {
 
@@ -62,18 +61,6 @@
             },
         },
         methods: {
-
-            onSelectMessage: function(message) {
-
-                const editText = '/edit ' + message.id + ' ' + message.content;
-                const deleteText = '/delete ' + message.id;
-                const quoteText = '@' + message.id + ' ';
-                const rotation = [quoteText, editText, deleteText];
-                const currentContent = this.$refs.messageForm.getMessage();
-                const currentPosition = rotation.indexOf(currentContent);
-                const newPosition = (currentPosition + 1) % rotation.length;
-                this.$refs.messageForm.setMessage(rotation[newPosition]);
-            },
 
             gotoRoom() {
                 this.$store.commit('SET_PAGE', 'room');
@@ -121,7 +108,7 @@
                 width: 100%;
                 max-width: 380px;
                 background-color: #222223;
-                opacity: 0.4;
+                opacity: 0.75;
 
                 &:hover {
                     opacity: 1;

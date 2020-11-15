@@ -12,18 +12,19 @@ const store = {
         documentTitleBlinking: false,
         page: 'welcome',
         mobileCurrentPage: 'tchat',
+        config: null,
         cinemaMode: false,
         channel: null,
         connectionState: WebSocket.CLOSED,
         user: {
             id: 0,
-            username: '*Hamster0',
+            username: '*Guest',
             money: 0,
             xp: 0,
             right: -1,
             data: {
                 plugins: {
-                    avatar: "https://risibank.fr/cache/stickers/d666/66604-thumb.png",
+                    avatar: "",
                     cursor: true,
                     moto: "",
                 }
@@ -82,6 +83,9 @@ const store = {
         GOTO_MAIN_CHANNEL(state) {
             state.channel = null;
         },
+        SET_CONFIG(state, config) {
+            state.config = config;
+        },
         SET_CONNECTION_STATE(state, connectionState) {
             state.connectionState = connectionState;
         },
@@ -93,7 +97,16 @@ const store = {
         },
         SET_CONNECTED_LIST(state, entries) {
             state.connectedList = entries;
+
+            // Update hash list of last message seen ids
             this.commit('GENERATE_LAST_MESSAGE_SEEN_IDS');
+
+            // Update self entry
+            const selfEntry = entries.find(entry => entry.user.username === state.user.username);
+            if (! selfEntry) {
+                return;
+            }
+            this.commit('SET_USER', selfEntry.user);
         },
         MESSAGE_SEEN(state, data) {
             const entry = state.connectedList.find(e => e.user.id === data.user);

@@ -3,9 +3,14 @@ import * as Mail from "nodemailer/lib/mailer";
 
 
 export type Preferences = {
+    ranks: {limit: number, rank: string}[],
     plugins: string[],
     fakeMessages: string[],
     guestNames: string[],
+}
+
+export type PublicConfig = {
+    ranks: {limit: number, rank: string}[],
 }
 
 export class Config {
@@ -45,6 +50,12 @@ export class Config {
 
     public static getPlugins(): string[] {
         return Config.PREFERENCES.plugins;
+    }
+
+    public static toClient(): PublicConfig {
+        return {
+            ranks: Config.PREFERENCES.ranks,
+        }
     }
 
     public static initialize() {

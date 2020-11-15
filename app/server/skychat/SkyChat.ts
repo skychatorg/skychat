@@ -143,7 +143,7 @@ export class SkyChat {
      * @param connection
      */
     private async onConnectionCreated(connection: Connection): Promise<void> {
-
+        connection.send('config', Config.toClient());
     }
 
     private async onRegister(payload: any, connection: Connection): Promise<void> {

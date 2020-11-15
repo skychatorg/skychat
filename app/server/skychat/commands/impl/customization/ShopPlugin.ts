@@ -11,26 +11,27 @@ import {MessageFormatter} from "../../../MessageFormatter";
 
 export type ShopItems = {
     items: ShopItem[];
-    preview: (value: any, user: User) => string
+    preview: (value: any, user: User) => string;
+    sellRatio: number;
 };
 
 export type ShopItem = {
-    id: number,
-    name: string,
-    value: any,
-    price: number
-}
+    id: number;
+    name: string;
+    value: any;
+    price: number;
+};
 
 
 export class ShopPlugin extends Plugin {
 
     public static readonly COLORS_TIER_0_COST: number = 0;
-    public static readonly COLORS_TIER_1_COST: number = 500;
-    public static readonly COLORS_TIER_2_COST: number = 1500;
-    public static readonly COLORS_TIER_3_COST: number = 3000;
+    public static readonly COLORS_TIER_1_COST: number = 2 * 100;
+    public static readonly COLORS_TIER_2_COST: number = 25 * 100;
+    public static readonly COLORS_TIER_3_COST: number = 50 * 100;
 
     public static readonly ITEMS: {[type: string]: ShopItems} = {
-        'color.main': {
+        'color': {
             items: [
                 {id: 0, name: 'default', value: ColorPlugin.DEFAULT_MAIN, price: ShopPlugin.COLORS_TIER_0_COST},
 
@@ -65,37 +66,26 @@ export class ShopPlugin extends Plugin {
             ],
             preview: (value, user) => `
                 <div style="color:${value};border-left: 4px solid ${value};padding-left: 6px;">
-                    <div style="border:1px solid white;width:14px;height:14px;border-radius:50%;background:transparent;display:inline-block;margin-right:4px;box-shadow:2px 2px 3px 2px ${user.data.plugins.color.secondary}">&nbsp;</div>
+                    <div style="border:1px solid white;width:14px;height:14px;border-radius:50%;background:transparent;display:inline-block;margin-right:4px;box-shadow:${user.data.plugins.halo ? '2px 2px 3px 2px ' + value : 'unset'}">&nbsp;</div>
                     <b>${user.username}</b>
                 </div>
-            `
+            `,
+            sellRatio: 0.4,
         },
-        'color.secondary': {
+        'halo': {
             items: [
-                {id: 0, name: 'default', value: ColorPlugin.DEFAULT_SECONDARY, price: ShopPlugin.COLORS_TIER_0_COST},
-
-                {id: 1, name: 'white', value: '#ffffff', price: ShopPlugin.COLORS_TIER_1_COST},
-                {id: 2, name: 'black', value: '#000000', price: ShopPlugin.COLORS_TIER_1_COST},
-
-                {id: 3, name: 'purple', value: '#ae1e68', price: ShopPlugin.COLORS_TIER_3_COST},
-                {id: 4, name: 'rebeccapurple', value: '#a348ff', price: ShopPlugin.COLORS_TIER_3_COST},
-                {id: 5, name: 'royalblue', value: '#4169e1', price: ShopPlugin.COLORS_TIER_3_COST},
-                {id: 6, name: 'oldblue', value: '#4c80bb', price: ShopPlugin.COLORS_TIER_3_COST},
-                {id: 7, name: 'turquoise', value: '#40e0d0', price: ShopPlugin.COLORS_TIER_3_COST},
-                {id: 8, name: 'limegreen', value: '#32cd32', price: ShopPlugin.COLORS_TIER_3_COST},
-                {id: 9, name: 'yellow', value: '#e4e400', price: ShopPlugin.COLORS_TIER_3_COST},
-                {id: 10, name: 'orange', value: '#e67e00', price: ShopPlugin.COLORS_TIER_3_COST},
-                {id: 11, name: 'orangered', value: '#ff4500', price: ShopPlugin.COLORS_TIER_3_COST},
-                {id: 12, name: 'bestred', value: '#ff2424', price: ShopPlugin.COLORS_TIER_3_COST},
+                {id: 0, name: 'no halo', value: false, price: 0},
+                {id: 1, name: 'halo', value: true, price: 50 * 100},
             ],
             preview: (value, user) => `
-                <div style="color:${user.data.plugins.color.main};border-left: 4px solid ${user.data.plugins.color.main};padding-left: 6px;">
-                    <div style="border:1px solid white;width:14px;height:14px;border-radius:50%;background:transparent;display:inline-block;margin-right:4px;box-shadow:2px 2px 3px 2px ${user.data.plugins.color.secondary}">
+                <div style="color:${user.data.plugins.color};border-left: 4px solid ${user.data.plugins.color};padding-left: 6px;">
+                    <div style="border:1px solid white;width:14px;height:14px;border-radius:50%;background:transparent;display:inline-block;margin-right:4px;box-shadow:${value ? '2px 2px 3px 2px ' + user.data.plugins.color : 'unset'}">
                         &nbsp;
                     </div>
                     <b>${user.username}</b>
                 </div>
-            `
+            `,
+            sellRatio: 0.4,
         },
         'pinnedicon': {
             items: [
@@ -162,21 +152,24 @@ export class ShopPlugin extends Plugin {
                 price: data[1] === '' ? 0 : 5000
             })),
             preview: (value, user) => `
-                <div style="color:${user.data.plugins.color.main};border-left: 4px solid ${user.data.plugins.color.main};padding-left: 6px;">
-                    <div style="border:1px solid white;width:14px;height:14px;border-radius:50%;background:transparent;display:inline-block;margin-right:4px;box-shadow:2px 2px 3px 2px ${user.data.plugins.color.secondary}">&nbsp;</div>
+                <div style="color:${user.data.plugins.color};border-left: 4px solid ${user.data.plugins.color};padding-left: 6px;">
+                    <div style="border:1px solid white;width:14px;height:14px;border-radius:50%;background:transparent;display:inline-block;margin-right:4px;box-shadow:${user.data.plugins.halo ? '2px 2px 3px 2px ' + user.data.plugins.color : 'unset'}">
+                        &nbsp;
+                    </div>
                     <i class="material-icons md-14">${value}</i> <b>${user.username}</b>
                 </div>
-            `
+            `,
+            sellRatio: 0.4,
         }
     };
 
-    public static readonly TYPE_REGEXP: RegExp = /^(color\.main|color\.secondary|pinnedicon)$/;
+    public static readonly TYPE_REGEXP: RegExp = /^(color|halo|pinnedicon)$/;
 
     readonly defaultDataStorageValue: {[type: string]: number[]} = {colors: []};
 
     readonly name = 'shop';
 
-    readonly aliases = ['shoplist', 'shopbuy', 'shopset'];
+    readonly aliases = ['shoplist', 'shopbuy', 'shopsell', 'shopset'];
 
     readonly minRight = 0;
 
@@ -191,6 +184,14 @@ export class ShopPlugin extends Plugin {
             maxCount: 1,
             params: [
                 {name: 'type', pattern: ShopPlugin.TYPE_REGEXP}
+            ]
+        },
+        shopsell: {
+            minCount: 2,
+            maxCount: 2,
+            params: [
+                {name: 'type', pattern: ShopPlugin.TYPE_REGEXP},
+                {name: 'item', pattern: /^([0-9]+)$/},
             ]
         },
         shopbuy: {
@@ -226,6 +227,11 @@ export class ShopPlugin extends Plugin {
 
         if (alias === 'shoplist') {
             await this.handleShopList(param, connection);
+            return;
+        }
+
+        if (alias === 'shopsell') {
+            await this.handleShopSell(param, connection);
             return;
         }
 
@@ -288,7 +294,7 @@ export class ShopPlugin extends Plugin {
                     <td>${item.name}</td>
                     <td>${itemDefinition.preview(item.value, connection.session.user)}</td>
                     <td>${'$ ' + (item.price / 100)}</td>
-                    <td>${itemOwned ? '' : formatter.getButtonHtml('buy', '/shopbuy ' + param + ' ' + item.id, true, true)}</td>
+                    <td>${itemOwned ? formatter.getButtonHtml('sell', '/shopsell ' + param + ' ' + item.id, true, true) : formatter.getButtonHtml('buy', '/shopbuy ' + param + ' ' + item.id, true, true)}</td>
                     <td>${formatter.getButtonHtml('set', '/shopset ' + param + ' ' + item.id, true, true)}</td>
                 </tr>
             `;
@@ -296,6 +302,37 @@ export class ShopPlugin extends Plugin {
         html += '</table>';
         message.append(striptags(html), html);
         connection.send('message', message.sanitized());
+    }
+
+    /**
+     * Sell an item
+     * @param param
+     * @param connection
+     */
+    private async handleShopSell(param: string, connection: Connection): Promise<void> {
+
+        const type = param.split(' ')[0];
+        const id = parseInt(param.split(' ')[1]);
+
+        // Check item existence
+        const item = this.getItem(type, id);
+        if (! item) {
+            throw new Error('Item not found');
+        }
+
+        // Check ownership
+        if (! this.userOwnsItem(connection.session.user, type, id)) {
+            throw new Error('You don\'t own this item');
+        }
+
+        // Check that the item is not currently set
+        if (await this.userHasItemSet(connection.session.user, type, id)) {
+            throw new Error('Unset this item before selling it');
+        }
+
+        // Buy item
+        await UserController.giveMoney(connection.session.user, Math.floor(item.price * ShopPlugin.ITEMS[type].sellRatio));
+        await this.userRemoveOwnedItem(connection.session.user, type, id);
     }
 
     /**
@@ -316,7 +353,7 @@ export class ShopPlugin extends Plugin {
 
         // Check ownership
         if (this.userOwnsItem(connection.session.user, type, id)) {
-            throw new Error('You don\'t own this item');
+            throw new Error('You already own this item');
         }
 
         // Buy item
@@ -346,19 +383,54 @@ export class ShopPlugin extends Plugin {
         }
 
         // Set item
+        await this.userSetItem(connection.session.user, type, id);
+        
+        // Notify other users
+        (this.room.getPlugin('connectedlist') as ConnectedListPlugin).sync();
+    }
+
+    /**
+     * Set an item
+     * @param user 
+     * @param type 
+     * @param itemId 
+     */
+    public async userSetItem(user: User, type: string, itemId: number) {
+    
+        // Find item object
+        const item = this.getItem(type, itemId);
+        if (! item) {
+            throw new Error('Item not found');
+        }
+
         switch (type) {
-            case 'color.main':
-            case 'color.secondary':
-                const data = await UserController.getPluginData(connection.session.user, 'color');
-                data[type.split('.')[1]] = item.value;
-                await UserController.savePluginData(connection.session.user, 'color', data);
-                await (this.room.getPlugin('connectedlist') as ConnectedListPlugin).sync();
-                break;
-            
+            case 'color':
+            case 'halo':
             case 'pinnedicon':
-                await UserController.savePluginData(connection.session.user, 'pinnedicon', item.value);
-                await (this.room.getPlugin('connectedlist') as ConnectedListPlugin).sync();
+                await UserController.savePluginData(user, type, item.value);
                 break;
+        }
+    }
+
+    /**
+     * Whether an user currently has an item set
+     * @param user 
+     * @param type 
+     * @param itemId 
+     */
+    public async userHasItemSet(user: User, type: string, itemId: number) {
+    
+        // Find item object
+        const item = this.getItem(type, itemId);
+        if (! item) {
+            throw new Error('Item not found');
+        }
+
+        switch (type) {
+            case 'color':
+            case 'halo':
+            case 'pinnedicon':
+                return (await UserController.getPluginData(user, type)) === item.value;
         }
     }
 
@@ -390,7 +462,7 @@ export class ShopPlugin extends Plugin {
     }
 
     /**
-     * Tells whether an user owns a specific item
+     * Add an owned item to an user
      * @param user
      * @param type
      * @param itemId
@@ -401,6 +473,22 @@ export class ShopPlugin extends Plugin {
         storage.shop.ownedItems = storage.shop.ownedItems || {};
         storage.shop.ownedItems[type] = storage.shop.ownedItems[type] || [];
         storage.shop.ownedItems[type].push(itemId);
+        user.storage = storage;
+        await UserController.sync(user);
+    }
+
+    /**
+     * Remvoed an owned item
+     * @param user
+     * @param type
+     * @param itemId
+     */
+    public async userRemoveOwnedItem(user: User, type: string, itemId: number): Promise<void> {
+        const storage = user.storage || {shop: {owned: {}}};
+        storage.shop = storage.shop || {};
+        storage.shop.ownedItems = storage.shop.ownedItems || {};
+        storage.shop.ownedItems[type] = storage.shop.ownedItems[type] || [];
+        storage.shop.ownedItems[type] = storage.shop.ownedItems[type].filter((ownedItemId: number) => ownedItemId != itemId);
         user.storage = storage;
         await UserController.sync(user);
     }

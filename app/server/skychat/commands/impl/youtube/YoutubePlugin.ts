@@ -287,6 +287,7 @@ export class YoutubePlugin extends Plugin {
             return;
         }
         this.storage.currentVideo = null;
+        this.sync(this.room);
     }
 
     /**

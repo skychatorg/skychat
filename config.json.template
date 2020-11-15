@@ -1,4 +1,16 @@
 {
+    "ranks": [
+        {"limit": 100000, "rank": "rank_9.gif"},
+        {"limit": 70000, "rank": "rank_8.png"},
+        {"limit": 50000, "rank": "rank_7.png"},
+        {"limit": 30000, "rank": "rank_6.png"},
+        {"limit": 15000, "rank": "rank_5.png"},
+        {"limit": 8000, "rank": "rank_4.png"},
+        {"limit": 1300, "rank": "rank_3.png"},
+        {"limit": 300, "rank": "rank_2.png"},
+        {"limit": 30, "rank": "rank_1.png"},
+        {"limit": 0, "rank": "rank_0.png"}
+    ],
     "plugins": [
         "AccountPlugin",
         "AvatarPlugin",

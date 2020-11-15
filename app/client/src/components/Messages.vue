@@ -1,19 +1,16 @@
 <template>
-    <div class="messages">
-        <player v-if="! hidePlayer" class="player" v-show="playerState && playerState.enabled"/>
-
-        <div class="messages-feed scrollbar"
-             ref="scroller"
-             @scroll="onScroll"
-             :style="smoothScroll ? 'scroll-behavior: smooth' : ''">
-            <message v-for="item in messages"
-                     @select="$emit('select-message', item)"
-                     @content-loaded="onContentLoaded"
-                     :key="item.id"
-                     :message="item"
-                     :seen-users="lastMessageSeenIds[item.id] || []"
-                     class="message"/>
-        </div>
+    <div class="messages-feed scrollbar"
+            ref="scroller"
+            @scroll="onScroll"
+            :style="smoothScroll ? 'scroll-behavior: smooth' : ''">
+            
+        <message v-for="item in messages"
+                    @select="$emit('select-message', item)"
+                    @content-loaded="onContentLoaded"
+                    :key="item.id"
+                    :message="item"
+                    :seen-users="lastMessageSeenIds[item.id] || []"
+                    class="message"/>
     </div>
 </template>
 
@@ -32,6 +29,10 @@
             };
         },
         props: {
+            messages: {
+                required: true,
+                type: Array,
+            },
             hidePlayer: {
                 required: false,
                 default: false,
@@ -110,12 +111,6 @@
             },
         },
         computed: {
-            messages: function() {
-                if (this.$store.state.channel) {
-                    return this.$store.state.privateMessages[this.$store.state.channel].messages;
-                }
-                return this.$store.state.messages;
-            },
             playerState: function() {
                 return this.$store.state.playerState;
             },
@@ -127,26 +122,13 @@
 </script>
 
 <style lang="scss" scoped>
-
-    .messages {
+    .messages-feed {
         flex-grow: 1;
+        margin-left: 10px;
+        margin-right: 10px;
+        height: 0;
+        overflow-y: scroll;
         display: flex;
         flex-direction: column;
-
-        .player {
-            width: 100%;
-            height: 40%;
-            max-height: 350px;
-        }
-
-        .messages-feed {
-            flex-grow: 1;
-            margin-left: 10px;
-            margin-right: 10px;
-            height: 0;
-            overflow-y: scroll;
-            display: flex;
-            flex-direction: column;
-        }
     }
 </style>

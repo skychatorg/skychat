@@ -1,39 +1,47 @@
 <template>
     <div class="youtube-preview" v-if="playerState">
-        <div class="current-video">
-            <div class="progress"><div class="progress-bar progress-bar-top" :class="'custom-color-' + progressBarColor" :style="{'width': (100 * cursorPercent) + '%'}"></div></div>
-            <div class="image-container">
-                <h3 class="preview-title">{{playerState.video.title}}</h3>
-                <div class="sliding-window up" :class="{['custom-color-' + progressBarColor]: true, closed: cursorPercent >= 1}"></div>
-                <div class="progress-vertical"><div class="progress-bar progress-bar-left" :class="'custom-color-' + progressBarColor" :style="{'height': (100 * cursorPercent) + '%'}"></div></div>
-                <img class="preview-thumb" :src="playerState.video.thumb">
-                <div class="progress-vertical"><div class="progress-bar progress-bar-right" :class="'custom-color-' + progressBarColor" :style="{'height': (100 * cursorPercent) + '%'}"></div></div>
-                <div class="sliding-window down" :class="{['custom-color-' + progressBarColor]: true, closed: cursorPercent >= 1}"></div>
-            </div>
-            <div class="progress"><div class="progress-bar progress-bar-bottom" :class="'custom-color-' + progressBarColor" :style="{'width': (100 * cursorPercent) + '%'}"></div></div>
+
+        <!-- preview container -->
+        <div class="preview-image-container">
+
+            <!-- progress bars -->
+            <div class="progress-bar progress-bar-top" :class="'custom-color-' + progressBarColor" :style="{'width': (100 * cursorPercent) + '%'}"></div>
+            <div class="progress-bar progress-bar-bottom" :class="'custom-color-' + progressBarColor" :style="{'width': (100 * cursorPercent) + '%'}"></div>
+            <div class="progress-bar progress-bar-left" :class="'custom-color-' + progressBarColor" :style="{'height': (100 * cursorPercent) + '%'}"></div>
+            <div class="progress-bar progress-bar-right" :class="'custom-color-' + progressBarColor" :style="{'height': (100 * cursorPercent) + '%'}"></div>
+
+            <!-- image preview -->
+            <img class="preview-thumb" :src="playerState.video.thumb">
+
+            <!-- title -->
+            <div class="preview-title">{{playerState.video.title}}</div>
+
+            <!-- sliding window that closes over the image -->
+            <div class="sliding-window top" :class="{['custom-color-' + progressBarColor]: true, 'closed': cursorPercent >= 1}"></div>
+            <div class="sliding-window bottom" :class="{['custom-color-' + progressBarColor]: true, 'closed': cursorPercent >= 1}"></div>
         </div>
-        <div class="queue" v-show="nextVideos.length > 0">
-            <div class="vertical-bar" :class="'custom-color-' + progressBarColor"></div>
-            <transition-group name="list" tag="div">
-                <div v-for="video, videoIndex in nextVideos"
-                    class="video-in-queue"
-                    :key="video.video.id">
-                    <div class="image avatar">
-                        <div class="image-bubble" :style="'box-shadow: #' + progressBarColor +' 0 0 4px 0;'">
-                            <img data-v-193da69e="" :src="video.video.thumb">
-                        </div>
-                    </div>
-                    <!-- the svg has -5px left and top to avoid the circles being truncated -->
-                    <svg height="50" width="50">
-                        <circle cx="25" cy="25" r="20" fill="none" stroke="black"></circle>
-                        <circle cx="25" cy="25" r="20" :class="'custom-color-' + progressBarColor" :stroke-dashoffset="- (queueWaitDurations[videoIndex]) * 2 * Math.PI * 25"></circle>
-                    </svg>
-                    <div class="info">
-                        <div class="title">{{video.video.title}}</div>
-                        <div class="user">- {{video.user.username}}</div>
+
+        <!-- youtube queue -->
+        <div class="queue scrollbar" v-show="nextVideos.length > 0">
+            
+            <div v-for="video, videoIndex in nextVideos"
+                class="video-in-queue"
+                :key="video.video.id"
+                :title="video.video.title + ': added by ' + video.user.username">
+
+                <!-- video preview image -->
+                <div class="image avatar">
+                    <div class="image-bubble" :style="'box-shadow: #' + progressBarColor +' 0 0 4px 0;'">
+                        <img data-v-193da69e="" :src="video.video.thumb">
                     </div>
                 </div>
-            </transition-group>
+
+                <!-- the svg has -5px left and top to avoid the circles being truncated -->
+                <svg height="50" width="50">
+                    <circle cx="25" cy="25" r="20" fill="none" stroke="black"></circle>
+                    <circle cx="25" cy="25" r="20" :class="'custom-color-' + progressBarColor" :stroke-dashoffset="- (queueWaitDurations[videoIndex]) * 2 * Math.PI * 25"></circle>
+                </svg>
+            </div>
         </div>
     </div>
 </template>
@@ -109,7 +117,7 @@
             },
             nextVideos: function() {
                 if (this.playerState) {
-                    return this.playerState.queue.slice(0, 4);
+                    return this.playerState.queue.slice(0, 30);
                 } else {
                     return [];
                 }
@@ -119,33 +127,70 @@
 </script>
 
 <style lang="scss" scoped>
+
     .youtube-preview {
-        padding-top: 20px;
+
+        width: 100%;
+        height: 160px;
+        display: flex;
+        margin-top: 10px;
         padding-right: 20px;
         padding-left: 6px;
         color: white;
 
-        .preview-title {
-            position: absolute;
-            left: 10px;
-            top: 3px;
-            white-space: nowrap;
-            overflow: hidden;
-            -ms-text-overflow: ellipsis;
-            text-overflow: ellipsis;
-            margin-bottom: 2px;
-            width: 100%;
-        }
-
-        .image-container {
-            display: flex;
-            height: 176px;
-            width: 100%;
+        >.preview-image-container {
             position: relative;
-            overflow: hidden;
-            z-index: 1;
+            flex-basis: 284.444444444px;
+            background-color: black;
+            
+            > .progress-bar {
+                position: absolute;
+                transition: all 1s ease-in-out;
 
-            >.sliding-window {
+                &.progress-bar-top {
+                    height: 4px;
+                    top: 0;
+                    right: 0;
+                }
+                &.progress-bar-bottom {
+                    height: 4px;
+                    bottom: 0;
+                    left: 0;
+                }
+                &.progress-bar-left {
+                    width: 2px;
+                    left: 0;
+                    bottom: 0;
+                }
+                &.progress-bar-right {
+                    width: 2px;
+                    right: 0;
+                    top: 0;
+                }
+            }
+
+            > .preview-thumb {
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                padding: 2px;
+            }
+
+            > .preview-title {
+                position: absolute;
+                left: 8px;
+                top: 5px;
+                white-space: nowrap;
+                overflow: hidden;
+                -ms-text-overflow: ellipsis;
+                text-overflow: ellipsis;
+                margin-bottom: 2px;
+                width: calc(100% - 16px);
+                font-size: 120%;
+                font-weight: 600;
+            }
+
+            > .sliding-window {
                 width: 100%;
                 position: absolute;
                 left: 0;
@@ -156,34 +201,25 @@
                 -o-transition: all 1s ease-in-out;
                 transition: all 1s ease-in-out;
 
-                &.up {
+                &.top {
                     top: 0;
                 }
-                &.down {
+                &.bottom {
                     bottom: 0;
                 }
                 &.closed {
                     height: 50%;
                 }
             }
+        }
 
-            >.progress-vertical {
-                flex-basis: 2px;
-                position: relative;
-
-                >.progress-bar {
-                    width: 100%;
-                    position: absolute;
-                    transition: all 1s ease-in-out;
-
-                    &.progress-bar-left {
-                        bottom: 0;
-                    }
-                    &.progress-bar-right {
-                        top: 0;
-                    }
-                }
-            }
+        .image-container {
+            display: flex;
+            height: 176px;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
 
             >.preview-thumb {
                 flex-grow: 1;
@@ -235,26 +271,21 @@
         }
 
         .queue {
+            flex-grow: 1;
+            flex-basis: 0px;
+            overflow-y: auto;
             display: flex;
-            flex-direction: column;
+            flex-wrap: wrap;
+            justify-content: center;
             position: relative;
             background: #2b2b2f;
-            padding-right: 30px;
-            padding-left: 10px;
-            padding-bottom: 10px;
+            padding: 4px;
 
-            .vertical-bar {
-                position: absolute;
-                transition: all 1s ease-in-out;
-                width: 2px;
-                height: calc(100% - 30px);
-                left: 30px;
-            }
             .video-in-queue {
                 display: flex;
-                width: 100%;
+                width: 40px;
                 height: 40px;
-                margin: 10px 0 5px 0;
+                margin: 5px;
                 position: relative;
 
                 .image {
@@ -280,38 +311,8 @@
                         transform: rotate(-85deg);
                         animation: rotate 60s linear infinite;
                     }
-
-                    @keyframes rotate {
-                        to {
-                        }
-                    }
-                }
-                .info {
-                    width: 0;
-                    flex-grow: 1;
-                    display: flex;
-                    flex-direction: column;
-                    padding: 5px;
-                    margin-left: 6px;
-
-                    >.title {
-                        white-space: nowrap;
-                        overflow: hidden;
-                        text-overflow: ellipsis;
-                    }
                 }
             }
-        }
-
-        .list-enter-active, .list-leave-active {
-            transition: all 1s;
-        }
-        .list-leave-to {
-            margin-top: -60px !important;
-            margin-bottom: 40px !important;
-        }
-        .list-enter {
-            opacity: 0;
         }
     }
 </style>
