@@ -27,16 +27,14 @@ export class MailPlugin extends Plugin {
 
     readonly minRight = 30;
 
-    private readonly transporter: Mail;
+    private readonly transporter?: Mail;
 
     constructor(room: Room) {
         super(room);
 
-        if (! Config.EMAIL_TRANSPORT) {
-            throw new Error('Email transport not registered');
+        if (Config.EMAIL_TRANSPORT) {
+            this.transporter = nodemailer.createTransport(Config.EMAIL_TRANSPORT);
         }
-
-        this.transporter = nodemailer.createTransport(Config.EMAIL_TRANSPORT);
     }
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
@@ -60,13 +58,11 @@ export class MailPlugin extends Plugin {
      */
     public async sendMail(to: string, subject: string, content: string): Promise<SentMessageInfo> {
 
-        if (! Config.EMAIL_TRANSPORT) {
+        if (! this.transporter) {
             throw new Error('Email transport not registered');
         }
 
-        const transporter = nodemailer.createTransport(Config.EMAIL_TRANSPORT);
-
-        return await transporter.sendMail({
+        return await this.transporter.sendMail({
             to: to,
             subject: subject,
             text: content

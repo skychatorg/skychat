@@ -51,7 +51,7 @@ The semantic of these fields are defined below:
 | ssl                      | false or {certificate:string,key:string}  | false                                                             | SSL configuration (paths to certificate and key files). Use false if SSL is disabled.               |
 | **users_passwords_salt** | string                                    | ""                                                                | Password salt. MUST be set manually.                                                                |
 | **users_token_salt**     | string                                    | ""                                                                | Token salt. MUST be set manually.                                                                   |
-| youtube_api_key          | string                                    | ""                                                                | Youtube api key                                                                                     |
+| **youtube_api_key**      | string                                    | ""                                                                | Youtube api key                                                                                     |
 | op                       | string[]                                  | []                                                                | OP usernames. OP usernames can use the /setright command.                                           |
 | email_transport          | nodemailer.JSONTransport                  | {"sendmail": true,"newline": "unix","path": "/usr/sbin/sendmail"} | Value given to [nodemailer.createTransport](https://nodemailer.com/about/) to initialize the mailer |
 
