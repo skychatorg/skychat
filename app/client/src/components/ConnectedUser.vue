@@ -136,12 +136,12 @@
             height: 55px;
             padding: 10px;
             position: relative;
-            margin-right: 5px;
+            margin-right: 8px;
 
             >.rank {
                 position: absolute;
-                right: -5px;
-                bottom: 4px;
+                right: -8px;
+                bottom: 0px;
                 z-index: 10;
 
                 >img {
