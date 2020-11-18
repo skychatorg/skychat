@@ -36,7 +36,7 @@ export class User {
         plugins: {}
     };
 
-    public static readonly RANK_LIMITS: {limit: number, rank: string}[] = Config.PREFERENCES.ranks;
+    public static readonly RANK_LIMITS: {limit: number, image: string}[] = Config.PREFERENCES.ranks;
 
     /**
      * Get the rank image of this user from an xp amount
@@ -45,7 +45,7 @@ export class User {
         const entry = User
             .RANK_LIMITS
             .filter(entry => xp >= entry.limit)[0];
-        return entry ? entry.rank : User.RANK_LIMITS[User.RANK_LIMITS.length - 1].rank;
+        return entry ? entry.image : User.RANK_LIMITS[User.RANK_LIMITS.length - 1].image;
     }
 
     /**

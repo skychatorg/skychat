@@ -63,10 +63,11 @@ export class UserController {
      * Get a neutral user used for sending information messages
      */
     public static getNeutralUser(): User {
-        return new User(0, '~Server', null, '', 0, 0, 0, {
+        return new User(0, '~', null, '', 0, 0, 0, {
             plugins: {
-                avatar: Config.LOCATION + '/assets/images/server-avatar.png',
-                color: 'rgb(255, 255, 255)'
+                avatar: Config.LOCATION + '/assets/images/avatars/server.png',
+                color: 'rgb(255, 255, 255)',
+                halo: true,
             }
         });
     }

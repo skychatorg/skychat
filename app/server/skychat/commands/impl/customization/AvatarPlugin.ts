@@ -8,7 +8,7 @@ import {UserController} from "../../../UserController";
 
 export class AvatarPlugin extends Plugin {
 
-    static readonly DEFAULT_AVATAR: string = Config.LOCATION + '/assets/images/otter.png';
+    static readonly DEFAULT_AVATAR: string = Config.LOCATION + '/assets/images/avatars/default.png';
 
     readonly defaultDataStorageValue = AvatarPlugin.DEFAULT_AVATAR;
 

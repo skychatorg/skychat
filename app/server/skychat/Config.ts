@@ -3,14 +3,14 @@ import * as Mail from "nodemailer/lib/mailer";
 
 
 export type Preferences = {
-    ranks: {limit: number, rank: string}[],
+    ranks: {limit: number, image: string}[],
     plugins: string[],
     fakeMessages: string[],
     guestNames: string[],
 }
 
 export type PublicConfig = {
-    ranks: {limit: number, rank: string}[],
+    ranks: {limit: number, image: string}[],
 }
 
 export class Config {

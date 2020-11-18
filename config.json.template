@@ -1,15 +1,20 @@
 {
     "ranks": [
-        {"limit": 100000, "rank": "rank_9.gif"},
-        {"limit": 70000, "rank": "rank_8.png"},
-        {"limit": 50000, "rank": "rank_7.png"},
-        {"limit": 30000, "rank": "rank_6.png"},
-        {"limit": 15000, "rank": "rank_5.png"},
-        {"limit": 8000, "rank": "rank_4.png"},
-        {"limit": 1300, "rank": "rank_3.png"},
-        {"limit": 300, "rank": "rank_2.png"},
-        {"limit": 30, "rank": "rank_1.png"},
-        {"limit": 0, "rank": "rank_0.png"}
+        {"limit": 200000, "image": "ranks/materials/14_diamond.gif"},
+        {"limit": 150000, "image": "ranks/materials/13_emerald.gif"},
+        {"limit": 100000, "image": "ranks/materials/12_saphir.gif"},
+        {"limit": 50000, "image": "ranks/materials/11_ruby.gif"},
+        {"limit": 20000, "image": "ranks/materials/10_topaz.gif"},
+        {"limit": 10000, "image": "ranks/materials/9_amethyst.gif"},
+        {"limit": 5000, "image": "ranks/materials/8_onyx.png"},
+        {"limit": 2000, "image": "ranks/materials/7_platinum.png"},
+        {"limit": 1000, "image": "ranks/materials/6_gold.png"},
+        {"limit": 500, "image": "ranks/materials/5_silver.png"},
+        {"limit": 250, "image": "ranks/materials/4_bronze.png"},
+        {"limit": 100, "image": "ranks/materials/3_stone.png"},
+        {"limit": 50, "image": "ranks/materials/2_plastic.png"},
+        {"limit": 25, "image": "ranks/materials/1_cardboard.png"},
+        {"limit": 0, "image": "ranks/materials/0_paper.png"}
     ],
     "plugins": [
         "AccountPlugin",

@@ -22,8 +22,8 @@
                 <div class="progress-bar-progress" :style="{width: xpProgressPct + '%'}"></div>
 
                 <!-- Rank icons -->
-                <div class="rank current-rank" :title="'Current rank unlocked at ' + currentRank.limit + ' xp'"><img :src="'/assets/images/' + currentRank.rank"></div>
-                <div class="rank next-rank" :title="'Next rank at ' + nextRank.limit + ' xp'" v-if="nextRank"><img :src="'/assets/images/' + nextRank.rank"></div>
+                <div class="rank current-rank" :title="'Current rank unlocked at ' + currentRank.limit + ' xp'"><img :src="'/assets/images/' + currentRank.image"></div>
+                <div class="rank next-rank" :title="'Next rank at ' + nextRank.limit + ' xp'" v-if="nextRank"><img :src="'/assets/images/' + nextRank.image"></div>
             </div>
         </div>
     </div>
