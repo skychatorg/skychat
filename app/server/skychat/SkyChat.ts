@@ -147,19 +147,19 @@ export class SkyChat {
     }
 
     private async onRegister(payload: any, connection: Connection): Promise<void> {
-        const user = await UserController.registerUser(payload.username, payload.password);
-        await this.onAuthSuccessful(user, connection);
+        await UserController.registerUser(payload.username, payload.password);
+        await this.onAuthSuccessful(payload.username, connection);
     }
 
     private async onLogin(payload: any, connection: Connection): Promise<void> {
         const user = await UserController.login(payload.username, payload.password);
-        await this.onAuthSuccessful(user, connection);
+        await this.onAuthSuccessful(payload.username, connection);
     }
 
     private async onSetToken(payload: any, connection: Connection): Promise<void> {
         try {
             const user = await UserController.verifyAuthToken(payload);
-            await this.onAuthSuccessful(user, connection);
+            await this.onAuthSuccessful(user.username, connection);
         } catch (e) {
             connection.send('auth-token', null);
         }
@@ -171,17 +171,25 @@ export class SkyChat {
 
     /**
      * When an auth attempt is completed
-     * @param user
+     * @param username
      * @param connection
      */
-    private async onAuthSuccessful(user: User, connection: Connection): Promise<void> {
+    private async onAuthSuccessful(username: string, connection: Connection): Promise<void> {
         // Find an existing session belonging to the same user
-        const recycledSession = Session.getSessionByIdentifier(user.username.toLowerCase());
+        const recycledSession = Session.getSessionByIdentifier(username.toLowerCase());
+        let user;
         if (recycledSession) {
             // If such session exists, attach the recycled one
+            user = recycledSession.user;
+            await UserController.changeUsernameCase(user, username);
             recycledSession.attachConnection(connection);
         } else {
             // Else, update this session
+            user = await UserController.getUserByUsername(username);
+            if (! user) {
+                throw new Error('User does not exist');
+            }
+            await UserController.changeUsernameCase(user, username);
             connection.session.setUser(user);
         }
         connection.send('auth-token', UserController.getAuthToken(user.id));

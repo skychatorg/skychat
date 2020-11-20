@@ -135,7 +135,7 @@ export class UserController {
      * @param username
      * @param password
      */
-    public static async registerUser(username: string, password: string): Promise<User> {
+    public static async registerUser(username: string, password: string): Promise<void> {
         const tms = Math.floor(Date.now() / 1000);
         const sqlQuery = SQL`insert into users
             (username, username_custom, password, money, xp, right, data, storage, tms_created, tms_last_seen) values
@@ -147,15 +147,14 @@ export class UserController {
         }
         const hashedPassword = UserController.hashPassword(userId, username.toLowerCase(), password);
         await DatabaseHelper.db.run(SQL`update users set password=${hashedPassword} where id=${userId}`);
-        return UserController.getUserById(userId);
     }
 
     /**
-     * Login attempt
+     * Login attempt. If login is successful, updates the username case in the database.
      * @param username
      * @param password
      */
-    public static async login(username: string, password: string): Promise<User> {
+    public static async login(username: string, password: string): Promise<void> {
         const user = await UserController.getUserByUsername(username);
         if (! user) {
             throw new Error('User does not exist');
@@ -163,7 +162,6 @@ export class UserController {
         if (! user.testHashedPassword(UserController.hashPassword(user.id, user.username, password))) {
             throw new Error('Incorrect password');
         }
-        return user;
     }
 
     /**
@@ -270,6 +268,21 @@ export class UserController {
             data=${JSON.stringify(user.data)},
             storage=${JSON.stringify(user.storage)}            
             where id=${user.id}`);
+    }
+
+    public static async changeUsernameCase(user: User, newUsernameCase: string) {
+        // Check that only the case changed
+        if (user.username.toLowerCase() !== newUsernameCase.toLowerCase()) {
+            throw new Error('Only the case must change when changing the username case');
+        }
+        // If case did not change
+        if (user.username === newUsernameCase) {
+            return;
+        }
+        // Update cased username
+        user.username = newUsernameCase;
+        // Update database
+        await DatabaseHelper.db.run(SQL`update users set username_custom=${user.username} where id=${user.id}`);
     }
 
     /**
