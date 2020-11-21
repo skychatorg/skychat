@@ -29,7 +29,8 @@
             <div class="seen-users">
                 <div v-for="seenUser of seenUsers"
                      class="avatar image-bubble"
-                     :title="'Seen by ' + seenUser.username">
+                     :title="'Seen by ' + seenUser.username"
+                     :style="{'border': '1px solid ' + seenUser.data.plugins.color}">
                     <img :src="seenUser.data.plugins.avatar">
                 </div>
             </div>
