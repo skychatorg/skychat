@@ -114,6 +114,12 @@ export class SkyChatClient extends EventEmitter {
      * @param message
      */
     onWebSocketMessage(message) {
+        // If raw audio received
+        if (message.data instanceof Blob) {
+            new Audio(URL.createObjectURL(message.data)).play();
+            return;
+        }
+        // Otherwise, if normal json message received
         const data = JSON.parse(message.data);
         const eventName = data.event;
         const eventPayload = data.data;

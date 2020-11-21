@@ -31,6 +31,7 @@ export {BanPlugin} from "./moderation/BanPlugin";
 export {UsurpPlugin} from "./moderation/UsurpPlugin";
 export {LogFuzzerPlugin} from "./optional/LogFuzzerPlugin";
 export {AccountPlugin} from "./core/AccountPlugin";
+export {AudioRecorderPlugin} from "./core/AudioRecorderPlugin";
 export {MailPlugin} from "./core/MailPlugin";
 export {TrackerPlugin} from "./moderation/TrackerPlugin";
 export {MessageHistoryPlugin} from "./core/MessageHistoryPlugin";

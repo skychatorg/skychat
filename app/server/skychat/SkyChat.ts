@@ -11,6 +11,7 @@ import {UserController} from "./UserController";
 import {Config} from "./Config";
 import * as fs from "fs";
 import {Message} from "./Message";
+import {AudioRecorderPlugin} from "./commands/impl/core/AudioRecorderPlugin";
 
 
 export type StoredSkyChat = {
@@ -75,6 +76,9 @@ export class SkyChat {
 
                 // On message sent
                 this.server.registerEvent('message', this.onMessage.bind(this), 'string');
+
+                // On audio received
+                this.server.registerEvent('audio', this.onAudio.bind(this));
             });
 
         setInterval(this.tick.bind(this), SkyChat.TICK_INTERVAL);
@@ -204,34 +208,42 @@ export class SkyChat {
      */
     private async onMessage(payload: string, connection: Connection): Promise<void> {
 
-        try {
-
-            // Apply hooks on payload
-            if (! connection.room) {
-                throw new Error('Messages event should be sent in rooms');
-            }
-
-            // Handle default command (/message)
-            if (payload[0] !== '/') {
-                payload = '/message ' + payload;
-            }
-
-            payload = await connection.room.executeNewMessageHook(payload, connection);
-
-            // Parse command name and message content
-            const {param, commandName} = CommandManager.parseMessage(payload);
-
-            // Get command object
-            const command = connection.room.commands[commandName];
-            if (! command) {
-                throw new Error('This command does not exist');
-            }
-
-            await command.execute(commandName, param, connection);
-        } catch (e) {
-
-            connection.sendError(e);
+        // Apply hooks on payload
+        if (! connection.room) {
+            throw new Error('Messages event should be sent in rooms');
         }
+
+        // Handle default command (/message)
+        if (payload[0] !== '/') {
+            payload = '/message ' + payload;
+        }
+
+        payload = await connection.room.executeNewMessageHook(payload, connection);
+
+        // Parse command name and message content
+        const {param, commandName} = CommandManager.parseMessage(payload);
+
+        // Get command object
+        const command = connection.room.commands[commandName];
+        if (! command) {
+            throw new Error('This command does not exist');
+        }
+
+        await command.execute(commandName, param, connection);
+    }
+
+    /**
+     * When an audio buffer is received
+     * @param buffer 
+     */
+    private async onAudio(buffer: Buffer, connection: Connection): Promise<void> {
+
+        if (! connection.room) {
+            throw new Error('Audio recordings should be sent in rooms');
+        }
+        
+        const audioRecorderPlugin = connection.room.getPlugin('audio') as AudioRecorderPlugin;
+        await audioRecorderPlugin.registerAudioBuffer(buffer, connection);
     }
 }
 

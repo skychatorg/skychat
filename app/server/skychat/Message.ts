@@ -42,6 +42,8 @@ export interface SanitizedMessage {
 export type MessageMeta = {
 
     device: string;
+
+    audio: number;
 }
 
 
@@ -80,7 +82,8 @@ export class Message {
         this.user = options.user;
         this.createdTime = options.createdTime instanceof Date ? options.createdTime : new Date();
         this.meta = Object.assign({
-            device: ''
+            device: '',
+            audio: 0,
         }, options.meta || {});
     }
 

@@ -2,6 +2,7 @@ import Vue from "vue";
 import MainPage from "./components/MainPage.vue";
 import {SkyChatClient} from "./skychat/SkyChatClient";
 import store from "./store/store";
+import {AudioRecorder} from "./AudioRecorder";
 import VModal from 'vue-js-modal';
 import Mousetrap from "mousetrap";
 
@@ -18,6 +19,8 @@ Vue.use(VModal, {
 });
 
 const client = new SkyChatClient(store);
+
+Vue.prototype.$audio = AudioRecorder;
 
 Vue.prototype.$store = store;
 
