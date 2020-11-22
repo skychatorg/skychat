@@ -3,7 +3,7 @@
         <div class="avatar image-bubble" :style="{'box-shadow': message.user.data.plugins.halo ? '0 0 4px 4px ' + message.user.data.plugins.color : 'unset'}">
             <img :src="message.user.data.plugins.avatar">
         </div>
-        <div class="content">
+        <div class="content" ref="formatted">
             <div class="user" :style="{'color': message.user.data.plugins.color}">
                 <i v-show="message.user.data.plugins.pinnedicon" class="material-icons md-14">{{message.user.data.plugins.pinnedicon}}</i>
                  {{message.user.username}}
@@ -20,7 +20,7 @@
                 </div>
                 <div class="quote-content" v-html="message.quoted.formatted"></div>
             </div>
-            <div ref="formatted" class="formatted" v-html="message.formatted"></div>
+            <div class="formatted" v-html="message.formatted"></div>
         </div>
         <div class="meta">
             <div class="date">
