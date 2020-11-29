@@ -7,7 +7,7 @@
           }">
         <div class="avatar">
             <span class="rank">
-                <img title="User rank" :src="'/assets/images/' + session.user.rank">
+                <img title="User rank" :src="'/assets/images/' + session.user.rank['18']">
             </span>
             <div class="image-bubble" :style="{'box-shadow': session.user.data.plugins.halo ? '0 0 4px 4px ' + session.user.data.plugins.color : 'unset'}">
                 <img :src="session.user.data.plugins.avatar">
@@ -140,8 +140,8 @@
 
             >.rank {
                 position: absolute;
-                right: -8px;
-                bottom: 0px;
+                right: -2px;
+                bottom: 3px;
                 z-index: 10;
 
                 >img {

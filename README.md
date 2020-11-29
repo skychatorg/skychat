@@ -62,10 +62,10 @@ The config.json file specifies application preferences. The available fields are
 
 **ranks**
 
-- Type: `Array<{limit: number, image: string}>`
+- Type: `Array<{limit: number, images: {'18': string, '26': string}}>`
 - Description: Rank definition (xp threshold and image path). Must be sorted by descending limit.
   - limit: XP limit to have this rank. The last rank definition must have `0` as the limit, otherwise new users will not have any rank.
-  - image: Image path corresponding to the rank icon. Image paths should be relative to `/assets/images/`.
+  - images: Image path corresponding to the rank icon for each 18 and 26px sizes. Image paths should be relative to `/assets/images/`.
 
 
 **plugins**

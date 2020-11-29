@@ -20,7 +20,7 @@ export type SanitizedUser = {
     xp: number;
     right: number;
     data: UserData;
-    rank: string;
+    rank: {[size: string]: string};
 }
 
 
@@ -36,16 +36,16 @@ export class User {
         plugins: {}
     };
 
-    public static readonly RANK_LIMITS: {limit: number, image: string}[] = Config.PREFERENCES.ranks;
+    public static readonly RANK_LIMITS: {limit: number, images: {[size: string]: string}}[] = Config.PREFERENCES.ranks;
 
     /**
      * Get the rank image of this user from an xp amount
      */
-    static getRankByXp(xp: number): string {
+    static getRankByXp(xp: number): {[size: string]: string} {
         const entry = User
             .RANK_LIMITS
             .filter(entry => xp >= entry.limit)[0];
-        return entry ? entry.image : User.RANK_LIMITS[User.RANK_LIMITS.length - 1].image;
+        return entry ? entry.images : User.RANK_LIMITS[User.RANK_LIMITS.length - 1].images;
     }
 
     /**
