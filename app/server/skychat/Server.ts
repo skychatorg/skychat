@@ -77,7 +77,7 @@ export class Server {
                 this.wss.emit('connection', ws, request);
             });
         });
-        server.listen(Config.PORT, function() {
+        server.listen(Config.PORT, Config.HOSTNAME, function() {
             console.log('Listening on :' + Config.PORT);
         });
     }
