@@ -4,8 +4,8 @@
              v-for="entry in cursors"
              :key="entry.cursor.user.id"
              :style="{left: (entry.cursor.x * window.innerWidth) + 'px', top: (entry.cursor.y * window.innerHeight) + 'px'}">
-            <img src="/assets/images/cursors/default.gif">
-            <span>{{entry.cursor.user.username}}</span>
+            <img src="/assets/images/cursors/default.png">
+            <span class="ml-1">{{entry.cursor.user.username}}</span>
         </div>
     </div>
 </template>
