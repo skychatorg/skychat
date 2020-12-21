@@ -110,7 +110,7 @@
         height: 55px;
         display: flex;
         color: white;
-        background: #2b2b2f;
+        background: #242427;
         margin-top: 4px;
         border-left: 4px solid #a3a5b4;
         transition: all 0.2s;

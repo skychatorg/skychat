@@ -84,7 +84,7 @@
     $header-height: 50px;
 
     header {
-        background: #18191c;
+        background: #09090a;
         border-bottom: 1px solid #fff;
         width: 100%;
         height: $header-height;

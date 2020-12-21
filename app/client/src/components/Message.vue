@@ -95,7 +95,7 @@
         display: flex;
         flex: 0 0 auto;
         color: white;
-        background: #2b2b2f;
+        background: #242427;
         margin-top: 4px;
         border-left: 4px solid #a3a5b4;
         padding: 6px 10px 6px 12px;

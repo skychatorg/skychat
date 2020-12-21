@@ -91,7 +91,7 @@
             color: white;
             margin-top: 4px;
             transition: all 0.2s;
-            background: #2b2b2f;
+            background: #242427;
             border-left: 4px solid #ff6d6d;
 
             &.pending {
