@@ -72,6 +72,7 @@
         position: relative;
         pointer-events: none;
         opacity: .5;
+        z-index: 10000000000;
 
         .cursor {
             position: absolute;
