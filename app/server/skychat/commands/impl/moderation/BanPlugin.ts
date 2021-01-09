@@ -37,7 +37,10 @@ export class BanPlugin extends Plugin {
             maxCount: 1,
             params: [{name: "username", pattern: User.USERNAME_REGEXP}]
         },
-        [BanPlugin.BANLIST_COMMAND]: {minCount: 0, maxCount: 0,},
+        [BanPlugin.BANLIST_COMMAND]: {
+            minCount: 0,
+            maxCount: 0,
+        },
     };
 
     readonly minRight = 20;
@@ -45,7 +48,7 @@ export class BanPlugin extends Plugin {
     /**
      * List of banned ips
      */
-    protected storage: {banned: {[matchString: string]: {source: string, until: number}}} = {
+    protected storage: {banned: {[matchString: string]: {source: string, until: number | null}}} = {
         banned: {}
     };
 
@@ -86,6 +89,7 @@ export class BanPlugin extends Plugin {
         const banEntries = Object.keys(this.storage.banned)
             .filter(s => s === `ip:${ip}` || s === `username:${username}`)
             .map(matchString => this.storage.banned[matchString])
+            .filter(banEntry => banEntry.until)
             .filter(banEntry => new Date().getTime() < banEntry.until);
         return banEntries.length > 0;
     }
@@ -128,6 +132,10 @@ export class BanPlugin extends Plugin {
         }
 
         const banEntry = {source: session.identifier, until: new Date(Date.now() + duration * 1000).getTime()};
+        // Unban timestamp can be null if specified duration is too far from now
+        if (! banEntry.until) {
+            throw new Error('Invalid specified ban duration');
+        }
         this.storage.banned['username:' + session.identifier] = banEntry;
         for (const connection of session.connections) {
             this.storage.banned['ip:' + connection.ip] = banEntry;
