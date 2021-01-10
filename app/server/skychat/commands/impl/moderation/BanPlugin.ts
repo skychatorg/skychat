@@ -50,7 +50,7 @@ export class BanPlugin extends Plugin {
     /**
      * List of banned ips
      */
-    protected storage: {banned: {[matchString: string]: {source: string, until: number | null}}} = {
+    protected storage: {banned: {[matchString: string]: {source: string, until: number}}} = {
         banned: {}
     };
 
@@ -91,7 +91,6 @@ export class BanPlugin extends Plugin {
         const banEntries = Object.keys(this.storage.banned)
             .filter(s => s === `ip:${ip}` || s === `username:${username}`)
             .map(matchString => this.storage.banned[matchString])
-            .filter(banEntry => banEntry.until)
             .filter(banEntry => new Date().getTime() < banEntry.until);
         return banEntries.length > 0;
     }
