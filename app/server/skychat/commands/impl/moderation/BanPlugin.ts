@@ -16,6 +16,8 @@ export class BanPlugin extends Plugin {
     public static readonly UNBAN_COMMAND: string = 'unban';
     public static readonly BANLIST_COMMAND: string = 'banlist';
 
+    public static readonly BAN_MIN_RIGHT = 40;
+
     readonly name = BanPlugin.BAN_COMMAND;
 
     readonly aliases = [BanPlugin.VOTEBAN_COMMAND, BanPlugin.UNBAN_COMMAND, BanPlugin.BANLIST_COMMAND];
@@ -57,7 +59,7 @@ export class BanPlugin extends Plugin {
         switch (alias) {
 
             case BanPlugin.BAN_COMMAND:
-                if (connection.session.user.right < 30) {
+                if (connection.session.user.right < BanPlugin.BAN_MIN_RIGHT) {
                     throw new Error(`You don't have the right to use this command`);
                 }
                 await this.handleBan(param, connection);
@@ -68,14 +70,14 @@ export class BanPlugin extends Plugin {
                 break;
 
             case BanPlugin.UNBAN_COMMAND:
-                if (connection.session.user.right < 30) {
+                if (connection.session.user.right < BanPlugin.BAN_MIN_RIGHT) {
                     throw new Error(`You don't have the right to use this command`);
                 }
                 await this.handleUnban(param, connection);
                 break;
 
             case BanPlugin.BANLIST_COMMAND:
-                if (connection.session.user.right < 30) {
+                if (connection.session.user.right < BanPlugin.BAN_MIN_RIGHT) {
                     throw new Error(`You don't have the right to use this command`);
                 }
                 await this.handleBanList(param, connection);
