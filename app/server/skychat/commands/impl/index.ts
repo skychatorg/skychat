@@ -4,7 +4,7 @@ export {AvatarPlugin} from "./customization/AvatarPlugin";
 export {CursorPlugin} from "./customization/CursorPlugin";
 export {MutePlugin} from "./moderation/MutePlugin";
 export {TypingListPlugin} from "./core/TypingListPlugin";
-export {MotoPlugin} from "./customization/MotoPlugin";
+export {MottoPlugin} from "./customization/MottoPlugin";
 export {PinnedIconPlugin} from "./customization/PinnedIconPlugin";
 export {YoutubePlugin} from "./youtube/YoutubePlugin";
 export {HelpCommand} from "./core/HelpCommand";

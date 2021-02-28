@@ -42,7 +42,7 @@
                             <span class="text-unread-count">{{getUnreadCount(session.user.username)}}️</span>
                         </template>
                     </div>
-                    <div class="moto" :title="session.user.data.plugins.moto">{{session.user.data.plugins.moto}}&nbsp;</div>
+                    <div class="motto" :title="session.user.data.plugins.motto">{{session.user.data.plugins.motto}}&nbsp;</div>
                 </template>
             </div>
         </div>
@@ -209,7 +209,7 @@
                         vertical-align: top;
                     }
                 }
-                >.moto {
+                >.motto {
                     white-space: nowrap;
                     overflow: hidden;
                     text-overflow: ellipsis;
