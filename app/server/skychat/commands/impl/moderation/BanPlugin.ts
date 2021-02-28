@@ -86,13 +86,11 @@ export class BanPlugin extends Plugin {
     }
 
     isBanned(connection: Connection): boolean {
-        const username = connection.session.identifier;
-        const ip = connection.ip;
-        const banEntries = Object.keys(this.storage.banned)
-            .filter(s => s === `ip:${ip}` || s === `username:${username}`)
-            .map(matchString => this.storage.banned[matchString])
-            .filter(banEntry => new Date().getTime() < banEntry.until);
-        return banEntries.length > 0;
+        return Object.keys(this.storage.banned)
+            .filter(s => s === `ip:${connection.ip}` || s === `username:${connection.session.identifier}`) // get entries for this connection
+            .map(matchString => this.storage.banned[matchString]) // transform back keys into values
+            .filter(banEntry => new Date().getTime() < banEntry.until) // filter entries that are still valid
+            .length > 0; // is there at least one of them?
     }
 
     async handleBan(param: string, connection: Connection) {
