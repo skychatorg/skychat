@@ -48,6 +48,13 @@ export class AvatarPlugin extends Plugin {
             throw new Error('Given image does not exist');
         }
 
+        // Remove previous avatar
+        const previousAvatarUrl = UserController.getPluginData(connection.session.user, this.name);
+        const previousAvatarLocalPath = '.' + previousAvatarUrl.substr(Config.LOCATION.length).split('?')[0];
+        try {
+            fs.unlinkSync(previousAvatarLocalPath);
+        } catch (error) { }
+
         // Copy avatar
         fs.copyFileSync(localPath, newAvatarPath);
 
