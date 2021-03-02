@@ -96,7 +96,7 @@ export class MessageFormatter {
      * @param text
      */
     public replaceLinks(text: string, remove?: boolean): string {
-        let regExp = /(?:^|[ ])((http|https):\/\/[\w?=&.\/-;#~%+,\[\]:!-]+(?![\w\s?&.\/;#~%"=+,\[\]:!-]*>))/ig;
+        let regExp = /(?:^|[ ])((http|https):\/\/[\w?=&.\/-;#~%+@,\[\]:!-]+(?![\w\s?&.\/;#~%"=+@,\[\]:!-]*>))/ig;
         if (remove) {
             text = text.replace(regExp, '');
         } else {
