@@ -141,7 +141,7 @@
                     if (result.status === 500) {
                         throw new Error('Unable to upload: ' + result.message);
                     }
-                    this.setMessage(this.message + ' ' + document.location.href + result.path);
+                    this.setMessage(this.message + ' ' + document.location.origin + '/' + result.path);
                 } catch (e) {
                     new Noty({
                         type: 'error',
