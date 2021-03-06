@@ -54,9 +54,11 @@ export class AvatarPlugin extends Plugin {
         // Remove previous avatar
         const previousAvatarUrl = UserController.getPluginData(connection.session.user, this.name);
         const previousAvatarLocalPath = '.' + previousAvatarUrl.substr(Config.LOCATION.length).split('?')[0];
-        try {
-            fs.unlinkSync(previousAvatarLocalPath);
-        } catch (error) { }
+        if (previousAvatarUrl.match('^avatars\/')) {
+            try {
+                fs.unlinkSync(previousAvatarLocalPath);
+            } catch (error) { }
+        }
 
         // Copy avatar
         fs.copyFileSync(localPath, newAvatarPath);
