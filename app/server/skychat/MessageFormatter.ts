@@ -167,7 +167,7 @@ export class MessageFormatter {
      * @param code
      * @param url
      */
-    public addSticker(code: string, url: string): void {
+    public registerSticker(code: string, url: string): void {
         code = code.toLowerCase();
         if (typeof this.stickers[code] !== 'undefined') {
             throw new Error('This sticker already exist');
@@ -177,16 +177,34 @@ export class MessageFormatter {
     }
 
     /**
+     * Whether a sticker code is defined
+     * @param code 
+     * @returns 
+     */
+    public stickerExists(code: string): boolean {
+        return typeof this.stickers[code.toLowerCase()] !== 'undefined';
+    }
+
+    /**
      * Delete a sticker
      * @param code
      */
-    public deleteSticker(code: string): void {
+    public unregisterSticker(code: string): void {
         code = code.toLowerCase();
         if (typeof this.stickers[code] === 'undefined') {
             throw new Error('This sticker does not exist');
         }
         delete this.stickers[code];
         this.saveStickers();
+    }
+
+    /**
+     * Get a sticker URL
+     * @param code 
+     * @returns 
+     */
+    public getStickerUrl(code: string): string {
+        return this.stickers[code];
     }
 
     /**

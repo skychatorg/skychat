@@ -5,6 +5,8 @@ import {Config} from "../../../Config";
 import {MessageFormatter} from "../../../MessageFormatter";
 import {UserController} from "../../../UserController";
 import * as fs from 'fs';
+import { FileManager } from "../../../FileManager";
+import { Server } from "../../../Server";
 
 
 export class AvatarPlugin extends Plugin {
@@ -27,9 +29,7 @@ export class AvatarPlugin extends Plugin {
             params: [
                 {
                     name: 'avatar',
-                    // The following regexp ensures that the given path is path to an uploaded avatar on this server
-                    // Security for the image being moved to the avatars directory is ensured through this regexp
-                    pattern: new RegExp('^' + MessageFormatter.getInstance().escapeRegExp(Config.LOCATION) + '\/uploads\/([0-9a-zA-Z/-]+)\.(jpg|jpeg|png|webp)$'),
+                    pattern: Server.UPLOADED_FILE_REGEXP,
                     info: 'Image link'
                 }
             ]
@@ -38,15 +38,14 @@ export class AvatarPlugin extends Plugin {
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
 
-        // Get local path to image
-        const localPath = '.' + param.substr(Config.LOCATION.length);
-        const avatarExtension = (localPath.match(/\.[a-z]+$/) || [])[0].substr(1);
-        const newAvatarPath = 'avatars/' + connection.session.identifier + '.' + avatarExtension;
-
         // Check that the given image exists
-        if (! fs.existsSync(localPath)) {
+        if (! FileManager.uploadedFileExists(param)) {
             throw new Error('Given image does not exist');
         }
+
+        // Get local path to image
+        const localPath = FileManager.getLocalPathFromFileUrl(param);
+        const newAvatarPath = 'avatars/' + connection.session.identifier + '.' + FileManager.getFileExtension(localPath);
 
         // Remove previous avatar
         const previousAvatarUrl = UserController.getPluginData(connection.session.user, this.name);

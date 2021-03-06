@@ -2,6 +2,9 @@ import {Connection} from "../../../Connection";
 import {Plugin} from "../../Plugin";
 import {Server} from "../../../Server";
 import {MessageFormatter} from "../../../MessageFormatter";
+import { FileManager } from "../../../FileManager";
+import * as fs from "fs";
+import { Config } from "../../../Config";
 
 
 export class StickerPlugin extends Plugin {
@@ -58,17 +61,33 @@ export class StickerPlugin extends Plugin {
      * @param connection
      */
     private async handleStickerAdd(param: string, connection: Connection): Promise<void> {
-        const [code, url] = param.split(' ');
-        console.log(code, url, param.split(' '));
-        this.formatter.addSticker(code, url);
+        let [code, url] = param.split(' ');
+        if (! FileManager.isUploadedFileUrl(url)) {
+            throw new Error('Given sticker is not an uploaded image');
+        }
+        if (this.formatter.stickerExists(code)) {
+            throw new Error('Given sticker already exists');
+        }
+        const newStickerPath = 'stickers/' + code.replace(/:/g, '_') + '.' + FileManager.getFileExtension(url);
+        const newStickerUrl = Config.LOCATION + '/' + newStickerPath + '?' + new Date().getTime();
+        fs.copyFileSync(FileManager.getLocalPathFromFileUrl(url), newStickerPath);
+        this.formatter.registerSticker(code, newStickerUrl);
     }
 
     /**
      * Delete a sticker
-     * @param param
+     * @param code
      * @param connection
      */
-    private async handleStickerDelete(param: string, connection: Connection): Promise<void> {
-        this.formatter.deleteSticker(param);
+    private async handleStickerDelete(code: string, connection: Connection): Promise<void> {
+        if (! this.formatter.stickerExists(code)) {
+            throw new Error('Given sticker does not exist');
+        }
+        const stickerUrl = this.formatter.getStickerUrl(code);
+        const stickerLocalPath = FileManager.getLocalPathFromFileUrl(stickerUrl);
+        try {
+            fs.unlinkSync(stickerLocalPath);
+        } catch (error) { }
+        this.formatter.unregisterSticker(code);
     }
 }
