@@ -68,9 +68,14 @@ export class StickerPlugin extends Plugin {
         if (this.formatter.stickerExists(code)) {
             throw new Error('Given sticker already exists');
         }
-        const newStickerPath = 'stickers/' + code.replace(/:/g, '_') + '.' + FileManager.getFileExtension(url);
+        const localFilePath = FileManager.getLocalPathFromFileUrl(url);
+        const extension = FileManager.getFileExtension(localFilePath);
+        if (['png', 'jpg', 'jpeg', 'gif'].indexOf(extension) === -1) {
+            throw new Error('Extension not allowed');
+        }
+        const newStickerPath = 'stickers/' + code.replace(/:/g, '_') + '.' + extension;
         const newStickerUrl = Config.LOCATION + '/' + newStickerPath + '?' + new Date().getTime();
-        fs.copyFileSync(FileManager.getLocalPathFromFileUrl(url), newStickerPath);
+        fs.copyFileSync(localFilePath, newStickerPath);
         this.formatter.registerSticker(code, newStickerUrl);
     }
 

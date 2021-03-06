@@ -45,7 +45,11 @@ export class AvatarPlugin extends Plugin {
 
         // Get local path to image
         const localPath = FileManager.getLocalPathFromFileUrl(param);
-        const newAvatarPath = 'avatars/' + connection.session.identifier + '.' + FileManager.getFileExtension(localPath);
+        const extension = FileManager.getFileExtension(localPath);
+        if (['png', 'jpg', 'jpeg'].indexOf(extension) === -1) {
+            throw new Error('Extension not allowed');
+        }
+        const newAvatarPath = 'avatars/' + connection.session.identifier + '.' + extension;
 
         // Remove previous avatar
         const previousAvatarUrl = UserController.getPluginData(connection.session.user, this.name);
