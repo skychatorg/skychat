@@ -14,6 +14,11 @@ export type PollOptions = {
      * Timeout in milliseconds
      */
     timeout: number;
+
+    /**
+     * Minimum required number of votes
+     */
+    minVotes?: number;
 }
 
 export type SanitizedPoll = {
@@ -83,9 +88,17 @@ export class Poll {
         if (votes.length === 0) {
             return undefined;
         }
+        // If not enough votes, return the default specified value
+        const enoughVotes = typeof this.options.minVotes === 'undefined' || votes.length >= this.options.minVotes;
+        if (! enoughVotes) {
+            return this.options.defaultValue;
+        }
         const yes = votes.filter(vote => vote).length;
         const no = votes.filter(vote => ! vote).length;
-        return yes === no ? this.options.defaultValue : yes > no;
+        if (yes === no) {
+            return this.options.defaultValue;
+        }
+        return yes > no;
     }
 
     /**
