@@ -70,7 +70,7 @@ export class MessageFormatter {
      * Replace images
      * @param message
      */
-    public replaceImages(message: string): string {
+    public replaceImages(message: string, remove?: boolean): string {
         let matches = message.match(new RegExp(Config.LOCATION + '/uploads/([-\\/._a-zA-Z0-9]+)\\.(png|jpg|jpeg|gif)', 'g'));
         if (! matches) {
             return message;
@@ -78,7 +78,7 @@ export class MessageFormatter {
         matches = Array.from(new Set(matches));
         for (const imageUrl of matches) {
             const html = `<a class="skychat-image" href="${imageUrl}" target="_blank"><img src="${imageUrl}"></a>`;
-            message = message.replace(new RegExp(imageUrl, 'g'), html);
+            message = message.replace(new RegExp(imageUrl, 'g'), remove ? '' : html);
         }
         return message;
     }
@@ -95,12 +95,16 @@ export class MessageFormatter {
      * Replace links in the message
      * @param text
      */
-    public replaceLinks(text: string): string {
-        let regExp = /(?:^|[ ])((http|https):\/\/[\w?=&.\/-;#~%+,\[\]:!-]+(?![\w\s?&.\/;#~%"=+,\[\]:!-]*>))/ig;
-        text = text.replace(regExp, ($0, $1, $2, $3, $4, $5, $6) => {
-            const start = $0[0] === 'h' ? '' : ' ';
-            return `${start}<a class="skychat-link" target="_blank" rel="nofollow" href="${$1}">${$1}</a>`;
-        });
+    public replaceLinks(text: string, remove?: boolean): string {
+        let regExp = /(?:^|[ ])((http|https):\/\/[\w?=&.\/-;#~%+@,\[\]:!-]+(?![\w\s?&.\/;#~%"=+@,\[\]:!-]*>))/ig;
+        if (remove) {
+            text = text.replace(regExp, '');
+        } else {
+            text = text.replace(regExp, ($0, $1, $2, $3, $4, $5, $6) => {
+                const start = $0[0] === 'h' ? '' : ' ';
+                return `${start}<a class="skychat-link" target="_blank" rel="nofollow" href="${$1}">${$1}</a>`;
+            });
+        }
         return text;
     }
 
@@ -123,6 +127,9 @@ export class MessageFormatter {
         if (escape) {
             title = escapeHtml(title);
             action = escapeHtml(action);
+            action = this.replaceLinks(action, true);
+            action = this.replaceImages(action, true);
+            action = this.replaceStickers(action, true);
         }
         if (action[0] === '/' && ! trusted) {
             title += ' <span class="skychat-button-info">(' + escapeHtml(action.split(' ')[0]) + ')</span>';
@@ -134,10 +141,10 @@ export class MessageFormatter {
      * Replace stickers in a raw message
      * @param message
      */
-    public replaceStickers(message: string): string {
+    public replaceStickers(message: string, remove?: boolean): string {
         for (const code in this.stickers) {
             const sticker = this.stickers[code];
-            message = message.replace(new RegExp(this.escapeRegExp(code), 'g'), `<img class="skychat-sticker" title="${code}" alt="${code}" src="${sticker}">`);
+            message = message.replace(new RegExp(this.escapeRegExp(code), 'g'), remove ? '' : `<img class="skychat-sticker" title="${code}" alt="${code}" src="${sticker}">`);
         }
         return message;
     }
@@ -160,7 +167,7 @@ export class MessageFormatter {
      * @param code
      * @param url
      */
-    public addSticker(code: string, url: string): void {
+    public registerSticker(code: string, url: string): void {
         code = code.toLowerCase();
         if (typeof this.stickers[code] !== 'undefined') {
             throw new Error('This sticker already exist');
@@ -170,16 +177,34 @@ export class MessageFormatter {
     }
 
     /**
+     * Whether a sticker code is defined
+     * @param code 
+     * @returns 
+     */
+    public stickerExists(code: string): boolean {
+        return typeof this.stickers[code.toLowerCase()] !== 'undefined';
+    }
+
+    /**
      * Delete a sticker
      * @param code
      */
-    public deleteSticker(code: string): void {
+    public unregisterSticker(code: string): void {
         code = code.toLowerCase();
         if (typeof this.stickers[code] === 'undefined') {
             throw new Error('This sticker does not exist');
         }
         delete this.stickers[code];
         this.saveStickers();
+    }
+
+    /**
+     * Get a sticker URL
+     * @param code 
+     * @returns 
+     */
+    public getStickerUrl(code: string): string {
+        return this.stickers[code];
     }
 
     /**

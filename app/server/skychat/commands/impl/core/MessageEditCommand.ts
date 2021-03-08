@@ -18,7 +18,7 @@ export class MessageEditCommand extends Command {
             coolDown: 100,
             params: [
                 {pattern: /^([0-9]+)$/, name: 'id'},
-                {pattern: /./, name: 'message'},
+                {pattern: /.?/, name: 'message'},
             ]
         },
         delete: {

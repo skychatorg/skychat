@@ -26,7 +26,7 @@ const store = {
                 plugins: {
                     avatar: "",
                     cursor: true,
-                    moto: "",
+                    motto: "",
                 }
             }
         },

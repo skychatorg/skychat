@@ -121,7 +121,7 @@
     .search-item {
         display: flex;
         margin: 10px;
-        background-color: #2b2b2f;
+        background-color: #242427;
         border-left: 4px solid white;
         padding: 4px 4px 4px 8px;
         -webkit-transition: all 0.2s;

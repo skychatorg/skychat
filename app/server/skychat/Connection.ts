@@ -112,8 +112,14 @@ export class Connection extends EventEmitter implements IBroadcaster {
         try {
 
             // If data is not of type string, fail with error
+            if (data instanceof Buffer) {
+                this.emit('audio', data);
+                return;
+            }
+
+            // Otherwise, if type is not string, reject the message
             if (typeof data !== 'string') {
-                throw new Error('Incorrect message');
+                throw new Error('Unsupported data type');
             }
 
             // Decode & unpack message

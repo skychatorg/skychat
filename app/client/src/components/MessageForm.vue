@@ -1,15 +1,18 @@
 <template>
     <div class="message-form">
-        <div class="image-upload" v-show="uploading">
+        <div class="image-upload" v-show="uploadingFile">
             <label for="file-input">
-                <img src="https://i.gifer.com/origin/34/34338d26023e5515f6cc8969aa027bca_w200.gif"/>
+                <img src="/assets/images/icons/loading.gif"/>
             </label>
         </div>
-        <div class="image-upload" v-show="! uploading">
+        <div class="image-upload" v-show="! uploadingFile">
             <label for="file-input">
                 <i class="upload-icon material-icons md-28">publish</i>
             </label>
             <input ref="file" @change="onFileInputChange" id="file-input" type="file" />
+        </div>
+        <div  @click="uploadAudio" class="audio-upload" :class="{'recording': recordingAudio}">
+            <i class="upload-icon material-icons md-28">mic</i>
         </div>
         <form class="form" onsubmit="return false">
             <textarea ref="input"
@@ -43,7 +46,9 @@
                 message: '',
                 historyIndex: null,
                 sentMessageHistory: [],
-                uploading: false,
+                uploadingFile: false,
+                recordingAudio: false,
+                recordingAudioStopCb: null,
             };
         },
 
@@ -75,6 +80,18 @@
             setMessage: function(message) {
                 this.message = message;
                 this.$refs.input.focus();
+            },
+
+            uploadAudio: async function() {
+                if (this.recordingAudio) {
+                    // Stop recording
+                    const {blob, uri, audio} = await this.recordingAudioStopCb();
+                    this.$client.webSocket.send(blob);
+                } else {
+                    // Start recording
+                    this.recordingAudioStopCb = await this.$audio.start();
+                }
+                this.recordingAudio = ! this.recordingAudio;
             },
 
             /**
@@ -113,10 +130,10 @@
              * Upload a given file
              */
             upload: async function(file) {
-                if (this.uploading) {
+                if (this.uploadingFile) {
                     return;
                 }
-                this.uploading = true;
+                this.uploadingFile = true;
                 try {
                     const data = new FormData();
                     data.append('file', file);
@@ -124,7 +141,7 @@
                     if (result.status === 500) {
                         throw new Error('Unable to upload: ' + result.message);
                     }
-                    this.setMessage(this.message + ' ' + document.location.href + result.path);
+                    this.setMessage(this.message + ' ' + document.location.origin + '/' + result.path);
                 } catch (e) {
                     new Noty({
                         type: 'error',
@@ -134,7 +151,7 @@
                         timeout: 2000
                     }).show();
                 } finally {
-                    this.uploading = false;
+                    this.uploadingFile = false;
                 }
             },
 
@@ -219,6 +236,24 @@
 
             >input {
                 display: none;
+            }
+        }
+
+        .audio-upload {
+            flex-basis: 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            margin-left: 12px;
+            color: #cccccc;
+
+            .upload-icon {
+                width: 100%;
+                cursor: pointer;
+            }
+
+            &.recording {
+                color: #ff7d7d;
             }
         }
 

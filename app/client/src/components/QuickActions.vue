@@ -256,7 +256,7 @@
                     flex: 0 calc(33% - 14px);
                     height: 30px;
                     color: white;
-                    background: #2b2b2f;
+                    background: #242427;
                     border-left: 4px solid #a3a5b4;
                     transition: all 0.2s;
                     display: flex;

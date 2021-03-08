@@ -16,6 +16,8 @@ export class BanPlugin extends Plugin {
     public static readonly UNBAN_COMMAND: string = 'unban';
     public static readonly BANLIST_COMMAND: string = 'banlist';
 
+    public static readonly BAN_MIN_RIGHT = 40;
+
     readonly name = BanPlugin.BAN_COMMAND;
 
     readonly aliases = [BanPlugin.VOTEBAN_COMMAND, BanPlugin.UNBAN_COMMAND, BanPlugin.BANLIST_COMMAND];
@@ -37,7 +39,10 @@ export class BanPlugin extends Plugin {
             maxCount: 1,
             params: [{name: "username", pattern: User.USERNAME_REGEXP}]
         },
-        [BanPlugin.BANLIST_COMMAND]: {minCount: 0, maxCount: 0,},
+        [BanPlugin.BANLIST_COMMAND]: {
+            minCount: 0,
+            maxCount: 0,
+        },
     };
 
     readonly minRight = 20;
@@ -54,7 +59,7 @@ export class BanPlugin extends Plugin {
         switch (alias) {
 
             case BanPlugin.BAN_COMMAND:
-                if (connection.session.user.right < 30) {
+                if (connection.session.user.right < BanPlugin.BAN_MIN_RIGHT) {
                     throw new Error(`You don't have the right to use this command`);
                 }
                 await this.handleBan(param, connection);
@@ -65,14 +70,14 @@ export class BanPlugin extends Plugin {
                 break;
 
             case BanPlugin.UNBAN_COMMAND:
-                if (connection.session.user.right < 30) {
+                if (connection.session.user.right < BanPlugin.BAN_MIN_RIGHT) {
                     throw new Error(`You don't have the right to use this command`);
                 }
                 await this.handleUnban(param, connection);
                 break;
 
             case BanPlugin.BANLIST_COMMAND:
-                if (connection.session.user.right < 30) {
+                if (connection.session.user.right < BanPlugin.BAN_MIN_RIGHT) {
                     throw new Error(`You don't have the right to use this command`);
                 }
                 await this.handleBanList(param, connection);
@@ -81,13 +86,11 @@ export class BanPlugin extends Plugin {
     }
 
     isBanned(connection: Connection): boolean {
-        const username = connection.session.identifier;
-        const ip = connection.ip;
-        const banEntries = Object.keys(this.storage.banned)
-            .filter(s => s === `ip:${ip}` || s === `username:${username}`)
-            .map(matchString => this.storage.banned[matchString])
-            .filter(banEntry => new Date().getTime() < banEntry.until);
-        return banEntries.length > 0;
+        return Object.keys(this.storage.banned)
+            .filter(s => s === `ip:${connection.ip}` || s === `username:${connection.session.identifier}`) // get entries for this connection
+            .map(matchString => this.storage.banned[matchString]) // transform back keys into values
+            .filter(banEntry => new Date().getTime() < banEntry.until) // filter entries that are still valid
+            .length > 0; // is there at least one of them?
     }
 
     async handleBan(param: string, connection: Connection) {
@@ -128,6 +131,10 @@ export class BanPlugin extends Plugin {
         }
 
         const banEntry = {source: session.identifier, until: new Date(Date.now() + duration * 1000).getTime()};
+        // Unban timestamp can be null if specified duration is too far from now
+        if (! banEntry.until) {
+            throw new Error('Invalid specified ban duration');
+        }
         this.storage.banned['username:' + session.identifier] = banEntry;
         for (const connection of session.connections) {
             this.storage.banned['ip:' + connection.ip] = banEntry;

@@ -278,7 +278,7 @@
             flex-wrap: wrap;
             justify-content: center;
             position: relative;
-            background: #2b2b2f;
+            background: #242427;
             padding: 4px;
 
             .video-in-queue {

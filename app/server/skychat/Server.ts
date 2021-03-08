@@ -8,7 +8,7 @@ import * as express from "express";
 import {Config} from "./Config";
 import * as fs from "fs";
 import * as fileUpload from "express-fileupload";
-import {RandomGenerator} from "./RandomGenerator";
+import { FileManager } from "./FileManager";
 
 
 
@@ -51,6 +51,8 @@ export class Server {
         this.app = express();
         this.app.use(express.static('dist'));
         this.app.use('/uploads', express.static('uploads'));
+        this.app.use('/stickers', express.static('stickers'));
+        this.app.use('/avatars', express.static('avatars'));
         this.app.use(fileUpload({
             limits: { fileSize: 10 * 1024 * 1024 },
             createParentPath: true,
@@ -77,7 +79,7 @@ export class Server {
                 this.wss.emit('connection', ws, request);
             });
         });
-        server.listen(Config.PORT, function() {
+        server.listen(Config.PORT, Config.HOSTNAME, function() {
             console.log('Listening on :' + Config.PORT);
         });
     }
@@ -88,32 +90,20 @@ export class Server {
      * @param res
      */
     public onFileUpload(req: express.Request, res: express.Response): void {
-        const file: any = req.files ? req.files.file : undefined;
-        if (! file) {
-            res.send(JSON.stringify({"status": 500, "message": "File not found"}));
+        try {
+            const file: fileUpload.UploadedFile | fileUpload.UploadedFile[] | undefined = req.files ? req.files.file : undefined;
+            if (! file) {
+                throw new Error('File not found');
+            }
+            if (Array.isArray(file)) {
+                throw new Error('Please upload one file at the time');
+            }
+            res.send(JSON.stringify({"status": 200, "path": FileManager.saveFile(file)}));
+        } catch (error) {
+            res.send(JSON.stringify({"status": 500, "message": error.toString()}));
+        } finally {
             res.end();
-            return;
         }
-        const date = new Date();
-        const mimeTypes: {[mimetype: string]: string} = {
-            'image/jpeg': 'jpg',
-            'image/jpg': 'jpg',
-            'image/png': 'png',
-            'image/gif': 'gif',
-            'application/pdf': 'pdf',
-            'video/mp4': 'mp4',
-            'video/webm': 'webm',
-        };
-        if (typeof mimeTypes[file.mimetype] === 'undefined') {
-            res.send(JSON.stringify({"status": 500, "message": "Invalid mimetype"}));
-            res.end();
-            return;
-        }
-        const extension = mimeTypes[file.mimetype];
-        const filePath = 'uploads/' + date.toISOString().substr(0, 19).replace(/(-|T)/g, '/').replace(/:/g, '-') + '-' + Math.floor(1000000000 * RandomGenerator.random(8)) + '.' + extension;
-        file.mv(filePath);
-        res.send(JSON.stringify({"status": 200, "path": filePath}));
-        res.end();
     }
 
     /**

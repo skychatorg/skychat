@@ -20,7 +20,7 @@ body,
 
 body {
     background-size: 100%;
-    background: #1d1e21 url(/assets/background.svg) no-repeat fixed bottom;
+    background: #000000 url(/assets/background.svg) no-repeat fixed bottom;
 }
 
 
@@ -46,7 +46,7 @@ body {
             flex-basis: 100% !important;
             padding: 0 0 0 10px;
 
-            .connected-session .moto {
+            .connected-session .motto {
                 flex-basis: calc(100% - 90px)!important;
             }
         }

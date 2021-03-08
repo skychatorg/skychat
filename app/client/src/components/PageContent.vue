@@ -125,7 +125,7 @@
                 flex-grow: 1;
                 padding-bottom: 6px;
                 height: 100%;
-                background: #2a2a2f78;
+                background: #16161978;
                 display: flex;
                 flex-direction: column;
 
@@ -139,7 +139,7 @@
                 flex-basis: 400px;
                 height: 100%;
                 overflow-y: auto;
-                background: #25262b85;
+                background: #16161978;
             }
         }
     }

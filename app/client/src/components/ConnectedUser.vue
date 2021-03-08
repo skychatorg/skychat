@@ -7,7 +7,7 @@
           }">
         <div class="avatar">
             <span class="rank">
-                <img title="User rank" :src="'/assets/images/' + session.user.rank">
+                <img title="User rank" :src="'/assets/images/' + session.user.rank['18']">
             </span>
             <div class="image-bubble" :style="{'box-shadow': session.user.data.plugins.halo ? '0 0 4px 4px ' + session.user.data.plugins.color : 'unset'}">
                 <img :src="session.user.data.plugins.avatar">
@@ -42,7 +42,7 @@
                             <span class="text-unread-count">{{getUnreadCount(session.user.username)}}️</span>
                         </template>
                     </div>
-                    <div class="moto" :title="session.user.data.plugins.moto">{{session.user.data.plugins.moto}}&nbsp;</div>
+                    <div class="motto" :title="session.user.data.plugins.motto">{{session.user.data.plugins.motto}}&nbsp;</div>
                 </template>
             </div>
         </div>
@@ -110,7 +110,7 @@
         height: 55px;
         display: flex;
         color: white;
-        background: #2b2b2f;
+        background: #242427;
         margin-top: 4px;
         border-left: 4px solid #a3a5b4;
         transition: all 0.2s;
@@ -136,13 +136,13 @@
             height: 55px;
             padding: 10px;
             position: relative;
+            margin-right: 8px;
 
             >.rank {
                 position: absolute;
-                left: 6px;
-                bottom: 4px;
+                right: -2px;
+                bottom: 3px;
                 z-index: 10;
-                height: 18px;
 
                 >img {
                     height: 100%;
@@ -209,7 +209,7 @@
                         vertical-align: top;
                     }
                 }
-                >.moto {
+                >.motto {
                     white-space: nowrap;
                     overflow: hidden;
                     text-overflow: ellipsis;

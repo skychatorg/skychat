@@ -3,7 +3,7 @@
         <div class="avatar image-bubble" :style="{'box-shadow': message.user.data.plugins.halo ? '0 0 4px 4px ' + message.user.data.plugins.color : 'unset'}">
             <img :src="message.user.data.plugins.avatar">
         </div>
-        <div class="content">
+        <div class="content" ref="formatted">
             <div class="user" :style="{'color': message.user.data.plugins.color}">
                 <i v-show="message.user.data.plugins.pinnedicon" class="material-icons md-14">{{message.user.data.plugins.pinnedicon}}</i>
                  {{message.user.username}}
@@ -20,7 +20,7 @@
                 </div>
                 <div class="quote-content" v-html="message.quoted.formatted"></div>
             </div>
-            <div ref="formatted" class="formatted" v-html="message.formatted"></div>
+            <div class="formatted" v-html="message.formatted"></div>
         </div>
         <div class="meta">
             <div class="date">
@@ -29,7 +29,8 @@
             <div class="seen-users">
                 <div v-for="seenUser of seenUsers"
                      class="avatar image-bubble"
-                     :title="'Seen by ' + seenUser.username">
+                     :title="'Seen by ' + seenUser.username"
+                     :style="{'border': '1px solid ' + seenUser.data.plugins.color}">
                     <img :src="seenUser.data.plugins.avatar">
                 </div>
             </div>
@@ -94,7 +95,7 @@
         display: flex;
         flex: 0 0 auto;
         color: white;
-        background: #2b2b2f;
+        background: #242427;
         margin-top: 4px;
         border-left: 4px solid #a3a5b4;
         padding: 6px 10px 6px 12px;
