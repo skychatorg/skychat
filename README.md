@@ -2,7 +2,7 @@
 
 
 
-## SkyChat quick tour
+# SkyChat
 
 The **SkyChat** is a modern-looking discussion platform with real-time visualisation of everyone's cursor, and a shared and synchronized youtube player.
 
@@ -24,7 +24,7 @@ Users can play any youtube video on a shared and synchronized player. Orchestrat
 ### Live cursor visualization and mini-games
 
 Users can interact and play with integrated mini-games (which can be disabled in the configuration).
-Seeing each other cursors give a sense of proximity between users. Seeing mouse movements is the most iconic features of the SkyChat.
+Users can also see each other cursors moving in real time. This gives a sense of proximity between users. This is the most iconic feature of the SkyChat.
 ![cursor-roll](./doc/cursor-roll.gif)
 
 ### Cinema mode
@@ -34,7 +34,7 @@ If watching long videos, documentaries, or tv shows, the cinema-mode allows user
 
 ### And much more
 
-This is not all, but to discover all features, you may as well launch an instance yourself and try it yourself
+This is not all, but to discover all features, you may as well launch an instance and try it yourself!
 
 ## How to install
 
@@ -42,14 +42,38 @@ Ensure you have the following installed on your system:
 - sqlite3
 - nodejs/npm
 
-Then, clone the repository, install nodejs dependencies, and run the setup script.
+Then, follow these steps:
 
 ```bash
+# 1. Clone the repository
 git clone https://github.com/skychatorg/skychat.git
 cd skychat
+
+# 2. Install nodejs dependencies
 npm i
+
+# 3. Generates the .env.json, stickers.json, config.json files and the database
 npm run setup
+
+# 4. Build and run the app
+npm run dev
 ```
+
+### Setup Youtube
+
+The SkyChat requires a key for the Youtube plugin to work. This key needs to be put in your `.env.json` file.
+
+Using the Youtube API is free but there is a daily quota, which when exceeded blocks the requests until the next day. If it happens, the Youtube plugin will be disabled until the next day. 
+
+1. Go to [the Google Cloud Platform](https://console.cloud.google.com/apis/api/youtube.googleapis.com/credentials). If you never activated the account, you will have to activate it. 
+2. Click `Create credentials > API key`
+3. Copy the generated API key, and paste it in your `.env.json` file (the variable name is `youtube_api_key`)
+4. Restart the server
+
+
+### Setup a super-user
+
+In order to escalate user rights, you can setup a super-user by editing the `.env.json` file and adding one or multiple usernames in the `op` array.
 
 ## How to dev
 
