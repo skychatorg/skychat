@@ -1,16 +1,40 @@
-# SkyChat
+![](./app/client/assets/assets/logo.png)
 
-The SkyChat is a modern-looking discussion platform with a few original features:
-- A shared youtube player (If you are familiar with plug.dj, that's exactly it)
-- Real-time visualisation of everyone's cursor
 
-And many customisation/entertainment features such as:
+
+## SkyChat quick tour
+
+The **SkyChat** is a modern-looking discussion platform with real-time visualisation of everyone's cursor, and a shared and synchronized youtube player.
+
+It also includes many customisation/entertainment features such as:
 - Custom text and halo colors to be bought for user messages
 - Virtual money with mini-games (casino roulette, guess the number)
 - An XP system with associated ranks, based on users activity
 - Custom profile pictures (guests have randomly generated ones)
 
-<img src="./doc/screenshot.png">
+Most of these features can be enabled-disabled from the configuration file.
+
+Overall, here is what it looks like:
+![overall-screenshot](./doc/screenshot.png)
+### Synchronized Youtube Player
+
+Users can play any youtube video on a shared and synchronized player. Orchestration is implemented through a public queue of videos to play, and decision-making (for instance to skip videos) is done with polls. Democracy 💯
+![youtube-short](./doc/youtube-short.gif)
+
+### Live cursor visualization and mini-games
+
+Users can interact and play with integrated mini-games (which can be disabled in the configuration).
+Seeing each other cursors give a sense of proximity between users. Seeing mouse movements is the most iconic features of the SkyChat.
+![cursor-roll](./doc/cursor-roll.gif)
+
+### Cinema mode
+
+If watching long videos, documentaries, or tv shows, the cinema-mode allows users to watch the video in full-screen and have the tchat minimized on the bottom-right of the screen.
+![cinema-mode](./doc/cinema-mode.gif)
+
+### And much more
+
+This is not all, but to discover all features, you may as well launch an instance yourself and try it yourself
 
 ## How to install
 
