@@ -109,7 +109,7 @@ export class ShopPlugin extends Plugin {
                 [ 19, 'sports_esports' ],
                 [ 20, 'sports_soccer' ],
                 [ 21, 'sports_rugby' ],
-                [ 22, 'sports_mottorsports' ],
+                [ 22, 'sports_score' ],
                 [ 25, 'sports_handball' ],
                 [ 26, 'sports_football' ],
                 [ 27, 'sports_bar' ],

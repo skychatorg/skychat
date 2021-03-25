@@ -73,15 +73,15 @@ export class Config {
         }
         Config.USERS_PASSWORD_SALT = env.users_passwords_salt;
         if (Config.USERS_PASSWORD_SALT.length === 0) {
-            throw new Error('Please set the password salt in the .env.json file before running the application');
+            throw new Error('Please set the password salt in the .env.json file before running the application.');
         }
         Config.USERS_TOKEN_SALT = env.users_token_salt;
         if (Config.USERS_TOKEN_SALT.length === 0) {
-            throw new Error('Please set the user token salt in the .env.json file before running the application');
+            throw new Error('Please set the user token salt in the .env.json file before running the application.');
         }
         Config.YOUTUBE_API_KEY = env.youtube_api_key;
         if (Config.YOUTUBE_API_KEY.length === 0) {
-            throw new Error('Please set the youtube API key in the .env.json file before running the application');
+            console.warn('The Youtube API key is NOT set in the .env.json file. You will not be able to play youtube videos.');
         }
         Config.OP = env.op;
         if (Config.OP.length === 0) {

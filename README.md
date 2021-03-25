@@ -1,16 +1,40 @@
+![](./app/client/assets/assets/logo.png)
+
+
+
 # SkyChat
 
-The SkyChat is a modern-looking discussion platform with a few original features:
-- A shared youtube player (If you are familiar with plug.dj, that's exactly it)
-- Real-time visualisation of everyone's cursor
+The **SkyChat** is a modern-looking discussion platform with real-time visualisation of everyone's cursor, and a shared and synchronized youtube player.
 
-And many customisation/entertainment features such as:
+It also includes many customisation/entertainment features such as:
 - Custom text and halo colors to be bought for user messages
 - Virtual money with mini-games (casino roulette, guess the number)
 - An XP system with associated ranks, based on users activity
 - Custom profile pictures (guests have randomly generated ones)
 
-<img src="./doc/screenshot.png">
+Most of these features can be enabled-disabled from the configuration file.
+
+Overall, here is what it looks like:
+![overall-screenshot](./doc/screenshot.png)
+### Synchronized Youtube Player
+
+Users can play any youtube video on a shared and synchronized player. Orchestration is implemented through a public queue of videos to play, and decision-making (for instance to skip videos) is done with polls. Democracy 💯
+![youtube-short](./doc/youtube-short.gif)
+
+### Live cursor visualization and mini-games
+
+Users can interact and play with integrated mini-games (which can be disabled in the configuration).
+Users can also see each other cursors moving in real time. This gives a sense of proximity between users. This is the most iconic feature of the SkyChat.
+![cursor-roll](./doc/cursor-roll.gif)
+
+### Cinema mode
+
+If watching long videos, documentaries, or tv shows, the cinema-mode allows users to watch the video in full-screen and have the tchat minimized on the bottom-right of the screen.
+![cinema-mode](./doc/cinema-mode.gif)
+
+### And much more
+
+This is not all, but to discover all features, you may as well launch an instance and try it yourself!
 
 ## How to install
 
@@ -18,14 +42,38 @@ Ensure you have the following installed on your system:
 - sqlite3
 - nodejs/npm
 
-Then, clone the repository, install nodejs dependencies, and run the setup script.
+Then, follow these steps:
 
 ```bash
+# 1. Clone the repository
 git clone https://github.com/skychatorg/skychat.git
 cd skychat
+
+# 2. Install nodejs dependencies
 npm i
+
+# 3. Generates the .env.json, stickers.json, config.json files and the database
 npm run setup
+
+# 4. Build and run the app
+npm run dev
 ```
+
+### Setup Youtube
+
+The SkyChat requires a key for the Youtube plugin to work. This key needs to be put in your `.env.json` file.
+
+Using the Youtube API is free but there is a daily quota, which when exceeded blocks the requests until the next day. If it happens, the Youtube plugin will be disabled until the next day. 
+
+1. Go to [the Google Cloud Platform](https://console.cloud.google.com/apis/api/youtube.googleapis.com/credentials). If you never activated the account, you will have to activate it. 
+2. Click `Create credentials > API key`
+3. Copy the generated API key, and paste it in your `.env.json` file (the variable name is `youtube_api_key`)
+4. Restart the server
+
+
+### Setup a super-user
+
+In order to escalate user rights, you can setup a super-user by editing the `.env.json` file and adding one or multiple usernames in the `op` array.
 
 ## How to dev
 

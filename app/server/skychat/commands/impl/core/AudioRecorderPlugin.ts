@@ -7,10 +7,10 @@ import { MessageFormatter } from "../../../MessageFormatter";
 export class AudioRecorderPlugin extends Plugin {
 
     // Maximum number of recordings to keep in memory
-    public static MAX_RECORDING_CACHED: number = 64;
+    public static MAX_RECORDING_CACHED: number = 32;
 
-    // Maximum number of recordings to keep in memory
-    public static MAX_BUFFER_LENGTH: number = 65536;
+    // Max recording length
+    public static MAX_BUFFER_LENGTH: number = 1048576;
 
     readonly name = 'audio';
 
