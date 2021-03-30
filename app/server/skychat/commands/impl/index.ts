@@ -21,6 +21,7 @@ export {MessageEditCommand} from "./core/MessageEditCommand";
 export {StickerPlugin} from "./moderation/StickerPlugin";
 export {IpPlugin} from "./moderation/IpPlugin";
 export {RisiBankPlugin} from "./entertainment/RisiBankPlugin";
+export {RandomGeneratorPlugin} from "./entertainment/RandomGeneratorPlugin";
 export {GuessTheNumberPlugin} from "./entertainment/GuessTheNumberPlugin";
 export {RollPlugin} from "./entertainment/RollPlugin";
 export {KickPlugin} from "./moderation/KickPlugin";
