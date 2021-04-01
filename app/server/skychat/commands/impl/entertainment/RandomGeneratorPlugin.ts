@@ -8,8 +8,6 @@ export class RandomGeneratorPlugin extends Plugin {
 
     readonly name = 'rand';
 
-    readonly aliases = ['randminmax'];
-
     readonly minRight = 0;
 
     readonly rules = {

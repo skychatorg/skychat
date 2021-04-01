@@ -31,6 +31,7 @@ export {XPFarmerPlugin} from "./core/XPFarmerPlugin";
 export {BanPlugin} from "./moderation/BanPlugin";
 export {UsurpPlugin} from "./moderation/UsurpPlugin";
 export {LogFuzzerPlugin} from "./optional/LogFuzzerPlugin";
+export {AprilFoolsDay} from "./optional/AprilFoolsDay";
 export {AccountPlugin} from "./core/AccountPlugin";
 export {AudioRecorderPlugin} from "./core/AudioRecorderPlugin";
 export {MailPlugin} from "./core/MailPlugin";
