@@ -27,7 +27,7 @@ export {RollPlugin} from "./entertainment/RollPlugin";
 export {KickPlugin} from "./moderation/KickPlugin";
 export {GiveMoneyPlugin} from "./core/GiveMoneyPlugin";
 export {PollPlugin} from "./poll/PollPlugin";
-export {XPFarmerPlugin} from "./core/XPFarmerPlugin";
+export {RankPlugin} from "./core/RankPlugin";
 export {BanPlugin} from "./moderation/BanPlugin";
 export {UsurpPlugin} from "./moderation/UsurpPlugin";
 export {LogFuzzerPlugin} from "./optional/LogFuzzerPlugin";

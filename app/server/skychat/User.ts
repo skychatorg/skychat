@@ -41,11 +41,11 @@ export class User {
     /**
      * Get the rank image of this user from an xp amount
      */
-    static getRankByXp(xp: number): {[size: string]: string} {
+    static getRankByXp(xp: number): {limit: number, images: {[size: string]: string}} {
         const entry = User
             .RANK_LIMITS
             .filter(entry => xp >= entry.limit)[0];
-        return entry ? entry.images : User.RANK_LIMITS[User.RANK_LIMITS.length - 1].images;
+        return entry ? entry : User.RANK_LIMITS[User.RANK_LIMITS.length - 1];
     }
 
     /**
@@ -121,7 +121,7 @@ export class User {
             right: this.right,
             xp: this.xp,
             data: this.data,
-            rank: User.getRankByXp(this.xp)
+            rank: User.getRankByXp(this.xp).images
         }
     }
 }

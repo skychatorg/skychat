@@ -1,6 +1,6 @@
 {
     "ranks": [
-        {"limit": 1000000, "images": { "18": "ranks/materials/15_diamond_shiny_18.png", "26": "ranks/materials/15_diamond_shiny_26.png" }},
+        {"limit": 1000000, "images": { "18": "ranks/materials/15_diamond_shiny_18.gif", "26": "ranks/materials/15_diamond_shiny_26.gif" }},
         {"limit": 200000, "images": { "18": "ranks/materials/14_diamond_18.png", "26": "ranks/materials/14_diamond_26.png" }},
         {"limit": 150000, "images": { "18": "ranks/materials/13_emerald_18.png", "26": "ranks/materials/13_emerald_26.png" }},
         {"limit": 100000, "images": { "18": "ranks/materials/12_saphir_18.png", "26": "ranks/materials/12_saphir_26.png" }},
@@ -34,7 +34,7 @@
         "MessageEditCommand",
         "MessageHistoryPlugin",
         "MessageSeenPlugin",
-        "XPFarmerPlugin",
+        "RankPlugin",
         "MottoPlugin",
         "PinnedIconPlugin",
         "MutePlugin",
