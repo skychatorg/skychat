@@ -48,6 +48,11 @@ export class Room implements IBroadcaster {
     public messages: Message[] = [];
 
     /**
+     * Whether a room is locked. If a room is locked, it is not possible to broadcast new messages or start new games.
+     */
+    public locked: boolean = false;
+
+    /**
      * Command instances (including plugins).
      * All aliases of a command/plugin points to the same command instance.
      */
@@ -248,6 +253,9 @@ export class Room implements IBroadcaster {
      * @param options
      */
     public async sendMessage(options: MessageConstructorOptions & {connection?: Connection}): Promise<Message> {
+        if (this.locked) {
+            throw new Error('Unable to broadcast message because the room is locked');
+        }
         options.meta = options.meta || {};
         if (options.connection) {
             options.meta.device = options.connection.device;
