@@ -21,6 +21,7 @@ export class AudioRecorder {
                     const blob = new Blob(chunks);
                     const uri = URL.createObjectURL(blob);
                     const audio = new Audio(uri);
+                    mediaStream.getTracks().forEach(t => t.stop());
                     resolve({blob, uri, audio});
                 });
 
