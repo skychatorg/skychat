@@ -194,7 +194,7 @@ export abstract class Command {
     /**
      * Command implementation
      */
-    public abstract async run(
+    public abstract run(
         alias: string,
         param: string,
         connection: Connection,
