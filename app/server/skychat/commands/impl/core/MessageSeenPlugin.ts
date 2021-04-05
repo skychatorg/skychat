@@ -41,10 +41,8 @@ export class MessageSeenPlugin extends Plugin {
         }
         const lastMessageSeen = UserController.getPluginData(connection.session.user, this.name);
         const newLastMessageSeen = parseInt(param);
-        let message;
-        try {
-            message = await this.room.getMessageById(newLastMessageSeen);
-        } catch (error) {
+        const message = await this.room.getMessageById(newLastMessageSeen);
+        if (! message) {
             return;
         }
         if (lastMessageSeen > newLastMessageSeen) {

@@ -4,10 +4,10 @@ import {Message, MessageConstructorOptions, MessageMeta} from "./Message";
 import {Command} from "./commands/Command";
 import {Plugin} from "./commands/Plugin";
 import {CommandManager} from "./commands/CommandManager";
-import {User} from "./User";
 import * as fs from "fs";
 import SQL from "sql-template-strings";
 import {DatabaseHelper} from "./DatabaseHelper";
+import { MessageController } from "./MessageController";
 
 
 export type StoredRoom = {
@@ -82,15 +82,9 @@ export class Room implements IBroadcaster {
      */
     private load(): void {
         try {
-
-            // Load data from disk
             const data = JSON.parse(fs.readFileSync(this.getStoragePath()).toString()) as StoredRoom;
-            // @TODO save room settings
-
         } catch (e) {
-
-            // If an error happens, reset this room's storage
-            this.save();
+            this.save(); // If an error happens, reset this room's storage
         }
     }
 
@@ -106,6 +100,17 @@ export class Room implements IBroadcaster {
         } catch (e) {
             return false;
         }
+    }
+
+    /**
+     * Load last messages from the database
+     */
+    public async loadLastMessagesFromDB(): Promise<void> {
+        this.messages = (await MessageController.getMessages(
+                ['room_id', '=', this.id],
+                'id DESC',
+                Room.MESSAGE_HISTORY_LENGTH
+            )).sort((m1, m2) => m1.id - m2.id);
     }
 
     /**
@@ -233,13 +238,8 @@ export class Room implements IBroadcaster {
     /**
      * Find a message from history by its unique id. Try to load it from cache, or go find it in database if it does not exist.
      */
-    public async getMessageById(id: number): Promise<Message> {
-        let message = this.messages.find(message => message.id === id);
-        if (message) {
-            return message;
-        }
-        //DatabaseHelper.db;
-        return Message.getMessageById(id);
+    public async getMessageById(id: number): Promise<Message | null> {
+        return this.messages.find(message => message.id === id) || null;
     }
 
     /**

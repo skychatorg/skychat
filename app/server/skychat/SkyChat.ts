@@ -50,6 +50,8 @@ export class SkyChat {
             .load()
             .then(async () => {
 
+                await this.room.loadLastMessagesFromDB();
+
                 // On register
                 this.server.registerEvent('register', this.onRegister.bind(this), new iof.ObjectFilter({
                     username: new iof.RegExpFilter(User.USERNAME_LOGGED_REGEXP),

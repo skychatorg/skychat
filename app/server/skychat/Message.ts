@@ -62,16 +62,6 @@ export type MessageConstructorOptions = {
 
 export class Message {
 
-    static async getMessageById(id: number): Promise<Message> {
-        const sqlQuery = SQL`select id, room_id, user_id, quoted_message_id, date, content, ip from messages where id=${id} limit 1`;
-        const message: {id: number, room_id: number, user_id: number, quoted_message_id: number, date: Date, content: string, ip: string} = await DatabaseHelper.db.get(sqlQuery);
-        if (! message) {
-            throw new Error('Message not found');
-        }
-        const user = await UserController.getUserById(message.user_id);
-        return new Message({id: message.id, content: message.content, user: user});
-    }
-
     public static ID: number = 1;
 
     public readonly id: number;

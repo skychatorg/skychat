@@ -37,6 +37,10 @@ export class MessageEditCommand extends Command {
         // Find message
         const message = await this.room.getMessageById(id);
 
+        if (! message) {
+            throw new Error('Message not found');
+        }
+
         // Check rights
         if (message.user !== connection.session.user && connection.session.user.right < MessageEditCommand.EDIT_ANY_MIN_RIGHT) {
             throw new Error('You can only edit your own messages');
