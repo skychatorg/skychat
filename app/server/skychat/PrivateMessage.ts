@@ -16,7 +16,8 @@ export class PrivateMessage extends Message {
     private readonly to: User;
 
     constructor(options: PrivateMessageConstructorOptions) {
-        super(options);
+        // Always set the id to 0 as private messages are never saved in the database
+        super({...options, id: 0});
 
         this.to = options.to;
     }
