@@ -1,8 +1,8 @@
 .env.json
 database.db
 config.json
-fakemessages.json
-guestnames.json
+fakemessages.txt
+guestnames.txt
 stickers.json
 build/
 dist/
