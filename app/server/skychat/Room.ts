@@ -231,11 +231,15 @@ export class Room implements IBroadcaster {
     }
 
     /**
-     * Find a message from history by its unique id
+     * Find a message from history by its unique id. Try to load it from cache, or go find it in database if it does not exist.
      */
-    public getMessageById(id: number): Message | null {
-        const message = this.messages.find(message => message.id === id);
-        return message || null;
+    public async getMessageById(id: number): Promise<Message> {
+        let message = this.messages.find(message => message.id === id);
+        if (message) {
+            return message;
+        }
+        //DatabaseHelper.db;
+        return Message.getMessageById(id);
     }
 
     /**

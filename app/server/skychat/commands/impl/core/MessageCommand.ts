@@ -21,10 +21,10 @@ export class MessageCommand extends Command {
         const quoteMatch = content.match(/^@([0-9]+)/);
         if (quoteMatch && quoteMatch[1]) {
             const quoteId = parseInt(quoteMatch[1]);
-            quoted = this.room.getMessageById(quoteId);
-            if (quoted) {
+            try {
+                quoted = await this.room.getMessageById(quoteId);
                 content = content.slice(quoteMatch[0].length);
-            }
+            } catch (error) { }
         }
 
         // Send the message to the room

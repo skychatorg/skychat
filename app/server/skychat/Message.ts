@@ -1,5 +1,8 @@
 import {SanitizedUser, User} from "./User";
 import {MessageFormatter} from "./MessageFormatter";
+import { DatabaseHelper } from "./DatabaseHelper";
+import SQL from "sql-template-strings";
+import { UserController } from "./UserController";
 
 export interface SanitizedMessage {
 
@@ -48,6 +51,7 @@ export type MessageMeta = {
 
 
 export type MessageConstructorOptions = {
+    id?: number;
     content: string;
     formatted?: string | null;
     user: User;
@@ -57,6 +61,16 @@ export type MessageConstructorOptions = {
 }
 
 export class Message {
+
+    static async getMessageById(id: number): Promise<Message> {
+        const sqlQuery = SQL`select id, room_id, user_id, quoted_message_id, date, content, ip from messages where id=${id} limit 1`;
+        const message: {id: number, room_id: number, user_id: number, quoted_message_id: number, date: Date, content: string, ip: string} = await DatabaseHelper.db.get(sqlQuery);
+        if (! message) {
+            throw new Error('Message not found');
+        }
+        const user = await UserController.getUserById(message.user_id);
+        return new Message({id: message.id, content: message.content, user: user});
+    }
 
     public static ID: number = 1;
 
@@ -75,7 +89,7 @@ export class Message {
     public readonly meta: MessageMeta;
 
     constructor(options: MessageConstructorOptions) {
-        this.id = ++ Message.ID;
+        this.id = typeof options.id !== 'undefined' ? options.id : ++ Message.ID;
         this.content = options.content;
         this.formatted = typeof options.formatted === 'string' ? options.formatted : MessageFormatter.getInstance().format(options.content);
         this.quoted = options.quoted || null;

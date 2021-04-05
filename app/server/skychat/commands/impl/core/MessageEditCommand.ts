@@ -35,10 +35,7 @@ export class MessageEditCommand extends Command {
         const id = parseInt(param.split(' ')[0]);
 
         // Find message
-        const message = this.room.getMessageById(id);
-        if (! message) {
-            throw new Error('Message not found');
-        }
+        const message = await this.room.getMessageById(id);
 
         // Check rights
         if (message.user !== connection.session.user && connection.session.user.right < MessageEditCommand.EDIT_ANY_MIN_RIGHT) {
