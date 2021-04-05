@@ -3,10 +3,9 @@ import * as Mail from "nodemailer/lib/mailer";
 
 
 export type Preferences = {
-    ranks: {limit: number, images: {[size: string]: string}}[],
-    plugins: string[],
-    fakeMessages: string[],
-    guestNames: string[],
+    minRightForMessageHistory: number;
+    ranks: {limit: number, images: {[size: string]: string}}[];
+    plugins: string[];
 }
 
 export type PublicConfig = {
@@ -38,14 +37,18 @@ export class Config {
     public static EMAIL_TRANSPORT: Mail | null = null;
 
     public static PREFERENCES: Preferences;
+    
+    public static GUEST_NAMES: string[] = [];
+
+    public static FAKE_MESSAGES: string[] = [];
 
     public static isOP(identifier: string): boolean {
         return Config.OP.indexOf(identifier.toLowerCase()) >= 0;
     }
 
     public static getRandomGuestName(): string {
-        const index = Math.floor(Math.random() * Config.PREFERENCES.guestNames.length);
-        return Config.PREFERENCES.guestNames[index];
+        const index = Math.floor(Math.random() * Config.GUEST_NAMES.length);
+        return Config.GUEST_NAMES[index];
     }
 
     public static getPlugins(): string[] {
@@ -59,6 +62,7 @@ export class Config {
     }
 
     public static initialize() {
+        // Load env variables
         const env = JSON.parse(fs.readFileSync('.env.json').toString());
         Config.LOCATION = env.location;
         Config.HOSTNAME = env.hostname;
@@ -90,8 +94,21 @@ export class Config {
         if (typeof env.email_transport === 'object') {
             Config.EMAIL_TRANSPORT = env.email_transport;
         }
+        // Load guest names
+        Config.GUEST_NAMES = fs.readFileSync('guestnames.txt').toString().trim().split("\n").map(l => l.trim()).filter(l => l.length > 0);
+        if (Config.GUEST_NAMES.length === 0) {
+            console.warn('No guest name found (guestnames.txt file is empty). Using default "Guest" username for all guests.');
+            Config.GUEST_NAMES.push('Guest');
+        }
+        // Load fake messages
+        Config.FAKE_MESSAGES = fs.readFileSync('fakemessages.txt').toString().trim().split("\n").map(l => l.trim()).filter(l => l.length > 0);
+        if (Config.FAKE_MESSAGES.length === 0) {
+            console.warn('No fake messages found (fakemessages.txt file is empty). Using a single empty fake message.');
+            Config.GUEST_NAMES.push('');
+        }
+        // Load config.json
         Config.PREFERENCES = JSON.parse(fs.readFileSync('config.json').toString());
-        const keys: string[] = ['fakeMessages', 'guestNames', 'plugins', 'ranks'];
+        const keys: string[] = ['minRightForMessageHistory', 'plugins', 'ranks'];
         for (const key of keys) {
             if (typeof (Config.PREFERENCES as any)[key] === 'undefined') {
                 throw new Error(`The field "${key}" is missing in the config.json file. Please copy the field from the config.json.template file to the config.json file.`);

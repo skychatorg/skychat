@@ -9,8 +9,6 @@ import {UserController} from "../../../UserController";
 
 export class MessageHistoryPlugin extends Plugin {
 
-    static readonly MIN_RIGHT_HISTORY = 10;
-
     static readonly FAKE_HISTORY_LENGTH = 32;
 
     readonly name = 'welcomer';
@@ -26,7 +24,7 @@ export class MessageHistoryPlugin extends Plugin {
     public async onConnectionJoinedRoom(connection: Connection): Promise<void> {
 
         // If user has the right to access the full history
-        if (connection.session.user.right >= MessageHistoryPlugin.MIN_RIGHT_HISTORY) {
+        if (connection.session.user.right >= Config.PREFERENCES.minRightForMessageHistory) {
             this.room.sendHistory(connection);
             return;
         }
@@ -41,7 +39,7 @@ export class MessageHistoryPlugin extends Plugin {
         for (let i = Math.max(0, this.room.messages.length - Room.MESSAGE_HISTORY_VISIBLE_LENGTH); i < this.room.messages.length; ++ i) {
 
             // Build a fake message
-            let fakeText = Config.PREFERENCES.fakeMessages[Math.floor(Math.random() * Config.PREFERENCES.fakeMessages.length)];
+            let fakeText = Config.FAKE_MESSAGES[Math.floor(Math.random() * Config.FAKE_MESSAGES.length)];
 
             // Randomly add a sticker
             if (stickers.length && Math.random() < .7) {

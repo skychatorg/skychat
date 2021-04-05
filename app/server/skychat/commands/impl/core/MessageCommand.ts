@@ -1,5 +1,6 @@
 import {Command} from "../../Command";
 import {Connection} from "../../../Connection";
+import { Config } from "../../../Config";
 
 
 export class MessageCommand extends Command {
@@ -19,8 +20,10 @@ export class MessageCommand extends Command {
 
         // Parse quote
         const quoteMatch = content.match(/^@([0-9]+)/);
-        if (quoteMatch && quoteMatch[1]) {
+        if (quoteMatch && quoteMatch[1] && connection.session.user.right >= Config.PREFERENCES.minRightForMessageHistory) {
+
             const quoteId = parseInt(quoteMatch[1]);
+            // User has right to access message history
             try {
                 quoted = await this.room.getMessageById(quoteId);
                 content = content.slice(quoteMatch[0].length);

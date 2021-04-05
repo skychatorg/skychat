@@ -34,8 +34,10 @@ export class MessageSeenPlugin extends Plugin {
     async run(alias: string, param: string, connection: Connection): Promise<void> {
         const lastMessageSeen = UserController.getPluginData(connection.session.user, this.name);
         const newLastMessageSeen = parseInt(param);
-        const message = await this.room.getMessageById(newLastMessageSeen);
-        if (! message) {
+        let message;
+        try {
+            message = await this.room.getMessageById(newLastMessageSeen);
+        } catch (error) {
             return;
         }
         if (lastMessageSeen > newLastMessageSeen) {

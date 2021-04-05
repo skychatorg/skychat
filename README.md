@@ -104,9 +104,15 @@ The semantic of these fields are defined below:
 | email_transport          | nodemailer.JSONTransport                  | {"sendmail": true,"newline": "unix","path": "/usr/sbin/sendmail"} | Value given to [nodemailer.createTransport](https://nodemailer.com/about/) to initialize the mailer |
 
 
-## The config.json file
+## config.json
 
 The config.json file specifies application preferences. The available fields are detailed below.
+
+**minRightForMessageHistory**
+
+- Type: `number`
+- Description: Minimum required right for users to access room message history. This includes accessing the previous messages when joining the room and quoting old messages.
+
 
 **ranks**
 
@@ -122,13 +128,10 @@ The config.json file specifies application preferences. The available fields are
 - Description: Enabled plugins. Must only define classes exported by `app/server/skychat/commands/impl/index.ts`
 
 
-**fakeMessages**
+## fakemessages.txt
 
-- Type: `Array<string>`
-- Description: Fake raw messages that are displayed to guests and low-rank users when they connect to the skychat. 
+This file contains the fake raw messages that are displayed to users whose right level is less than `minRightForMessageHistory` defined in `config.json`.
 
+## guestnames.txt
 
-**guestNames**
-
-- Type: `Array<string>`
-- Description: When a guest logs in, a random name is associated to its session. These names are randomly fetched from this file. If you want to change these names, keep in mind that they should not contain whitespace characters (anything matched by \s so newline, tab, space, ..). Default random names are animal names.
+When a guest logs in, a random name is associated to its session. These names are randomly used from this file. If you want to change these names, keep in mind that they should not contain whitespace characters (anything matched by \s so newline, tab, space, ..). Default random names are animal names.

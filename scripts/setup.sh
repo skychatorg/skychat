@@ -29,3 +29,13 @@ fi
 if [[ ! -e config.json ]]; then
     cp config.json.template config.json;
 fi
+
+# Initialize guest names list file
+if [[ ! -e guestnames.txt ]]; then
+    cp guestnames.txt.template guestnames.txt;
+fi
+
+# Initialize fake messages list file
+if [[ ! -e fakemessages.txt ]]; then
+    cp fakemessages.txt.template fakemessages.txt;
+fi
