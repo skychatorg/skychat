@@ -256,8 +256,8 @@ export class Room implements IBroadcaster {
      * Send a new message to the room
      * @param options
      */
-    public async sendMessage(options: MessageConstructorOptions & {connection?: Connection}): Promise<Message> {
-        if (this.locked) {
+    public async sendMessage(options: MessageConstructorOptions & {connection?: Connection}, bypassLock?: boolean): Promise<Message> {
+        if (this.locked && ! bypassLock) {
             throw new Error('Unable to broadcast message because the room is locked');
         }
         options.meta = options.meta || {};

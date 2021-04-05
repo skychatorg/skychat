@@ -53,7 +53,9 @@
         },
         watch: {
             'message.formatted': function() {
-                this.bindContentLoaded();
+                Vue.nextTick(() => {
+                    this.bindContentLoaded();
+                });
             }
         },
         mounted: function() {
@@ -72,6 +74,9 @@
                 const buttons = Array.from(this.$refs.formatted.getElementsByClassName('skychat-button'));
                 for (const button of buttons) {
                     button.addEventListener('click', () => {
+                        if (button.dataset.action[0] === '/' && button.dataset.trusted === 'false' && ! confirm('Send "' + button.dataset.action + '"?')) {
+                            return;
+                        }
                         this.$client.sendMessage(button.dataset.action);
                     });
                 }

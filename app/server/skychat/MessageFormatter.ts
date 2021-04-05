@@ -134,7 +134,7 @@ export class MessageFormatter {
         if (action[0] === '/' && ! trusted) {
             title += ' <span class="skychat-button-info">(' + escapeHtml(action.split(' ')[0]) + ')</span>';
         }
-        return `<button class="skychat-button" title="${action}" data-action="${action}">${title}</button>`;
+        return `<button class="skychat-button" title="${action}" data-action="${action}" data-trusted="${trusted}">${title}</button>`;
     }
 
     /**
