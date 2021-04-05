@@ -52,11 +52,11 @@ cd skychat
 # 2. Install nodejs dependencies
 npm i
 
-# 3. Generates the .env.json, stickers.json, config.json files and the database
+# 3. Generates the .env.json, stickers.json, config files and the database
 npm run setup
 
 # 4. Build and run the app
-npm run dev
+npm start
 ```
 
 ### Setup Youtube

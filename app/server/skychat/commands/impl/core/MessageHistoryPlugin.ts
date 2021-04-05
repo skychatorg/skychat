@@ -47,7 +47,7 @@ export class MessageHistoryPlugin extends Plugin {
             }
 
             // Build the message object and send it
-            fakeMessages.push(new Message({content: fakeText, user: this.room.messages[i].user}).sanitized());
+            fakeMessages.push(new Message({id: this.room.messages[i].id, content: fakeText, user: this.room.messages[i].user}).sanitized());
         }
         connection.send('messages', fakeMessages);
     }

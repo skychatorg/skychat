@@ -62,8 +62,8 @@ export class UserController {
     /**
      * Get a neutral user used for sending information messages
      */
-    public static getNeutralUser(): User {
-        return new User(0, '[ Server ]', null, '', 0, 0, 0, {
+    public static getNeutralUser(identifier?: string): User {
+        return new User(0, identifier || '[ Server ]', null, '', 0, 0, 0, {
             plugins: {
                 avatar: Config.LOCATION + '/assets/images/avatars/server.png',
                 color: 'rgb(65, 105, 225)',
@@ -74,14 +74,14 @@ export class UserController {
 
     /**
      * Create a neutral message
-     * @param optionsOrContent
+     * @param options
      */
-    public static createNeutralMessage(optionsOrContent: Partial<MessageConstructorOptions> | string): Message {
-        const options = typeof optionsOrContent === 'string' ? {content: optionsOrContent} : optionsOrContent;
+    public static createNeutralMessage(options: Partial<MessageConstructorOptions>, identifier?: string): Message {
         return new Message({
+            id: options.id,
             content: options.content || '',
             formatted: options.formatted,
-            user: UserController.getNeutralUser(),
+            user: UserController.getNeutralUser(identifier),
             quoted: options.quoted,
             createdTime: options.createdTime,
             meta: options.meta,

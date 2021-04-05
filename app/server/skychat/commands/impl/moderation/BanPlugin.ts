@@ -109,7 +109,7 @@ export class BanPlugin extends Plugin {
         for (const connection of session.connections) {
             connection.close(Connection.CLOSE_KICKED, "You have been banned");
         }
-        connection.send('message', UserController.createNeutralMessage('User has been banned').sanitized());
+        connection.send('message', UserController.createNeutralMessage({content: 'User has been banned', id: 0}).sanitized());
     }
 
     async handleVoteBan(param: string, connection: Connection) {
@@ -143,7 +143,7 @@ export class BanPlugin extends Plugin {
         for (const connection of session.connections) {
             connection.close(Connection.CLOSE_KICKED, "You have been banned");
         }
-        this.room.send('message', UserController.createNeutralMessage('User has been banned').sanitized());
+        this.room.send('message', UserController.createNeutralMessage({content: 'User has been banned', id: 0}).sanitized());
     }
 
     async handleUnban(param: string, connection: Connection) {
@@ -159,7 +159,7 @@ export class BanPlugin extends Plugin {
             }
         }
         this.syncStorage();
-        connection.send('message', UserController.createNeutralMessage('User has been unbanned').sanitized());
+        connection.send('message', UserController.createNeutralMessage({content: 'User has been unbanned', id: 0}).sanitized());
     }
 
     async handleBanList(param: string, connection: Connection) {
@@ -185,7 +185,7 @@ export class BanPlugin extends Plugin {
                 </tr>`;
         }
         content += `</table>`;
-        const message = UserController.createNeutralMessage('');
+        const message = UserController.createNeutralMessage({content: '', id: 0});
         message.edit(striptags(content), content);
         connection.send('message', message.sanitized());
     }

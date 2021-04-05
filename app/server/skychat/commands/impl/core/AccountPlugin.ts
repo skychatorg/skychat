@@ -90,7 +90,7 @@ export class AccountPlugin extends Plugin {
         }
 
         // Send confirmation back to the user
-        const message = UserController.createNeutralMessage(messageContent);
+        const message = UserController.createNeutralMessage({content: messageContent, id: 0});
         connection.send('message', message.sanitized());
     }
 
@@ -104,6 +104,10 @@ export class AccountPlugin extends Plugin {
             throw new Error('Invalid password');
         }
 
+        if (Config.isOP(username)) {
+            throw new Error('You can not escalate yourself into OP by changing username. Please remove the new username from the OP list, change username, then re-add it.');
+        }
+
         if (await UserController.getUserByUsername(username)) {
             throw new Error('This username already exists');
         }
@@ -114,7 +118,7 @@ export class AccountPlugin extends Plugin {
 
         await UserController.buy(user, AccountPlugin.CHANGE_USERNAME_PRICE);
 
-        const message = UserController.createNeutralMessage(`Your username has been changed to ${username}`);
+        const message = UserController.createNeutralMessage({content: `Your username has been changed to ${username}`, id: 0});
         connection.send('message', message.sanitized());
 
         await UserController.changeUsername(user, username, password);
@@ -144,7 +148,7 @@ export class AccountPlugin extends Plugin {
         await UserController.changePassword(userObject, password);
 
         // Notify OP
-        const message = UserController.createNeutralMessage(`${username} password has been changed to: ${password}`);
+        const message = UserController.createNeutralMessage({content: `${username} password has been changed to: ${password}`, id: 0});
         connection.send('message', message.sanitized());
     }
 
@@ -155,11 +159,14 @@ export class AccountPlugin extends Plugin {
             return;
         }
 
-        const message = UserController.createNeutralMessage(`Your email is not set!
-            Use:
-            /set email your@email.com
-            
-            To set your email address`);
+        const message = UserController.createNeutralMessage({
+            content: `Your email is not set!
+                Use:
+                /set email your@email.com
+                
+                To set your email address`,
+            id: 0,
+        });
         connection.send('message', message.sanitized());
     }
 }

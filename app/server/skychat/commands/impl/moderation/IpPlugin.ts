@@ -79,7 +79,7 @@ export class IpPlugin extends Command {
         content += `</table>`;
 
         // Send the message
-        const message = UserController.createNeutralMessage('');
+        const message = UserController.createNeutralMessage({content: '', id: 0});
         message.edit(striptags(content), content);
         connection.send('message', message.sanitized());
     }

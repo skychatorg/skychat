@@ -14,10 +14,14 @@ export class MessageSeenPlugin extends Plugin {
 
     readonly defaultDataStorageValue = 0;
 
-    readonly minRight = 0;
+    /**
+     * We need to allow guests to send /lastseen even though it is not recorded in the backend because sometimes,
+     *  the client does not know it own right level, therefore it would always send /lastseen
+     */
+    readonly minRight = -1;
 
     readonly rules = {
-        s: {
+        lastseen: {
             minCount: 1,
             maxCount: 1,
             maxCallsPer10Seconds: 20,
@@ -32,6 +36,9 @@ export class MessageSeenPlugin extends Plugin {
     };
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
+        if (connection.session.isGuest()) {
+            return;
+        }
         const lastMessageSeen = UserController.getPluginData(connection.session.user, this.name);
         const newLastMessageSeen = parseInt(param);
         let message;

@@ -46,6 +46,7 @@ export class RankPlugin extends Plugin {
 
         const message = new Message(
             {
+                id: 0,
                 formatted: rankHtml,
                 content: striptags(rankHtml),
                 user: UserController.getNeutralUser()

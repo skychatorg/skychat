@@ -6,6 +6,10 @@ import {UserController} from "../../../UserController";
 import {Room} from "../../../Room";
 
 
+/**
+ * This plugins allows anyone to `sandalize` someone else.
+ * When someone is `sandalized`, his next message is replaced with a... sandale.
+ */
 export class SandalePlugin extends Plugin {
 
     readonly name = 'sandale';

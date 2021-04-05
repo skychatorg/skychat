@@ -114,8 +114,15 @@ export class Session implements IBroadcaster {
         this.deadSince = null;
     }
 
+    /**
+     * @returns Returns whether there is a real user in the database behind this session
+     */
+    public isGuest(): boolean {
+        return this.user.id === 0;
+    }
+
     public getDefaultCleanUpDelay(): number {
-        return this.user.id === 0 ? Session.DEAD_GUEST_SESSION_CLEANUP_DELAY_MS : Session.DEAD_USER_SESSION_CLEANUP_DELAY_MS;
+        return this.isGuest() ? Session.DEAD_GUEST_SESSION_CLEANUP_DELAY_MS : Session.DEAD_USER_SESSION_CLEANUP_DELAY_MS;
     }
 
     /**

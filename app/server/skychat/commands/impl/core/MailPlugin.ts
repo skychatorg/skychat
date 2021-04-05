@@ -47,7 +47,7 @@ export class MailPlugin extends Plugin {
         const result = await this.sendMailToUsername(username, 'New mail from ' + Config.LOCATION, message);
 
         // Send back notification
-        connection.send('message', UserController.createNeutralMessage(result.response).sanitized());
+        connection.send('message', UserController.createNeutralMessage({content: result.response, id: 0}).sanitized());
     }
 
     /**
