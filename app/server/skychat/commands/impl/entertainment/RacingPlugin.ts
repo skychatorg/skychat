@@ -6,10 +6,12 @@ import {MessageFormatter} from "../../../MessageFormatter";
 import {RandomGenerator} from "../../../RandomGenerator";
 import { Session } from "../../../Session";
 import { Message } from "../../../Message";
+import { Timing } from "../../../Timing";
 
 
 type GameObject = {
     state: 'pending' | 'starting' | 'started';
+    cars: string[];
     titleMessage: string;
     gameMessage: Message | null;
     participants: Session[],
@@ -31,7 +33,22 @@ const waitTimeout = (delay: number) => {
 
 export class RacingPlugin extends Plugin {
 
-    static readonly CARS: string[] = ['🚚', '🚗', '🚴', '🚁', '🛸'];
+    static readonly CARS: string[] = [
+        '🚚',
+        '🚗',
+        '🚴',
+        '🚁',
+        '🛸',
+        '🐒',
+        '🐄',
+        '🐘',
+        '🦏',
+        '🐇',
+        '🦕',
+        '🐢',
+        '⛷️',
+        '🤸‍♂️'
+    ];
 
     static readonly AVERAGE_RACE_DURATION: number = 10 * 1000;
 
@@ -78,17 +95,20 @@ export class RacingPlugin extends Plugin {
 
         // If last game finished less than 4 minute before
         if (this.lastGameFinishedDate.getTime() + RacingPlugin.GLOBAL_COOL_DOWN > new Date().getTime()) {
-            throw new Error('A game was launched in the last 4 minutes. Wait a bit.');
+            const waitDuration = this.lastGameFinishedDate.getTime() + RacingPlugin.GLOBAL_COOL_DOWN - new Date().getTime();
+            throw new Error(`Wait ${Timing.getDurationText(waitDuration, false, true)} seconds before launching a new round.`);
         }
 
-        // Initialize car positions
+        // Choose a subset of cars and initialize car positions
+        const chosenCars = RacingPlugin.CARS.slice(0).sort(() => Math.random() - .5).slice(0, 4);
         const carPositions: {[carId: number]: number} = {};
-        for (let i = 0; i < RacingPlugin.CARS.length; ++ i) { carPositions[i] = 0; }
+        for (let i = 0; i < chosenCars.length; ++ i) { carPositions[i] = 0; }
 
         // Initialize game object
         this.currentGame = {
             state: 'pending',
             titleMessage: 'Choose your car',
+            cars: chosenCars,
             gameMessage: null,
             participants: [],
             bets: {},
@@ -130,10 +150,10 @@ export class RacingPlugin extends Plugin {
         this.updateGameMessage();
         await waitTimeout(1000);
         const tickDuration = 1000 / 4;
-        const percentPerTick = tickDuration / RacingPlugin.AVERAGE_RACE_DURATION * RacingPlugin.CARS.length;
+        const percentPerTick = tickDuration / RacingPlugin.AVERAGE_RACE_DURATION * this.currentGame.cars.length;
         while (true) {
             // Decide which car will move this tick
-            const chosenCarId = Math.floor(RandomGenerator.random(8) * RacingPlugin.CARS.length);
+            const chosenCarId = Math.floor(RandomGenerator.random(8) * this.currentGame.cars.length);
             // Move the car
             this.currentGame.positions[chosenCarId] += percentPerTick;
             this.updateGameMessage();
@@ -152,7 +172,7 @@ export class RacingPlugin extends Plugin {
         let content = ``;
         if (winners.length > 0) {
             content += `Winners:<br>`;
-            const amount = RacingPlugin.ENTRY_COST * RacingPlugin.CARS.length;
+            const amount = RacingPlugin.ENTRY_COST * this.currentGame.cars.length;
             for (const winner of winners) {
                 content += `- ${winner.identifier} (+ $${amount / 100})<br>`;
                 UserController.giveMoney(winner.user, amount);
@@ -180,12 +200,12 @@ export class RacingPlugin extends Plugin {
         // Display game board
         let content = this.currentGame.titleMessage + '<br>';
         content += '- '.repeat(roadWidth / 2 + 3) + '🚩<br>';
-        for (let carId = 0; carId < RacingPlugin.CARS.length; ++ carId) {
-            const carEmoji = `<div style="display:inline-block;-webkit-transform:rotateY(180deg);-moz-transform:rotateY(180deg);-o-transform:rotateY(180deg);-ms-transform:rotateY(180deg);">${RacingPlugin.CARS[carId]}</div>`;
+        for (let carId = 0; carId < this.currentGame.cars.length; ++ carId) {
+            const carEmoji = `<div style="display:inline-block;-webkit-transform:rotateY(180deg);-moz-transform:rotateY(180deg);-o-transform:rotateY(180deg);-ms-transform:rotateY(180deg);">${this.currentGame.cars[carId]}</div>`;
             const dashCount = Math.floor(this.currentGame.positions[carId] * roadWidth / 2);
             // add button so that users can bet on this car
             content += `[[→//${this.name} ${carId}]] `;
-            content += '- '.repeat(dashCount) + carEmoji;
+            content += '· '.repeat(dashCount) + carEmoji;
             // find participants that bet on this car
             const identifiers = Object.entries(this.currentGame.bets)
             .filter(entry => entry[1] === carId)
@@ -215,7 +235,7 @@ export class RacingPlugin extends Plugin {
             throw new Error('Round has already started');
         }
         const bet = parseInt(param);
-        if (bet < 0 || bet > RacingPlugin.CARS.length - 1) {
+        if (bet < 0 || bet > this.currentGame.cars.length - 1) {
             throw new Error('Invalid bet');
         }
         if (this.currentGame.participants.indexOf(connection.session) === -1) {
