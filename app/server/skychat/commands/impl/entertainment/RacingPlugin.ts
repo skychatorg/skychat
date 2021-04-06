@@ -136,7 +136,6 @@ export class RacingPlugin extends Plugin {
         }
 
         // Display list of participants and prepare cars
-        this.room.locked = true;
         this.currentGame.state = 'starting';
         for (let i = 0; i < 3 + 1; ++ i) {
             this.currentGame.titleMessage = `Starting in ${3 - i}s`;
@@ -186,7 +185,6 @@ export class RacingPlugin extends Plugin {
         // End game
         this.currentGame = null;
         this.lastGameFinishedDate = new Date();
-        this.room.locked = false;
     }
 
     /**
