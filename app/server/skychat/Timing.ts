@@ -45,4 +45,15 @@ export class Timing {
     
         return durations.join(' ');
     }
+
+    /**
+     * Sleep for a given duration in milliseconds
+     * @param delay
+     * @returns 
+     */
+    static sleep(delay: number): Promise<void> {
+        return new Promise((resolve) => {
+            setTimeout(resolve, delay);
+        });
+    };
 }

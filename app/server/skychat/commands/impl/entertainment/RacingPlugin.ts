@@ -117,7 +117,7 @@ export class RacingPlugin extends Plugin {
         };
 
         // Wait for participants
-        this.currentGame.gameMessage = await this.room.sendMessage({content: `...`, user: UserController.getNeutralUser()}, true);
+        this.currentGame.gameMessage = await this.room.sendMessage({content: `...`, user: UserController.getNeutralUser()});
         this.updateGameMessage();
 
         // Let users the time to participate
