@@ -132,6 +132,12 @@ export class DailyRoll extends Plugin {
         // End chosing state
         this.currentGame.state = 'started';
 
+        // Re-create game message
+        this.currentGame.gameMessage.edit('deleted', '<i>deleted</i>');
+        this.room.send('message-edit', this.currentGame.gameMessage.sanitized());
+        this.currentGame.gameMessage = await this.room.sendMessage({content: '...', user: UserController.getNeutralUser()});
+        this.updateGameMessage();
+
         // Reveal cards which were not chosen
         lastMessage.edit('Too late! Now revealing cards..');
         this.room.send('message-edit', lastMessage.sanitized());
