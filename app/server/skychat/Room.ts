@@ -134,6 +134,7 @@ export class Room implements IBroadcaster {
             // Detach from it
             connection.room.detachConnection(connection);
         }
+        await this.executeBeforeConnectionJoinedRoom(connection);
         // Attach the connection to this room
         connection.setRoom(this);
         this.connections.push(connection);
@@ -194,6 +195,17 @@ export class Room implements IBroadcaster {
             await plugin.onConnectionAuthenticated(connection);
         }
     }
+    
+    /**
+     * Execute before room join hook
+     * @param connection
+     */
+     public async executeBeforeConnectionJoinedRoom(connection: Connection): Promise<void> {
+        for (const plugin of this.plugins) {
+            await plugin.onBeforeConnectionJoinedRoom(connection);
+        }
+    }
+
     /**
      * Execute room join hook
      * @param connection

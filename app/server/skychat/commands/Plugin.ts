@@ -87,6 +87,14 @@ export abstract class Plugin extends Command {
     }
 
     /**
+     * Executed before a connection joins a room
+     * @param connection
+     */
+    public async onBeforeConnectionJoinedRoom(connection: Connection): Promise<void> {
+
+    }
+
+    /**
      * Executed when a connection joins a room
      * @param connection
      */

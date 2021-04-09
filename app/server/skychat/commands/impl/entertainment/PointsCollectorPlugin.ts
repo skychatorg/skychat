@@ -42,7 +42,7 @@ export class PointsCollectorPlugin extends Plugin {
         pointscollector: {
             minCount: 0,
             maxCount: 0,
-            coolDown: PointsCollectorPlugin.GAME_DURATION,
+            coolDown: PointsCollectorPlugin.GAME_DURATION + 4 * 60 * 1000,
             params: []
         }
     };
@@ -74,9 +74,10 @@ export class PointsCollectorPlugin extends Plugin {
                 pos: {x: .5, y: .5},
                 vel: {x: .0, y: .0},
             },
-            point: {x: RandomGenerator.random(8), y: RandomGenerator.random(8), },
+            point: {x: 0, y: 0},
             collectedPoints: 0,
         };
+        this.movePoint();
 
         // Start message
         this.currentGame.gameMessage = await this.room.sendMessage({content: `...`, user: UserController.getNeutralUser()});
@@ -109,6 +110,14 @@ export class PointsCollectorPlugin extends Plugin {
         this.currentGame = null;
     }
 
+    private movePoint(): void {
+        if (! this.currentGame) {
+            return;
+        }
+        this.currentGame.point.x = PointsCollectorPlugin.POINT_COLLISION_RADIUS + RandomGenerator.random(8) * (1 - PointsCollectorPlugin.POINT_COLLISION_RADIUS * 2);
+        this.currentGame.point.y = PointsCollectorPlugin.POINT_COLLISION_RADIUS + RandomGenerator.random(8) * (1 - PointsCollectorPlugin.POINT_COLLISION_RADIUS * 2);
+    }
+
     private async tick(delta: number, cursorPlugin: CursorPlugin): Promise<void> {
 
         if (! this.currentGame) {
@@ -121,8 +130,7 @@ export class PointsCollectorPlugin extends Plugin {
         // If ball touches point
         const pointDistance = Math.sqrt(Math.pow(ball.pos.x - point.x, 2) + Math.pow(ball.pos.y - point.y, 2));
         if (pointDistance < PointsCollectorPlugin.POINT_COLLISION_RADIUS) {
-            point.x = RandomGenerator.random(8);
-            point.y = RandomGenerator.random(8);
+            this.movePoint();
             this.currentGame.collectedPoints ++;
             this.updateGameMessage();
         }

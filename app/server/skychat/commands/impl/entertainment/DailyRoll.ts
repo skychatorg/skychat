@@ -50,7 +50,7 @@ export class DailyRoll extends Plugin {
         super(room);
 
         if (this.room) {
-            setTimeout(async () => await this.start(), 1000);
+            this.armTimer();
         }
     }
 
