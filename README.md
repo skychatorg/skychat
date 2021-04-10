@@ -38,9 +38,11 @@ This is not all, but to discover all features, you may as well launch an instanc
 
 ## How to install
 
-Ensure you have the following installed on your system:
+If you will not be using docker, ensure you have the following installed on your system:
 - sqlite3
 - nodejs/npm
+
+Otherwise, just ensure you have docker-compose installed on your system.
 
 Then, follow these steps:
 
@@ -49,14 +51,12 @@ Then, follow these steps:
 git clone https://github.com/skychatorg/skychat.git
 cd skychat
 
-# 2. Install nodejs dependencies
-npm i
-
-# 3. Generates the .env.json, stickers.json, config files and the database
+# 2. Generates the .env.json, stickers.json, config files and the database
 npm run setup
 
-# 4. Build and run the app
-npm start
+# 3. Run the app
+npm i && npm start  # WITHOUT DOCKER
+docker-compose up   # USING DOCKER
 ```
 
 ### Setup Youtube

@@ -1,0 +1,14 @@
+version: '3.5'
+
+services:
+  app:
+    build: .
+    volumes:
+        - ./avatars:/var/skychat/avatars
+        - ./database:/var/skychat/database
+        - ./scripts:/var/skychat/scripts
+        - ./stickers:/var/skychat/stickers
+        - ./storage:/var/skychat/storage
+        - ./uploads:/var/skychat/uploads
+    ports:
+        - "8080:8080"
