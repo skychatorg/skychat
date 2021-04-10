@@ -10,6 +10,8 @@ export class MessageCommand extends Command {
 
     readonly minRight = -1;
 
+    readonly hidden = true;
+
     readonly rules = {
         message: {minCount: 1}
     };

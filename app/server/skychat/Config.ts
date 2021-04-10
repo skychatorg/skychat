@@ -4,6 +4,10 @@ import * as Mail from "nodemailer/lib/mailer";
 
 export type Preferences = {
     minRightForMessageHistory: number;
+    minRightForPrivateMessages: number;
+    minRightForAudioRecording: number;
+    minRightForConnectedList: number;
+    minRightForPolls: number;
     ranks: {limit: number, images: {[size: string]: string}}[];
     plugins: string[];
 }
@@ -108,7 +112,15 @@ export class Config {
         }
         // Load config.json
         Config.PREFERENCES = JSON.parse(fs.readFileSync('config.json').toString());
-        const keys: string[] = ['minRightForMessageHistory', 'plugins', 'ranks'];
+        const keys: string[] = [
+            'minRightForMessageHistory',
+            'minRightForPrivateMessages',
+            'minRightForAudioRecording',
+            'minRightForConnectedList',
+            'minRightForPolls',
+            'plugins',
+            'ranks'
+        ];
         for (const key of keys) {
             if (typeof (Config.PREFERENCES as any)[key] === 'undefined') {
                 throw new Error(`The field "${key}" is missing in the config.json file. Please copy the field from the config.json.template file to the config.json file.`);

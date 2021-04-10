@@ -172,7 +172,7 @@ export abstract class Command {
             }
 
             // Check parameter format
-            for (let i = 0; i < params.length; ++ i) {
+            for (let i = 0; i < Math.min(params.length, splitParams.length); ++ i) {
                 if (! params[i].pattern.exec(splitParams[i])) {
                     throw new Error('Invalid format for ' + params[i].name);
                 }

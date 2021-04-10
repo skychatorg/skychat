@@ -10,11 +10,9 @@ export class LogFuzzerPlugin extends Plugin {
 
     readonly name = 'logfuzzer';
 
-    readonly minRight = -1;
+    readonly callable = false;
 
-    readonly rules = {
-        logfuzzer: { }
-    };
+    readonly hidden = true;
 
     /**
      * Last fuzzed message id in history
@@ -33,9 +31,7 @@ export class LogFuzzerPlugin extends Plugin {
         }
     }
 
-    async run(alias: string, param: string, connection: Connection): Promise<void> {
-        throw new Error('This plugin is not callable');        
-    }
+    async run(alias: string, param: string, connection: Connection): Promise<void> { }
 
     private fuzzContent(content: string) {
         return content.replace(/(^| |,|\/|.)([a-z0-9àâçéèêëîïôûùüÿñæœ-]+)/gi, (m0, m1, m2) => {

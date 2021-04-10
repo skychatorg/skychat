@@ -19,6 +19,8 @@ export class MessageSeenPlugin extends Plugin {
      *  the client does not know it own right level, therefore it would always send /lastseen
      */
     readonly minRight = -1;
+    
+    readonly hidden = true;
 
     readonly rules = {
         lastseen: {

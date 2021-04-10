@@ -110,6 +110,9 @@ const store = {
         },
         MESSAGE_SEEN(state, data) {
             const entry = state.connectedList.find(e => e.user.id === data.user);
+            if (! entry) {
+                return;
+            }
             entry.user.data.plugins.lastseen = data.message;
             this.commit('GENERATE_LAST_MESSAGE_SEEN_IDS');
         },

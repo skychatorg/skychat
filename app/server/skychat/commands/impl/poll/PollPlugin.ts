@@ -3,6 +3,7 @@ import {Plugin} from "../../Plugin";
 import {Poll, PollOptions} from "./Poll";
 import {Command} from "../../Command";
 import {Room} from "../../../Room";
+import { Config } from "../../../Config";
 
 
 
@@ -16,7 +17,7 @@ export class PollPlugin extends Plugin {
 
     readonly aliases = ['vote'];
 
-    readonly minRight = 0;
+    readonly minRight = Config.PREFERENCES.minRightForPolls;
 
     private polls: {[id: number]: Poll} = [];
 

@@ -108,11 +108,30 @@ The semantic of these fields are defined below:
 
 The config.json file specifies application preferences. The available fields are detailed below.
 
+**minRightForPrivateMessages**
+
+- Type: `number`
+- Description: Minimum required right to send private messages.
+
 **minRightForMessageHistory**
 
 - Type: `number`
-- Description: Minimum required right for users to access room message history. This includes accessing the previous messages when joining the room and quoting old messages.
+- Description: Minimum required right to access room message history. This includes accessing the previous messages when joining the room and quoting old messages.
 
+**minRightForAudioRecording**
+
+- Type: `number`
+- Description: Minimum required right to record and listen to audio files.
+
+**minRightForConnectedList**
+
+- Type: `number`
+- Description: Minimum required right to see the connected list.
+
+**minRightForPolls**
+
+- Type: `number`
+- Description: Minimum required right to make polls.
 
 **ranks**
 

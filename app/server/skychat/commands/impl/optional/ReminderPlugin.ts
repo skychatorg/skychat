@@ -12,6 +12,7 @@ export class ReminderPlugin extends Plugin {
 
     readonly minRight = 0;
 
+    readonly hidden = true;
     readonly rules = {
         remindme: {
             maxCallsPer10Seconds: 1,

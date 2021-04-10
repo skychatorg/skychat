@@ -19,6 +19,8 @@ export class CursorPlugin extends Plugin {
 
     readonly minRight = -1;
 
+    readonly hidden = true;
+
     public readonly cursors: {[identifier: string]: {x: number, y: number, lastSent: Date}} = {};
 
     readonly rules = {

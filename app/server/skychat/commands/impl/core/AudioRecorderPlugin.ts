@@ -2,6 +2,7 @@ import {Plugin} from "../../Plugin";
 import {Connection} from "../../../Connection";
 import {User} from "../../../User";
 import { MessageFormatter } from "../../../MessageFormatter";
+import { Config } from "../../../Config";
 
 
 export class AudioRecorderPlugin extends Plugin {
@@ -14,7 +15,7 @@ export class AudioRecorderPlugin extends Plugin {
 
     readonly name = 'audio';
 
-    readonly minRight = -1;
+    readonly minRight = Config.PREFERENCES.minRightForAudioRecording;
 
     readonly rules = {
         audio: {
@@ -48,6 +49,10 @@ export class AudioRecorderPlugin extends Plugin {
      * @param connection 
      */
     async registerAudioBuffer(buffer: Buffer, connection: Connection): Promise<void> {
+
+        if (connection.session.user.right < Config.PREFERENCES.minRightForAudioRecording) {
+            throw new Error('You do not have the permission to save audio files');
+        }
 
         if (buffer.length > AudioRecorderPlugin.MAX_BUFFER_LENGTH) {
             throw new Error('Audio recording too long');

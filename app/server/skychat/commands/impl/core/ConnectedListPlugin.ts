@@ -2,6 +2,7 @@ import {Connection} from "../../../Connection";
 import {Plugin} from "../../Plugin";
 import {Room} from "../../../Room";
 import {Session} from "../../../Session";
+import { Config } from "../../../Config";
 
 
 /**
@@ -15,7 +16,7 @@ export class ConnectedListPlugin extends Plugin {
 
     readonly callable = true;
     
-    protected storage: {mode: 'show-all' | 'hide-by-right', argument: number} = {
+    protected storage: {mode: 'show-all' | 'hide-details-by-right', argument: number} = {
         mode: 'show-all',
         argument: 0,
     };
@@ -23,7 +24,7 @@ export class ConnectedListPlugin extends Plugin {
     readonly rules = {
         connectedlist: {
             minCount: 1,
-            params: [{name: 'mode', pattern: /^(show-all|hide-by-right)$/}, {name: 'argument', pattern: /^([0-9]+)$/}]
+            params: [{name: 'mode', pattern: /^(show-all|hide-details-by-right)$/}, {name: 'argument', pattern: /^([0-9]+)$/}]
         }
     }
 
@@ -41,7 +42,7 @@ export class ConnectedListPlugin extends Plugin {
         // Update storage value
         const [mode, arg]: string[] = param.split(' ');
         this.storage = {
-            mode: mode as 'show-all'|'hide-by-right',
+            mode: mode as 'show-all'|'hide-details-by-right',
             argument: parseInt(arg)
         };
         this.syncStorage();
@@ -92,7 +93,12 @@ export class ConnectedListPlugin extends Plugin {
             });
         
         this.room.connections.forEach(connection => {
-            if (this.storage.mode === 'hide-by-right' && connection.session.user.right < this.storage.argument) {
+
+            if (connection.session.user.right < Config.PREFERENCES.minRightForConnectedList) {
+                return;
+            }
+            
+            if (this.storage.mode === 'hide-details-by-right' && connection.session.user.right < this.storage.argument) {
                 connection.send('connected-list', anonSessions);
             } else {
                 connection.send('connected-list', realSessions);

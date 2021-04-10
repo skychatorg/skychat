@@ -8,6 +8,8 @@ export class AprilFoolsDay extends Plugin {
 
     readonly minRight = -1;
 
+    readonly hidden = true;
+
     readonly rules = {
         aprilfoolsday: { }
     };

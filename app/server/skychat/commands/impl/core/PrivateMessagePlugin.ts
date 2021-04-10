@@ -2,15 +2,15 @@ import {Connection} from "../../../Connection";
 import {Plugin} from "../../Plugin";
 import {Session} from "../../../Session";
 import {User} from "../../../User";
-import {Message} from "../../../Message";
 import {PrivateMessage} from "../../../PrivateMessage";
+import { Config } from "../../../Config";
 
 
 export class PrivateMessagePlugin extends Plugin {
 
     readonly name = 'mp';
 
-    readonly minRight = -1;
+    readonly minRight = Config.PREFERENCES.minRightForPrivateMessages;
 
     readonly rules = {
         mp: {

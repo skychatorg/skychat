@@ -4,7 +4,6 @@ import {Message} from "../../../Message";
 import {Room} from "../../../Room";
 import {Config} from "../../../Config";
 import {MessageFormatter} from "../../../MessageFormatter";
-import {UserController} from "../../../UserController";
 
 
 export class MessageHistoryPlugin extends Plugin {
@@ -12,6 +11,8 @@ export class MessageHistoryPlugin extends Plugin {
     static readonly FAKE_HISTORY_LENGTH = 32;
 
     readonly name = 'welcomer';
+
+    readonly hidden = true;
 
     private readonly formatter: MessageFormatter = MessageFormatter.getInstance();
 
