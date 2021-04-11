@@ -39,8 +39,13 @@ export class MessageHistoryPlugin extends Plugin {
         const stickers = Object.keys(this.formatter.stickers);
         for (let i = Math.max(0, this.room.messages.length - Room.MESSAGE_HISTORY_VISIBLE_LENGTH); i < this.room.messages.length; ++ i) {
 
-            // Build a fake message
-            let fakeText = Config.FAKE_MESSAGES[Math.floor(Math.random() * Config.FAKE_MESSAGES.length)];
+            // Each fake message correspond to a real message
+            const realMessage = this.room.messages[i];
+            const realMessageHash = realMessage.createdTime.getTime() + realMessage.id;
+
+            // Get the fake message content
+            let fakeText = Config.PREFERENCES.fakeMessages[realMessageHash % Config.PREFERENCES.fakeMessages.length];
+
 
             // Randomly add a sticker
             if (stickers.length && Math.random() < .7) {
@@ -49,6 +54,7 @@ export class MessageHistoryPlugin extends Plugin {
 
             // Build the message object and send it
             fakeMessages.push(new Message({id: this.room.messages[i].id, content: fakeText, user: this.room.messages[i].user}).sanitized());
+
         }
         connection.send('messages', fakeMessages);
     }
