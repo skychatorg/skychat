@@ -9,7 +9,7 @@ import {Config} from "./Config";
  */
 export class MessageFormatter {
 
-    public static readonly STICKERS_JSON: string = './stickers.json';
+    public static readonly STICKERS_JSON: string = 'config/stickers.json';
 
     public static readonly STICKER_CODE_REGEXP: RegExp = /^:([a-z0-9-_)(]+):?$/;
 

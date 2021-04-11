@@ -21,21 +21,21 @@ if [[ ! -e .env.json ]]; then
 fi
 
 # Initialize stickers.json
-if [[ ! -e stickers.json ]]; then
-    cp stickers.json.template stickers.json;
+if [[ ! -e config/stickers.json ]]; then
+    cp config/stickers.json.template config/stickers.json;
 fi
 
-# Initialize config.json
-if [[ ! -e config.json ]]; then
-    cp config.json.template config.json;
+# Initialize preferences.json
+if [[ ! -e config/preferences.json ]]; then
+    cp config/preferences.json.template config/preferences.json;
 fi
 
 # Initialize guest names list file
-if [[ ! -e guestnames.txt ]]; then
-    cp guestnames.txt.template guestnames.txt;
+if [[ ! -e config/guestnames.txt ]]; then
+    cp config/guestnames.txt.template config/guestnames.txt;
 fi
 
 # Initialize fake messages list file
-if [[ ! -e fakemessages.txt ]]; then
-    cp fakemessages.txt.template fakemessages.txt;
+if [[ ! -e config/fakemessages.txt ]]; then
+    cp config/fakemessages.txt.template config/fakemessages.txt;
 fi

@@ -4,6 +4,7 @@ services:
   app:
     build: .
     volumes:
+        - ./config:/var/skychat/config
         - ./avatars:/var/skychat/avatars
         - ./database:/var/skychat/database
         - ./scripts:/var/skychat/scripts

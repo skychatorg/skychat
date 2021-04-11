@@ -104,9 +104,9 @@ The semantic of these fields are defined below:
 | email_transport          | nodemailer.JSONTransport                  | {"sendmail": true,"newline": "unix","path": "/usr/sbin/sendmail"} | Value given to [nodemailer.createTransport](https://nodemailer.com/about/) to initialize the mailer |
 
 
-## config.json
+## preferences.json
 
-The config.json file specifies application preferences. The available fields are detailed below.
+The preferences.json file specifies application preferences. The available fields are detailed below.
 
 **minRightForPrivateMessages**
 
@@ -149,7 +149,7 @@ The config.json file specifies application preferences. The available fields are
 
 ## fakemessages.txt
 
-This file contains the fake raw messages that are displayed to users whose right level is less than `minRightForMessageHistory` defined in `config.json`.
+This file contains the fake raw messages that are displayed to users whose right level is less than `minRightForMessageHistory` defined in `preferences.json`.
 
 ## guestnames.txt
 

@@ -99,19 +99,19 @@ export class Config {
             Config.EMAIL_TRANSPORT = env.email_transport;
         }
         // Load guest names
-        Config.GUEST_NAMES = fs.readFileSync('guestnames.txt').toString().trim().split("\n").map(l => l.trim()).filter(l => l.length > 0);
+        Config.GUEST_NAMES = fs.readFileSync('config/guestnames.txt').toString().trim().split("\n").map(l => l.trim()).filter(l => l.length > 0);
         if (Config.GUEST_NAMES.length === 0) {
             console.warn('No guest name found (guestnames.txt file is empty). Using default "Guest" username for all guests.');
             Config.GUEST_NAMES.push('Guest');
         }
         // Load fake messages
-        Config.FAKE_MESSAGES = fs.readFileSync('fakemessages.txt').toString().trim().split("\n").map(l => l.trim()).filter(l => l.length > 0);
+        Config.FAKE_MESSAGES = fs.readFileSync('config/fakemessages.txt').toString().trim().split("\n").map(l => l.trim()).filter(l => l.length > 0);
         if (Config.FAKE_MESSAGES.length === 0) {
             console.warn('No fake messages found (fakemessages.txt file is empty). Using a single empty fake message.');
             Config.GUEST_NAMES.push('');
         }
-        // Load config.json
-        Config.PREFERENCES = JSON.parse(fs.readFileSync('config.json').toString());
+        // Load preferences.json
+        Config.PREFERENCES = JSON.parse(fs.readFileSync('config/preferences.json').toString());
         const keys: string[] = [
             'minRightForMessageHistory',
             'minRightForPrivateMessages',
@@ -123,7 +123,7 @@ export class Config {
         ];
         for (const key of keys) {
             if (typeof (Config.PREFERENCES as any)[key] === 'undefined') {
-                throw new Error(`The field "${key}" is missing in the config.json file. Please copy the field from the config.json.template file to the config.json file.`);
+                throw new Error(`The field "${key}" is missing in the preferences.json file. Please copy the field from the preferences.json.template file to the preferences.json file.`);
             }
         }
     }

@@ -1,9 +1,4 @@
 .env.json
-database.db
-config.json
-fakemessages.txt
-guestnames.txt
-stickers.json
 build/
 dist/
 node_modules/

@@ -95,7 +95,7 @@ export class BanPlugin extends Plugin {
 
     async handleBan(param: string, connection: Connection) {
         const identifier = Session.autocompleteIdentifier(param.split(' ')[0]);
-        const typeRaw = param.split(' ')[1] || BAN_TYPES.ACCESS;
+        const typeRaw = param.split(' ')[1] || 'ACCESS';
         const duration = param.split(' ')[2] ? parseInt(param.split(' ')[2]) : null;
         if (typeof (BAN_TYPES as any)[typeRaw] === 'undefined') {
             throw new Error('Invalid ban type');
