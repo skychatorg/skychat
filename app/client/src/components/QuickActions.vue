@@ -134,6 +134,12 @@
                         showInNonCinema: true,
                         actions: [
                             {
+                                id: 'racing',
+                                title: "Start a race car game",
+                                icon: 'flag',
+                                shortcuts: ['ctrl+r']
+                            },
+                            {
                                 id: 'guess',
                                 title: "Start a guess the number round",
                                 icon: 'not_listed_location',
@@ -143,7 +149,7 @@
                                 id: 'roll',
                                 title: "Start a game of roulette",
                                 icon: 'casino',
-                                shortcuts: ['ctrl+r']
+                                shortcuts: ['ctrl+o']
                             },
                         ]
                     },
@@ -184,6 +190,8 @@
                         return `<b>Halo</b>`;
                     case 'shop-pinnedicon':
                         return `<b>Icon</b>`;
+                    case 'racing':
+                        return `<b>Racing</b>`;
                     case 'guess':
                         return `<b>Guess</b>`;
                     case 'roll':
@@ -213,6 +221,8 @@
                         return this.$client.sendMessage('/shoplist halo');
                     case 'shop-pinnedicon':
                         return this.$client.sendMessage('/shoplist pinnedicon');
+                    case 'racing':
+                        return this.$client.sendMessage('/racing start');
                     case 'guess':
                         return this.$client.sendMessage('/guess start');
                     case 'roll':
@@ -311,7 +321,8 @@
                             color: #e0a067;
                         }
                     }
-                    &.action-guess ,
+                    &.action-racing,
+                    &.action-guess,
                     &.action-roll {
                         border-left-color: #6ee067 !important;
                         .icon {

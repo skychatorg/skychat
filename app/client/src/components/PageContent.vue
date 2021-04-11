@@ -117,7 +117,7 @@
         }
 
         .default-container {
-            max-width: 1100px;
+            max-width: 1400px;
             flex-grow: 1;
             display: flex;
 

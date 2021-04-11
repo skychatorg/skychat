@@ -4,10 +4,10 @@ import {Message, MessageConstructorOptions, MessageMeta} from "./Message";
 import {Command} from "./commands/Command";
 import {Plugin} from "./commands/Plugin";
 import {CommandManager} from "./commands/CommandManager";
-import {User} from "./User";
 import * as fs from "fs";
 import SQL from "sql-template-strings";
 import {DatabaseHelper} from "./DatabaseHelper";
+import { MessageController } from "./MessageController";
 
 
 export type StoredRoom = {
@@ -48,6 +48,11 @@ export class Room implements IBroadcaster {
     public messages: Message[] = [];
 
     /**
+     * Whether a room is locked. If a room is locked, it is not possible to broadcast new messages or start new games.
+     */
+    public locked: boolean = false;
+
+    /**
      * Command instances (including plugins).
      * All aliases of a command/plugin points to the same command instance.
      */
@@ -77,15 +82,9 @@ export class Room implements IBroadcaster {
      */
     private load(): void {
         try {
-
-            // Load data from disk
             const data = JSON.parse(fs.readFileSync(this.getStoragePath()).toString()) as StoredRoom;
-            // @TODO save room settings
-
         } catch (e) {
-
-            // If an error happens, reset this room's storage
-            this.save();
+            this.save(); // If an error happens, reset this room's storage
         }
     }
 
@@ -101,6 +100,17 @@ export class Room implements IBroadcaster {
         } catch (e) {
             return false;
         }
+    }
+
+    /**
+     * Load last messages from the database
+     */
+    public async loadLastMessagesFromDB(): Promise<void> {
+        this.messages = (await MessageController.getMessages(
+                ['room_id', '=', this.id],
+                'id DESC',
+                Room.MESSAGE_HISTORY_LENGTH
+            )).sort((m1, m2) => m1.id - m2.id);
     }
 
     /**
@@ -124,6 +134,7 @@ export class Room implements IBroadcaster {
             // Detach from it
             connection.room.detachConnection(connection);
         }
+        await this.executeBeforeConnectionJoinedRoom(connection);
         // Attach the connection to this room
         connection.setRoom(this);
         this.connections.push(connection);
@@ -184,6 +195,17 @@ export class Room implements IBroadcaster {
             await plugin.onConnectionAuthenticated(connection);
         }
     }
+    
+    /**
+     * Execute before room join hook
+     * @param connection
+     */
+     public async executeBeforeConnectionJoinedRoom(connection: Connection): Promise<void> {
+        for (const plugin of this.plugins) {
+            await plugin.onBeforeConnectionJoinedRoom(connection);
+        }
+    }
+
     /**
      * Execute room join hook
      * @param connection
@@ -226,11 +248,10 @@ export class Room implements IBroadcaster {
     }
 
     /**
-     * Find a message from history by its unique id
+     * Find a message from history by its unique id. Try to load it from cache, or go find it in database if it does not exist.
      */
-    public getMessageById(id: number): Message | null {
-        const message = this.messages.find(message => message.id === id);
-        return message || null;
+    public async getMessageById(id: number): Promise<Message | null> {
+        return this.messages.find(message => message.id === id) || null;
     }
 
     /**
@@ -247,7 +268,10 @@ export class Room implements IBroadcaster {
      * Send a new message to the room
      * @param options
      */
-    public async sendMessage(options: MessageConstructorOptions & {connection?: Connection}): Promise<Message> {
+    public async sendMessage(options: MessageConstructorOptions & {connection?: Connection}, bypassLock?: boolean): Promise<Message> {
+        if (this.locked && ! bypassLock) {
+            throw new Error('Unable to broadcast message because the room is locked');
+        }
         options.meta = options.meta || {};
         if (options.connection) {
             options.meta.device = options.connection.device;

@@ -24,7 +24,7 @@ export type StoredSkyChat = {
  */
 export class SkyChat {
 
-    public static readonly STORAGE_BASE_PATH: string = 'storage/skychat.json';
+    public static readonly STORAGE_MAIN_FILE: string = 'storage/skychat.json';
 
     private static TICK_INTERVAL: number = 5 * 1000;
 
@@ -50,35 +50,45 @@ export class SkyChat {
             .load()
             .then(async () => {
 
+                await this.room.loadLastMessagesFromDB();
+
                 // On register
-                this.server.registerEvent('register', this.onRegister.bind(this), new iof.ObjectFilter({
-                    username: new iof.RegExpFilter(User.USERNAME_LOGGED_REGEXP),
-                    password: new iof.RegExpFilter(/^.{4,512}$/),
-                }));
+                this.server.registerEvent(
+                    'register', this.onRegister.bind(this),
+                    500, 2, // 0.5 second cooldown, max 2 attempts / minute
+                    new iof.ObjectFilter({
+                        username: new iof.RegExpFilter(User.USERNAME_LOGGED_REGEXP),
+                        password: new iof.RegExpFilter(/^.{4,512}$/),
+                    }));
 
                 // Login by username & password
-                this.server.registerEvent('login', this.onLogin.bind(this), new iof.ObjectFilter({
-                    username: new iof.RegExpFilter(User.USERNAME_LOGGED_REGEXP),
-                    password: new iof.RegExpFilter(/^.{4,512}$/),
-                }));
+                this.server.registerEvent(
+                    'login', this.onLogin.bind(this),
+                    500, 5, // 0.5 second cooldown, max 5 attempts / minute
+                    new iof.ObjectFilter({
+                        username: new iof.RegExpFilter(User.USERNAME_LOGGED_REGEXP),
+                        password: new iof.RegExpFilter(/^.{4,512}$/),
+                    }));
 
                 // Login using token
-                this.server.registerEvent('set-token', this.onSetToken.bind(this), new iof.ObjectFilter({
-                    userId: new iof.NumberFilter(1, Infinity, false),
-                    timestamp: new iof.NumberFilter(- Infinity, Infinity, false),
-                    signature: new iof.ValueTypeFilter('string'),
-                }));
+                this.server.registerEvent(
+                    'set-token',
+                    this.onSetToken.bind(this),
+                    0, 30, // no cooldown, max 30 attemtps / minute
+                    new iof.ObjectFilter({
+                        userId: new iof.NumberFilter(1, Infinity, false),
+                        timestamp: new iof.NumberFilter(- Infinity, Infinity, false),
+                        signature: new iof.ValueTypeFilter('string'),
+                    }));
 
                 // Join a room
-                this.server.registerEvent('join-room', this.onJoinRoom.bind(this), new iof.ObjectFilter({
-                    roomId: new iof.NumberFilter(0, 0, false),
-                }));
+                this.server.registerEvent('join-room', this.onJoinRoom.bind(this), 0, 120, new iof.ObjectFilter({roomId: new iof.NumberFilter(0, 0, false)}));
 
                 // On message sent
-                this.server.registerEvent('message', this.onMessage.bind(this), 'string');
+                this.server.registerEvent('message', this.onMessage.bind(this), 0, Infinity, 'string');
 
                 // On audio received
-                this.server.registerEvent('audio', this.onAudio.bind(this));
+                this.server.registerEvent('audio', this.onAudio.bind(this), 0, 30);
             });
 
         setInterval(this.tick.bind(this), SkyChat.TICK_INTERVAL);
@@ -91,7 +101,7 @@ export class SkyChat {
         try {
 
             // Load data from disk
-            const data = JSON.parse(fs.readFileSync(SkyChat.STORAGE_BASE_PATH).toString()) as StoredSkyChat;
+            const data = JSON.parse(fs.readFileSync(SkyChat.STORAGE_MAIN_FILE).toString()) as StoredSkyChat;
             SkyChat.CURRENT_GUEST_ID = data.guestId || 0;
             Message.ID = data.messageId || 0;
 
@@ -113,7 +123,7 @@ export class SkyChat {
                 messageId: Message.ID
             };
 
-            fs.writeFileSync(SkyChat.STORAGE_BASE_PATH, JSON.stringify(data));
+            fs.writeFileSync(SkyChat.STORAGE_MAIN_FILE, JSON.stringify(data));
             return true;
         } catch (e) {
             return false;
@@ -124,7 +134,9 @@ export class SkyChat {
      * Clean-up function, executed once in a while
      */
     private tick(): void {
+
         this.save();
+        this.server.cleanup();
     }
 
     /**

@@ -36,7 +36,8 @@
             document.addEventListener('mousemove', event => {
                 const x = event.clientX / window.innerWidth;
                 const y = event.clientY / window.innerHeight;
-                if (this.$store.state.currentRoom !== null) {
+                if (this.$store.state.currentRoom !== null
+                    && this.$store.state && this.$store.state.user.data.plugins.cursor) {
                     this.sendCursorPosition(x, y);
                 }
             });

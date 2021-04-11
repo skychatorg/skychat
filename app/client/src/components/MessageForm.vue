@@ -1,17 +1,20 @@
 <template>
     <div class="message-form">
-        <div class="image-upload" v-show="uploadingFile">
+        <div class="image-upload" v-show="! recordingAudio && uploadingFile">
             <label for="file-input">
                 <img src="/assets/images/icons/loading.gif"/>
             </label>
         </div>
-        <div class="image-upload" v-show="! uploadingFile">
+        <div class="image-upload" v-show="! recordingAudio && ! uploadingFile">
             <label for="file-input">
                 <i class="upload-icon material-icons md-28">publish</i>
             </label>
             <input ref="file" @change="onFileInputChange" id="file-input" type="file" />
         </div>
-        <div  @click="uploadAudio" class="audio-upload" :class="{'recording': recordingAudio}">
+        <div @click="cancelAudioUpload" class="audio-upload" v-show="recordingAudio" title="Cancel audio recording">
+            <i class="upload-icon material-icons md-28">cancel</i>
+        </div>
+        <div @click="uploadAudio" class="audio-upload" :class="{'recording': recordingAudio}" title="Send an audio recording">
             <i class="upload-icon material-icons md-28">mic</i>
         </div>
         <form class="form" onsubmit="return false">
@@ -92,6 +95,15 @@
                     this.recordingAudioStopCb = await this.$audio.start();
                 }
                 this.recordingAudio = ! this.recordingAudio;
+            },
+
+            cancelAudioUpload: async function() {
+                if (! this.recordingAudio) {
+                    return;
+                }
+                // Stop recording
+                await this.recordingAudioStopCb();
+                this.recordingAudio = false;
             },
 
             /**

@@ -7,6 +7,7 @@ import {UserController} from "../../../UserController";
 
 /**
  * Handle cursor events
+ * @TODO handle cursors mapping periodical cleanup
  */
 export class CursorPlugin extends Plugin {
 
@@ -17,6 +18,10 @@ export class CursorPlugin extends Plugin {
     readonly aliases = ['c'];
 
     readonly minRight = -1;
+
+    readonly hidden = true;
+
+    public readonly cursors: {[identifier: string]: {x: number, y: number, lastSent: Date}} = {};
 
     readonly rules = {
         cursor: {
@@ -57,8 +62,16 @@ export class CursorPlugin extends Plugin {
      * @param connection
      */
     async handleCursorEvent(param: string, connection: Connection): Promise<void> {
+        // Else, unpack cursor position
+        const [xRaw, yRaw] = param.split(' ');
+        const [x, y] = [parseFloat(xRaw), parseFloat(yRaw)];
+        // Store entry
+        this.cursors[connection.session.identifier] = {
+            x, y,
+            lastSent: new Date()
+        };
         // For every connection in the room
-        for (const conn of connection.room!.connections) {
+        for (const conn of this.room.connections) {
             // If the user has cursors disabled
             if (! UserController.getPluginData(conn.session.user, this.name)) {
                 // Abort
@@ -68,14 +81,29 @@ export class CursorPlugin extends Plugin {
             if (conn.session.identifier === connection.session.identifier) {
                 continue;
             }
-            // Else, unpack cursor position
-            const [x, y] = param.split(' ');
             // And send it to this client
             conn.send('cursor', {
-                x: parseFloat(x),
-                y: parseFloat(y),
+                x, y, 
                 user: connection.session.user.sanitized()
-            })
+            });
+        }
+    }
+
+    /**
+     * Send a cursor position to all users
+     * @param user 
+     * @param x 
+     * @param y 
+     */
+    async sendCursorPosition(user: User, x: number, y: number): Promise<void> {
+
+        // For every connection in the room
+        for (const conn of this.room.connections) {
+            // If the user has cursors disabled, don't send
+            if (! UserController.getPluginData(conn.session.user, this.name)) {
+                continue;
+            }
+            conn.send('cursor', { x, y, user });
         }
     }
 }

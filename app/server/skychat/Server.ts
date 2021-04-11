@@ -13,10 +13,13 @@ import { FileManager } from "./FileManager";
 
 
 type EventHandler<payloadFilter> = (payload: payloadFilter, client: Connection) => Promise<void>;
+
 type EventsDescription = {
     [eventName: string]: {
-        payloadFilter?: iof.MaskFilter,
-        handler: EventHandler<any>
+        handler: EventHandler<any>;
+        coolDownMs: number;
+        maxCallsPer60Seconds: number;
+        payloadFilter?: iof.MaskFilter;
     };
 };
 
@@ -45,6 +48,11 @@ export class Server {
      * Builds a session object when a new connection is initiated
      */
     public sessionBuilder: (request: http.IncomingMessage) => Promise<Session>;
+
+    /**
+     * Cooldown entries
+     */
+    private coolDownEntries: {[key: string]: {first: Date, last: Date, count: number}} = {};
 
     constructor(sessionBuilder: (request: http.IncomingMessage) => Promise<Session>) {
         this.sessionBuilder = sessionBuilder;
@@ -110,12 +118,16 @@ export class Server {
      * Register a new client event
      * @param name
      * @param handler
+     * @param coolDownMs
+     * @param maxCallsPer60Seconds
      * @param payloadType Type of payload. If set to a string, the type of the payload should be equal to this string. Can also be set to a valid mask filter.
      */
-    public registerEvent<PayloadType>(name: string, handler: EventHandler<PayloadType>, payloadType?: string | iof.MaskFilter): void {
+    public registerEvent<PayloadType>(name: string, handler: EventHandler<PayloadType>, coolDownMs: number, maxCallsPer60Seconds: number, payloadType?: string | iof.MaskFilter): void {
         const payloadFilter = typeof payloadType === 'string' ? new iof.ValueTypeFilter(payloadType) : payloadType;
         this.events[name] = {
             handler: handler.bind(handler),
+            coolDownMs: coolDownMs,
+            maxCallsPer60Seconds: maxCallsPer60Seconds,
             payloadFilter: payloadFilter,
         };
     }
@@ -161,12 +173,45 @@ export class Server {
                 payload = event.payloadFilter.mask(payload);
             }
 
+            // If a cooldown is defined for this event
+            if (event.coolDownMs) {
+                let key = `${eventName}/${connection.ip}`;
+                if (this.coolDownEntries[key] && event.coolDownMs && new Date() < new Date(this.coolDownEntries[key].last.getTime() + event.coolDownMs)) {
+                    throw new Error('Please wait before performing this action again');
+                }
+                // If 10 second window entry still valid
+                if (this.coolDownEntries[key] && event.maxCallsPer60Seconds && this.coolDownEntries[key].first.getTime() + 60 * 1000 > new Date().getTime()) {
+                    // If maximum number of calls per 10 seconds reached
+                    if (this.coolDownEntries[key].count > event.maxCallsPer60Seconds) {
+                        throw new Error('Please wait before performing this action again');
+                    }
+                }
+                this.coolDownEntries[key] = this.coolDownEntries[key] || {
+                    first: new Date(),
+                    last: new Date(),
+                    count: 0,
+                };
+                this.coolDownEntries[key].last = new Date();
+                this.coolDownEntries[key].count ++;
+            }
+
             // Call handler
             await event.handler(payload, connection);
 
         } catch (error) {
 
             connection.sendError(error);
+        }
+    }
+
+    /**
+     * Cleanup stale cooldown entries
+     */
+    public cleanup(): void {
+        for (const key of Object.keys(this.coolDownEntries)) {
+            if (this.coolDownEntries[key].first.getTime() + 60 * 1000 < new Date().getTime()) {
+                delete this.coolDownEntries[key];
+            }
         }
     }
 }

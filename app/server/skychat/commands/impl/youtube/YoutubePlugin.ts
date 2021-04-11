@@ -26,6 +26,8 @@ type YoutubePluginStorage = {
  */
 export class YoutubePlugin extends Plugin {
 
+    static readonly MIN_API_RIGHT: number = 10;
+
     readonly defaultDataStorageValue = true;
 
     readonly name = 'yt';
@@ -118,14 +120,23 @@ export class YoutubePlugin extends Plugin {
                 break;
 
             case 'skip':
+                if (connection.session.user.right < YoutubePlugin.MIN_API_RIGHT) {
+                    throw new Error('Unable to perform this action');
+                }
                 await this.handleYtSkip(connection);
                 break;
 
             case 'shuffle':
+                if (connection.session.user.right < YoutubePlugin.MIN_API_RIGHT) {
+                    throw new Error('Unable to perform this action');
+                }
                 this.shuffleQueue();
                 break;
 
             case 'flush':
+                if (connection.session.user.right < YoutubePlugin.MIN_API_RIGHT) {
+                    throw new Error('Unable to perform this action');
+                }
                 if (! Config.isOP(connection.session.identifier)) {
                     throw new Error('You need to be OP to flush the youtube queue');
                 }
@@ -141,6 +152,9 @@ export class YoutubePlugin extends Plugin {
      * @param connection
      */
     private async handlePlay(param: string, connection: Connection): Promise<void> {
+        if (connection.session.user.right < YoutubePlugin.MIN_API_RIGHT) {
+            throw new Error('Unable to perform this action');
+        }
         let id, start;
         let match;
         if (match = param.match(/v=([a-zA-Z0-9-_]+)/)) {
@@ -165,6 +179,9 @@ export class YoutubePlugin extends Plugin {
      * @param connection
      */
     private async handlePlayPlaylist(param: string, connection: Connection): Promise<void> {
+        if (connection.session.user.right < YoutubePlugin.MIN_API_RIGHT) {
+            throw new Error('Unable to perform this action');
+        }
         let id;
         let match;
         if (match = param.match(/list=([a-zA-Z0-9-_]+)/)) {
@@ -192,6 +209,9 @@ export class YoutubePlugin extends Plugin {
      * @param connection
      */
     private async handleApiSearch(param: string, connection: Connection): Promise<void> {
+        if (connection.session.user.right < YoutubePlugin.MIN_API_RIGHT) {
+            throw new Error('Unable to perform this action');
+        }
         const type = param.split(' ')[0];
         const query = param.split(' ').slice(1).join(' ');
         const result = await this.youtube.search.list({
@@ -213,6 +233,9 @@ export class YoutubePlugin extends Plugin {
      * @param connection
      */
     private async handleSearchAndPlay(param: string, connection: Connection): Promise<void> {
+        if (connection.session.user.right < YoutubePlugin.MIN_API_RIGHT) {
+            throw new Error('Unable to perform this action');
+        }
         const result = await this.youtube.search.list({
             'part': 'snippet',
             'q': param,
@@ -233,7 +256,10 @@ export class YoutubePlugin extends Plugin {
      * @param connection
      */
     private async handleYtList(connection: Connection): Promise<void> {
-        const message = UserController.createNeutralMessage('Videos in the queue:');
+        const message = UserController.createNeutralMessage({
+            content: 'Videos in the queue:',
+            id: 0
+        });
         for (const pending of this.storage.queue) {
             message.append(' - ' + pending.video.title + ', added by ' +pending.user.username);
         }
@@ -244,6 +270,9 @@ export class YoutubePlugin extends Plugin {
      * @param connection
      */
     private async handleYtSkip(connection: Connection): Promise<void> {
+        if (connection.session.user.right < YoutubePlugin.MIN_API_RIGHT) {
+            throw new Error('Unable to perform this action');
+        }
         if (! this.storage.currentVideo) {
             return;
         }

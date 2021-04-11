@@ -1,5 +1,7 @@
 import {Command} from "../../Command";
 import {Connection} from "../../../Connection";
+import { Config } from "../../../Config";
+import { MessageController } from "../../../MessageController";
 
 
 export class MessageCommand extends Command {
@@ -7,6 +9,8 @@ export class MessageCommand extends Command {
     readonly name = 'message';
 
     readonly minRight = -1;
+
+    readonly hidden = true;
 
     readonly rules = {
         message: {minCount: 1}
@@ -19,9 +23,15 @@ export class MessageCommand extends Command {
 
         // Parse quote
         const quoteMatch = content.match(/^@([0-9]+)/);
-        if (quoteMatch && quoteMatch[1]) {
+        // we also check that user has right to access message history
+        if (quoteMatch && quoteMatch[1] && connection.session.user.right >= Config.PREFERENCES.minRightForMessageHistory) {
+
             const quoteId = parseInt(quoteMatch[1]);
-            quoted = this.room.getMessageById(quoteId);
+            // Try to find message in room message cache
+            quoted = await this.room.getMessageById(quoteId);
+            // Otherwise, try to find the quoted message in the database
+            quoted = quoted || await MessageController.getMessageById(quoteId)
+            // If quote found, remote the quote string from the message
             if (quoted) {
                 content = content.slice(quoteMatch[0].length);
             }

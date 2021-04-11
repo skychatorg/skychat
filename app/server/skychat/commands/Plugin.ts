@@ -70,10 +70,27 @@ export abstract class Plugin extends Command {
     }
 
     /**
+     * Executed before broadcasting a message to the room
+     * @param message
+     * @param connection
+     */
+    public async onBeforeMessageBroadcastHook(message: Message, connection?: Connection): Promise<Message> {
+        return message;
+    }
+
+    /**
      * When a connection successfully authenticated
      * @param connection
      */
     public async onConnectionAuthenticated(connection: Connection): Promise<void> {
+
+    }
+
+    /**
+     * Executed before a connection joins a room
+     * @param connection
+     */
+    public async onBeforeConnectionJoinedRoom(connection: Connection): Promise<void> {
 
     }
 
@@ -91,14 +108,5 @@ export abstract class Plugin extends Command {
      */
     public async onConnectionClosed(connection: Connection): Promise<void> {
 
-    }
-
-    /**
-     * Executed before broadcasting a message to the room
-     * @param message
-     * @param connection
-     */
-    public async onBeforeMessageBroadcastHook(message: Message, connection?: Connection): Promise<Message> {
-        return message;
     }
 }

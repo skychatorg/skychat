@@ -38,9 +38,11 @@ This is not all, but to discover all features, you may as well launch an instanc
 
 ## How to install
 
-Ensure you have the following installed on your system:
+If you will not be using docker, ensure you have the following installed on your system:
 - sqlite3
 - nodejs/npm
+
+Otherwise, just ensure you have docker-compose installed on your system.
 
 Then, follow these steps:
 
@@ -49,14 +51,12 @@ Then, follow these steps:
 git clone https://github.com/skychatorg/skychat.git
 cd skychat
 
-# 2. Install nodejs dependencies
-npm i
-
-# 3. Generates the .env.json, stickers.json, config.json files and the database
+# 2. Generates the .env.json, stickers.json, config files and the database
 npm run setup
 
-# 4. Build and run the app
-npm run dev
+# 3. Run the app
+npm i && npm start  # WITHOUT DOCKER
+docker-compose up   # USING DOCKER
 ```
 
 ### Setup Youtube
@@ -104,9 +104,34 @@ The semantic of these fields are defined below:
 | email_transport          | nodemailer.JSONTransport                  | {"sendmail": true,"newline": "unix","path": "/usr/sbin/sendmail"} | Value given to [nodemailer.createTransport](https://nodemailer.com/about/) to initialize the mailer |
 
 
-## The config.json file
+## preferences.json
 
-The config.json file specifies application preferences. The available fields are detailed below.
+The preferences.json file specifies application preferences. The available fields are detailed below.
+
+**minRightForPrivateMessages**
+
+- Type: `number`
+- Description: Minimum required right to send private messages.
+
+**minRightForMessageHistory**
+
+- Type: `number`
+- Description: Minimum required right to access room message history. This includes accessing the previous messages when joining the room and quoting old messages.
+
+**minRightForAudioRecording**
+
+- Type: `number`
+- Description: Minimum required right to record and listen to audio files.
+
+**minRightForConnectedList**
+
+- Type: `number`
+- Description: Minimum required right to see the connected list.
+
+**minRightForPolls**
+
+- Type: `number`
+- Description: Minimum required right to make polls.
 
 **ranks**
 
@@ -122,13 +147,10 @@ The config.json file specifies application preferences. The available fields are
 - Description: Enabled plugins. Must only define classes exported by `app/server/skychat/commands/impl/index.ts`
 
 
-**fakeMessages**
+## fakemessages.txt
 
-- Type: `Array<string>`
-- Description: Fake raw messages that are displayed to guests and low-rank users when they connect to the skychat. 
+This file contains the fake raw messages that are displayed to users whose right level is less than `minRightForMessageHistory` defined in `preferences.json`.
 
+## guestnames.txt
 
-**guestNames**
-
-- Type: `Array<string>`
-- Description: When a guest logs in, a random name is associated to its session. These names are randomly fetched from this file. If you want to change these names, keep in mind that they should not contain whitespace characters (anything matched by \s so newline, tab, space, ..). Default random names are animal names.
+When a guest logs in, a random name is associated to its session. These names are randomly used from this file. If you want to change these names, keep in mind that they should not contain whitespace characters (anything matched by \s so newline, tab, space, ..). Default random names are animal names.

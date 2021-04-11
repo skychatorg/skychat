@@ -7,6 +7,7 @@ import * as striptags from "striptags";
 import {MessageFormatter} from "../../../MessageFormatter";
 import {Room} from "../../../Room";
 import {RandomGenerator} from "../../../RandomGenerator";
+import { Timing } from "../../../Timing";
 
 
 
@@ -112,7 +113,8 @@ export class RollPlugin extends Plugin {
 
         // If last game finished less than 4 minute before
         if (this.lastGameFinishedDate.getTime() + RollPlugin.GLOBAL_COOL_DOWN > new Date().getTime()) {
-            throw new Error('A game was launched in the last 4 minutes. Wait a bit.');
+            const waitDuration = this.lastGameFinishedDate.getTime() + RollPlugin.GLOBAL_COOL_DOWN - new Date().getTime();
+            throw new Error(`Wait ${Timing.getDurationText(waitDuration, false, true)} seconds before launching a new round.`);
         }
 
         // Initialize game object

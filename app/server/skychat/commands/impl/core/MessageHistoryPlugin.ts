@@ -4,16 +4,15 @@ import {Message} from "../../../Message";
 import {Room} from "../../../Room";
 import {Config} from "../../../Config";
 import {MessageFormatter} from "../../../MessageFormatter";
-import {UserController} from "../../../UserController";
 
 
 export class MessageHistoryPlugin extends Plugin {
 
-    static readonly MIN_RIGHT_HISTORY = 10;
-
     static readonly FAKE_HISTORY_LENGTH = 32;
 
     readonly name = 'welcomer';
+
+    readonly hidden = true;
 
     private readonly formatter: MessageFormatter = MessageFormatter.getInstance();
 
@@ -26,7 +25,7 @@ export class MessageHistoryPlugin extends Plugin {
     public async onConnectionJoinedRoom(connection: Connection): Promise<void> {
 
         // If user has the right to access the full history
-        if (connection.session.user.right >= MessageHistoryPlugin.MIN_RIGHT_HISTORY) {
+        if (connection.session.user.right >= Config.PREFERENCES.minRightForMessageHistory) {
             this.room.sendHistory(connection);
             return;
         }
@@ -47,17 +46,15 @@ export class MessageHistoryPlugin extends Plugin {
             // Get the fake message content
             let fakeText = Config.PREFERENCES.fakeMessages[realMessageHash % Config.PREFERENCES.fakeMessages.length];
 
+
             // Randomly add a sticker
             if (stickers.length && Math.random() < .7) {
                 fakeText += ' ' + stickers[Math.floor(stickers.length * Math.random())];
             }
 
             // Build the message object and send it
-            fakeMessages.push(new Message({
-                content: fakeText,
-                user: this.room.messages[i].user,
-                createdTime: this.room.messages[i].createdTime
-            }).sanitized());
+            fakeMessages.push(new Message({id: this.room.messages[i].id, content: fakeText, user: this.room.messages[i].user}).sanitized());
+
         }
         connection.send('messages', fakeMessages);
     }

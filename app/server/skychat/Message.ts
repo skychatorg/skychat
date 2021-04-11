@@ -1,5 +1,8 @@
 import {SanitizedUser, User} from "./User";
 import {MessageFormatter} from "./MessageFormatter";
+import { DatabaseHelper } from "./DatabaseHelper";
+import SQL from "sql-template-strings";
+import { UserController } from "./UserController";
 
 export interface SanitizedMessage {
 
@@ -48,6 +51,7 @@ export type MessageMeta = {
 
 
 export type MessageConstructorOptions = {
+    id?: number;
     content: string;
     formatted?: string | null;
     user: User;
@@ -75,7 +79,7 @@ export class Message {
     public readonly meta: MessageMeta;
 
     constructor(options: MessageConstructorOptions) {
-        this.id = ++ Message.ID;
+        this.id = typeof options.id !== 'undefined' ? options.id : ++ Message.ID;
         this.content = options.content;
         this.formatted = typeof options.formatted === 'string' ? options.formatted : MessageFormatter.getInstance().format(options.content);
         this.quoted = options.quoted || null;

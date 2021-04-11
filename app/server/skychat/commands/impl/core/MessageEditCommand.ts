@@ -35,7 +35,8 @@ export class MessageEditCommand extends Command {
         const id = parseInt(param.split(' ')[0]);
 
         // Find message
-        const message = this.room.getMessageById(id);
+        const message = await this.room.getMessageById(id);
+
         if (! message) {
             throw new Error('Message not found');
         }

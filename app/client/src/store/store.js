@@ -110,6 +110,9 @@ const store = {
         },
         MESSAGE_SEEN(state, data) {
             const entry = state.connectedList.find(e => e.user.id === data.user);
+            if (! entry) {
+                return;
+            }
             entry.user.data.plugins.lastseen = data.message;
             this.commit('GENERATE_LAST_MESSAGE_SEEN_IDS');
         },
@@ -197,16 +200,17 @@ const store = {
             state.typingList = users;
         },
         NEW_CURSOR(state, cursor) {
-            if (cursor.user.id === state.user.id) {
+            const identifier = cursor.user.username.toLowerCase();
+            if (identifier === state.user.username.toLowerCase()) {
                 return;
             }
-            Vue.set(state.cursors, cursor.user.id, {date: new Date(), cursor});
+            Vue.set(state.cursors, identifier, {date: new Date(), cursor});
             // Clean up the cursors
             if (Math.random() < 0.1) {
-                for (const userId in state.cursors) {
-                    const entry = state.cursors[userId];
+                for (const identifier in state.cursors) {
+                    const entry = state.cursors[identifier];
                     if (new Date().getTime() - entry.date.getTime() > 5 * 1000) {
-                        delete state.cursors[userId];
+                        delete state.cursors[identifier];
                     }
                 }
             }

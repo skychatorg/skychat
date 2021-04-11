@@ -34,7 +34,10 @@ export class OfferMoneyPlugin extends Plugin {
 
         const amount = parseInt(param.split(' ')[1]);
         await UserController.giveMoney(session.user, amount);
-        session.send('message', UserController.createNeutralMessage(connection.session.user.username + ' sent you $ ' + amount / 100).sanitized());
+        session.send('message', UserController.createNeutralMessage({
+            content: connection.session.user.username + ' sent you $ ' + amount / 100,
+            id: 0
+        }).sanitized());
         await (this.room.getPlugin('connectedlist') as ConnectedListPlugin).sync();
     }
 }
