@@ -2,14 +2,21 @@ version: '3.5'
 
 services:
   app:
-    build: .
+    cap_drop:
+      - ALL
+    build:
+      context: .
+      args:
+        UNAME: ${DOCKER_UNAME}
+        UID: ${DOCKER_UID}
+        GID: ${DOCKER_GID}
     volumes:
-        - ./config:/var/skychat/config
-        - ./avatars:/var/skychat/avatars
-        - ./database:/var/skychat/database
-        - ./scripts:/var/skychat/scripts
-        - ./stickers:/var/skychat/stickers
-        - ./storage:/var/skychat/storage
-        - ./uploads:/var/skychat/uploads
+      - ./config:/var/skychat/config
+      - ./avatars:/var/skychat/avatars
+      - ./database:/var/skychat/database
+      - ./scripts:/var/skychat/scripts
+      - ./stickers:/var/skychat/stickers
+      - ./storage:/var/skychat/storage
+      - ./uploads:/var/skychat/uploads
     ports:
-        - "8080:8080"
+        - "${DOCKER_PORT}:${DOCKER_PORT}"

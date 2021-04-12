@@ -1,10 +1,17 @@
 FROM node:10
 
-# Create app dir
-WORKDIR /app/skychat/
+# Arguments
+ARG UNAME=skychat
+ARG UID=1000
+ARG GID=1000
+ARG DOCKER_PORT=8080
 
-# Create local user
-RUN useradd -m skychat
+# Create a local user corresponding to the host one
+RUN groupadd -g $GID -o $UNAME
+RUN useradd -m -u $UID -g $GID -o -s /bin/bash $UNAME
+
+# Create app dir 
+WORKDIR /app/skychat/
 
 # Mount volumes
 RUN ln -s /var/skychat/config   ./config
@@ -25,16 +32,16 @@ COPY .env.json ./
 COPY ./app ./app
 
 # Change files permissions
-RUN chown -R skychat:skychat ./
+RUN chown -R $UNAME:$UNAME ./
 
 # Change to non-root privilege
-USER skychat
+USER $UNAME
 
 # Copy dependencies first
 RUN npm install
 
 # Expose app port
-EXPOSE 8080
+EXPOSE $DOCKER_PORT
 
 # Build app
 ENV GENERATE_SOURCEMAP false
