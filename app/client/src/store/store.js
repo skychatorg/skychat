@@ -5,6 +5,9 @@ Vue.use(Vuex);
 
 const DEFAULT_DOCUMENT_TITLE = "~ SkyChat";
 
+const CURSOR_DECAY_DELAY = 5 * 1000; // Must match value from backend
+
+
 const store = {
     state: {
         focused: true,
@@ -209,7 +212,7 @@ const store = {
             if (Math.random() < 0.1) {
                 for (const identifier in state.cursors) {
                     const entry = state.cursors[identifier];
-                    if (new Date().getTime() - entry.date.getTime() > 5 * 1000) {
+                    if (new Date().getTime() - entry.date.getTime() > CURSOR_DECAY_DELAY) {
                         delete state.cursors[identifier];
                     }
                 }

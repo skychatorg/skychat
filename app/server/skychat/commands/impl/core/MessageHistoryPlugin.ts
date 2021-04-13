@@ -44,7 +44,7 @@ export class MessageHistoryPlugin extends Plugin {
             const realMessageHash = realMessage.createdTime.getTime() + realMessage.id;
 
             // Get the fake message content
-            let fakeText = Config.PREFERENCES.fakeMessages[realMessageHash % Config.PREFERENCES.fakeMessages.length];
+            let fakeText = Config.FAKE_MESSAGES[realMessageHash % Config.FAKE_MESSAGES.length];
 
 
             // Randomly add a sticker
