@@ -61,8 +61,6 @@
         components: {AuthPage, RoomList, MiddleColumn, Polls, UserPreview, PlayerPreview, PlayerBackground, ConnectedList, QuickActions, MessagesOverlay},
         watch: {
             cinemaMode: function() {
-
-                console.log('cinema mode changed', this.cinemaMode);
                 this.$client.ytSync();
             },
         },

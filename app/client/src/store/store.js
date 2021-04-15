@@ -44,6 +44,12 @@ const store = {
         lastMessageSeenIds: {},
 
         /**
+         * Mapping from room ids to number of connected within.
+         * Generated from the list of connected users.
+         */
+        roomConnectedCounts: {},
+
+        /**
          * Last message missed because the windows was not focused, if any
          */
         lastMissedMessage: null,
@@ -110,6 +116,7 @@ const store = {
 
             // Update hash list of last message seen ids
             this.commit('GENERATE_LAST_MESSAGE_SEEN_IDS');
+            this.commit('GENERATE_ROOM_CONNECTED_COUNTS');
 
             // Update self entry
             const selfEntry = entries.find(entry => entry.user.username === state.user.username);
@@ -140,6 +147,18 @@ const store = {
                 lastSeen[id].push(entry.user);
             }
             state.lastMessageSeenIds = lastSeen;
+        },
+        GENERATE_ROOM_CONNECTED_COUNTS(state) {
+            const roomConnectedCounts = {};
+            for (const entry of state.connectedList) {
+                for (const room of entry.rooms) {
+                    if (! room) {
+                        continue;
+                    }
+                    roomConnectedCounts[room.id] = (roomConnectedCounts[room.id] || 0) + 1;
+                }
+            }
+            state.roomConnectedCounts = roomConnectedCounts;
         },
         NEW_MESSAGE(state, message) {
             state.messages.push(message);

@@ -10,7 +10,6 @@ export class SkyChatClient extends EventEmitter {
         this.store = store;
         this.lastPingDate = null;
         this.bind();
-        console.log('skychat client', this);
     }
 
     /**

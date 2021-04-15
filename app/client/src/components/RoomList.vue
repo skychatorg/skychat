@@ -10,7 +10,7 @@
             }"
             @click="joinRoom(room.id)">
             <div class="room-name">
-                <b># {{room.name}}</b>
+                <b># {{room.name}}<sup v-show="roomConnectedCounts[room.id]">{{roomConnectedCounts[room.id]}}</sup></b>
             </div>
         </div>
     </div>
@@ -33,6 +33,9 @@
             },
             currentRoom: function() {
                 return this.$store.state.currentRoom;
+            },
+            roomConnectedCounts: function() {
+                return this.$store.state.roomConnectedCounts;
             },
         },
     });
