@@ -30,7 +30,7 @@ export class SkyChat {
 
     private static CURRENT_GUEST_ID: number = 0;
 
-    private readonly room: Room = new Room(0);
+    private readonly rooms: Room[] = [];
 
     private readonly server: Server;
 
@@ -50,7 +50,15 @@ export class SkyChat {
             .load()
             .then(async () => {
 
-                await this.room.loadLastMessagesFromDB();
+                // Create room from configuration
+                for (const room of Config.PREFERENCES.rooms) {
+                    this.rooms.push(new Room(room.id, room.name));
+                }
+
+                // Load last messages from all rooms
+                for (const room of this.rooms) {
+                    await room.loadLastMessagesFromDB();
+                }
 
                 // On register
                 this.server.registerEvent(
@@ -82,7 +90,7 @@ export class SkyChat {
                     }));
 
                 // Join a room
-                this.server.registerEvent('join-room', this.onJoinRoom.bind(this), 0, 120, new iof.ObjectFilter({roomId: new iof.NumberFilter(0, 0, false)}));
+                this.server.registerEvent('join-room', this.onJoinRoom.bind(this), 0, 120, new iof.ObjectFilter({roomId: new iof.NumberFilter(0, Infinity, false)}));
 
                 // On message sent
                 this.server.registerEvent('message', this.onMessage.bind(this), 0, Infinity, 'string');
@@ -160,6 +168,7 @@ export class SkyChat {
      */
     private async onConnectionCreated(connection: Connection): Promise<void> {
         connection.send('config', Config.toClient());
+        connection.send('room-list', this.rooms.map(room => room.sanitized()));
     }
 
     private async onRegister(payload: any, connection: Connection): Promise<void> {
@@ -182,7 +191,10 @@ export class SkyChat {
     }
 
     private async onJoinRoom(payload: {roomId: number}, connection: Connection): Promise<void> {
-        await this.room.attachConnection(connection);
+        if (typeof payload.roomId !== 'number' || typeof this.rooms[payload.roomId] !== 'object') {
+            throw new Error('Invalid room specified');
+        }
+        await this.rooms[payload.roomId].attachConnection(connection);
     }
 
     /**
@@ -209,8 +221,9 @@ export class SkyChat {
             connection.session.setUser(user);
         }
         connection.send('auth-token', UserController.getAuthToken(user.id));
-        await this.room.attachConnection(connection);
-        await this.room.executeConnectionAuthenticated(connection);
+        const room = this.rooms[0];
+        await room.attachConnection(connection);
+        await room.executeConnectionAuthenticated(connection);
     }
 
     /**

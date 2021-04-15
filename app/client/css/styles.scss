@@ -33,19 +33,22 @@ body {
     .show-mobile { display: unset !important; }
     .hide-mobile { display: none !important; }
 
-    .mobile-page-tchat {
-        .hide-mobile-tchat { display: none !important; }
+    .mobile-page-middle {
+        .hide-mobile-middle { display: none !important; }
     }
-    .mobile-page-list {
-        .hide-mobile-list { display: none !important; }
+    .mobile-page-right {
+        .hide-mobile-right { display: none !important; }
     }
 
-    .mobile-page-list {
+    .mobile-page-right {
 
+        .default-container > .left,
         .default-container > .right {
             flex-basis: 100% !important;
             padding: 0 0 0 10px;
+        }
 
+        .default-container > .right {
             .connected-session .motto {
                 flex-basis: calc(100% - 90px)!important;
             }

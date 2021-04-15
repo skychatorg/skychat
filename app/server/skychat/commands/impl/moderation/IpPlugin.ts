@@ -79,7 +79,7 @@ export class IpPlugin extends Command {
         content += `</table>`;
 
         // Send the message
-        const message = UserController.createNeutralMessage({content: '', id: 0});
+        const message = UserController.createNeutralMessage({content: '', room: this.room.id, id: 0});
         message.edit(striptags(content), content);
         connection.send('message', message.sanitized());
     }

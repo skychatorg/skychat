@@ -14,8 +14,9 @@ const store = {
         documentTitle: DEFAULT_DOCUMENT_TITLE,
         documentTitleBlinking: false,
         page: 'welcome',
-        mobileCurrentPage: 'tchat',
+        mobileCurrentPage: 'middle',
         config: null,
+        rooms: [],
         cinemaMode: false,
         channel: null,
         connectionState: WebSocket.CLOSED,
@@ -89,11 +90,17 @@ const store = {
         SET_CONFIG(state, config) {
             state.config = config;
         },
+        SET_ROOM_LIST(state, rooms) {
+            state.rooms = rooms;
+        },
         SET_CONNECTION_STATE(state, connectionState) {
             state.connectionState = connectionState;
         },
         SET_CURRENT_ROOM(state, currentRoom) {
-            state.currentRoom = currentRoom;
+            if (currentRoom !== state.currentRoom) {
+                state.currentRoom = currentRoom;
+                state.messages = [];
+            }
         },
         SET_USER(state, user) {
             state.user = user;

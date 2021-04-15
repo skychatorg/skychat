@@ -36,6 +36,7 @@ export class OfferMoneyPlugin extends Plugin {
         await UserController.giveMoney(session.user, amount);
         session.send('message', UserController.createNeutralMessage({
             content: connection.session.user.username + ' sent you $ ' + amount / 100,
+            room: this.room.id,
             id: 0
         }).sanitized());
         await (this.room.getPlugin('connectedlist') as ConnectedListPlugin).sync();

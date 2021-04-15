@@ -210,6 +210,6 @@ export class GuessTheNumberPlugin extends Plugin {
             throw new Error('Number should be between 0 and 1000');
         }
         this.currentGame.guesses[connection.session.identifier] = guess;
-        connection.send('message', UserController.createNeutralMessage({content: 'Guess: ' + guess, id: 0}).sanitized());
+        connection.send('message', UserController.createNeutralMessage({content: 'Guess: ' + guess, room: this.room.id, id: 0}).sanitized());
     }
 }

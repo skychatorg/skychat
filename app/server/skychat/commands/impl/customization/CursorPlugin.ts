@@ -44,7 +44,7 @@ export class CursorPlugin extends Plugin {
         super(room);
 
         if (this.room) {
-            setInterval(this.cleanupCursors.bind(this), CursorPlugin.CURSOR_DECAY_DELAY);
+            setInterval(this.cleanUpCursors.bind(this), CursorPlugin.CURSOR_DECAY_DELAY);
         }
     }
 
@@ -121,7 +121,7 @@ export class CursorPlugin extends Plugin {
     /**
      * Remove obsolete cursor entries from cache
      */
-    cleanupCursors(): void {
+    cleanUpCursors(): void {
         // For each saved cursor position
         for (const identifier of Object.keys(this.cursors)) {
             // If it did not move since >5s

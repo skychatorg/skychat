@@ -70,6 +70,7 @@ export class MessageController {
             }
             messages.push(new Message({
                 id: messageRow.id,
+                room: messageRow.room_id,
                 content: messageRow.content,
                 user: users[messageRow.user_id]
             }));

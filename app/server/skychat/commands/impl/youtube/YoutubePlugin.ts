@@ -258,6 +258,7 @@ export class YoutubePlugin extends Plugin {
     private async handleYtList(connection: Connection): Promise<void> {
         const message = UserController.createNeutralMessage({
             content: 'Videos in the queue:',
+            room: this.room.id,
             id: 0
         });
         for (const pending of this.storage.queue) {

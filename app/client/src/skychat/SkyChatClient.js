@@ -10,6 +10,7 @@ export class SkyChatClient extends EventEmitter {
         this.store = store;
         this.lastPingDate = null;
         this.bind();
+        console.log('skychat client', this);
     }
 
     /**
@@ -29,6 +30,7 @@ export class SkyChatClient extends EventEmitter {
      */
     bind() {
         this.on('config', this.onConfig.bind(this));
+        this.on('room-list', this.onRoomList.bind(this));
         this.on('join-room', this.onJoinRoom.bind(this));
         this.on('message', this.onMessage.bind(this));
         this.on('messages', this.onMessages.bind(this));
@@ -93,6 +95,13 @@ export class SkyChatClient extends EventEmitter {
      */
     onConfig(config) {
         this.store.commit('SET_CONFIG', config);
+    }
+
+    /**
+     * When receiving the room list
+     */
+    onRoomList(rooms) {
+        this.store.commit('SET_ROOM_LIST', rooms);
     }
 
     /**
