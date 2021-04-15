@@ -136,6 +136,13 @@ The preferences.json file specifies application preferences. The available field
 - Type: `number`
 - Description: Minimum required right to make polls.
 
+**rooms**
+
+- Type: `Array<{id: number, name: string}>`
+- Description: Room list.
+  - id: Room id. Must be unique.
+  - name: Room name as shown in the UI.
+
 **ranks**
 
 - Type: `Array<{limit: number, images: {'18': string, '26': string}}>`

@@ -97,7 +97,7 @@
     }
     .nav {
         width: 100%;
-        max-width: 1100px;
+        max-width: 1740px;
         margin: 0 auto;
         height: 100%;
         display: flex;
