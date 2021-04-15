@@ -15,7 +15,8 @@
 
                     <!-- left col (room list) -->
                     <section class="left hide-mobile-middle hide-mobile-right scrollbar">
-                        <room-list></room-list>
+                        <room-list class="left-room-list"></room-list>
+                        <user-preview></user-preview>
                     </section>
 
                     <!-- middle col (main content) -->
@@ -25,7 +26,6 @@
 
                     <!-- right col (connected list and metas) -->
                     <section class="right hide-mobile-left hide-mobile-middle scrollbar">
-                        <user-preview></user-preview>
                         <player-preview></player-preview>
                         <polls></polls>
                         <connected-list></connected-list>
@@ -127,6 +127,12 @@
 
             .left {
                 flex-basis: 200px;
+                display: flex;
+                flex-direction: column;
+
+                .left-room-list {
+                    flex-grow: 1;
+                }
             }
 
             .middle {
