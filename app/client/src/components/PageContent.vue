@@ -13,14 +13,19 @@
 
                 <section class="default-container">
 
-                    <!-- left col -->
-                    <section class="left hide-mobile-list">
-                        <left-column></left-column>
+                    <!-- left col (room list) -->
+                    <section class="left hide-mobile-middle hide-mobile-right scrollbar">
+                        <room-list class="left-room-list"></room-list>
+                        <user-preview></user-preview>
                     </section>
 
-                    <!-- right col -->
-                    <section class="right hide-mobile-tchat scrollbar">
-                        <user-preview></user-preview>
+                    <!-- middle col (main content) -->
+                    <section class="middle hide-mobile-left hide-mobile-right">
+                        <middle-column></middle-column>
+                    </section>
+
+                    <!-- right col (connected list and metas) -->
+                    <section class="right hide-mobile-left hide-mobile-middle scrollbar">
                         <player-preview></player-preview>
                         <polls></polls>
                         <connected-list></connected-list>
@@ -42,7 +47,8 @@
 <script>
     import Vue from "vue";
     import AuthPage from "./AuthPage.vue";
-    import LeftColumn from "./LeftColumn.vue";
+    import RoomList from "./RoomList.vue";
+    import MiddleColumn from "./MiddleColumn.vue";
     import Polls from "./Polls.vue";
     import UserPreview from "./UserPreview.vue";
     import PlayerPreview from "./PlayerPreview.vue";
@@ -52,11 +58,9 @@
     import MessagesOverlay from "./MessagesOverlay.vue";
 
     export default Vue.extend({
-        components: {AuthPage, LeftColumn, Polls, UserPreview, PlayerPreview, PlayerBackground, ConnectedList, QuickActions, MessagesOverlay},
+        components: {AuthPage, RoomList, MiddleColumn, Polls, UserPreview, PlayerPreview, PlayerBackground, ConnectedList, QuickActions, MessagesOverlay},
         watch: {
             cinemaMode: function() {
-
-                console.log('cinema mode changed', this.cinemaMode);
                 this.$client.ytSync();
             },
         },
@@ -117,11 +121,21 @@
         }
 
         .default-container {
-            max-width: 1400px;
+            max-width: 1800px;
             flex-grow: 1;
             display: flex;
 
             .left {
+                flex-basis: 200px;
+                display: flex;
+                flex-direction: column;
+
+                .left-room-list {
+                    flex-grow: 1;
+                }
+            }
+
+            .middle {
                 flex-grow: 1;
                 padding-bottom: 6px;
                 height: 100%;

@@ -1,6 +1,6 @@
 <template>
 
-    <div class="user-preview pr-2 pl-1 mt-1">
+    <div class="user-preview pb-1 pl-1 mt-1">
 
         <div class="user-preview-avatar">
             <div class="image-bubble" >

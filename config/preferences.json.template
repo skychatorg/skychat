@@ -4,6 +4,9 @@
     "minRightForAudioRecording": -1,
     "minRightForConnectedList": -1,
     "minRightForPolls": -1,
+    "rooms": [
+        {"id": 0, "name": "Main"}
+    ],
     "ranks": [
         {"limit": 1000000, "images": { "18": "ranks/materials/15_diamond_shiny_18.gif", "26": "ranks/materials/15_diamond_shiny_26.gif" }},
         {"limit": 200000, "images": { "18": "ranks/materials/14_diamond_18.png", "26": "ranks/materials/14_diamond_26.png" }},

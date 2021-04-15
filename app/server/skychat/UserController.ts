@@ -79,6 +79,7 @@ export class UserController {
     public static createNeutralMessage(options: Partial<MessageConstructorOptions>, identifier?: string): Message {
         return new Message({
             id: options.id,
+            room: options.room,
             content: options.content || '',
             formatted: options.formatted,
             user: UserController.getNeutralUser(identifier),

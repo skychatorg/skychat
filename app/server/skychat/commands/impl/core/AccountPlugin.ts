@@ -90,7 +90,7 @@ export class AccountPlugin extends Plugin {
         }
 
         // Send confirmation back to the user
-        const message = UserController.createNeutralMessage({content: messageContent, id: 0});
+        const message = UserController.createNeutralMessage({content: messageContent, room: this.room.id, id: 0});
         connection.send('message', message.sanitized());
     }
 
@@ -118,7 +118,7 @@ export class AccountPlugin extends Plugin {
 
         await UserController.buy(user, AccountPlugin.CHANGE_USERNAME_PRICE);
 
-        const message = UserController.createNeutralMessage({content: `Your username has been changed to ${username}`, id: 0});
+        const message = UserController.createNeutralMessage({content: `Your username has been changed to ${username}`, room: this.room.id, id: 0});
         connection.send('message', message.sanitized());
 
         await UserController.changeUsername(user, username, password);
@@ -148,7 +148,7 @@ export class AccountPlugin extends Plugin {
         await UserController.changePassword(userObject, password);
 
         // Notify OP
-        const message = UserController.createNeutralMessage({content: `${username} password has been changed to: ${password}`, id: 0});
+        const message = UserController.createNeutralMessage({content: `${username} password has been changed to: ${password}`, room: this.room.id, id: 0});
         connection.send('message', message.sanitized());
     }
 
@@ -165,6 +165,7 @@ export class AccountPlugin extends Plugin {
                 /set email your@email.com
                 
                 To set your email address`,
+            room: this.room.id,
             id: 0,
         });
         connection.send('message', message.sanitized());

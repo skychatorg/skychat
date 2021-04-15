@@ -60,7 +60,10 @@ export class GiveMoneyPlugin extends Plugin {
         if (commission > 0) {
             message += ' (- $' + (commission / 100) + ' commission)';
         }
-        await this.room.sendMessage({content: message, user: UserController.getNeutralUser()});
+        await this.room.sendMessage({
+            content: message,
+            user: UserController.getNeutralUser()
+        });
         await (this.room.getPlugin('connectedlist') as ConnectedListPlugin).sync();
     }
 }

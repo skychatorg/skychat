@@ -190,7 +190,7 @@
              * When clicking the arrow to show the connect list on mobile phones
              */
             onMobileShowList: function() {
-                this.$store.commit('SET_MOBILE_PAGE', 'list');
+                this.$store.commit('SET_MOBILE_PAGE', 'right');
             },
 
             /**

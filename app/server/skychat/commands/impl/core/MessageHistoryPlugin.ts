@@ -8,8 +8,6 @@ import {MessageFormatter} from "../../../MessageFormatter";
 
 export class MessageHistoryPlugin extends Plugin {
 
-    static readonly FAKE_HISTORY_LENGTH = 32;
-
     readonly name = 'welcomer';
 
     readonly hidden = true;
@@ -41,19 +39,24 @@ export class MessageHistoryPlugin extends Plugin {
 
             // Each fake message correspond to a real message
             const realMessage = this.room.messages[i];
-            const realMessageHash = realMessage.createdTime.getTime() + realMessage.id;
+            const fakeTextIndex = (realMessage.createdTime.getTime() + realMessage.id) % Config.FAKE_MESSAGES.length;
+            const addSticker = realMessage.createdTime.getTime() % 4 === 0;
+            const stickerIndex = realMessage.createdTime.getTime() % stickers.length;
 
             // Get the fake message content
-            let fakeText = Config.PREFERENCES.fakeMessages[realMessageHash % Config.PREFERENCES.fakeMessages.length];
-
-
+            let fakeText = Config.FAKE_MESSAGES[fakeTextIndex];
             // Randomly add a sticker
-            if (stickers.length && Math.random() < .7) {
-                fakeText += ' ' + stickers[Math.floor(stickers.length * Math.random())];
+            if (addSticker) {
+                fakeText += ' ' + stickers[stickerIndex];
             }
 
             // Build the message object and send it
-            fakeMessages.push(new Message({id: this.room.messages[i].id, content: fakeText, user: this.room.messages[i].user}).sanitized());
+            fakeMessages.push(new Message({
+                id: this.room.messages[i].id,
+                room: this.room.id,
+                content: fakeText,
+                user: this.room.messages[i].user
+            }).sanitized());
 
         }
         connection.send('messages', fakeMessages);

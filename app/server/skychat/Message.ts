@@ -1,8 +1,5 @@
 import {SanitizedUser, User} from "./User";
 import {MessageFormatter} from "./MessageFormatter";
-import { DatabaseHelper } from "./DatabaseHelper";
-import SQL from "sql-template-strings";
-import { UserController } from "./UserController";
 
 export interface SanitizedMessage {
 
@@ -10,6 +7,11 @@ export interface SanitizedMessage {
      * Message unique id
      */
     id: number;
+
+    /**
+     * Message room
+     */
+    room: number | null;
 
     /**
      * Message content
@@ -52,6 +54,7 @@ export type MessageMeta = {
 
 export type MessageConstructorOptions = {
     id?: number;
+    room?: number;
     content: string;
     formatted?: string | null;
     user: User;
@@ -65,6 +68,8 @@ export class Message {
     public static ID: number = 1;
 
     public readonly id: number;
+
+    public readonly room: number | null;
 
     public content: string;
 
@@ -80,6 +85,7 @@ export class Message {
 
     constructor(options: MessageConstructorOptions) {
         this.id = typeof options.id !== 'undefined' ? options.id : ++ Message.ID;
+        this.room = typeof options.room === 'number' ? options.room : null;
         this.content = options.content;
         this.formatted = typeof options.formatted === 'string' ? options.formatted : MessageFormatter.getInstance().format(options.content);
         this.quoted = options.quoted || null;
@@ -124,6 +130,7 @@ export class Message {
     public sanitized(quoteDepth: number = 2): SanitizedMessage {
         return {
             id: this.id,
+            room: this.room,
             content: this.content,
             quoted: this.quoted && quoteDepth > 0 ? this.quoted.sanitized(quoteDepth - 1) : null,
             formatted: this.formatted,

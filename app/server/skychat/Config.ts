@@ -10,6 +10,7 @@ export type Preferences = {
     minRightForPolls: number;
     ranks: {limit: number, images: {[size: string]: string}}[];
     plugins: string[];
+    rooms: {id: number, name: string}[];
 }
 
 export type PublicConfig = {
@@ -119,7 +120,8 @@ export class Config {
             'minRightForConnectedList',
             'minRightForPolls',
             'plugins',
-            'ranks'
+            'ranks',
+            'rooms',
         ];
         for (const key of keys) {
             if (typeof (Config.PREFERENCES as any)[key] === 'undefined') {

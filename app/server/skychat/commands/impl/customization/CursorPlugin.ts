@@ -3,6 +3,7 @@ import {Plugin} from "../../Plugin";
 import {User} from "../../../User";
 import {Message} from "../../../Message";
 import {UserController} from "../../../UserController";
+import { Room } from "../../../Room";
 
 
 /**
@@ -10,6 +11,8 @@ import {UserController} from "../../../UserController";
  * @TODO handle cursors mapping periodical cleanup
  */
 export class CursorPlugin extends Plugin {
+
+    static readonly CURSOR_DECAY_DELAY = 5 * 1000;
 
     readonly defaultDataStorageValue = true;
 
@@ -36,6 +39,14 @@ export class CursorPlugin extends Plugin {
             params: [{name: "x", pattern: /^\d+(\.\d+)?$/}, {name: "y", pattern: /^\d+(\.\d+)?$/}]
         }
     };
+
+    constructor(room: Room) {
+        super(room);
+
+        if (this.room) {
+            setInterval(this.cleanUpCursors.bind(this), CursorPlugin.CURSOR_DECAY_DELAY);
+        }
+    }
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
         if (alias === 'cursor') {
@@ -104,6 +115,20 @@ export class CursorPlugin extends Plugin {
                 continue;
             }
             conn.send('cursor', { x, y, user });
+        }
+    }
+
+    /**
+     * Remove obsolete cursor entries from cache
+     */
+    cleanUpCursors(): void {
+        // For each saved cursor position
+        for (const identifier of Object.keys(this.cursors)) {
+            // If it did not move since >5s
+            if (new Date().getTime() - this.cursors[identifier].lastSent.getTime() > CursorPlugin.CURSOR_DECAY_DELAY) {
+                // Remove entry
+                delete this.cursors[identifier];
+            }
         }
     }
 }

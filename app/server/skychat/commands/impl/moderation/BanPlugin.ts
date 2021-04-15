@@ -159,7 +159,7 @@ export class BanPlugin extends Plugin {
                 </tr>`;
         }
         content += `</table>`;
-        const message = UserController.createNeutralMessage({content: '', id: 0});
+        const message = UserController.createNeutralMessage({content: '', room: this.room.id, id: 0});
         message.edit(striptags(content), content);
         connection.send('message', message.sanitized());
     }
@@ -180,7 +180,7 @@ export class BanPlugin extends Plugin {
 
             // Only send new messages to himself
             if (message.startsWith('/message ')) {
-                connection.send('message', new Message({id: ++Message.ID, content: message.substr('/message'.length), user: connection.session.user}).sanitized());
+                connection.send('message', new Message({id: ++Message.ID, room: this.room.id, content: message.substr('/message'.length), user: connection.session.user}).sanitized());
                 connection.session.lastMessageDate = new Date();
                 return `/void`;
             }

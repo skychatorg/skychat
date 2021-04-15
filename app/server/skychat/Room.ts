@@ -14,6 +14,11 @@ export type StoredRoom = {
 
 }
 
+export type SanitizedRoom = {
+    id: number;
+    name: string;
+}
+
 
 export class Room implements IBroadcaster {
 
@@ -36,6 +41,11 @@ export class Room implements IBroadcaster {
      * This room's unique id
      */
     public readonly id: number;
+
+    /**
+     * This room name
+     */
+    public name: string;
 
     /**
      * Connections that are within this room
@@ -63,8 +73,9 @@ export class Room implements IBroadcaster {
      */
     public readonly plugins: Plugin[];
 
-    constructor(id: number) {
+    constructor(id: number, name: string) {
         this.id = id;
+        this.name = name;
         this.commands = CommandManager.instantiateCommands(this);
         this.plugins = CommandManager.extractPlugins(this.commands);
         this.load();
@@ -276,6 +287,12 @@ export class Room implements IBroadcaster {
         if (options.connection) {
             options.meta.device = options.connection.device;
         }
+        if (typeof options.room === "undefined") {
+            options.room = this.id;
+        }
+        if (options.room !== this.id) {
+            throw new Error(`Trying to send a message with invalid room id ${options.room} in room ${this.id}`);
+        }
         let message = new Message(options);
         message = await this.executeOnBeforeMessageBroadcastHook(message, options.connection);
         // Send it to clients
@@ -300,5 +317,15 @@ export class Room implements IBroadcaster {
             message.edit('deleted', `<i>deleted</i>`);
             this.send('message-edit', message.sanitized());
         });
+    }
+
+    /**
+     * Get metadata about this room
+     */
+    public sanitized(): SanitizedRoom {
+        return {
+            id: this.id,
+            name: this.name,
+        };
     }
 }

@@ -1,6 +1,7 @@
 import {SanitizedUser, User} from "./User";
 import {Connection} from "./Connection";
 import {IBroadcaster} from "./IBroadcaster";
+import {SanitizedRoom} from "./Room";
 
 
 export type SanitizedSession = {
@@ -14,6 +15,8 @@ export type SanitizedSession = {
     lastMessageTime: number;
 
     user: SanitizedUser;
+
+    rooms: (SanitizedRoom | null)[];
 }
 
 /**
@@ -214,6 +217,7 @@ export class Session implements IBroadcaster {
         return {
             identifier: this.identifier,
             connectionCount: this.connections.length,
+            rooms: Array.from(new Set(this.connections.map(c => c.room ? c.room : null))).map(room => room ? room.sanitized() : null),
             deadSinceTime: this.deadSince ? this.deadSince.getTime() * 0.001 : undefined,
             lastMessageTime: this.lastMessageDate.getTime() * 0.001,
             user: this.user.sanitized()

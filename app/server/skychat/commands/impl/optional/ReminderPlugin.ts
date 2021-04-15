@@ -48,6 +48,7 @@ export class ReminderPlugin extends Plugin {
         // Send immediate notification to user that he will be notified
         connection.send('message', UserController.createNeutralMessage({
             content: `You will be notified in ${amount * multiplier} seconds (${amountRaw}${unitRaw})`,
+            room: this.room.id,
             id: 0,
         }, 'Reminder').sanitized());
 
@@ -61,11 +62,12 @@ export class ReminderPlugin extends Plugin {
 
         // Notify user
         for (let i = 0; i < 6; ++ i) {
-            connection.send('message', UserController.createNeutralMessage({content: `@${connection.session.identifier}`, id: 0}, 'Reminder').sanitized());
+            connection.send('message', UserController.createNeutralMessage({content: `@${connection.session.identifier}`, room: this.room.id, id: 0}, 'Reminder').sanitized());
             await this.sleep(100);;
         }
         connection.send('message', UserController.createNeutralMessage({
             content: `Hey @${connection.session.identifier}, you asked ${amountRaw}${unitRaw} ago to be notified now.` + (message ? ` \n"${message}"` : ''),
+            room: this.room.id,
             id: 0,
         }, 'Reminder').sanitized());
     }

@@ -47,6 +47,7 @@ export class RankPlugin extends Plugin {
         const message = new Message(
             {
                 id: 0,
+                room: this.room.id,
                 formatted: rankHtml,
                 content: striptags(rankHtml),
                 user: UserController.getNeutralUser()

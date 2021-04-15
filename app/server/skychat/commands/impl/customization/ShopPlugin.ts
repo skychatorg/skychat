@@ -252,7 +252,7 @@ export class ShopPlugin extends Plugin {
      * @param connection
      */
     private async handleShop(param: string, connection: Connection): Promise<void> {
-        const message = UserController.createNeutralMessage({content: '', id: 0});
+        const message = UserController.createNeutralMessage({content: '', room: this.room.id, id: 0});
         for (const type in ShopPlugin.ITEMS) {
             message.append(`[[list all available ${type}//shoplist ${type}]]`);
         }
@@ -275,7 +275,7 @@ export class ShopPlugin extends Plugin {
         if (! itemDefinition) {
             throw new Error('Unknown item type');
         }
-        const message = UserController.createNeutralMessage({content: 'Available ' + param + ':', id: 0});
+        const message = UserController.createNeutralMessage({content: 'Available ' + param + ':', room: this.room.id, id: 0});
         const formatter = MessageFormatter.getInstance();
         let html = '<table class="skychat-table">';
         html += `

@@ -188,6 +188,7 @@ export class TrackerPlugin extends Plugin {
 
         connection.send('message', new Message({
             id: 0,
+            room: this.room.id,
             content: striptags(html),
             formatted: html,
             user: UserController.getNeutralUser()
@@ -217,6 +218,7 @@ export class TrackerPlugin extends Plugin {
         // Send confirmation
         connection.send('message', new Message({
             id: 0,
+            room: this.room.id,
             content: `Association ${TrackerPlugin.nodeToKey(type1, value1)} to ${TrackerPlugin.nodeToKey(type2, value2)} deleted`,
             user: UserController.getNeutralUser()
         }).sanitized());
@@ -281,6 +283,7 @@ export class TrackerPlugin extends Plugin {
 
         connection.send('message', new Message({
             id: 0,
+            room: this.room.id,
             content: striptags(html),
             formatted: html,
             user: UserController.getNeutralUser()

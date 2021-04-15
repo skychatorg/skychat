@@ -30,7 +30,7 @@
                 }
             },
             onMobileShowTchat: function() {
-                this.$store.commit('SET_MOBILE_PAGE', 'tchat');
+                this.$store.commit('SET_MOBILE_PAGE', 'middle');
             }
         },
         computed: {

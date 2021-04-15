@@ -5,14 +5,18 @@ Vue.use(Vuex);
 
 const DEFAULT_DOCUMENT_TITLE = "~ SkyChat";
 
+const CURSOR_DECAY_DELAY = 5 * 1000; // Must match value from backend
+
+
 const store = {
     state: {
         focused: true,
         documentTitle: DEFAULT_DOCUMENT_TITLE,
         documentTitleBlinking: false,
         page: 'welcome',
-        mobileCurrentPage: 'tchat',
+        mobileCurrentPage: 'middle',
         config: null,
+        rooms: [],
         cinemaMode: false,
         channel: null,
         connectionState: WebSocket.CLOSED,
@@ -38,6 +42,12 @@ const store = {
          * Generated from the list of connected users.
          */
         lastMessageSeenIds: {},
+
+        /**
+         * Mapping from room ids to number of connected within.
+         * Generated from the list of connected users.
+         */
+        roomConnectedCounts: {},
 
         /**
          * Last message missed because the windows was not focused, if any
@@ -86,11 +96,17 @@ const store = {
         SET_CONFIG(state, config) {
             state.config = config;
         },
+        SET_ROOM_LIST(state, rooms) {
+            state.rooms = rooms;
+        },
         SET_CONNECTION_STATE(state, connectionState) {
             state.connectionState = connectionState;
         },
         SET_CURRENT_ROOM(state, currentRoom) {
-            state.currentRoom = currentRoom;
+            if (currentRoom !== state.currentRoom) {
+                state.currentRoom = currentRoom;
+                state.messages = [];
+            }
         },
         SET_USER(state, user) {
             state.user = user;
@@ -100,6 +116,7 @@ const store = {
 
             // Update hash list of last message seen ids
             this.commit('GENERATE_LAST_MESSAGE_SEEN_IDS');
+            this.commit('GENERATE_ROOM_CONNECTED_COUNTS');
 
             // Update self entry
             const selfEntry = entries.find(entry => entry.user.username === state.user.username);
@@ -130,6 +147,18 @@ const store = {
                 lastSeen[id].push(entry.user);
             }
             state.lastMessageSeenIds = lastSeen;
+        },
+        GENERATE_ROOM_CONNECTED_COUNTS(state) {
+            const roomConnectedCounts = {};
+            for (const entry of state.connectedList) {
+                for (const room of entry.rooms) {
+                    if (! room) {
+                        continue;
+                    }
+                    roomConnectedCounts[room.id] = (roomConnectedCounts[room.id] || 0) + 1;
+                }
+            }
+            state.roomConnectedCounts = roomConnectedCounts;
         },
         NEW_MESSAGE(state, message) {
             state.messages.push(message);
@@ -209,7 +238,7 @@ const store = {
             if (Math.random() < 0.1) {
                 for (const identifier in state.cursors) {
                     const entry = state.cursors[identifier];
-                    if (new Date().getTime() - entry.date.getTime() > 5 * 1000) {
+                    if (new Date().getTime() - entry.date.getTime() > CURSOR_DECAY_DELAY) {
                         delete state.cursors[identifier];
                     }
                 }
