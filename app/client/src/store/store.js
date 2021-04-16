@@ -107,6 +107,7 @@ const store = {
                 state.currentRoom = currentRoom;
                 state.messages = [];
             }
+            console.log(state);
         },
         SET_USER(state, user) {
             state.user = user;

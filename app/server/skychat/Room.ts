@@ -17,6 +17,7 @@ export type StoredRoom = {
 export type SanitizedRoom = {
     id: number;
     name: string;
+    lastReceivedMessageId: number;
 }
 
 
@@ -326,6 +327,7 @@ export class Room implements IBroadcaster {
         return {
             id: this.id,
             name: this.name,
+            lastReceivedMessageId: this.messages.length === 0 ? 0 : this.messages[this.messages.length - 1].id,
         };
     }
 }

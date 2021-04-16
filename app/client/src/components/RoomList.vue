@@ -6,7 +6,7 @@
             class="room"
             :class="{
                 'selected': currentRoom === room.id,
-                'has-unread': false
+                'has-unread': user.id > 0 && user.data.plugins.lastseen < room.lastReceivedMessageId
             }"
             @click="joinRoom(room.id)">
             <div class="room-name">
@@ -36,6 +36,9 @@
             },
             roomConnectedCounts: function() {
                 return this.$store.state.roomConnectedCounts;
+            },
+            user: function() {
+                return this.$store.state.user;
             },
         },
     });

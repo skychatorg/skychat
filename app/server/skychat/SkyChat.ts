@@ -97,6 +97,14 @@ export class SkyChat {
 
                 // On audio received
                 this.server.registerEvent('audio', this.onAudio.bind(this), 0, 30);
+
+                // Periodically send the room list to users
+                setInterval(() => {
+                    Object.values(Session.sessions)
+                        .map(session => {
+                            session.send('room-list', this.rooms.map(room => room.sanitized()));
+                        });
+                }, 5 * 1000);
             });
 
         setInterval(this.tick.bind(this), SkyChat.TICK_INTERVAL);
