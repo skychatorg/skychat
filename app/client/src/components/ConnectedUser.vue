@@ -3,7 +3,8 @@
          :style="{'border-left-color': session.user.data.plugins.color}"
          :class="{
             'selected': isChanSelected(session.user.username),
-            'has-unread': getUnreadCount(session.user.username) > 0
+            'has-unread': getUnreadCount(session.user.username) > 0,
+            'disconnected': session.connectionCount === 0,
           }">
         <div class="avatar">
             <span class="rank">
@@ -115,6 +116,10 @@
         border-left: 4px solid #a3a5b4;
         transition: all 0.2s;
         cursor: pointer;
+
+        &.disconnected {
+            opacity: .6;
+        }
 
         &.has-unread {
             background: #e2b14152;
