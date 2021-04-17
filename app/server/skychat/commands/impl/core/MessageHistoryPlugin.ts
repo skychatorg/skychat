@@ -55,6 +55,7 @@ export class MessageHistoryPlugin extends Plugin {
                 id: this.room.messages[i].id,
                 room: this.room.id,
                 content: fakeText,
+                createdTime: this.room.messages[i].createdTime,
                 user: this.room.messages[i].user
             }).sanitized());
 

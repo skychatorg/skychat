@@ -72,9 +72,10 @@
     display: flex;
 
     > .user-preview-avatar {
-        width: 65px;
-        height: 65px;
-        padding: 10px;
+        flex-basis: 35px;
+        width: 35px;
+        height: 35px;
+        margin-top: 15px;
         position: relative;
 
         >.image-bubble{
@@ -86,11 +87,13 @@
     > .user-preview-info {
 
         flex-grow: 1;
+        width: 0;
         display: flex;
         flex-direction: column;
         padding-top: 8px;
         padding-left: 12px;
         padding-right: 22px;
+        overflow: hidden;
 
         >.session {
             display: inline;

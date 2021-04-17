@@ -72,7 +72,8 @@ export class MessageController {
                 id: messageRow.id,
                 room: messageRow.room_id,
                 content: messageRow.content,
-                user: users[messageRow.user_id]
+                createdTime: new Date(messageRow.date),
+                user: users[messageRow.user_id],
             }));
         }
         return messages;

@@ -126,7 +126,8 @@
             display: flex;
 
             .left {
-                flex-basis: 200px;
+                flex-basis: 220px;
+                width: 0;
                 display: flex;
                 flex-direction: column;
 

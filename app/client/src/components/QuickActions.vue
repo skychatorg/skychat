@@ -206,7 +206,6 @@
                     case 'yt-queue':
                         return this.$client.sendMessage('/yt list');
                     case 'yt-lock':
-                        console.log('test', this.$store);
                         return this.$store.commit('TOGGLE_PLAYER_LOCK'); 
                     case 'yt-play':
                         this.$modal.show(YoutubeVideoSearcher);

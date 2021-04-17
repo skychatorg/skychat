@@ -18,6 +18,7 @@ export type SanitizedRoom = {
     id: number;
     name: string;
     lastReceivedMessageId: number;
+    lastReceivedMessageTimestamp: number;
 }
 
 
@@ -324,10 +325,12 @@ export class Room implements IBroadcaster {
      * Get metadata about this room
      */
     public sanitized(): SanitizedRoom {
+        const lastMessage: Message | null = this.messages.length === 0 ? null : this.messages[this.messages.length - 1];
         return {
             id: this.id,
             name: this.name,
-            lastReceivedMessageId: this.messages.length === 0 ? 0 : this.messages[this.messages.length - 1].id,
+            lastReceivedMessageId: lastMessage ? lastMessage.id : 0,
+            lastReceivedMessageTimestamp: lastMessage ? lastMessage.createdTime.getTime() : 0,
         };
     }
 }
