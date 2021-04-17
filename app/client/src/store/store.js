@@ -107,7 +107,6 @@ const store = {
                 state.currentRoom = currentRoom;
                 state.messages = [];
             }
-            console.log(state);
         },
         SET_USER(state, user) {
             state.user = user;
@@ -131,21 +130,23 @@ const store = {
             if (! entry) {
                 return;
             }
-            entry.user.data.plugins.lastseen = data.message;
+            entry.user.data.plugins.lastseen = data.data;
             this.commit('GENERATE_LAST_MESSAGE_SEEN_IDS');
         },
         GENERATE_LAST_MESSAGE_SEEN_IDS(state) {
             // Update last seen message ids
             const lastSeen = {};
+            const roomId = state.currentRoom;
             for (const entry of state.connectedList) {
-                const id = entry.user.data.plugins.lastseen;
-                if (! id) {
+                const entries = entry.user.data.plugins.lastseen;
+                if (! entries || ! entries[roomId]) {
                     continue;
                 }
-                if (typeof lastSeen[id] === 'undefined') {
-                    lastSeen[id] = [];
+                const lastSeenId = entries[roomId];
+                if (typeof lastSeen[lastSeenId] === 'undefined') {
+                    lastSeen[lastSeenId] = [];
                 }
-                lastSeen[id].push(entry.user);
+                lastSeen[lastSeenId].push(entry.user);
             }
             state.lastMessageSeenIds = lastSeen;
         },

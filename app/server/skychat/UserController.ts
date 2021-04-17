@@ -6,6 +6,7 @@ import {AuthToken, User} from "./User";
 import SQL from "sql-template-strings";
 import {Plugin} from "./commands/Plugin";
 import {Message, MessageConstructorOptions, MessageMeta} from "./Message";
+import * as _ from "lodash"
 
 
 export class UserController {
@@ -42,7 +43,7 @@ export class UserController {
         if (typeof plugins[pluginName] === 'undefined') {
             return undefined;
         }
-        return plugins[pluginName].defaultDataStorageValue;
+        return _.cloneDeep(plugins[pluginName].defaultDataStorageValue);
     }
 
     /**
@@ -56,7 +57,7 @@ export class UserController {
                 defaultValues[plugin.name] = plugin.defaultDataStorageValue;
             }
         }
-        return defaultValues;
+        return _.cloneDeep(defaultValues);
     }
 
     /**

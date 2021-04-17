@@ -5,14 +5,14 @@ import {UserController} from "../../../UserController";
 
 export type MessageSeenEventData = {
     user: number;
-    message: number;
+    data: {[room: number]: number};
 };
 
 export class MessageSeenPlugin extends Plugin {
 
     readonly name = 'lastseen';
 
-    readonly defaultDataStorageValue = 0;
+    readonly defaultDataStorageValue = {};
 
     /**
      * We need to allow guests to send /lastseen even though it is not recorded in the backend because sometimes,
@@ -50,7 +50,15 @@ export class MessageSeenPlugin extends Plugin {
         if (lastMessageSeen > newLastMessageSeen) {
             return;
         }
-        await UserController.savePluginData(connection.session.user, this.name, message.id);
-        this.room.send('message-seen', {user: connection.session.user.id, message: message.id} as MessageSeenEventData);
+        let pluginData = UserController.getPluginData(connection.session.user, this.name);
+        if (typeof pluginData !== 'object') {
+            pluginData = {};
+        }
+        pluginData[this.room.id] = message.id;
+        await UserController.savePluginData(connection.session.user, this.name, pluginData);
+        this.room.send('message-seen', {
+            user: connection.session.user.id,
+            data: pluginData,
+        } as MessageSeenEventData);
     }
 }

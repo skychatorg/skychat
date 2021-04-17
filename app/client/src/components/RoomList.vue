@@ -6,7 +6,7 @@
             class="room"
             :class="{
                 'selected': currentRoom === room.id,
-                'has-unread': user.id > 0 && user.data.plugins.lastseen < room.lastReceivedMessageId
+                'has-unread': user.id > 0 && (user.data.plugins.lastseen[room.id] || 0) < room.lastReceivedMessageId
             }"
             @click="joinRoom(room.id)">
             <div class="room-name">
