@@ -17,6 +17,7 @@ const store = {
         mobileCurrentPage: 'middle',
         config: null,
         rooms: [],
+        playerLock: false,
         cinemaMode: false,
         channel: null,
         connectionState: WebSocket.CLOSED,
@@ -78,6 +79,9 @@ const store = {
         },
         SET_MOBILE_PAGE(state, mobilePage) {
             state.mobileCurrentPage = mobilePage;
+        },
+        TOGGLE_PLAYER_LOCK(state) {
+            state.playerLock = ! state.playerLock;
         },
         TOGGLE_CINEMA_MODE(state) {
             state.cinemaMode = ! state.cinemaMode;
@@ -213,6 +217,9 @@ const store = {
             Vue.set(state.messages, oldMessageIndex, message);
         },
         SET_PLAYER_STATE(state, playerState) {
+            if (state.playerLock) {
+                return;
+            }
             state.playerState = playerState;
         },
         SET_POLLS(state, polls) {

@@ -46,22 +46,17 @@
                                 icon: 'movie',
                                 shortcuts: ['ctrl+shift+y']
                             },
-                            /*{
-                                id: 'yt-queue',
-                                title: "See youtube queue",
-                                icon: 'queue_music'
-                            },*/
+                            {
+                                id: 'yt-lock',
+                                title: "Lock video player",
+                                icon: 'lock',
+                                shortcuts: []
+                            },
                             {
                                 id: 'yt-play',
                                 title: "Play a youtube video",
                                 icon: 'play_arrow',
                                 shortcuts: ['ctrl+p']
-                            },
-                            {
-                                id: 'yt-skip',
-                                title: "Skip current video",
-                                icon: 'skip_next',
-                                shortcuts: ['ctrl+shift+delete']
                             },
                         ]
                     },
@@ -180,8 +175,8 @@
                         return `<i class="material-icons md-16" style="color:${this.user.data.plugins.cursor ? '' : 'gray'}">toggle_${this.user.data.plugins.cursor ? 'on' : 'off'}</i>`;
                     case 'yt-queue':
                         return `<b>List</b>`;
-                    case 'yt-skip':
-                        return `<b>Skip</b>`;
+                    case 'yt-lock':
+                        return `<i class="material-icons md-16" style="color:${this.playerLock ? '' : 'gray'}">toggle_${this.playerLock ? 'on' : 'off'}</i>`;
                     case 'yt-play':
                         return `<b>Play</b>`;
                     case 'shop-color':
@@ -210,8 +205,9 @@
                         return this.$client.cursorSetState(! this.user.data.plugins.cursor);
                     case 'yt-queue':
                         return this.$client.sendMessage('/yt list');
-                    case 'yt-skip':
-                        return this.$client.sendMessage('/yt skip');
+                    case 'yt-lock':
+                        console.log('test', this.$store);
+                        return this.$store.commit('TOGGLE_PLAYER_LOCK'); 
                     case 'yt-play':
                         this.$modal.show(YoutubeVideoSearcher);
                         return;
@@ -236,6 +232,9 @@
         },
 
         computed: {
+            playerLock: function() {
+                return this.$store.state.playerLock;
+            },
             cinemaMode: function() {
                 return this.$store.state.cinemaMode;
             },
@@ -298,7 +297,7 @@
 
                     &.action-yt-toggle,
                     &.action-yt-queue,
-                    &.action-yt-skip,
+                    &.action-yt-lock,
                     &.action-yt-play {
                         border-left-color: #ff8f8f !important;
                         .icon {

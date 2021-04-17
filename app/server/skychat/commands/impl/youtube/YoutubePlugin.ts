@@ -6,7 +6,6 @@ import {Connection} from "../../../Connection";
 import {CommandEntryPointRule} from "../../Command";
 import {google, youtube_v3} from "googleapis";
 import {Config} from "../../../Config";
-import {Message} from "../../../Message";
 import {UserController} from "../../../UserController";
 import {PendingYoutubeVideo} from "./PendingYoutubeVideo";
 import {CurrentYoutubeVideo, SyncPlayerStateObject} from "./CurrentYoutubeVideo";
@@ -39,7 +38,7 @@ export class YoutubePlugin extends Plugin {
             minCount: 1,
             maxCount: 1,
             maxCallsPer10Seconds: 10,
-            params: [{name: 'action', pattern: /^(sync|off|on|list|skip|shuffle|flush)$/}]
+            params: [{name: 'action', pattern: /^(sync|off|on|replay30|skip30|list|skip|shuffle|flush)$/}]
         },
         play: {
             minCount: 1,
@@ -113,6 +112,22 @@ export class YoutubePlugin extends Plugin {
                 await UserController.savePluginData(connection.session.user, this.name, newState);
                 this.sync(connection);
                 connection.session.syncUserData();
+                break;
+            
+            case 'replay30':
+            case 'skip30':
+                if (! this.storage.currentVideo) {
+                    return;
+                }
+                if (connection.session.user.right < YoutubePlugin.MIN_API_RIGHT) {
+                    throw new Error('Unable to perform this action');
+                }
+                if (! Config.isOP(connection.session.identifier)
+                    && this.storage.currentVideo.user.id !== connection.session.user.id) {
+                    throw new Error('Unable to perform this action');
+                }
+                const sign = param === 'replay30' ? -1 : +1;
+                this.moveCursor(sign * 30 * 1000);
                 break;
 
             case 'list':
@@ -308,6 +323,24 @@ export class YoutubePlugin extends Plugin {
             this.skip();
         }
         this.skipVoteInProgress = false;
+    }
+
+    /**
+     * Move the cursor relative to where it is now
+     * @param duration Duration in ms
+     * @returns 
+     */
+    private moveCursor(duration: number): void {
+        if (! this.storage.currentVideo) {
+            return;
+        }
+        // Move start date
+        let newStartTime = this.storage.currentVideo.startedDate.getTime() - duration;
+        if (newStartTime > Date.now()) {
+            newStartTime = Date.now();
+        }
+        this.storage.currentVideo.startedDate = new Date(newStartTime);
+        this.sync(this.room);
     }
 
     /**
