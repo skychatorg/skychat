@@ -6,10 +6,11 @@
             <div class="poll">
                 <div class="info">
                     <div class="poll-title">
-                        Result of: {{pollResult.title}}
+                        {{pollResult.title}}
                     </div>
                     <div class="poll-content">
-                        {{pollResult.content}}<br>
+                        {{pollResult.content}}
+                        <br>
                         <div>
                             RESULT: {{typeof pollResult.result === 'undefined' ? 'NONE' : (pollResult.result ? 'YES' : 'NO')}}
                         </div>

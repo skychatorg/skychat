@@ -39,10 +39,18 @@ body {
     .mobile-page-right {
         .hide-mobile-right { display: none !important; }
     }
+    .mobile-page-left {
+        .hide-mobile-left { display: none !important; }
+    }
 
-    .mobile-page-right {
+    .mobile-page-right,
+    .mobile-page-left {
 
-        .default-container > .left,
+        .default-container > .left {
+            flex-basis: 100% !important;
+            padding: 0 10px 0 10px;
+        }
+
         .default-container > .right {
             flex-basis: 100% !important;
             padding: 0 0 0 10px;

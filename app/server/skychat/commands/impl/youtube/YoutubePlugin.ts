@@ -314,7 +314,7 @@ export class YoutubePlugin extends Plugin {
         }
         this.skipVoteInProgress = true;
         const pollPlugin = this.room.getPlugin('poll') as PollPlugin;
-        const poll = await pollPlugin.poll('Skip song: ' + this.storage.currentVideo.video.title + '?', 'Poll by ' + connection.session.identifier, {
+        const poll = await pollPlugin.poll('Skip song: ' + this.storage.currentVideo.video.title + '?', connection.session.identifier + ' asks:', {
             timeout: 15 * 1000,
             defaultValue: false,
             minVotes: 2,

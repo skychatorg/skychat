@@ -8,7 +8,9 @@
                 'selected': currentRoom === room.id,
                 'has-unread': user.id > 0 && (user.data.plugins.lastseen[room.id] || 0) < room.lastReceivedMessageId
             }"
-            @click="joinRoom(room.id)">
+            @click="joinRoom(room.id)"
+        >
+            <span class="material-icons md-18 room-icon">tag</span>
             <div class="room-name" :title="room.name">
                 <b>{{room.name}}<sup v-show="roomConnectedCounts[room.id]">{{roomConnectedCounts[room.id]}}</sup></b>
             </div>
@@ -70,8 +72,8 @@
 
 .room-list {
     padding-top: 20px;
-    padding-right: 6px;
-    padding-left: 20px;
+    padding-right: 10px;
+    padding-left: 10px;
     color: white;
 
     .room {
@@ -89,21 +91,26 @@
             background: #e2b14152;
         }
 
-        &.selected {
-            margin-left: 4px;
-            background: #424248;
-        }
-
         &:hover:not(.selected) {
             border-width: 0;
             margin-left: 4px;
             background: #313235;
         }
 
+        &.selected {
+            margin-left: 8px;
+            background: #424248;
+        }
+
+        .room-icon {
+            margin-top: 10px;
+            margin-left: 4px;
+        }
+
         .room-name {
             flex-grow: 1;
             margin-top: 10px;
-            margin-left: 14px;
+            margin-left: 4px;
             overflow: hidden;
             white-space: nowrap;
             text-overflow: ellipsis;

@@ -112,7 +112,7 @@
         display: flex;
         color: white;
         background: #242427;
-        margin-top: 4px;
+        margin-bottom: 4px;
         border-left: 4px solid #a3a5b4;
         transition: all 0.2s;
         cursor: pointer;

@@ -1,11 +1,18 @@
 <template>
     <div class="message-form">
-        <div class="image-upload" v-show="! recordingAudio && uploadingFile">
+        <div class="show-mobile">
+            <div class="goto-other-cols">
+                <div @click="onMobileShowLeftCol" title="See rooms and account info" class="goto-left-col">
+                    <i class="material-icons md-28">keyboard_arrow_left</i>
+                </div>
+            </div>
+        </div>
+        <div class="image-upload" v-show="! recordingAudio && uploadingFile" title="Uploading..">
             <label for="file-input">
                 <img src="/assets/images/icons/loading.gif"/>
             </label>
         </div>
-        <div class="image-upload" v-show="! recordingAudio && ! uploadingFile">
+        <div class="image-upload" v-show="! recordingAudio && ! uploadingFile" title="Upload an image">
             <label for="file-input">
                 <i class="upload-icon material-icons md-28">publish</i>
             </label>
@@ -29,9 +36,11 @@
                       v-model="message"
                       placeholder="Message.."></textarea>
         </form>
-        <div @click="onMobileShowList" class="show-mobile">
-            <div class="goto-list">
-                <i class="material-icons md-28">keyboard_arrow_right</i>
+        <div class="show-mobile">
+            <div class="goto-other-cols">
+                <div @click="onMobileShowRightCol" title="See connected list and quick actions" class="goto-right-col">
+                    <i class="material-icons md-28">keyboard_arrow_right</i>
+                </div>
             </div>
         </div>
     </div>
@@ -187,10 +196,17 @@
             },
 
             /**
-             * When clicking the arrow to show the connect list on mobile phones
+             * When clicking the arrow to show the right column
              */
-            onMobileShowList: function() {
+            onMobileShowRightCol: function() {
                 this.$store.commit('SET_MOBILE_PAGE', 'right');
+            },
+
+            /**
+             * When clicking the arrow to show the left column
+             */
+            onMobileShowLeftCol: function() {
+                this.$store.commit('SET_MOBILE_PAGE', 'left');
             },
 
             /**
@@ -269,6 +285,11 @@
             }
         }
 
+        .goto-left-col,
+        .goto-right-col {
+            cursor: pointer;
+        }
+
         .form {
             flex-grow: 1;
             padding: 4px 10px 4px 10px;
@@ -297,13 +318,28 @@
             }
         }
 
-        .goto-list {
-            color: #cccccc;
-            height: 100%;
+        .goto-other-cols {
+
             display: flex;
-            flex-direction: column;
-            justify-content: center;
-            margin-right: 10px;
+            height: 100%;
+
+            .goto-left-col {
+                color: #cccccc;
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                margin-left: 10px;
+            }
+
+            .goto-right-col {
+                color: #cccccc;
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                margin-right: 10px;
+            }
         }
     }
 </style>

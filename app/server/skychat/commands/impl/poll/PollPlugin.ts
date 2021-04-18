@@ -53,7 +53,7 @@ export class PollPlugin extends Plugin {
      * @param connection
      */
     private async handlePoll(param: string, connection: Connection) {
-        await this.poll(`New poll by ${connection.session.user.username}`, param, {
+        await this.poll(`${connection.session.user.username} asks:`, param, {
             defaultValue: undefined,
             timeout: PollPlugin.POLL_TIMEOUT
         });

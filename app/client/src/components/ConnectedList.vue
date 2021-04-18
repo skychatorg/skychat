@@ -1,17 +1,10 @@
 <template>
     <div class="connected-list">
-
         <connected-user
                 v-for="session in sessions"
                 @click.native="() => onJoinPrivateChannel(session.identifier)"
                 :key="session.identifier"
                 :session="session"/>
-
-        <div @click="onMobileShowTchat" class="show-mobile">
-            <div class="goto-tchat">
-                <i class="material-icons md-28">keyboard_arrow_left</i>
-            </div>
-        </div>
     </div>
 </template>
 
@@ -28,9 +21,6 @@
                 } else {
                     this.$store.commit('SET_CHANNEL', username);
                 }
-            },
-            onMobileShowTchat: function() {
-                this.$store.commit('SET_MOBILE_PAGE', 'middle');
             }
         },
         computed: {
@@ -46,8 +36,6 @@
 
 <style lang="scss" scoped>
     .connected-list {
-        padding-top: 20px;
-        padding-right: 20px;
         padding-left: 6px;
         color: white;
     }
