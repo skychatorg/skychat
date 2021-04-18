@@ -80,8 +80,8 @@ const store = {
         SET_MOBILE_PAGE(state, mobilePage) {
             state.mobileCurrentPage = mobilePage;
         },
-        TOGGLE_PLAYER_LOCK(state) {
-            state.playerLock = ! state.playerLock;
+        SET_PLAYER_LOCK(state, playerLock) {
+            state.playerLock = !! playerLock;
         },
         TOGGLE_CINEMA_MODE(state) {
             state.cinemaMode = ! state.cinemaMode;

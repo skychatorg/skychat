@@ -10,7 +10,7 @@
             }"
             @click="joinRoom(room.id)">
             <div class="room-name" :title="room.name">
-                <b># {{room.name}}<sup v-show="roomConnectedCounts[room.id]">{{roomConnectedCounts[room.id]}}</sup></b>
+                <b>{{room.name}}<sup v-show="roomConnectedCounts[room.id]">{{roomConnectedCounts[room.id]}}</sup></b>
             </div>
             <div class="room-meta">
                 <div class="last-activity"
@@ -110,7 +110,7 @@
         }
 
         .room-meta {
-            flex-basis: 60px;
+            flex-basis: 65px;
             margin-top: 10px;
             margin-right: 6px;
             display: flex;

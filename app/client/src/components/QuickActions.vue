@@ -50,7 +50,7 @@
                                 id: 'yt-lock',
                                 title: "Lock video player",
                                 icon: 'lock',
-                                shortcuts: []
+                                shortcuts: ['alt+a']
                             },
                             {
                                 id: 'yt-play',
@@ -107,19 +107,19 @@
                                 id: 'shop-color',
                                 title: "Browse shop colors",
                                 icon: 'palette',
-                                shortcuts: ['ctrl+s+1']
+                                shortcuts: []
                             },
                             {
                                 id: 'shop-halo',
                                 title: "Browse shop halo colors",
                                 icon: 'brush',
-                                shortcuts: ['ctrl+s+2']
+                                shortcuts: []
                             },
                             {
                                 id: 'shop-pinnedicon',
                                 title: "Browse shop",
                                 icon: 'info',
-                                shortcuts: ['ctrl+s+3']
+                                shortcuts: []
                             },
                         ]
                     },
@@ -206,7 +206,7 @@
                     case 'yt-queue':
                         return this.$client.sendMessage('/yt list');
                     case 'yt-lock':
-                        return this.$store.commit('TOGGLE_PLAYER_LOCK'); 
+                        return this.$store.commit('SET_PLAYER_LOCK', ! this.playerLock); 
                     case 'yt-play':
                         this.$modal.show(YoutubeVideoSearcher);
                         return;
