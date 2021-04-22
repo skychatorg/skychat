@@ -219,7 +219,7 @@
                     overflow: hidden;
                     text-overflow: ellipsis;
                     margin-top: 5px;
-                    flex-basis: calc(100% - 90px)!important;
+                    flex-basis: calc(100% - 110px);
                     text-align: right;
                 }
             }

@@ -2,7 +2,7 @@
     <div class="message-form">
         <div class="show-mobile">
             <div class="goto-other-cols">
-                <div @click="onMobileShowLeftCol" title="See rooms and account info" class="goto-left-col">
+                <div @click="onMobileShowLeftCol" title="See rooms and account info" class="goto-left-col" :class="{'has-new': hasNewContentInOtherRooms}">
                     <i class="material-icons md-28">keyboard_arrow_left</i>
                 </div>
             </div>
@@ -234,7 +234,19 @@
             },
             connectedList: function() {
                 return this.$store.state.connectedList;
-            }
+            },
+            hasNewContentInOtherRooms: function() {
+                const user = this.$store.state.user;
+                if (user.id <= 0) {
+                    return false;
+                }
+                for (const room of this.$store.state.rooms) {
+                    if ((user.data.plugins.lastseen[room.id] || 0) < room.lastReceivedMessageId) {
+                        return true;
+                    }
+                }
+                return false;
+            },
         }
     });
 </script>
@@ -330,6 +342,10 @@
                 flex-direction: column;
                 justify-content: center;
                 margin-left: 10px;
+
+                &.has-new {
+                    color: #ff7d7d;
+                }
             }
 
             .goto-right-col {
