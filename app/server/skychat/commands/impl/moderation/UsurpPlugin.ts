@@ -1,10 +1,10 @@
-import {Command} from "../../Command";
 import {Connection} from "../../../Connection";
 import {User} from "../../../User";
 import {Session} from "../../../Session";
+import { Plugin } from "../../Plugin";
 
 
-export class UsurpPlugin extends Command {
+export class UsurpPlugin extends Plugin {
 
     readonly name = 'usurp';
 

@@ -28,6 +28,7 @@
     "plugins": [
         "AccountPlugin",
         "AvatarPlugin",
+        "BackupPlugin",
         "ColorPlugin",
         "ConnectedListPlugin",
         "GiveMoneyPlugin",

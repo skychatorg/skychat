@@ -1,10 +1,10 @@
-import {Command} from "../../Command";
 import {Connection} from "../../../Connection";
 import { Config } from "../../../Config";
 import { MessageController } from "../../../MessageController";
+import { Plugin } from "../../Plugin";
 
 
-export class MessageCommand extends Command {
+export class MessageCommand extends Plugin {
 
     readonly name = 'message';
 

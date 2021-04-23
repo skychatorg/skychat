@@ -1,14 +1,12 @@
-import {Command, CommandEntryPointRule} from "../../Command";
+import {PluginCommandRules} from "../../Plugin";
+import {Plugin} from "../../Plugin";
 import {Connection} from "../../../Connection";
-import {Message} from "../../../Message";
-import {User} from "../../../User";
 import * as striptags from "striptags";
 import {Config} from "../../../Config";
-import {commentanalyzer_v1alpha1} from "googleapis";
 import {UserController} from "../../../UserController";
 
 
-export class HelpCommand extends Command {
+export class HelpCommand extends Plugin {
 
     readonly name = 'help';
 
@@ -44,7 +42,7 @@ export class HelpCommand extends Command {
             }
 
             // Get rule object
-            const rules: CommandEntryPointRule = (command.rules && command.rules[alias]) ? command.rules[alias] : {};
+            const rules: PluginCommandRules = (command.rules && command.rules[alias]) ? command.rules[alias] : {};
 
             content += `
             <tr>

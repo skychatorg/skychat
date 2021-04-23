@@ -1,4 +1,3 @@
-import { Command } from "./Command";
 import { Plugin } from "./Plugin";
 import { Room } from "../Room";
 import { Config } from "../Config";
@@ -8,14 +7,15 @@ const impl = require('./impl/');
 /**
  * Utility class that handles the list of commands and plugins
  */
-export class CommandManager {
+export class PluginManager {
 
     /**
      * Load all commands and plugins
      */
-    public static instantiateCommands(room: Room) {
+    public static instantiatePlugins(room: Room) {
         // Initialize command and plugin instances
-        const commands: {[commandName: string]: Command} = {};
+        const commands: {[commandName: string]: Plugin} = {};
+        const plugins: Plugin[] = [];
         // For every command/plugin
         for (let commandName of Config.getPlugins()) {
             // Check if the command/plugin exists
@@ -23,33 +23,29 @@ export class CommandManager {
                 throw new Error(`Unable to load command/plugin ${commandName}. Ensure the corresponding file is there and the plugin class exported.`);
             }
             // Instantiate it
-            const CommandConstructor = impl[commandName];
-            const command = new CommandConstructor(room);
+            const PluginConstructor = impl[commandName];
+            const plugin = new PluginConstructor(room);
+            plugins.push(plugin);
             // Add it in the command object with its name and all its aliases
-            commands[command.name] = command;
-            command.aliases.forEach((alias: any) => {
-                commands[alias] = command;
+            if (typeof commands[plugin.name] !== 'undefined') {
+                throw new Error(`Plugin command ${plugin.name} is implemented twice by plugin configuration. Verify there is no duplicate plugin.`);
+            }
+            commands[plugin.name] = plugin;
+            plugin.aliases.forEach((alias: any) => {
+                if (typeof commands[alias] !== 'undefined') {
+                    throw new Error(`Plugin command alias ${alias} is implemented twice by plugins ${commands[alias].name} and ${plugin.name}. Verify there is no duplicate plugin.`);
+                }
+                commands[alias] = plugin;
             });
         }
-        return commands;
-    }
-
-    /**
-     * Load all commands and plugins
-     */
-    public static extractPlugins(commands: {[commandName: string]: Command}) {
-        return Object.keys(commands)
-            .filter(commandAlias => commands[commandAlias] instanceof Plugin)
-            .filter(pluginAlias => commands[pluginAlias].name === pluginAlias)
-            .map(pluginAlias => commands[pluginAlias] as Plugin)
-            .sort((a, b) => a.priority - b.priority);
+        return {commands, plugins};
     }
 
     /**
      * Get command name from the message
      * @param message
      */
-    public static parseMessage(message: string): {param: string, commandName: string} {
+    public static parseCommand(message: string): {param: string, commandName: string} {
         message = message.trim();
         const commandName = message.split(' ')[0].substr(1).toLowerCase();
         const param = message.substr(commandName.length + 2);

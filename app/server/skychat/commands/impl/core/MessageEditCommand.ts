@@ -1,8 +1,8 @@
-import {Command} from "../../Command";
 import {Connection} from "../../../Connection";
+import { Plugin } from "../../Plugin";
 
 
-export class MessageEditCommand extends Command {
+export class MessageEditCommand extends Plugin {
 
     public static readonly EDIT_ANY_MIN_RIGHT: number = 100;
 

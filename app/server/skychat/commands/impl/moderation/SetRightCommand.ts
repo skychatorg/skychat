@@ -1,12 +1,12 @@
-import {Command} from "../../Command";
 import {Connection} from "../../../Connection";
 import {User} from "../../../User";
 import {Session} from "../../../Session";
 import {ConnectedListPlugin} from "../core/ConnectedListPlugin";
 import {UserController} from "../../../UserController";
+import { Plugin } from "../../Plugin";
 
 
-export class SetRightCommand extends Command {
+export class SetRightCommand extends Plugin {
 
     readonly name = 'setright';
 

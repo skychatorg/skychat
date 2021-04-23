@@ -6,12 +6,12 @@ import {DatabaseHelper} from "./DatabaseHelper";
 import {User} from "./User";
 import * as iof from "io-filter";
 import {Room, StoredRoom} from "./Room";
-import {CommandManager} from "./commands/CommandManager";
 import {UserController} from "./UserController";
 import {Config} from "./Config";
 import * as fs from "fs";
 import {Message} from "./Message";
 import {AudioRecorderPlugin} from "./commands/impl/core/AudioRecorderPlugin";
+import { PluginManager } from "./commands/PluginManager";
 
 
 export type StoredSkyChat = {
@@ -254,7 +254,7 @@ export class SkyChat {
         payload = await connection.room.executeNewMessageHook(payload, connection);
 
         // Parse command name and message content
-        const {param, commandName} = CommandManager.parseMessage(payload);
+        const {param, commandName} = PluginManager.parseCommand(payload);
 
         // Get command object
         const command = connection.room.commands[commandName];

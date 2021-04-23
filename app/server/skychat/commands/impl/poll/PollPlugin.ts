@@ -1,7 +1,6 @@
 import {Connection} from "../../../Connection";
 import {Plugin} from "../../Plugin";
 import {Poll, PollOptions} from "./Poll";
-import {Command} from "../../Command";
 import {Room} from "../../../Room";
 import { Config } from "../../../Config";
 
@@ -31,7 +30,7 @@ export class PollPlugin extends Plugin {
             minCount: 2,
             maxCount: 2,
             maxCallsPer10Seconds: 4,
-            params: [{name: 'poll id', pattern: Command.POSITIVE_INTEGER_REGEXP}, {name: 'answer', pattern: /^([yn])$/}]
+            params: [{name: 'poll id', pattern: Plugin.POSITIVE_INTEGER_REGEXP}, {name: 'answer', pattern: /^([yn])$/}]
         }
     };
 

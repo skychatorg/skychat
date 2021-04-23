@@ -1,9 +1,9 @@
-import {Command} from "../../Command";
 import {Connection} from "../../../Connection";
 import {UserController} from "../../../UserController";
+import { Plugin } from "../../Plugin";
 
 
-export class HistoryClearPlugin extends Command {
+export class HistoryClearPlugin extends Plugin {
 
     readonly name = 'historyclear';
 

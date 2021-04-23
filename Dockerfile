@@ -14,8 +14,9 @@ RUN useradd -m -u $UID -g $GID -o -s /bin/bash $UNAME
 WORKDIR /app/skychat/
 
 # Mount volumes
-RUN ln -s /var/skychat/config   ./config
 RUN ln -s /var/skychat/avatars  ./avatars
+RUN ln -s /var/skychat/backups  ./backups
+RUN ln -s /var/skychat/config   ./config
 RUN ln -s /var/skychat/database ./database
 RUN ln -s /var/skychat/scripts  ./scripts
 RUN ln -s /var/skychat/stickers ./stickers

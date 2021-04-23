@@ -3,7 +3,7 @@ import {Room} from "../../../Room";
 import {User} from "../../../User";
 import {Session} from "../../../Session";
 import {Connection} from "../../../Connection";
-import {CommandEntryPointRule} from "../../Command";
+import {PluginCommandRules} from "../../Plugin";
 import {google, youtube_v3} from "googleapis";
 import {Config} from "../../../Config";
 import {UserController} from "../../../UserController";
@@ -33,7 +33,7 @@ export class YoutubePlugin extends Plugin {
 
     readonly aliases = ['play', 'playpl', 'ytapi', 'ytapi:search', '~'];
 
-    readonly rules: {[alias: string]: CommandEntryPointRule} = {
+    readonly rules: {[alias: string]: PluginCommandRules} = {
         yt: {
             minCount: 1,
             maxCount: 1,

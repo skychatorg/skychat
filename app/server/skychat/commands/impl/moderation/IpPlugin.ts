@@ -1,15 +1,14 @@
-import {Command} from "../../Command";
 import {Connection} from "../../../Connection";
 import {User} from "../../../User";
 import {Session} from "../../../Session";
-import {Message} from "../../../Message";
 import * as striptags from "striptags";
 import {UserController} from "../../../UserController";
 import * as geoip from "geoip-lite";
 import {MessageFormatter} from "../../../MessageFormatter";
+import { Plugin } from "../../Plugin";
 
 
-export class IpPlugin extends Command {
+export class IpPlugin extends Plugin {
 
     readonly name = 'ip';
 

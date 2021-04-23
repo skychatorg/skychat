@@ -1,4 +1,4 @@
-import {CommandManager} from "./commands/CommandManager";
+import {PluginManager} from "./commands/PluginManager";
 import * as sha256 from "sha256";
 import {Config} from "./Config";
 import {DatabaseHelper} from "./DatabaseHelper";
@@ -28,10 +28,10 @@ export class UserController {
         }
 
         this.dummyPluginInstances = {};
-        CommandManager.extractPlugins(CommandManager.instantiateCommands(null as any))
-            .forEach(plugin => {
-                this.dummyPluginInstances[plugin.name] = plugin;
-            });
+        const {commands, plugins} = PluginManager.instantiatePlugins(null as any);
+        plugins.forEach(plugin => {
+            this.dummyPluginInstances[plugin.name] = plugin;
+        });
         return this.dummyPluginInstances;
     }
 
