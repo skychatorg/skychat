@@ -6,6 +6,9 @@ ARG UID=1000
 ARG GID=1000
 ARG DOCKER_PORT=8080
 
+# Install zip (required for managing backups)
+RUN apt-get update -y && apt-get -y install zip
+
 # Create a local user corresponding to the host one
 RUN groupadd -g $GID -o $UNAME
 RUN useradd -m -u $UID -g $GID -o -s /bin/bash $UNAME
@@ -38,7 +41,7 @@ RUN chown -R $UNAME:$UNAME ./
 # Change to non-root privilege
 USER $UNAME
 
-# Copy dependencies first
+# Install dependencies
 RUN npm install
 
 # Expose app port

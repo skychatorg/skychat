@@ -11,8 +11,9 @@ services:
         UID: ${DOCKER_UID}
         GID: ${DOCKER_GID}
     volumes:
-      - ./config:/var/skychat/config
       - ./avatars:/var/skychat/avatars
+      - ./backups:/var/skychat/backups
+      - ./config:/var/skychat/config
       - ./database:/var/skychat/database
       - ./scripts:/var/skychat/scripts
       - ./stickers:/var/skychat/stickers
