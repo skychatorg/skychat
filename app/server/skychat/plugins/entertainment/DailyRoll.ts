@@ -24,7 +24,7 @@ export class DailyRoll extends Plugin {
     /**
      * Scheduled time in hours. E.g. 2.5 means 2h30
      */
-    public static readonly SCHEDULED_TIME: number = 1.66;
+    public static readonly SCHEDULED_TIME: number = 21.5;
 
     public static readonly ENTRY_COST: number = 100;
 
