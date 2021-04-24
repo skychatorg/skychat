@@ -10,8 +10,8 @@ import {UserController} from "./UserController";
 import {Config} from "./Config";
 import * as fs from "fs";
 import {Message} from "./Message";
-import {AudioRecorderPlugin} from "./commands/impl/core/AudioRecorderPlugin";
-import { PluginManager } from "./commands/PluginManager";
+import {AudioRecorderPlugin} from "./plugins/core/AudioRecorderPlugin";
+import { PluginManager } from "./PluginManager";
 
 
 export type StoredSkyChat = {

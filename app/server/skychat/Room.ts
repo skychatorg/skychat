@@ -1,8 +1,8 @@
 import {Connection} from "./Connection";
 import {IBroadcaster} from "./IBroadcaster";
 import {Message, MessageConstructorOptions, MessageMeta} from "./Message";
-import {Plugin} from "./commands/Plugin";
-import {PluginManager} from "./commands/PluginManager";
+import {Plugin} from "./Plugin";
+import {PluginManager} from "./PluginManager";
 import * as fs from "fs";
 import SQL from "sql-template-strings";
 import {DatabaseHelper} from "./DatabaseHelper";

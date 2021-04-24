@@ -1,10 +1,10 @@
-import {PluginManager} from "./commands/PluginManager";
+import {PluginManager} from "./PluginManager";
 import * as sha256 from "sha256";
 import {Config} from "./Config";
 import {DatabaseHelper} from "./DatabaseHelper";
 import {AuthToken, User} from "./User";
 import SQL from "sql-template-strings";
-import {Plugin} from "./commands/Plugin";
+import {Plugin} from "./Plugin";
 import {Message, MessageConstructorOptions, MessageMeta} from "./Message";
 import * as _ from "lodash"
 
@@ -29,7 +29,7 @@ export class UserController {
 
         this.dummyPluginInstances = {};
         const {commands, plugins} = PluginManager.instantiatePlugins(null as any);
-        plugins.forEach(plugin => {
+        plugins.forEach((plugin: Plugin) => {
             this.dummyPluginInstances[plugin.name] = plugin;
         });
         return this.dummyPluginInstances;
