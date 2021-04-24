@@ -17,6 +17,7 @@ const store = {
         mobileCurrentPage: 'middle',
         config: null,
         rooms: [],
+        playerLock: false,
         cinemaMode: false,
         channel: null,
         connectionState: WebSocket.CLOSED,
@@ -79,6 +80,9 @@ const store = {
         SET_MOBILE_PAGE(state, mobilePage) {
             state.mobileCurrentPage = mobilePage;
         },
+        SET_PLAYER_LOCK(state, playerLock) {
+            state.playerLock = !! playerLock;
+        },
         TOGGLE_CINEMA_MODE(state) {
             state.cinemaMode = ! state.cinemaMode;
         },
@@ -130,21 +134,23 @@ const store = {
             if (! entry) {
                 return;
             }
-            entry.user.data.plugins.lastseen = data.message;
+            entry.user.data.plugins.lastseen = data.data;
             this.commit('GENERATE_LAST_MESSAGE_SEEN_IDS');
         },
         GENERATE_LAST_MESSAGE_SEEN_IDS(state) {
             // Update last seen message ids
             const lastSeen = {};
+            const roomId = state.currentRoom;
             for (const entry of state.connectedList) {
-                const id = entry.user.data.plugins.lastseen;
-                if (! id) {
+                const entries = entry.user.data.plugins.lastseen;
+                if (! entries || ! entries[roomId]) {
                     continue;
                 }
-                if (typeof lastSeen[id] === 'undefined') {
-                    lastSeen[id] = [];
+                const lastSeenId = entries[roomId];
+                if (typeof lastSeen[lastSeenId] === 'undefined') {
+                    lastSeen[lastSeenId] = [];
                 }
-                lastSeen[id].push(entry.user);
+                lastSeen[lastSeenId].push(entry.user);
             }
             state.lastMessageSeenIds = lastSeen;
         },
@@ -211,6 +217,9 @@ const store = {
             Vue.set(state.messages, oldMessageIndex, message);
         },
         SET_PLAYER_STATE(state, playerState) {
+            if (state.playerLock) {
+                return;
+            }
             state.playerState = playerState;
         },
         SET_POLLS(state, polls) {

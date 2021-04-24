@@ -16,17 +16,19 @@
         data: function() {
             return {
                 src: '',
-                previousPlayedId: null
+                previousPlayedObject: null
             }
         },
         watch: {
             playerState: function() {
                 if (! this.playerState || ! this.playerState.enabled) {
                     this.src = '';
-                    this.previousPlayedId = null;
+                    this.previousPlayedObject = null;
                     return;
                 }
-                if (this.playerState.video.id === this.previousPlayedId) {
+                if (this.previousPlayedObject
+                    && this.playerState.video.id === this.previousPlayedObject.video.id
+                    && this.playerState.startedDate === this.previousPlayedObject.startedDate) {
                     return;
                 }
                 let src = 'https://www.youtube.com/embed/' + this.playerState.video.id;
@@ -35,8 +37,8 @@
                 if (this.playerState.video.duration > 0) {
                     src += '&start=' + parseInt(this.playerState.cursor);
                 }
-                this.src = src;
-                this.previousPlayedId = this.playerState.video.id;
+                this.src = src + '&random=' + Math.random();
+                this.previousPlayedObject = this.playerState;
             }
         },
         computed: {

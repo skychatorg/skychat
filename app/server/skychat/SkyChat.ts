@@ -6,12 +6,12 @@ import {DatabaseHelper} from "./DatabaseHelper";
 import {User} from "./User";
 import * as iof from "io-filter";
 import {Room, StoredRoom} from "./Room";
-import {CommandManager} from "./commands/CommandManager";
 import {UserController} from "./UserController";
 import {Config} from "./Config";
 import * as fs from "fs";
 import {Message} from "./Message";
-import {AudioRecorderPlugin} from "./commands/impl/core/AudioRecorderPlugin";
+import {AudioRecorderPlugin} from "./plugins/core/AudioRecorderPlugin";
+import { PluginManager } from "./PluginManager";
 
 
 export type StoredSkyChat = {
@@ -97,6 +97,14 @@ export class SkyChat {
 
                 // On audio received
                 this.server.registerEvent('audio', this.onAudio.bind(this), 0, 30);
+
+                // Periodically send the room list to users
+                setInterval(() => {
+                    Object.values(Session.sessions)
+                        .map(session => {
+                            session.send('room-list', this.rooms.map(room => room.sanitized()));
+                        });
+                }, 5 * 1000);
             });
 
         setInterval(this.tick.bind(this), SkyChat.TICK_INTERVAL);
@@ -246,7 +254,7 @@ export class SkyChat {
         payload = await connection.room.executeNewMessageHook(payload, connection);
 
         // Parse command name and message content
-        const {param, commandName} = CommandManager.parseMessage(payload);
+        const {param, commandName} = PluginManager.parseCommand(payload);
 
         // Get command object
         const command = connection.room.commands[commandName];

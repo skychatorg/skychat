@@ -1,9 +1,8 @@
 import {Connection} from "./Connection";
 import {IBroadcaster} from "./IBroadcaster";
 import {Message, MessageConstructorOptions, MessageMeta} from "./Message";
-import {Command} from "./commands/Command";
-import {Plugin} from "./commands/Plugin";
-import {CommandManager} from "./commands/CommandManager";
+import {Plugin} from "./Plugin";
+import {PluginManager} from "./PluginManager";
 import * as fs from "fs";
 import SQL from "sql-template-strings";
 import {DatabaseHelper} from "./DatabaseHelper";
@@ -17,6 +16,8 @@ export type StoredRoom = {
 export type SanitizedRoom = {
     id: number;
     name: string;
+    lastReceivedMessageId: number;
+    lastReceivedMessageTimestamp: number;
 }
 
 
@@ -63,21 +64,21 @@ export class Room implements IBroadcaster {
     public locked: boolean = false;
 
     /**
-     * Command instances (including plugins).
-     * All aliases of a command/plugin points to the same command instance.
+     * Plugins. All aliases of a command/plugin points to the same command instance.
      */
-    public readonly commands: {[commandName: string]: Command};
+    public readonly commands: {[commandName: string]: Plugin};
 
     /**
-     * List of loaded plugins
+     * Plugins sorted by descending priority
      */
     public readonly plugins: Plugin[];
 
     constructor(id: number, name: string) {
         this.id = id;
         this.name = name;
-        this.commands = CommandManager.instantiateCommands(this);
-        this.plugins = CommandManager.extractPlugins(this.commands);
+        const {commands, plugins} = PluginManager.instantiatePlugins(this);
+        this.commands = commands;
+        this.plugins = plugins;
         this.load();
     }
 
@@ -177,8 +178,8 @@ export class Room implements IBroadcaster {
      * Get a plugin instance by its name
      * @param name
      */
-    public getPlugin(name: string): Command {
-        const plugin = this.commands[name];
+    public getPlugin(name: string): Plugin {
+        const plugin: Plugin | undefined = this.commands[name];
         if (! plugin) {
             throw new Error('Plugin not found');
         }
@@ -323,9 +324,12 @@ export class Room implements IBroadcaster {
      * Get metadata about this room
      */
     public sanitized(): SanitizedRoom {
+        const lastMessage: Message | null = this.messages.length === 0 ? null : this.messages[this.messages.length - 1];
         return {
             id: this.id,
             name: this.name,
+            lastReceivedMessageId: lastMessage ? lastMessage.id : 0,
+            lastReceivedMessageTimestamp: lastMessage ? lastMessage.createdTime.getTime() : 0,
         };
     }
 }

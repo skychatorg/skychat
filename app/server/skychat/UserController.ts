@@ -1,11 +1,12 @@
-import {CommandManager} from "./commands/CommandManager";
+import {PluginManager} from "./PluginManager";
 import * as sha256 from "sha256";
 import {Config} from "./Config";
 import {DatabaseHelper} from "./DatabaseHelper";
 import {AuthToken, User} from "./User";
 import SQL from "sql-template-strings";
-import {Plugin} from "./commands/Plugin";
+import {Plugin} from "./Plugin";
 import {Message, MessageConstructorOptions, MessageMeta} from "./Message";
+import * as _ from "lodash"
 
 
 export class UserController {
@@ -27,10 +28,10 @@ export class UserController {
         }
 
         this.dummyPluginInstances = {};
-        CommandManager.extractPlugins(CommandManager.instantiateCommands(null as any))
-            .forEach(plugin => {
-                this.dummyPluginInstances[plugin.name] = plugin;
-            });
+        const {commands, plugins} = PluginManager.instantiatePlugins(null as any);
+        plugins.forEach((plugin: Plugin) => {
+            this.dummyPluginInstances[plugin.name] = plugin;
+        });
         return this.dummyPluginInstances;
     }
 
@@ -42,7 +43,7 @@ export class UserController {
         if (typeof plugins[pluginName] === 'undefined') {
             return undefined;
         }
-        return plugins[pluginName].defaultDataStorageValue;
+        return _.cloneDeep(plugins[pluginName].defaultDataStorageValue);
     }
 
     /**
@@ -56,7 +57,7 @@ export class UserController {
                 defaultValues[plugin.name] = plugin.defaultDataStorageValue;
             }
         }
-        return defaultValues;
+        return _.cloneDeep(defaultValues);
     }
 
     /**

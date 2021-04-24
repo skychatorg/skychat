@@ -15,6 +15,17 @@
 
     export default Vue.extend({
         components: {PageHeader, PageContent, CursorLayer},
+        mounted: function() {
+            this.$mousetrap.bind(Array.from({length: 9}).map((_, i) => `alt+${i + 1}`), (event) => {
+                event.preventDefault();
+                const index = parseInt(event.key) - 1;
+                const room = this.rooms[index];
+                if (! room) {
+                    return;
+                }
+                this.$client.joinRoom(index);
+            });
+        },
         methods: {
             logout: function() {
                 this.$client.logout();
@@ -25,6 +36,9 @@
             }
         },
         computed: {
+            rooms: function() {
+                return this.$store.state.rooms;
+            },
             page: function() {
                 return this.$store.state.page;
             },

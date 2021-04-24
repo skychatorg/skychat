@@ -21,26 +21,50 @@
             <div class="sliding-window bottom" :class="{['custom-color-' + progressBarColor]: true, 'closed': cursorPercent >= 1}"></div>
         </div>
 
-        <!-- youtube queue -->
-        <div class="queue scrollbar" v-show="nextVideos.length > 0">
-            
-            <div v-for="video, videoIndex in nextVideos"
-                class="video-in-queue"
-                :key="video.video.id"
-                :title="video.video.title + ': added by ' + video.user.username">
+        <!-- yt preview right col -->
+        <div class="preview-right-col">
 
-                <!-- video preview image -->
-                <div class="image avatar">
-                    <div class="image-bubble" :style="'box-shadow: #' + progressBarColor +' 0 0 4px 0;'">
-                        <img data-v-193da69e="" :src="video.video.thumb">
+            <!-- youtube queue -->
+            <div class="queue scrollbar">
+                <div v-for="video, videoIndex in nextVideos"
+                    class="video-in-queue"
+                    :key="video.video.id"
+                    :title="video.video.title + ': added by ' + video.user.username">
+
+                    <!-- video preview image -->
+                    <div class="image avatar">
+                        <div class="image-bubble" :style="'box-shadow: #' + progressBarColor +' 0 0 4px 0;'">
+                            <img data-v-193da69e="" :src="video.video.thumb">
+                        </div>
                     </div>
-                </div>
 
-                <!-- the svg has -5px left and top to avoid the circles being truncated -->
-                <svg height="50" width="50">
-                    <circle cx="25" cy="25" r="20" fill="none" stroke="black"></circle>
-                    <circle cx="25" cy="25" r="20" :class="'custom-color-' + progressBarColor" :stroke-dashoffset="- (queueWaitDurations[videoIndex]) * 2 * Math.PI * 25"></circle>
-                </svg>
+                    <!-- the svg has -5px left and top to avoid the circles being truncated -->
+                    <svg height="50" width="50">
+                        <circle cx="25" cy="25" r="20" fill="none" stroke="black"></circle>
+                        <circle cx="25" cy="25" r="20" :class="'custom-color-' + progressBarColor" :stroke-dashoffset="- (queueWaitDurations[videoIndex]) * 2 * Math.PI * 25"></circle>
+                    </svg>
+                </div>
+            </div>
+                
+            <!-- actions -->
+            <div class="preview-actions" :style="{'border-color': progressBarColor}">
+                <div v-show="canHandlePlayer()"
+                     @click="ytReplay30"
+                     title="Replay 30 seconds"
+                     class="preview-action">
+                    <i class="material-icons md-14">replay_30</i>
+                </div>
+                <div v-show="canHandlePlayer()"
+                     @click="ytSkip30"
+                     title="Skip 30 seconds"
+                     class="preview-action">
+                    <i class="material-icons md-14">forward_30</i>
+                </div>
+                <div @click="ytSkip"
+                     title="Skip video"
+                     class="preview-action">
+                    <i class="material-icons md-14">skip_next</i>
+                </div>
             </div>
         </div>
     </div>
@@ -109,9 +133,24 @@
                 const indexOf = colors.indexOf(this.progressBarColor);
                 const newIndex = (indexOf + 1) % colors.length;
                 this.progressBarColor = colors[newIndex];
-            }
+            },
+            ytReplay30: function() {
+                this.$client.sendMessage('/yt replay30');
+            },
+            ytSkip30: function() {
+                this.$client.sendMessage('/yt skip30');
+            },
+            ytSkip: function() {
+                this.$client.sendMessage('/yt skip');
+            },
+            canHandlePlayer: function() {
+                return this.playerState && this.user && this.user.id === this.playerState.user.id;
+            },
         },
         computed: {
+            user: function() {
+                return this.$store.state.user;
+            },
             playerState: function() {
                 return this.$store.state.playerState;
             },
@@ -270,46 +309,72 @@
             stroke: #9b71b9;
         }
 
-        .queue {
+        .preview-right-col {
+
             flex-grow: 1;
             flex-basis: 0px;
-            overflow-y: auto;
             display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            position: relative;
+            flex-direction: column;
             background: #242427;
-            padding: 4px;
 
-            .video-in-queue {
+            .queue {
+                flex-grow: 1;
+                overflow-y: auto;
                 display: flex;
-                width: 40px;
-                height: 40px;
-                margin: 5px;
+                flex-wrap: wrap;
+                justify-content: center;
                 position: relative;
+                padding: 4px;
 
-                .image {
+                .video-in-queue {
+                    display: flex;
                     width: 40px;
                     height: 40px;
-                    display: flex;
+                    margin: 5px;
+                    position: relative;
 
-                    .image-bubble {
-                        transition: all 1s ease-in-out;
+                    .image {
+                        width: 40px;
+                        height: 40px;
+                        display: flex;
+
+                        .image-bubble {
+                            transition: all 1s ease-in-out;
+                        }
+                    }
+                    svg {
+                        position: absolute;
+                        top: -5px;
+                        left: -5px;
+
+                        circle {
+                            fill: none;
+                            transition: all 1s ease-in-out;
+                            stroke-width: 2px;
+                            stroke-dasharray: 1000;
+                            transform-origin: center center;
+                            transform: rotate(-85deg);
+                            animation: rotate 60s linear infinite;
+                        }
                     }
                 }
-                svg {
-                    position: absolute;
-                    top: -5px;
-                    left: -5px;
+            }
 
-                    circle {
-                        fill: none;
-                        transition: all 1s ease-in-out;
-                        stroke-width: 2px;
-                        stroke-dasharray: 1000;
-                        transform-origin: center center;
-                        transform: rotate(-85deg);
-                        animation: rotate 60s linear infinite;
+            .preview-actions {
+                flex-basis: 20px;
+                display: flex;
+                justify-content: center;
+                padding-top: 4px;
+
+                .preview-action {
+                    flex-grow: 1;
+                    padding: 4px;
+                    text-align: center;
+                    cursor: pointer;
+                    transition: all 0.2s;
+
+                    &:hover {
+                        background: #313235;
                     }
                 }
             }

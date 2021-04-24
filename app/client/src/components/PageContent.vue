@@ -16,7 +16,13 @@
                     <!-- left col (room list) -->
                     <section class="left hide-mobile-middle hide-mobile-right scrollbar">
                         <room-list class="left-room-list"></room-list>
+                        <polls></polls>
                         <user-preview></user-preview>
+                        <div @click="onMobileShowMiddleCol" class="show-mobile" style="text-align: right;">
+                            <div class="goto-middle-col">
+                                <i class="material-icons md-28">keyboard_arrow_right</i>
+                            </div>
+                        </div>
                     </section>
 
                     <!-- middle col (main content) -->
@@ -26,10 +32,14 @@
 
                     <!-- right col (connected list and metas) -->
                     <section class="right hide-mobile-left hide-mobile-middle scrollbar">
-                        <player-preview></player-preview>
-                        <polls></polls>
-                        <connected-list></connected-list>
-                        <quick-actions></quick-actions>
+                        <player-preview id="player-preview"></player-preview>
+                        <connected-list id="connected-list" class="scrollbar"></connected-list>
+                        <quick-actions id="quick-actions"></quick-actions>
+                        <div @click="onMobileShowMiddleCol" class="show-mobile">
+                            <div class="goto-middle-col">
+                                <i class="material-icons md-28">keyboard_arrow_left</i>
+                            </div>
+                        </div>
                     </section>
                 </section>
             </template>
@@ -70,6 +80,9 @@
                 this.$store.commit('SET_PAGE', 'room');
                 this.$client.ytSync();
             },
+            onMobileShowMiddleCol: function() {
+                this.$store.commit('SET_MOBILE_PAGE', 'middle');
+            },
         },
         computed: {
             page: function() {
@@ -90,6 +103,7 @@
         width: 100%;
         height: 0;
         margin: 0 auto;
+        color: white;
 
         display: flex;
         justify-content: center;
@@ -126,7 +140,8 @@
             display: flex;
 
             .left {
-                flex-basis: 200px;
+                flex-basis: 220px;
+                width: 0;
                 display: flex;
                 flex-direction: column;
 
@@ -152,8 +167,23 @@
             .right {
                 flex-basis: 400px;
                 height: 100%;
-                overflow-y: auto;
+                overflow-y: hidden;
                 background: #16161978;
+                display: flex;
+                flex-direction: column;
+                padding-bottom: 4px;
+
+                #player-preview {
+                    flex-basis: 160px;
+                }
+
+                #connected-list {
+                    flex-grow: 1;
+                    overflow-y: auto;
+                    margin-right: 20px;
+                    margin-top: 10px;
+                    padding-right: 14px;
+                }
             }
         }
     }

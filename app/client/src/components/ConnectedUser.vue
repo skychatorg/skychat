@@ -3,7 +3,8 @@
          :style="{'border-left-color': session.user.data.plugins.color}"
          :class="{
             'selected': isChanSelected(session.user.username),
-            'has-unread': getUnreadCount(session.user.username) > 0
+            'has-unread': getUnreadCount(session.user.username) > 0,
+            'disconnected': session.connectionCount === 0,
           }">
         <div class="avatar">
             <span class="rank">
@@ -111,10 +112,14 @@
         display: flex;
         color: white;
         background: #242427;
-        margin-top: 4px;
+        margin-bottom: 4px;
         border-left: 4px solid #a3a5b4;
         transition: all 0.2s;
         cursor: pointer;
+
+        &.disconnected {
+            opacity: .6;
+        }
 
         &.has-unread {
             background: #e2b14152;
@@ -214,7 +219,7 @@
                     overflow: hidden;
                     text-overflow: ellipsis;
                     margin-top: 5px;
-                    flex-basis: calc(100% - 90px)!important;
+                    flex-basis: calc(100% - 110px);
                     text-align: right;
                 }
             }
