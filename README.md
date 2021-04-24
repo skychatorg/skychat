@@ -136,6 +136,21 @@ The preferences.json file specifies application preferences. The available field
 - Type: `number`
 - Description: Minimum required right to make polls.
 
+**maxReplacedImagesPerMessage**
+
+- Type: `number`
+- Description: Max number of replaced images per message, to prevent UI defacing.
+
+**maxReplacedStickersPerMessage**
+
+- Type: `number`
+- Description: Max number of replaced stickers per message, to prevent UI defacing.
+
+**maxNewlinesPerMessage**
+
+- Type: `number`
+- Description: Max number of newlines images per message, to prevent UI defacing. Additional newlines will be replaced by spaces.
+
 **rooms**
 
 - Type: `Array<{id: number, name: string}>`
