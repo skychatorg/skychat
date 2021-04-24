@@ -4,6 +4,8 @@
     "minRightForAudioRecording": -1,
     "minRightForConnectedList": -1,
     "minRightForPolls": -1,
+    "maxReplacedImagesPerMessage": 50,
+    "maxNewlinesPerMessage": 20,
     "rooms": [
         {"id": 0, "name": "Main"}
     ],

@@ -63,14 +63,14 @@ export class IpPlugin extends Plugin {
                 <tr>
                     <td>${roomId}</td>
                     <td>
-                        ${formatter.getButtonHtml(connection.session.identifier, '/track username ' + connection.session.identifier, true, true)}
-                         ${formatter.getButtonHtml('A', '/autotrack ' + connection.session.identifier, true, true)}
+                        ${formatter.getButtonHtml(connection.session.identifier, '/track username ' + connection.session.identifier, true)}
+                         ${formatter.getButtonHtml('A', '/autotrack ' + connection.session.identifier, true)}
                     </td>
                     <td>${connection.origin}</td>
                     <td>${connection.userAgent}</td>
                     <td>
-                        ${formatter.getButtonHtml(connection.ip, '/track ip ' + connection.ip, true, true)}
-                         ${formatter.getButtonHtml('A', '/autotrack ' + connection.ip, true, true)}
+                        ${formatter.getButtonHtml(connection.ip, '/track ip ' + connection.ip, true)}
+                         ${formatter.getButtonHtml('A', '/autotrack ' + connection.ip, true)}
                     </td>
                     <td>${geoIp ? `<a class="skychat-link" href="${geoIpLink}" rel="nofollow" target="_blank">${geoIp.country + ' / ' + geoIp.city}</a>` : ''}</td>
                 </tr>`;

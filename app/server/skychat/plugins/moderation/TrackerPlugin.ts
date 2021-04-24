@@ -177,8 +177,8 @@ export class TrackerPlugin extends Plugin {
                     <td>${value}</td>
                     <td>${node.type}</td>
                     <td>
-                        ${formatter.getButtonHtml(node.value, '/track ' + node.type + ' ' + node.value, true, true)}
-                        ${formatter.getButtonHtml('A', '/autotrack ' + node.value, true, true)}
+                        ${formatter.getButtonHtml(node.value, '/track ' + node.type + ' ' + node.value, true)}
+                        ${formatter.getButtonHtml('A', '/autotrack ' + node.value, true)}
                     </td>
                     <td>${node.count} (${(100 * node.count / sumOfCounts).toFixed(2)}%)</td>
                 </tr>
@@ -275,7 +275,7 @@ export class TrackerPlugin extends Plugin {
             html += `
                 <tr>
                     <td>${pathStr}</td>
-                    <td>${formatter.getButtonHtml(entry.node.value, '/track username ' + entry.node.value, true, true)}</td>
+                    <td>${formatter.getButtonHtml(entry.node.value, '/track username ' + entry.node.value, true)}</td>
                 </tr>
             `;
         }

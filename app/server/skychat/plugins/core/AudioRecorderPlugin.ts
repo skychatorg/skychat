@@ -67,7 +67,7 @@ export class AudioRecorderPlugin extends Plugin {
         // Send the message to the room
         const content = `[[play audio//audio ${this.currentEntryId}]]`;
         await this.room.sendMessage({
-            formatted: MessageFormatter.getInstance().replaceButtons(content, true),
+            formatted: MessageFormatter.getInstance().replaceButtons(content, false, true),
             content: content,
             user: connection.session.user,
             connection,

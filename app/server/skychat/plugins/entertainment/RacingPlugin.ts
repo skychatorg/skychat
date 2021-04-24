@@ -216,7 +216,7 @@ export class RacingPlugin extends Plugin {
         content += '- '.repeat(roadWidth / 2 + 3) + '🚩<br>';
         // Send the message edit
         const formatter = MessageFormatter.getInstance();
-        this.currentGame.gameMessage.edit(striptags(content), formatter.replaceButtons(content, true));
+        this.currentGame.gameMessage.edit(striptags(content), formatter.replaceButtons(content, false, true));
         this.room.send('message-edit', this.currentGame.gameMessage.sanitized());
     }
 

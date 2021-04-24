@@ -30,7 +30,7 @@ export class FileManager {
     }
 
     static isUploadedFileUrl(fileUrl: string): boolean {
-        return !! fileUrl.match(new RegExp('^' + MessageFormatter.getInstance().escapeRegExp(Config.LOCATION) + '\/uploads\/([0-9a-zA-Z/-]+)\.(jpg|jpeg|png|webp|gif|pdf|mp4|webm)$'));
+        return !! fileUrl.match(new RegExp('^' + MessageFormatter.escapeRegExp(Config.LOCATION) + '\/uploads\/([0-9a-zA-Z/-]+)\.(jpg|jpeg|png|webp|gif|pdf|mp4|webm)$'));
     }
 
     static uploadedFileExists(fileUrl: string): boolean {

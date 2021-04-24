@@ -8,6 +8,8 @@ export type Preferences = {
     minRightForAudioRecording: number;
     minRightForConnectedList: number;
     minRightForPolls: number;
+    maxReplacedImagesPerMessage: number;
+    maxNewlinesPerMessage: number;
     ranks: {limit: number, images: {[size: string]: string}}[];
     plugins: string[];
     rooms: {id: number, name: string}[];
@@ -119,6 +121,8 @@ export class Config {
             'minRightForAudioRecording',
             'minRightForConnectedList',
             'minRightForPolls',
+            'maxReplacedImagesPerMessage',
+            'maxNewlinesPerMessage',
             'plugins',
             'ranks',
             'rooms',

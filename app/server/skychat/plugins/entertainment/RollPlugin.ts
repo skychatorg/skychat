@@ -137,7 +137,7 @@ export class RollPlugin extends Plugin {
             </tr>
         </table>`;
         const formatter = MessageFormatter.getInstance();
-        introMessageContent = formatter.replaceButtons(introMessageContent, true);
+        introMessageContent = formatter.replaceButtons(introMessageContent, false, true);
         const introMessage = await this.room.sendMessage({
             content: striptags(introMessageContent),
             formatted: introMessageContent,

@@ -296,8 +296,8 @@ export class ShopPlugin extends Plugin {
                     <td>${item.name}</td>
                     <td>${itemDefinition.preview(item.value, connection.session.user)}</td>
                     <td>${'$ ' + (item.price / 100)}</td>
-                    <td>${itemOwned ? formatter.getButtonHtml('sell', '/shopsell ' + param + ' ' + item.id, true, true) : formatter.getButtonHtml('buy', '/shopbuy ' + param + ' ' + item.id, true, true)}</td>
-                    <td>${formatter.getButtonHtml('set', '/shopset ' + param + ' ' + item.id, true, true)}</td>
+                    <td>${itemOwned ? formatter.getButtonHtml('sell', '/shopsell ' + param + ' ' + item.id, true) : formatter.getButtonHtml('buy', '/shopbuy ' + param + ' ' + item.id, true)}</td>
+                    <td>${formatter.getButtonHtml('set', '/shopset ' + param + ' ' + item.id, true)}</td>
                 </tr>
             `;
         }

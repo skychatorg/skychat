@@ -1,6 +1,6 @@
-import * as fs from 'fs';
 import * as escapeHtml from "escape-html";
 import {Config} from "./Config";
+import { StickerManager } from './StickerManager';
 
 
 
@@ -9,11 +9,19 @@ import {Config} from "./Config";
  */
 export class MessageFormatter {
 
-    public static readonly STICKERS_JSON: string = 'config/stickers.json';
+    public static readonly IMAGE_REPLACE_LIMIT: number = Config.PREFERENCES.maxReplacedImagesPerMessage;
 
-    public static readonly STICKER_CODE_REGEXP: RegExp = /^:([a-z0-9-_)(]+):?$/;
+    public static readonly MAX_NEWLINES_PER_MESSAGE: number = Config.PREFERENCES.maxNewlinesPerMessage;
 
     private static instance?: MessageFormatter;
+
+    /**
+     * Escape a regexp
+     * @param string
+     */
+    public static escapeRegExp(string: string): string {
+        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
+    }
 
     public static getInstance(): MessageFormatter {
         if (! MessageFormatter.instance) {
@@ -24,23 +32,53 @@ export class MessageFormatter {
 
     public stickers: {[code: string]: string} = {};
 
-    constructor() {
-        this.loadStickers();
-    }
-
     /**
      * Format a raw message to html
      * @param message
      */
-    public format(message: string): string {
-        message = escapeHtml(message);
-        message = message.replace(/\n/g, "<br>");
-        message = this.replaceButtons(message, false);
-        message = this.replaceImages(message);
-        message = this.replaceRisiBankStickers(message);
-        message = this.replaceStickers(message);
-        message = this.replaceLinks(message);
+    public format(message: string, remove?: boolean, trusted?: boolean): string {
+        message = this.replaceHtml(message);
+        message = this.replaceNewlines(message, remove, trusted);
+        message = this.replaceButtons(message, remove, trusted);
+        message = this.replaceImages(message, remove, trusted);
+        message = this.replaceRisiBankStickers(message, remove);
+        message = this.replaceStickers(message, remove);
+        message = this.replaceLinks(message, remove);
         return message;
+    }
+
+    /**
+     * Escape html
+     * @param message
+     */
+    public replaceHtml(message: string): string {
+        return escapeHtml(message);
+    }
+
+    /**
+     * Replace newlines with <br>
+     * @param message
+     * @param remove
+     * @param trusted
+     */
+    public replaceNewlines(message: string, remove?: boolean, trusted?: boolean): string {
+        if (remove) {
+            return message.replace(/\n/g, ' ');
+        }
+        // If replacing newlines with html br
+        if (trusted) {
+            return message.replace(/\n/g, '<br>');
+        }
+        // If using max newlines / message
+        let count = 0;
+        return message.replace(/\n/g, () => {
+            // If limit reached
+            if (++ count > MessageFormatter.MAX_NEWLINES_PER_MESSAGE) {
+                return "\n";
+            }
+            // Otherwise, replace with br
+            return '<br>';
+        })
     }
 
     /**
@@ -48,7 +86,7 @@ export class MessageFormatter {
      * @param message
      * @param trusted
      */
-    public replaceButtons(message: string, trusted: boolean): string {
+    public replaceButtons(message: string, remove?: boolean, trusted?: boolean): string {
         const regexStr = '\\[\\[(.+?)\/(.+?)\\]\\]';
         const matches = message.match(new RegExp(regexStr, 'g'));
         if (! matches) {
@@ -60,25 +98,69 @@ export class MessageFormatter {
                 // Weird: not supposed to happen
                 continue;
             }
-            const buttonCode = this.getButtonHtml(codeDetail[1], codeDetail[2], true, trusted);
-            message = message.replace(rawCode, buttonCode);
+            if (remove) {
+                // Remove the button
+                message = message.replace(rawCode, '');
+            } else {
+                // Replace the button by its html code
+                const buttonCode = this.getButtonHtml(codeDetail[1], codeDetail[2], trusted);
+                message = message.replace(rawCode, buttonCode);
+            }
         }
         return message;
     }
 
     /**
+     * Get the html code of a button
+     * @param title
+     * @param action
+     * @param escape
+     * @param trusted
+     */
+    public getButtonHtml(title: string, action: string, trusted?: boolean) {
+        // Escape title and actions to prevent XSS
+        title = this.format(title, true);
+        action = this.format(action, true);
+        // Preview command if action is one
+        if (action[0] === '/' && ! trusted) {
+            title += ' <span class="skychat-button-info">(' + escapeHtml(action.split(' ')[0]) + ')</span>';
+        }
+        return `<button class="skychat-button" title="${action}" data-action="${action}" data-trusted="${trusted}">${title}</button>`;
+    }
+
+    /**
      * Replace images
      * @param message
+     * @param remove
+     * @param trusted Whether to limit the number of replacements
      */
-    public replaceImages(message: string, remove?: boolean): string {
+    public replaceImages(message: string, remove?: boolean, trusted?: boolean): string {
         let matches = message.match(new RegExp(Config.LOCATION + '/uploads/([-\\/._a-zA-Z0-9]+)\\.(png|jpg|jpeg|gif)', 'g'));
         if (! matches) {
             return message;
         }
         matches = Array.from(new Set(matches));
+        let count = 0;
         for (const imageUrl of matches) {
             const html = `<a class="skychat-image" href="${imageUrl}" target="_blank"><img src="${imageUrl}"></a>`;
-            message = message.replace(new RegExp(imageUrl, 'g'), remove ? '' : html);
+            // If removing images
+            if (remove) {
+                // Remove all image urls without any limit
+                message = message.replace(new RegExp(imageUrl, 'g'), '');
+            } else {
+                // If replacing images by html, replace within limit
+                message = message.replace(new RegExp(imageUrl, 'g'), () => {
+                    ++ count;
+                    if (! trusted && count > MessageFormatter.IMAGE_REPLACE_LIMIT) {
+                        return imageUrl;
+                    }
+                    return html;
+                });
+            }
+            // If limit was reached when replacing this image, do not replace the next ones
+            if (! trusted && count < MessageFormatter.IMAGE_REPLACE_LIMIT) {
+                break;
+            }
         }
         return message;
     }
@@ -87,8 +169,25 @@ export class MessageFormatter {
      * Replace RisiBank images
      * @param message
      */
-    public replaceRisiBankStickers(message: string): string {
-        return message.replace(/https:\/\/api.risibank.fr\/cache\/stickers\/d([0-9]+)\/([0-9]+)-([A-Za-z0-9-_\[\]]+?)\.(jpg|jpeg|gif|png)/g, '<a class="skychat-risibank-sticker" href="//risibank.fr/stickers/$2-0" target="_blank"><img src="//api.risibank.fr/cache/stickers/d$1/$2-$3.$4"></a>');
+    public replaceRisiBankStickers(message: string, remove?: boolean): string {
+        const risibankImageRegExp = /https:\/\/api.risibank.fr\/cache\/stickers\/d([0-9]+)\/([0-9]+)-([A-Za-z0-9-_\[\]]+?)\.(jpg|jpeg|gif|png)/g;
+        const replaceStr = '<a class="skychat-risibank-sticker" href="//risibank.fr/stickers/$2-0" target="_blank"><img src="//api.risibank.fr/cache/stickers/d$1/$2-$3.$4"></a>';
+        if (remove) {
+            return message.replace(risibankImageRegExp, '');
+        }
+        return message.replace(risibankImageRegExp, replaceStr);
+    }
+
+    /**
+     * Replace stickers in a raw message
+     * @param message
+     */
+    public replaceStickers(message: string, remove?: boolean): string {
+        for (const code in StickerManager.stickers) {
+            const sticker = StickerManager.stickers[code];
+            message = message.replace(new RegExp(MessageFormatter.escapeRegExp(code), 'g'), remove ? '' : `<img class="skychat-sticker" title="${code}" alt="${code}" src="${sticker}">`);
+        }
+        return message;
     }
 
     /**
@@ -106,111 +205,5 @@ export class MessageFormatter {
             });
         }
         return text;
-    }
-
-    /**
-     * Escape a regexp
-     * @param string
-     */
-    public escapeRegExp(string: string): string {
-        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
-    }
-
-    /**
-     * Get the html code of a button
-     * @param title
-     * @param action
-     * @param escape
-     * @param trusted
-     */
-    public getButtonHtml(title: string, action: string, escape: boolean, trusted: boolean) {
-        if (escape) {
-            title = escapeHtml(title);
-            action = escapeHtml(action);
-            action = this.replaceLinks(action, true);
-            action = this.replaceImages(action, true);
-            action = this.replaceStickers(action, true);
-        }
-        if (action[0] === '/' && ! trusted) {
-            title += ' <span class="skychat-button-info">(' + escapeHtml(action.split(' ')[0]) + ')</span>';
-        }
-        return `<button class="skychat-button" title="${action}" data-action="${action}" data-trusted="${trusted}">${title}</button>`;
-    }
-
-    /**
-     * Replace stickers in a raw message
-     * @param message
-     */
-    public replaceStickers(message: string, remove?: boolean): string {
-        for (const code in this.stickers) {
-            const sticker = this.stickers[code];
-            message = message.replace(new RegExp(this.escapeRegExp(code), 'g'), remove ? '' : `<img class="skychat-sticker" title="${code}" alt="${code}" src="${sticker}">`);
-        }
-        return message;
-    }
-
-    /**
-     * Load stickers from storage
-     */
-    public loadStickers(): void {
-        try {
-            this.stickers = JSON.parse(fs.readFileSync(MessageFormatter.STICKERS_JSON).toString());
-        } catch (e) {
-            console.warn("stickers.json did NOT exist. It has been created automatically.");
-            this.stickers = {};
-            this.saveStickers();
-        }
-    }
-
-    /**
-     * Add a sticker
-     * @param code
-     * @param url
-     */
-    public registerSticker(code: string, url: string): void {
-        code = code.toLowerCase();
-        if (typeof this.stickers[code] !== 'undefined') {
-            throw new Error('This sticker already exist');
-        }
-        this.stickers[code] = url;
-        this.saveStickers();
-    }
-
-    /**
-     * Whether a sticker code is defined
-     * @param code 
-     * @returns 
-     */
-    public stickerExists(code: string): boolean {
-        return typeof this.stickers[code.toLowerCase()] !== 'undefined';
-    }
-
-    /**
-     * Delete a sticker
-     * @param code
-     */
-    public unregisterSticker(code: string): void {
-        code = code.toLowerCase();
-        if (typeof this.stickers[code] === 'undefined') {
-            throw new Error('This sticker does not exist');
-        }
-        delete this.stickers[code];
-        this.saveStickers();
-    }
-
-    /**
-     * Get a sticker URL
-     * @param code 
-     * @returns 
-     */
-    public getStickerUrl(code: string): string {
-        return this.stickers[code];
-    }
-
-    /**
-     * Save current sticker list to storage
-     */
-    public saveStickers(): void {
-        fs.writeFileSync(MessageFormatter.STICKERS_JSON, JSON.stringify(this.stickers));
     }
 }

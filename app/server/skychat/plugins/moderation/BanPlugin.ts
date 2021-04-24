@@ -155,7 +155,7 @@ export class BanPlugin extends Plugin {
                     <td>${matchString}</td>
                     <td>${BAN_TYPES[banEntry.type]}</td>
                     <td>${unbanDuration}</td>
-                    <td>${formatter.getButtonHtml('unban', '/' + BanPlugin.UNBAN_COMMAND + ' ' + banEntry.source, true, true)}</td>
+                    <td>${formatter.getButtonHtml('unban', '/' + BanPlugin.UNBAN_COMMAND + ' ' + banEntry.source, true)}</td>
                 </tr>`;
         }
         content += `</table>`;
