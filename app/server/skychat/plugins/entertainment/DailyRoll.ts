@@ -21,6 +21,11 @@ type GameObject = {
 
 export class DailyRoll extends Plugin {
 
+    /**
+     * Scheduled time in hours. E.g. 2.5 means 2h30
+     */
+    public static readonly SCHEDULED_TIME: number = 1.66;
+
     public static readonly ENTRY_COST: number = 100;
 
     public static readonly JACKPOT_AMOUNT: number = 50 * 100;
@@ -49,7 +54,7 @@ export class DailyRoll extends Plugin {
     constructor(room: Room) {
         super(room);
 
-        if (this.room) {
+        if (this.room && this.room.id === 0) { // @TODO implement plugins / room
             this.armTimer();
         }
     }
@@ -70,7 +75,12 @@ export class DailyRoll extends Plugin {
     }
     
     private armTimer(): void {
-        setTimeout(this.start.bind(this), 24 * 60 * 60 * 1000);
+        const now = new Date().getHours() + new Date().getMinutes() / 60;
+        let duration = DailyRoll.SCHEDULED_TIME - now;
+        if (duration < 0) {
+            duration += 24;
+        }
+        setTimeout(this.start.bind(this), duration * 60 * 60 * 1000);
     }
 
     async start(): Promise<void> {
