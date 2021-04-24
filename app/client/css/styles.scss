@@ -102,6 +102,16 @@ body {
     }
 }
 
+.skychat-halo-preview {
+    border: 1px solid white;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: transparent;
+    display: inline-block;
+    margin-right: 4px;
+}
+
 .skychat-sticker {
     max-width: 80px;
     max-height: 80px;
