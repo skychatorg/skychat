@@ -11,6 +11,8 @@ export class MessageFormatter {
 
     public static readonly IMAGE_REPLACE_LIMIT: number = Config.PREFERENCES.maxReplacedImagesPerMessage;
 
+    public static readonly STICKER_REPLACE_LIMIT: number = Config.PREFERENCES.maxReplacedStickersPerMessage;
+
     public static readonly MAX_NEWLINES_PER_MESSAGE: number = Config.PREFERENCES.maxNewlinesPerMessage;
 
     private static instance?: MessageFormatter;
@@ -140,7 +142,7 @@ export class MessageFormatter {
             return message;
         }
         matches = Array.from(new Set(matches));
-        let count = 0;
+        let replacedCount = 0;
         for (const imageUrl of matches) {
             const html = `<a class="skychat-image" href="${imageUrl}" target="_blank"><img src="${imageUrl}"></a>`;
             // If removing images
@@ -150,15 +152,15 @@ export class MessageFormatter {
             } else {
                 // If replacing images by html, replace within limit
                 message = message.replace(new RegExp(imageUrl, 'g'), () => {
-                    ++ count;
-                    if (! trusted && count > MessageFormatter.IMAGE_REPLACE_LIMIT) {
+                    ++ replacedCount;
+                    if (! trusted && replacedCount > MessageFormatter.IMAGE_REPLACE_LIMIT) {
                         return imageUrl;
                     }
                     return html;
                 });
             }
             // If limit was reached when replacing this image, do not replace the next ones
-            if (! trusted && count < MessageFormatter.IMAGE_REPLACE_LIMIT) {
+            if (! trusted && replacedCount < MessageFormatter.IMAGE_REPLACE_LIMIT) {
                 break;
             }
         }
@@ -183,9 +185,24 @@ export class MessageFormatter {
      * @param message
      */
     public replaceStickers(message: string, remove?: boolean): string {
+        let replacedCount = 0;
         for (const code in StickerManager.stickers) {
             const sticker = StickerManager.stickers[code];
-            message = message.replace(new RegExp(MessageFormatter.escapeRegExp(code), 'g'), remove ? '' : `<img class="skychat-sticker" title="${code}" alt="${code}" src="${sticker}">`);
+            if (remove) {
+                message = message.replace(new RegExp(MessageFormatter.escapeRegExp(code), 'g'), '');
+            } else {
+
+                message = message.replace(new RegExp(MessageFormatter.escapeRegExp(code), 'g'), () => {
+                    ++ replacedCount;
+                    if (replacedCount > MessageFormatter.STICKER_REPLACE_LIMIT) {
+                        return code;
+                    }
+                    return `<img class="skychat-sticker" title="${code}" alt="${code}" src="${sticker}">`;
+                });
+                if (replacedCount > MessageFormatter.STICKER_REPLACE_LIMIT) {
+                    break;
+                }
+            }
         }
         return message;
     }

@@ -9,6 +9,7 @@ export type Preferences = {
     minRightForConnectedList: number;
     minRightForPolls: number;
     maxReplacedImagesPerMessage: number;
+    maxReplacedStickersPerMessage: number;
     maxNewlinesPerMessage: number;
     ranks: {limit: number, images: {[size: string]: string}}[];
     plugins: string[];
@@ -122,6 +123,7 @@ export class Config {
             'minRightForConnectedList',
             'minRightForPolls',
             'maxReplacedImagesPerMessage',
+            'maxReplacedStickersPerMessage',
             'maxNewlinesPerMessage',
             'plugins',
             'ranks',

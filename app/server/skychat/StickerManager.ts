@@ -83,3 +83,5 @@ export class StickerManager {
         fs.writeFileSync(StickerManager.STICKERS_JSON, JSON.stringify(this.stickers));
     }
 }
+
+StickerManager.loadStickers();
