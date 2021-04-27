@@ -4,23 +4,16 @@ import {Message} from "../../Message";
 import {Room} from "../../Room";
 import {Config} from "../../Config";
 import {MessageFormatter} from "../../MessageFormatter";
+import { StickerManager } from "../../StickerManager";
 
 
 export class MessageHistoryPlugin extends Plugin {
 
-    readonly name = 'welcomer';
+    readonly name = 'messagehistory';
 
     readonly hidden = true;
 
-    private readonly formatter: MessageFormatter = MessageFormatter.getInstance();
-
-    async run(alias: string, param: string, connection: Connection): Promise<void> { }
-
-    /**
-     * Executed when a connection joins a room
-     * @param connection
-     */
-    public async onConnectionJoinedRoom(connection: Connection): Promise<void> {
+    async run(alias: string, param: string, connection: Connection): Promise<void> {
 
         // If user has the right to access the full history
         if (connection.session.user.right >= Config.PREFERENCES.minRightForMessageHistory) {
@@ -34,7 +27,7 @@ export class MessageHistoryPlugin extends Plugin {
          */
         // Send message history to the connection that just joined this room
         const fakeMessages = [];
-        const stickers = Object.keys(this.formatter.stickers);
+        const stickers = Object.keys(StickerManager.stickers);
         for (let i = Math.max(0, this.room.messages.length - Room.MESSAGE_HISTORY_VISIBLE_LENGTH); i < this.room.messages.length; ++ i) {
 
             // Each fake message correspond to a real message

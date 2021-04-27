@@ -12,14 +12,14 @@
         >
             <span class="material-icons md-18 room-icon">tag</span>
             <div class="room-name" :title="room.name">
-                <b>{{room.name}}<sup v-show="roomConnectedCounts[room.id]">{{roomConnectedCounts[room.id]}}</sup></b>
+                <b>{{room.name}}</b>
             </div>
             <div class="room-meta">
-                <div class="last-activity"
-                    title="Date of the last sent message in this room"
-                    v-show="room.id != currentRoom">
-                    <i class="material-icons md-14 icon-active-time">schedule</i>
-                    <span> {{getLastMessageDurationText(room)}}</span>
+                <div v-show="roomConnectedCounts[room.id]"
+                    class="room-users"
+                    title="Users in this room">
+                    <i class="material-icons md-14 icon-active-time">{{roomConnectedCounts[room.id] > 1 ? 'group' : 'person'}}</i>
+                     <span>{{ roomConnectedCounts[room.id] }}</span>
                 </div>
             </div>
         </div>
@@ -36,20 +36,6 @@
             joinRoom: function(id) {
                 this.$client.joinRoom(id);
             },
-            minutesSinceLastMessage: function(room) {
-                const duration = new Date().getTime() - room.lastReceivedMessageTimestamp;
-                return Math.floor(duration / 1000 / 60);
-            },
-            getLastMessageDurationText: function(room) {
-                const duration = this.minutesSinceLastMessage(room);
-                if (duration > 30) {
-                    return '>30m';
-                }
-                if (duration > 1) {
-                    return `${duration}m`;
-                }
-                return 'now';
-            }
         },
         computed: {
             rooms: function() {
@@ -119,11 +105,11 @@
         .room-meta {
             flex-basis: 65px;
             margin-top: 10px;
-            margin-right: 6px;
+            margin-right: 10px;
             display: flex;
             flex-direction: row-reverse;
 
-            .last-activity {
+            .room-users {
                 color: #8ecfff;
                 span { vertical-align: top; }
             }

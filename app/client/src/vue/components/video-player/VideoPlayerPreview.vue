@@ -1,5 +1,5 @@
 <template>
-    <div class="youtube-preview" v-if="playerState">
+    <div class="youtube-preview">
 
         <!-- preview container -->
         <div class="preview-image-container">
@@ -11,10 +11,10 @@
             <div class="progress-bar progress-bar-right" :class="'custom-color-' + progressBarColor" :style="{'height': (100 * cursorPercent) + '%'}"></div>
 
             <!-- image preview -->
-            <img class="preview-thumb" :src="playerState.video.thumb">
+            <img class="preview-thumb" v-if="playerState" :src="playerState.video.thumb">
 
             <!-- title -->
-            <div class="preview-title">{{playerState.video.title}}</div>
+            <div class="preview-title" v-if="playerState">{{playerState.video.title}}</div>
 
             <!-- sliding window that closes over the image -->
             <div class="sliding-window top" :class="{['custom-color-' + progressBarColor]: true, 'closed': cursorPercent >= 1}"></div>
@@ -60,7 +60,8 @@
                      class="preview-action">
                     <i class="material-icons md-14">forward_30</i>
                 </div>
-                <div @click="ytSkip"
+                <div v-show="playerState"
+                     @click="ytSkip"
                      title="Skip video"
                      class="preview-action">
                     <i class="material-icons md-14">skip_next</i>
@@ -76,8 +77,8 @@
     export default Vue.extend({
         data: function() {
             return {
-                cursorPercent: 0,
-                progressBarColor: 'ffffff',
+                cursorPercent: 1.,
+                progressBarColor: '000000',
                 queueWaitDurations: []
             }
         },
@@ -113,7 +114,7 @@
             },
             updateCurrentDuration: function() {
                 if (! this.playerState) {
-                    this.cursorPercent = 0;
+                    this.cursorPercent = 1.;
                     return;
                 }
                 if (this.playerState.video.duration === 0) {
@@ -127,6 +128,7 @@
             },
             updateProgressBarColor: function() {
                 if (! this.playerState) {
+                    this.progressBarColor = '000000';
                     return;
                 }
                 const colors = ['ffffff', 'ff8f8f', '8ecfff', '6ee067', 'e0a067', '9b71b9'];
@@ -284,6 +286,10 @@
             }
         }
 
+        .custom-color-000000 {
+            background-color: #000000;
+            stroke: #000000;
+        }
         .custom-color-ffffff {
             background-color: white;
             stroke: white;
