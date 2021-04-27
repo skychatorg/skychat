@@ -12,7 +12,6 @@ services:
         GID: ${DOCKER_GID}
         DOCKER_TZ: "${DOCKER_TZ}"
     volumes:
-      - /etc/timezone:/etc/timezone:ro
       - ./avatars:/var/skychat/avatars
       - ./backups:/var/skychat/backups
       - ./config:/var/skychat/config:ro

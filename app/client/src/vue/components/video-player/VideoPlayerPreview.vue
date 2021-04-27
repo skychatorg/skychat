@@ -12,7 +12,7 @@
 
             <!-- image preview -->
             <img class="preview-thumb" v-if="playerState" :src="playerState.video.thumb">
-
+ 
             <!-- title -->
             <div class="preview-title" v-if="playerState">{{playerState.video.title}}</div>
 
@@ -47,7 +47,7 @@
             </div>
                 
             <!-- actions -->
-            <div class="preview-actions" :style="{'border-color': progressBarColor}">
+            <div class="preview-actions">
                 <div v-show="canHandlePlayer()"
                      @click="ytReplay30"
                      title="Replay 30 seconds"
@@ -66,6 +66,12 @@
                      class="preview-action">
                     <i class="material-icons md-14">skip_next</i>
                 </div>
+                <div v-show="! playerState"
+                     @click="ytAdd"
+                     title="Play a video"
+                     class="preview-action">
+                    <i class="material-icons md-14">add</i>
+                </div>
             </div>
         </div>
     </div>
@@ -73,6 +79,7 @@
 
 <script>
     import Vue from "vue";
+    import YoutubeVideoSearcher from "../modal/YoutubeVideoSearcher.vue";
 
     export default Vue.extend({
         data: function() {
@@ -144,6 +151,9 @@
             },
             ytSkip: function() {
                 this.$client.sendMessage('/yt skip');
+            },
+            ytAdd: function() {
+                this.$modal.show(YoutubeVideoSearcher);
             },
             canHandlePlayer: function() {
                 return this.playerState && this.user && this.user.id === this.playerState.user.id;
