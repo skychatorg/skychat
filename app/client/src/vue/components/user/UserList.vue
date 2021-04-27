@@ -1,6 +1,6 @@
 <template>
     <div class="connected-list">
-        <connected-user
+        <user-list-row
                 v-for="session in sessions"
                 @click.native="() => onJoinPrivateChannel(session.identifier)"
                 :key="session.identifier"
@@ -10,10 +10,10 @@
 
 <script>
     import Vue from "vue";
-    import ConnectedUser from "./ConnectedUser.vue";
+    import UserListRow from "./UserListRow.vue";
 
     export default Vue.extend({
-        components: {ConnectedUser},
+        components: {UserListRow},
         methods: {
             onJoinPrivateChannel: function(username) {
                 if (this.$store.state.channel === username.toLowerCase()) {

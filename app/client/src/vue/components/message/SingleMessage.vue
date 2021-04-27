@@ -28,9 +28,10 @@
             </div>
             <div class="seen-users">
                 <div v-for="seenUser of seenUsers"
-                     class="avatar image-bubble"
-                     :title="'Seen by ' + seenUser.username"
-                     :style="{'border': '1px solid ' + seenUser.data.plugins.color}">
+                    :key="seenUser.username"
+                    class="avatar image-bubble"
+                    :title="'Seen by ' + seenUser.username"
+                    :style="{'border': '1px solid ' + seenUser.data.plugins.color}">
                     <img :src="seenUser.data.plugins.avatar">
                 </div>
             </div>
@@ -159,10 +160,6 @@
             flex-direction: column;
             width: 66px;
             text-align: center;
-
-            >.date {
-
-            }
 
             >.seen-users {
                 display: flex;

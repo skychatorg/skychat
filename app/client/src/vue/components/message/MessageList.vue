@@ -4,23 +4,23 @@
             @scroll="onScroll"
             :style="smoothScroll ? 'scroll-behavior: smooth' : ''">
             
-        <message v-for="item in messages"
-                    @select="$emit('select-message', item)"
-                    @content-loaded="onContentLoaded"
-                    :key="item.id"
-                    :message="item"
-                    :seen-users="lastMessageSeenIds[item.id] || []"
-                    class="message"/>
+        <single-message v-for="item in messages"
+            @select="$emit('select-message', item)"
+            @content-loaded="onContentLoaded"
+            :key="item.id"
+            :message="item"
+            :seen-users="lastMessageSeenIds[item.id] || []"
+            class="message"/>
     </div>
 </template>
 
 <script>
     import Vue from "vue";
-    import Message from "./Message.vue";
-    import Player from "./Player.vue";
+    import SingleMessage from "./SingleMessage.vue";
+    import VideoPlayer from "../video-player/VideoPlayer.vue";
 
     export default Vue.extend({
-        components: {Player, Message},
+        components: {VideoPlayer, SingleMessage},
         data: function() {
             return {
                 autoScroll: true,

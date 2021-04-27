@@ -27,7 +27,7 @@
 
 <script>
     import Vue from "vue";
-    import YoutubeVideoSearcher from "./YoutubeVideoSearcher.vue";
+    import YoutubeVideoSearcher from "../modal/YoutubeVideoSearcher.vue";
 
     export default Vue.extend({
 
