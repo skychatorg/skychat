@@ -3,18 +3,19 @@ import {Plugin} from "../../Plugin";
 import {UserController} from "../../UserController";
 import {User} from "../../User";
 import {Session} from "../../Session";
+import {Config} from "../../Config";
 
 export class StatsPlugin extends Plugin {
 
-    static readonly AVERAGE_BOOK_READ_TIME: number    = 60 * 5; 
+    static readonly AVERAGE_BOOK_READ_TIME: number = 60 * 5; 
 
-    static readonly AVERAGE_MOVIE_WATCH_TIME: number  = 60 * 2; 
+    static readonly AVERAGE_MOVIE_WATCH_TIME: number = 60 * 2; 
 
     static readonly AVERAGE_MARATHON_RUN_TIME: number = 60 * 4;
 
     readonly name = 'stats';
 
-    readonly minRight = 10;
+    readonly minRight = Config.PREFERENCES.minRightForConnectedList;
 
     readonly rules = {
         stats: {
@@ -44,15 +45,15 @@ export class StatsPlugin extends Plugin {
 
         let messageContent = `-> ${session.user.username} spent ${xp} minutes on the SkyChat 🕒
 
-            That's ${Math.floor(xp/60)} hours, ${Math.floor(xp/1440)} days, and ${Math.floor(xp/10080)} weeks !
+            That's ${Math.floor(xp/60)} hours, ${Math.floor(xp/1440)} days, and ${Math.floor(xp/10080)} weeks!
 
-            During this time, he could have :
+            During this time, he could have:
             
             - read ${Math.floor(xp/StatsPlugin.AVERAGE_BOOK_READ_TIME)} book 📖
             - watch ${Math.floor(xp/StatsPlugin.AVERAGE_MOVIE_WATCH_TIME)} movies 🎥
             - run ${Math.floor(xp/StatsPlugin.AVERAGE_MARATHON_RUN_TIME)} marathons 🏃
         
-        But instead he chose to come to the SkyChat, which is much better than all those things !
+        But instead he chose to come here, which is much better than all those things!
         `
 
         await this.room.sendMessage({
