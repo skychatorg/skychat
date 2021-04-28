@@ -15,6 +15,8 @@ export class MessageFormatter {
 
     public static readonly MAX_NEWLINES_PER_MESSAGE: number = Config.PREFERENCES.maxNewlinesPerMessage;
 
+    public static readonly LINK_REGEXP: RegExp = /(^|[ \n]|<br>)((http|https):\/\/[\w?=&.\/-;#~%+@,\[\]:!-]+(?![\w\s?&.\/;#~%"=+@,\[\]:!-]*>))/ig;
+
     private static instance?: MessageFormatter;
 
     /**
@@ -210,14 +212,10 @@ export class MessageFormatter {
      * @param text
      */
     public replaceLinks(text: string, remove?: boolean): string {
-        let regExp = /(?:^|[ ])((http|https):\/\/[\w?=&.\/-;#~%+@,\[\]:!-]+(?![\w\s?&.\/;#~%"=+@,\[\]:!-]*>))/ig;
         if (remove) {
-            text = text.replace(regExp, '');
+            text = text.replace(MessageFormatter.LINK_REGEXP, '');
         } else {
-            text = text.replace(regExp, ($0, $1, $2, $3, $4, $5, $6) => {
-                const start = $0[0] === 'h' ? '' : ' ';
-                return `${start}<a class="skychat-link" target="_blank" rel="nofollow" href="${$1}">${$1}</a>`;
-            });
+            text = text.replace(MessageFormatter.LINK_REGEXP, '$1<a class="skychat-link" target="_blank" rel="nofollow" href="$2">$2</a>');
         }
         return text;
     }
