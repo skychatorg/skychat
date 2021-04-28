@@ -27,7 +27,7 @@ export class StatsPlugin extends Plugin {
     };
 
     /**
-     * Displays a funny message about the number of minutes a user has spent on the Skychat
+     * Displays a funny message about the number of minutes a user has spent on the tchat
      * @param alias
      * @param param
      * @param connection
@@ -43,17 +43,10 @@ export class StatsPlugin extends Plugin {
 
         const xp = session.user.xp;
 
-        let messageContent = `-> ${session.user.username} spent ${xp} minutes on the SkyChat 🕒
-
-            That's ${Math.floor(xp/60)} hours, ${Math.floor(xp/1440)} days, and ${Math.floor(xp/10080)} weeks!
-
-            During this time, he could have:
-            
-            - read ${Math.floor(xp/StatsPlugin.AVERAGE_BOOK_READ_TIME)} book 📖
-            - watch ${Math.floor(xp/StatsPlugin.AVERAGE_MOVIE_WATCH_TIME)} movies 🎥
-            - run ${Math.floor(xp/StatsPlugin.AVERAGE_MARATHON_RUN_TIME)} marathons 🏃
-        
-        But instead he chose to come here, which is much better than all those things!
+        let messageContent = `-> ${session.user.username} spent ${xp} ${xp > 1 ? 'minutes' : 'minute'} here, that's ${Math.floor(xp/60)} ${Math.floor(xp/60) > 1 ? 'hours' : 'hour'}, ${Math.floor(xp/1440)} ${Math.floor(xp/1440) > 1 ? 'days' : 'day'}, and ${Math.floor(xp/10080)} ${Math.floor(xp/1440) > 1 ? 'weeks' : 'week'}! During this time, he could have:  
+            - read ${Math.floor(xp/StatsPlugin.AVERAGE_BOOK_READ_TIME)} ${Math.floor(xp/StatsPlugin.AVERAGE_BOOK_READ_TIME) > 1 ? 'books' : 'book'} 📖
+            - watch ${Math.floor(xp/StatsPlugin.AVERAGE_MOVIE_WATCH_TIME)} ${Math.floor(xp/StatsPlugin.AVERAGE_MOVIE_WATCH_TIME) > 1 ? 'movies' : 'movie'} 🎥
+            - run ${Math.floor(xp/StatsPlugin.AVERAGE_MARATHON_RUN_TIME)} ${Math.floor(xp/StatsPlugin.AVERAGE_MARATHON_RUN_TIME) > 1 ? 'marathons' : 'marathon'} 🏃        
         `
 
         await this.room.sendMessage({
