@@ -2,11 +2,11 @@
     <div class="messages">
 
         <!-- player -->
-        <player v-if="! hidePlayer" class="player" v-show="playerState && playerState.enabled"/>
+        <video-player v-if="! hidePlayer" class="player" v-show="playerState && playerState.enabled"/>
 
         <!-- message feeds -->
-        <messages v-show="! privateMessageChannel" :messages="messages" @select-message="onSelectMessage" class="scrollbar" />
-        <messages v-show="privateMessageChannel" :messages="privateMessages" @select-message="onSelectMessage" class="scrollbar" />
+        <message-list v-show="! privateMessageChannel" :messages="messages" @select-message="onSelectMessage" class="scrollbar" />
+        <message-list v-show="privateMessageChannel" :messages="privateMessages" @select-message="onSelectMessage" class="scrollbar" />
 
         <!-- typing list -->         
         <typing-list id="typing-list" />
@@ -18,13 +18,13 @@
 
 <script>
     import Vue from "vue";
-    import Messages from "./Messages.vue";
-    import Player from "./Player.vue";
-    import TypingList from "./TypingList.vue";
-    import MessageForm from "./MessageForm.vue";
+    import MessageList from "../message/MessageList.vue";
+    import VideoPlayer from "../video-player/VideoPlayer.vue";
+    import TypingList from "../form/TypingList.vue";
+    import MessageForm from "../form/MessageForm.vue";
 
     export default Vue.extend({
-        components: {Player, Messages, TypingList, MessageForm},
+        components: {VideoPlayer, MessageList, TypingList, MessageForm},
         
         props: {
             hidePlayer: {

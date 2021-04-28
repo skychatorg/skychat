@@ -1,20 +1,33 @@
 <template>
     <div class="page" :class="'mobile-page-' + mobileCurrentPage">
-        <cursor-layer id="cursor-layer"/>
-        <page-header @logout="logout" @login="login" id="header"/>
-        <page-content id="content"/>
+        <cursor-overlay id="cursor-overlay"/>
+        <app-header @logout="logout" @login="login" id="header"/>
+        <div class="page">
+
+            <!-- Auth page -->
+            <auth-page
+                v-if="page === 'welcome'"
+                @gotoroom="gotoRoom"
+                id="auth-page"/>
+
+            <!-- Tchat -->
+            <tchat-page
+                v-if="page === 'room'"
+                id="content"></tchat-page>
+        </div>
     </div>
 </template>
 
 
 <script>
     import Vue from "vue";
-    import PageHeader from "./PageHeader.vue";
-    import PageContent from "./PageContent.vue";
-    import CursorLayer from "./CursorLayer.vue";
+    import AuthPage from "./pages/AuthPage.vue";
+    import TchatPage from "./pages/TchatPage.vue";
+    import AppHeader from "./AppHeader.vue";
+    import CursorOverlay from "./components/overlay/CursorOverlay.vue";
 
     export default Vue.extend({
-        components: {PageHeader, PageContent, CursorLayer},
+        components: {AuthPage, AppHeader, TchatPage, CursorOverlay},
         mounted: function() {
             this.$mousetrap.bind(Array.from({length: 9}).map((_, i) => `alt+${i + 1}`), (event) => {
                 event.preventDefault();
@@ -33,7 +46,11 @@
             },
             login: function() {
                 this.$store.commit('SET_PAGE', 'welcome');
-            }
+            },
+            gotoRoom() {
+                this.$store.commit('SET_PAGE', 'room');
+                this.$client.ytSync();
+            },
         },
         computed: {
             rooms: function() {
@@ -60,7 +77,7 @@
         flex-direction: column;
         position: relative;
 
-        >#cursor-layer {
+        >#cursor-overlay {
             position: absolute;
         }
 

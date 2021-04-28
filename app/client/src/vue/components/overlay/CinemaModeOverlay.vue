@@ -1,19 +1,19 @@
 <template>
     <div class="messages-overlay">
         <quick-actions class="quick-actions"></quick-actions>
-        <middle-column :hide-player="true" />
+        <tchat-middle-column :hide-player="true" />
     </div>
 </template>
 
 <script>
     import Vue from "vue";
-    import MiddleColumn from "./MiddleColumn.vue";
-    import TypingList from "./TypingList.vue";
-    import MessageForm from "./MessageForm.vue";
-    import QuickActions from "./QuickActions.vue";
+    import TchatMiddleColumn from "../layout/TchatMiddleColumn.vue";
+    import TypingList from "../form/TypingList.vue";
+    import MessageForm from "../form/MessageForm.vue";
+    import QuickActions from "../form/QuickActions.vue";
 
     export default Vue.extend({
-        components: {MiddleColumn, TypingList, MessageForm, QuickActions},
+        components: {TchatMiddleColumn, TypingList, MessageForm, QuickActions},
     });
 </script>
 

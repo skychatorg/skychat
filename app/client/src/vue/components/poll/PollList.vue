@@ -27,6 +27,7 @@
         <div v-show="polls.length > 0">
             <div
                 v-for="poll in polls"
+                :key="poll.id"
                 class="poll pending">
                 <div class="info">
                     <div class="poll-title">

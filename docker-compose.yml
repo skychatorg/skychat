@@ -10,12 +10,13 @@ services:
         UNAME: ${DOCKER_UNAME}
         UID: ${DOCKER_UID}
         GID: ${DOCKER_GID}
+        DOCKER_TZ: "${DOCKER_TZ}"
     volumes:
       - ./avatars:/var/skychat/avatars
       - ./backups:/var/skychat/backups
-      - ./config:/var/skychat/config
+      - ./config:/var/skychat/config:ro
       - ./database:/var/skychat/database
-      - ./scripts:/var/skychat/scripts
+      - ./scripts:/var/skychat/scripts:ro
       - ./stickers:/var/skychat/stickers
       - ./storage:/var/skychat/storage
       - ./uploads:/var/skychat/uploads

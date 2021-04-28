@@ -5,9 +5,10 @@
         </div>
         <div class="search-form">
             <button v-for="type in searchTypes"
-                    @click="searchType = type.id"
-                    class="button"
-                    :class="type.id === searchType ? 'active' : ''">
+                :key="type.id"
+                @click="searchType = type.id"
+                class="button"
+                :class="type.id === searchType ? 'active' : ''">
                 {{type.name}}
             </button>
         </div>

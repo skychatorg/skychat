@@ -295,6 +295,9 @@ export class SkyChatClient extends EventEmitter {
      */
     onJoinRoom(roomId) {
         this.store.commit('SET_CURRENT_ROOM', roomId);
+        if (roomId !== null) {
+            this.sendMessage('/messagehistory');
+        }
     }
 
     /**

@@ -1,74 +1,65 @@
 <template>
-
-    <!-- content -->
     <div class="page-content">
 
-        <template v-if="page === 'welcome'">
-            <auth-page @gotoroom="gotoRoom" id="auth-page"/>
+        <!-- Cinema mode -->
+        <template v-if="cinemaMode">
+            <section id="cinema" class="scrollbar">
+                <video-player class="player-background"></video-player>
+                <cinema-mode-overlay class="messages-overlay"></cinema-mode-overlay>
+            </section>
         </template>
 
-        <template v-if="page === 'room'">
+        <!-- Normal mode -->
+        <template v-if="! cinemaMode">
+            <section class="default-container">
 
-            <template v-if="! cinemaMode">
-
-                <section class="default-container">
-
-                    <!-- left col (room list) -->
-                    <section class="left hide-mobile-middle hide-mobile-right scrollbar">
-                        <room-list class="left-room-list"></room-list>
-                        <polls></polls>
-                        <user-preview></user-preview>
-                        <div @click="onMobileShowMiddleCol" class="show-mobile" style="text-align: right;">
-                            <div class="goto-middle-col">
-                                <i class="material-icons md-28">keyboard_arrow_right</i>
-                            </div>
+                <!-- left col (room list) -->
+                <section class="left hide-mobile-middle hide-mobile-right scrollbar">
+                    <room-list class="left-room-list"></room-list>
+                    <polls></polls>
+                    <user-preview></user-preview>
+                    <div @click="onMobileShowMiddleCol" class="show-mobile" style="text-align: right;">
+                        <div class="goto-middle-col">
+                            <i class="material-icons md-28">keyboard_arrow_right</i>
                         </div>
-                    </section>
+                    </div>
+                </section>
+                
+                <!-- middle col (main content) -->
+                <section class="middle hide-mobile-left hide-mobile-right">
+                    <tchat-middle-column />
+                </section>
 
-                    <!-- middle col (main content) -->
-                    <section class="middle hide-mobile-left hide-mobile-right">
-                        <middle-column></middle-column>
-                    </section>
-
-                    <!-- right col (connected list and metas) -->
-                    <section class="right hide-mobile-left hide-mobile-middle scrollbar">
-                        <player-preview id="player-preview"></player-preview>
-                        <connected-list id="connected-list" class="scrollbar"></connected-list>
-                        <quick-actions id="quick-actions"></quick-actions>
-                        <div @click="onMobileShowMiddleCol" class="show-mobile">
-                            <div class="goto-middle-col">
-                                <i class="material-icons md-28">keyboard_arrow_left</i>
-                            </div>
+                <!-- right col (connected list and metas) -->
+                <section class="right hide-mobile-left hide-mobile-middle scrollbar">
+                    <video-player-preview id="player-preview"></video-player-preview>
+                    <user-list id="connected-list" class="scrollbar"></user-list>
+                    <quick-actions id="quick-actions"></quick-actions>
+                    <div @click="onMobileShowMiddleCol" class="show-mobile">
+                        <div class="goto-middle-col">
+                            <i class="material-icons md-28">keyboard_arrow_left</i>
                         </div>
-                    </section>
+                    </div>
                 </section>
-            </template>
-
-            <template v-if="cinemaMode">
-                <section id="cinema" class="scrollbar">
-                    <player-background class="player-background"></player-background>
-                    <messages-overlay class="messages-overlay"></messages-overlay>
-                </section>
-            </template>
+            </section>
         </template>
     </div>
 </template>
 
 <script>
     import Vue from "vue";
-    import AuthPage from "./AuthPage.vue";
-    import RoomList from "./RoomList.vue";
-    import MiddleColumn from "./MiddleColumn.vue";
-    import Polls from "./Polls.vue";
-    import UserPreview from "./UserPreview.vue";
-    import PlayerPreview from "./PlayerPreview.vue";
-    import PlayerBackground from "./PlayerBackground.vue";
-    import ConnectedList from "./ConnectedList.vue";
-    import QuickActions from "./QuickActions.vue";
-    import MessagesOverlay from "./MessagesOverlay.vue";
+    import RoomList from "../components/room/RoomList.vue";
+    import TchatMiddleColumn from "../components/layout/TchatMiddleColumn.vue";
+    import PollList from "../components/poll/PollList.vue";
+    import UserPreview from "../components/user/UserPreview.vue";
+    import VideoPlayerPreview from "../components/video-player/VideoPlayerPreview.vue";
+    import VideoPlayer from "../components/video-player/VideoPlayer.vue";
+    import UserList from "../components/user/UserList.vue";
+    import QuickActions from "../components/form/QuickActions.vue";
+    import CinemaModeOverlay from "../components/overlay/CinemaModeOverlay.vue";
 
     export default Vue.extend({
-        components: {AuthPage, RoomList, MiddleColumn, Polls, UserPreview, PlayerPreview, PlayerBackground, ConnectedList, QuickActions, MessagesOverlay},
+        components: {RoomList, TchatMiddleColumn, PollList, UserPreview, VideoPlayerPreview, VideoPlayer, UserList, QuickActions, CinemaModeOverlay},
         watch: {
             cinemaMode: function() {
                 this.$client.ytSync();

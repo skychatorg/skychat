@@ -32,8 +32,6 @@ export class MessageFormatter {
         return MessageFormatter.instance;
     }
 
-    public stickers: {[code: string]: string} = {};
-
     /**
      * Format a raw message to html
      * @param message

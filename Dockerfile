@@ -5,9 +5,14 @@ ARG UNAME=skychat
 ARG UID=1000
 ARG GID=1000
 ARG DOCKER_PORT=8080
+ARG DOCKER_TZ=America/Denver
 
 # Install zip (required for managing backups)
 RUN apt-get update -y && apt-get -y install zip
+
+# Set timezone
+RUN ln -snf /usr/share/zoneinfo/$DOCKER_TZ /etc/localtime
+RUN echo $DOCKER_TZ > /etc/timezone
 
 # Create a local user corresponding to the host one
 RUN groupadd -g $GID -o $UNAME

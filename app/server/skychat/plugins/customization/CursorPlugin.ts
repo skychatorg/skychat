@@ -4,6 +4,7 @@ import {User} from "../../User";
 import {Message} from "../../Message";
 import {UserController} from "../../UserController";
 import { Room } from "../../Room";
+import { Session } from "../../Session";
 
 
 /**
@@ -81,22 +82,24 @@ export class CursorPlugin extends Plugin {
             x, y,
             lastSent: new Date()
         };
-        // For every connection in the room
-        for (const conn of this.room.connections) {
-            // If the user has cursors disabled
-            if (! UserController.getPluginData(conn.session.user, this.name)) {
-                // Abort
-                continue;
+        // For every connection
+        for (const session of Object.values(Session.sessions)) {
+            for (const conn of session.connections) {
+                // If the user has cursors disabled
+                if (! UserController.getPluginData(conn.session.user, this.name)) {
+                    // Abort
+                    continue;
+                }
+                // Do not send cursor events to the owner
+                if (conn.session.identifier === connection.session.identifier) {
+                    continue;
+                }
+                // And send it to this client
+                conn.send('cursor', {
+                    x, y, 
+                    user: connection.session.user.sanitized()
+                });
             }
-            // Do not send cursor events to the owner
-            if (conn.session.identifier === connection.session.identifier) {
-                continue;
-            }
-            // And send it to this client
-            conn.send('cursor', {
-                x, y, 
-                user: connection.session.user.sanitized()
-            });
         }
     }
 

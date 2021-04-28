@@ -1,7 +1,7 @@
 import Vue from "vue";
-import MainPage from "./components/MainPage.vue";
-import {SkyChatClient} from "./skychat/SkyChatClient";
-import store from "./store/store";
+import SkychatApp from "./vue/SkychatApp.vue";
+import {SkyChatClient} from "./SkyChatClient";
+import store from "./store";
 import {AudioRecorder} from "./AudioRecorder";
 import VModal from 'vue-js-modal';
 import Mousetrap from "mousetrap";
@@ -33,11 +33,11 @@ const app = new Vue({
     el: "#app",
     template: `
     <div id="root">
-        <main-page/>
+        <skychat-app/>
     </div>
     `,
     components: {
-        MainPage
+        SkychatApp
     }
 });
 
@@ -52,6 +52,7 @@ resize();
 window.addEventListener('blur', () => {
     store.commit('BLUR');
 });
+
 window.addEventListener('focus', () => {
     if (store.state.lastMissedMessage) {
         client.notifySeenMessage(store.state.lastMissedMessage.id);
