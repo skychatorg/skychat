@@ -158,6 +158,13 @@ export abstract class Plugin {
     }
 
     /**
+     * Get a summary of this plugin state to include in the room list
+     */
+    public getRoomSummary(): any {
+        return null;
+    }
+
+    /**
      * Executed when a new messages comes in
      * @abstract
      * @param message

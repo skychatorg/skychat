@@ -18,6 +18,7 @@ export type SanitizedRoom = {
     name: string;
     lastReceivedMessageId: number;
     lastReceivedMessageTimestamp: number;
+    plugins: {[pluginName: string]: any};
 }
 
 
@@ -325,11 +326,19 @@ export class Room implements IBroadcaster {
      */
     public sanitized(): SanitizedRoom {
         const lastMessage: Message | null = this.messages.length === 0 ? null : this.messages[this.messages.length - 1];
+        const plugins: {[pluginName: string]: string} = {};
+        for (const plugin of this.plugins) {
+            const summary = plugin.getRoomSummary();
+            if (summary) {
+                plugins[plugin.name] = summary;
+            }
+        }
         return {
             id: this.id,
             name: this.name,
             lastReceivedMessageId: lastMessage ? lastMessage.id : 0,
             lastReceivedMessageTimestamp: lastMessage ? lastMessage.createdTime.getTime() : 0,
+            plugins,
         };
     }
 }

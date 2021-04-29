@@ -15,10 +15,15 @@
                 <b>{{room.name}}</b>
             </div>
             <div class="room-meta">
+                <div v-show="room.plugins.yt"
+                    class="room-player mr-1"
+                    title="A video is currently playing in this room">
+                    <i class="material-icons md-14">movie</i>
+                </div>
                 <div v-show="roomConnectedCounts[room.id]"
-                    class="room-users"
+                    class="room-users mr-1"
                     title="Users in this room">
-                    <i class="material-icons md-14 icon-active-time">{{roomConnectedCounts[room.id] > 1 ? 'group' : 'person'}}</i>
+                    <i class="material-icons md-14">{{roomConnectedCounts[room.id] > 1 ? 'group' : 'person'}}</i>
                      <span>{{ roomConnectedCounts[room.id] }}</span>
                 </div>
             </div>
@@ -103,15 +108,18 @@
         }
 
         .room-meta {
-            flex-basis: 65px;
+            flex-basis: 85px;
             margin-top: 10px;
-            margin-right: 10px;
             display: flex;
             flex-direction: row-reverse;
 
             .room-users {
                 color: #8ecfff;
                 span { vertical-align: top; }
+            }
+
+            .room-player {
+                color: #ff8f8f;
             }
         }
     }

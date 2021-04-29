@@ -79,6 +79,14 @@ export class YoutubePlugin extends Plugin {
         }
     }
 
+    /**
+     * Tell the room whether there is a video currently playing
+     * @returns 
+     */
+    public getRoomSummary(): boolean {
+        return !! this.storage.currentVideo;
+    }
+
     async run(alias: string, param: string, connection: Connection, session: Session, user: User, room: Room | null): Promise<void> {
         if (alias === 'yt') {
             await this.handleYt(param, connection);
