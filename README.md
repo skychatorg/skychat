@@ -111,52 +111,54 @@ The semantic of these fields are defined below:
 
 The preferences.json file specifies application preferences. The available fields are detailed below.
 
+
 **minRightForPrivateMessages**
 
 - Type: `number`
 - Description: Minimum required right to send private messages.
+
 
 **minRightForMessageHistory**
 
 - Type: `number`
 - Description: Minimum required right to access room message history. This includes accessing the previous messages when joining the room and quoting old messages.
 
+
 **minRightForAudioRecording**
 
 - Type: `number`
 - Description: Minimum required right to record and listen to audio files.
+
 
 **minRightForConnectedList**
 
 - Type: `number`
 - Description: Minimum required right to see the connected list.
 
+
 **minRightForPolls**
 
 - Type: `number`
 - Description: Minimum required right to make polls.
+
 
 **maxReplacedImagesPerMessage**
 
 - Type: `number`
 - Description: Max number of replaced images per message, to prevent UI defacing.
 
+
 **maxReplacedStickersPerMessage**
 
 - Type: `number`
 - Description: Max number of replaced stickers per message, to prevent UI defacing.
+
 
 **maxNewlinesPerMessage**
 
 - Type: `number`
 - Description: Max number of newlines images per message, to prevent UI defacing. Additional newlines will be replaced by spaces.
 
-**rooms**
-
-- Type: `Array<{id: number, name: string}>`
-- Description: Room list.
-  - id: Room id. Must be unique.
-  - name: Room name as shown in the UI.
 
 **ranks**
 
