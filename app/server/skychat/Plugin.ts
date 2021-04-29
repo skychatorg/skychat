@@ -53,7 +53,7 @@ export abstract class Plugin {
     /**
      * Base path for plugin persistent storage
      */
-    public static readonly STORAGE_BASE_PATH: string = 'storage/plugins';
+    public static readonly STORAGE_BASE_PATH: string = 'storage';
 
     /**
      * Helper regexp used by sub classes
@@ -136,7 +136,8 @@ export abstract class Plugin {
         if (! this.storage) {
             return;
         }
-        fs.writeFileSync(this.getStoragePath(), JSON.stringify(this.storage));
+        fs.mkdirSync(this.getStoragePath(), { recursive: true });
+        fs.writeFileSync(this.getStoragePath() + `/${this.name}.json`, JSON.stringify(this.storage));
     }
 
     /**
@@ -144,7 +145,7 @@ export abstract class Plugin {
      */
     protected loadStorage(): void {
         try {
-            this.storage = JSON.parse(fs.readFileSync(this.getStoragePath()).toString());
+            this.storage = JSON.parse(fs.readFileSync(this.getStoragePath() + `/${this.name}.json`).toString());
         } catch (e) {
             this.syncStorage();
         }
@@ -154,7 +155,7 @@ export abstract class Plugin {
      * Get this plugin's storage path
      */
     public getStoragePath(): string {
-        return `${Plugin.STORAGE_BASE_PATH}/${this.name}.json`;
+        return `${Plugin.STORAGE_BASE_PATH}/plugins/${this.room.id}`;
     }
 
     /**

@@ -17,6 +17,7 @@ import { PluginManager } from "./PluginManager";
 export type StoredSkyChat = {
     guestId: number;
     messageId: number;
+    rooms: number[];
 }
 
 /**
@@ -30,14 +31,11 @@ export class SkyChat {
 
     private static CURRENT_GUEST_ID: number = 0;
 
-    private readonly rooms: Room[] = [];
+    private rooms: Room[] = [];
 
     private readonly server: Server;
 
     constructor() {
-
-        // Try to load this instance's settings from storage
-        this.load();
 
         // Create server instance
         this.server = new Server(this.getNewSession.bind(this));
@@ -50,9 +48,12 @@ export class SkyChat {
             .load()
             .then(async () => {
 
-                // Create room from configuration
-                for (const room of Config.PREFERENCES.rooms) {
-                    this.rooms.push(new Room(room.id, room.name));
+                // Try to load this instance's settings from storage
+                // Load rooms from storage
+                this.load();
+
+                if (this.rooms.length === 0) {
+                    this.rooms.push(new Room(0, this));
                 }
 
                 // Load last messages from all rooms
@@ -114,18 +115,21 @@ export class SkyChat {
      * Try to load this room's data from disk
      */
     private load(): void {
-        try {
-
-            // Load data from disk
-            const data = JSON.parse(fs.readFileSync(SkyChat.STORAGE_MAIN_FILE).toString()) as StoredSkyChat;
-            SkyChat.CURRENT_GUEST_ID = data.guestId || 0;
-            Message.ID = data.messageId || 0;
-
-        } catch (e) {
-
-            // If an error happens, reset this room's storage
+        if (! fs.existsSync(SkyChat.STORAGE_MAIN_FILE)) {
             this.save();
+            return;
         }
+
+        // Load data from disk
+        const data = JSON.parse(fs.readFileSync(SkyChat.STORAGE_MAIN_FILE).toString()) as StoredSkyChat;
+
+        // Register ids
+        SkyChat.CURRENT_GUEST_ID = data.guestId || 0;
+        Message.ID = data.messageId || 0;
+
+        // Create rooms
+        const rooms = data.rooms || [0];
+        this.rooms = rooms.map(id => new Room(id, this));
     }
 
     /**
@@ -136,7 +140,8 @@ export class SkyChat {
             // Build storage object
             const data: StoredSkyChat = {
                 guestId: SkyChat.CURRENT_GUEST_ID,
-                messageId: Message.ID
+                messageId: Message.ID,
+                rooms: this.rooms.map(room => room.id),
             };
 
             fs.writeFileSync(SkyChat.STORAGE_MAIN_FILE, JSON.stringify(data));
@@ -153,6 +158,63 @@ export class SkyChat {
 
         this.save();
         this.server.cleanup();
+    }
+
+    /**
+     * Returns whether a room id exists
+     * @param id 
+     * @returns 
+     */
+    public hasRoomId(id: number): boolean {
+        return !! this.rooms.find(room => room.id === id);
+    }
+
+    /**
+     * Get a room by id
+     * @param id 
+     * @returns 
+     */
+    public getRoomById(id: number): Room | null {
+        return this.rooms.find(room => room.id === id) || null;
+    }
+
+    /**
+     * Create a new room
+     * @param id 
+     * @param name
+     * @returns 
+     */
+    public createRoom(id: number, name?: string) {
+        if (this.hasRoomId(id)) {
+            throw new Error(`Room ${id} already exists`);
+        }
+        const room = new Room(id, this);
+        if (name) {
+            room.name = name;
+        }
+        this.rooms.push(room);
+        return room;
+    }
+
+    /**
+     * Delete a room
+     * @param id 
+     */
+    public async deleteRoom(id: number) {
+        if (this.rooms.length === 1) {
+            throw new Error('Impossible to remote the last remaining room');
+        }
+        const room = this.getRoomById(id);
+        if (! room){
+            throw new Error(`Room ${id} not found`);
+        }
+        // Move all connections to another room
+        const anyRoom: Room = this.rooms.find(room => room.id !== id) as Room;
+        for (const connection of anyRoom.connections) {
+            await anyRoom.attachConnection(connection);
+        }
+        // Remove old room
+        this.rooms = this.rooms.filter(room => room.id !== id);
     }
 
     /**
@@ -202,7 +264,11 @@ export class SkyChat {
         if (typeof payload.roomId !== 'number' || typeof this.rooms[payload.roomId] !== 'object') {
             throw new Error('Invalid room specified');
         }
-        await this.rooms[payload.roomId].attachConnection(connection);
+        const room = this.getRoomById(payload.roomId);
+        if (! room) {
+            throw new Error('Invalid room specified');
+        }
+        await room.attachConnection(connection);
     }
 
     /**

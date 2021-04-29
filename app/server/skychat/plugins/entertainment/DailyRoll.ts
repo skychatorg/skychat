@@ -143,7 +143,7 @@ export class DailyRoll extends Plugin {
         this.currentGame.state = 'started';
 
         // Re-create game message
-        this.currentGame.gameMessage.edit('deleted', '<i>deleted</i>');
+        this.currentGame.gameMessage.edit('deleted', '<s>deleted</s>');
         this.room.send('message-edit', this.currentGame.gameMessage.sanitized());
         this.currentGame.gameMessage = await this.room.sendMessage({content: '...', user: UserController.getNeutralUser()});
         this.updateGameMessage();

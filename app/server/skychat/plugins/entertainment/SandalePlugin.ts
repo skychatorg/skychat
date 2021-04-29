@@ -37,7 +37,10 @@ export class SandalePlugin extends Plugin {
 
     constructor(room: Room) {
         super(room);
-        this.loadStorage();
+
+        if (this.room) {
+            this.loadStorage();
+        }
     }
 
     /**

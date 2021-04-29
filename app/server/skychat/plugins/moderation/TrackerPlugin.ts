@@ -69,7 +69,10 @@ export class TrackerPlugin extends Plugin {
 
     constructor(room: Room) {
         super(room);
-        this.loadStorage();
+
+        if (this.room) {
+            this.loadStorage();
+        }
     }
 
     public getAllRelatedNodes(type: NodeType, value: string): Node[] {

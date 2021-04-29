@@ -27,9 +27,8 @@ export class LogFuzzerPlugin extends Plugin {
     constructor(room: Room) {
         super(room);
 
-        this.loadStorage();
-
         if (room) {
+            this.loadStorage();
             this.armTick(LogFuzzerPlugin.FUZZ_COOLDOWN);
         }
     }

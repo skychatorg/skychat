@@ -51,7 +51,7 @@ export class MessageEditCommand extends Plugin {
             const content = param.split(' ').slice(1).join(' ');
             message.edit(content);
         } else {
-            message.edit('deleted', `<i>deleted</i>`);
+            message.edit('deleted', `<s>deleted</s>`);
         }
         this.room.send('message-edit', message.sanitized());
     }

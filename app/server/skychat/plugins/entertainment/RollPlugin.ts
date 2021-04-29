@@ -88,7 +88,10 @@ export class RollPlugin extends Plugin {
 
     constructor(room: Room) {
         super(room);
-        this.loadStorage();
+
+        if (this.room) {
+            this.loadStorage();
+        }
     }
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
@@ -163,7 +166,7 @@ export class RollPlugin extends Plugin {
         }
 
         // Start actual round
-        introMessage.edit('deleted', `<i>deleted</i>`);
+        introMessage.edit('deleted', `<s>deleted</s>`);
         this.room.send('message-edit', introMessage.sanitized());
         this.currentGame.state = 'running';
         this.currentGame.ballPosition = Math.floor(RandomGenerator.random(8) * 10);

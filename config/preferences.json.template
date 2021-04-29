@@ -29,6 +29,7 @@
         {"limit": 0, "images": { "18": "ranks/materials/0_paper_18.png", "26": "ranks/materials/0_paper_26.png" }}
     ],
     "plugins": [
+        "RoomManagerPlugin",
         "AccountPlugin",
         "AvatarPlugin",
         "BackupPlugin",

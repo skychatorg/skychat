@@ -1,16 +1,19 @@
 import {Connection} from "./Connection";
 import {IBroadcaster} from "./IBroadcaster";
-import {Message, MessageConstructorOptions, MessageMeta} from "./Message";
+import {Message, MessageConstructorOptions} from "./Message";
 import {Plugin} from "./Plugin";
 import {PluginManager} from "./PluginManager";
 import * as fs from "fs";
 import SQL from "sql-template-strings";
 import {DatabaseHelper} from "./DatabaseHelper";
 import { MessageController } from "./MessageController";
+import { Config } from "./Config";
+import { SkyChat } from "./SkyChat";
 
 
 export type StoredRoom = {
-
+    name: string;
+    enabledPlugins: string[];
 }
 
 export type SanitizedRoom = {
@@ -30,6 +33,11 @@ export class Room implements IBroadcaster {
     public static readonly STORAGE_BASE_PATH: string = 'storage/rooms';
 
     /**
+     * Room tick duration
+     */
+    private static TICK_INTERVAL: number = 5 * 1000;
+
+    /**
      * Number of messages kept in memory
      */
     static readonly MESSAGE_HISTORY_LENGTH = 1000;
@@ -44,10 +52,17 @@ export class Room implements IBroadcaster {
      */
     public readonly id: number;
 
+    public readonly manager: SkyChat;
+
     /**
      * This room name
      */
     public name: string;
+
+    /**
+     * List of enabled plugins
+     */
+    public enabledPlugins: string[] = [];
 
     /**
      * Connections that are within this room
@@ -74,13 +89,23 @@ export class Room implements IBroadcaster {
      */
     public readonly plugins: Plugin[];
 
-    constructor(id: number, name: string) {
+    constructor(id: number, manager: SkyChat) {
         this.id = id;
-        this.name = name;
+        this.manager = manager;
+
+        // Set default value for stored values
+        this.name = `Room ${id}`; 
+        this.enabledPlugins = Config.getPlugins();
+
+        // Load storage file if it exists (will override default values)
+        this.load();
+
+        // Instantiate plugins
         const {commands, plugins} = PluginManager.instantiatePlugins(this);
         this.commands = commands;
         this.plugins = plugins;
-        this.load();
+
+        setInterval(this.tick.bind(this), Room.TICK_INTERVAL);
     }
 
     /**
@@ -94,25 +119,35 @@ export class Room implements IBroadcaster {
      * Try to load this room's data from disk
      */
     private load(): void {
-        try {
-            const data = JSON.parse(fs.readFileSync(this.getStoragePath()).toString()) as StoredRoom;
-        } catch (e) {
-            this.save(); // If an error happens, reset this room's storage
+        // If the storage does not exist, create it
+        if (! fs.existsSync(this.getStoragePath())) {
+            this.save();
+            return;
         }
+
+        // Otherwise, load data from this file
+        const data = JSON.parse(fs.readFileSync(this.getStoragePath()).toString()) as StoredRoom;
+        this.name = data.name || this.name;
+        this.enabledPlugins = data.enabledPlugins || this.enabledPlugins;
     }
 
     /**
      * Save this room's data to disk
      */
     private save(): boolean {
-        try {
-            // @TODO build room storage object
-            const data: StoredRoom = {};
-            fs.writeFileSync(this.getStoragePath(), JSON.stringify(data));
-            return true;
-        } catch (e) {
-            return false;
-        }
+        const data: StoredRoom = {
+            name: this.name,
+            enabledPlugins: this.enabledPlugins,
+        };
+        fs.writeFileSync(this.getStoragePath(), JSON.stringify(data));
+        return true;
+    }
+
+    /**
+     * Periodical cleanup/storage of this room data
+     */
+    private tick(): void {
+        this.save();
     }
 
     /**
@@ -316,7 +351,7 @@ export class Room implements IBroadcaster {
      */
     public clearHistory(): void {
         this.messages.forEach(message => {
-            message.edit('deleted', `<i>deleted</i>`);
+            message.edit('deleted', `<s>deleted</s>`);
             this.send('message-edit', message.sanitized());
         });
     }
@@ -329,7 +364,7 @@ export class Room implements IBroadcaster {
         const plugins: {[pluginName: string]: string} = {};
         for (const plugin of this.plugins) {
             const summary = plugin.getRoomSummary();
-            if (summary) {
+            if (summary === null || typeof summary === 'undefined') {
                 plugins[plugin.name] = summary;
             }
         }
