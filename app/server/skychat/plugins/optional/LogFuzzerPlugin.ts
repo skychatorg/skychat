@@ -7,9 +7,9 @@ import SQL from "sql-template-strings";
 
 export class LogFuzzerPlugin extends Plugin {
 
-    static readonly DURATION_BEFORE_FUZZ =  60 * 60 * 1000;
+    static readonly DURATION_BEFORE_FUZZ =  6 * 60 * 60 * 1000;
 
-    static readonly FUZZ_COOLDOWN =  60 * 1000;
+    static readonly FUZZ_COOLDOWN =  LogFuzzerPlugin.DURATION_BEFORE_FUZZ;
 
     readonly name = 'logfuzzer';
 
