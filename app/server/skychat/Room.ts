@@ -365,8 +365,9 @@ export class Room implements IBroadcaster {
         for (const plugin of this.plugins) {
             const summary = plugin.getRoomSummary();
             if (summary === null || typeof summary === 'undefined') {
-                plugins[plugin.name] = summary;
+                continue;
             }
+            plugins[plugin.name] = summary;
         }
         return {
             id: this.id,
