@@ -1,23 +1,22 @@
 import {Connection} from "../../Connection";
-import {Plugin} from "../../Plugin";
 import {ConnectedListPlugin} from "../core/ConnectedListPlugin";
 import {Config} from "../../Config";
-import {MessageFormatter} from "../../MessageFormatter";
 import {UserController} from "../../UserController";
 import * as fs from 'fs';
 import { FileManager } from "../../FileManager";
 import { Server } from "../../Server";
+import { GlobalPlugin } from "../../GlobalPlugin";
 
 
-export class AvatarPlugin extends Plugin {
+export class AvatarPlugin extends GlobalPlugin {
 
     static readonly DEFAULT_AVATAR: string = Config.LOCATION + '/assets/images/avatars/default.png';
 
-    readonly defaultDataStorageValue = AvatarPlugin.DEFAULT_AVATAR;
+    static readonly defaultDataStorageValue = AvatarPlugin.DEFAULT_AVATAR;
 
-    readonly name = 'avatar';
+    static readonly commandName = 'avatar';
 
-    readonly aliases = [];
+    static readonly commandAliases = [];
 
     readonly minRight = 0;
 
@@ -52,7 +51,7 @@ export class AvatarPlugin extends Plugin {
         const newAvatarPath = 'avatars/' + connection.session.identifier + '.' + extension;
 
         // Remove previous avatar
-        const previousAvatarUrl = UserController.getPluginData(connection.session.user, this.name);
+        const previousAvatarUrl = UserController.getPluginData(connection.session.user, this.commandName);
         const previousAvatarLocalPath = '.' + previousAvatarUrl.substr(Config.LOCATION.length).split('?')[0];
         if (previousAvatarUrl.match('^avatars\/')) {
             try {
@@ -67,7 +66,8 @@ export class AvatarPlugin extends Plugin {
         const avatarNewUrl = Config.LOCATION + '/' + newAvatarPath + '?' + new Date().getTime();
 
         // Save data to database
-        await UserController.savePluginData(connection.session.user, this.name, avatarNewUrl);
-        (this.room.getPlugin('connectedlist') as ConnectedListPlugin).sync();
+        await UserController.savePluginData(connection.session.user, this.commandName, avatarNewUrl);
+
+        (this.manager.getPlugin('connectedlist') as ConnectedListPlugin).sync();
     }
 }

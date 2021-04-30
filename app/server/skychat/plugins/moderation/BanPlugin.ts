@@ -1,13 +1,13 @@
 import {Connection} from "../../Connection";
 import {User} from "../../User";
 import {Session} from "../../Session";
-import {Plugin} from "../../Plugin";
 import {UserController} from "../../UserController";
 import * as striptags from "striptags";
 import {MessageFormatter} from "../../MessageFormatter";
-import { Room } from "../../Room";
 import { Timing } from "../../Timing";
 import { Message } from "../../Message";
+import { GlobalPlugin } from "../../GlobalPlugin";
+import { RoomManager } from "../../RoomManager";
 
 
 enum BAN_TYPES {
@@ -16,19 +16,21 @@ enum BAN_TYPES {
 };
 
 
-export class BanPlugin extends Plugin {
+export class BanPlugin extends GlobalPlugin {
 
-    public static readonly BAN_COMMAND: string = 'ban';
-    public static readonly UNBAN_COMMAND: string = 'unban';
-    public static readonly BANLIST_COMMAND: string = 'banlist';
+    static readonly BAN_COMMAND: string = 'ban';
 
-    public static readonly BAN_MIN_RIGHT = 40;
+    static readonly UNBAN_COMMAND: string = 'unban';
 
-    readonly name = BanPlugin.BAN_COMMAND;
+    static readonly BANLIST_COMMAND: string = 'banlist';
+
+    static readonly BAN_MIN_RIGHT = 40;
+
+    static readonly commandName = BanPlugin.BAN_COMMAND;
+
+    static readonly commandAliases = [BanPlugin.UNBAN_COMMAND, BanPlugin.BANLIST_COMMAND];
 
     readonly minRight = BanPlugin.BAN_MIN_RIGHT;
-
-    readonly aliases = [BanPlugin.UNBAN_COMMAND, BanPlugin.BANLIST_COMMAND];
 
     readonly rules = {
         [BanPlugin.BAN_COMMAND]: {
@@ -58,12 +60,10 @@ export class BanPlugin extends Plugin {
         banned: {}
     };
 
-    constructor(room: Room) {
-        super(room);
+    constructor(manager: RoomManager) {
+        super(manager);
 
-        if (this.room) {
-            this.loadStorage();
-        }
+        this.loadStorage();
     }
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
@@ -159,7 +159,7 @@ export class BanPlugin extends Plugin {
                 </tr>`;
         }
         content += `</table>`;
-        const message = UserController.createNeutralMessage({content: '', room: this.room.id, id: 0});
+        const message = UserController.createNeutralMessage({content: '', room: connection.roomId, id: 0});
         message.edit(striptags(content), content);
         connection.send('message', message.sanitized());
     }
@@ -180,7 +180,7 @@ export class BanPlugin extends Plugin {
 
             // Only send new messages to himself
             if (message.startsWith('/message ')) {
-                connection.send('message', new Message({id: ++Message.ID, room: this.room.id, content: message.substr('/message'.length), user: connection.session.user}).sanitized());
+                connection.send('message', new Message({id: ++Message.ID, room: connection.roomId, content: message.substr('/message'.length), user: connection.session.user}).sanitized());
                 connection.session.lastMessageDate = new Date();
                 return `/void`;
             }

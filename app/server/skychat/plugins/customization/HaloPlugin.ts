@@ -1,12 +1,12 @@
 import {Connection} from "../../Connection";
-import {Plugin} from "../../Plugin";
+import {GlobalPlugin} from "../../GlobalPlugin";
 
 
-export class HaloPlugin extends Plugin {
+export class HaloPlugin extends GlobalPlugin {
 
-    readonly defaultDataStorageValue = false;
+    static readonly commandName = 'halo';
 
-    readonly name = 'halo';
+    static readonly defaultDataStorageValue = false;
 
     readonly callable = false;
     

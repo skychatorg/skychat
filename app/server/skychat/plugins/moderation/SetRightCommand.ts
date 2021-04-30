@@ -3,12 +3,12 @@ import {User} from "../../User";
 import {Session} from "../../Session";
 import {ConnectedListPlugin} from "../core/ConnectedListPlugin";
 import {UserController} from "../../UserController";
-import { Plugin } from "../../Plugin";
+import {GlobalPlugin} from "../../GlobalPlugin";
 
 
-export class SetRightCommand extends Plugin {
+export class SetRightCommand extends GlobalPlugin {
 
-    readonly name = 'setright';
+    static readonly commandName = 'setright';
 
     readonly minRight = 0;
 
@@ -38,6 +38,6 @@ export class SetRightCommand extends Plugin {
         const user = session.user;
         user.right = right;
         await UserController.sync(user);
-        await (this.room.getPlugin('connectedlist') as ConnectedListPlugin).sync();
+        (this.manager.getPlugin('connectedlist') as ConnectedListPlugin).sync();
     }
 }

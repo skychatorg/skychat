@@ -1,5 +1,5 @@
 import {Connection} from "../../Connection";
-import {Plugin} from "../../Plugin";
+import {RoomPlugin} from "../../RoomPlugin";
 import {Message} from "../../Message";
 import {UserController} from "../../UserController";
 import {Session} from "../../Session";
@@ -31,7 +31,7 @@ const waitTimeout = (delay: number) => {
 };
 
 
-export class RollPlugin extends Plugin {
+export class RollPlugin extends RoomPlugin {
 
     public static readonly ENTRY_COST: number = 100;
 
@@ -63,7 +63,7 @@ export class RollPlugin extends Plugin {
             7621
         ]);
 
-    readonly name = 'roll';
+    static readonly commandName = 'roll';
 
     readonly minRight = 20;
 
@@ -136,7 +136,7 @@ export class RollPlugin extends Plugin {
         -> New round (roll). To bet on a specific slot, click on one of the button below:<br>
         <table class="skychat-table">
             <tr>
-                ${Array.from({length:10}).map((_: any, i: number) => `<td>[[slot ${i}//${this.name} ${i}]]</td>`).join(' ')}
+                ${Array.from({length:10}).map((_: any, i: number) => `<td>[[slot ${i}//${this.commandName} ${i}]]</td>`).join(' ')}
             </tr>
         </table>`;
         const formatter = MessageFormatter.getInstance();

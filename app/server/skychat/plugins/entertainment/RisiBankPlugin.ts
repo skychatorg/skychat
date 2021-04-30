@@ -1,12 +1,12 @@
 import {Connection} from "../../Connection";
-import {Plugin} from "../../Plugin";
+import {RoomPlugin} from "../../RoomPlugin";
 import {Message} from "../../Message";
 import {RisiBank, Sticker} from "risibank";
 
 
-export class RisiBankPlugin extends Plugin {
+export class RisiBankPlugin extends RoomPlugin {
 
-    readonly name = 'risibank';
+    static readonly commandName = 'risibank';
 
     readonly minRight = 0;
 

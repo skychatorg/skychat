@@ -16,48 +16,21 @@ export class UserController {
      */
     public static AUTH_TOKEN_VALIDITY: number = 1000 * 60 * 60 * 24 * 7;
 
-    private static dummyPluginInstances: {[name: string]: Plugin};
-
     /**
-     * Static init block
+     * Object containing default storage data for each plugin
      */
-    public static loadDummyPluginInstances(): {[name: string]: Plugin} {
-
-        if (typeof this.dummyPluginInstances !== 'undefined') {
-            return this.dummyPluginInstances;
-        }
-
-        this.dummyPluginInstances = {};
-        const {commands, plugins} = PluginManager.instantiatePlugins(null as any);
-        plugins.forEach((plugin: Plugin) => {
-            this.dummyPluginInstances[plugin.name] = plugin;
-        });
-        return this.dummyPluginInstances;
-    }
+    private static pluginDefaultStorages: {[name: string]: any} = PluginManager.getPluginsDefaultDataStorageValues(Config.PREFERENCES.plugins);
 
     /**
-     * Static init block
      */
     public static getPluginDefaultData(pluginName: string): any {
-        const plugins = this.loadDummyPluginInstances();
-        if (typeof plugins[pluginName] === 'undefined') {
-            return undefined;
-        }
-        return _.cloneDeep(plugins[pluginName].defaultDataStorageValue);
+        return _.cloneDeep(this.pluginDefaultStorages[pluginName]);
     }
 
     /**
-     * Static init block
      */
     public static getPluginsDefaultData(): {[pluginName: string]: any} {
-        const plugins = this.loadDummyPluginInstances();
-        const defaultValues: {[pluginName: string]: any} = {};
-        for (const plugin of Object.values(plugins)) {
-            if (typeof plugin.defaultDataStorageValue !== 'undefined') {
-                defaultValues[plugin.name] = plugin.defaultDataStorageValue;
-            }
-        }
-        return _.cloneDeep(defaultValues);
+        return _.cloneDeep(this.pluginDefaultStorages);
     }
 
     /**

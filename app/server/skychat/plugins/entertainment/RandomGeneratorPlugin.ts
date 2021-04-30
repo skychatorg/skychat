@@ -1,12 +1,12 @@
 import {Connection} from "../../Connection";
-import {Plugin} from "../../Plugin";
+import {RoomPlugin} from "../../RoomPlugin";
 import {UserController} from "../../UserController";
 import { RandomGenerator } from "../../RandomGenerator";
 
 
-export class RandomGeneratorPlugin extends Plugin {
+export class RandomGeneratorPlugin extends RoomPlugin {
 
-    readonly name = 'rand';
+    static readonly commandName = 'rand';
 
     readonly minRight = 0;
 

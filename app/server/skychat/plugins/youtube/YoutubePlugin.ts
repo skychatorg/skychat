@@ -11,6 +11,7 @@ import {PendingYoutubeVideo} from "./PendingYoutubeVideo";
 import {CurrentYoutubeVideo, SyncPlayerStateObject} from "./CurrentYoutubeVideo";
 import {YoutubeHelper} from "./YoutubeHelper";
 import {PollPlugin} from "../poll/PollPlugin";
+import { RoomPlugin } from "../../RoomPlugin";
 
 
 
@@ -23,15 +24,15 @@ type YoutubePluginStorage = {
 /**
  * Youtube plugin for the skychat
  */
-export class YoutubePlugin extends Plugin {
+export class YoutubePlugin extends RoomPlugin {
 
     static readonly MIN_API_RIGHT: number = 10;
 
-    readonly defaultDataStorageValue = true;
+    static readonly commandName = 'yt';
 
-    readonly name = 'yt';
+    static readonly commandAliases = ['play', 'playpl', 'ytapi', 'ytapi:search', '~'];
 
-    readonly aliases = ['play', 'playpl', 'ytapi', 'ytapi:search', '~'];
+    static readonly defaultDataStorageValue = true;
 
     readonly rules: {[alias: string]: PluginCommandRules} = {
         yt: {
@@ -117,7 +118,7 @@ export class YoutubePlugin extends Plugin {
             case 'on':
             case 'off':
                 const newState = param === 'on';
-                await UserController.savePluginData(connection.session.user, this.name, newState);
+                await UserController.savePluginData(connection.session.user, this.commandName, newState);
                 this.sync(connection);
                 connection.session.syncUserData();
                 break;
@@ -453,7 +454,7 @@ export class YoutubePlugin extends Plugin {
             return;
         }
         const syncObject: SyncPlayerStateObject = {
-            enabled: UserController.getPluginData(broadcaster.session.user, this.name),
+            enabled: UserController.getPluginData(broadcaster.session.user, this.commandName),
             user: this.storage.currentVideo.user.sanitized(),
             video: this.storage.currentVideo.video,
             start: this.storage.currentVideo.start,

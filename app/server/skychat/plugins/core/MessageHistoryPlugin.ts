@@ -1,15 +1,14 @@
-import {Plugin} from "../../Plugin";
+import {RoomPlugin} from "../../RoomPlugin";
 import {Connection} from "../../Connection";
 import {Message} from "../../Message";
 import {Room} from "../../Room";
 import {Config} from "../../Config";
-import {MessageFormatter} from "../../MessageFormatter";
 import { StickerManager } from "../../StickerManager";
 
 
-export class MessageHistoryPlugin extends Plugin {
+export class MessageHistoryPlugin extends RoomPlugin {
 
-    readonly name = 'messagehistory';
+    static readonly commandName = 'messagehistory';
 
     readonly hidden = true;
 

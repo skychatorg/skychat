@@ -1,5 +1,5 @@
 import {Connection} from "../../Connection";
-import {Plugin} from "../../Plugin";
+import {RoomPlugin} from "../../RoomPlugin";
 import { UserController } from "../../UserController";
 import { Room } from "../../Room";
 import { Message } from "../../Message";
@@ -19,7 +19,7 @@ type GameObject = {
 };
 
 
-export class DailyRoll extends Plugin {
+export class DailyRoll extends RoomPlugin {
 
     /**
      * Scheduled time in hours. E.g. 2.5 means 2h30
@@ -36,7 +36,7 @@ export class DailyRoll extends Plugin {
 
     public static readonly CARDS_COUNT: number = DailyRoll.BOARD_WIDTH * DailyRoll.BOARD_HEIGHT;
 
-    readonly name = 'dailyroll';
+    static readonly commandName = 'dailyroll';
 
     readonly minRight = 10;
 
@@ -53,8 +53,9 @@ export class DailyRoll extends Plugin {
 
     constructor(room: Room) {
         super(room);
-
-        if (this.room && this.room.id === 0) { // @TODO implement plugins / room
+        
+        // @TODO implement plugins / room
+        if (this.room.id === 0) {
             this.armTimer();
         }
     }
@@ -219,15 +220,15 @@ export class DailyRoll extends Plugin {
 
                 // Display this specific card
                 if (card.state === 'pending') {
-                    content += `[[❔//${this.name} ${id}]]`;
+                    content += `[[❔//${this.commandName} ${id}]]`;
                 } else if (card.state === 'chosen') {
-                    content += `[[❓//${this.name} ${id}]]`;
+                    content += `[[❓//${this.commandName} ${id}]]`;
                 } else if (card.content === DailyRoll.JACKPOT_AMOUNT) {
-                    content += `[[💰//${this.name} ${id}]]`;
+                    content += `[[💰//${this.commandName} ${id}]]`;
                 } else if (card.content > 0) {
-                    content += `[[💵//${this.name} ${id}]]`;
+                    content += `[[💵//${this.commandName} ${id}]]`;
                 } else {
-                    content += `[[💩//${this.name} ${id}]]`;
+                    content += `[[💩//${this.commandName} ${id}]]`;
                 }
 
                 content += '</td>';

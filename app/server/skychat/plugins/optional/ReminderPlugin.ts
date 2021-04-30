@@ -1,14 +1,13 @@
 import { Connection } from "../../Connection";
-import { Message } from "../../Message";
 import { UserController } from "../../UserController";
-import { Plugin } from "../../Plugin";
+import { RoomPlugin } from "../../RoomPlugin";
 
 
-export class ReminderPlugin extends Plugin {
+export class ReminderPlugin extends RoomPlugin {
 
     static readonly TIME_PATTERN: RegExp = /^([0-9]+)(s|m|h)$/;
 
-    readonly name = 'remindme';
+    static readonly commandName = 'remindme';
 
     readonly minRight = 0;
 

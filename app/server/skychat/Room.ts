@@ -8,7 +8,8 @@ import SQL from "sql-template-strings";
 import {DatabaseHelper} from "./DatabaseHelper";
 import { MessageController } from "./MessageController";
 import { Config } from "./Config";
-import { SkyChat } from "./SkyChat";
+import { RoomManager } from "./RoomManager";
+import { RoomPlugin } from "./RoomPlugin";
 
 
 export type StoredRoom = {
@@ -52,7 +53,10 @@ export class Room implements IBroadcaster {
      */
     public readonly id: number;
 
-    public readonly manager: SkyChat;
+    /**
+     * Room manager
+     */
+    public readonly manager: RoomManager;
 
     /**
      * This room name
@@ -82,26 +86,26 @@ export class Room implements IBroadcaster {
     /**
      * Plugins. All aliases of a command/plugin points to the same command instance.
      */
-    public readonly commands: {[commandName: string]: Plugin};
+    public readonly commands: {[commandName: string]: RoomPlugin};
 
     /**
      * Plugins sorted by descending priority
      */
-    public readonly plugins: Plugin[];
+    public readonly plugins: RoomPlugin[];
 
-    constructor(id: number, manager: SkyChat) {
+    constructor(id: number, manager: RoomManager) {
         this.id = id;
         this.manager = manager;
 
         // Set default value for stored values
         this.name = `Room ${id}`; 
-        this.enabledPlugins = Config.getPlugins();
+        this.enabledPlugins = Config.getPlugins().filter(PluginManager.isRoomPlugin);
 
         // Load storage file if it exists (will override default values)
         this.load();
 
         // Instantiate plugins
-        const {commands, plugins} = PluginManager.instantiatePlugins(this);
+        const {commands, plugins} = PluginManager.instantiateRoomPlugins(this);
         this.commands = commands;
         this.plugins = plugins;
 
@@ -167,6 +171,7 @@ export class Room implements IBroadcaster {
      */
     public detachConnection(connection: Connection) {
         this.connections = this.connections.filter(c => c !== connection);
+        this.executeOnConnectionLeftRoom(connection);
     }
 
     /**
@@ -221,28 +226,6 @@ export class Room implements IBroadcaster {
         }
         return plugin;
     }
-
-    /**
-     * Execute new connection hook
-     * @param message
-     * @param connection
-     */
-    public async executeNewMessageHook(message: string, connection: Connection): Promise<string> {
-        for (const plugin of this.plugins) {
-            message = await plugin.onNewMessageHook(message, connection);
-        }
-        return message;
-    }
-
-    /**
-     * Execute connection authenticated hook
-     * @param connection
-     */
-    public async executeConnectionAuthenticated(connection: Connection): Promise<void> {
-        for (const plugin of this.plugins) {
-            await plugin.onConnectionAuthenticated(connection);
-        }
-    }
     
     /**
      * Execute before room join hook
@@ -268,9 +251,9 @@ export class Room implements IBroadcaster {
      * Execute connection closed hook
      * @param connection
      */
-    public async executeOnConnectionClosed(connection: Connection): Promise<void> {
+    public async executeOnConnectionLeftRoom(connection: Connection): Promise<void> {
         for (const plugin of this.plugins) {
-            await plugin.onConnectionClosed(connection);
+            await plugin.onConnectionLeftRoom(connection);
         }
     }
 
@@ -361,13 +344,14 @@ export class Room implements IBroadcaster {
      */
     public sanitized(): SanitizedRoom {
         const lastMessage: Message | null = this.messages.length === 0 ? null : this.messages[this.messages.length - 1];
+        // Merge summary data from every plugin
         const plugins: {[pluginName: string]: string} = {};
         for (const plugin of this.plugins) {
             const summary = plugin.getRoomSummary();
             if (summary === null || typeof summary === 'undefined') {
                 continue;
             }
-            plugins[plugin.name] = summary;
+            plugins[plugin.commandName] = summary;
         }
         return {
             id: this.id,

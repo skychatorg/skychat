@@ -1,5 +1,5 @@
 import {Connection} from "../../Connection";
-import {Plugin} from "../../Plugin";
+import {RoomPlugin} from "../../RoomPlugin";
 import {UserController} from "../../UserController";
 import * as striptags from "striptags";
 import {MessageFormatter} from "../../MessageFormatter";
@@ -22,7 +22,7 @@ type GameObject = {
 };
 
 
-export class PointsCollectorPlugin extends Plugin {
+export class PointsCollectorPlugin extends RoomPlugin {
 
     static readonly GAME_DURATION: number = 30 * 1000;
 
@@ -34,7 +34,7 @@ export class PointsCollectorPlugin extends Plugin {
 
     static readonly POINT_COLLISION_RADIUS: number = 0.05;
 
-    readonly name = 'pointscollector';
+    static readonly commandName = 'pointscollector';
 
     readonly minRight = 20;
 
@@ -194,14 +194,14 @@ export class PointsCollectorPlugin extends Plugin {
 
         // Send ball
         cursorPlugin.sendCursorPosition(
-            UserController.getNeutralUser(`$${this.name}_ball`),
+            UserController.getNeutralUser(`$${this.commandName}_ball`),
             this.currentGame.ball.pos.x,
             this.currentGame.ball.pos.y,
         );
 
         // Send point
         cursorPlugin.sendCursorPosition(
-            UserController.getNeutralUser(`$${this.name}_point`),
+            UserController.getNeutralUser(`$${this.commandName}_point`),
             this.currentGame.point.x,
             this.currentGame.point.y,
         );

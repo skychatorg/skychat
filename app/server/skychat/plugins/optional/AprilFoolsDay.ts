@@ -1,10 +1,10 @@
 import { Connection } from "../../Connection";
-import { Plugin } from "../../Plugin";
+import { GlobalPlugin } from "../../GlobalPlugin";
 
 
-export class AprilFoolsDay extends Plugin {
+export class AprilFoolsDay extends GlobalPlugin {
 
-    readonly name = 'aprilfoolsday';
+    static readonly commandName = 'aprilfoolsday';
 
     readonly minRight = -1;
 

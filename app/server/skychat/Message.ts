@@ -54,7 +54,7 @@ export type MessageMeta = {
 
 export type MessageConstructorOptions = {
     id?: number;
-    room?: number;
+    room?: number | null;
     content: string;
     formatted?: string | null;
     user: User;

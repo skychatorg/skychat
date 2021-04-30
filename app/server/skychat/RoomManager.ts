@@ -5,13 +5,14 @@ import {Session} from "./Session";
 import {DatabaseHelper} from "./DatabaseHelper";
 import {User} from "./User";
 import * as iof from "io-filter";
-import {Room, StoredRoom} from "./Room";
+import {Room} from "./Room";
 import {UserController} from "./UserController";
 import {Config} from "./Config";
 import * as fs from "fs";
 import {Message} from "./Message";
 import {AudioRecorderPlugin} from "./plugins/core/AudioRecorderPlugin";
 import { PluginManager } from "./PluginManager";
+import { GlobalPlugin } from "./GlobalPlugin";
 
 
 export type StoredSkyChat = {
@@ -21,11 +22,11 @@ export type StoredSkyChat = {
 }
 
 /**
- * The base server class for the skychat
+ * The room manager
  */
-export class SkyChat {
+export class RoomManager {
 
-    public static readonly STORAGE_MAIN_FILE: string = 'storage/skychat.json';
+    public static readonly STORAGE_MAIN_FILE: string = 'storage/main.json';
 
     private static TICK_INTERVAL: number = 5 * 1000;
 
@@ -34,6 +35,16 @@ export class SkyChat {
     private rooms: Room[] = [];
 
     private readonly server: Server;
+
+    /**
+     * Plugins. All aliases of a command/plugin points to the same command instance.
+     */
+    public commands: {[commandName: string]: GlobalPlugin} = {};
+
+    /**
+     * Plugins sorted by descending priority
+     */
+    public plugins: GlobalPlugin[] = [];
 
     constructor() {
 
@@ -60,6 +71,11 @@ export class SkyChat {
                 for (const room of this.rooms) {
                     await room.loadLastMessagesFromDB();
                 }
+
+                // Load global plugins
+                const {commands, plugins} = PluginManager.instantiateGlobalPlugins(this);
+                this.commands = commands;
+                this.plugins = plugins;
 
                 // On register
                 this.server.registerEvent(
@@ -108,23 +124,23 @@ export class SkyChat {
                 }, 5 * 1000);
             });
 
-        setInterval(this.tick.bind(this), SkyChat.TICK_INTERVAL);
+        setInterval(this.tick.bind(this), RoomManager.TICK_INTERVAL);
     }
 
     /**
      * Try to load this room's data from disk
      */
     private load(): void {
-        if (! fs.existsSync(SkyChat.STORAGE_MAIN_FILE)) {
+        if (! fs.existsSync(RoomManager.STORAGE_MAIN_FILE)) {
             this.save();
             return;
         }
 
         // Load data from disk
-        const data = JSON.parse(fs.readFileSync(SkyChat.STORAGE_MAIN_FILE).toString()) as StoredSkyChat;
+        const data = JSON.parse(fs.readFileSync(RoomManager.STORAGE_MAIN_FILE).toString()) as StoredSkyChat;
 
         // Register ids
-        SkyChat.CURRENT_GUEST_ID = data.guestId || 0;
+        RoomManager.CURRENT_GUEST_ID = data.guestId || 0;
         Message.ID = data.messageId || 0;
 
         // Create rooms
@@ -139,12 +155,12 @@ export class SkyChat {
         try {
             // Build storage object
             const data: StoredSkyChat = {
-                guestId: SkyChat.CURRENT_GUEST_ID,
+                guestId: RoomManager.CURRENT_GUEST_ID,
                 messageId: Message.ID,
                 rooms: this.rooms.map(room => room.id),
             };
 
-            fs.writeFileSync(SkyChat.STORAGE_MAIN_FILE, JSON.stringify(data));
+            fs.writeFileSync(RoomManager.STORAGE_MAIN_FILE, JSON.stringify(data));
             return true;
         } catch (e) {
             return false;
@@ -221,15 +237,46 @@ export class SkyChat {
      * Build a new session object when there is a new connection
      */
     private async getNewSession(request: http.IncomingMessage): Promise<Session> {
-        if (SkyChat.CURRENT_GUEST_ID >= Math.pow(10, 10)) {
-            SkyChat.CURRENT_GUEST_ID = 0;
+        if (RoomManager.CURRENT_GUEST_ID >= Math.pow(10, 10)) {
+            RoomManager.CURRENT_GUEST_ID = 0;
         }
-        const guestId = ++ SkyChat.CURRENT_GUEST_ID;
+        const guestId = ++ RoomManager.CURRENT_GUEST_ID;
         const randomName = Config.getRandomGuestName();
         const identifier = '*' + randomName + '#' + guestId;
         const session = new Session(identifier);
         session.user.data.plugins.avatar = 'https://eu.ui-avatars.com/api/?name=' + randomName;
         return session;
+    }
+
+    /**
+     * Get a plugin by its command name
+     * @param commandName 
+     * @returns 
+     */
+    public getPlugin(commandName: string): GlobalPlugin {
+        return this.commands[commandName];
+    }
+
+    /**
+     * Execute new connection hook
+     * @param message
+     * @param connection
+     */
+    public async executeNewMessageHook(message: string, connection: Connection): Promise<string> {
+        for (const plugin of this.plugins) {
+            message = await plugin.onNewMessageHook(message, connection);
+        }
+        return message;
+    }
+
+    /**
+     * Execute connection authenticated hook
+     * @param connection
+     */
+    public async executeConnectionAuthenticated(connection: Connection): Promise<void> {
+        for (const plugin of this.plugins) {
+            await plugin.onConnectionAuthenticated(connection);
+        }
     }
 
     /**
@@ -297,7 +344,7 @@ export class SkyChat {
         connection.send('auth-token', UserController.getAuthToken(user.id));
         const room = this.rooms[0];
         await room.attachConnection(connection);
-        await room.executeConnectionAuthenticated(connection);
+        await this.executeConnectionAuthenticated(connection);
     }
 
     /**
@@ -307,27 +354,35 @@ export class SkyChat {
      */
     private async onMessage(payload: string, connection: Connection): Promise<void> {
 
-        // Apply hooks on payload
-        if (! connection.room) {
-            throw new Error('Messages event should be sent in rooms');
-        }
-
         // Handle default command (/message)
         if (payload[0] !== '/') {
             payload = '/message ' + payload;
         }
 
-        payload = await connection.room.executeNewMessageHook(payload, connection);
+        payload = await this.executeNewMessageHook(payload, connection);
 
         // Parse command name and message content
         const {param, commandName} = PluginManager.parseCommand(payload);
 
-        // Get command object
-        const command = connection.room.commands[commandName];
-        if (! command) {
-            throw new Error('This command does not exist');
+        // If command linked to a global plugin
+        if (typeof this.commands[commandName] !== 'undefined') {
+            const command = this.commands[commandName];
+            await command.execute(commandName, param, connection);
+            return;
         }
 
+        // If command linked to a room plugin
+        if (! connection.room) {
+            throw new Error('Messages event should be sent in rooms');
+        }
+
+        // Get command object
+        if (typeof connection.room.commands[commandName] === 'undefined') {
+            throw new Error('This command does not exist');
+        }
+        const command = connection.room.commands[commandName];
+
+        // Execute the room plugin
         await command.execute(commandName, param, connection);
     }
 
@@ -341,8 +396,7 @@ export class SkyChat {
             throw new Error('Audio recordings should be sent in rooms');
         }
         
-        const audioRecorderPlugin = connection.room.getPlugin('audio') as AudioRecorderPlugin;
+        const audioRecorderPlugin = connection.room.getPlugin('audio') as unknown as AudioRecorderPlugin;
         await audioRecorderPlugin.registerAudioBuffer(buffer, connection);
     }
 }
-

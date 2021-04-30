@@ -1,20 +1,21 @@
-import {Connection} from "../../Connection";
-import {Plugin} from "../../Plugin";
-import {Poll, PollOptions} from "./Poll";
-import {Room} from "../../Room";
+import { Connection } from "../../Connection";
+import { Plugin } from "../../Plugin";
+import { RoomPlugin } from "../../RoomPlugin";
+import { Poll, PollOptions } from "./Poll";
+import { Room} from "../../Room";
 import { Config } from "../../Config";
 
 
 
-export class PollPlugin extends Plugin {
+export class PollPlugin extends RoomPlugin {
 
     public static readonly POLL_CREATION_COOL_DOWN: number = 60 * 1000;
 
     public static readonly POLL_TIMEOUT: number = 30 * 1000;
 
-    readonly name = 'poll';
+    static readonly commandName = 'poll';
 
-    readonly aliases = ['vote'];
+    static readonly commandAliases = ['vote'];
 
     readonly minRight = Config.PREFERENCES.minRightForPolls;
 

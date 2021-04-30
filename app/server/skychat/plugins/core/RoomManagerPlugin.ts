@@ -1,16 +1,14 @@
 import {Connection} from "../../Connection";
-import {Plugin} from "../../Plugin";
-import {Message} from "../../Message";
-import { MessageController } from "../../MessageController";
+import {RoomPlugin} from "../../RoomPlugin";
 import { UserController } from "../../UserController";
 import { Config } from "../../Config";
 
 
-export class RoomManagerPlugin extends Plugin {
+export class RoomManagerPlugin extends RoomPlugin {
 
-    readonly name = 'room';
+    static readonly commandName = 'room';
 
-    readonly aliases = ['roomset', 'roomcreate', 'roomdelete', 'roomplugin']
+    static readonly commandAliases = ['roomset', 'roomcreate', 'roomdelete', 'roomplugin']
 
     readonly opOnly = true;
 

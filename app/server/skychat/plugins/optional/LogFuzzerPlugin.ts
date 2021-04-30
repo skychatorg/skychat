@@ -1,17 +1,17 @@
 import { Connection } from "../../Connection";
-import { Room } from "../../Room";
 import { DatabaseHelper } from "../../DatabaseHelper";
-import { Plugin } from "../../Plugin";
 import SQL from "sql-template-strings";
+import { GlobalPlugin } from "../../GlobalPlugin";
+import { RoomManager } from "../../RoomManager";
 
 
-export class LogFuzzerPlugin extends Plugin {
+export class LogFuzzerPlugin extends GlobalPlugin {
 
     static readonly DURATION_BEFORE_FUZZ =  6 * 60 * 60 * 1000;
 
     static readonly FUZZ_COOLDOWN =  LogFuzzerPlugin.DURATION_BEFORE_FUZZ;
 
-    readonly name = 'logfuzzer';
+    static readonly commandName = 'logfuzzer';
 
     readonly callable = false;
 
@@ -24,13 +24,11 @@ export class LogFuzzerPlugin extends Plugin {
 
     private tickTimeout?: NodeJS.Timeout;
 
-    constructor(room: Room) {
-        super(room);
+    constructor(manager: RoomManager) {
+        super(manager);
 
-        if (room) {
-            this.loadStorage();
-            this.armTick(LogFuzzerPlugin.FUZZ_COOLDOWN);
-        }
+        this.loadStorage();
+        this.armTick(LogFuzzerPlugin.FUZZ_COOLDOWN);
     }
 
     async run(alias: string, param: string, connection: Connection): Promise<void> { }
@@ -56,7 +54,7 @@ export class LogFuzzerPlugin extends Plugin {
 
     async tick(): Promise<void> {
         const limitTimestamp = Math.floor(new Date().getTime() - LogFuzzerPlugin.DURATION_BEFORE_FUZZ);
-        const sqlQuery = SQL`select id, content from messages where room_id = ${this.room.id} and id > ${this.storage.lastId} and date <= ${limitTimestamp} limit 5000`;
+        const sqlQuery = SQL`select id, content from messages where id > ${this.storage.lastId} and date <= ${limitTimestamp} limit 5000`;
         const messages: {content: string, id: number}[] = await DatabaseHelper.db.all(sqlQuery);
         for (const {id, content} of messages) {
             const sqlQuery = SQL`update messages set content=${this.fuzzContent(content)} where id=${id}`;

@@ -1,5 +1,5 @@
-import {SkyChat} from "./skychat/SkyChat";
+import {RoomManager} from "./skychat/RoomManager";
 
 
 // WebSocket server
-new SkyChat();
+new RoomManager();

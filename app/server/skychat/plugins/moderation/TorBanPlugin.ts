@@ -2,32 +2,32 @@ import {Connection} from "../../Connection";
 import {User} from "../../User";
 import {Session} from "../../Session";
 import { Room } from "../../Room";
-import { Plugin } from "../../Plugin";
+import { GlobalPlugin } from "../../GlobalPlugin";
 import fetch from "node-fetch";
+import { RoomManager } from "../../RoomManager";
 
 
-export class TorBanPlugin extends Plugin {
+export class TorBanPlugin extends GlobalPlugin {
 
     static readonly CHECK_TOR_URL = 'https://check.torproject.org/torbulkexitlist';
 
     static readonly UPDATE_TOR_EXIT_NODES_INTERVAL = 6 * 60 * 60 * 1000;
 
-    readonly name = 'torban';
+    static readonly commandName = 'torban';
 
     public torExitNodes: string[] = [];
 
-    public readonly callable = false;
-    //public readonly minRight = 100;
-    //public readonly opOnly = true;
+    readonly callable = false;
+    
+    public readonly opOnly = true;
+    
     public readonly hidden = true;
 
-    constructor(room: Room) {
-        super(room);
+    constructor(manager: RoomManager) {
+        super(manager);
 
-        if (this.room) {
-            setInterval(this.updateTorExitNodesList.bind(this), TorBanPlugin.UPDATE_TOR_EXIT_NODES_INTERVAL);
-            this.updateTorExitNodesList();
-        }
+        setInterval(this.updateTorExitNodesList.bind(this), TorBanPlugin.UPDATE_TOR_EXIT_NODES_INTERVAL);
+        this.updateTorExitNodesList();
     }
 
     public run(alias: string, param: string, connection: Connection, session: Session, user: User, room: Room): Promise<void> {

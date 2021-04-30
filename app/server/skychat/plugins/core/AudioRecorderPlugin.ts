@@ -1,11 +1,11 @@
-import {Plugin} from "../../Plugin";
+import {RoomPlugin} from "../../RoomPlugin";
 import {Connection} from "../../Connection";
 import {User} from "../../User";
 import { MessageFormatter } from "../../MessageFormatter";
 import { Config } from "../../Config";
 
 
-export class AudioRecorderPlugin extends Plugin {
+export class AudioRecorderPlugin extends RoomPlugin {
 
     // Maximum number of recordings to keep in memory
     public static MAX_RECORDING_CACHED: number = 32;
@@ -13,7 +13,7 @@ export class AudioRecorderPlugin extends Plugin {
     // Max recording length
     public static MAX_BUFFER_LENGTH: number = 1048576;
 
-    readonly name = 'audio';
+    static readonly commandName = 'audio';
 
     readonly minRight = Config.PREFERENCES.minRightForAudioRecording;
 

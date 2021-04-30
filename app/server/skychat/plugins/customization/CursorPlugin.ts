@@ -1,25 +1,24 @@
 import {Connection} from "../../Connection";
-import {Plugin} from "../../Plugin";
+import {GlobalPlugin} from "../../GlobalPlugin";
 import {User} from "../../User";
-import {Message} from "../../Message";
 import {UserController} from "../../UserController";
-import { Room } from "../../Room";
 import { Session } from "../../Session";
+import { RoomManager } from "../../RoomManager";
 
 
 /**
  * Handle cursor events
  * @TODO handle cursors mapping periodical cleanup
  */
-export class CursorPlugin extends Plugin {
+export class CursorPlugin extends GlobalPlugin {
 
     static readonly CURSOR_DECAY_DELAY = 5 * 1000;
 
-    readonly defaultDataStorageValue = true;
+    static readonly defaultDataStorageValue = true;
 
-    readonly name = 'cursor';
+    static readonly commandName = 'cursor';
 
-    readonly aliases = ['c'];
+    static readonly commandAliases = ['c'];
 
     readonly minRight = -1;
 
@@ -41,12 +40,10 @@ export class CursorPlugin extends Plugin {
         }
     };
 
-    constructor(room: Room) {
-        super(room);
+    constructor(manager: RoomManager) {
+        super(manager);
 
-        if (this.room) {
-            setInterval(this.cleanUpCursors.bind(this), CursorPlugin.CURSOR_DECAY_DELAY);
-        }
+        setInterval(this.cleanUpCursors.bind(this), CursorPlugin.CURSOR_DECAY_DELAY);
     }
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
@@ -64,7 +61,7 @@ export class CursorPlugin extends Plugin {
      */
     async handleToggle(param: string, connection: Connection): Promise<void> {
         const cursorEnabled = param === 'on';
-        await UserController.savePluginData(connection.session.user, this.name, cursorEnabled);
+        await UserController.savePluginData(connection.session.user, this.commandName, cursorEnabled);
         connection.session.syncUserData();
     }
 
@@ -86,7 +83,7 @@ export class CursorPlugin extends Plugin {
         for (const session of Object.values(Session.sessions)) {
             for (const conn of session.connections) {
                 // If the user has cursors disabled
-                if (! UserController.getPluginData(conn.session.user, this.name)) {
+                if (! UserController.getPluginData(conn.session.user, this.commandName)) {
                     // Abort
                     continue;
                 }
@@ -112,9 +109,9 @@ export class CursorPlugin extends Plugin {
     async sendCursorPosition(user: User, x: number, y: number): Promise<void> {
 
         // For every connection in the room
-        for (const conn of this.room.connections) {
+        for (const conn of Session.connections) {
             // If the user has cursors disabled, don't send
-            if (! UserController.getPluginData(conn.session.user, this.name)) {
+            if (! UserController.getPluginData(conn.session.user, this.commandName)) {
                 continue;
             }
             conn.send('cursor', { x, y, user });

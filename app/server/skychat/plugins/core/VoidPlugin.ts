@@ -1,10 +1,10 @@
 import {Connection} from "../../Connection";
-import {Plugin} from "../../Plugin";
+import {GlobalPlugin} from "../../GlobalPlugin";
 
 
-export class VoidPlugin extends Plugin {
+export class VoidPlugin extends GlobalPlugin {
 
-    readonly name = 'void';
+    static readonly commandName = 'void';
     readonly minRight = -1;
     readonly hidden = true;
     async run(alias: string, param: string, connection: Connection): Promise<void> { }

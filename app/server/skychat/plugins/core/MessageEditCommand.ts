@@ -1,14 +1,14 @@
 import {Connection} from "../../Connection";
-import { Plugin } from "../../Plugin";
+import { RoomPlugin } from "../../RoomPlugin";
 
 
-export class MessageEditCommand extends Plugin {
+export class MessageEditCommand extends RoomPlugin {
 
     public static readonly EDIT_ANY_MIN_RIGHT: number = 100;
 
-    readonly name = 'edit';
+    static readonly commandName = 'edit';
 
-    readonly aliases = ['delete'];
+    static readonly commandAliases = ['delete'];
 
     readonly minRight = 0;
 

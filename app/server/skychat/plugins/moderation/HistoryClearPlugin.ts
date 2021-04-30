@@ -1,13 +1,13 @@
 import {Connection} from "../../Connection";
 import {UserController} from "../../UserController";
-import { Plugin } from "../../Plugin";
+import { RoomPlugin } from "../../RoomPlugin";
 
 
-export class HistoryClearPlugin extends Plugin {
+export class HistoryClearPlugin extends RoomPlugin {
 
-    readonly name = 'historyclear';
+    static readonly commandName = 'historyclear';
 
-    readonly aliases = ['hc'];
+    static readonly commandAliases = ['hc'];
 
     readonly minRight = 30;
 

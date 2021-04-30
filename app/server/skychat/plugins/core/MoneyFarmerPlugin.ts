@@ -1,12 +1,13 @@
 import {Connection} from "../../Connection";
-import {Plugin} from "../../Plugin";
-import {Room} from "../../Room";
 import {User} from "../../User";
 import {ConnectedListPlugin} from "./ConnectedListPlugin";
 import {UserController} from "../../UserController";
+import { GlobalPlugin } from "../../GlobalPlugin";
+import { Session } from "../../Session";
+import { RoomManager } from "../../RoomManager";
 
 
-export class MoneyFarmerPlugin extends Plugin {
+export class MoneyFarmerPlugin extends GlobalPlugin {
 
     public static readonly MAX_INACTIVITY_DURATION_MS: number = 5 * 60 * 1000;
 
@@ -16,18 +17,16 @@ export class MoneyFarmerPlugin extends Plugin {
         {limit: 100 * 100, amount: 1},
     ];
 
-    readonly name = 'moneyfarmer';
+    static readonly commandName = 'moneyfarmer';
 
     readonly minRight = -1;
 
     readonly callable = false;
 
-    constructor(room: Room) {
-        super(room);
+    constructor(manager: RoomManager) {
+        super(manager);
 
-        if (this.room) {
-            setInterval(this.tick.bind(this), 60 * 1000);
-        }
+        setInterval(this.tick.bind(this), 60 * 1000);
     }
 
     async run(alias: string, param: string, connection: Connection): Promise<void> { }
@@ -44,8 +43,8 @@ export class MoneyFarmerPlugin extends Plugin {
     }
 
     private async tick(): Promise<void> {
-        // Get rooms in the session
-        const sessions = Array.from(new Set(this.room.connections.map(connection => connection.session)));
+        // Get all sessions
+        const sessions = Object.values(Session.sessions);
         // For each session in the room
         for (const session of sessions) {
             // If it's not a logged session, continue
@@ -64,6 +63,6 @@ export class MoneyFarmerPlugin extends Plugin {
             session.user.money += amount;
             await UserController.sync(session.user);
         }
-        await (this.room.getPlugin('connectedlist') as ConnectedListPlugin).sync();
+        (this.manager.getPlugin('connectedlist') as ConnectedListPlugin).sync();
     }
 }

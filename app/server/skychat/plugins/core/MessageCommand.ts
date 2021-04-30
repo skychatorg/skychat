@@ -1,12 +1,12 @@
 import {Connection} from "../../Connection";
 import { Config } from "../../Config";
 import { MessageController } from "../../MessageController";
-import { Plugin } from "../../Plugin";
+import { RoomPlugin } from "../../RoomPlugin";
 
 
-export class MessageCommand extends Plugin {
+export class MessageCommand extends RoomPlugin {
 
-    readonly name = 'message';
+    static readonly commandName = 'message';
 
     readonly minRight = -1;
 

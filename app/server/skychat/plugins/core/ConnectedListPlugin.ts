@@ -1,21 +1,19 @@
 import {Connection} from "../../Connection";
-import {Plugin} from "../../Plugin";
-import {Room} from "../../Room";
 import {Session} from "../../Session";
 import { Config } from "../../Config";
+import { GlobalPlugin } from "../../GlobalPlugin";
+import { RoomManager } from "../../RoomManager";
 
 
 /**
  * Handle the list of currently active connections
  */
-export class ConnectedListPlugin extends Plugin {
+export class ConnectedListPlugin extends GlobalPlugin {
 
-    readonly name = 'connectedlist';
+    static readonly commandName = 'connectedlist';
 
-    readonly minRight = 100;
+    readonly opOnly = true;
 
-    readonly callable = true;
-    
     protected storage: {mode: 'show-all' | 'hide-details-by-right', argument: number} = {
         mode: 'show-all',
         argument: 0,
@@ -28,13 +26,11 @@ export class ConnectedListPlugin extends Plugin {
         }
     }
 
-    constructor(room: Room) {
-        super(room);
+    constructor(manager: RoomManager) {
+        super(manager);
 
-        if (this.room) {
-            this.loadStorage();
-            setInterval(this.tick.bind(this), 6 * 1000);
-        }
+        this.loadStorage();
+        setInterval(this.tick.bind(this), 6 * 1000);
     }
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
@@ -58,7 +54,7 @@ export class ConnectedListPlugin extends Plugin {
         this.sync();
     }
 
-    async onConnectionClosed(connection: Connection): Promise<void> {
+    async onConnectionLeftRoom(connection: Connection): Promise<void> {
         this.sync();
     }
 
@@ -91,18 +87,20 @@ export class ConnectedListPlugin extends Plugin {
                 }
                 return b.user.xp - a.user.xp;
             });
-        
-        this.room.connections.forEach(connection => {
-
-            if (connection.session.user.right < Config.PREFERENCES.minRightForConnectedList) {
-                return;
-            }
             
-            if (this.storage.mode === 'hide-details-by-right' && connection.session.user.right < this.storage.argument) {
-                connection.send('connected-list', anonSessions);
-            } else {
-                connection.send('connected-list', realSessions);
-            }
+        Object.values(Session.sessions).forEach(session => {
+            session.connections.forEach(connection => {
+
+                if (connection.session.user.right < Config.PREFERENCES.minRightForConnectedList) {
+                    return;
+                }
+                
+                if (this.storage.mode === 'hide-details-by-right' && connection.session.user.right < this.storage.argument) {
+                    connection.send('connected-list', anonSessions);
+                } else {
+                    connection.send('connected-list', realSessions);
+                }
+            });
         });
     }
 }

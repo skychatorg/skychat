@@ -1,11 +1,11 @@
 import {Connection} from "../../Connection";
-import {Plugin} from "../../Plugin";
+import {RoomPlugin} from "../../RoomPlugin";
 import {UserController} from "../../UserController";
 import {User} from "../../User";
 import {Session} from "../../Session";
 import {Config} from "../../Config";
 
-export class StatsPlugin extends Plugin {
+export class StatsPlugin extends RoomPlugin {
 
     static readonly AVERAGE_BOOK_READ_TIME: number = 60 * 5; 
 
@@ -13,7 +13,7 @@ export class StatsPlugin extends Plugin {
 
     static readonly AVERAGE_MARATHON_RUN_TIME: number = 60 * 4;
 
-    readonly name = 'stats';
+    static readonly commandName = 'stats';
 
     readonly minRight = Config.PREFERENCES.minRightForConnectedList;
 
