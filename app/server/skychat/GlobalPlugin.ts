@@ -4,43 +4,6 @@ import { RoomManager } from "./RoomManager";
 
 
 /**
- * Plugin command parameters description object
- */
-export type PluginCommandRules = {
-
-    /**
-     * Minimum number of expected parameters
-     */
-    minCount?: number;
-
-    /**
-     * Maximum number of parameters
-     */
-    maxCount?: number;
-
-    /**
-     * Minimum duration between two consecutive calls
-     */
-    coolDown?: number;
-
-    /**
-     * Maximum number of time this function can be called within a 10 second window
-     */
-    maxCallsPer10Seconds?: number;
-
-    /**
-     * Expected parameters
-     */
-    params?: {
-        name: string,
-        pattern: RegExp,
-        info?: string
-    }[];
-};
-
-
-
-/**
  * A global plugin is a plugin which instantied once at the level of the room manager
  */
 export abstract class GlobalPlugin extends Plugin {

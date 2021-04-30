@@ -18,6 +18,7 @@
                     <room-list class="left-room-list"></room-list>
                     <polls></polls>
                     <user-preview></user-preview>
+                    <quick-actions id="quick-actions"></quick-actions>
                     <div @click="onMobileShowMiddleCol" class="show-mobile" style="text-align: right;">
                         <div class="goto-middle-col">
                             <i class="material-icons md-28">keyboard_arrow_right</i>
@@ -34,7 +35,6 @@
                 <section class="right hide-mobile-left hide-mobile-middle scrollbar">
                     <video-player-preview id="player-preview"></video-player-preview>
                     <user-list id="connected-list" class="scrollbar"></user-list>
-                    <quick-actions id="quick-actions"></quick-actions>
                     <div @click="onMobileShowMiddleCol" class="show-mobile">
                         <div class="goto-middle-col">
                             <i class="material-icons md-28">keyboard_arrow_left</i>
@@ -166,6 +166,7 @@
 
                 #player-preview {
                     flex-basis: 160px;
+                    min-height: 160px;
                 }
 
                 #connected-list {

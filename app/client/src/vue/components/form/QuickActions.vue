@@ -36,6 +36,19 @@
 
                 actions: [
                     {
+                        name: "Misc (Cinema)",
+                        showInCinema: true,
+                        showInNonCinema: false,
+                        actions: [
+                            {
+                                id: 'cinema-mode',
+                                title: "Toggle cinema mode",
+                                icon: 'tv',
+                                shortcuts: []
+                            },
+                        ]
+                    },
+                    {
                         name: "Youtube",
                         showInCinema: false,
                         showInNonCinema: true,
@@ -51,12 +64,6 @@
                                 title: "Lock video player",
                                 icon: 'lock',
                                 shortcuts: ['alt+a']
-                            },
-                            {
-                                id: 'yt-play',
-                                title: "Play a youtube video",
-                                icon: 'play_arrow',
-                                shortcuts: ['ctrl+p']
                             },
                         ]
                     },
@@ -77,6 +84,19 @@
                                 icon: 'tv',
                                 shortcuts: ['alt+enter']
                             },
+                        ]
+                    },
+                    {
+                        name: "Shop",
+                        showInCinema: false,
+                        showInNonCinema: true,
+                        actions: [
+                            {
+                                id: 'shop',
+                                title: "Browse shop",
+                                icon: 'palette',
+                                shortcuts: []
+                            },
                             {
                                 id: 'help',
                                 title: "See available commands",
@@ -86,59 +106,15 @@
                         ]
                     },
                     {
-                        name: "Misc (Cinema)",
-                        showInCinema: true,
-                        showInNonCinema: false,
-                        actions: [
-                            {
-                                id: 'cinema-mode',
-                                title: "Toggle cinema mode",
-                                icon: 'tv',
-                                shortcuts: []
-                            },
-                        ]
-                    },
-                    {
-                        name: "Shop",
-                        showInCinema: false,
-                        showInNonCinema: true,
-                        actions: [
-                            {
-                                id: 'shop-color',
-                                title: "Browse shop colors",
-                                icon: 'palette',
-                                shortcuts: []
-                            },
-                            {
-                                id: 'shop-halo',
-                                title: "Browse shop halo colors",
-                                icon: 'brush',
-                                shortcuts: []
-                            },
-                            {
-                                id: 'shop-pinnedicon',
-                                title: "Browse shop",
-                                icon: 'info',
-                                shortcuts: []
-                            },
-                        ]
-                    },
-                    {
                         name: "Games",
                         showInCinema: false,
-                        showInNonCinema: true,
+                        showInNonCinema: false,
                         actions: [
                             {
                                 id: 'racing',
                                 title: "Start a race car game",
                                 icon: 'flag',
                                 shortcuts: ['ctrl+r']
-                            },
-                            {
-                                id: 'guess',
-                                title: "Start a guess the number round",
-                                icon: 'not_listed_location',
-                                shortcuts: ['ctrl+g']
                             },
                             {
                                 id: 'roll',
@@ -179,6 +155,8 @@
                         return `<i class="material-icons md-16" style="color:${this.playerLock ? '' : 'gray'}">toggle_${this.playerLock ? 'on' : 'off'}</i>`;
                     case 'yt-play':
                         return `<b>Play</b>`;
+                    case 'shop':
+                        return `<b>Shop</b>`;
                     case 'shop-color':
                         return `<b>Color</b>`;
                     case 'shop-halo':
@@ -210,6 +188,8 @@
                     case 'yt-play':
                         this.$modal.show(YoutubeVideoSearcher);
                         return;
+                    case 'shop':
+                        return this.$client.sendMessage('/shop');
                     case 'shop-color':
                         return this.$client.sendMessage('/shoplist color');
                     case 'shop-halo':
@@ -246,7 +226,9 @@
 
 <style lang="scss" scoped>
     .quick-actions {
-        padding-top: 20px;
+        padding-left: 10px;
+        padding-bottom: 10px;
+        padding-right: 5px;
         color: white;
 
         .quick-actions-group {
@@ -261,15 +243,14 @@
                 flex-direction: row;
 
                 .quick-action {
-                    flex: 0 calc(33% - 14px);
+                    flex: 0 calc(50% - 10px);
                     height: 30px;
                     color: white;
                     background: #242427;
                     border-left: 4px solid #a3a5b4;
                     transition: all 0.2s;
                     display: flex;
-                    padding: 5px;
-                    margin: 5px;
+                    margin: 5px 5px 0 5px;
                     cursor: pointer;
                     user-select: none;
 
@@ -303,6 +284,7 @@
                             color: #ff8f8f;
                         }
                     }
+                    &.action-shop,
                     &.action-shop-pinnedicon,
                     &.action-shop-color,
                     &.action-shop-halo {

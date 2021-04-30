@@ -66,8 +66,9 @@
                      class="preview-action">
                     <i class="material-icons md-14">skip_next</i>
                 </div>
-                <div v-show="! playerState"
-                     @click="ytAdd"
+            </div>
+            <div class="preview-actions">
+                <div @click="ytAdd"
                      title="Play a video"
                      class="preview-action">
                     <i class="material-icons md-14">add</i>
