@@ -6,7 +6,7 @@ import {UserController} from "../../UserController";
 import {GlobalPlugin} from "../../GlobalPlugin";
 
 
-export class SetRightCommand extends GlobalPlugin {
+export class SetRightPlugin extends GlobalPlugin {
 
     static readonly commandName = 'setright';
 

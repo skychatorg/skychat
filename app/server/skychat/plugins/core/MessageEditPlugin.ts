@@ -2,7 +2,7 @@ import {Connection} from "../../Connection";
 import { RoomPlugin } from "../../RoomPlugin";
 
 
-export class MessageEditCommand extends RoomPlugin {
+export class MessageEditPlugin extends RoomPlugin {
 
     public static readonly EDIT_ANY_MIN_RIGHT: number = 100;
 
@@ -42,7 +42,7 @@ export class MessageEditCommand extends RoomPlugin {
         }
 
         // Check rights
-        if (message.user !== connection.session.user && connection.session.user.right < MessageEditCommand.EDIT_ANY_MIN_RIGHT) {
+        if (message.user !== connection.session.user && connection.session.user.right < MessageEditPlugin.EDIT_ANY_MIN_RIGHT) {
             throw new Error('You can only edit your own messages');
         }
 

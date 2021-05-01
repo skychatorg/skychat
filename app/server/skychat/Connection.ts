@@ -103,6 +103,10 @@ export class Connection extends EventEmitter implements IBroadcaster {
         this.send('pong', null);
     }
 
+    public get closed(): boolean {
+        return ! this.webSocket || [WebSocket.OPEN, WebSocket.CONNECTING].indexOf(this.webSocket.readyState) === -1;
+    }
+
     /**
      * When a message is received on the socket
      * @param data

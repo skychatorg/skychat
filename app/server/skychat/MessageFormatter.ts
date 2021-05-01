@@ -160,7 +160,7 @@ export class MessageFormatter {
                 });
             }
             // If limit was reached when replacing this image, do not replace the next ones
-            if (! trusted && replacedCount < MessageFormatter.IMAGE_REPLACE_LIMIT) {
+            if (! trusted && replacedCount > MessageFormatter.IMAGE_REPLACE_LIMIT) {
                 break;
             }
         }

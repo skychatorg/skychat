@@ -6,7 +6,7 @@ import {Config} from "../../Config";
 import {UserController} from "../../UserController";
 
 
-export class HelpCommand extends RoomPlugin {
+export class HelpPlugin extends RoomPlugin {
 
     static readonly commandName = 'help';
 

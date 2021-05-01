@@ -1,6 +1,6 @@
 import {SanitizedUser, User} from "../../User";
 import {YoutubeVideoMeta} from "./YoutubeVideoMeta";
-import {PendingYoutubeVideo, SanitizedPendingYoutubeVideo} from "./PendingYoutubeVideo";
+import {SanitizedPendingYoutubeVideo} from "./PendingYoutubeVideo";
 
 
 

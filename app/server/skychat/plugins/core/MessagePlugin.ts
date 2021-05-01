@@ -4,7 +4,7 @@ import { MessageController } from "../../MessageController";
 import { RoomPlugin } from "../../RoomPlugin";
 
 
-export class MessageCommand extends RoomPlugin {
+export class MessagePlugin extends RoomPlugin {
 
     static readonly commandName = 'message';
 
