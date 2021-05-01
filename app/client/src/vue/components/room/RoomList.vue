@@ -6,7 +6,8 @@
             class="room"
             :class="{
                 'selected': currentRoom === room.id,
-                'has-unread': user.id > 0 && (user.data.plugins.lastseen[room.id] || 0) < room.lastReceivedMessageId
+                'has-unread': user.id > 0 && (user.data.plugins.lastseen[room.id] || 0) < room.lastReceivedMessageId,
+                'player-lock': playerLockRoomId === room.id,
             }"
             @click="joinRoom(room.id)"
         >
@@ -15,8 +16,14 @@
                 <b>{{room.name}}</b>
             </div>
             <div class="room-meta">
+                <div v-show="playerLockRoomId === room.id"
+                    class="room-player-lock mr-1"
+                    title="Subscribed to this room player">
+                    <i class="material-icons md-14">lock</i>
+                </div>
                 <div v-show="room.plugins.yt"
                     class="room-player mr-1"
+                    :class="{ 'disabled': (playerLockRoomId !== null && playerLockRoomId !== room.id) || (playerLockRoomId === null && currentRoom !== room.id) }"
                     title="A video is currently playing in this room">
                     <i class="material-icons md-14">movie</i>
                 </div>
@@ -54,6 +61,9 @@
             },
             user: function() {
                 return this.$store.state.user;
+            },
+            playerLockRoomId: function() {
+                return this.$store.state.playerLockRoomId;
             },
         },
     });
@@ -93,6 +103,10 @@
             background: #424248;
         }
 
+        &.player-lock {
+            border-left-color: #ff8f8f;
+        }
+
         .room-icon {
             margin-top: 10px;
             margin-left: 4px;
@@ -119,6 +133,14 @@
             }
 
             .room-player {
+                color: #ff8f8f;
+            }
+
+            .room-player.disabled {
+                color: #8c8c8c;
+            }
+
+            .room-player-lock {
                 color: #ff8f8f;
             }
         }

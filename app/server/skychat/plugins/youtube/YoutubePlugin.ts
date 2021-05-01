@@ -34,6 +34,61 @@ export class YoutubePlugin extends RoomPlugin {
 
     static readonly defaultDataStorageValue = true;
 
+    /**
+     * A list of connections that subscribed to the room where this plugin is instantiated
+     */
+    static subscribedConnections: {
+        rooms: {[roomId: number]: Connection[]},
+        connections: Map<Connection, number>,
+    } = {rooms: {}, connections: new Map()};
+
+    static getRoomSubscribedConnections(roomId: number): Connection[] {
+        if (typeof YoutubePlugin.subscribedConnections.rooms[roomId] === 'undefined') {
+            YoutubePlugin.subscribedConnections.rooms[roomId] = [];
+        }
+        return YoutubePlugin.subscribedConnections.rooms[roomId];
+    }
+
+    static subscribeConnectionToRoom(connection: Connection, roomId: number) {
+        const subscribedConnections = YoutubePlugin.getRoomSubscribedConnections(roomId);
+        // Unsubscribe this connection from other rooms
+        const currentlySubscribedRoomId = YoutubePlugin.subscribedConnections.connections.get(connection);
+        if (typeof currentlySubscribedRoomId !== 'undefined') {
+            YoutubePlugin.unsubscribeConnection(connection);
+        }
+        // Lock
+        if (subscribedConnections.indexOf(connection) !== -1) {
+            throw new Error('This room\'s player is already locked');
+        }
+        // Add connection/room link to mappings
+        YoutubePlugin.subscribedConnections.connections.set(connection, roomId);
+        subscribedConnections.push(connection);
+        // Notify connection
+        connection.send('player-lock-room-id', roomId);
+    }
+
+    static unsubscribeConnection(connection: Connection) {
+        const currentlySubscribedRoomId = YoutubePlugin.getConnectionSubscribedRoomId(connection);
+        if (typeof currentlySubscribedRoomId === 'undefined') {
+            throw new Error('Can not unlock the room player, it is not locked');
+        }
+        // Remove the connection from the connection->room map
+        YoutubePlugin.subscribedConnections.connections.delete(connection);
+        // Remove the room from the room->connections map
+        const subscribedConnections = YoutubePlugin.subscribedConnections.rooms[currentlySubscribedRoomId];
+        subscribedConnections.splice(subscribedConnections.indexOf(connection), 1);
+        // Notify connection
+        connection.send('player-lock-room-id', null);
+    }
+
+    static isConnectionSubscribed(connection: Connection): boolean {
+        return YoutubePlugin.subscribedConnections.connections.has(connection);
+    }
+
+    static getConnectionSubscribedRoomId(connection: Connection): number | undefined {
+        return YoutubePlugin.subscribedConnections.connections.get(connection);
+    }
+
     readonly rules: {[alias: string]: PluginCommandRules} = {
         yt: {
             minCount: 1,
@@ -90,6 +145,18 @@ export class YoutubePlugin extends RoomPlugin {
 
     async run(alias: string, param: string, connection: Connection, session: Session, user: User, room: Room | null): Promise<void> {
 
+        // Check whether this connection is subscribed to another room
+        const roomId = YoutubePlugin.getConnectionSubscribedRoomId(connection);
+        if (typeof roomId === 'number' && roomId !== this.room.id) {
+            const room = this.room.manager.getRoomById(roomId);
+            // Check that the room still exists (should be the case)
+            if (room) {
+                const otherPlugin = room.getPlugin('yt') as YoutubePlugin;
+                await otherPlugin.run(alias, param, connection, session, user, room);
+                return;
+            }
+        }
+
         switch (alias) {
 
             case 'yt':
@@ -127,14 +194,14 @@ export class YoutubePlugin extends RoomPlugin {
         switch (param) {
 
             case 'sync':
-                this.sync(connection);
+                this.autosync([connection]);
                 break;
 
             case 'on':
             case 'off':
                 const newState = param === 'on';
                 await UserController.savePluginData(connection.session.user, this.commandName, newState);
-                this.sync(connection);
+                this.autosync([connection]);
                 connection.session.syncUserData();
                 break;
             
@@ -176,7 +243,24 @@ export class YoutubePlugin extends RoomPlugin {
                     throw new Error('You need to be OP to flush the youtube queue');
                 }
                 this.storage.queue.splice(0);
-                this.sync();
+                this.autosync();
+                break;
+
+            case 'lock':
+                YoutubePlugin.subscribeConnectionToRoom(connection, this.room.id);
+                break;
+            
+            case 'unlock':
+                YoutubePlugin.unsubscribeConnection(connection);
+                if (connection.roomId !== null) {
+                    const room = this.room.manager.getRoomById(connection.roomId);
+                    if (room) {
+                        const otherYtPlugin = room.getPlugin(YoutubePlugin.commandName) as YoutubePlugin;
+                        if (otherYtPlugin) {
+                            otherYtPlugin.autosync([connection]);
+                        }
+                    }
+                }
                 break;
         }
     }
@@ -196,7 +280,7 @@ export class YoutubePlugin extends RoomPlugin {
             newStartTime = Date.now();
         }
         this.storage.currentVideo.startedDate = new Date(newStartTime);
-        this.sync();
+        this.autosync();
     }
 
     /**
@@ -324,7 +408,7 @@ export class YoutubePlugin extends RoomPlugin {
             return;
         }
         this.storage.currentVideo = null;
-        this.sync();
+        this.autosync();
     }
 
     /**
@@ -353,7 +437,7 @@ export class YoutubePlugin extends RoomPlugin {
                 remainingCount --;
             }
         }
-        this.sync();
+        this.autosync();
     }
 
     /**
@@ -361,13 +445,20 @@ export class YoutubePlugin extends RoomPlugin {
      * @param connection
      */
     async onConnectionJoinedRoom(connection: Connection): Promise<void> {
-        this.sync(connection);
+        this.autosync([connection]);
     }
 
     /**
      *
      */
     private async tick(): Promise<void> {
+
+        // Cleanup previously subscribed connections
+        const subscribedConnections = YoutubePlugin.getRoomSubscribedConnections(this.room.id);
+        for (const connection of subscribedConnections) {
+            // If the connection is closed, remove the disconnected connection from the list of subscribed connections
+            connection.closed && YoutubePlugin.unsubscribeConnection(connection);
+        }
 
         // If a video is playing currently
         if (this.storage.currentVideo) {
@@ -378,7 +469,7 @@ export class YoutubePlugin extends RoomPlugin {
 
                 // If there is no more video to play, sync clients (this will deactive the player)
                 if (this.storage.queue.length === 0) {
-                    this.sync();
+                    this.autosync();
                 }
             }
             return; // Wait until next tick
@@ -398,24 +489,31 @@ export class YoutubePlugin extends RoomPlugin {
             content: 'Now playing: ' + nextVideo.video.title + ', added by ' + nextVideo.user.username,
             user: UserController.getNeutralUser()
         });
-        this.sync();
+        this.autosync();
     }
 
     /**
-     * Sync clients
+     * Sync a given list of connections or all room and subscribed connections by default.
+     * Filters connections subscribed to another room.
      */
-    public sync(target?: Connection[] | Connection) {
+    public autosync(target?: Connection[]) {
         
         if (typeof target === 'undefined') {
-            // By default, sync room
-            this.syncConnections(this.room.connections);
-        } else if (target instanceof Connection) {
-            // If a single connection is given
-            this.syncConnections([target]);
-        } else if (target instanceof Array) {
-            // If a list of connections is given
-            this.syncConnections(target);
+            // By default, sync room and subscribed connections. Remove duplicates
+            const roomConnections = this.room.connections.filter(connection => ! YoutubePlugin.isConnectionSubscribed(connection));
+            const subscribedConnections = YoutubePlugin.getRoomSubscribedConnections(this.room.id);
+            const connections = roomConnections.concat(subscribedConnections);
+            this.syncConnections(Array.from(new Set(connections)));
+            return;
+        
         }
+        
+        // If a list of connections is given
+        const connections = target.filter(connection => {
+            const roomId = YoutubePlugin.getConnectionSubscribedRoomId(connection);
+            return !(typeof roomId === 'number' && roomId !== this.room.id);
+        });
+        this.syncConnections(connections);
     }
 
     public syncConnections(connections: Connection[]) {

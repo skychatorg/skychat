@@ -61,7 +61,7 @@
                             },
                             {
                                 id: 'yt-lock',
-                                title: "Lock video player",
+                                title: "Lock this room's video player",
                                 icon: 'lock',
                                 shortcuts: ['alt+a']
                             },
@@ -152,7 +152,7 @@
                     case 'yt-queue':
                         return `<b>List</b>`;
                     case 'yt-lock':
-                        return `<i class="material-icons md-16" style="color:${this.playerLock ? '' : 'gray'}">toggle_${this.playerLock ? 'on' : 'off'}</i>`;
+                        return `<i class="material-icons md-16" style="color:${typeof this.playerLockRoomId === 'number' ? '' : 'gray'}">toggle_${typeof this.playerLockRoomId === 'number' ? 'on' : 'off'}</i>`;
                     case 'yt-play':
                         return `<b>Play</b>`;
                     case 'shop':
@@ -184,7 +184,11 @@
                     case 'yt-queue':
                         return this.$client.sendMessage('/yt list');
                     case 'yt-lock':
-                        return this.$store.commit('SET_PLAYER_LOCK', ! this.playerLock); 
+                        if (typeof this.playerLockRoomId === 'number') {
+                            return this.$client.sendMessage('/yt unlock');
+                        } else {
+                            return this.$client.sendMessage('/yt lock');
+                        }
                     case 'yt-play':
                         this.$modal.show(YoutubeVideoSearcher);
                         return;
@@ -211,8 +215,8 @@
         },
 
         computed: {
-            playerLock: function() {
-                return this.$store.state.playerLock;
+            playerLockRoomId: function() {
+                return this.$store.state.playerLockRoomId;
             },
             cinemaMode: function() {
                 return this.$store.state.cinemaMode;
