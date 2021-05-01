@@ -1,7 +1,7 @@
 <template>
 
     <div class="quick-actions">
-
+        <h2 class="title">Quick actions</h2>
         <div class="quick-actions-group"
             v-for="group in actions"
             :key="group.name"
@@ -227,7 +227,7 @@
 <style lang="scss" scoped>
     .quick-actions {
         padding-left: 10px;
-        padding-bottom: 10px;
+        padding-bottom: 5px;
         padding-right: 5px;
         color: white;
 
@@ -250,14 +250,14 @@
                     border-left: 4px solid #a3a5b4;
                     transition: all 0.2s;
                     display: flex;
-                    margin: 5px 5px 0 5px;
+                    margin: 0 10px 4px 0px;
                     cursor: pointer;
                     user-select: none;
 
                     &:hover {
                         border-width: 0;
-                        margin-left: 9px;
-                        margin-right: 1px;
+                        margin-left: 5px;
+                        margin-right: 5px;
                         background: #313235;
                     }
 

@@ -17,7 +17,7 @@
                 <section class="left hide-mobile-middle hide-mobile-right scrollbar">
                     <room-list class="left-room-list"></room-list>
                     <polls></polls>
-                    <user-preview></user-preview>
+                    <user-preview class="mb-3 ml-1 mt-1"></user-preview>
                     <quick-actions id="quick-actions"></quick-actions>
                     <div @click="onMobileShowMiddleCol" class="show-mobile" style="text-align: right;">
                         <div class="goto-middle-col">
@@ -33,7 +33,7 @@
 
                 <!-- right col (connected list and metas) -->
                 <section class="right hide-mobile-left hide-mobile-middle scrollbar">
-                    <video-player-preview id="player-preview"></video-player-preview>
+                    <video-player-preview id="player-preview" class="mb-2"></video-player-preview>
                     <user-list id="connected-list" class="scrollbar"></user-list>
                     <div @click="onMobileShowMiddleCol" class="show-mobile">
                         <div class="goto-middle-col">

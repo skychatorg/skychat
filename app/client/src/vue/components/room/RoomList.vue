@@ -1,6 +1,6 @@
 <template>
     <div class="room-list">
-
+        <h2 class="title">Channels</h2>
         <div v-for="room in rooms"
             :key="room.id"
             class="room"
