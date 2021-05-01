@@ -1,29 +1,31 @@
 <template>
-
-    <div class="user-preview pb-1 pl-1 mt-1">
-
-        <div class="user-preview-avatar">
-            <div class="image-bubble" >
-                <img :src="user.data.plugins.avatar">
-            </div>
-        </div>
-
-        <div class="user-preview-info">
-            
-            <div class="session"
-                 :style="{'color': user.data.plugins.color}">
-                {{user.username}}
+    <div>
+        <h2 class="title">Account</h2>
+        
+        <div class="user-preview ml-1">
+            <div class="user-preview-avatar">
+                <div class="image-bubble" >
+                    <img :src="user.data.plugins.avatar">
+                </div>
             </div>
 
-            <!-- rank progress bar -->
-            <div class="progress-bar">
+            <div class="user-preview-info">
+                
+                <div class="session"
+                    :style="{'color': user.data.plugins.color}">
+                    {{user.username}}
+                </div>
 
-                <!-- Progress bar -->
-                <div class="progress-bar-progress" :style="{width: xpProgressPct + '%'}"></div>
+                <!-- rank progress bar -->
+                <div class="progress-bar">
 
-                <!-- Rank icons -->
-                <div class="rank current-rank" :title="'Current rank unlocked at ' + currentRank.limit + ' xp'"><img :src="'/assets/images/' + currentRank.images['26']"></div>
-                <div class="rank next-rank" :title="'Next rank at ' + nextRank.limit + ' xp'" v-if="nextRank"><img :src="'/assets/images/' + nextRank.images['26']"></div>
+                    <!-- Progress bar -->
+                    <div class="progress-bar-progress" :style="{width: xpProgressPct + '%'}"></div>
+
+                    <!-- Rank icons -->
+                    <div class="rank current-rank" :title="'Current rank unlocked at ' + currentRank.limit + ' xp'"><img :src="'/assets/images/' + currentRank.images['26']"></div>
+                    <div class="rank next-rank" :title="'Next rank at ' + nextRank.limit + ' xp'" v-if="nextRank"><img :src="'/assets/images/' + nextRank.images['26']"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -75,7 +77,7 @@
         flex-basis: 35px;
         width: 35px;
         height: 35px;
-        margin-top: 15px;
+        margin-top: 8px;
         position: relative;
 
         >.image-bubble{
@@ -90,7 +92,6 @@
         width: 0;
         display: flex;
         flex-direction: column;
-        padding-top: 8px;
         padding-left: 12px;
         padding-right: 22px;
         overflow: hidden;

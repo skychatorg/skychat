@@ -1,5 +1,5 @@
 import {Connection} from "../../Connection";
-import {Plugin} from "../../Plugin";
+import {GlobalPlugin} from "../../GlobalPlugin";
 import {User} from "../../User";
 import {Session} from "../../Session";
 
@@ -7,11 +7,11 @@ import {Session} from "../../Session";
 /**
  * Handle cursor events
  */
-export class MutePlugin extends Plugin {
+export class MutePlugin extends GlobalPlugin {
 
-    readonly name = 'mute';
+    static readonly commandName = 'mute';
 
-    readonly aliases = ['unmute'];
+    static readonly commandAliases = ['unmute'];
 
     readonly minRight = 40;
 

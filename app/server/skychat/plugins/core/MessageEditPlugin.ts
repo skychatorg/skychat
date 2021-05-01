@@ -1,14 +1,14 @@
 import {Connection} from "../../Connection";
-import { Plugin } from "../../Plugin";
+import { RoomPlugin } from "../../RoomPlugin";
 
 
-export class MessageEditCommand extends Plugin {
+export class MessageEditPlugin extends RoomPlugin {
 
     public static readonly EDIT_ANY_MIN_RIGHT: number = 100;
 
-    readonly name = 'edit';
+    static readonly commandName = 'edit';
 
-    readonly aliases = ['delete'];
+    static readonly commandAliases = ['delete'];
 
     readonly minRight = 0;
 
@@ -42,7 +42,7 @@ export class MessageEditCommand extends Plugin {
         }
 
         // Check rights
-        if (message.user !== connection.session.user && connection.session.user.right < MessageEditCommand.EDIT_ANY_MIN_RIGHT) {
+        if (message.user !== connection.session.user && connection.session.user.right < MessageEditPlugin.EDIT_ANY_MIN_RIGHT) {
             throw new Error('You can only edit your own messages');
         }
 
@@ -51,7 +51,7 @@ export class MessageEditCommand extends Plugin {
             const content = param.split(' ').slice(1).join(' ');
             message.edit(content);
         } else {
-            message.edit('deleted', `<i>deleted</i>`);
+            message.edit('deleted', `<s>deleted</s>`);
         }
         this.room.send('message-edit', message.sanitized());
     }

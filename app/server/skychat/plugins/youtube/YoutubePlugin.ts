@@ -11,6 +11,7 @@ import {PendingYoutubeVideo} from "./PendingYoutubeVideo";
 import {CurrentYoutubeVideo, SyncPlayerStateObject} from "./CurrentYoutubeVideo";
 import {YoutubeHelper} from "./YoutubeHelper";
 import {PollPlugin} from "../poll/PollPlugin";
+import { RoomPlugin } from "../../RoomPlugin";
 
 
 
@@ -23,22 +24,77 @@ type YoutubePluginStorage = {
 /**
  * Youtube plugin for the skychat
  */
-export class YoutubePlugin extends Plugin {
+export class YoutubePlugin extends RoomPlugin {
 
     static readonly MIN_API_RIGHT: number = 10;
 
-    readonly defaultDataStorageValue = true;
+    static readonly commandName = 'yt';
 
-    readonly name = 'yt';
+    static readonly commandAliases = ['play', 'playpl', 'ytapi', 'ytapi:search', '~'];
 
-    readonly aliases = ['play', 'playpl', 'ytapi', 'ytapi:search', '~'];
+    static readonly defaultDataStorageValue = true;
+
+    /**
+     * A list of connections that subscribed to the room where this plugin is instantiated
+     */
+    static subscribedConnections: {
+        rooms: {[roomId: number]: Connection[]},
+        connections: Map<Connection, number>,
+    } = {rooms: {}, connections: new Map()};
+
+    static getRoomSubscribedConnections(roomId: number): Connection[] {
+        if (typeof YoutubePlugin.subscribedConnections.rooms[roomId] === 'undefined') {
+            YoutubePlugin.subscribedConnections.rooms[roomId] = [];
+        }
+        return YoutubePlugin.subscribedConnections.rooms[roomId];
+    }
+
+    static subscribeConnectionToRoom(connection: Connection, roomId: number) {
+        const subscribedConnections = YoutubePlugin.getRoomSubscribedConnections(roomId);
+        // Unsubscribe this connection from other rooms
+        const currentlySubscribedRoomId = YoutubePlugin.subscribedConnections.connections.get(connection);
+        if (typeof currentlySubscribedRoomId !== 'undefined') {
+            YoutubePlugin.unsubscribeConnection(connection);
+        }
+        // Lock
+        if (subscribedConnections.indexOf(connection) !== -1) {
+            throw new Error('This room\'s player is already locked');
+        }
+        // Add connection/room link to mappings
+        YoutubePlugin.subscribedConnections.connections.set(connection, roomId);
+        subscribedConnections.push(connection);
+        // Notify connection
+        connection.send('player-lock-room-id', roomId);
+    }
+
+    static unsubscribeConnection(connection: Connection) {
+        const currentlySubscribedRoomId = YoutubePlugin.getConnectionSubscribedRoomId(connection);
+        if (typeof currentlySubscribedRoomId === 'undefined') {
+            throw new Error('Can not unlock the room player, it is not locked');
+        }
+        // Remove the connection from the connection->room map
+        YoutubePlugin.subscribedConnections.connections.delete(connection);
+        // Remove the room from the room->connections map
+        const subscribedConnections = YoutubePlugin.subscribedConnections.rooms[currentlySubscribedRoomId];
+        subscribedConnections.splice(subscribedConnections.indexOf(connection), 1);
+        // Notify connection
+        connection.send('player-lock-room-id', null);
+    }
+
+    static isConnectionSubscribed(connection: Connection): boolean {
+        return YoutubePlugin.subscribedConnections.connections.has(connection);
+    }
+
+    static getConnectionSubscribedRoomId(connection: Connection): number | undefined {
+        return YoutubePlugin.subscribedConnections.connections.get(connection);
+    }
 
     readonly rules: {[alias: string]: PluginCommandRules} = {
         yt: {
             minCount: 1,
             maxCount: 1,
             maxCallsPer10Seconds: 10,
-            params: [{name: 'action', pattern: /^(sync|off|on|replay30|skip30|list|skip|shuffle|flush)$/}]
+            params: [{name: 'action', pattern: /^(sync|off|on|replay30|skip30|list|skip|shuffle|flush|lock|unlock)$/}]
         },
         play: {
             minCount: 1,
@@ -79,17 +135,52 @@ export class YoutubePlugin extends Plugin {
         }
     }
 
+    /**
+     * Tell the room whether there is a video currently playing
+     * @returns 
+     */
+    public getRoomSummary(): boolean {
+        return !! this.storage.currentVideo;
+    }
+
     async run(alias: string, param: string, connection: Connection, session: Session, user: User, room: Room | null): Promise<void> {
-        if (alias === 'yt') {
-            await this.handleYt(param, connection);
-        } else if (alias === 'play') {
-            await this.handlePlay(param, connection);
-        } else if (alias === '~') {
-            await this.handleSearchAndPlay(param, connection);
-        } else if (alias === 'playpl') {
-            await this.handlePlayPlaylist(param, connection);
-        } else if (alias === 'ytapi:search') {
-            await this.handleApiSearch(param, connection);
+
+        // Check whether this connection is subscribed to another room
+        const roomId = YoutubePlugin.getConnectionSubscribedRoomId(connection);
+        if (typeof roomId === 'number' && roomId !== this.room.id) {
+            const room = this.room.manager.getRoomById(roomId);
+            // Check that the room still exists (should be the case)
+            if (room) {
+                const otherPlugin = room.getPlugin('yt') as YoutubePlugin;
+                await otherPlugin.run(alias, param, connection, session, user, room);
+                return;
+            }
+        }
+
+        switch (alias) {
+
+            case 'yt':
+                await this.handleYt(param, connection);
+                break;
+
+            case 'play':
+                await this.handlePlay(param, connection);
+                break;
+
+            case '~':
+                await this.handleSearchAndPlay(param, connection);
+                break;
+
+            case 'playpl':
+                await this.handlePlayPlaylist(param, connection);
+                break;
+
+            case 'ytapi:search':
+                await this.handleApiSearch(param, connection);
+                break;
+            
+            default:
+                throw new Error('Youtube command not found');
         }
     }
 
@@ -103,14 +194,14 @@ export class YoutubePlugin extends Plugin {
         switch (param) {
 
             case 'sync':
-                this.sync(connection);
+                this.autosync([connection]);
                 break;
 
             case 'on':
             case 'off':
                 const newState = param === 'on';
-                await UserController.savePluginData(connection.session.user, this.name, newState);
-                this.sync(connection);
+                await UserController.savePluginData(connection.session.user, this.commandName, newState);
+                this.autosync([connection]);
                 connection.session.syncUserData();
                 break;
             
@@ -128,10 +219,6 @@ export class YoutubePlugin extends Plugin {
                 }
                 const sign = param === 'replay30' ? -1 : +1;
                 this.moveCursor(sign * 30 * 1000);
-                break;
-
-            case 'list':
-                await this.handleYtList(connection);
                 break;
 
             case 'skip':
@@ -156,9 +243,44 @@ export class YoutubePlugin extends Plugin {
                     throw new Error('You need to be OP to flush the youtube queue');
                 }
                 this.storage.queue.splice(0);
-                this.sync(this.room);
+                this.autosync();
+                break;
+
+            case 'lock':
+                YoutubePlugin.subscribeConnectionToRoom(connection, this.room.id);
+                break;
+            
+            case 'unlock':
+                YoutubePlugin.unsubscribeConnection(connection);
+                if (connection.roomId !== null) {
+                    const room = this.room.manager.getRoomById(connection.roomId);
+                    if (room) {
+                        const otherYtPlugin = room.getPlugin(YoutubePlugin.commandName) as YoutubePlugin;
+                        if (otherYtPlugin) {
+                            otherYtPlugin.autosync([connection]);
+                        }
+                    }
+                }
                 break;
         }
+    }
+
+    /**
+     * Move the cursor relative to where it is now
+     * @param duration Duration in ms
+     * @returns 
+     */
+    private moveCursor(duration: number): void {
+        if (! this.storage.currentVideo) {
+            return;
+        }
+        // Move start date
+        let newStartTime = this.storage.currentVideo.startedDate.getTime() - duration;
+        if (newStartTime > Date.now()) {
+            newStartTime = Date.now();
+        }
+        this.storage.currentVideo.startedDate = new Date(newStartTime);
+        this.autosync();
     }
 
     /**
@@ -170,21 +292,13 @@ export class YoutubePlugin extends Plugin {
         if (connection.session.user.right < YoutubePlugin.MIN_API_RIGHT) {
             throw new Error('Unable to perform this action');
         }
-        let id, start;
-        let match;
-        if (match = param.match(/v=([a-zA-Z0-9-_]+)/)) {
-            id = match[1];
-        } else {
-            id = param;
-        }
-        if (match = param.match(/(t|time_continue|start)=([0-9hms]+)/)) {
-            start = parseInt(match[2]) || 0;
-        } else {
-            start = 0;
-        }
-        const video = await YoutubeHelper.getYoutubeVideoMeta(this.youtube, id);
-        const queueElement = {user: connection.session.user, video, start};
-        this.storage.queue.push(queueElement);
+        
+        // Get information about the yt link
+        const {videoId, start} = YoutubeHelper.parseYoutubeLink(param);
+        const video = await YoutubeHelper.getYoutubeVideoMeta(this.youtube, videoId);
+
+        // Add element to the queue and re-organize queue
+        this.storage.queue.push({ user: connection.session.user, video, start });
         this.shuffleQueue();
     }
 
@@ -197,22 +311,14 @@ export class YoutubePlugin extends Plugin {
         if (connection.session.user.right < YoutubePlugin.MIN_API_RIGHT) {
             throw new Error('Unable to perform this action');
         }
-        let id;
-        let match;
-        if (match = param.match(/list=([a-zA-Z0-9-_]+)/)) {
-            id = match[1];
-        } else {
-            id = param;
-        }
-        const result = await this.youtube.playlistItems.list({part: 'contentDetails', playlistId: id, maxResults: 50});
-        if (! result || ! result.data || ! result.data.items || result.data.items.length === 0) {
-            throw new Error('No result found for ' + param);
-        }
-        const videoIds: string[] = result.data.items
-            .filter(item => item.contentDetails && item.contentDetails.videoId)
-            .map(item => item.contentDetails!.videoId as string);
-        for (const videoId of videoIds) {
-            const video = await YoutubeHelper.getYoutubeVideoMeta(this.youtube, videoId);
+
+        // Get info about the given playlist
+        const {videoId, playlistId} = YoutubeHelper.parseYoutubeLink(param);
+        const id = playlistId || videoId;
+        const videos = await YoutubeHelper.getYoutubePlaylistMeta(this.youtube, id);
+
+        // Add videos then shuffle the queue
+        for (const video of videos) {
             this.storage.queue.push({user: connection.session.user, video, start: 0});
         }
         this.shuffleQueue();
@@ -227,19 +333,10 @@ export class YoutubePlugin extends Plugin {
         if (connection.session.user.right < YoutubePlugin.MIN_API_RIGHT) {
             throw new Error('Unable to perform this action');
         }
-        const type = param.split(' ')[0];
         const query = param.split(' ').slice(1).join(' ');
-        const result = await this.youtube.search.list({
-            'part': 'snippet',
-            'q': query,
-            'type': type,
-            'maxResults': 20
-        });
-        const items = result?.data?.items;
-        if (! items) {
-            throw new Error('No result found');
-        }
-        connection.send('ytapi:search', {type, items});
+        const type = param.split(' ')[0];
+        const items = await YoutubeHelper.searchYoutube(this.youtube, query, type, 10);
+        connection.send('ytapi:search', { type, items });
     }
 
     /**
@@ -251,35 +348,13 @@ export class YoutubePlugin extends Plugin {
         if (connection.session.user.right < YoutubePlugin.MIN_API_RIGHT) {
             throw new Error('Unable to perform this action');
         }
-        const result = await this.youtube.search.list({
-            'part': 'snippet',
-            'q': param,
-            'type': 'video',
-            'maxResults': 1
-        });
-        const videoId = (result?.data?.items || [])[0]?.id?.videoId;
-        if (! videoId) {
+        const items = await YoutubeHelper.searchYoutube(this.youtube, param, 'video', 1);
+        if (items.length === 0 || ! items[0].id?.videoId) {
             throw new Error('No result found for ' + param);
         }
-        const video = await YoutubeHelper.getYoutubeVideoMeta(this.youtube, videoId);
+        const video = await YoutubeHelper.getYoutubeVideoMeta(this.youtube, items[0].id.videoId);
         this.storage.queue.push({user: connection.session.user, video, start: 0});
         this.shuffleQueue();
-    }
-
-    /**
-     *
-     * @param connection
-     */
-    private async handleYtList(connection: Connection): Promise<void> {
-        const message = UserController.createNeutralMessage({
-            content: 'Videos in the queue:',
-            room: this.room.id,
-            id: 0
-        });
-        for (const pending of this.storage.queue) {
-            message.append(' - ' + pending.video.title + ', added by ' +pending.user.username);
-        }
-        connection.send('message', message.sanitized());
     }
 
     /**
@@ -326,24 +401,6 @@ export class YoutubePlugin extends Plugin {
     }
 
     /**
-     * Move the cursor relative to where it is now
-     * @param duration Duration in ms
-     * @returns 
-     */
-    private moveCursor(duration: number): void {
-        if (! this.storage.currentVideo) {
-            return;
-        }
-        // Move start date
-        let newStartTime = this.storage.currentVideo.startedDate.getTime() - duration;
-        if (newStartTime > Date.now()) {
-            newStartTime = Date.now();
-        }
-        this.storage.currentVideo.startedDate = new Date(newStartTime);
-        this.sync(this.room);
-    }
-
-    /**
      * Skip the current song
      */
     private skip(): void {
@@ -351,7 +408,7 @@ export class YoutubePlugin extends Plugin {
             return;
         }
         this.storage.currentVideo = null;
-        this.sync(this.room);
+        this.autosync();
     }
 
     /**
@@ -380,7 +437,7 @@ export class YoutubePlugin extends Plugin {
                 remainingCount --;
             }
         }
-        this.sync(this.room);
+        this.autosync();
     }
 
     /**
@@ -388,13 +445,20 @@ export class YoutubePlugin extends Plugin {
      * @param connection
      */
     async onConnectionJoinedRoom(connection: Connection): Promise<void> {
-        this.sync(connection);
+        this.autosync([connection]);
     }
 
     /**
      *
      */
     private async tick(): Promise<void> {
+
+        // Cleanup previously subscribed connections
+        const subscribedConnections = YoutubePlugin.getRoomSubscribedConnections(this.room.id);
+        for (const connection of subscribedConnections) {
+            // If the connection is closed, remove the disconnected connection from the list of subscribed connections
+            connection.closed && YoutubePlugin.unsubscribeConnection(connection);
+        }
 
         // If a video is playing currently
         if (this.storage.currentVideo) {
@@ -405,7 +469,7 @@ export class YoutubePlugin extends Plugin {
 
                 // If there is no more video to play, sync clients (this will deactive the player)
                 if (this.storage.queue.length === 0) {
-                    this.sync(this.room);
+                    this.autosync();
                 }
             }
             return; // Wait until next tick
@@ -425,27 +489,46 @@ export class YoutubePlugin extends Plugin {
             content: 'Now playing: ' + nextVideo.video.title + ', added by ' + nextVideo.user.username,
             user: UserController.getNeutralUser()
         });
-        this.sync(this.room);
+        this.autosync();
     }
 
     /**
-     * Sync clients
+     * Sync a given list of connections or all room and subscribed connections by default.
+     * Filters connections subscribed to another room.
      */
-    public sync(broadcaster: Connection | Room) {
-        if (broadcaster instanceof Room) {
-            for (const connection of broadcaster.connections) {
-                this.sync(connection);
+    public autosync(target?: Connection[]) {
+        
+        if (typeof target === 'undefined') {
+            // By default, sync room and subscribed connections. Remove duplicates
+            const roomConnections = this.room.connections.filter(connection => ! YoutubePlugin.isConnectionSubscribed(connection));
+            const subscribedConnections = YoutubePlugin.getRoomSubscribedConnections(this.room.id);
+            const connections = roomConnections.concat(subscribedConnections);
+            this.syncConnections(Array.from(new Set(connections)));
+            return;
+        
+        }
+        
+        // If a list of connections is given
+        const connections = target.filter(connection => {
+            const roomId = YoutubePlugin.getConnectionSubscribedRoomId(connection);
+            return !(typeof roomId === 'number' && roomId !== this.room.id);
+        });
+        this.syncConnections(connections);
+    }
+
+    public syncConnections(connections: Connection[]) {
+
+        // If no video is playing
+        if (! this.storage.currentVideo) {
+            for (const connection of connections) {
+                connection.send('yt-sync', null);
             }
             return;
         }
-        // If no video is playing
-        if (! this.storage.currentVideo) {
-            // Abort
-            broadcaster.send('yt-sync', null);
-            return;
-        }
+
+        // Otherwise, build sync object
         const syncObject: SyncPlayerStateObject = {
-            enabled: UserController.getPluginData(broadcaster.session.user, this.name),
+            enabled: true, // @TODO remove when the ability to disable the yt player is removed
             user: this.storage.currentVideo.user.sanitized(),
             video: this.storage.currentVideo.video,
             start: this.storage.currentVideo.start,
@@ -459,6 +542,10 @@ export class YoutubePlugin extends Plugin {
                 };
             })
         };
-        broadcaster.send('yt-sync', syncObject);
+        
+        for (const connection of connections) {
+            syncObject.enabled = UserController.getPluginData(connection.session.user, this.commandName);
+            connection.send('yt-sync', syncObject);
+        }
     }
 }

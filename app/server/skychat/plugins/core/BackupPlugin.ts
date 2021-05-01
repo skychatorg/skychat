@@ -1,25 +1,24 @@
 import {Connection} from "../../Connection";
-import {Plugin} from "../../Plugin";
-import {exec} from 'child_process';
+import {GlobalPlugin} from "../../GlobalPlugin";
 import { UserController } from "../../UserController";
+import {exec} from 'child_process';
 
 
-export class BackupPlugin extends Plugin {
+export class BackupPlugin extends GlobalPlugin {
 
-    readonly name = 'backup';
+    static readonly commandName = 'backup';
 
     readonly opOnly = true;
 
     readonly rules = {
         backup: {
-            coolDown: 1000,
+            coolDown: 10 * 1000,
         },
     };
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
 
         const filePath = await this.makeBackup();
-
         const content = `Backup created: ${filePath}`;
         const message = UserController.createNeutralMessage({content, id: 0,});
         connection.send('message', message.sanitized());

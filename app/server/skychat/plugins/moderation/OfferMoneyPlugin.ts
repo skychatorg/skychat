@@ -1,15 +1,14 @@
 import {Connection} from "../../Connection";
-import {Plugin} from "../../Plugin";
+import {GlobalPlugin} from "../../GlobalPlugin";
 import {Session} from "../../Session";
 import {User} from "../../User";
-import {Message} from "../../Message";
 import {ConnectedListPlugin} from "../core/ConnectedListPlugin";
 import {UserController} from "../../UserController";
 
 
-export class OfferMoneyPlugin extends Plugin {
+export class OfferMoneyPlugin extends GlobalPlugin {
 
-    readonly name = 'offermoney';
+    static readonly commandName = 'offermoney';
 
     readonly minRight = 0;
 
@@ -36,9 +35,9 @@ export class OfferMoneyPlugin extends Plugin {
         await UserController.giveMoney(session.user, amount);
         session.send('message', UserController.createNeutralMessage({
             content: connection.session.user.username + ' sent you $ ' + amount / 100,
-            room: this.room.id,
+            room: connection.roomId,
             id: 0
         }).sanitized());
-        await (this.room.getPlugin('connectedlist') as ConnectedListPlugin).sync();
+        (this.manager.getPlugin('connectedlist') as ConnectedListPlugin).sync();
     }
 }

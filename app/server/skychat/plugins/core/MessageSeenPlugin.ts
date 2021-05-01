@@ -1,4 +1,4 @@
-import {Plugin} from "../../Plugin";
+import {RoomPlugin} from "../../RoomPlugin";
 import {Connection} from "../../Connection";
 import {UserController} from "../../UserController";
 
@@ -8,11 +8,11 @@ export type MessageSeenEventData = {
     data: {[room: number]: number};
 };
 
-export class MessageSeenPlugin extends Plugin {
+export class MessageSeenPlugin extends RoomPlugin {
 
-    readonly name = 'lastseen';
+    static readonly commandName = 'lastseen';
 
-    readonly defaultDataStorageValue = {};
+    static readonly defaultDataStorageValue = {};
 
     /**
      * We need to allow guests to send /lastseen even though it is not recorded in the backend because sometimes,
@@ -41,7 +41,7 @@ export class MessageSeenPlugin extends Plugin {
         if (connection.session.isGuest()) {
             return;
         }
-        const lastMessageSeen = UserController.getPluginData(connection.session.user, this.name);
+        const lastMessageSeen = UserController.getPluginData(connection.session.user, this.commandName);
         const newLastMessageSeen = parseInt(param);
         const message = await this.room.getMessageById(newLastMessageSeen);
         if (! message) {
@@ -50,12 +50,12 @@ export class MessageSeenPlugin extends Plugin {
         if (lastMessageSeen > newLastMessageSeen) {
             return;
         }
-        let pluginData = UserController.getPluginData(connection.session.user, this.name);
+        let pluginData = UserController.getPluginData(connection.session.user, this.commandName);
         if (typeof pluginData !== 'object') {
             pluginData = {};
         }
         pluginData[this.room.id] = message.id;
-        await UserController.savePluginData(connection.session.user, this.name, pluginData);
+        await UserController.savePluginData(connection.session.user, this.commandName, pluginData);
         this.room.send('message-seen', {
             user: connection.session.user.id,
             data: pluginData,

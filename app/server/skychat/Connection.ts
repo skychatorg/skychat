@@ -103,6 +103,10 @@ export class Connection extends EventEmitter implements IBroadcaster {
         this.send('pong', null);
     }
 
+    public get closed(): boolean {
+        return ! this.webSocket || [WebSocket.OPEN, WebSocket.CONNECTING].indexOf(this.webSocket.readyState) === -1;
+    }
+
     /**
      * When a message is received on the socket
      * @param data
@@ -148,7 +152,6 @@ export class Connection extends EventEmitter implements IBroadcaster {
 
         this.session.detachConnection(this);
         if (this.room) {
-            await this.room.executeOnConnectionClosed(this);
             this.room.detachConnection(this);
         }
     }
@@ -160,6 +163,13 @@ export class Connection extends EventEmitter implements IBroadcaster {
     public setRoom(room: Room | null) {
         this.room = room;
         this.send('join-room', room ? room.id : null);
+    }
+
+    /**
+     * Get current room id
+     */
+    public get roomId(): number | null {
+        return this.room ? this.room.id : null;
     }
 
     /**

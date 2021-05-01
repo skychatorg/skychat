@@ -1,5 +1,5 @@
 import {Connection} from "../../Connection";
-import {Plugin} from "../../Plugin";
+import {GlobalPlugin} from "../../GlobalPlugin";
 import {Server} from "../../Server";
 import { FileManager } from "../../FileManager";
 import * as fs from "fs";
@@ -7,11 +7,11 @@ import { Config } from "../../Config";
 import { StickerManager } from "../../StickerManager";
 
 
-export class StickerPlugin extends Plugin {
+export class StickerPlugin extends GlobalPlugin {
 
-    readonly name = 'sticker';
+    static readonly commandName = 'sticker';
 
-    readonly aliases = ['stickeradd', 'stickerdel'];
+    static readonly commandAliases = ['stickeradd', 'stickerdel'];
 
     readonly minRight = 40;
 

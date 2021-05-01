@@ -1,5 +1,5 @@
 import {Connection} from "../../Connection";
-import {Plugin} from "../../Plugin";
+import {RoomPlugin} from "../../RoomPlugin";
 import {UserController} from "../../UserController";
 import * as striptags from "striptags";
 import {MessageFormatter} from "../../MessageFormatter";
@@ -31,7 +31,7 @@ const waitTimeout = (delay: number) => {
 };
 
 
-export class RacingPlugin extends Plugin {
+export class RacingPlugin extends RoomPlugin {
 
     static readonly CARS: string[] = [
         '🚚',
@@ -56,7 +56,7 @@ export class RacingPlugin extends Plugin {
 
     public static readonly GLOBAL_COOL_DOWN: number = 4 * 60 * 1000;
 
-    readonly name = 'racing';
+    static readonly commandName = 'racing';
 
     readonly minRight = 20;
 
@@ -202,7 +202,7 @@ export class RacingPlugin extends Plugin {
             const carEmoji = `<div style="display:inline-block;-webkit-transform:rotateY(180deg);-moz-transform:rotateY(180deg);-o-transform:rotateY(180deg);-ms-transform:rotateY(180deg);">${this.currentGame.cars[carId]}</div>`;
             const dashCount = Math.floor(this.currentGame.positions[carId] * roadWidth / 2);
             // add button so that users can bet on this car
-            content += `[[→//${this.name} ${carId}]] `;
+            content += `[[→//${this.commandName} ${carId}]] `;
             content += '· '.repeat(dashCount) + carEmoji;
             // find participants that bet on this car
             const identifiers = Object.entries(this.currentGame.bets)

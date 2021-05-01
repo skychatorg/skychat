@@ -1,14 +1,15 @@
 import {Connection} from "../../Connection";
 import {User} from "../../User";
 import {Session} from "../../Session";
-import { Plugin } from "../../Plugin";
+import { RoomPlugin } from "../../RoomPlugin";
 
 
-export class UsurpPlugin extends Plugin {
+/**
+ * 
+ */
+export class UsurpPlugin extends RoomPlugin {
 
-    readonly name = 'usurp';
-
-    readonly minRight = 100;
+    static readonly commandName = 'usurp';
 
     readonly opOnly = true;
 

@@ -1,5 +1,4 @@
 import {Connection} from "./Connection";
-import {Message} from "./Message";
 import * as fs from "fs";
 import { Session } from "./Session";
 import { User } from "./User";
@@ -53,7 +52,7 @@ export abstract class Plugin {
     /**
      * Base path for plugin persistent storage
      */
-    public static readonly STORAGE_BASE_PATH: string = 'storage/plugins';
+    public static readonly STORAGE_BASE_PATH: string = 'storage';
 
     /**
      * Helper regexp used by sub classes
@@ -61,19 +60,27 @@ export abstract class Plugin {
     public static readonly POSITIVE_INTEGER_REGEXP: RegExp = /^([0-9]+)$/;
 
     /**
-     * A command is attached to a specific room
+     * Some plugins (i.e. plugin to ban users) are globally available.
+     * They have a single storage file, and they are instantiated only once at the root-level instead of once per room.
+     * This static attribute need to be set
+     * @abstract
      */
-    public readonly room: Room;
+    public static readonly isGlobal: boolean;
 
     /**
      * Plugin command name
      */
-    public abstract readonly name: string;
+    public static readonly commandName: string = "plugin";
 
     /**
      * Plugin command aliases
      */
-    public readonly aliases: string[] = [];
+    public static readonly commandAliases: string[] = [];
+
+    /**
+     * If the plugin uses storage, it needs to define a default value for its custom entry in user data object.
+     */
+    public static readonly defaultDataStorageValue?: any;
 
     /**
      * Define command rules, ie expected parameters and cooldown. Can be defined globally or per command alias.
@@ -112,22 +119,9 @@ export abstract class Plugin {
     public readonly priority: number = 0;
 
     /**
-     * If the plugin uses storage, it needs to define a default value for its custom entry in user data object.
-     */
-    public readonly defaultDataStorageValue?: any;
-
-    /**
      * This plugin's persistent storage
      */
     protected storage: any = null;
-
-    /**
-     * A plugin is attached to a given room
-     * @param room 
-     */
-    constructor(room: Room) {
-        this.room = room;
-    }
 
     /**
      * Save this plugin's data to the disk
@@ -136,7 +130,8 @@ export abstract class Plugin {
         if (! this.storage) {
             return;
         }
-        fs.writeFileSync(this.getStoragePath(), JSON.stringify(this.storage));
+        fs.mkdirSync(this.getStoragePath(), { recursive: true });
+        fs.writeFileSync(this.getStoragePath() + `/${this.commandName}.json`, JSON.stringify(this.storage));
     }
 
     /**
@@ -144,73 +139,31 @@ export abstract class Plugin {
      */
     protected loadStorage(): void {
         try {
-            this.storage = JSON.parse(fs.readFileSync(this.getStoragePath()).toString());
+            this.storage = JSON.parse(fs.readFileSync(this.getStoragePath() + `/${this.commandName}.json`).toString());
         } catch (e) {
             this.syncStorage();
         }
     }
 
     /**
+     * Get command name
+     */
+    public get commandName(): string {
+        return (<any>this.constructor).commandName;
+    }
+
+    /**
      * Get this plugin's storage path
      */
     public getStoragePath(): string {
-        return `${Plugin.STORAGE_BASE_PATH}/${this.name}.json`;
+        return `${Plugin.STORAGE_BASE_PATH}/plugins/global`;
     }
 
     /**
-     * Executed when a new messages comes in
-     * @abstract
-     * @param message
-     * @param connection
+     * Get a summary of this plugin state to include in the room list
      */
-    public async onNewMessageHook(message: string, connection: Connection): Promise<string> {
-        return message;
-    }
-
-    /**
-     * Executed before broadcasting a message to the room
-     * @abstract
-     * @param message
-     * @param connection
-     */
-    public async onBeforeMessageBroadcastHook(message: Message, connection?: Connection): Promise<Message> {
-        return message;
-    }
-
-    /**
-     * When a connection successfully authenticated
-     * @abstract
-     * @param connection
-     */
-    public async onConnectionAuthenticated(connection: Connection): Promise<void> {
-
-    }
-
-    /**
-     * Executed before a connection joins a room
-     * @abstract
-     * @param connection
-     */
-    public async onBeforeConnectionJoinedRoom(connection: Connection): Promise<void> {
-
-    }
-
-    /**
-     * Executed when a connection joins a room
-     * @abstract
-     * @param connection
-     */
-    public async onConnectionJoinedRoom(connection: Connection): Promise<void> {
-
-    }
-
-    /**
-     * Executed when a connection is closed
-     * @abstract
-     * @param connection
-     */
-    public async onConnectionClosed(connection: Connection): Promise<void> {
-
+    public getRoomSummary(): any {
+        return null;
     }
 
     /**

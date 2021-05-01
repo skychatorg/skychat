@@ -1,14 +1,14 @@
 import {PluginCommandRules} from "../../Plugin";
-import {Plugin} from "../../Plugin";
+import {RoomPlugin} from "../../RoomPlugin";
 import {Connection} from "../../Connection";
 import * as striptags from "striptags";
 import {Config} from "../../Config";
 import {UserController} from "../../UserController";
 
 
-export class HelpCommand extends Plugin {
+export class HelpPlugin extends RoomPlugin {
 
-    readonly name = 'help';
+    static readonly commandName = 'help';
 
     readonly minRight = -1;
 

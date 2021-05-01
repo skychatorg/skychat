@@ -1,14 +1,14 @@
 import {Connection} from "../../Connection";
-import {Plugin} from "../../Plugin";
+import {GlobalPlugin} from "../../GlobalPlugin";
 
 
-export class ColorPlugin extends Plugin {
+export class ColorPlugin extends GlobalPlugin {
 
     static readonly DEFAULT_MAIN: string = '#aaaaaa';
 
-    readonly defaultDataStorageValue = ColorPlugin.DEFAULT_MAIN;
+    static readonly defaultDataStorageValue = ColorPlugin.DEFAULT_MAIN;
 
-    readonly name = 'color';
+    static readonly commandName = 'color';
 
     readonly callable = false;
 

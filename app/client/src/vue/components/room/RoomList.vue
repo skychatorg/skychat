@@ -1,12 +1,13 @@
 <template>
     <div class="room-list">
-
+        <h2 class="title">Channels</h2>
         <div v-for="room in rooms"
             :key="room.id"
             class="room"
             :class="{
                 'selected': currentRoom === room.id,
-                'has-unread': user.id > 0 && (user.data.plugins.lastseen[room.id] || 0) < room.lastReceivedMessageId
+                'has-unread': user.id > 0 && (user.data.plugins.lastseen[room.id] || 0) < room.lastReceivedMessageId,
+                'player-lock': playerLockRoomId === room.id,
             }"
             @click="joinRoom(room.id)"
         >
@@ -15,10 +16,21 @@
                 <b>{{room.name}}</b>
             </div>
             <div class="room-meta">
+                <div v-show="playerLockRoomId === room.id"
+                    class="room-player-lock mr-1"
+                    title="Subscribed to this room player">
+                    <i class="material-icons md-14">lock</i>
+                </div>
+                <div v-show="room.plugins.yt"
+                    class="room-player mr-1"
+                    :class="{ 'disabled': (playerLockRoomId !== null && playerLockRoomId !== room.id) || (playerLockRoomId === null && currentRoom !== room.id) }"
+                    title="A video is currently playing in this room">
+                    <i class="material-icons md-14">movie</i>
+                </div>
                 <div v-show="roomConnectedCounts[room.id]"
-                    class="room-users"
+                    class="room-users mr-1"
                     title="Users in this room">
-                    <i class="material-icons md-14 icon-active-time">{{roomConnectedCounts[room.id] > 1 ? 'group' : 'person'}}</i>
+                    <i class="material-icons md-14">{{roomConnectedCounts[room.id] > 1 ? 'group' : 'person'}}</i>
                      <span>{{ roomConnectedCounts[room.id] }}</span>
                 </div>
             </div>
@@ -49,6 +61,9 @@
             },
             user: function() {
                 return this.$store.state.user;
+            },
+            playerLockRoomId: function() {
+                return this.$store.state.playerLockRoomId;
             },
         },
     });
@@ -88,6 +103,10 @@
             background: #424248;
         }
 
+        &.player-lock {
+            border-left-color: #ff8f8f;
+        }
+
         .room-icon {
             margin-top: 10px;
             margin-left: 4px;
@@ -103,15 +122,26 @@
         }
 
         .room-meta {
-            flex-basis: 65px;
+            flex-basis: 85px;
             margin-top: 10px;
-            margin-right: 10px;
             display: flex;
             flex-direction: row-reverse;
 
             .room-users {
                 color: #8ecfff;
                 span { vertical-align: top; }
+            }
+
+            .room-player {
+                color: #ff8f8f;
+            }
+
+            .room-player.disabled {
+                color: #8c8c8c;
+            }
+
+            .room-player-lock {
+                color: #ff8f8f;
             }
         }
     }

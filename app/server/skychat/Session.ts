@@ -54,6 +54,19 @@ export class Session implements IBroadcaster {
     }
 
     /**
+     * Get all connections from all sessions
+     */
+    public static get connections(): Connection[] {
+        const connections: Connection[] = [];
+        for (const session of Object.values(Session.sessions)) {
+            for (const connection of session.connections) {
+                connections.push(connection);
+            }
+        }
+        return connections;
+    }
+
+    /**
      * Tells if there is currently an active session for a given identifier
      * @param identifier
      */

@@ -1,4 +1,4 @@
-import {Plugin} from "../../Plugin";
+import {GlobalPlugin} from "../../GlobalPlugin";
 import {Connection} from "../../Connection";
 import {Room} from "../../Room";
 import {Message} from "../../Message";
@@ -6,6 +6,7 @@ import {UserController} from "../../UserController";
 import * as striptags from "striptags";
 import {MessageFormatter} from "../../MessageFormatter";
 import {Config} from "../../Config";
+import { RoomManager } from "../../RoomManager";
 
 
 type NodeType = 'username' | 'ip';
@@ -21,7 +22,7 @@ type StorageObject = {
     [stringifiedNode: string]: Array<Node>
 }
 
-export class TrackerPlugin extends Plugin {
+export class TrackerPlugin extends GlobalPlugin {
 
     public static readonly SOURCE_TYPES: NodeType[] = ['username', 'ip'];
 
@@ -31,9 +32,9 @@ export class TrackerPlugin extends Plugin {
         return `${type}:${value}`;
     }
 
-    readonly name = 'track';
+    static readonly commandName = 'track';
 
-    readonly aliases = ['autotrack', 'trackdelete'];
+    static readonly commandAliases = ['autotrack', 'trackdelete'];
 
     readonly minRight = 40;
 
@@ -67,8 +68,8 @@ export class TrackerPlugin extends Plugin {
 
     protected storage: StorageObject = {};
 
-    constructor(room: Room) {
-        super(room);
+    constructor(manager: RoomManager) {
+        super(manager);
         this.loadStorage();
     }
 
@@ -188,7 +189,7 @@ export class TrackerPlugin extends Plugin {
 
         connection.send('message', new Message({
             id: 0,
-            room: this.room.id,
+            room: connection.roomId,
             content: striptags(html),
             formatted: html,
             user: UserController.getNeutralUser()
@@ -218,7 +219,7 @@ export class TrackerPlugin extends Plugin {
         // Send confirmation
         connection.send('message', new Message({
             id: 0,
-            room: this.room.id,
+            room: connection.roomId,
             content: `Association ${TrackerPlugin.nodeToKey(type1, value1)} to ${TrackerPlugin.nodeToKey(type2, value2)} deleted`,
             user: UserController.getNeutralUser()
         }).sanitized());
@@ -283,7 +284,7 @@ export class TrackerPlugin extends Plugin {
 
         connection.send('message', new Message({
             id: 0,
-            room: this.room.id,
+            room: connection.roomId,
             content: striptags(html),
             formatted: html,
             user: UserController.getNeutralUser()

@@ -1,7 +1,6 @@
 import {Connection} from "../../Connection";
-import {Plugin} from "../../Plugin";
+import {GlobalPlugin} from "../../GlobalPlugin";
 import {ColorPlugin} from "./ColorPlugin";
-import {Message} from "../../Message";
 import {User} from "../../User";
 import {ConnectedListPlugin} from "../core/ConnectedListPlugin";
 import * as striptags from "striptags";
@@ -23,7 +22,7 @@ export type ShopItem = {
 };
 
 
-export class ShopPlugin extends Plugin {
+export class ShopPlugin extends GlobalPlugin {
 
     public static readonly COLORS_TIER_0_COST: number = 0;
     public static readonly COLORS_TIER_1_COST: number = 2 * 100;
@@ -167,11 +166,11 @@ export class ShopPlugin extends Plugin {
 
     public static readonly TYPE_REGEXP: RegExp = /^(color|halo|pinnedicon)$/;
 
-    readonly defaultDataStorageValue: {[type: string]: number[]} = {colors: []};
+    static readonly commandName = 'shop';
 
-    readonly name = 'shop';
+    static readonly commandAliases = ['shoplist', 'shopbuy', 'shopsell', 'shopset'];
 
-    readonly aliases = ['shoplist', 'shopbuy', 'shopsell', 'shopset'];
+    static readonly defaultDataStorageValue: {[type: string]: number[]} = {colors: []};
 
     readonly minRight = 0;
 
@@ -254,7 +253,7 @@ export class ShopPlugin extends Plugin {
      * @param connection
      */
     private async handleShop(param: string, connection: Connection): Promise<void> {
-        const message = UserController.createNeutralMessage({content: '', room: this.room.id, id: 0});
+        const message = UserController.createNeutralMessage({content: '', room: connection.roomId, id: 0});
         for (const type in ShopPlugin.ITEMS) {
             message.append(`[[list all available ${type}//shoplist ${type}]]`);
         }
@@ -277,7 +276,7 @@ export class ShopPlugin extends Plugin {
         if (! itemDefinition) {
             throw new Error('Unknown item type');
         }
-        const message = UserController.createNeutralMessage({content: 'Available ' + param + ':', room: this.room.id, id: 0});
+        const message = UserController.createNeutralMessage({content: 'Available ' + param + ':', room: connection.roomId, id: 0});
         const formatter = MessageFormatter.getInstance();
         let html = '<table class="skychat-table">';
         html += `
@@ -388,7 +387,7 @@ export class ShopPlugin extends Plugin {
         await this.userSetItem(connection.session.user, type, id);
         
         // Notify other users
-        (this.room.getPlugin('connectedlist') as ConnectedListPlugin).sync();
+        (this.manager.getPlugin('connectedlist') as ConnectedListPlugin).sync();
     }
 
     /**

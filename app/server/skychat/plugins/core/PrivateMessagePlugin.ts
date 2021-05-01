@@ -1,14 +1,14 @@
 import {Connection} from "../../Connection";
-import {Plugin} from "../../Plugin";
+import {GlobalPlugin} from "../../GlobalPlugin";
 import {Session} from "../../Session";
 import {User} from "../../User";
 import {PrivateMessage} from "../../PrivateMessage";
 import { Config } from "../../Config";
 
 
-export class PrivateMessagePlugin extends Plugin {
+export class PrivateMessagePlugin extends GlobalPlugin {
 
-    readonly name = 'mp';
+    static readonly commandName = 'mp';
 
     readonly minRight = Config.PREFERENCES.minRightForPrivateMessages;
 

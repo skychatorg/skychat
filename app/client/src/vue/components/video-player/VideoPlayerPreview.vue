@@ -1,76 +1,79 @@
 <template>
-    <div class="youtube-preview">
+    <div class="mt-2">
+        <div class="youtube-preview pr-2">
 
-        <!-- preview container -->
-        <div class="preview-image-container">
+            <!-- preview container -->
+            <div class="preview-image-container">
 
-            <!-- progress bars -->
-            <div class="progress-bar progress-bar-top" :class="'custom-color-' + progressBarColor" :style="{'width': (100 * cursorPercent) + '%'}"></div>
-            <div class="progress-bar progress-bar-bottom" :class="'custom-color-' + progressBarColor" :style="{'width': (100 * cursorPercent) + '%'}"></div>
-            <div class="progress-bar progress-bar-left" :class="'custom-color-' + progressBarColor" :style="{'height': (100 * cursorPercent) + '%'}"></div>
-            <div class="progress-bar progress-bar-right" :class="'custom-color-' + progressBarColor" :style="{'height': (100 * cursorPercent) + '%'}"></div>
+                <!-- progress bars -->
+                <div class="progress-bar progress-bar-top" :class="'custom-color-' + progressBarColor" :style="{'width': (100 * cursorPercent) + '%'}"></div>
+                <div class="progress-bar progress-bar-bottom" :class="'custom-color-' + progressBarColor" :style="{'width': (100 * cursorPercent) + '%'}"></div>
+                <div class="progress-bar progress-bar-left" :class="'custom-color-' + progressBarColor" :style="{'height': (100 * cursorPercent) + '%'}"></div>
+                <div class="progress-bar progress-bar-right" :class="'custom-color-' + progressBarColor" :style="{'height': (100 * cursorPercent) + '%'}"></div>
 
-            <!-- image preview -->
-            <img class="preview-thumb" v-if="playerState" :src="playerState.video.thumb">
- 
-            <!-- title -->
-            <div class="preview-title" v-if="playerState">{{playerState.video.title}}</div>
+                <!-- image preview -->
+                <img class="preview-thumb" v-if="playerState" :src="playerState.video.thumb">
+    
+                <!-- title -->
+                <div class="preview-title" v-if="playerState">{{playerState.video.title}}</div>
 
-            <!-- sliding window that closes over the image -->
-            <div class="sliding-window top" :class="{['custom-color-' + progressBarColor]: true, 'closed': cursorPercent >= 1}"></div>
-            <div class="sliding-window bottom" :class="{['custom-color-' + progressBarColor]: true, 'closed': cursorPercent >= 1}"></div>
-        </div>
-
-        <!-- yt preview right col -->
-        <div class="preview-right-col">
-
-            <!-- youtube queue -->
-            <div class="queue scrollbar">
-                <div v-for="video, videoIndex in nextVideos"
-                    class="video-in-queue"
-                    :key="video.video.id"
-                    :title="video.video.title + ': added by ' + video.user.username">
-
-                    <!-- video preview image -->
-                    <div class="image avatar">
-                        <div class="image-bubble" :style="'box-shadow: #' + progressBarColor +' 0 0 4px 0;'">
-                            <img data-v-193da69e="" :src="video.video.thumb">
-                        </div>
-                    </div>
-
-                    <!-- the svg has -5px left and top to avoid the circles being truncated -->
-                    <svg height="50" width="50">
-                        <circle cx="25" cy="25" r="20" fill="none" stroke="black"></circle>
-                        <circle cx="25" cy="25" r="20" :class="'custom-color-' + progressBarColor" :stroke-dashoffset="- (queueWaitDurations[videoIndex]) * 2 * Math.PI * 25"></circle>
-                    </svg>
-                </div>
+                <!-- sliding window that closes over the image -->
+                <div class="sliding-window top" :class="{['custom-color-' + progressBarColor]: true, 'closed': cursorPercent >= 1}"></div>
+                <div class="sliding-window bottom" :class="{['custom-color-' + progressBarColor]: true, 'closed': cursorPercent >= 1}"></div>
             </div>
-                
-            <!-- actions -->
-            <div class="preview-actions">
-                <div v-show="canHandlePlayer()"
-                     @click="ytReplay30"
-                     title="Replay 30 seconds"
-                     class="preview-action">
-                    <i class="material-icons md-14">replay_30</i>
+
+            <!-- yt preview right col -->
+            <div class="preview-right-col">
+
+                <!-- youtube queue -->
+                <div class="queue scrollbar">
+                    <div v-for="video, videoIndex in nextVideos"
+                        class="video-in-queue"
+                        :key="video.video.id"
+                        :title="video.video.title + ': added by ' + video.user.username">
+
+                        <!-- video preview image -->
+                        <div class="image avatar">
+                            <div class="image-bubble" :style="'box-shadow: #' + progressBarColor +' 0 0 4px 0;'">
+                                <img data-v-193da69e="" :src="video.video.thumb">
+                            </div>
+                        </div>
+
+                        <!-- the svg has -5px left and top to avoid the circles being truncated -->
+                        <svg height="50" width="50">
+                            <circle cx="25" cy="25" r="20" fill="none" stroke="black"></circle>
+                            <circle cx="25" cy="25" r="20" :class="'custom-color-' + progressBarColor" :stroke-dashoffset="- (queueWaitDurations[videoIndex]) * 2 * Math.PI * 25"></circle>
+                        </svg>
+                    </div>
                 </div>
-                <div v-show="canHandlePlayer()"
-                     @click="ytSkip30"
-                     title="Skip 30 seconds"
-                     class="preview-action">
-                    <i class="material-icons md-14">forward_30</i>
+                    
+                <!-- actions -->
+                <div class="preview-actions">
+                    <div v-show="canHandlePlayer()"
+                        @click="ytReplay30"
+                        title="Replay 30 seconds"
+                        class="preview-action">
+                        <i class="material-icons md-14">replay_30</i>
+                    </div>
+                    <div v-show="canHandlePlayer()"
+                        @click="ytSkip30"
+                        title="Skip 30 seconds"
+                        class="preview-action">
+                        <i class="material-icons md-14">forward_30</i>
+                    </div>
+                    <div v-show="playerState"
+                        @click="ytSkip"
+                        title="Skip video"
+                        class="preview-action">
+                        <i class="material-icons md-14">skip_next</i>
+                    </div>
                 </div>
-                <div v-show="playerState"
-                     @click="ytSkip"
-                     title="Skip video"
-                     class="preview-action">
-                    <i class="material-icons md-14">skip_next</i>
-                </div>
-                <div v-show="! playerState"
-                     @click="ytAdd"
-                     title="Play a video"
-                     class="preview-action">
-                    <i class="material-icons md-14">add</i>
+                <div class="preview-actions">
+                    <div @click="ytAdd"
+                        title="Play a video"
+                        class="preview-action">
+                        <i class="material-icons md-14">add</i>
+                    </div>
                 </div>
             </div>
         </div>
@@ -184,8 +187,6 @@
         width: 100%;
         height: 160px;
         display: flex;
-        margin-top: 10px;
-        padding-right: 20px;
         padding-left: 6px;
         color: white;
 

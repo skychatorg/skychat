@@ -1,5 +1,5 @@
 import {Connection} from "../../Connection";
-import {Plugin} from "../../Plugin";
+import {RoomPlugin} from "../../RoomPlugin";
 import { UserController } from "../../UserController";
 import { Room } from "../../Room";
 import { Message } from "../../Message";
@@ -19,7 +19,7 @@ type GameObject = {
 };
 
 
-export class DailyRoll extends Plugin {
+export class DailyRollPlugin extends RoomPlugin {
 
     /**
      * Scheduled time in hours. E.g. 2.5 means 2h30
@@ -34,9 +34,9 @@ export class DailyRoll extends Plugin {
 
     public static readonly BOARD_HEIGHT: number = 5;
 
-    public static readonly CARDS_COUNT: number = DailyRoll.BOARD_WIDTH * DailyRoll.BOARD_HEIGHT;
+    public static readonly CARDS_COUNT: number = DailyRollPlugin.BOARD_WIDTH * DailyRollPlugin.BOARD_HEIGHT;
 
-    readonly name = 'dailyroll';
+    static readonly commandName = 'dailyroll';
 
     readonly minRight = 10;
 
@@ -53,21 +53,22 @@ export class DailyRoll extends Plugin {
 
     constructor(room: Room) {
         super(room);
-
-        if (this.room && this.room.id === 0) { // @TODO implement plugins / room
+        
+        // @TODO implement plugins / room
+        if (this.room.id === 0) {
             this.armTimer();
         }
     }
 
     getCardCoordinates(cardId: number): {x: number, y: number} {
         return {
-            x: cardId % DailyRoll.BOARD_WIDTH,
-            y: Math.floor(cardId / DailyRoll.BOARD_WIDTH),
+            x: cardId % DailyRollPlugin.BOARD_WIDTH,
+            y: Math.floor(cardId / DailyRollPlugin.BOARD_WIDTH),
         }
     }
 
     getCardId(x: number, y: number): number {
-        return y * DailyRoll.BOARD_WIDTH + x;
+        return y * DailyRollPlugin.BOARD_WIDTH + x;
     }
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
@@ -76,7 +77,7 @@ export class DailyRoll extends Plugin {
     
     private armTimer(): void {
         const now = new Date().getHours() + new Date().getMinutes() / 60;
-        let duration = DailyRoll.SCHEDULED_TIME - now;
+        let duration = DailyRollPlugin.SCHEDULED_TIME - now;
         if (duration < 0) {
             duration += 24;
         }
@@ -114,7 +115,7 @@ export class DailyRoll extends Plugin {
         };
 
         // Decide card content
-        for (let cardId = 0; cardId < DailyRoll.CARDS_COUNT; ++ cardId) {
+        for (let cardId = 0; cardId < DailyRollPlugin.CARDS_COUNT; ++ cardId) {
             this.currentGame.cards[cardId] = {
                 state: "pending",
                 content: Math.floor(RandomGenerator.random(8) * 6) * 100,
@@ -122,8 +123,8 @@ export class DailyRoll extends Plugin {
         }
 
         // Decide jackpot card
-        const jackpotCardId = Math.floor(RandomGenerator.random(8) * DailyRoll.CARDS_COUNT);
-        this.currentGame.cards[jackpotCardId].content = DailyRoll.JACKPOT_AMOUNT;
+        const jackpotCardId = Math.floor(RandomGenerator.random(8) * DailyRollPlugin.CARDS_COUNT);
+        this.currentGame.cards[jackpotCardId].content = DailyRollPlugin.JACKPOT_AMOUNT;
 
         // Send base message
         this.currentGame.gameMessage = await this.room.sendMessage({content: '...', user: UserController.getNeutralUser()});
@@ -143,7 +144,7 @@ export class DailyRoll extends Plugin {
         this.currentGame.state = 'started';
 
         // Re-create game message
-        this.currentGame.gameMessage.edit('deleted', '<i>deleted</i>');
+        this.currentGame.gameMessage.edit('deleted', '<s>deleted</s>');
         this.room.send('message-edit', this.currentGame.gameMessage.sanitized());
         this.currentGame.gameMessage = await this.room.sendMessage({content: '...', user: UserController.getNeutralUser()});
         this.updateGameMessage();
@@ -152,8 +153,8 @@ export class DailyRoll extends Plugin {
         lastMessage.edit('Too late! Now revealing cards..');
         this.room.send('message-edit', lastMessage.sanitized());
         await Timing.sleep(2 * 1000);
-        for (let y = 0; y < DailyRoll.BOARD_HEIGHT; ++ y) {
-            for (let x = 0; x < DailyRoll.BOARD_WIDTH; ++ x) {
+        for (let y = 0; y < DailyRollPlugin.BOARD_HEIGHT; ++ y) {
+            for (let x = 0; x < DailyRollPlugin.BOARD_WIDTH; ++ x) {
                 const id = this.getCardId(x, y);
                 const card = this.currentGame.cards[id];
                 // Only reveal card if not chosen
@@ -209,25 +210,25 @@ export class DailyRoll extends Plugin {
 
         // Display board context
         content += '<table style="text-align: center">';
-        content += '<tr>' + '<th style="width: 30px"></th>'.repeat(DailyRoll.BOARD_WIDTH) + '</tr>';
-        for (let y = 0; y < DailyRoll.BOARD_HEIGHT; ++ y) {
+        content += '<tr>' + '<th style="width: 30px"></th>'.repeat(DailyRollPlugin.BOARD_WIDTH) + '</tr>';
+        for (let y = 0; y < DailyRollPlugin.BOARD_HEIGHT; ++ y) {
             content += '<tr>';
-            for (let x = 0; x < DailyRoll.BOARD_WIDTH; ++ x) {
+            for (let x = 0; x < DailyRollPlugin.BOARD_WIDTH; ++ x) {
                 const id = this.getCardId(x, y);
                 const card = this.currentGame.cards[id];
                 content += '<td>';
 
                 // Display this specific card
                 if (card.state === 'pending') {
-                    content += `[[❔//${this.name} ${id}]]`;
+                    content += `[[❔//${this.commandName} ${id}]]`;
                 } else if (card.state === 'chosen') {
-                    content += `[[❓//${this.name} ${id}]]`;
-                } else if (card.content === DailyRoll.JACKPOT_AMOUNT) {
-                    content += `[[💰//${this.name} ${id}]]`;
+                    content += `[[❓//${this.commandName} ${id}]]`;
+                } else if (card.content === DailyRollPlugin.JACKPOT_AMOUNT) {
+                    content += `[[💰//${this.commandName} ${id}]]`;
                 } else if (card.content > 0) {
-                    content += `[[💵//${this.name} ${id}]]`;
+                    content += `[[💵//${this.commandName} ${id}]]`;
                 } else {
-                    content += `[[💩//${this.name} ${id}]]`;
+                    content += `[[💩//${this.commandName} ${id}]]`;
                 }
 
                 content += '</td>';
@@ -250,7 +251,7 @@ export class DailyRoll extends Plugin {
             throw new Error('Round has already started');
         }
         const bet = parseInt(param);
-        if (bet < 0 || bet > DailyRoll.CARDS_COUNT - 1) {
+        if (bet < 0 || bet > DailyRollPlugin.CARDS_COUNT - 1) {
             throw new Error('Invalid bet');
         }
         if (this.currentGame.cards[cardId].state !== 'pending') {
@@ -259,7 +260,7 @@ export class DailyRoll extends Plugin {
         if (this.currentGame.participants.indexOf(connection.session) !== -1) {
             throw new Error('You have alrady chosen');
         }
-        await UserController.buy(connection.session.user, DailyRoll.ENTRY_COST);
+        await UserController.buy(connection.session.user, DailyRollPlugin.ENTRY_COST);
         this.currentGame.participants.push(connection.session);
         this.currentGame.bets[connection.session.identifier] = bet;
         this.currentGame.cards[cardId].state = 'chosen';

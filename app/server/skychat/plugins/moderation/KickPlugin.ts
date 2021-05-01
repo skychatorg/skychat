@@ -1,15 +1,15 @@
 import {Connection} from "../../Connection";
-import {Plugin} from "../../Plugin";
 import {User} from "../../User";
 import {Session} from "../../Session";
+import { GlobalPlugin } from "../../GlobalPlugin";
 
 
 /**
  * The kick plugin allows to force the disconnection of all the connections belonging to a session
  */
-export class KickPlugin extends Plugin {
+export class KickPlugin extends GlobalPlugin {
 
-    readonly name = 'kick';
+    static readonly commandName = 'kick';
 
     readonly minRight = 40;
 

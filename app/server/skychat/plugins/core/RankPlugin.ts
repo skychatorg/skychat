@@ -1,28 +1,27 @@
 import {Connection} from "../../Connection";
-import {Plugin} from "../../Plugin";
-import {Room} from "../../Room";
+import {GlobalPlugin} from "../../GlobalPlugin";
 import {ConnectedListPlugin} from "./ConnectedListPlugin";
 import {UserController} from "../../UserController";
 import { Config } from "../../Config";
 import * as striptags from "striptags";
 import { User } from "../../User";
 import { Message } from "../../Message";
+import { Session } from "../../Session";
+import { RoomManager } from "../../RoomManager";
 
 
-export class RankPlugin extends Plugin {
+export class RankPlugin extends GlobalPlugin {
 
     public static readonly MAX_INACTIVITY_DURATION_MS: number = 10 * 60 * 1000;
 
-    readonly name = 'rank';
+    static readonly commandName = 'rank';
 
     readonly minRight = -1;
 
-    constructor(room: Room) {
-        super(room);
+    constructor(manager: RoomManager) {
+        super(manager);
 
-        if (this.room) {
-            setInterval(this.tick.bind(this), 60 * 1000);
-        }
+        setInterval(this.tick.bind(this), 60 * 1000);
     }
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
@@ -47,7 +46,7 @@ export class RankPlugin extends Plugin {
         const message = new Message(
             {
                 id: 0,
-                room: this.room.id,
+                room: connection.roomId,
                 formatted: rankHtml,
                 content: striptags(rankHtml),
                 user: UserController.getNeutralUser()
@@ -58,7 +57,7 @@ export class RankPlugin extends Plugin {
 
     private async tick(): Promise<void> {
         // Get rooms in the session
-        const sessions = Array.from(new Set(this.room.connections.map(connection => connection.session)));
+        const sessions = Object.values(Session.sessions);
         // For each session in the room
         for (const session of sessions) {
             // If it's not a logged session, continue
@@ -72,6 +71,6 @@ export class RankPlugin extends Plugin {
 
             await UserController.giveXP(session.user, 1);
         }
-        await (this.room.getPlugin('connectedlist') as ConnectedListPlugin).sync();
+        (this.manager.getPlugin('connectedlist') as ConnectedListPlugin).sync();
     }
 }

@@ -1,5 +1,6 @@
 <template>
-    <div class="connected-list">
+    <div class="connected-list" v-if="sessions.length > 0">
+        <h2 class="title">Active now</h2>
         <user-list-row
                 v-for="session in sessions"
                 @click.native="() => onJoinPrivateChannel(session.identifier)"

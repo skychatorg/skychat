@@ -5,12 +5,12 @@ import * as striptags from "striptags";
 import {UserController} from "../../UserController";
 import * as geoip from "geoip-lite";
 import {MessageFormatter} from "../../MessageFormatter";
-import { Plugin } from "../../Plugin";
+import { GlobalPlugin } from "../../GlobalPlugin";
 
 
-export class IpPlugin extends Plugin {
+export class IpPlugin extends GlobalPlugin {
 
-    readonly name = 'ip';
+    static readonly commandName = 'ip';
 
     readonly minRight = 40;
 
@@ -32,7 +32,7 @@ export class IpPlugin extends Plugin {
 
         // If using wildcard
         if (param === '') {
-            connections = this.room.connections;
+            connections = Session.connections;
 
         } else {
             const username = Session.autocompleteIdentifier(param);
@@ -78,7 +78,7 @@ export class IpPlugin extends Plugin {
         content += `</table>`;
 
         // Send the message
-        const message = UserController.createNeutralMessage({content: '', room: this.room.id, id: 0});
+        const message = UserController.createNeutralMessage({content: '', room: connection.roomId, id: 0});
         message.edit(striptags(content), content);
         connection.send('message', message.sanitized());
     }

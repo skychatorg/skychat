@@ -1,7 +1,7 @@
 <template>
 
     <div class="quick-actions">
-
+        <h2 class="title">Quick actions</h2>
         <div class="quick-actions-group"
             v-for="group in actions"
             :key="group.name"
@@ -36,6 +36,19 @@
 
                 actions: [
                     {
+                        name: "Misc (Cinema)",
+                        showInCinema: true,
+                        showInNonCinema: false,
+                        actions: [
+                            {
+                                id: 'cinema-mode',
+                                title: "Toggle cinema mode",
+                                icon: 'tv',
+                                shortcuts: []
+                            },
+                        ]
+                    },
+                    {
                         name: "Youtube",
                         showInCinema: false,
                         showInNonCinema: true,
@@ -48,15 +61,9 @@
                             },
                             {
                                 id: 'yt-lock',
-                                title: "Lock video player",
+                                title: "Lock this room's video player",
                                 icon: 'lock',
                                 shortcuts: ['alt+a']
-                            },
-                            {
-                                id: 'yt-play',
-                                title: "Play a youtube video",
-                                icon: 'play_arrow',
-                                shortcuts: ['ctrl+p']
                             },
                         ]
                     },
@@ -77,6 +84,19 @@
                                 icon: 'tv',
                                 shortcuts: ['alt+enter']
                             },
+                        ]
+                    },
+                    {
+                        name: "Shop",
+                        showInCinema: false,
+                        showInNonCinema: true,
+                        actions: [
+                            {
+                                id: 'shop',
+                                title: "Browse shop",
+                                icon: 'palette',
+                                shortcuts: []
+                            },
                             {
                                 id: 'help',
                                 title: "See available commands",
@@ -86,59 +106,15 @@
                         ]
                     },
                     {
-                        name: "Misc (Cinema)",
-                        showInCinema: true,
-                        showInNonCinema: false,
-                        actions: [
-                            {
-                                id: 'cinema-mode',
-                                title: "Toggle cinema mode",
-                                icon: 'tv',
-                                shortcuts: []
-                            },
-                        ]
-                    },
-                    {
-                        name: "Shop",
-                        showInCinema: false,
-                        showInNonCinema: true,
-                        actions: [
-                            {
-                                id: 'shop-color',
-                                title: "Browse shop colors",
-                                icon: 'palette',
-                                shortcuts: []
-                            },
-                            {
-                                id: 'shop-halo',
-                                title: "Browse shop halo colors",
-                                icon: 'brush',
-                                shortcuts: []
-                            },
-                            {
-                                id: 'shop-pinnedicon',
-                                title: "Browse shop",
-                                icon: 'info',
-                                shortcuts: []
-                            },
-                        ]
-                    },
-                    {
                         name: "Games",
                         showInCinema: false,
-                        showInNonCinema: true,
+                        showInNonCinema: false,
                         actions: [
                             {
                                 id: 'racing',
                                 title: "Start a race car game",
                                 icon: 'flag',
                                 shortcuts: ['ctrl+r']
-                            },
-                            {
-                                id: 'guess',
-                                title: "Start a guess the number round",
-                                icon: 'not_listed_location',
-                                shortcuts: ['ctrl+g']
                             },
                             {
                                 id: 'roll',
@@ -176,9 +152,11 @@
                     case 'yt-queue':
                         return `<b>List</b>`;
                     case 'yt-lock':
-                        return `<i class="material-icons md-16" style="color:${this.playerLock ? '' : 'gray'}">toggle_${this.playerLock ? 'on' : 'off'}</i>`;
+                        return `<i class="material-icons md-16" style="color:${typeof this.playerLockRoomId === 'number' ? '' : 'gray'}">toggle_${typeof this.playerLockRoomId === 'number' ? 'on' : 'off'}</i>`;
                     case 'yt-play':
                         return `<b>Play</b>`;
+                    case 'shop':
+                        return `<b>Shop</b>`;
                     case 'shop-color':
                         return `<b>Color</b>`;
                     case 'shop-halo':
@@ -206,10 +184,16 @@
                     case 'yt-queue':
                         return this.$client.sendMessage('/yt list');
                     case 'yt-lock':
-                        return this.$store.commit('SET_PLAYER_LOCK', ! this.playerLock); 
+                        if (typeof this.playerLockRoomId === 'number') {
+                            return this.$client.sendMessage('/yt unlock');
+                        } else {
+                            return this.$client.sendMessage('/yt lock');
+                        }
                     case 'yt-play':
                         this.$modal.show(YoutubeVideoSearcher);
                         return;
+                    case 'shop':
+                        return this.$client.sendMessage('/shop');
                     case 'shop-color':
                         return this.$client.sendMessage('/shoplist color');
                     case 'shop-halo':
@@ -231,8 +215,8 @@
         },
 
         computed: {
-            playerLock: function() {
-                return this.$store.state.playerLock;
+            playerLockRoomId: function() {
+                return this.$store.state.playerLockRoomId;
             },
             cinemaMode: function() {
                 return this.$store.state.cinemaMode;
@@ -246,7 +230,9 @@
 
 <style lang="scss" scoped>
     .quick-actions {
-        padding-top: 20px;
+        padding-left: 10px;
+        padding-bottom: 5px;
+        padding-right: 5px;
         color: white;
 
         .quick-actions-group {
@@ -261,22 +247,21 @@
                 flex-direction: row;
 
                 .quick-action {
-                    flex: 0 calc(33% - 14px);
+                    flex: 0 calc(50% - 10px);
                     height: 30px;
                     color: white;
                     background: #242427;
                     border-left: 4px solid #a3a5b4;
                     transition: all 0.2s;
                     display: flex;
-                    padding: 5px;
-                    margin: 5px;
+                    margin: 0 10px 4px 0px;
                     cursor: pointer;
                     user-select: none;
 
                     &:hover {
                         border-width: 0;
-                        margin-left: 9px;
-                        margin-right: 1px;
+                        margin-left: 5px;
+                        margin-right: 5px;
                         background: #313235;
                     }
 
@@ -303,6 +288,7 @@
                             color: #ff8f8f;
                         }
                     }
+                    &.action-shop,
                     &.action-shop-pinnedicon,
                     &.action-shop-color,
                     &.action-shop-halo {

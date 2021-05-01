@@ -1,18 +1,18 @@
 import {Connection} from "../../Connection";
-import {Plugin} from "../../Plugin";
+import {GlobalPlugin} from "../../GlobalPlugin";
 import {User} from "../../User";
 import {Session} from "../../Session";
 import {UserController} from "../../UserController";
-import {Room} from "../../Room";
+import { RoomManager } from "../../RoomManager";
 
 
 /**
  * This plugins allows anyone to `sandalize` someone else.
  * When someone is `sandalized`, his next message is replaced with a... sandale.
  */
-export class SandalePlugin extends Plugin {
+export class SandalePlugin extends GlobalPlugin {
 
-    readonly name = 'sandale';
+    static readonly commandName = 'sandale';
 
     readonly minRight = 0;
 
@@ -35,8 +35,8 @@ export class SandalePlugin extends Plugin {
         sandales: {}
     };
 
-    constructor(room: Room) {
-        super(room);
+    constructor(manager: RoomManager) {
+        super(manager);
         this.loadStorage();
     }
 

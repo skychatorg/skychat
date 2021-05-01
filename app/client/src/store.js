@@ -17,7 +17,7 @@ const store = {
         mobileCurrentPage: 'middle',
         config: null,
         rooms: [],
-        playerLock: false,
+        playerLockRoomId: null,
         cinemaMode: false,
         channel: null,
         connectionState: WebSocket.CLOSED,
@@ -80,8 +80,8 @@ const store = {
         SET_MOBILE_PAGE(state, mobilePage) {
             state.mobileCurrentPage = mobilePage;
         },
-        SET_PLAYER_LOCK(state, playerLock) {
-            state.playerLock = !! playerLock;
+        SET_PLAYER_LOCK_ROOM_ID(state, playerLockRoomId) {
+            state.playerLockRoomId = typeof playerLockRoomId === 'number' ? playerLockRoomId : null;
         },
         TOGGLE_CINEMA_MODE(state) {
             state.cinemaMode = ! state.cinemaMode;

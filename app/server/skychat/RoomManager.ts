@@ -5,39 +5,48 @@ import {Session} from "./Session";
 import {DatabaseHelper} from "./DatabaseHelper";
 import {User} from "./User";
 import * as iof from "io-filter";
-import {Room, StoredRoom} from "./Room";
+import {Room} from "./Room";
 import {UserController} from "./UserController";
 import {Config} from "./Config";
 import * as fs from "fs";
 import {Message} from "./Message";
 import {AudioRecorderPlugin} from "./plugins/core/AudioRecorderPlugin";
 import { PluginManager } from "./PluginManager";
+import { GlobalPlugin } from "./GlobalPlugin";
 
 
 export type StoredSkyChat = {
     guestId: number;
     messageId: number;
+    rooms: number[];
 }
 
 /**
- * The base server class for the skychat
+ * The room manager
  */
-export class SkyChat {
+export class RoomManager {
 
-    public static readonly STORAGE_MAIN_FILE: string = 'storage/skychat.json';
+    public static readonly STORAGE_MAIN_FILE: string = 'storage/main.json';
 
     private static TICK_INTERVAL: number = 5 * 1000;
 
     private static CURRENT_GUEST_ID: number = 0;
 
-    private readonly rooms: Room[] = [];
+    private rooms: Room[] = [];
 
     private readonly server: Server;
 
-    constructor() {
+    /**
+     * Plugins. All aliases of a command/plugin points to the same command instance.
+     */
+    public commands: {[commandName: string]: GlobalPlugin} = {};
 
-        // Try to load this instance's settings from storage
-        this.load();
+    /**
+     * Plugins sorted by descending priority
+     */
+    public plugins: GlobalPlugin[] = [];
+
+    constructor() {
 
         // Create server instance
         this.server = new Server(this.getNewSession.bind(this));
@@ -50,15 +59,23 @@ export class SkyChat {
             .load()
             .then(async () => {
 
-                // Create room from configuration
-                for (const room of Config.PREFERENCES.rooms) {
-                    this.rooms.push(new Room(room.id, room.name));
+                // Try to load this instance's settings from storage
+                // Load rooms from storage
+                this.load();
+
+                if (this.rooms.length === 0) {
+                    this.rooms.push(new Room(0, this));
                 }
 
                 // Load last messages from all rooms
                 for (const room of this.rooms) {
                     await room.loadLastMessagesFromDB();
                 }
+
+                // Load global plugins
+                const {commands, plugins} = PluginManager.instantiateGlobalPlugins(this);
+                this.commands = commands;
+                this.plugins = plugins;
 
                 // On register
                 this.server.registerEvent(
@@ -107,25 +124,28 @@ export class SkyChat {
                 }, 5 * 1000);
             });
 
-        setInterval(this.tick.bind(this), SkyChat.TICK_INTERVAL);
+        setInterval(this.tick.bind(this), RoomManager.TICK_INTERVAL);
     }
 
     /**
      * Try to load this room's data from disk
      */
     private load(): void {
-        try {
-
-            // Load data from disk
-            const data = JSON.parse(fs.readFileSync(SkyChat.STORAGE_MAIN_FILE).toString()) as StoredSkyChat;
-            SkyChat.CURRENT_GUEST_ID = data.guestId || 0;
-            Message.ID = data.messageId || 0;
-
-        } catch (e) {
-
-            // If an error happens, reset this room's storage
+        if (! fs.existsSync(RoomManager.STORAGE_MAIN_FILE)) {
             this.save();
+            return;
         }
+
+        // Load data from disk
+        const data = JSON.parse(fs.readFileSync(RoomManager.STORAGE_MAIN_FILE).toString()) as StoredSkyChat;
+
+        // Register ids
+        RoomManager.CURRENT_GUEST_ID = data.guestId || 0;
+        Message.ID = data.messageId || 0;
+
+        // Create rooms
+        const rooms = data.rooms || [0];
+        this.rooms = rooms.map(id => new Room(id, this));
     }
 
     /**
@@ -135,11 +155,12 @@ export class SkyChat {
         try {
             // Build storage object
             const data: StoredSkyChat = {
-                guestId: SkyChat.CURRENT_GUEST_ID,
-                messageId: Message.ID
+                guestId: RoomManager.CURRENT_GUEST_ID,
+                messageId: Message.ID,
+                rooms: this.rooms.map(room => room.id),
             };
 
-            fs.writeFileSync(SkyChat.STORAGE_MAIN_FILE, JSON.stringify(data));
+            fs.writeFileSync(RoomManager.STORAGE_MAIN_FILE, JSON.stringify(data));
             return true;
         } catch (e) {
             return false;
@@ -156,18 +177,106 @@ export class SkyChat {
     }
 
     /**
+     * Returns whether a room id exists
+     * @param id 
+     * @returns 
+     */
+    public hasRoomId(id: number): boolean {
+        return !! this.rooms.find(room => room.id === id);
+    }
+
+    /**
+     * Get a room by id
+     * @param id 
+     * @returns 
+     */
+    public getRoomById(id: number): Room | null {
+        return this.rooms.find(room => room.id === id) || null;
+    }
+
+    /**
+     * Create a new room
+     * @param id 
+     * @param name
+     * @returns 
+     */
+    public createRoom(id: number, name?: string) {
+        if (this.hasRoomId(id)) {
+            throw new Error(`Room ${id} already exists`);
+        }
+        const room = new Room(id, this);
+        if (name) {
+            room.name = name;
+        }
+        this.rooms.push(room);
+        return room;
+    }
+
+    /**
+     * Delete a room
+     * @param id 
+     */
+    public async deleteRoom(id: number) {
+        if (this.rooms.length === 1) {
+            throw new Error('Impossible to remote the last remaining room');
+        }
+        const room = this.getRoomById(id);
+        if (! room){
+            throw new Error(`Room ${id} not found`);
+        }
+        // Move all connections to another room
+        const anyRoom: Room = this.rooms.find(room => room.id !== id) as Room;
+        for (const connection of anyRoom.connections) {
+            await anyRoom.attachConnection(connection);
+        }
+        // Remove old room
+        this.rooms = this.rooms.filter(room => room.id !== id);
+    }
+
+    /**
      * Build a new session object when there is a new connection
      */
     private async getNewSession(request: http.IncomingMessage): Promise<Session> {
-        if (SkyChat.CURRENT_GUEST_ID >= Math.pow(10, 10)) {
-            SkyChat.CURRENT_GUEST_ID = 0;
+        if (RoomManager.CURRENT_GUEST_ID >= Math.pow(10, 10)) {
+            RoomManager.CURRENT_GUEST_ID = 0;
         }
-        const guestId = ++ SkyChat.CURRENT_GUEST_ID;
+        const guestId = ++ RoomManager.CURRENT_GUEST_ID;
         const randomName = Config.getRandomGuestName();
         const identifier = '*' + randomName + '#' + guestId;
         const session = new Session(identifier);
         session.user.data.plugins.avatar = 'https://eu.ui-avatars.com/api/?name=' + randomName;
         return session;
+    }
+
+    /**
+     * Get a plugin by its command name
+     * @param commandName 
+     * @returns 
+     */
+    public getPlugin(commandName: string): GlobalPlugin {
+        return this.commands[commandName];
+    }
+
+    /**
+     * Execute new connection hook
+     * @param message
+     * @param connection
+     */
+    public async executeNewMessageHook(message: string, connection: Connection): Promise<string> {
+        for (const plugin of this.plugins) {
+            message = await plugin.onNewMessageHook(message, connection);
+        }
+        return message;
+    }
+
+    /**
+     * Execute connection authenticated hook
+     * @param connection
+     */
+    public async executeConnectionAuthenticated(connection: Connection): Promise<void> {
+        for (const plugin of this.plugins) {
+            await plugin.onConnectionAuthenticated(connection);
+        }
     }
 
     /**
@@ -202,7 +311,11 @@ export class SkyChat {
         if (typeof payload.roomId !== 'number' || typeof this.rooms[payload.roomId] !== 'object') {
             throw new Error('Invalid room specified');
         }
-        await this.rooms[payload.roomId].attachConnection(connection);
+        const room = this.getRoomById(payload.roomId);
+        if (! room) {
+            throw new Error('Invalid room specified');
+        }
+        await room.attachConnection(connection);
     }
 
     /**
@@ -231,7 +344,7 @@ export class SkyChat {
         connection.send('auth-token', UserController.getAuthToken(user.id));
         const room = this.rooms[0];
         await room.attachConnection(connection);
-        await room.executeConnectionAuthenticated(connection);
+        await this.executeConnectionAuthenticated(connection);
     }
 
     /**
@@ -241,27 +354,35 @@ export class SkyChat {
      */
     private async onMessage(payload: string, connection: Connection): Promise<void> {
 
-        // Apply hooks on payload
-        if (! connection.room) {
-            throw new Error('Messages event should be sent in rooms');
-        }
-
         // Handle default command (/message)
         if (payload[0] !== '/') {
             payload = '/message ' + payload;
         }
 
-        payload = await connection.room.executeNewMessageHook(payload, connection);
+        payload = await this.executeNewMessageHook(payload, connection);
 
         // Parse command name and message content
         const {param, commandName} = PluginManager.parseCommand(payload);
 
-        // Get command object
-        const command = connection.room.commands[commandName];
-        if (! command) {
-            throw new Error('This command does not exist');
+        // If command linked to a global plugin
+        if (typeof this.commands[commandName] !== 'undefined') {
+            const command = this.commands[commandName];
+            await command.execute(commandName, param, connection);
+            return;
         }
 
+        // If command linked to a room plugin
+        if (! connection.room) {
+            throw new Error('Messages event should be sent in rooms');
+        }
+
+        // Get command object
+        if (typeof connection.room.commands[commandName] === 'undefined') {
+            throw new Error('This command does not exist');
+        }
+        const command = connection.room.commands[commandName];
+
+        // Execute the room plugin
         await command.execute(commandName, param, connection);
     }
 
@@ -275,8 +396,7 @@ export class SkyChat {
             throw new Error('Audio recordings should be sent in rooms');
         }
         
-        const audioRecorderPlugin = connection.room.getPlugin('audio') as AudioRecorderPlugin;
+        const audioRecorderPlugin = connection.room.getPlugin('audio') as unknown as AudioRecorderPlugin;
         await audioRecorderPlugin.registerAudioBuffer(buffer, connection);
     }
 }
-

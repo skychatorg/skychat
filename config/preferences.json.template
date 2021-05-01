@@ -7,9 +7,6 @@
     "maxReplacedImagesPerMessage": 50,
     "maxReplacedStickersPerMessage": 50,
     "maxNewlinesPerMessage": 20,
-    "rooms": [
-        {"id": 0, "name": "Main"}
-    ],
     "ranks": [
         {"limit": 1000000, "images": { "18": "ranks/materials/15_diamond_shiny_18.gif", "26": "ranks/materials/15_diamond_shiny_26.gif" }},
         {"limit": 200000, "images": { "18": "ranks/materials/14_diamond_18.png", "26": "ranks/materials/14_diamond_26.png" }},
@@ -29,6 +26,7 @@
         {"limit": 0, "images": { "18": "ranks/materials/0_paper_18.png", "26": "ranks/materials/0_paper_26.png" }}
     ],
     "plugins": [
+        "RoomManagerPlugin",
         "AccountPlugin",
         "AvatarPlugin",
         "BackupPlugin",
@@ -36,14 +34,14 @@
         "ConnectedListPlugin",
         "GiveMoneyPlugin",
         "CursorPlugin",
-        "HelpCommand",
+        "HelpPlugin",
         "MailPlugin",
         "BanPlugin",
         "HistoryClearPlugin",
         "IpPlugin",
         "KickPlugin",
-        "MessageCommand",
-        "MessageEditCommand",
+        "MessagePlugin",
+        "MessageEditPlugin",
         "MessageHistoryPlugin",
         "MessageSeenPlugin",
         "RankPlugin",
@@ -61,7 +59,7 @@
         "RisiBankPlugin",
         "RollPlugin",
         "SandalePlugin",
-        "SetRightCommand",
+        "SetRightPlugin",
         "ShopPlugin",
         "StickerPlugin",
         "TrackerPlugin",

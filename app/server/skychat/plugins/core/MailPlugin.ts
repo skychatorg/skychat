@@ -1,18 +1,17 @@
 import {Connection} from "../../Connection";
-import {Plugin} from "../../Plugin";
-import {Room} from "../../Room";
 import {Config} from "../../Config";
 import * as nodemailer from "nodemailer";
 import * as Mail from "nodemailer/lib/mailer";
 import {SentMessageInfo} from "nodemailer";
 import {UserController} from "../../UserController";
 import {User} from "../../User";
-import {Message} from "../../Message";
+import { GlobalPlugin } from "../../GlobalPlugin";
+import { RoomManager } from "../../RoomManager";
 
 
-export class MailPlugin extends Plugin {
+export class MailPlugin extends GlobalPlugin {
 
-    readonly name = 'mail';
+    static readonly commandName = 'mail';
 
     readonly opOnly = true;
 
@@ -29,8 +28,8 @@ export class MailPlugin extends Plugin {
 
     private readonly transporter?: Mail;
 
-    constructor(room: Room) {
-        super(room);
+    constructor(manager: RoomManager) {
+        super(manager);
 
         if (Config.EMAIL_TRANSPORT) {
             this.transporter = nodemailer.createTransport(Config.EMAIL_TRANSPORT);
@@ -47,7 +46,7 @@ export class MailPlugin extends Plugin {
         const result = await this.sendMailToUsername(username, 'New mail from ' + Config.LOCATION, message);
 
         // Send back notification
-        connection.send('message', UserController.createNeutralMessage({content: result.response, room: this.room.id, id: 0}).sanitized());
+        connection.send('message', UserController.createNeutralMessage({content: result.response, room: connection.roomId, id: 0}).sanitized());
     }
 
     /**

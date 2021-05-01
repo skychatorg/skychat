@@ -1,16 +1,16 @@
 import {Connection} from "../../Connection";
-import {Plugin} from "../../Plugin";
+import {GlobalPlugin} from "../../GlobalPlugin";
 import {ConnectedListPlugin} from "../core/ConnectedListPlugin";
 import {UserController} from "../../UserController";
 
 
-export class MottoPlugin extends Plugin {
+export class MottoPlugin extends GlobalPlugin {
 
     private static MOTTO_MAX_LENGTH: number = 64;
 
-    readonly defaultDataStorageValue = '';
+    static readonly commandName = 'motto';
 
-    readonly name = 'motto';
+    static readonly defaultDataStorageValue = '';
 
     readonly minRight = 0;
 
@@ -31,7 +31,7 @@ export class MottoPlugin extends Plugin {
         if (param.length > MottoPlugin.MOTTO_MAX_LENGTH) {
             throw new Error('Motto too long');
         }
-        await UserController.savePluginData(connection.session.user, this.name, param);
-        await (this.room.getPlugin('connectedlist') as ConnectedListPlugin).sync();
+        await UserController.savePluginData(connection.session.user, this.commandName, param);
+        (this.manager.getPlugin('connectedlist') as ConnectedListPlugin).sync();
     }
 }

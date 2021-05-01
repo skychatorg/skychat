@@ -1,5 +1,5 @@
 import {Connection} from "../../Connection";
-import {Plugin} from "../../Plugin";
+import {RoomPlugin} from "../../RoomPlugin";
 import {UserController} from "../../UserController";
 import {Message} from "../../Message";
 import {Session} from "../../Session";
@@ -26,11 +26,11 @@ const waitTimeout = (delay: number) => {
 };
 
 
-export class GuessTheNumberPlugin extends Plugin {
+export class GuessTheNumberPlugin extends RoomPlugin {
 
     public static readonly ENTRY_COST: number = 100;
 
-    readonly name = 'guess';
+    static readonly commandName = 'guess';
 
     readonly minRight = 20;
 
@@ -60,10 +60,6 @@ export class GuessTheNumberPlugin extends Plugin {
         await this.handleGuess(param, connection);
     }
 
-    public async onNewMessageHook(message: string, connection: Connection): Promise<string> {
-        return message;
-    }
-
     /**
      * Start a new game
      */
@@ -84,7 +80,7 @@ export class GuessTheNumberPlugin extends Plugin {
 
         // Wait for participants
         await this.room.sendMessage({
-            content: `:d) New round (guess the number) :d) [[Participate (entry cost: ${GuessTheNumberPlugin.ENTRY_COST / 100}$)//${this.name} join]]`,
+            content: `:d) New round (guess the number) :d) [[Participate (entry cost: ${GuessTheNumberPlugin.ENTRY_COST / 100}$)//${this.commandName} join]]`,
             user: UserController.getNeutralUser()
         });
         this.currentGame.participantListMessage = await this.room.sendMessage({

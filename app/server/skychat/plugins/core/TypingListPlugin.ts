@@ -1,16 +1,16 @@
 import {Connection} from "../../Connection";
-import {Plugin} from "../../Plugin";
+import {RoomPlugin} from "../../RoomPlugin";
 import {User} from "../../User";
 
 
 /**
  * Handle cursor events
  */
-export class TypingListPlugin extends Plugin {
+export class TypingListPlugin extends RoomPlugin {
 
     public static readonly CLEAR_MIN_RIGHT: number = 20;
 
-    readonly name = 't';
+    static readonly commandName = 't';
 
     readonly minRight = -1;
 
@@ -59,7 +59,7 @@ export class TypingListPlugin extends Plugin {
         this.sync();
     }
 
-    async onConnectionClosed(connection: Connection): Promise<void> {
+    async onConnectionLeftRoom(connection: Connection): Promise<void> {
         delete this.typingList[connection.session.identifier];
     }
 

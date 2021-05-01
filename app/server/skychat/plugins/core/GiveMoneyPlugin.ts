@@ -1,12 +1,12 @@
 import {Connection} from "../../Connection";
-import {Plugin} from "../../Plugin";
+import {RoomPlugin} from "../../RoomPlugin";
 import {Session} from "../../Session";
 import {User} from "../../User";
 import {ConnectedListPlugin} from "../core/ConnectedListPlugin";
 import {UserController} from "../../UserController";
 
 
-export class GiveMoneyPlugin extends Plugin {
+export class GiveMoneyPlugin extends RoomPlugin {
 
     public static readonly MIN_RIGHT_COMMISSION_FREE: number = 20;
 
@@ -14,7 +14,7 @@ export class GiveMoneyPlugin extends Plugin {
 
     public static readonly COMMISSION_MIN: number = 1;
 
-    readonly name = 'give';
+    static readonly commandName = 'give';
 
     readonly minRight = 0;
 

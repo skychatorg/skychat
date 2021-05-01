@@ -1,12 +1,12 @@
 import {Connection} from "../../Connection";
-import {Plugin} from "../../Plugin";
+import {GlobalPlugin} from "../../GlobalPlugin";
 
 
-export class PinnedIconPlugin extends Plugin {
+export class PinnedIconPlugin extends GlobalPlugin {
 
-    readonly defaultDataStorageValue = '';
+    static readonly commandName = 'pinnedicon';
 
-    readonly name = 'pinnedicon';
+    static readonly defaultDataStorageValue = '';
 
     readonly callable = false;
 
