@@ -31,7 +31,7 @@ export class RankPlugin extends GlobalPlugin {
 
         // Build HTML
         let rankHtml = `All ranks: <table>`
-            + Config.PREFERENCES.ranks
+            + Config.RANKS
                 .slice(0)
                 .sort((a, b) => a.limit - b.limit)
                 .map(rank => `

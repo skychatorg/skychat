@@ -56,7 +56,7 @@ export class PluginManager {
         const commands: {[pluginName: string]: GlobalPlugin} = {};
         const plugins: GlobalPlugin[] = [];
         // For every command/plugin
-        for (let pluginName of Config.PREFERENCES.plugins) {
+        for (let pluginName of Config.PLUGINS) {
             
             // Check if the command/plugin exists
             if (typeof impl[pluginName] !== 'function') {

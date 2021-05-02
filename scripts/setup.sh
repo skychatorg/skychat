@@ -20,6 +20,16 @@ if [[ ! -e .env.json ]]; then
     generate_salt;
 fi
 
+# Initialize plugins.txt
+if [[ ! -e config/plugins.txt ]]; then
+    cp config/plugins.txt.template config/plugins.txt;
+fi
+
+# Initialize ranks.json
+if [[ ! -e config/ranks.json ]]; then
+    cp config/ranks.json.template config/ranks.json;
+fi
+
 # Initialize stickers.json
 if [[ ! -e config/stickers.json ]]; then
     cp config/stickers.json.template config/stickers.json;

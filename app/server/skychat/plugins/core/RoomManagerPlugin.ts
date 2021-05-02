@@ -100,7 +100,7 @@ export class RoomManagerPlugin extends RoomPlugin {
         
         // Add a plugin
         if (add) {
-            if (Config.PREFERENCES.plugins.indexOf(pluginName) === -1) {
+            if (Config.PLUGINS.indexOf(pluginName) === -1) {
                 throw new Error(`Plugin ${pluginName} does not exist. Is it in the preferences.json file?`);
             }
             if (this.room.enabledPlugins.indexOf(pluginName) !== -1) {

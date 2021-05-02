@@ -1,12 +1,15 @@
 ![](./app/client/assets/assets/logo.png)
 
-
-
 # SkyChat
 
-The **SkyChat** is a modern-looking discussion platform with real-time visualisation of everyone's cursor, and a shared and synchronized youtube player.
+1. [Features](#features)
+2. [Install](#how-to-install)
+3. [Customize](#customize)
 
-It also includes many customisation/entertainment features such as:
+
+## Features
+
+The **SkyChat** is a modern-looking discussion platform with real-time visualisation of everyone's cursor, and a shared and synchronized youtube player. It includes many customisation/entertainment features:
 - Custom text and halo colors to be bought for user messages
 - Virtual money with mini-games (casino roulette, guess the number)
 - An XP system with associated ranks, based on users activity
@@ -38,6 +41,8 @@ This is not all, but to discover all features, you may as well launch an instanc
 
 ## How to install
 
+### Install and run
+
 If using docker you need:
 - nodejs/npm, any version
 - docker/docker-compose
@@ -62,6 +67,27 @@ npm i && npm run start        # If without docker
 npm i && npm run dev          # If without docker with fs watcher and auto rebuild/restart
 ```
 
+
+### Application setup
+
+In order to customize the domain name of your SkyChat application, you will need to edit the `.env.json` file. The fields in the .env.json contain private information related to the application.
+
+The semantic of these fields are defined below:
+
+
+| field | type | default | semantic |
+|-------|------|---------|----------|
+| location                 | string | "http://localhost:8080" | Server location, i.e. what user need to put in their browser to access your app |
+| hostname                 | string | "localhost" | Hostname the server will listen to |
+| port                     | number | 8080 | Server port |
+| ssl                      | false or {certificate:string,key:string}  | false | SSL configuration (paths to certificate and key files). Use false if SSL is disabled. |
+| **users_passwords_salt** | string | "$RANDOM_SALT" | Password salt. MUST be set manually. |
+| **users_token_salt**     | string | "$RANDOM_SALT" | Token salt. MUST be set manually. |
+| **youtube_api_key**      | string | "" | [Youtube api key](#setup-youtube) |
+| op                       | string[] | [] | OP usernames. OP usernames can use the /setright command. |
+| email_transport          | nodemailer.JSONTransport | {"sendmail": true,"newline": "unix","path": "/usr/sbin/sendmail"} | Value given to [nodemailer.createTransport](https://nodemailer.com/about/) to initialize the mailer |
+
+
 ### Setup Youtube
 
 The SkyChat requires a key for the Youtube plugin to work. This key needs to be put in your `.env.json` file.
@@ -74,11 +100,7 @@ Using the Youtube API is free but there is a daily quota, which when exceeded bl
 4. Restart the server
 
 
-### Setup a super-user
-
-In order to escalate user rights, you can setup a super-user by editing the `.env.json` file and adding one or multiple usernames in the `op` array.
-
-## How to dev
+### Develop
 
 ```bash
 npm run dev
@@ -87,97 +109,43 @@ npm run dev
 This will start a static file server & websocket server on http://localhost:8080
 When the source files change, the build processes runs automatically
 
-## The env.json file
-
-The fields in the .env.json contain private information related to the application.
-
-The semantic of these fields are defined below:
+## Customize
 
 
-| field                    | type                                      | default                                                           | semantic                                                                                            |
-|--------------------------|-------------------------------------------|-------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------|
-| location                 | string                                    | "http://localhost:8080"                                           | Server location, i.e. what user need to put in their browser to access your app                     |
-| hostname                 | string                                    | "localhost"                                                       | Hostname the server will listen to                                                                  |
-| port                     | number                                    | 8080                                                              | Server port                                                                                         |
-| ssl                      | false or {certificate:string,key:string}  | false                                                             | SSL configuration (paths to certificate and key files). Use false if SSL is disabled.               |
-| **users_passwords_salt** | string                                    | ""                                                                | Password salt. MUST be set manually.                                                                |
-| **users_token_salt**     | string                                    | ""                                                                | Token salt. MUST be set manually.                                                                   |
-| **youtube_api_key**      | string                                    | ""                                                                | Youtube api key                                                                                     |
-| op                       | string[]                                  | []                                                                | OP usernames. OP usernames can use the /setright command.                                           |
-| email_transport          | nodemailer.JSONTransport                  | {"sendmail": true,"newline": "unix","path": "/usr/sbin/sendmail"} | Value given to [nodemailer.createTransport](https://nodemailer.com/about/) to initialize the mailer |
-
-
-## preferences.json
+### Customize preferences
 
 The preferences.json file specifies application preferences. The available fields are detailed below.
 
 
-**minRightForPrivateMessages**
-
-- Type: `number`
-- Description: Minimum required right to send private messages.
-
-
-**minRightForMessageHistory**
-
-- Type: `number`
-- Description: Minimum required right to access room message history. This includes accessing the previous messages when joining the room and quoting old messages.
-
-
-**minRightForAudioRecording**
-
-- Type: `number`
-- Description: Minimum required right to record and listen to audio files.
+| field | type | default | description |
+|-------|------|---------|-------------|
+| minRightForPrivateMessages    | number |  -1 | Min. right to send private messages |
+| minRightForMessageHistory     | number |  -1 | Min. right to access room message history |
+| minRightForAudioRecording     | number |  -1 | Min. right to share and play audio recordings |
+| minRightForConnectedList      | number |  -1 | Min. right to visualize the list of currently active users |
+| minRightForPolls              | number |  -1 | Min. right to create polls |
+| maxReplacedImagesPerMessage   | number |  50 | Max. number of replaced images per message |
+| maxReplacedStickersPerMessage | number |  50 | Max. number of replaced stickers per message |
+| maxNewlinesPerMessage         | number |  20 | Max. number of newlines per message |
 
 
-**minRightForConnectedList**
+### Customize plugins
 
-- Type: `number`
-- Description: Minimum required right to see the connected list.
-
-
-**minRightForPolls**
-
-- Type: `number`
-- Description: Minimum required right to make polls.
+Enabled plugins. Must only define classes exported by `app/server/skychat/commands/impl/index.ts`
 
 
-**maxReplacedImagesPerMessage**
+### Customize ranks
 
-- Type: `number`
-- Description: Max number of replaced images per message, to prevent UI defacing.
-
-
-**maxReplacedStickersPerMessage**
-
-- Type: `number`
-- Description: Max number of replaced stickers per message, to prevent UI defacing.
-
-
-**maxNewlinesPerMessage**
-
-- Type: `number`
-- Description: Max number of newlines images per message, to prevent UI defacing. Additional newlines will be replaced by spaces.
-
-
-**ranks**
-
-- Type: `Array<{limit: number, images: {'18': string, '26': string}}>`
-- Description: Rank definition (xp threshold and image path). Must be sorted by descending limit.
+Rank definition (xp threshold and image path). Must be sorted by descending limit. The fields for each rank are:
   - limit: XP limit to have this rank. The last rank definition must have `0` as the limit, otherwise new users will not have any rank.
   - images: Image path corresponding to the rank icon for each 18 and 26px sizes. Image paths should be relative to `/assets/images/`.
 
 
-**plugins**
-
-- Type: `Array<string>`
-- Description: Enabled plugins. Must only define classes exported by `app/server/skychat/commands/impl/index.ts`
-
-
-## fakemessages.txt
+### Customize the fake message history
 
 This file contains the fake raw messages that are displayed to users whose right level is less than `minRightForMessageHistory` defined in `preferences.json`.
 
-## guestnames.txt
+
+### Customize guest names
 
 When a guest logs in, a random name is associated to its session. These names are randomly used from this file. If you want to change these names, keep in mind that they should not contain whitespace characters (anything matched by \s so newline, tab, space, ..). Default random names are animal names.

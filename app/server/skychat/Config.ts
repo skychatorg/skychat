@@ -11,8 +11,6 @@ export type Preferences = {
     maxReplacedImagesPerMessage: number;
     maxReplacedStickersPerMessage: number;
     maxNewlinesPerMessage: number;
-    ranks: {limit: number, images: {[size: string]: string}}[];
-    plugins: string[];
 }
 
 export type PublicConfig = {
@@ -49,6 +47,10 @@ export class Config {
 
     public static FAKE_MESSAGES: string[] = [];
 
+    public static RANKS: {limit: number, images: {[size: string]: string}}[] = [];
+
+    public static PLUGINS: string[] = [];
+
     public static isOP(identifier: string): boolean {
         return Config.OP.indexOf(identifier.toLowerCase()) >= 0;
     }
@@ -59,12 +61,12 @@ export class Config {
     }
 
     public static getPlugins(): string[] {
-        return Config.PREFERENCES.plugins;
+        return Config.PLUGINS;
     }
 
     public static toClient(): PublicConfig {
         return {
-            ranks: Config.PREFERENCES.ranks,
+            ranks: Config.RANKS,
         }
     }
 
@@ -113,6 +115,14 @@ export class Config {
             console.warn('No fake messages found (fakemessages.txt file is empty). Using a single empty fake message.');
             Config.GUEST_NAMES.push('');
         }
+        // Load plugins
+        Config.PLUGINS = fs.readFileSync('config/plugins.txt').toString().trim().split("\n").map(l => l.trim()).filter(l => l.length > 0);
+        // Load ranks
+        Config.RANKS = JSON.parse(fs.readFileSync('config/ranks.json').toString());
+        if (Config.RANKS.length === 0) {
+            console.warn('No rank defined in config/ranks.json');
+            Config.RANKS.push({limit: 0, images: { "18": "", "26": "" }});
+        }
         // Load preferences.json
         Config.PREFERENCES = JSON.parse(fs.readFileSync('config/preferences.json').toString());
         const keys: string[] = [
@@ -123,9 +133,7 @@ export class Config {
             'minRightForPolls',
             'maxReplacedImagesPerMessage',
             'maxReplacedStickersPerMessage',
-            'maxNewlinesPerMessage',
-            'plugins',
-            'ranks',
+            'maxNewlinesPerMessage'
         ];
         for (const key of keys) {
             if (typeof (Config.PREFERENCES as any)[key] === 'undefined') {

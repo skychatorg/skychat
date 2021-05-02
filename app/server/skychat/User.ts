@@ -36,7 +36,7 @@ export class User {
         plugins: {}
     };
 
-    public static readonly RANK_LIMITS: {limit: number, images: {[size: string]: string}}[] = Config.PREFERENCES.ranks;
+    public static readonly RANK_LIMITS: {limit: number, images: {[size: string]: string}}[] = Config.RANKS;
 
     /**
      * Get the rank image of this user from an xp amount

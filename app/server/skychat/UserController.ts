@@ -19,7 +19,7 @@ export class UserController {
     /**
      * Object containing default storage data for each plugin
      */
-    private static pluginDefaultStorages: {[name: string]: any} = PluginManager.getPluginsDefaultDataStorageValues(Config.PREFERENCES.plugins);
+    private static pluginDefaultStorages: {[name: string]: any} = PluginManager.getPluginsDefaultDataStorageValues(Config.PLUGINS);
 
     /**
      */
