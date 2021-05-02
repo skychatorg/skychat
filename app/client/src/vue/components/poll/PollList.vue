@@ -1,6 +1,8 @@
 <template>
 
-    <div class="polls">
+    <div class="poll-list">
+
+        <h2 class="title" v-show="pollResult || polls.length > 0">Polls</h2>
 
         <div v-if="pollResult">
             <div class="poll">
@@ -78,14 +80,9 @@
 
 <style lang="scss" scoped>
 
-    .polls {
+    .poll-list {
         padding-right: 20px;
-        padding-left: 6px;
         color: white;
-
-        >* {
-            padding-top: 40px;
-        }
 
         .poll {
             width: 100%;

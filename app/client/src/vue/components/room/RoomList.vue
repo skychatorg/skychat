@@ -122,7 +122,7 @@
         }
 
         .room-meta {
-            flex-basis: 85px;
+            flex-basis: 95px;
             margin-top: 10px;
             display: flex;
             flex-direction: row-reverse;

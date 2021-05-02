@@ -16,7 +16,7 @@
                 <!-- left col (room list) -->
                 <section class="left hide-mobile-middle hide-mobile-right scrollbar">
                     <room-list class="left-room-list"></room-list>
-                    <polls></polls>
+                    <poll-list class="mb-2 ml-1"></poll-list>
                     <user-preview class="mb-3 ml-1 mt-1"></user-preview>
                     <quick-actions id="quick-actions"></quick-actions>
                     <div @click="onMobileShowMiddleCol" class="show-mobile" style="text-align: right;">
@@ -131,7 +131,7 @@
             display: flex;
 
             .left {
-                flex-basis: 220px;
+                flex-basis: 250px;
                 width: 0;
                 display: flex;
                 flex-direction: column;

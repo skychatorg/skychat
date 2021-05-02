@@ -73,7 +73,7 @@ export class RoomManagerPlugin extends RoomPlugin {
             default:
                 throw new Error(`Invalid property ${property}`);
         }
-        const message = UserController.createNeutralMessage({ content: `Room property ${property} set to ${value}` });
+        const message = UserController.createNeutralMessage({ id: 0, content: `Room property ${property} set to ${value}` });
         connection.send('message', message.sanitized());
     }
 
@@ -84,13 +84,13 @@ export class RoomManagerPlugin extends RoomPlugin {
             throw new Error('Invalid room id');
         }
         const room = this.room.manager.createRoom(roomId, roomName);
-        const message = UserController.createNeutralMessage({ content: `Room ${room.id} has been created` });
+        const message = UserController.createNeutralMessage({ id: 0, content: `Room ${room.id} has been created` });
         connection.send('message', message.sanitized());
     }
 
     async handleRoomDelete(param: string, connection: Connection): Promise<void> {
         await this.room.manager.deleteRoom(this.room.id);
-        const message = UserController.createNeutralMessage({ content: `Room ${this.room.id} has been deleted` });
+        const message = UserController.createNeutralMessage({ id: 0, content: `Room ${this.room.id} has been deleted` });
         connection.send('message', message.sanitized());
     }
 
@@ -107,7 +107,7 @@ export class RoomManagerPlugin extends RoomPlugin {
                 throw new Error(`Plugin ${pluginName} is already enabled`);
             }
             this.room.enabledPlugins.push(pluginName);
-            const message = UserController.createNeutralMessage({ content: `Plugin ${pluginName} has been enabled` });
+            const message = UserController.createNeutralMessage({ id: 0, content: `Plugin ${pluginName} has been enabled` });
             connection.send('message', message.sanitized());
             return;
         }
@@ -117,7 +117,7 @@ export class RoomManagerPlugin extends RoomPlugin {
             throw new Error(`Unable to disable plugin ${pluginName} because it is not currently enabled in this room`);
         }
         this.room.enabledPlugins = this.room.enabledPlugins.filter(name => name !== pluginName);
-        const message = UserController.createNeutralMessage({ content: `Plugin ${pluginName} has been disabled` });
+        const message = UserController.createNeutralMessage({ id: 0, content: `Plugin ${pluginName} has been disabled` });
         connection.send('message', message.sanitized());
         return;
     }
