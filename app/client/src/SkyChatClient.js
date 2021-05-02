@@ -39,7 +39,6 @@ export class SkyChatClient extends EventEmitter {
         this.on('set-user', this.onSetUser.bind(this));
         this.on('connected-list', this.onConnectedList.bind(this));
         this.on('yt-sync', this.onYtSync.bind(this));
-        this.on('player-lock-room-id', this.onPlayerLockRoomId.bind(this));
         this.on('poll', this.onPoll.bind(this));
         this.on('poll-result', this.onPollResult.bind(this));
         this.on('auth-token', this.onAuthToken.bind(this));
@@ -218,14 +217,6 @@ export class SkyChatClient extends EventEmitter {
     }
 
     /**
-     * Set youtube state
-     * @param {boolean} state
-     */
-    ytSetState(state) {
-        this.sendMessage('/yt ' + (state ? 'on' : 'off'));
-    }
-
-    /**
      * Set cursor state
      * @param state
      */
@@ -377,13 +368,6 @@ export class SkyChatClient extends EventEmitter {
      */
     onYtSync(playerState) {
         this.store.commit('SET_PLAYER_STATE', playerState);
-    }
-
-    /**
-     * 
-     */
-    onPlayerLockRoomId(roomId) {
-        this.store.commit('SET_PLAYER_LOCK_ROOM_ID', roomId);
     }
 
     /**

@@ -1,4 +1,3 @@
-import {Plugin} from "../../Plugin";
 import {Room} from "../../Room";
 import {User} from "../../User";
 import {Session} from "../../Session";
@@ -37,56 +36,53 @@ export class YoutubePlugin extends RoomPlugin {
     /**
      * A list of connections that subscribed to the room where this plugin is instantiated
      */
-    static subscribedConnections: {
-        rooms: {[roomId: number]: Connection[]},
-        connections: Map<Connection, number>,
-    } = {rooms: {}, connections: new Map()};
+    static subscribedSessions: {[roomId: number]: Session[]} = {};
 
-    static getRoomSubscribedConnections(roomId: number): Connection[] {
-        if (typeof YoutubePlugin.subscribedConnections.rooms[roomId] === 'undefined') {
-            YoutubePlugin.subscribedConnections.rooms[roomId] = [];
+    static getRoomSubscribedSessions(roomId: number): Session[] {
+        if (typeof YoutubePlugin.subscribedSessions[roomId] === 'undefined') {
+            YoutubePlugin.subscribedSessions[roomId] = [];
         }
-        return YoutubePlugin.subscribedConnections.rooms[roomId];
+        return YoutubePlugin.subscribedSessions[roomId];
     }
 
-    static subscribeConnectionToRoom(connection: Connection, roomId: number) {
-        const subscribedConnections = YoutubePlugin.getRoomSubscribedConnections(roomId);
-        // Unsubscribe this connection from other rooms
-        const currentlySubscribedRoomId = YoutubePlugin.subscribedConnections.connections.get(connection);
+    static subscribeSessionToRoom(session: Session, roomId: number) {
+        const subscribedSessions = YoutubePlugin.getRoomSubscribedSessions(roomId);
+        // Unsubscribe this user from other rooms
+        const currentlySubscribedRoomId = YoutubePlugin.getSessionSubscribedRoomId(session);
         if (typeof currentlySubscribedRoomId !== 'undefined') {
-            YoutubePlugin.unsubscribeConnection(connection);
+            YoutubePlugin.unsubscribeSession(session);
         }
         // Lock
-        if (subscribedConnections.indexOf(connection) !== -1) {
+        if (subscribedSessions.indexOf(session) !== -1) {
             throw new Error('This room\'s player is already locked');
         }
-        // Add connection/room link to mappings
-        YoutubePlugin.subscribedConnections.connections.set(connection, roomId);
-        subscribedConnections.push(connection);
-        // Notify connection
-        connection.send('player-lock-room-id', roomId);
+        // Add user/room link to mappings
+        subscribedSessions.push(session);
     }
 
-    static unsubscribeConnection(connection: Connection) {
-        const currentlySubscribedRoomId = YoutubePlugin.getConnectionSubscribedRoomId(connection);
+    static unsubscribeSession(session: Session) {
+        const currentlySubscribedRoomId = YoutubePlugin.getSessionSubscribedRoomId(session);
         if (typeof currentlySubscribedRoomId === 'undefined') {
             throw new Error('Can not unlock the room player, it is not locked');
         }
-        // Remove the connection from the connection->room map
-        YoutubePlugin.subscribedConnections.connections.delete(connection);
         // Remove the room from the room->connections map
-        const subscribedConnections = YoutubePlugin.subscribedConnections.rooms[currentlySubscribedRoomId];
-        subscribedConnections.splice(subscribedConnections.indexOf(connection), 1);
-        // Notify connection
-        connection.send('player-lock-room-id', null);
+        const subscribedConnections = YoutubePlugin.getRoomSubscribedSessions(currentlySubscribedRoomId);
+        subscribedConnections.splice(subscribedConnections.indexOf(session), 1);
     }
 
-    static isConnectionSubscribed(connection: Connection): boolean {
-        return YoutubePlugin.subscribedConnections.connections.has(connection);
+    static syncSessionSubscription(session: Session) {
+        const room = YoutubePlugin.getSessionSubscribedRoomId(session);
+        if (typeof room === 'number') {
+            YoutubePlugin.subscribeSessionToRoom(session, room);
+        }
     }
 
-    static getConnectionSubscribedRoomId(connection: Connection): number | undefined {
-        return YoutubePlugin.subscribedConnections.connections.get(connection);
+    static isSessionSubscribed(session: Session): boolean {
+        return typeof UserController.getPluginData(session.user, YoutubePlugin.commandName) !== 'undefined';
+    }
+
+    static getSessionSubscribedRoomId(session: Session): number | undefined {
+        return UserController.getPluginData(session.user, YoutubePlugin.commandName);
     }
 
     readonly rules: {[alias: string]: PluginCommandRules} = {
@@ -94,7 +90,7 @@ export class YoutubePlugin extends RoomPlugin {
             minCount: 1,
             maxCount: 1,
             maxCallsPer10Seconds: 10,
-            params: [{name: 'action', pattern: /^(sync|off|on|replay30|skip30|list|skip|shuffle|flush|lock|unlock)$/}]
+            params: [{name: 'action', pattern: /^(sync|replay30|skip30|list|skip|shuffle|flush|lock|unlock)$/}]
         },
         play: {
             minCount: 1,
@@ -146,17 +142,17 @@ export class YoutubePlugin extends RoomPlugin {
     async run(alias: string, param: string, connection: Connection, session: Session, user: User, room: Room | null): Promise<void> {
 
         // Check whether this connection is subscribed to another room
-        const roomId = YoutubePlugin.getConnectionSubscribedRoomId(connection);
+        const roomId = UserController.getPluginData(connection.session.user, YoutubePlugin.commandName);
         if (typeof roomId === 'number' && roomId !== this.room.id) {
             const room = this.room.manager.getRoomById(roomId);
             // Check that the room still exists (should be the case)
-            if (room) {
+            if (room && room.getPlugin('yt')) {
                 const otherPlugin = room.getPlugin('yt') as YoutubePlugin;
                 await otherPlugin.run(alias, param, connection, session, user, room);
                 return;
             }
         }
-
+        
         switch (alias) {
 
             case 'yt':
@@ -195,14 +191,6 @@ export class YoutubePlugin extends RoomPlugin {
 
             case 'sync':
                 this.autosync([connection]);
-                break;
-
-            case 'on':
-            case 'off':
-                const newState = param === 'on';
-                await UserController.savePluginData(connection.session.user, this.commandName, newState);
-                this.autosync([connection]);
-                connection.session.syncUserData();
                 break;
             
             case 'replay30':
@@ -247,11 +235,22 @@ export class YoutubePlugin extends RoomPlugin {
                 break;
 
             case 'lock':
-                YoutubePlugin.subscribeConnectionToRoom(connection, this.room.id);
+                YoutubePlugin.subscribeSessionToRoom(connection.session, this.room.id);
+                // Update stored value for this user
+                if (connection.session.user.id > 0) {
+                    UserController.savePluginData(connection.session.user, YoutubePlugin.commandName, this.room.id);
+                    connection.session.syncUserData();
+                }
                 break;
             
             case 'unlock':
-                YoutubePlugin.unsubscribeConnection(connection);
+                YoutubePlugin.unsubscribeSession(connection.session);
+                // Update stored value for this user
+                if (connection.session.user.id > 0) {
+                    UserController.savePluginData(connection.session.user, YoutubePlugin.commandName, null);
+                    connection.session.syncUserData();
+                }
+                // Synchronize connection to this room
                 if (connection.roomId !== null) {
                     const room = this.room.manager.getRoomById(connection.roomId);
                     if (room) {
@@ -445,6 +444,7 @@ export class YoutubePlugin extends RoomPlugin {
      * @param connection
      */
     async onConnectionJoinedRoom(connection: Connection): Promise<void> {
+        YoutubePlugin.syncSessionSubscription(connection.session);
         this.autosync([connection]);
     }
 
@@ -452,13 +452,6 @@ export class YoutubePlugin extends RoomPlugin {
      *
      */
     private async tick(): Promise<void> {
-
-        // Cleanup previously subscribed connections
-        const subscribedConnections = YoutubePlugin.getRoomSubscribedConnections(this.room.id);
-        for (const connection of subscribedConnections) {
-            // If the connection is closed, remove the disconnected connection from the list of subscribed connections
-            connection.closed && YoutubePlugin.unsubscribeConnection(connection);
-        }
 
         // If a video is playing currently
         if (this.storage.currentVideo) {
@@ -500,17 +493,19 @@ export class YoutubePlugin extends RoomPlugin {
         
         if (typeof target === 'undefined') {
             // By default, sync room and subscribed connections. Remove duplicates
-            const roomConnections = this.room.connections.filter(connection => ! YoutubePlugin.isConnectionSubscribed(connection));
-            const subscribedConnections = YoutubePlugin.getRoomSubscribedConnections(this.room.id);
-            const connections = roomConnections.concat(subscribedConnections);
-            this.syncConnections(Array.from(new Set(connections)));
+            const roomConnections = this.room.connections.filter(connection => ! YoutubePlugin.isSessionSubscribed(connection.session));
+            this.syncConnections(roomConnections);
+
+            const subscribedSessions = YoutubePlugin.getRoomSubscribedSessions(this.room.id);
+            for (const session of subscribedSessions) {
+                this.syncConnections(session.connections);
+            }
             return;
-        
         }
         
         // If a list of connections is given
         const connections = target.filter(connection => {
-            const roomId = YoutubePlugin.getConnectionSubscribedRoomId(connection);
+            const roomId = YoutubePlugin.getSessionSubscribedRoomId(connection.session);
             return !(typeof roomId === 'number' && roomId !== this.room.id);
         });
         this.syncConnections(connections);
@@ -528,7 +523,6 @@ export class YoutubePlugin extends RoomPlugin {
 
         // Otherwise, build sync object
         const syncObject: SyncPlayerStateObject = {
-            enabled: true, // @TODO remove when the ability to disable the yt player is removed
             user: this.storage.currentVideo.user.sanitized(),
             video: this.storage.currentVideo.video,
             start: this.storage.currentVideo.start,
@@ -544,7 +538,6 @@ export class YoutubePlugin extends RoomPlugin {
         };
         
         for (const connection of connections) {
-            syncObject.enabled = UserController.getPluginData(connection.session.user, this.commandName);
             connection.send('yt-sync', syncObject);
         }
     }

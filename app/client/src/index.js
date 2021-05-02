@@ -18,6 +18,8 @@ Vue.use(VModal, {
     }
 });
 
+store.commit('LOAD_LOCALSTORAGE');
+
 const client = new SkyChatClient(store);
 
 Vue.prototype.$audio = AudioRecorder;

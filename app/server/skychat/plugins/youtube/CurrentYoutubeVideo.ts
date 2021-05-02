@@ -37,11 +37,6 @@ export interface CurrentYoutubeVideo {
 export type SyncPlayerStateObject = {
 
     /**
-     * Whether this connection has the player enabled
-     */
-    enabled: boolean;
-
-    /**
      * User that added the video
      */
     user: SanitizedUser,

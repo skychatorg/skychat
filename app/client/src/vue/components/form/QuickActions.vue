@@ -146,13 +146,13 @@
             getActionText: function(id) {
                 switch (id) {
                     case 'yt-toggle':
-                        return `<i class="material-icons md-16" style="color:${this.user.data.plugins.yt ? '' : 'gray'}">toggle_${this.user.data.plugins.yt ? 'on' : 'off'}</i>`;
+                        return `<i class="material-icons md-16" style="color:${this.playerEnabled ? '' : 'gray'}">toggle_${this.playerEnabled ? 'on' : 'off'}</i>`;
                     case 'cursor-toggle':
                         return `<i class="material-icons md-16" style="color:${this.user.data.plugins.cursor ? '' : 'gray'}">toggle_${this.user.data.plugins.cursor ? 'on' : 'off'}</i>`;
                     case 'yt-queue':
                         return `<b>List</b>`;
                     case 'yt-lock':
-                        return `<i class="material-icons md-16" style="color:${typeof this.playerLockRoomId === 'number' ? '' : 'gray'}">toggle_${typeof this.playerLockRoomId === 'number' ? 'on' : 'off'}</i>`;
+                        return `<i class="material-icons md-16" style="color:${typeof this.user.data.plugins.yt === 'number' ? '' : 'gray'}">toggle_${typeof this.user.data.plugins.yt === 'number' ? 'on' : 'off'}</i>`;
                     case 'yt-play':
                         return `<b>Play</b>`;
                     case 'shop':
@@ -178,13 +178,15 @@
             onActivate: function(id) {
                 switch (id) {
                     case 'yt-toggle':
-                        return this.$client.ytSetState(! this.user.data.plugins.yt);
+                        this.$store.commit('SET_PLAYER_ENABLED', ! this.playerEnabled);
+                        this.$client.ytSync();
+                        return;
                     case 'cursor-toggle':
                         return this.$client.cursorSetState(! this.user.data.plugins.cursor);
                     case 'yt-queue':
                         return this.$client.sendMessage('/yt list');
                     case 'yt-lock':
-                        if (typeof this.playerLockRoomId === 'number') {
+                        if (typeof this.user.data.plugins.yt === 'number') {
                             return this.$client.sendMessage('/yt unlock');
                         } else {
                             return this.$client.sendMessage('/yt lock');
@@ -215,15 +217,15 @@
         },
 
         computed: {
-            playerLockRoomId: function() {
-                return this.$store.state.playerLockRoomId;
-            },
             cinemaMode: function() {
                 return this.$store.state.cinemaMode;
             },
             user: function() {
                 return this.$store.state.user;
-            }
+            },
+            playerEnabled: function() {
+                return this.$store.state.playerEnabled;
+            },
         }
     });
 </script>

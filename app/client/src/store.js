@@ -7,6 +7,9 @@ const DEFAULT_DOCUMENT_TITLE = "~ SkyChat";
 
 const CURSOR_DECAY_DELAY = 5 * 1000; // Must match value from backend
 
+const CURRENT_VERSION = 1;
+const STORE_SAVED_KEYS = ['playerEnabled'];
+
 
 const store = {
     state: {
@@ -17,7 +20,6 @@ const store = {
         mobileCurrentPage: 'middle',
         config: null,
         rooms: [],
-        playerLockRoomId: null,
         cinemaMode: false,
         channel: null,
         connectionState: WebSocket.CLOSED,
@@ -32,6 +34,7 @@ const store = {
                     avatar: "",
                     cursor: true,
                     motto: "",
+                    yt: null,
                 }
             }
         },
@@ -59,12 +62,42 @@ const store = {
         messages: [],
         privateMessages: {},
         playerState: null,
+        playerEnabled: localStorage.getItem('ekip'),
         typingList: [],
         polls: [],
         pollResult: null,
         ytApiSearchResult: {}
     },
     mutations: {
+        LOAD_LOCALSTORAGE(state) {
+            // If local storage not implemented
+            if (! localStorage) {
+                return;
+            }
+            // Load item from local storage
+            const preferences = JSON.parse(localStorage.getItem('preferences')) || {version: 0, values: {}};
+            // If saved local storage is obsolete
+            if (preferences.version !== CURRENT_VERSION) {
+                return;
+            }
+            // Load values from local storage
+            for (const key of STORE_SAVED_KEYS) {
+                if (typeof preferences.values[key] !== 'undefined') {
+                    Vue.set(state, key, preferences.values[key]);
+                }
+            }
+        },
+        SAVE_LOCALSTORAGE(state) {
+            // If local storage not implemented
+            if (! localStorage) {
+                return;
+            }
+            // Save preferences
+            localStorage.setItem('preferences', JSON.stringify({
+                version: CURRENT_VERSION,
+                values: Object.fromEntries(STORE_SAVED_KEYS.map(key => [key, state[key]])),
+            }));
+        },
         FOCUS(state) {
             state.focused = true;
             state.documentTitle = DEFAULT_DOCUMENT_TITLE;
@@ -79,9 +112,6 @@ const store = {
         },
         SET_MOBILE_PAGE(state, mobilePage) {
             state.mobileCurrentPage = mobilePage;
-        },
-        SET_PLAYER_LOCK_ROOM_ID(state, playerLockRoomId) {
-            state.playerLockRoomId = typeof playerLockRoomId === 'number' ? playerLockRoomId : null;
         },
         TOGGLE_CINEMA_MODE(state) {
             state.cinemaMode = ! state.cinemaMode;
@@ -217,10 +247,11 @@ const store = {
             Vue.set(state.messages, oldMessageIndex, message);
         },
         SET_PLAYER_STATE(state, playerState) {
-            if (state.playerLock) {
-                return;
-            }
             state.playerState = playerState;
+        },
+        SET_PLAYER_ENABLED(state, playerEnabled) {
+            state.playerEnabled = playerEnabled;
+            this.commit('SAVE_LOCALSTORAGE');
         },
         SET_POLLS(state, polls) {
             if (polls.length > state.polls.length) {

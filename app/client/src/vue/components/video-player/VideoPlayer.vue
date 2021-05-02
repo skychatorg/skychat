@@ -21,7 +21,7 @@
         },
         watch: {
             playerState: function() {
-                if (! this.playerState || ! this.playerState.enabled) {
+                if (! this.playerState || ! this.playerEnabled) {
                     this.src = '';
                     this.previousPlayedObject = null;
                     return;
@@ -44,7 +44,10 @@
         computed: {
             playerState: function() {
                 return this.$store.state.playerState;
-            }
+            },
+            playerEnabled: function() {
+                return this.$store.state.playerEnabled;
+            },
         }
     });
 </script>
