@@ -35,11 +35,29 @@ export abstract class GlobalPlugin extends Plugin {
     }
 
     /**
+     * When a connection is created
+     * @abstract
+     * @param connection
+     */
+    public async onNewConnection(connection: Connection): Promise<void> {
+
+    }
+
+    /**
      * When a connection successfully authenticated
      * @abstract
      * @param connection
      */
     public async onConnectionAuthenticated(connection: Connection): Promise<void> {
+
+    }
+
+    /**
+     * When a connection was closed
+     * @abstract
+     * @param connection
+     */
+    public async onConnectionClosed(connection: Connection): Promise<void> {
 
     }
 }

@@ -1,6 +1,16 @@
-import {YoutubeVideoMeta} from "./YoutubeVideoMeta";
 import {GoogleApis, youtube_v3} from "googleapis";
 import Youtube = youtube_v3.Youtube;
+
+
+/**
+ * Describe the relevant information of a youtube video (to be sent to the client)
+ */
+ export interface YoutubeVideoMeta {
+    id: string;
+    thumb: string;
+    title: string
+    duration: number;
+}
 
 
 export class YoutubeHelper {

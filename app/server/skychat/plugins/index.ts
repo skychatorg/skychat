@@ -5,4 +5,4 @@ export * from "./moderation";
 export * from "./optional";
 export * from "./poll";
 export * from "./user_defined";
-export * from "./youtube";
+export * from "./player";

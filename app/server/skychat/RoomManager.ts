@@ -273,11 +273,32 @@ export class RoomManager {
      * Execute connection authenticated hook
      * @param connection
      */
-    public async executeConnectionAuthenticated(connection: Connection): Promise<void> {
+    public async executeConnectionAuthenticatedHook(connection: Connection): Promise<void> {
         for (const plugin of this.plugins) {
             await plugin.onConnectionAuthenticated(connection);
         }
     }
+
+    /**
+     * Execute connection authenticated hook
+     * @param connection
+     */
+    public async executeNewConnectionHook(connection: Connection): Promise<void> {
+        for (const plugin of this.plugins) {
+            await plugin.onNewConnection(connection);
+        }
+    }
+
+    /**
+     * Execute connection closed hook
+     * @param connection
+     */
+    public async executeConnectionClosedHook(connection: Connection): Promise<void> {
+        for (const plugin of this.plugins) {
+            await plugin.onConnectionClosed(connection);
+        }
+    }
+    
 
     /**
      * Called each time a new connection is created
@@ -286,6 +307,10 @@ export class RoomManager {
     private async onConnectionCreated(connection: Connection): Promise<void> {
         connection.send('config', Config.toClient());
         connection.send('room-list', this.rooms.map(room => room.sanitized()));
+        this.executeNewConnectionHook(connection);
+        connection.webSocket.on('close', () => {
+            this.executeConnectionClosedHook(connection);
+        });
     }
 
     private async onRegister(payload: any, connection: Connection): Promise<void> {
@@ -344,7 +369,7 @@ export class RoomManager {
         connection.send('auth-token', UserController.getAuthToken(user.id));
         const room = this.rooms[0];
         await room.attachConnection(connection);
-        await this.executeConnectionAuthenticated(connection);
+        await this.executeConnectionAuthenticatedHook(connection);
     }
 
     /**

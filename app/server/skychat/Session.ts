@@ -100,6 +100,15 @@ export class Session implements IBroadcaster {
         }
     }
 
+    /**
+     * Send to everyone
+     * @param event
+     * @param payload
+     */
+    public static send(event: string, payload: any): void {
+        Session.connections.forEach(connection => connection.send(event, payload));
+    }
+
     public static cleanUpInterval = setInterval(Session.cleanUpAllSessions, 5 * 1000);
 
     /**
