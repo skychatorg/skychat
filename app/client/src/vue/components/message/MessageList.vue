@@ -111,9 +111,6 @@
             },
         },
         computed: {
-            playerState: function() {
-                return this.$store.state.playerState;
-            },
             lastMessageSeenIds: function() {
                 return this.$store.state.lastMessageSeenIds;
             }

@@ -333,7 +333,7 @@ export class RoomManager {
     }
 
     private async onJoinRoom(payload: {roomId: number}, connection: Connection): Promise<void> {
-        if (typeof payload.roomId !== 'number' || typeof this.rooms[payload.roomId] !== 'object') {
+        if (typeof payload.roomId !== 'number') {
             throw new Error('Invalid room specified');
         }
         const room = this.getRoomById(payload.roomId);

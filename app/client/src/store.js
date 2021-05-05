@@ -61,12 +61,19 @@ const store = {
         cursors: {},
         messages: [],
         privateMessages: {},
-        playerState: null,
-        playerEnabled: localStorage.getItem('ekip'),
+        playerEnabled: false,
         typingList: [],
         polls: [],
         pollResult: null,
-        ytApiSearchResult: {}
+        
+        playerApiSearchResult: {},
+        playerChannels: [],
+        playerChannel: null,
+        playerState: {
+            current: null,
+            queue: [],
+            cursor: 0,
+        },
     },
     mutations: {
         LOAD_LOCALSTORAGE(state) {
@@ -247,6 +254,7 @@ const store = {
             Vue.set(state.messages, oldMessageIndex, message);
         },
         SET_PLAYER_STATE(state, playerState) {
+            console.log('player state', playerState);
             state.playerState = playerState;
         },
         SET_PLAYER_ENABLED(state, playerEnabled) {
@@ -300,8 +308,16 @@ const store = {
                 rollEndSound.play();
             }
         },
-        SET_YT_API_SEARCH_RESULTS(state, result) {
-            state.ytApiSearchResult = result;
+        SET_PLAYER_API_SEARCH_RESULTS(state, result) {
+            state.playerApiSearchResult = result;
+        },
+
+        SET_PLAYER_CHANNELS(state, channels) {
+            state.playerChannels = channels;
+        },
+
+        SET_PLAYER_CHANNEL(state, channelId) {
+            state.playerChannel = channelId;
         }
     }
 };

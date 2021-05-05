@@ -14,17 +14,17 @@
 
 @for $i from 1 through 10 {
 
-    .mt-#{$i} { margin-top: $i * 10px; }
-    .pt-#{$i} { padding-top: $i * 10px; }
+    .mt-#{$i} { margin-top: $i * 10px !important; }
+    .pt-#{$i} { padding-top: $i * 10px !important; }
 
-    .mb-#{$i} { margin-bottom: $i * 10px; }
-    .pb-#{$i} { padding-bottom: $i * 10px; }
+    .mb-#{$i} { margin-bottom: $i * 10px !important; }
+    .pb-#{$i} { padding-bottom: $i * 10px !important; }
 
-    .mr-#{$i} { margin-right: $i * 10px; }
-    .pr-#{$i} { padding-right: $i * 10px; }
+    .mr-#{$i} { margin-right: $i * 10px !important; }
+    .pr-#{$i} { padding-right: $i * 10px !important; }
 
-    .ml-#{$i} { margin-left: $i * 10px; }
-    .pl-#{$i} { padding-left: $i * 10px; }
+    .ml-#{$i} { margin-left: $i * 10px !important; }
+    .pl-#{$i} { padding-left: $i * 10px !important; }
 }
 
 .mlzero {

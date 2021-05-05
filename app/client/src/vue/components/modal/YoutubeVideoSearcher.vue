@@ -61,20 +61,20 @@
         },
         methods: {
             search: function(search) {
-                this.$client.sendMessage(`/ytapi:search ${this.searchType} ${search}`);
+                this.$client.sendMessage(`/playersearch ${this.searchType} ${search}`);
             },
             play: function(item) {
                 if (this.searchResult.type === 'video') {
-                    this.$client.sendMessage(`/play ${item.id.videoId}`);
+                    this.$client.sendMessage(`/+ ${item.id.videoId}`);
                 } else {
-                    this.$client.sendMessage(`/playpl ${item.id.playlistId}`);
+                    this.$client.sendMessage(`/++ ${item.id.playlistId}`);
                 }
                 this.$emit('close');
             }
         },
         computed: {
             searchResult: function() {
-                return this.$store.state.ytApiSearchResult;
+                return this.$store.state.playerApiSearchResult;
             }
         }
     });

@@ -118,6 +118,7 @@ export class PlayerChannelManager extends EventEmitter {
         // Update mappings and session list
         this.sessionChannels.set(session, channel.id);
         channel.sessions.push(session);
+        channel.syncSession(session);
 
         // Notify all connections of this session that the channel changed
         session.send('player-channel', id);
@@ -141,6 +142,7 @@ export class PlayerChannelManager extends EventEmitter {
         if (channel) { // If channel is not deleted
             channel.sessions.splice(channel.sessions.indexOf(session), 1);
         }
+        session.send('player-sync', {current: null, queue: [], cursor: 0});
 
         // Notify all connections of this session that the channel changed
         session.send('player-channel', null);
@@ -177,7 +179,7 @@ export class PlayerChannelManager extends EventEmitter {
 
     public toString(): string {
         return PlayerChannelManager.name + " (\n" + this.channels.map(channel =>
-            `  #${channel.id}: [${channel.sessions.map(session => session.identifier + '(' + session.connections.length + ')').join(', ')}]`
+            `  #${channel.id}: [${channel.sessions.map(session => session.identifier + '(' + session.connections.length + ')').join(', ')}] [${channel.currentVideoInfo ? channel.currentVideoInfo.video.id : ''}] [${channel.queue.length}]`
         ).join("\n") + "\n)";
     }
 }

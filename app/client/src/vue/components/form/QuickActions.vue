@@ -54,16 +54,16 @@
                         showInNonCinema: true,
                         actions: [
                             {
-                                id: 'yt-toggle',
+                                id: 'player-toggle',
                                 title: "Enable/disable youtube",
                                 icon: 'movie',
                                 shortcuts: ['ctrl+shift+y']
                             },
                             {
-                                id: 'yt-lock',
-                                title: "Lock this room's video player",
-                                icon: 'lock',
-                                shortcuts: ['alt+a']
+                                id: 'cinema-mode',
+                                title: "Toggle cinema mode",
+                                icon: 'tv',
+                                shortcuts: ['alt+enter']
                             },
                         ]
                     },
@@ -79,15 +79,15 @@
                                 shortcuts: ['ctrl+shift+c']
                             },
                             {
-                                id: 'cinema-mode',
-                                title: "Toggle cinema mode",
-                                icon: 'tv',
-                                shortcuts: ['alt+enter']
+                                id: 'racing',
+                                title: "Start a race car game",
+                                icon: 'flag',
+                                shortcuts: ['ctrl+r']
                             },
                         ]
                     },
                     {
-                        name: "Shop",
+                        name: "Misc",
                         showInCinema: false,
                         showInNonCinema: true,
                         actions: [
@@ -145,15 +145,11 @@
         methods: {
             getActionText: function(id) {
                 switch (id) {
-                    case 'yt-toggle':
+                    case 'player-toggle':
                         return `<i class="material-icons md-16" style="color:${this.playerEnabled ? '' : 'gray'}">toggle_${this.playerEnabled ? 'on' : 'off'}</i>`;
                     case 'cursor-toggle':
                         return `<i class="material-icons md-16" style="color:${this.user.data.plugins.cursor ? '' : 'gray'}">toggle_${this.user.data.plugins.cursor ? 'on' : 'off'}</i>`;
-                    case 'yt-queue':
-                        return `<b>List</b>`;
-                    case 'yt-lock':
-                        return `<i class="material-icons md-16" style="color:${typeof this.user.data.plugins.yt === 'number' ? '' : 'gray'}">toggle_${typeof this.user.data.plugins.yt === 'number' ? 'on' : 'off'}</i>`;
-                    case 'yt-play':
+                    case 'player-play':
                         return `<b>Play</b>`;
                     case 'shop':
                         return `<b>Shop</b>`;
@@ -177,21 +173,13 @@
             },
             onActivate: function(id) {
                 switch (id) {
-                    case 'yt-toggle':
+                    case 'player-toggle':
                         this.$store.commit('SET_PLAYER_ENABLED', ! this.playerEnabled);
-                        this.$client.ytSync();
+                        this.$client.playerSync();
                         return;
                     case 'cursor-toggle':
                         return this.$client.cursorSetState(! this.user.data.plugins.cursor);
-                    case 'yt-queue':
-                        return this.$client.sendMessage('/yt list');
-                    case 'yt-lock':
-                        if (typeof this.user.data.plugins.yt === 'number') {
-                            return this.$client.sendMessage('/yt unlock');
-                        } else {
-                            return this.$client.sendMessage('/yt lock');
-                        }
-                    case 'yt-play':
+                    case 'player-play':
                         this.$modal.show(YoutubeVideoSearcher);
                         return;
                     case 'shop':
@@ -281,16 +269,16 @@
                         justify-content: center;
                     }
 
-                    &.action-yt-toggle,
-                    &.action-yt-queue,
-                    &.action-yt-lock,
-                    &.action-yt-play {
+                    &.action-player-toggle,
+                    &.action-cinema-mode,
+                    &.action-player-play {
                         border-left-color: #ff8f8f !important;
                         .icon {
                             color: #ff8f8f;
                         }
                     }
                     &.action-shop,
+                    &.action-help,
                     &.action-shop-pinnedicon,
                     &.action-shop-color,
                     &.action-shop-halo {
@@ -299,15 +287,13 @@
                             color: #9b71b9;
                         }
                     }
-                    &.action-help,
-                    &.action-cinema-mode,
-                    &.action-cursor-toggle {
+                    &.action-cursor-toggle,
+                    &.action-racing {
                         border-left-color: #e0a067 !important;
                         .icon {
                             color: #e0a067;
                         }
                     }
-                    &.action-racing,
                     &.action-guess,
                     &.action-roll {
                         border-left-color: #6ee067 !important;

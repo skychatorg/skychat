@@ -38,7 +38,6 @@ export class SkyChatClient extends EventEmitter {
         this.on('message-seen', this.onMessageSeen.bind(this));
         this.on('set-user', this.onSetUser.bind(this));
         this.on('connected-list', this.onConnectedList.bind(this));
-        this.on('yt-sync', this.onYtSync.bind(this));
         this.on('poll', this.onPoll.bind(this));
         this.on('poll-result', this.onPollResult.bind(this));
         this.on('auth-token', this.onAuthToken.bind(this));
@@ -46,7 +45,11 @@ export class SkyChatClient extends EventEmitter {
         this.on('cursor', this.onCursor.bind(this));
         this.on('error', this.onError.bind(this));
         this.on('roll', this.onRoll.bind(this));
-        this.on('ytapi:search', this.onYtApiSearchResults.bind(this));
+
+        this.on('player-channels', this.onPlayerChannels.bind(this));
+        this.on('player-channel', this.onPlayerChannel.bind(this));
+        this.on('player-search', this.onPlayerApiSearchResults.bind(this));
+        this.on('player-sync', this.onPlayerSync.bind(this));
 
         this.on('pong', this.onPong.bind(this));
         this.on('ping', this.onPing.bind(this));
@@ -212,8 +215,23 @@ export class SkyChatClient extends EventEmitter {
     /**
      * Synchronize the youtube player
      */
-    ytSync() {
-        this.sendMessage('/yt sync');
+    playerSync() {
+        this.sendMessage('/playersync');
+    }
+
+    /**
+     * Leave a player channel
+     */
+    leavePlayerChannel() {
+        this.sendMessage('/playerchannel leave');
+    }
+
+    /**
+     * Join a player channel
+     * @param id
+     */
+    joinPlayerChannel(id) {
+        this.sendMessage('/playerchannel join ' + id);
     }
 
     /**
@@ -366,7 +384,7 @@ export class SkyChatClient extends EventEmitter {
      *
      * @param playerState
      */
-    onYtSync(playerState) {
+    onPlayerSync(playerState) {
         this.store.commit('SET_PLAYER_STATE', playerState);
     }
 
@@ -411,8 +429,16 @@ export class SkyChatClient extends EventEmitter {
     /**
      *
      */
-    onYtApiSearchResults(items) {
-        this.store.commit("SET_YT_API_SEARCH_RESULTS", items);
+    onPlayerApiSearchResults(items) {
+        this.store.commit("SET_PLAYER_API_SEARCH_RESULTS", items);
+    }
+
+    onPlayerChannels(channels) {
+        this.store.commit('SET_PLAYER_CHANNELS', channels);
+    }
+
+    onPlayerChannel(channelId) {
+        this.store.commit('SET_PLAYER_CHANNEL', channelId);
     }
 
     /**

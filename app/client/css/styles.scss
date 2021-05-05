@@ -198,6 +198,11 @@ body .vm--modal {
 .title {
     text-transform: uppercase;
     font-size: 12px;
-    margin-bottom: 4px;
     color: grey;
+    margin-top: 2px;
+    margin-bottom: 2px;
+}
+
+*:not(.selectable) {
+    user-select: none;
 }

@@ -1,16 +1,7 @@
 import {GoogleApis, youtube_v3} from "googleapis";
+import { VideoInfo } from "./PlayerChannel";
 import Youtube = youtube_v3.Youtube;
 
-
-/**
- * Describe the relevant information of a youtube video (to be sent to the client)
- */
- export interface YoutubeVideoMeta {
-    id: string;
-    thumb: string;
-    title: string
-    duration: number;
-}
 
 
 export class YoutubeHelper {
@@ -44,7 +35,7 @@ export class YoutubeHelper {
      * @param youtube
      * @param id
      */
-    public static async getYoutubeVideoMeta(youtube: Youtube, id: string): Promise<YoutubeVideoMeta> {
+    public static async getVideoInfo(youtube: Youtube, id: string): Promise<VideoInfo> {
         // Fetch youtube api
         const result = await youtube.videos.list({
             id: encodeURIComponent(id),
@@ -54,7 +45,7 @@ export class YoutubeHelper {
         });
         // If no result
         if (! result.data.items || result.data.items.length === 0) {
-            throw new Error('Video not found');
+            throw new Error(`Video ${id} not found`);
         }
         // Get item object
         const item = result.data.items[0];
@@ -63,10 +54,10 @@ export class YoutubeHelper {
             throw new Error('Unable to load item info');
         }
         // Get important video data & return it
-        const duration = YoutubeHelper.youtubeDurationToSeconds(item.contentDetails.duration);
+        const duration = YoutubeHelper.youtubeDurationToSeconds(item.contentDetails.duration) * 1000;
         const title = item.snippet.title;
         const thumb = item.snippet.thumbnails.medium.url;
-        return {id, duration, title, thumb};
+        return {type: 'youtube', id, duration, title, thumb, startCursor: 0};
     }
 
     /**
@@ -74,7 +65,7 @@ export class YoutubeHelper {
      * @param youtube
      * @param id
      */
-    public static async getYoutubePlaylistMeta(youtube: Youtube, id: string): Promise<YoutubeVideoMeta[]> {
+    public static async getYoutubePlaylistMeta(youtube: Youtube, id: string): Promise<VideoInfo[]> {
         const result = await youtube.playlistItems.list({part: 'contentDetails', playlistId: id, maxResults: 50});
         if (! result?.data?.items?.length) {
             throw new Error('No result found for ' + id);
@@ -85,7 +76,7 @@ export class YoutubeHelper {
             .map(item => item.contentDetails!.videoId as string);
         const videos = [];
         for (const videoId of videoIds) {
-            videos.push(await YoutubeHelper.getYoutubeVideoMeta(youtube, videoId))
+            videos.push(await YoutubeHelper.getVideoInfo(youtube, videoId))
         }
         return videos;
     }

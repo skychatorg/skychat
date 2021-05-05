@@ -14,11 +14,11 @@ import {google, youtube_v3} from "googleapis";
  */
 export class PlayerPlugin extends GlobalPlugin {
 
-    static readonly MIN_API_RIGHT: number = 10;
+    static readonly MIN_RIGHT: number = 10;
 
     static readonly commandName = 'player';
 
-    static readonly commandAliases = ['playerchannelmanage', 'playerchannel', 'playersearch'];
+    static readonly commandAliases = ['playerchannelmanage', 'playerchannel', 'playersearch', 'playersync', '+', '++'];
 
     static readonly defaultDataStorageValue: { channel: null | number; } = { channel: null };
 
@@ -27,7 +27,19 @@ export class PlayerPlugin extends GlobalPlugin {
             minCount: 1,
             maxCount: 1,
             maxCallsPer10Seconds: 10,
-            params: [{name: 'action', pattern: /^(sync|replay30|skip30|list|skip|flush)$/}]
+            params: [{name: 'action', pattern: /^(replay30|skip30|list|skip|flush)$/}]
+        },
+        '+': {
+            minCount: 1,
+            maxCount: 1,
+            maxCallsPer10Seconds: 10,
+            params: [{name: 'param', pattern: /./}]
+        },
+        '++': {
+            minCount: 1,
+            maxCount: 1,
+            maxCallsPer10Seconds: 10,
+            params: [{name: 'param', pattern: /./}]
         },
         playerchannelmanage: {
             minCount: 1,
@@ -48,10 +60,14 @@ export class PlayerPlugin extends GlobalPlugin {
         },
         playersearch: {
             minCount: 2,
-            maxCount: 2,
             coolDown: 500,
             maxCallsPer10Seconds: 5,
             params: [{name: 'type', pattern: /^(video|playlist)$/}, {name: 'search', pattern: /./}]
+        },
+        playersync: {
+            minCount: 0,
+            maxCount: 0,
+            maxCallsPer10Seconds: 10,
         }
     };
 
@@ -82,9 +98,6 @@ export class PlayerPlugin extends GlobalPlugin {
             this.storage.channels = this.channelManager.sanitized();
             this.syncStorage();
         });
-
-        // Debug
-        setInterval(() => { console.log(this.channelManager.toString()); }, 2 * 1000);
     }
 
     /**
@@ -135,6 +148,18 @@ export class PlayerPlugin extends GlobalPlugin {
                 await this.handlePlayerSearch(param, connection);
                 break;
 
+            case 'playersync':
+                await this.handlePlayerSync(param, connection);
+                break;
+
+            case '+':
+                await this.handlePlayerAddYoutubeVideo(param, connection);
+                break;
+
+            case '++':
+                await this.handlePlayerAddYoutubePlaylist(param, connection);
+                break;
+
             case 'player':
                 await this.handlePlayer(param, connection);
                 break;
@@ -168,19 +193,21 @@ export class PlayerPlugin extends GlobalPlugin {
 
         // Delete a channel
         if (action === 'delete') {
-            const channelId = parseInt(value);
-            this.channelManager.deleteChannel(channelId);
+            const channel = this.channelManager.getSessionChannel(connection.session);
+            if (! channel) {
+                throw new Error('Not in a channel');
+            }
+            this.channelManager.deleteChannel(channel.id);
             return;
         }
 
         // Rename a channel
         if (action === 'rename') {
-            const id = parseInt(value.split(' ')[0]) || null;
-            if (typeof id !== 'number') {
-                throw new Error(`Invalid specified ${id}`);
+            const channel = this.channelManager.getSessionChannel(connection.session);
+            if (! channel) {
+                throw new Error('Not in a channel');
             }
-            const name = value.split(' ').slice(1).join(' ');
-            this.channelManager.renameChannel(id, name);
+            this.channelManager.renameChannel(channel.id, value);
             return;
         }
         
@@ -228,13 +255,75 @@ export class PlayerPlugin extends GlobalPlugin {
      * @returns 
      */
     private async handlePlayerSearch(param: string, connection: Connection) {
-        if (connection.session.user.right < PlayerPlugin.MIN_API_RIGHT) {
+        if (connection.session.user.right < PlayerPlugin.MIN_RIGHT) {
             throw new Error('Unable to perform this action');
         }
         const query = param.split(' ').slice(1).join(' ');
         const type = param.split(' ')[0];
         const items = await YoutubeHelper.searchYoutube(this.youtube, query, type, 10);
         connection.send('player-search', { type, items });
+    }
+
+    /**
+     * Search video/playlists from YT
+     * @param param 
+     * @param connection 
+     * @returns 
+     */
+    private async handlePlayerSync(param: string, connection: Connection) {
+        const channel = this.channelManager.getSessionChannel(connection.session);
+        if (! channel) {
+            return;
+        }
+        channel.syncSession(connection.session);
+    }
+
+    /**
+     * Add a video to the queue
+     * @param param 
+     * @param connection 
+     * @returns 
+     */
+    private async handlePlayerAddYoutubeVideo(param: string, connection: Connection) {
+        if (connection.session.user.right < PlayerPlugin.MIN_RIGHT) {
+            throw new Error('Unable to perform this action');
+        }
+        const channel = this.channelManager.getSessionChannel(connection.session);
+        if (! channel) {
+            throw new Error('Join a channel to add videos');
+        }
+        
+        const {videoId, start} = YoutubeHelper.parseYoutubeLink(param);
+        
+        // Get information about the yt link
+        const video = await YoutubeHelper.getVideoInfo(this.youtube, videoId);
+        video.startCursor = start * 1000;
+        channel.add(video, connection.session.user);
+    }
+
+    /**
+     * Add an entire playlist to the queue
+     * @param param 
+     * @param connection 
+     * @returns 
+     */
+    private async handlePlayerAddYoutubePlaylist(param: string, connection: Connection) {
+        if (connection.session.user.right < PlayerPlugin.MIN_RIGHT) {
+            throw new Error('Unable to perform this action');
+        }
+        const channel = this.channelManager.getSessionChannel(connection.session);
+        if (! channel) {
+            throw new Error('Join a channel to add videos');
+        }
+        
+        let {playlistId} = YoutubeHelper.parseYoutubeLink(param);
+        
+        // Adding a playlist
+        if (! playlistId) {
+            playlistId = param;
+        }
+        const videos = await YoutubeHelper.getYoutubePlaylistMeta(this.youtube, playlistId);
+        channel.add(videos, connection.session.user);
     }
 
     /**
@@ -252,10 +341,6 @@ export class PlayerPlugin extends GlobalPlugin {
 
         switch (param) {
 
-            case 'sync':
-                channel.syncSession(connection.session);
-                break;
-            
             case 'replay30':
                 channel.moveCursor(- 30 * 1000);
                 break;
