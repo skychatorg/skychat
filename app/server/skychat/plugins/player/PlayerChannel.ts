@@ -186,6 +186,7 @@ export class PlayerChannel {
         for (const session of this.sessions) {
             session.send('player-sync', data);
         }
+        this.manager.sync();
     }
 
     /**
@@ -199,7 +200,11 @@ export class PlayerChannel {
     /**
      * What will be sent to the client
      */
-    public sanitized(): {id: number, name: string} {
-        return { id: this.id, name: this.name, };
+    public sanitized(): {id: number, name: string, playing: boolean} {
+        return {
+            id: this.id,
+            name: this.name,
+            playing: this.isPlaying(),
+        };
     }
 }

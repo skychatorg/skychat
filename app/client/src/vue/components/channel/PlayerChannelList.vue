@@ -16,7 +16,8 @@
                 </div>
                 <div class="channel-meta">
                     <!-- show if there is a video currently playing -->
-                    <div class="channel-player mr-1"
+                    <div v-show="channel.playing"
+                        class="channel-player mr-1"
                         :class="{ 'disabled': playerChannel !== channel.id }"
                         title="Player state">
                         <i class="material-icons md-14">movie</i>
