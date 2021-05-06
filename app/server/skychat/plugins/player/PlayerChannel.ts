@@ -14,37 +14,44 @@ export type VideoInfo = {
     /**
      * Video type (currently only youtube supported)
      */
-        type: 'youtube';
+    type: 'youtube';
 
-        /**
-         * Video data (for youtube, video id)
-         */
-        id: string;
+    /**
+     * Video data (for youtube, video id)
+     */
+    id: string;
 
-        /**
-         * Duration in ms
-         */
-        duration: number;
+    /**
+     * Duration in ms
+     */
+    duration: number;
 
-        /**
-         * Video start time if video has started
-         */
-        startTime?: number;
+    /**
+     * Video start time if video has started
+     */
+    startTime?: number;
 
-        /**
-         * The video should skip this specified amount of ms
-         */
-        startCursor: number;
+    /**
+     * The video should skip this specified amount of ms
+     */
+    startCursor: number;
 
-        /**
-         * Video title
-         */
-        title: string;
+    /**
+     * Video title
+     */
+    title: string;
 
-        /**
-         * Video thumbnail image
-         */
-        thumb?: string;
+    /**
+     * Video thumbnail image
+     */
+    thumb?: string;
+}
+
+
+export type SanitizedPlayerChannel = {
+    id: number;
+    name: string;
+    playing: boolean;
 }
 
 
@@ -103,6 +110,16 @@ export class PlayerChannel {
     }
 
     /**
+     * Get current cursor in ms
+     */
+    public getCursor(): number {
+        if (this.currentVideoInfo && this.currentVideoInfo.video.startTime) {
+            return new Date().getTime() - this.currentVideoInfo.video.startTime;
+        }
+        return 0;
+    }
+
+    /**
      * Arm or re-arm the function that will play the next video (if available)
      */
     public armPlayNextTimeout() {
@@ -111,12 +128,12 @@ export class PlayerChannel {
         }
         // If currently off, but there is a next video to play
         if (! this.currentVideoInfo) {
-            // Play it
-            this.playNext();
+            // Play it on next tick
+            this.playNextTimeout = setTimeout(this.playNext.bind(this), 0);
             return;
         }
         // If currently playing a video, arm the timeout to end the video at the end of it
-        const duration = this.currentVideoInfo.video.duration + 2 * 1000; // Add 2 seconds of margin before the next video
+        const duration = this.currentVideoInfo.video.duration - this.getCursor() + 2 * 1000; // Add 2 seconds of margin before the next video
         this.playNextTimeout = setTimeout(this.playNext.bind(this), duration);
     }
 
@@ -129,6 +146,7 @@ export class PlayerChannel {
             throw new Error('No video playing currently');
         }
         this.currentVideoInfo.video.startTime -= delta;
+        this.armPlayNextTimeout();
         this.sync();
     }
 
@@ -160,6 +178,7 @@ export class PlayerChannel {
                 video,
             });
         }
+        this.sync();
         this.armPlayNextTimeout();
     }
 
@@ -167,14 +186,10 @@ export class PlayerChannel {
      * 
      */
     public getPlayerData() {
-        let cursor = 0;
-        if (this.currentVideoInfo && this.currentVideoInfo.video.startTime) {
-            cursor = new Date().getTime() - this.currentVideoInfo.video.startTime;
-        }
         return {
             current: this.currentVideoInfo,
             queue: this.queue,
-            cursor,
+            cursor: this.getCursor(),
         };
     }
 
@@ -200,7 +215,7 @@ export class PlayerChannel {
     /**
      * What will be sent to the client
      */
-    public sanitized(): {id: number, name: string, playing: boolean} {
+    public sanitized(): SanitizedPlayerChannel {
         return {
             id: this.id,
             name: this.name,

@@ -4,7 +4,7 @@
             'selected': selected,
             'highlighted': highlighted,
         }">
-        <div class="hover-card-border" :style="{'border-color': borderColor}"></div>
+        <div class="hover-card-border" :style="{'background-color': borderColor}"></div>
         <div class="hover-card-content">
             <slot></slot>
         </div>

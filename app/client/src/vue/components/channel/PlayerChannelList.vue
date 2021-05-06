@@ -5,7 +5,7 @@
         <hover-card v-for="channel in playerChannels"
             :key="channel.id"
             :selected="playerChannel === channel.id"
-            :border-color="'#9b71b9'"
+            :border-color="'rgb(255, 130, 130)'"
             class="channel"
             @click.native="joinChannel(channel.id)"
         >
@@ -21,6 +21,13 @@
                         :class="{ 'disabled': playerChannel !== channel.id }"
                         title="Player state">
                         <i class="material-icons md-14">movie</i>
+                    </div>
+                    <!-- connected users -->
+                    <div v-if="playerChannelUsers[channel.id] && playerChannelUsers[channel.id].length > 0"
+                        class="channel-users mr-1"
+                        title="Users in this channel">
+                        <i class="material-icons md-14">{{playerChannelUsers[channel.id].length > 1 ? 'group' : 'person'}}</i>
+                        <span>{{ playerChannelUsers[channel.id].length }}</span>
                     </div>
                 </div>
             </div>
@@ -45,6 +52,9 @@
             },
         },
         computed: {
+            playerChannelUsers: function() {
+                return this.$store.state.playerChannelUsers;
+            },
             playerChannels: function() {
                 return this.$store.state.playerChannels;
             },
@@ -115,6 +125,11 @@
 
                 .channel-player.disabled {
                     color: #8c8c8c;
+                }
+
+                .channel-users {
+                    color: #8ecfff;
+                    span { vertical-align: top; }
                 }
             }
         }

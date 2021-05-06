@@ -1,11 +1,9 @@
-import { Session } from "../../Session";
 import { Config } from "../../Config";
 import { Connection } from "../../Connection";
 import { GlobalPlugin } from "../../GlobalPlugin";
 import { RoomManager } from "../../RoomManager";
 import { PlayerChannelManager } from "./PlayerChannelManager";
-import { YoutubeHelper } from "./YoutubeHelper";
-import {google, youtube_v3} from "googleapis";
+import { YoutubeFetcher } from "./fetcher/YoutubeFetcher";
 
 
 
@@ -16,9 +14,18 @@ export class PlayerPlugin extends GlobalPlugin {
 
     static readonly MIN_RIGHT: number = 10;
 
+    static readonly FETCHERS: {[fetcherName: string]: YoutubeFetcher} = {
+        'yt': new YoutubeFetcher(),
+    };
+
     static readonly commandName = 'player';
 
-    static readonly commandAliases = ['playerchannelmanage', 'playerchannel', 'playersearch', 'playersync', '+', '++'];
+    static readonly commandAliases = [
+        'playerchannelmanage',
+        'playerchannel',
+        'playersync',
+        'playersearch'
+    ].concat(Object.keys(PlayerPlugin.FETCHERS));
 
     static readonly defaultDataStorageValue: { channel: null | number; } = { channel: null };
 
@@ -28,18 +35,6 @@ export class PlayerPlugin extends GlobalPlugin {
             maxCount: 1,
             maxCallsPer10Seconds: 10,
             params: [{name: 'action', pattern: /^(replay30|skip30|list|skip|flush)$/}]
-        },
-        '+': {
-            minCount: 1,
-            maxCount: 1,
-            maxCallsPer10Seconds: 10,
-            params: [{name: 'param', pattern: /./}]
-        },
-        '++': {
-            minCount: 1,
-            maxCount: 1,
-            maxCallsPer10Seconds: 10,
-            params: [{name: 'param', pattern: /./}]
         },
         playerchannelmanage: {
             minCount: 1,
@@ -58,17 +53,30 @@ export class PlayerPlugin extends GlobalPlugin {
                 {name: 'id', pattern: /^([0-9]+)$/},
             ]
         },
-        playersearch: {
-            minCount: 2,
-            coolDown: 500,
-            maxCallsPer10Seconds: 5,
-            params: [{name: 'type', pattern: /^(video|playlist)$/}, {name: 'search', pattern: /./}]
-        },
         playersync: {
             minCount: 0,
             maxCount: 0,
             maxCallsPer10Seconds: 10,
-        }
+        },
+        playersearch: {
+            minCount: 2,
+            coolDown: 500,
+            maxCallsPer10Seconds: 5,
+            params: [
+                {name: 'param', pattern: new RegExp(`^${Object.keys(PlayerPlugin.FETCHERS).join('|')}$`)},
+                {name: 'type', pattern: /./},
+                {name: 'search', pattern: /./},
+            ]
+        },
+        ... Object.fromEntries(Object.keys(PlayerPlugin.FETCHERS).map(fetcherName => {
+            return [fetcherName, {
+                minCount: 1,
+                maxCallsPer10Seconds: 10,
+                params: [
+                    {name: 'action', pattern: /./},
+                ]
+            }];
+        }))
     };
 
     protected storage: { channels: {id: number; name: string}[] } = {
@@ -77,13 +85,8 @@ export class PlayerPlugin extends GlobalPlugin {
 
     public readonly channelManager: PlayerChannelManager;
 
-    private readonly youtube: youtube_v3.Youtube;
-
     constructor(manager: RoomManager) {
         super(manager);
-
-        // Youtube API object
-        this.youtube = google.youtube({version: 'v3', auth: Config.YOUTUBE_API_KEY});
 
         // Rebuild channels from storage
         this.loadStorage();
@@ -134,34 +137,32 @@ export class PlayerPlugin extends GlobalPlugin {
      */
     public async run(alias: string, param: string, connection: Connection) {
 
+        // If using a fetcher alias to play a video
+        if (typeof PlayerPlugin.FETCHERS[alias] !== 'undefined') {
+            await this.handlePlayerFetch(alias, param, connection);
+            return;
+        }
+
         switch (alias) {
 
-            case 'playerchannelmanage':
-                await this.handlePlayerChannelManage(param, connection);
+            case 'player':
+                await this.handlePlayer(param, connection);
                 break;
 
             case 'playerchannel':
                 await this.handlePlayerChannel(param, connection);
                 break;
 
-            case 'playersearch':
-                await this.handlePlayerSearch(param, connection);
+            case 'playerchannelmanage':
+                await this.handlePlayerChannelManage(param, connection);
                 break;
 
             case 'playersync':
                 await this.handlePlayerSync(param, connection);
                 break;
 
-            case '+':
-                await this.handlePlayerAddYoutubeVideo(param, connection);
-                break;
-
-            case '++':
-                await this.handlePlayerAddYoutubePlaylist(param, connection);
-                break;
-
-            case 'player':
-                await this.handlePlayer(param, connection);
+            case 'playersearch':
+                await this.handlePlayerSearch(param, connection);
                 break;
             
             default:
@@ -254,22 +255,6 @@ export class PlayerPlugin extends GlobalPlugin {
      * @param connection 
      * @returns 
      */
-    private async handlePlayerSearch(param: string, connection: Connection) {
-        if (connection.session.user.right < PlayerPlugin.MIN_RIGHT) {
-            throw new Error('Unable to perform this action');
-        }
-        const query = param.split(' ').slice(1).join(' ');
-        const type = param.split(' ')[0];
-        const items = await YoutubeHelper.searchYoutube(this.youtube, query, type, 10);
-        connection.send('player-search', { type, items });
-    }
-
-    /**
-     * Search video/playlists from YT
-     * @param param 
-     * @param connection 
-     * @returns 
-     */
     private async handlePlayerSync(param: string, connection: Connection) {
         const channel = this.channelManager.getSessionChannel(connection.session);
         if (! channel) {
@@ -279,12 +264,33 @@ export class PlayerPlugin extends GlobalPlugin {
     }
 
     /**
+     * Search video/playlists from YT
+     * @param param 
+     * @param connection 
+     * @returns 
+     */
+    private async handlePlayerSearch(param: string, connection: Connection) {
+        if (connection.session.user.right < PlayerPlugin.MIN_RIGHT) {
+            throw new Error('Unable to perform this action');
+        }
+        const fetcherName = param.split(' ')[0];
+        if (typeof PlayerPlugin.FETCHERS[fetcherName] === 'undefined') {
+            throw new Error('Invalid fetcher specified');
+        }
+        const fetcher = PlayerPlugin.FETCHERS[fetcherName];
+        const type = param.split(' ')[1];
+        const search = param.substr(fetcherName.length + 1 + type.length + 1);
+        const items = await fetcher.search(type, search);
+        connection.send('player-search', { type, items }); // @TODO
+    }
+
+    /**
      * Add a video to the queue
      * @param param 
      * @param connection 
      * @returns 
      */
-    private async handlePlayerAddYoutubeVideo(param: string, connection: Connection) {
+    private async handlePlayerFetch(fetcherName: string, param: string, connection: Connection) {
         if (connection.session.user.right < PlayerPlugin.MIN_RIGHT) {
             throw new Error('Unable to perform this action');
         }
@@ -292,38 +298,15 @@ export class PlayerPlugin extends GlobalPlugin {
         if (! channel) {
             throw new Error('Join a channel to add videos');
         }
-        
-        const {videoId, start} = YoutubeHelper.parseYoutubeLink(param);
-        
-        // Get information about the yt link
-        const video = await YoutubeHelper.getVideoInfo(this.youtube, videoId);
-        video.startCursor = start * 1000;
-        channel.add(video, connection.session.user);
-    }
-
-    /**
-     * Add an entire playlist to the queue
-     * @param param 
-     * @param connection 
-     * @returns 
-     */
-    private async handlePlayerAddYoutubePlaylist(param: string, connection: Connection) {
-        if (connection.session.user.right < PlayerPlugin.MIN_RIGHT) {
-            throw new Error('Unable to perform this action');
+        if (typeof PlayerPlugin.FETCHERS[fetcherName] === 'undefined') {
+            throw new Error('Invalid fetcher specified');
         }
-        const channel = this.channelManager.getSessionChannel(connection.session);
-        if (! channel) {
-            throw new Error('Join a channel to add videos');
+        const fetcher = PlayerPlugin.FETCHERS[fetcherName];
+        const items = await fetcher.fetch(param);
+        if (items.length === 0) {
+            throw new Error('Unable to fetch items');
         }
-        
-        let {playlistId} = YoutubeHelper.parseYoutubeLink(param);
-        
-        // Adding a playlist
-        if (! playlistId) {
-            playlistId = param;
-        }
-        const videos = await YoutubeHelper.getYoutubePlaylistMeta(this.youtube, playlistId);
-        channel.add(videos, connection.session.user);
+        channel.add(items, connection.session.user);
     }
 
     /**

@@ -16,7 +16,7 @@ export type SanitizedSession = {
 
     user: SanitizedUser;
 
-    rooms: (SanitizedRoom | null)[];
+    rooms: number[];
 }
 
 /**
@@ -239,7 +239,7 @@ export class Session implements IBroadcaster {
         return {
             identifier: this.identifier,
             connectionCount: this.connections.length,
-            rooms: Array.from(new Set(this.connections.map(c => c.room ? c.room : null))).map(room => room ? room.sanitized() : null),
+            rooms: Array.from(new Set(this.connections.filter(c => c.room).map(c => c.room!.id))),
             deadSinceTime: this.deadSince ? this.deadSince.getTime() * 0.001 : undefined,
             lastMessageTime: this.lastMessageDate.getTime() * 0.001,
             user: this.user.sanitized()

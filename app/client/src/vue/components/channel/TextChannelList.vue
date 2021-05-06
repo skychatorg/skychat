@@ -6,7 +6,7 @@
             :key="room.id"
             :selected="currentRoom === room.id"
             :highlighted="user.id > 0 && (user.data.plugins.lastseen[room.id] || 0) < room.lastReceivedMessageId && currentRoom !== room.id"
-            :border-color="'#9b71b9'"
+            :border-color="'#afafaf'"
             class="room"
             @click.native="joinRoom(room.id)"
         >
@@ -16,11 +16,11 @@
                     <b>{{room.name}}</b>
                 </div>
                 <div class="room-meta">
-                    <div v-show="roomConnectedCounts[room.id]"
+                    <div v-if="roomConnectedUsers[room.id] && roomConnectedUsers[room.id].length > 0"
                         class="room-users mr-1"
                         title="Users in this room">
-                        <i class="material-icons md-14">{{roomConnectedCounts[room.id] > 1 ? 'group' : 'person'}}</i>
-                        <span>{{ roomConnectedCounts[room.id] }}</span>
+                        <i class="material-icons md-14">{{roomConnectedUsers[room.id].length > 1 ? 'group' : 'person'}}</i>
+                        <span>{{ roomConnectedUsers[room.id].length }}</span>
                     </div>
                 </div>
             </div>
@@ -47,8 +47,8 @@
             currentRoom: function() {
                 return this.$store.state.currentRoom;
             },
-            roomConnectedCounts: function() {
-                return this.$store.state.roomConnectedCounts;
+            roomConnectedUsers: function() {
+                return this.$store.state.roomConnectedUsers;
             },
             user: function() {
                 return this.$store.state.user;

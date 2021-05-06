@@ -48,10 +48,16 @@ const store = {
         lastMessageSeenIds: {},
 
         /**
-         * Mapping from room ids to number of connected within.
+         * Mapping from room ids to users connected to this room.
          * Generated from the list of connected users.
          */
-        roomConnectedCounts: {},
+        roomConnectedUsers: {},
+
+        /**
+         * Mapping from player channel ids to users connected to this channel.
+         * Generated from the list of connected users.
+         */
+        playerChannelUsers: {},
 
         /**
          * Last message missed because the windows was not focused, if any
@@ -192,16 +198,29 @@ const store = {
             state.lastMessageSeenIds = lastSeen;
         },
         GENERATE_ROOM_CONNECTED_COUNTS(state) {
-            const roomConnectedCounts = {};
+            const roomConnectedUsers = {};
+            const playerChannelUsers = {};
             for (const entry of state.connectedList) {
-                for (const room of entry.rooms) {
-                    if (! room) {
-                        continue;
+
+                // Update room entries
+                for (const roomId of entry.rooms) {
+                    if (typeof roomConnectedUsers[roomId] === 'undefined') {
+                        roomConnectedUsers[roomId] = [];
                     }
-                    roomConnectedCounts[room.id] = (roomConnectedCounts[room.id] || 0) + 1;
+                    roomConnectedUsers[roomId].push(entry.user);
+                }
+
+                // Update player channel entries
+                const playerChannelId = entry.user.data.plugins.player;
+                if (playerChannelId !== null) {
+                    if (typeof playerChannelUsers[playerChannelId] === 'undefined') {
+                        playerChannelUsers[playerChannelId] = [];
+                    }
+                    playerChannelUsers[playerChannelId].push(entry.user);
                 }
             }
-            state.roomConnectedCounts = roomConnectedCounts;
+            state.roomConnectedUsers = roomConnectedUsers;
+            state.playerChannelUsers = playerChannelUsers;
         },
         NEW_MESSAGE(state, message) {
             state.messages.push(message);
@@ -254,7 +273,6 @@ const store = {
             Vue.set(state.messages, oldMessageIndex, message);
         },
         SET_PLAYER_STATE(state, playerState) {
-            console.log('player state', playerState);
             state.playerState = playerState;
         },
         SET_PLAYER_ENABLED(state, playerEnabled) {

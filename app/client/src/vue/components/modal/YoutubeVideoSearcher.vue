@@ -16,19 +16,19 @@
 
             <!-- 1 item -->
             <div v-for="item in searchResult.items"
-                 :key="item.etag"
+                 :key="item.id"
                  @click="play(item)"
                  class="search-item">
 
                 <!-- thumb -->
                 <div class="thumb">
-                    <img :src="item.snippet.thumbnails.default.url">
+                    <img :src="item.thumb">
                 </div>
 
                 <!-- informations -->
                 <div class="info">
-                    <div class="title">{{item.snippet.title}}</div>
-                    <div class="description">{{item.snippet.description}}</div>
+                    <div class="title">{{item.title}}</div>
+                    <div class="description"></div>
                 </div>
             </div>
         </div>
@@ -61,13 +61,13 @@
         },
         methods: {
             search: function(search) {
-                this.$client.sendMessage(`/playersearch ${this.searchType} ${search}`);
+                this.$client.sendMessage(`/playersearch yt ${this.searchType} ${search}`);
             },
             play: function(item) {
                 if (this.searchResult.type === 'video') {
-                    this.$client.sendMessage(`/+ ${item.id.videoId}`);
+                    this.$client.sendMessage(`/yt ${item.id} video`);
                 } else {
-                    this.$client.sendMessage(`/++ ${item.id.playlistId}`);
+                    this.$client.sendMessage(`/yt ${item.id} playlist`);
                 }
                 this.$emit('close');
             }
