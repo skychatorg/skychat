@@ -12,10 +12,10 @@
                 <div class="progress-bar progress-bar-right" :class="'custom-color-' + progressBarColor" :style="{'height': (100 * cursorPercent) + '%'}"></div>
 
                 <!-- image preview -->
-                <img class="preview-thumb" v-if="playerState" :src="playerState.video.thumb">
+                <img class="preview-thumb" v-if="playerState.current" :src="playerState.current.video.thumb">
     
                 <!-- title -->
-                <div class="preview-title" v-if="playerState">{{playerState.video.title}}</div>
+                <div class="preview-title" v-if="playerState.current">{{playerState.current.video.title}}</div>
 
                 <!-- sliding window that closes over the image -->
                 <div class="sliding-window top" :class="{['custom-color-' + progressBarColor]: true, 'closed': cursorPercent >= 1}"></div>
@@ -27,7 +27,7 @@
 
                 <!-- youtube queue -->
                 <div class="queue scrollbar">
-                    <div v-for="video, videoIndex in nextVideos"
+                    <div v-for="video, videoIndex in nextQueuedEntries"
                         class="video-in-queue"
                         :key="video.video.id"
                         :title="video.video.title + ': added by ' + video.user.username">
@@ -61,7 +61,7 @@
                         class="preview-action">
                         <i class="material-icons md-14">forward_30</i>
                     </div>
-                    <div v-show="playerState"
+                    <div v-show="playerState.current"
                         @click="ytSkip"
                         title="Skip video"
                         class="preview-action">
@@ -96,12 +96,12 @@
             this.updateCurrentDuration();
             this.updateQueueWaitDurations();
             this.updateProgressBarColor();
-            setInterval(this.updateCurrentDuration, 2000);
-            setInterval(this.updateQueueWaitDurations, 2000);
-            setInterval(this.updateProgressBarColor, 6 * 1000);
+            setInterval(this.updateCurrentDuration.bind(this), 2000);
+            setInterval(this.updateQueueWaitDurations.bind(this), 2000);
+            setInterval(this.updateProgressBarColor.bind(this), 6 * 1000);
         },
         watch: {
-            'nextVideos': {
+            'nextQueuedEntries': {
                 deep: true,
                 handler: function() {
                     this.updateQueueWaitDurations();
@@ -111,33 +111,33 @@
         methods: {
             updateQueueWaitDurations: function() {
                 let waitDuration = 0;
-                if (this.playerState && this.playerState.video) {
-                    waitDuration += this.playerState.video.duration - (new Date().getTime() / 1000 - this.playerState.startedDate);
+                if (this.playerState.current) {
+                    waitDuration += this.playerState.current.video.duration - (new Date().getTime() - this.playerState.current.video.startTime);
                 }
                 let waitDurations = [];
-                for (const video of this.nextVideos) {
+                for (const entry of this.nextQueuedEntries) {
                     waitDurations.push(waitDuration);
-                    waitDuration += video.video.duration - video.start;
+                    waitDuration += entry.video.duration - entry.video.startCursor;
                 }
                 waitDurations = waitDurations.map(duration => Math.max(0, duration / waitDuration));
                 this.queueWaitDurations = waitDurations;
             },
             updateCurrentDuration: function() {
-                if (! this.playerState) {
+                if (! this.playerState.current) {
                     this.cursorPercent = 1.;
                     return;
                 }
-                if (this.playerState.video.duration === 0) {
+                if (this.playerState.current.video.duration === 0) {
                     this.cursorPercent = 0;
                     return;
                 }
-                let pct = (new Date().getTime() / 1000 - this.playerState.startedDate + this.playerState.start) / this.playerState.video.duration;
+                let pct = (new Date().getTime() - this.playerState.current.video.startTime + this.playerState.current.video.startCursor) / this.playerState.current.video.duration;
                 pct = Math.max(0, pct);
                 pct = Math.min(1, pct);
                 this.cursorPercent = pct;
             },
             updateProgressBarColor: function() {
-                if (! this.playerState) {
+                if (! this.playerState.current) {
                     this.progressBarColor = '000000';
                     return;
                 }
@@ -147,19 +147,19 @@
                 this.progressBarColor = colors[newIndex];
             },
             ytReplay30: function() {
-                this.$client.sendMessage('/yt replay30');
+                this.$client.sendMessage('/player replay30');
             },
             ytSkip30: function() {
-                this.$client.sendMessage('/yt skip30');
+                this.$client.sendMessage('/player skip30');
             },
             ytSkip: function() {
-                this.$client.sendMessage('/yt skip');
+                this.$client.sendMessage('/player skip');
             },
             ytAdd: function() {
                 this.$modal.show(YoutubeVideoSearcher);
             },
             canHandlePlayer: function() {
-                return this.playerState && this.user && this.user.id === this.playerState.user.id;
+                return this.playerState.current && this.user && this.user.id === this.playerState.current.user.id;
             },
         },
         computed: {
@@ -169,12 +169,8 @@
             playerState: function() {
                 return this.$store.state.playerState;
             },
-            nextVideos: function() {
-                if (this.playerState) {
-                    return this.playerState.queue.slice(0, 30);
-                } else {
-                    return [];
-                }
+            nextQueuedEntries: function() {
+                return this.playerState.queue.slice(0, 30);
             }
         }
     });

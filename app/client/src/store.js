@@ -7,6 +7,9 @@ const DEFAULT_DOCUMENT_TITLE = "~ SkyChat";
 
 const CURSOR_DECAY_DELAY = 5 * 1000; // Must match value from backend
 
+const CURRENT_VERSION = 1;
+const STORE_SAVED_KEYS = ['playerEnabled'];
+
 
 const store = {
     state: {
@@ -17,7 +20,6 @@ const store = {
         mobileCurrentPage: 'middle',
         config: null,
         rooms: [],
-        playerLockRoomId: null,
         cinemaMode: false,
         channel: null,
         connectionState: WebSocket.CLOSED,
@@ -32,6 +34,7 @@ const store = {
                     avatar: "",
                     cursor: true,
                     motto: "",
+                    yt: null,
                 }
             }
         },
@@ -45,10 +48,16 @@ const store = {
         lastMessageSeenIds: {},
 
         /**
-         * Mapping from room ids to number of connected within.
+         * Mapping from room ids to users connected to this room.
          * Generated from the list of connected users.
          */
-        roomConnectedCounts: {},
+        roomConnectedUsers: {},
+
+        /**
+         * Mapping from player channel ids to users connected to this channel.
+         * Generated from the list of connected users.
+         */
+        playerChannelUsers: {},
 
         /**
          * Last message missed because the windows was not focused, if any
@@ -58,13 +67,50 @@ const store = {
         cursors: {},
         messages: [],
         privateMessages: {},
-        playerState: null,
+        playerEnabled: false,
         typingList: [],
         polls: [],
         pollResult: null,
-        ytApiSearchResult: {}
+        
+        playerApiSearchResult: {},
+        playerChannels: [],
+        playerChannel: null,
+        playerState: {
+            current: null,
+            queue: [],
+            cursor: 0,
+        },
     },
     mutations: {
+        LOAD_LOCALSTORAGE(state) {
+            // If local storage not implemented
+            if (! localStorage) {
+                return;
+            }
+            // Load item from local storage
+            const preferences = JSON.parse(localStorage.getItem('preferences')) || {version: 0, values: {}};
+            // If saved local storage is obsolete
+            if (preferences.version !== CURRENT_VERSION) {
+                return;
+            }
+            // Load values from local storage
+            for (const key of STORE_SAVED_KEYS) {
+                if (typeof preferences.values[key] !== 'undefined') {
+                    Vue.set(state, key, preferences.values[key]);
+                }
+            }
+        },
+        SAVE_LOCALSTORAGE(state) {
+            // If local storage not implemented
+            if (! localStorage) {
+                return;
+            }
+            // Save preferences
+            localStorage.setItem('preferences', JSON.stringify({
+                version: CURRENT_VERSION,
+                values: Object.fromEntries(STORE_SAVED_KEYS.map(key => [key, state[key]])),
+            }));
+        },
         FOCUS(state) {
             state.focused = true;
             state.documentTitle = DEFAULT_DOCUMENT_TITLE;
@@ -79,9 +125,6 @@ const store = {
         },
         SET_MOBILE_PAGE(state, mobilePage) {
             state.mobileCurrentPage = mobilePage;
-        },
-        SET_PLAYER_LOCK_ROOM_ID(state, playerLockRoomId) {
-            state.playerLockRoomId = typeof playerLockRoomId === 'number' ? playerLockRoomId : null;
         },
         TOGGLE_CINEMA_MODE(state) {
             state.cinemaMode = ! state.cinemaMode;
@@ -155,16 +198,29 @@ const store = {
             state.lastMessageSeenIds = lastSeen;
         },
         GENERATE_ROOM_CONNECTED_COUNTS(state) {
-            const roomConnectedCounts = {};
+            const roomConnectedUsers = {};
+            const playerChannelUsers = {};
             for (const entry of state.connectedList) {
-                for (const room of entry.rooms) {
-                    if (! room) {
-                        continue;
+
+                // Update room entries
+                for (const roomId of entry.rooms) {
+                    if (typeof roomConnectedUsers[roomId] === 'undefined') {
+                        roomConnectedUsers[roomId] = [];
                     }
-                    roomConnectedCounts[room.id] = (roomConnectedCounts[room.id] || 0) + 1;
+                    roomConnectedUsers[roomId].push(entry.user);
+                }
+
+                // Update player channel entries
+                const playerChannelId = entry.user.data.plugins.player;
+                if (playerChannelId !== null) {
+                    if (typeof playerChannelUsers[playerChannelId] === 'undefined') {
+                        playerChannelUsers[playerChannelId] = [];
+                    }
+                    playerChannelUsers[playerChannelId].push(entry.user);
                 }
             }
-            state.roomConnectedCounts = roomConnectedCounts;
+            state.roomConnectedUsers = roomConnectedUsers;
+            state.playerChannelUsers = playerChannelUsers;
         },
         NEW_MESSAGE(state, message) {
             state.messages.push(message);
@@ -217,10 +273,11 @@ const store = {
             Vue.set(state.messages, oldMessageIndex, message);
         },
         SET_PLAYER_STATE(state, playerState) {
-            if (state.playerLock) {
-                return;
-            }
             state.playerState = playerState;
+        },
+        SET_PLAYER_ENABLED(state, playerEnabled) {
+            state.playerEnabled = playerEnabled;
+            this.commit('SAVE_LOCALSTORAGE');
         },
         SET_POLLS(state, polls) {
             if (polls.length > state.polls.length) {
@@ -269,8 +326,16 @@ const store = {
                 rollEndSound.play();
             }
         },
-        SET_YT_API_SEARCH_RESULTS(state, result) {
-            state.ytApiSearchResult = result;
+        SET_PLAYER_API_SEARCH_RESULTS(state, result) {
+            state.playerApiSearchResult = result;
+        },
+
+        SET_PLAYER_CHANNELS(state, channels) {
+            state.playerChannels = channels;
+        },
+
+        SET_PLAYER_CHANNEL(state, channelId) {
+            state.playerChannel = channelId;
         }
     }
 };

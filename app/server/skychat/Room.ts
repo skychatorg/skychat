@@ -105,9 +105,17 @@ export class Room implements IBroadcaster {
         this.load();
 
         // Instantiate plugins
-        const {commands, plugins} = PluginManager.instantiateRoomPlugins(this);
-        this.commands = commands;
-        this.plugins = plugins;
+        let result: {commands: {[commandName: string]: RoomPlugin}, plugins: RoomPlugin[]};
+        try {
+            result = PluginManager.instantiateRoomPlugins(this);
+        } catch (error) {
+            console.warn('Unable to load plugins from storage', this.enabledPlugins);
+            // Retry with default plugins
+            this.enabledPlugins = Config.getPlugins().filter(PluginManager.isRoomPlugin);
+            result = PluginManager.instantiateRoomPlugins(this);
+        }
+        this.commands = result.commands;
+        this.plugins = result.plugins;
 
         setInterval(this.tick.bind(this), Room.TICK_INTERVAL);
     }

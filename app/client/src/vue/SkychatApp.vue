@@ -36,7 +36,7 @@
                 if (! room) {
                     return;
                 }
-                this.$client.joinRoom(index);
+                this.$client.joinRoom(room.id);
             });
         },
         methods: {
@@ -49,7 +49,6 @@
             },
             gotoRoom() {
                 this.$store.commit('SET_PAGE', 'room');
-                this.$client.ytSync();
             },
         },
         computed: {

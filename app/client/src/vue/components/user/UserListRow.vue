@@ -32,7 +32,7 @@
                 </template>
                 <template v-else>
                     <div class="icons">
-                        <i class="material-icons md-14 icon-yt" v-show="session.user.data.plugins.yt" title="Youtube enabled">movie</i>
+                        <i class="material-icons md-14 icon-yt" v-show="session.user.data.plugins.player !== null" title="Youtube enabled">movie</i>
                         <i class="material-icons md-14 icon-cursor" v-show="session.user.data.plugins.cursor" title="Cursors enabled">mouse</i>
                         <template v-if="minutesSinceLastMessage > 0">
                             <i title="Last activity" class="material-icons md-14 icon-active-time">schedule</i>

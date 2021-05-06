@@ -2,7 +2,7 @@
     <div class="messages">
 
         <!-- player -->
-        <video-player v-if="! hidePlayer" class="player" v-show="playerState && playerState.enabled"/>
+        <video-player v-if="! hidePlayer" class="player" v-show="playerState.current && playerEnabled"/>
 
         <!-- message feeds -->
         <message-list v-show="! privateMessageChannel" :messages="messages" @select-message="onSelectMessage" class="scrollbar" />
@@ -61,6 +61,9 @@
             },
             messages: function() {
                 return this.$store.state.messages;
+            },
+            playerEnabled: function() {
+                return this.$store.state.playerEnabled;
             },
         }
     });

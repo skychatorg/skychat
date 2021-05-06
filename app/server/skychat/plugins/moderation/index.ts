@@ -6,7 +6,7 @@ for (const file of files) {
     if (['index.js'].indexOf(file) !== -1) {
         continue;
     }
-    if (file.lastIndexOf('.js') !== file.length - 3) {
+    if (file.substr(file.length - 3) !== '.js') {
         continue;
     }
     const ClassName = file.substr(0, file.length - 3);

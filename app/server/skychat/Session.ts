@@ -16,7 +16,7 @@ export type SanitizedSession = {
 
     user: SanitizedUser;
 
-    rooms: (SanitizedRoom | null)[];
+    rooms: number[];
 }
 
 /**
@@ -98,6 +98,15 @@ export class Session implements IBroadcaster {
         for (const identifier of Object.keys(Session.sessions)) {
             Session.cleanUpSession(identifier, immediate);
         }
+    }
+
+    /**
+     * Send to everyone
+     * @param event
+     * @param payload
+     */
+    public static send(event: string, payload: any): void {
+        Session.connections.forEach(connection => connection.send(event, payload));
     }
 
     public static cleanUpInterval = setInterval(Session.cleanUpAllSessions, 5 * 1000);
@@ -230,7 +239,7 @@ export class Session implements IBroadcaster {
         return {
             identifier: this.identifier,
             connectionCount: this.connections.length,
-            rooms: Array.from(new Set(this.connections.map(c => c.room ? c.room : null))).map(room => room ? room.sanitized() : null),
+            rooms: Array.from(new Set(this.connections.filter(c => c.room).map(c => c.room!.id))),
             deadSinceTime: this.deadSince ? this.deadSince.getTime() * 0.001 : undefined,
             lastMessageTime: this.lastMessageDate.getTime() * 0.001,
             user: this.user.sanitized()

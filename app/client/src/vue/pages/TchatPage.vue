@@ -15,7 +15,8 @@
 
                 <!-- left col (room list) -->
                 <section class="left hide-mobile-middle hide-mobile-right scrollbar">
-                    <room-list class="left-room-list"></room-list>
+                    <text-channel-list class="left-room-list"></text-channel-list>
+                    <player-channel-list class="left-channel-room-list"></player-channel-list>
                     <poll-list class="mb-2 ml-1"></poll-list>
                     <user-preview class="mb-3 ml-1 mt-1"></user-preview>
                     <quick-actions id="quick-actions"></quick-actions>
@@ -48,7 +49,8 @@
 
 <script>
     import Vue from "vue";
-    import RoomList from "../components/room/RoomList.vue";
+    import TextChannelList from "../components/channel/TextChannelList.vue";
+    import PlayerChannelList from "../components/channel/PlayerChannelList.vue";
     import TchatMiddleColumn from "../components/layout/TchatMiddleColumn.vue";
     import PollList from "../components/poll/PollList.vue";
     import UserPreview from "../components/user/UserPreview.vue";
@@ -59,17 +61,16 @@
     import CinemaModeOverlay from "../components/overlay/CinemaModeOverlay.vue";
 
     export default Vue.extend({
-        components: {RoomList, TchatMiddleColumn, PollList, UserPreview, VideoPlayerPreview, VideoPlayer, UserList, QuickActions, CinemaModeOverlay},
+        components: {TextChannelList, PlayerChannelList, TchatMiddleColumn, PollList, UserPreview, VideoPlayerPreview, VideoPlayer, UserList, QuickActions, CinemaModeOverlay},
         watch: {
             cinemaMode: function() {
-                this.$client.ytSync();
+
             },
         },
         methods: {
 
             gotoRoom() {
                 this.$store.commit('SET_PAGE', 'room');
-                this.$client.ytSync();
             },
             onMobileShowMiddleCol: function() {
                 this.$store.commit('SET_MOBILE_PAGE', 'middle');
@@ -136,7 +137,7 @@
                 display: flex;
                 flex-direction: column;
 
-                .left-room-list {
+                .left-channel-room-list {
                     flex-grow: 1;
                 }
             }

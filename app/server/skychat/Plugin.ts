@@ -4,6 +4,7 @@ import { Session } from "./Session";
 import { User } from "./User";
 import { Room } from "./Room";
 import { Config } from "./Config";
+import { UserController } from "./UserController";
 
 
 /**
@@ -166,6 +167,24 @@ export abstract class Plugin {
         return null;
     }
 
+    /**
+     * Load user data for this plugin
+     * @param user 
+     * @returns 
+     */
+    public getUserData(user: User): any {
+        return UserController.getPluginData(user, this.commandName);
+    }
+
+    /**
+     * Save user data for this plugin
+     * @param user 
+     * @returns 
+     */
+    public async saveUserData(user: User, data: any) {
+        await UserController.savePluginData(user, this.commandName, data);
+    }
+    
     /**
      * Check command rights and arguments
      */
