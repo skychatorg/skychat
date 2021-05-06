@@ -4,6 +4,7 @@ import { GlobalPlugin } from "../../GlobalPlugin";
 import { RoomManager } from "../../RoomManager";
 import { PlayerChannelManager } from "./PlayerChannelManager";
 import { YoutubeFetcher } from "./fetcher/YoutubeFetcher";
+import { PluginCommandRules } from "../../Plugin";
 
 
 
@@ -29,7 +30,7 @@ export class PlayerPlugin extends GlobalPlugin {
 
     static readonly defaultDataStorageValue: { channel: null | number; } = { channel: null };
 
-    readonly rules = {
+    readonly rules: {[alias: string]: PluginCommandRules} = {
         player: {
             minCount: 1,
             maxCount: 1,
@@ -68,15 +69,6 @@ export class PlayerPlugin extends GlobalPlugin {
                 {name: 'search', pattern: /./},
             ]
         },
-        ... Object.fromEntries(Object.keys(PlayerPlugin.FETCHERS).map(fetcherName => {
-            return [fetcherName, {
-                minCount: 1,
-                maxCallsPer10Seconds: 10,
-                params: [
-                    {name: 'action', pattern: /./},
-                ]
-            }];
-        }))
     };
 
     protected storage: { channels: {id: number; name: string}[] } = {
@@ -87,6 +79,16 @@ export class PlayerPlugin extends GlobalPlugin {
 
     constructor(manager: RoomManager) {
         super(manager);
+
+        for (const fetcherName of Object.keys(PlayerPlugin.FETCHERS)) {
+            this.rules[fetcherName] = {
+                minCount: 1,
+                maxCallsPer10Seconds: 10,
+                params: [
+                    {name: 'action', pattern: /./},
+                ]
+            };
+        }
 
         // Rebuild channels from storage
         this.loadStorage();
