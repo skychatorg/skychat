@@ -34,7 +34,7 @@
                       @keydown.tab.prevent="onKeyUpTab"
                       class="new-message mousetrap"
                       v-model="message"
-                      :placeholder="currentRoom ? 'Send something in ' + currentRoom.name : 'Message..'"></textarea>
+                      :placeholder="currentRoom ? currentRoom.name + ' / Message' : 'Message'"></textarea>
         </form>
         <div class="show-mobile">
             <div class="goto-other-cols">

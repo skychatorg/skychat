@@ -1,3 +1,4 @@
+import { Config } from "../../Config";
 import { Session } from "../../Session";
 import { SanitizedUser, User } from "../../User";
 import { UserController } from "../../UserController";
@@ -52,6 +53,7 @@ export type SanitizedPlayerChannel = {
     id: number;
     name: string;
     playing: boolean;
+    currentOwner: string | undefined;
 }
 
 
@@ -183,6 +185,20 @@ export class PlayerChannel {
     }
 
     /**
+     * Return whether a identifier is authroized to manage the player right now
+     * @param identifier 
+     */
+    public hasPlayerPermission(identifier: string) {
+        if (this.currentVideoInfo && this.currentVideoInfo.user.username === identifier) {
+            return true;
+        }
+        if (Config.isOP(identifier)) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
      * 
      */
     public getPlayerData() {
@@ -220,6 +236,7 @@ export class PlayerChannel {
             id: this.id,
             name: this.name,
             playing: this.isPlaying(),
+            currentOwner: this.currentVideoInfo ? this.currentVideoInfo.user.username : undefined,
         };
     }
 }

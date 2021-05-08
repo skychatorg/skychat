@@ -327,18 +327,30 @@ export class PlayerPlugin extends GlobalPlugin {
         switch (param) {
 
             case 'replay30':
+                if (! channel.hasPlayerPermission(connection.session.identifier)) {
+                    throw new Error('You are not authorized to modify the player right now');
+                }
                 channel.moveCursor(- 30 * 1000);
                 break;
             
             case 'skip30':
+                if (! channel.hasPlayerPermission(connection.session.identifier)) {
+                    throw new Error('You are not authorized to modify the player right now');
+                }
                 channel.moveCursor(+ 30 * 1000);
                 break;
 
             case 'skip':
+                if (! channel.hasPlayerPermission(connection.session.identifier)) {
+                    throw new Error('You are not authorized to modify the player right now');
+                }
                 channel.skip();
                 break;
 
             case 'flush':
+                if (! Config.isOP(connection.session.identifier)) {
+                    throw new Error('Only OP can flush the queue');
+                }
                 channel.flushQueue();
                 break;
         }

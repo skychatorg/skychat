@@ -11,8 +11,7 @@
         >
             <div class="channel-content">
                 <div class="channel-content-info">
-                    <div class="channel-icon material-icons md-18">tv</div>
-                    <div class="channel-name" :title="channel.name">
+                    <div class="channel-name ml-1" :title="channel.name">
                         <b>{{channel.name}}</b>
                     </div>
                     <div class="channel-meta">
@@ -21,6 +20,7 @@
                             class="channel-player mr-1"
                             :class="{ 'disabled': playerChannel !== channel.id }"
                             title="A video is currently playing">
+                            <div class="channel-player-owner">{{channel.currentOwner}}</div>
                             <i class="material-icons md-14">movie</i>
                         </div>
                     </div>
@@ -29,14 +29,14 @@
                     <div v-for="user of playerChannelUsers[channel.id]"
                         :key="user.username"
                         class="avatar image-bubble"
-                        :title="user.username + ' is in there'"
+                        :title="user.username + ' is watching'"
                         :style="{'border': '1px solid ' + user.data.plugins.color}">
                         <img :src="user.data.plugins.avatar">
                     </div>
                     <!-- connected users -->
                     <div v-if="playerChannelUsers[channel.id] && playerChannelUsers[channel.id].length > 0"
                         class="channel-users mr-1"
-                        title="Users in this channel">
+                        title="Number of watchers">
                         <i class="material-icons md-14">{{playerChannelUsers[channel.id].length > 1 ? 'group' : 'person'}}</i>
                         <span>{{ playerChannelUsers[channel.id].length }}</span>
                     </div>
@@ -82,8 +82,6 @@
 <style lang="scss" scoped>
 
 .channel-list {
-    padding-right: 10px;
-    padding-left: 10px;
     color: white;
 
     .subtitle {
@@ -111,8 +109,6 @@
 
             .channel-content-info {
                 display: flex;
-                margin-bottom: 4px;
-
 
                 .channel-icon {
                     flex-basis: 20px;
@@ -128,16 +124,26 @@
                     overflow: hidden;
                     white-space: nowrap;
                     text-overflow: ellipsis;
+                    height: 20px;
                 }
 
                 .channel-meta {
-                    flex-basis: 65px;
+                    flex-basis: 100px;
                     margin-top: 10px;
                     display: flex;
                     flex-direction: row-reverse;
 
                     .channel-player {
                         color: #ff8f8f;
+
+                        .channel-player-owner {
+                            vertical-align: top;
+                            font-size: 11px;
+                            max-width: 70px;
+                            overflow: hidden;
+                            display: inline-block;
+                            text-overflow: ellipsis;
+                        }
                     }
 
                     .channel-player.disabled {
