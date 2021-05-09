@@ -180,6 +180,7 @@ export class PlayerChannel {
                 video,
             });
         }
+        this.fairShuffle();
         this.sync();
         this.armPlayNextTimeout();
     }
@@ -218,6 +219,38 @@ export class PlayerChannel {
             session.send('player-sync', data);
         }
         this.manager.sync();
+    }
+
+    /**
+     * Shuffle the queued videos fairly, ensuring a round-robin among users
+     */
+    public fairShuffle() {
+        // Build a separate queue for each user
+        const users: {[id: number]: QueuedVideoInfo[]} = {};
+        for (const queuedVideo of this.queue) {
+            if (typeof users[queuedVideo.user.id] === 'undefined') {
+                users[queuedVideo.user.id] = [];
+            }
+            users[queuedVideo.user.id].push(queuedVideo);
+        }
+        // Re-build the new queue
+        const queue: QueuedVideoInfo[] = [];
+        const userIds: number[] = Object.keys(users).map(k => parseInt(k));
+        while (true) {
+            let addedCount = 0;
+            for (const userId of userIds) {
+                const queuedVideo = users[userId].shift();
+                if (! queuedVideo) {
+                    continue;
+                }
+                queue.push(queuedVideo);
+                ++ addedCount;
+            }
+            if (addedCount === 0) {
+                break;
+            }
+        }
+        this.queue = queue;
     }
 
     /**
