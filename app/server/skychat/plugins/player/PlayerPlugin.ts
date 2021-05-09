@@ -282,8 +282,8 @@ export class PlayerPlugin extends GlobalPlugin {
         const fetcher = PlayerPlugin.FETCHERS[fetcherName];
         const type = param.split(' ')[1];
         const search = param.substr(fetcherName.length + 1 + type.length + 1);
-        const items = await fetcher.search(type, search);
-        connection.send('player-search', { type, items }); // @TODO
+        const items = await fetcher.search(type, search, 10);
+        connection.send('player-search', { type, items });
     }
 
     /**
