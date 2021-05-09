@@ -49,7 +49,9 @@ export class YoutubeFetcher implements VideoFetcher {
 
         // If the link contains a video
         let videoId: string;
-        if (match = link.match(/v=([a-zA-Z0-9-_]+)/)) {
+        if (match = link.match(/youtu\.be\/([a-zA-Z0-9-_]+)/)) {
+            videoId = match[1];
+        } else if (match = link.match(/v=([a-zA-Z0-9-_]+)/)) {
             videoId = match[1];
         } else {
             videoId = link;
