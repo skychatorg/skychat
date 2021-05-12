@@ -34,7 +34,7 @@
                       @keydown.tab.prevent="onKeyUpTab"
                       class="new-message mousetrap"
                       v-model="message"
-                      placeholder="Message.."></textarea>
+                      :placeholder="currentRoom ? currentRoom.name + ' / Message' : 'Message'"></textarea>
         </form>
         <div class="show-mobile">
             <div class="goto-other-cols">
@@ -76,6 +76,7 @@
                 if (newTyping !== oldTyping) {
                     this.$client.setTyping(newTyping);
                 }
+                Vue.nextTick(() => this.updateMessageInputHeight());
             },
 
             focused: function() {
@@ -92,6 +93,16 @@
             setMessage: function(message) {
                 this.message = message;
                 this.$refs.input.focus();
+            },
+
+            updateMessageInputHeight: function() {
+                if (! this.$refs.input || this.message === '') {
+                    this.$refs.input.style.height = '';
+                } else {
+                    this.$refs.input.style.height = '1px';
+                    const newHeight = Math.min(3 + this.$refs.input.scrollHeight, 110);
+                    this.$refs.input.style.height = newHeight + "px";
+                }
             },
 
             uploadAudio: async function() {
@@ -225,7 +236,7 @@
                     return;
                 }
                 this.message = this.message.substr(0, this.message.length - username.length) + matches[0];
-            }
+            },
         },
 
         computed: {
@@ -247,6 +258,9 @@
                 }
                 return false;
             },
+            currentRoom: function() {
+                return this.$store.state.rooms.find(room => room.id === this.$store.state.currentRoom);
+            }
         }
     });
 </script>
@@ -255,13 +269,15 @@
 
     .message-form {
         display: flex;
+        padding-left: 6px;
 
         .image-upload {
             flex-basis: 24px;
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            justify-content: flex-end;
             margin-left: 12px;
+            margin-bottom: 8px;
             color: #cccccc;
 
             .upload-icon {
@@ -283,8 +299,9 @@
             flex-basis: 24px;
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            justify-content: flex-end;
             margin-left: 12px;
+            margin-bottom: 10px;
             color: #cccccc;
 
             .upload-icon {

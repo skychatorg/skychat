@@ -14,9 +14,12 @@
             <section class="default-container">
 
                 <!-- left col (room list) -->
-                <section class="left hide-mobile-middle hide-mobile-right scrollbar">
-                    <text-channel-list class="left-room-list"></text-channel-list>
-                    <player-channel-list class="left-channel-room-list"></player-channel-list>
+                <section class="left hide-mobile-middle hide-mobile-right">
+                    <h2 class="title mt-2 ml-1">Channels</h2>
+                    <div class="channels scrollbar ml-1 pr-1">
+                        <text-channel-list class="left-room-list"></text-channel-list>
+                        <player-channel-list class="left-channel-room-list"></player-channel-list>
+                    </div>
                     <poll-list class="mb-2 ml-1"></poll-list>
                     <user-preview class="mb-3 ml-1 mt-1"></user-preview>
                     <quick-actions id="quick-actions"></quick-actions>
@@ -134,11 +137,13 @@
             .left {
                 flex-basis: 250px;
                 width: 0;
+                height: 100%;
                 display: flex;
                 flex-direction: column;
-
-                .left-channel-room-list {
+                
+                .channels {
                     flex-grow: 1;
+                    overflow-y: auto;
                 }
             }
 

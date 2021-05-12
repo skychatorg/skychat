@@ -202,3 +202,11 @@ body .vm--modal {
     margin-top: 2px;
     margin-bottom: 2px;
 }
+
+* {
+    user-select: none;
+}
+
+.selectable, .selectable * {
+    user-select: text;
+}

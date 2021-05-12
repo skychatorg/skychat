@@ -49,7 +49,9 @@ export class YoutubeFetcher implements VideoFetcher {
 
         // If the link contains a video
         let videoId: string;
-        if (match = link.match(/v=([a-zA-Z0-9-_]+)/)) {
+        if (match = link.match(/youtu\.be\/([a-zA-Z0-9-_]+)/)) {
+            videoId = match[1];
+        } else if (match = link.match(/v=([a-zA-Z0-9-_]+)/)) {
             videoId = match[1];
         } else {
             videoId = link;
@@ -104,8 +106,29 @@ export class YoutubeFetcher implements VideoFetcher {
      * @param param 
      * @returns 
      */
-    async search(type: string, search: string): Promise<VideoInfo[]> {
-        return this.searchYoutube(search, type, 10);
+    async search(type: string, search: string, limit: number): Promise<VideoInfo[]> {
+        const result = await this.youtube.search.list({
+            part: 'snippet',
+            q: search,
+            type: type,
+            maxResults: limit
+        });
+        const items = result?.data?.items;
+        if (! items || items.length === 0) {
+            throw new Error('No result found');
+        }
+        return items
+            .filter(item => (item.id!.videoId || item.id!.playlistId) && item.snippet!.title && item.snippet!.thumbnails!.default!.url)
+            .map(item => {
+                return {
+                    type: 'youtube',
+                    id: (item.id!.videoId || item.id!.playlistId) as string,
+                    duration: 0,
+                    startCursor: 0,
+                    thumb: item.snippet!.thumbnails!.default!.url as string,
+                    title: item.snippet!.title as string,
+                };
+            });
     }
 
     /**
@@ -118,8 +141,8 @@ export class YoutubeFetcher implements VideoFetcher {
         const result = await this.youtube.videos.list({
             id: encodeURIComponent(id),
             part: 'snippet,contentDetails',
-            maxResults: 1,
             fields: 'items(snippet(title,thumbnails),contentDetails,id),pageInfo',
+            maxResults: 1,
         });
         // If no result
         if (! result.data.items || result.data.items.length === 0) {
@@ -157,30 +180,5 @@ export class YoutubeFetcher implements VideoFetcher {
             videos.push(await this.getVideoInfo(videoId))
         }
         return videos;
-    }
-
-    /**
-     * Get a playlist metadata from its id
-     * @param query
-     * @param type
-     */
-    public async searchYoutube(query: string, type: string, maxResults: number): Promise<VideoInfo[]> {
-        const result = await this.youtube.search.list({ part: 'snippet', q: query, type: type, maxResults });
-        const items = result?.data?.items;
-        if (! items || items.length === 0) {
-            throw new Error('No result found');
-        }
-        return items
-            .filter(item => (item.id!.videoId || item.id!.playlistId) && item.snippet!.title && item.snippet!.thumbnails!.default!.url)
-            .map(item => {
-                return {
-                    type: 'youtube',
-                    id: (item.id!.videoId || item.id!.playlistId) as string,
-                    duration: 0,
-                    startCursor: 0,
-                    thumb: item.snippet!.thumbnails!.default!.url as string,
-                    title: item.snippet!.title as string,
-                };
-            });
     }
 }

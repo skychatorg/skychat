@@ -282,8 +282,8 @@ export class PlayerPlugin extends GlobalPlugin {
         const fetcher = PlayerPlugin.FETCHERS[fetcherName];
         const type = param.split(' ')[1];
         const search = param.substr(fetcherName.length + 1 + type.length + 1);
-        const items = await fetcher.search(type, search);
-        connection.send('player-search', { type, items }); // @TODO
+        const items = await fetcher.search(type, search, 10);
+        connection.send('player-search', { type, items });
     }
 
     /**
@@ -327,18 +327,30 @@ export class PlayerPlugin extends GlobalPlugin {
         switch (param) {
 
             case 'replay30':
+                if (! channel.hasPlayerPermission(connection.session.identifier)) {
+                    throw new Error('You are not authorized to modify the player right now');
+                }
                 channel.moveCursor(- 30 * 1000);
                 break;
             
             case 'skip30':
+                if (! channel.hasPlayerPermission(connection.session.identifier)) {
+                    throw new Error('You are not authorized to modify the player right now');
+                }
                 channel.moveCursor(+ 30 * 1000);
                 break;
 
             case 'skip':
+                if (! channel.hasPlayerPermission(connection.session.identifier)) {
+                    throw new Error('You are not authorized to modify the player right now');
+                }
                 channel.skip();
                 break;
 
             case 'flush':
+                if (! Config.isOP(connection.session.identifier)) {
+                    throw new Error('Only OP can flush the queue');
+                }
                 channel.flushQueue();
                 break;
         }

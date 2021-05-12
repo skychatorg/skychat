@@ -1,6 +1,5 @@
 <template>
     <div class="room-list">
-        <h2 class="title">Channels</h2>
         <div class="subtitle"><h3>text</h3></div>
         <hover-card v-for="room in rooms"
             :key="room.id"
@@ -60,9 +59,6 @@
 <style lang="scss" scoped>
 
 .room-list {
-    padding-top: 20px;
-    padding-right: 10px;
-    padding-left: 10px;
     color: white;
 
     .subtitle {
