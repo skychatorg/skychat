@@ -15,7 +15,7 @@ export type VideoInfo = {
     /**
      * Video type (currently only youtube supported)
      */
-    type: 'youtube';
+    type: 'youtube' | 'embed';
 
     /**
      * Video data (for youtube, video id)

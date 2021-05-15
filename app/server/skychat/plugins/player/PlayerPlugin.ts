@@ -5,6 +5,8 @@ import { RoomManager } from "../../RoomManager";
 import { PlayerChannelManager } from "./PlayerChannelManager";
 import { YoutubeFetcher } from "./fetcher/YoutubeFetcher";
 import { PluginCommandRules } from "../../Plugin";
+import { LinkFetcher } from "./fetcher/LinkFetcher";
+import { VideoFetcher } from "./VideoFetcher";
 
 
 
@@ -15,8 +17,9 @@ export class PlayerPlugin extends GlobalPlugin {
 
     static readonly MIN_RIGHT: number = 10;
 
-    static readonly FETCHERS: {[fetcherName: string]: YoutubeFetcher} = {
+    static readonly FETCHERS: {[fetcherName: string]: VideoFetcher} = {
         'yt': new YoutubeFetcher(),
+        'embed': new LinkFetcher(),
     };
 
     static readonly commandName = 'player';
@@ -304,11 +307,11 @@ export class PlayerPlugin extends GlobalPlugin {
             throw new Error('Invalid fetcher specified');
         }
         const fetcher = PlayerPlugin.FETCHERS[fetcherName];
-        const items = await fetcher.fetch(param);
-        if (items.length === 0) {
+        const videos = await fetcher.get(param);
+        if (videos.length === 0) {
             throw new Error('Unable to fetch items');
         }
-        channel.add(items, connection.session.user);
+        channel.add(videos, connection.session.user);
     }
 
     /**

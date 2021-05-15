@@ -79,7 +79,7 @@ export class YoutubeFetcher implements VideoFetcher {
         this.youtube = google.youtube({version: 'v3', auth: Config.YOUTUBE_API_KEY});
     }
 
-    async fetch(param: string): Promise<VideoInfo[]> {
+    async get(param: string): Promise<VideoInfo[]> {
 
         const [link, type] = param.split(' ');
 
