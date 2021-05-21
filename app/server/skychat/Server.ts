@@ -60,6 +60,7 @@ export class Server {
         this.app.use(express.static('dist'));
         this.app.use('/uploads', express.static('uploads'));
         this.app.use('/stickers', express.static('stickers'));
+        this.app.use('/gallery', express.static('gallery'));
         this.app.use('/avatars', express.static('avatars'));
         this.app.use(fileUpload({
             limits: { fileSize: 10 * 1024 * 1024 },

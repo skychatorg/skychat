@@ -11,10 +11,10 @@ import { YoutubeFetcher } from "./fetcher/YoutubeFetcher";
  */
 export class YoutubeSearchAndPlayPlugin extends GlobalPlugin {
 
-    static readonly commandName = '~';
+    static readonly commandName = '#';
 
     readonly rules: {[alias: string]: PluginCommandRules} = {
-        '~': {
+        '#': {
             minCount: 1,
             maxCallsPer10Seconds: 2,
             params: [{name: 'search', pattern: /./}]

@@ -8,7 +8,7 @@ ARG DOCKER_PORT=8080
 ARG DOCKER_TZ=America/Denver
 
 # Install zip (required for managing backups)
-RUN apt-get update -y && apt-get -y install zip
+RUN apt-get update -y && apt-get -y install zip ffmpeg
 
 # Set timezone
 RUN ln -snf /usr/share/zoneinfo/$DOCKER_TZ /etc/localtime

@@ -38,7 +38,9 @@ const store = {
                 }
             }
         },
+
         currentRoom: null,
+        
         connectedList: [],
 
         /**
@@ -63,6 +65,11 @@ const store = {
          * Last message missed because the windows was not focused, if any
          */
         lastMissedMessage: null,
+
+        /**
+         * Gallery info
+         */
+        gallery: null,
 
         cursors: {},
         messages: [],
@@ -271,6 +278,9 @@ const store = {
                 return;
             }
             Vue.set(state.messages, oldMessageIndex, message);
+        },
+        SET_GALLERY(state, gallery) {
+            state.gallery = gallery;
         },
         SET_PLAYER_STATE(state, playerState) {
             state.playerState = playerState;
