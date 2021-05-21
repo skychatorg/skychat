@@ -16,6 +16,7 @@ services:
       - ./backups:/var/skychat/backups
       - ./config:/var/skychat/config:ro
       - ./database:/var/skychat/database
+      - ./gallery:/var/skychat/gallery
       - ./scripts:/var/skychat/scripts:ro
       - ./stickers:/var/skychat/stickers
       - ./storage:/var/skychat/storage

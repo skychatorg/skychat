@@ -26,6 +26,7 @@ RUN ln -s /var/skychat/avatars  ./avatars
 RUN ln -s /var/skychat/backups  ./backups
 RUN ln -s /var/skychat/config   ./config
 RUN ln -s /var/skychat/database ./database
+RUN ln -s /var/skychat/gallery  ./gallery
 RUN ln -s /var/skychat/scripts  ./scripts
 RUN ln -s /var/skychat/stickers ./stickers
 RUN ln -s /var/skychat/storage  ./storage
