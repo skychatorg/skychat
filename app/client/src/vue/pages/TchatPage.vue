@@ -188,11 +188,6 @@
                     margin-top: 10px;
                     padding-right: 14px;
                 }
-
-                #gallery {
-                    flex-basis: 160px;
-                    min-height: 0;
-                }
             }
         }
     }

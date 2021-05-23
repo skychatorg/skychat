@@ -1,7 +1,10 @@
 <template>
     <div class="gallery-preview" v-if="shownFolders !== null">
-        <h2 class="title">Gallery</h2>
-        <div class="gallery-content">
+        <h2 class="title clickable" @click="setGalleryVisibility(! isGalleryVisible)" title="Show/hide the gallery">
+            Gallery
+            <i class="material-icons md-12 title-icon">{{ isGalleryVisible ? 'expand_more' : 'expand_less' }}</i>
+        </h2>
+        <div class="gallery-content" v-if="isGalleryVisible">
 
             <div class="gallery-search">
                 <input
@@ -148,6 +151,9 @@
             },
             deleteMedia: function(media) {
                 this.$client.sendMessage(`/gallerydelete ${media.folderId} ${media.id}`);
+            },
+            setGalleryVisibility: function(newVisibility) {
+                this.$store.commit('SET_GALLERY_VISIBILITY', newVisibility);
             }
         },
         computed: {
@@ -157,6 +163,9 @@
             gallerySearchResults: function() {
                 return this.$store.state.gallerySearchResults;
             },
+            isGalleryVisible: function() {
+                return this.$store.state.isGalleryVisible;
+            }
         }
     });
 </script>
@@ -165,7 +174,6 @@
 
     .gallery-preview {
         width: 100%;
-        height: 100%;
         display: flex;
         flex-direction: column;
         padding-left: 6px;
@@ -175,7 +183,8 @@
         padding-right: 20px;
 
         .gallery-content {
-            flex-grow: 1;
+            flex-basis: 140px;
+            min-height: 140px;
             background-color: #242427;
             overflow: hidden;
             display: flex;

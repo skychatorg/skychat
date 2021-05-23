@@ -7,8 +7,11 @@ const DEFAULT_DOCUMENT_TITLE = "~ SkyChat";
 
 const CURSOR_DECAY_DELAY = 5 * 1000; // Must match value from backend
 
-const CURRENT_VERSION = 1;
-const STORE_SAVED_KEYS = ['playerEnabled'];
+const CURRENT_VERSION = 2;
+const STORE_SAVED_KEYS = [
+    'playerEnabled',
+    'isGalleryVisible',
+];
 
 
 const store = {
@@ -71,6 +74,7 @@ const store = {
          */
         gallery: null,
         gallerySearchResults: null,
+        isGalleryVisible: true,
 
         cursors: {},
         messages: [],
@@ -285,6 +289,10 @@ const store = {
         },
         SET_GALLERY_SEARCH_RESULTS(state, gallerySearchResults) {
             state.gallerySearchResults = gallerySearchResults;
+        },
+        SET_GALLERY_VISIBILITY(state, isGalleryVisible) {
+            state.isGalleryVisible = !! isGalleryVisible;
+            this.commit('SAVE_LOCALSTORAGE');
         },
         SET_PLAYER_STATE(state, playerState) {
             state.playerState = playerState;
