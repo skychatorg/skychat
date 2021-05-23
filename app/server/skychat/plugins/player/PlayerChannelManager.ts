@@ -1,4 +1,5 @@
 import { EventEmitter } from "events";
+import { Connection } from "../../Connection";
 import { Session } from "../../Session";
 import { PlayerChannel } from "./PlayerChannel";
 import { PlayerPlugin } from "./PlayerPlugin";
@@ -88,10 +89,10 @@ export class PlayerChannelManager extends EventEmitter {
      * @param session 
      * @returns 
      */
-    public getSessionChannel(session: Session) {
+    public getSessionChannel(session: Session): PlayerChannel | null {
         const channelId = this.sessionChannels.get(session);
         if (typeof channelId === 'number') {
-            return this.getChannelById(channelId);
+            return this.getChannelById(channelId) || null;
         }
         return null;
     }
@@ -103,10 +104,17 @@ export class PlayerChannelManager extends EventEmitter {
      */
     public joinChannel(session: Session, id: number) {
 
-        // If the session is already within a channel, leave it first
+        // Get current/previous channel
         const previousChannel = this.getSessionChannel(session);
+
+        // If trying to join the same channel
+        if (previousChannel && previousChannel.id === id) {
+            return;
+        }
+
+        // If currently in another channel, leave it
         if (previousChannel) {
-            this.leaveChannel(session); // @TODO avoid sending the event twice
+            this.leaveChannel(session);
         }
 
         // Check that the given channel exists
@@ -118,7 +126,7 @@ export class PlayerChannelManager extends EventEmitter {
         // Update mappings and session list
         this.sessionChannels.set(session, channel.id);
         channel.sessions.push(session);
-        channel.syncSession(session);
+        channel.syncConnections(session.connections);
 
         // Notify all connections of this session that the channel changed
         session.send('player-channel', id);
@@ -151,11 +159,11 @@ export class PlayerChannelManager extends EventEmitter {
     /**
      * To be called when the list of channel or channel metadata changes
      */
-    public sync(sessions?: Session[]) {
-        if (sessions) {
+    public sync(sessionsOrConnections?: (Session | Connection)[]) {
+        if (sessionsOrConnections) {
             const sanitized = this.sanitized();
-            for (const session of sessions) {
-                session.send('player-channels', sanitized);
+            for (const sessionOrConnection of sessionsOrConnections) {
+                sessionOrConnection.send('player-channels', sanitized);
             }
         } else {
             Session.send('player-channels', this.sanitized());

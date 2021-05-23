@@ -1,4 +1,5 @@
 import { Config } from "../../Config";
+import { Connection } from "../../Connection";
 import { Session } from "../../Session";
 import { SanitizedUser, User } from "../../User";
 import { UserController } from "../../UserController";
@@ -254,11 +255,13 @@ export class PlayerChannel {
     }
 
     /**
-     * Sync a given session
-     * @param session 
+     * Sync a given list of connections
+     * @param connections
      */
-    public syncSession(session: Session) {
-        session.send('player-sync', this.getPlayerData());
+    public syncConnections(connections: Connection[]) {
+        for (const connection of connections) {
+            connection.send('player-sync', this.getPlayerData());
+        }
     }
 
     /**

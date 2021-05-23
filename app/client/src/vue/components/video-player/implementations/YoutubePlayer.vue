@@ -13,13 +13,18 @@
     import Vue from "vue";
 
     export default Vue.extend({
-        data: function() { return { src: '', } },
+        data: function() { return { src: '', previousVideoHash: null, } },
         watch: {
-            playerState: { deep: true, handler: 'update' },
+            'playerState.current.video': { deep: true, handler: 'update' },
         },
         mounted: function() { this.update(); },
         methods: {
             update: function() {
+                // If video did not change since last sync, pass
+                const hash = JSON.stringify(this.playerState.current.video);
+                if (hash === this.previousVideoHash) {
+                    return;
+                }
                 let src = 'https://www.youtube.com/embed/' + this.playerState.current.video.id;
                 src += '?autoplay=1';
                 src += '&origin=' + document.location.origin;
@@ -27,6 +32,7 @@
                     src += '&start=' + parseInt(this.playerState.cursor / 1000);
                 }
                 this.src = src + '&random=' + Math.random();
+                this.previousVideoHash = hash;
             }
         },
         computed: {

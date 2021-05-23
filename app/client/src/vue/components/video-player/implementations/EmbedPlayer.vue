@@ -16,7 +16,7 @@
     export default Vue.extend({
         data: function() { return { src: '', videoType: '' } },
         watch: {
-            playerState: { deep: true, handler: 'update' },
+            'playerState.current.video': { deep: true, handler: 'update' },
         },
         mounted: function() { this.update(); },
         methods: {
