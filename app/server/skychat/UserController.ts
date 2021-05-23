@@ -98,6 +98,14 @@ export class UserController {
     }
 
     /**
+     * Get all users
+     */
+    public static async getAllUsers(): Promise<User[]> {
+        const userObjects = await DatabaseHelper.db.all(SQL`SELECT * FROM users`);
+        return userObjects.map(o => this.userRowToObject(o));
+    }
+
+    /**
      * Convert a user row fetched from sqlite to an user object
      * @param row
      */

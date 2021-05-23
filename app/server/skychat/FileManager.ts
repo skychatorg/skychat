@@ -24,17 +24,17 @@ export class FileManager {
             throw new Error('Invalid mimetype');
         }
         const extension = mimeTypes[file.mimetype];
-        const filePath = 'uploads/' + date.toISOString().substr(0, 19).replace(/(-|T)/g, '/').replace(/:/g, '-') + '-' + Math.floor(1000000000 * RandomGenerator.random(8)) + '.' + extension;
+        const filePath = 'uploads/all/' + date.toISOString().substr(0, 19).replace(/(-|T)/g, '/').replace(/:/g, '-') + '-' + Math.floor(1000000000 * RandomGenerator.random(8)) + '.' + extension;
         file.mv(filePath);
         return filePath;
     }
 
     static isFileUrlUploaded(fileUrl: string): boolean {
-        return !! fileUrl.match(new RegExp('^' + MessageFormatter.escapeRegExp(Config.LOCATION) + '\/uploads\/([0-9a-zA-Z/-]+)\.(jpg|jpeg|png|webp|gif|pdf|mp4|webm)$'));
+        return !! fileUrl.match(new RegExp('^' + MessageFormatter.escapeRegExp(Config.LOCATION) + '\/uploads\/all\/([0-9a-zA-Z/-]+)\.(jpg|jpeg|png|webp|gif|pdf|mp4|webm)$'));
     }
 
     static isFileUrlInGallery(fileUrl: string): boolean {
-        return !! fileUrl.match(new RegExp('^' + MessageFormatter.escapeRegExp(Config.LOCATION) + '\/gallery\/([0-9]+)\/([0-9]+)\/([0-9a-z-]+)\.(jpg|jpeg|png|webp|gif|pdf|mp4|webm)$'));
+        return !! fileUrl.match(new RegExp('^' + MessageFormatter.escapeRegExp(Config.LOCATION) + '\/uploads\/gallery\/([0-9]+)\/([0-9]+)\/([0-9a-z-]+)\.(jpg|jpeg|png|webp|gif|pdf|mp4|webm)$'));
     }
 
     static uploadedFileExists(fileUrl: string): boolean {

@@ -1,4 +1,3 @@
-import { Gallery } from "./Gallery";
 import { GalleryMedia, SanitizedGalleryMedia } from "./GalleryMedia";
 
 

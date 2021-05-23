@@ -137,7 +137,7 @@ export class MessageFormatter {
      * @param trusted Whether to limit the number of replacements
      */
     public replaceImages(message: string, remove?: boolean, trusted?: boolean): string {
-        let matches = message.match(new RegExp(Config.LOCATION + '/uploads/([-\\/._a-zA-Z0-9]+)\\.(png|jpg|jpeg|gif)', 'g'));
+        let matches = message.match(new RegExp(Config.LOCATION + '/uploads/all/([-\\/._a-zA-Z0-9]+)\\.(png|jpg|jpeg|gif)', 'g'));
         if (! matches) {
             return message;
         }

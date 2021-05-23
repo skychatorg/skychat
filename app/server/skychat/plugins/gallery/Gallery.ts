@@ -41,7 +41,7 @@ export class Gallery {
     }
 
     getMediaPath(mediaId: number): string {
-        return `gallery/${Math.floor(mediaId / 1e6)}/${Math.floor(mediaId / 1e3)}/`;
+        return `uploads/gallery/${Math.floor(mediaId / 1e6)}/${Math.floor(mediaId / 1e3)}/`;
     }
 
     buildMediaThumb(mediaUrl: string): string {

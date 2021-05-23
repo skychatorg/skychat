@@ -12,13 +12,10 @@ services:
         GID: ${DOCKER_GID}
         DOCKER_TZ: "${DOCKER_TZ}"
     volumes:
-      - ./avatars:/var/skychat/avatars
-      - ./backups:/var/skychat/backups
       - ./config:/var/skychat/config:ro
-      - ./database:/var/skychat/database
-      - ./gallery:/var/skychat/gallery
       - ./scripts:/var/skychat/scripts:ro
-      - ./stickers:/var/skychat/stickers
+      - ./database:/var/skychat/database
+      - ./backups:/var/skychat/backups
       - ./storage:/var/skychat/storage
       - ./uploads:/var/skychat/uploads
     ports:
