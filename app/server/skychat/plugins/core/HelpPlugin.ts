@@ -32,7 +32,7 @@ export class HelpPlugin extends RoomPlugin {
             if (connection.session.user.right < command.minRight) {
                 continue;
             }
-            if (command.opOnly && ! Config.isOP(connection.session.identifier)) {
+            if (command.opOnly && ! connection.session.isOP()) {
                 continue;
             }
 

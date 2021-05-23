@@ -110,7 +110,7 @@ export class GalleryPlugin extends GlobalPlugin {
     }
 
     async handleGalleryFolderAdd(param: string, connection: Connection): Promise<void> {
-        if (! Config.isOP(connection.session.identifier)) {
+        if (! connection.session.isOP()) {
             throw new Error(`Only OP can manage folders`);
         }
         const folderName = param.trim();
@@ -119,7 +119,7 @@ export class GalleryPlugin extends GlobalPlugin {
     }
 
     async handleGalleryFolderRemove(param: string, connection: Connection): Promise<void> {
-        if (! Config.isOP(connection.session.identifier)) {
+        if (! connection.session.isOP()) {
             throw new Error(`Only OP can manage folders`);
         }
         const folderId = parseInt(param);
@@ -128,7 +128,7 @@ export class GalleryPlugin extends GlobalPlugin {
     }
 
     async handleGalleryAdd(param: string, connection: Connection): Promise<void> {
-        if (! Config.isOP(connection.session.identifier)) {
+        if (! connection.session.isOP()) {
             throw new Error(`Only OP can manage medias`);
         }
         const [rawLink, rawFolderId, rawTags] = param.split(' ');
@@ -143,7 +143,7 @@ export class GalleryPlugin extends GlobalPlugin {
     }
 
     async handleGalleryDelete(param: string, connection: Connection): Promise<void> {
-        if (! Config.isOP(connection.session.identifier)) {
+        if (! connection.session.isOP()) {
             throw new Error(`Only OP can manage medias`);
         }
         const [rawFolderId, rawMediaId] = param.split(' ');

@@ -190,11 +190,11 @@ export class PlayerChannel {
      * Return whether a identifier is authroized to manage the player right now
      * @param identifier 
      */
-    public hasPlayerPermission(identifier: string) {
-        if (this.currentVideoInfo && this.currentVideoInfo.user.username === identifier) {
+    public hasPlayerPermission(session: Session) {
+        if (this.currentVideoInfo && this.currentVideoInfo.user.username === session.identifier) {
             return true;
         }
-        if (Config.isOP(identifier)) {
+        if (session.isOP()) {
             return true;
         }
         return false;

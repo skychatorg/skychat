@@ -192,7 +192,7 @@ export class PlayerPlugin extends GlobalPlugin {
      */
     private async handlePlayerChannelManage(param: string, connection: Connection) {
 
-        if (! Config.isOP(connection.session.identifier)) {
+        if (! connection.session.isOP()) {
             throw new Error('Command only for OP');
         }
 
@@ -339,28 +339,28 @@ export class PlayerPlugin extends GlobalPlugin {
         switch (param) {
 
             case 'replay30':
-                if (! channel.hasPlayerPermission(connection.session.identifier)) {
+                if (! channel.hasPlayerPermission(connection.session)) {
                     throw new Error('You are not authorized to modify the player right now');
                 }
                 channel.moveCursor(- 30 * 1000);
                 break;
             
             case 'skip30':
-                if (! channel.hasPlayerPermission(connection.session.identifier)) {
+                if (! channel.hasPlayerPermission(connection.session)) {
                     throw new Error('You are not authorized to modify the player right now');
                 }
                 channel.moveCursor(+ 30 * 1000);
                 break;
 
             case 'skip':
-                if (! channel.hasPlayerPermission(connection.session.identifier)) {
+                if (! channel.hasPlayerPermission(connection.session)) {
                     throw new Error('You are not authorized to modify the player right now');
                 }
                 channel.skip();
                 break;
 
             case 'flush':
-                if (! Config.isOP(connection.session.identifier)) {
+                if (! connection.session.isOP()) {
                     throw new Error('Only OP can flush the queue');
                 }
                 channel.flushQueue();
