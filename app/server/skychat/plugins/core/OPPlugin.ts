@@ -12,7 +12,7 @@ export class OPPlugin extends GlobalPlugin {
 
     readonly rules = {
         op: {
-            minCount: 1,
+            minCount: 0,
             maxCount: 1,
             coolDown: 1000,
             maxCallsPer10Seconds: 2,
