@@ -1,27 +1,45 @@
-![](./app/client/assets/assets/logo.png)
+<p align="center">
+    <img src="./app/client/assets/assets/logo.png">
+</p>
 
 # SkyChat
 
-1. [Features](#features)
-2. [Install](#how-to-install)
-3. [Customize](#customize)
+A virtual cinema that allows you to setup your own private screening to enjoy watching movies, youtube videos, or music with your friends/colleagues/family.
+
+1. [Why the SkyChat?](#why-the-skychat)
+2. [Overview](#overview)
+3. [Install it](#how-to-install)
+4. [Customize it](#customize)
 
 
-## Features
+## Why the SkyChat?
 
-The **SkyChat** is a modern-looking discussion platform with real-time visualisation of everyone's cursor, and a shared and synchronized youtube player. It includes many customisation/entertainment features:
-- Custom text and halo colors to be bought for user messages
-- Virtual money with mini-games (casino roulette, guess the number)
-- An XP system with associated ranks, based on users activity
-- Custom profile pictures (guests have randomly generated ones)
+Here is what makes the SkyChat unique compared to the other applications:
 
-Most of these features can be enabled-disabled from the configuration file.
+~ **A carefully designed user experience, so everything feels nice and smooth**
 
-Overall, here is what it looks like:
+We strongly believe that building the perfect user experience is the key to ensure people continue using an application in the long run. That's why we are constantly and iteratively working on polishing and improving the design and feeling of the SkyChat. 
+
+~ **A sense of proximity between each other**
+
+You can see each other cursor users moving around the screen, which allows people to feel connected to each other. There are humans behind the usernames. (This feature can be enabled/disabled in the configuration)
+
+~ **Engaging the community**
+
+Entertainment and customization plugins allow your community to engage in the long term. Examples of such features, which can be enabled/disabled in the configuration:
+- Virtual money with mini-games (racing game, casino roulette)
+- Styling customization for usernames and messages
+- Long-term activity is rewarded with experience points (XP) and ranks
+- Custom profile pictures
+
+
+## Overview
+
+Here is what it looks like:
 ![overall-screenshot](./doc/screenshot.png)
 ### Synchronized Youtube Player
 
-Users can play any youtube video on a shared and synchronized player. Orchestration is implemented through a public queue of videos to play, and decision-making (for instance to skip videos) is done with polls. Democracy 💯
+Users can play any youtube video on a shared and synchronized player. Orchestration is implemented through a public queue of videos to play, and decision-making (for instance to skip videos) is done with polls. Democracy 💯. If you want it, setup multiple video channels to allow concurrent screenings.
 ![youtube-short](./doc/youtube-short.gif)
 
 ### Live cursor visualization and mini-games
@@ -70,7 +88,7 @@ npm i && npm run dev          # If without docker with fs watcher and auto rebui
 
 ### Application setup
 
-In order to customize the domain name of your SkyChat application, you will need to edit the `.env.json` file. The fields in the .env.json contain private information related to the application.
+By default, the application will be listening to `localhost:8080` and assume it is accessed from `http://localhost:8080`. In order to customize the domain name of your SkyChat application, you will need to edit the `.env.json` file. The fields in the .env.json contain private information related to the application.
 
 The semantic of these fields are defined below:
 
@@ -81,10 +99,11 @@ The semantic of these fields are defined below:
 | hostname                 | string | "localhost" | Hostname the server will listen to |
 | port                     | number | 8080 | Server port |
 | ssl                      | false or {certificate:string,key:string}  | false | SSL configuration (paths to certificate and key files). Use false if SSL is disabled. |
-| **users_passwords_salt** | string | "$RANDOM_SALT" | Password salt. MUST be set manually. |
-| **users_token_salt**     | string | "$RANDOM_SALT" | Token salt. MUST be set manually. |
-| **youtube_api_key**      | string | "" | [Youtube api key](#setup-youtube) |
+| users_passwords_salt | string | "$RANDOM_SALT" | Password salt. |
+| users_token_salt     | string | "$RANDOM_SALT" | Token salt. |
+| youtube_api_key      | string | "" | [Youtube api key](#setup-youtube) |
 | op                       | string[] | [] | OP usernames. OP usernames can use the /setright command. |
+| op_passcode              | string? | "$RANDOM_PASSCODE" | OP passcode. Activate your OP session with `/op $op_passcode` |
 | email_transport          | nodemailer.JSONTransport | {"sendmail": true,"newline": "unix","path": "/usr/sbin/sendmail"} | Value given to [nodemailer.createTransport](https://nodemailer.com/about/) to initialize the mailer |
 
 
@@ -122,8 +141,9 @@ The preferences.json file specifies application preferences. The available field
 | minRightForPrivateMessages    | number |  -1 | Min. right to send private messages |
 | minRightForMessageHistory     | number |  -1 | Min. right to access room message history |
 | minRightForAudioRecording     | number |  -1 | Min. right to share and play audio recordings |
-| minRightForConnectedList      | number |  -1 | Min. right to visualize the list of currently active users |
+| minRightForConnectedList      | number |  -1 | Min. right to access the list of currently active users |
 | minRightForPolls              | number |  -1 | Min. right to create polls |
+| minRightForGallery            | number |  -1 | Min. right to access the gallery |
 | maxReplacedImagesPerMessage   | number |  50 | Max. number of replaced images per message |
 | maxReplacedStickersPerMessage | number |  50 | Max. number of replaced stickers per message |
 | maxNewlinesPerMessage         | number |  20 | Max. number of newlines per message |
