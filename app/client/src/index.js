@@ -1,10 +1,11 @@
 import Vue from "vue";
 import SkychatApp from "./vue/SkychatApp.vue";
-import {SkyChatClient} from "./SkyChatClient";
+import { SkyChatClient } from "./SkyChatClient";
 import store from "./store";
-import {AudioRecorder} from "./AudioRecorder";
+import { AudioRecorder } from "./AudioRecorder";
 import VModal from 'vue-js-modal';
 import Mousetrap from "mousetrap";
+import { ClipboardHelper } from "./ClipboardHelper";
 
 
 Vue.use(VModal, {
@@ -22,9 +23,13 @@ store.commit('LOAD_LOCALSTORAGE');
 
 const client = new SkyChatClient(store);
 
+Vue.prototype.$clipboard = ClipboardHelper;
+
 Vue.prototype.$audio = AudioRecorder;
 
 Vue.prototype.$store = store;
+
+Vue.prototype.$noty = d => new Noty(d).show();
 
 Vue.prototype.$client = client;
 Vue.prototype.$client.connect();

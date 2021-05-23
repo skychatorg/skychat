@@ -2,6 +2,7 @@
 
 export type SanitizedGalleryMedia = {
     id: number;
+    folderId: number;
     thumb: string;
     location: string;
     username: string;
@@ -19,6 +20,8 @@ export class GalleryMedia {
 
     public readonly id: number;
 
+    public readonly folderId: number;
+
     public thumb: string;
 
     public location: string;
@@ -29,6 +32,7 @@ export class GalleryMedia {
 
     constructor(data: SanitizedGalleryMedia) {
         this.id = data.id;
+        this.folderId = data.folderId;
         this.thumb = data.thumb;
         this.location = data.location;
         this.username = data.username;
@@ -39,6 +43,7 @@ export class GalleryMedia {
     sanitized(): SanitizedGalleryMedia {
         return {
             id: this.id,
+            folderId: this.folderId,
             thumb: this.thumb,
             location: this.location,
             username: this.username,

@@ -190,8 +190,8 @@
                 }
 
                 #gallery {
-                    flex-basis: 140px;
-                    min-height: 140px;
+                    flex-basis: 160px;
+                    min-height: 0;
                 }
             }
         }

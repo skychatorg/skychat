@@ -70,6 +70,7 @@ const store = {
          * Gallery info
          */
         gallery: null,
+        gallerySearchResults: { folders: [] },
 
         cursors: {},
         messages: [],
@@ -281,6 +282,9 @@ const store = {
         },
         SET_GALLERY(state, gallery) {
             state.gallery = gallery;
+        },
+        SET_GALLERY_SEARCH_RESULTS(state, gallerySearchResults) {
+            state.gallerySearchResults = gallerySearchResults;
         },
         SET_PLAYER_STATE(state, playerState) {
             state.playerState = playerState;

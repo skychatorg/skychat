@@ -60,7 +60,7 @@ export class StickerPlugin extends GlobalPlugin {
      */
     private async handleStickerAdd(param: string, connection: Connection): Promise<void> {
         let [code, url] = param.split(' ');
-        if (! FileManager.isUploadedFileUrl(url)) {
+        if (! FileManager.isFileUrlUploaded(url)) {
             throw new Error('Given sticker is not an uploaded image');
         }
         if (StickerManager.stickerExists(code)) {

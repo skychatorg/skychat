@@ -52,11 +52,28 @@ export class GalleryFolder {
         this.medias = mediasInfo.map(media => new GalleryMedia(media));
     }
 
-    sanitized(): SanitizedGalleryFolder {
+    search(query: string): SanitizedGalleryFolder {
         return {
             id: this.id,
             name: this.name,
-            medias: this.medias.map(media => media.sanitized()),
+            medias: this.medias
+                .filter(media => {
+                    // Try to find a tag which is in the query
+                    const match = media.tags.find(tag => tag.indexOf(query) !== -1);
+                    return !! match;
+                })
+                .map(media => media.sanitized())
+        };
+    }
+
+    sanitized(limit?: number): SanitizedGalleryFolder {
+        if (typeof limit === 'undefined') {
+            limit = this.medias.length;
+        }
+        return {
+            id: this.id,
+            name: this.name,
+            medias: this.medias.slice(0, limit).map(media => media.sanitized()),
         }
     }
 }

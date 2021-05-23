@@ -29,12 +29,16 @@ export class FileManager {
         return filePath;
     }
 
-    static isUploadedFileUrl(fileUrl: string): boolean {
+    static isFileUrlUploaded(fileUrl: string): boolean {
         return !! fileUrl.match(new RegExp('^' + MessageFormatter.escapeRegExp(Config.LOCATION) + '\/uploads\/([0-9a-zA-Z/-]+)\.(jpg|jpeg|png|webp|gif|pdf|mp4|webm)$'));
     }
 
+    static isFileUrlInGallery(fileUrl: string): boolean {
+        return !! fileUrl.match(new RegExp('^' + MessageFormatter.escapeRegExp(Config.LOCATION) + '\/gallery\/([0-9]+)\/([0-9]+)\/([0-9a-z-]+)\.(jpg|jpeg|png|webp|gif|pdf|mp4|webm)$'));
+    }
+
     static uploadedFileExists(fileUrl: string): boolean {
-        return this.isUploadedFileUrl(fileUrl) && fs.existsSync(FileManager.getLocalPathFromFileUrl(fileUrl));
+        return (this.isFileUrlUploaded(fileUrl) || this.isFileUrlInGallery(fileUrl)) && fs.existsSync(FileManager.getLocalPathFromFileUrl(fileUrl));
     }
 
     static getLocalPathFromFileUrl(url: string): string {

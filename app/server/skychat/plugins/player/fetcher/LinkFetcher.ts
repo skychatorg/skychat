@@ -13,8 +13,8 @@ export class LinkFetcher implements VideoFetcher {
      * @param link 
      */
     async getInfoFromLink(link: string): Promise<VideoInfo> {
-        if (! FileManager.isUploadedFileUrl(link)) {
-            throw new Error('Link is not to an uploaded file');
+        if (! FileManager.isFileUrlUploaded(link) && ! FileManager.isFileUrlInGallery(link)) {
+            throw new Error('Only videos stored on this server can be fetched');
         }
         if (! FileManager.uploadedFileExists(link)) {
             throw new Error('Video does not exist');

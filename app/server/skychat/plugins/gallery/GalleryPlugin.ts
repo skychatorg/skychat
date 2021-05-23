@@ -15,10 +15,13 @@ export class GalleryPlugin extends GlobalPlugin {
 
     static readonly commandName = 'gallery';
 
-    static readonly commandAliases = ['galleryfolderadd', 'galleryfolderremove', 'galleryadd', 'galleryremove'];
+    static readonly commandAliases = ['gallerysearch', 'galleryfolderadd', 'galleryfolderremove', 'galleryadd', 'gallerydelete'];
 
     readonly rules = {
         gallery: { },
+        gallerysearch: {
+            minCount: 1,
+        },
         galleryfolderadd: {
             minCount: 1,
             params: [
@@ -40,11 +43,12 @@ export class GalleryPlugin extends GlobalPlugin {
                 {name: "tags", pattern: /^.+$/},
             ]
         },
-        galleryremove: {
-            minCount: 1,
-            maxCount: 1,
+        gallerydelete: {
+            minCount: 2,
+            maxCount: 2,
             params: [
-                {name: "id", pattern: /^\d+$/},
+                {name: "folderId", pattern: /^\d+$/},
+                {name: "mediaId", pattern: /^\d+$/},
             ]
         }
     }
@@ -78,6 +82,10 @@ export class GalleryPlugin extends GlobalPlugin {
     }
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
+
+        if (alias === 'gallerysearch') {
+            return await this.handleGallerySearch(param, connection);
+        }
         
         if (alias === 'galleryfolderadd') {
             return await this.handleGalleryFolderAdd(param, connection);
@@ -91,9 +99,14 @@ export class GalleryPlugin extends GlobalPlugin {
             return await this.handleGalleryAdd(param, connection);
         }
 
-        if (alias === 'galleryremove') {
-            return await this.handleGalleryRemove(param, connection);
+        if (alias === 'gallerydelete') {
+            return await this.handleGalleryDelete(param, connection);
         }
+    }
+
+    async handleGallerySearch(param: string, connection: Connection): Promise<void> {
+        const results = this.gallery.search(param);
+        connection.send('gallery-search', results);
     }
 
     async handleGalleryFolderAdd(param: string, connection: Connection): Promise<void> {
@@ -122,14 +135,14 @@ export class GalleryPlugin extends GlobalPlugin {
         const link = rawLink;
         const folderId = parseInt(rawFolderId);
         const tags = rawTags.split(',').map(tag => tag.trim());
-        if (! FileManager.isUploadedFileUrl(link)) {
+        if (! FileManager.isFileUrlUploaded(link)) {
             throw new Error('File is not stored on this server');
         }
         this.gallery.addMedia(connection.session.user, folderId, link, tags);
         this.syncStorage();
     }
 
-    async handleGalleryRemove(param: string, connection: Connection): Promise<void> {
+    async handleGalleryDelete(param: string, connection: Connection): Promise<void> {
         if (! Config.isOP(connection.session.identifier)) {
             throw new Error(`Only OP can manage medias`);
         }
@@ -151,7 +164,7 @@ export class GalleryPlugin extends GlobalPlugin {
     public sync(sessionsOrNothing?: Session[]): void {
         const sessions: Session[] = sessionsOrNothing || Object.values(Session.sessions);
         for (const session of sessions) {
-            session.send('gallery', this.sanitized());
+            session.send('gallery', this.gallery.sanitized(4));
         }
     }
 }

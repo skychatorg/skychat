@@ -21,9 +21,9 @@
         mounted: function() { this.update(); },
         methods: {
             update: function() {
-                this.src = this.playerState.current.video.id;
-                const extension = this.src.match(/\.([a-z0-9]+)$/)[1];
-                this.videoType = 'video/' + extension;
+                this.src = this.playerState.current.video.id + '#t=' + parseInt(this.playerState.cursor / 1000);
+                const extension = this.playerState.current.video.id.match(/\.([a-z0-9]+)$/)[1];
+                this.videoType = 'video/' + extension ;
             }
         },
         computed: {
