@@ -17,6 +17,8 @@ export class GalleryPlugin extends GlobalPlugin {
 
     static readonly commandAliases = ['gallerysearch', 'galleryfolderadd', 'galleryfolderremove', 'galleryadd', 'gallerydelete'];
 
+    public readonly minRight = Config.PREFERENCES.minRightForGallery;
+
     readonly rules = {
         gallery: { },
         gallerysearch: {
@@ -154,9 +156,19 @@ export class GalleryPlugin extends GlobalPlugin {
     }
 
     async onNewConnection(connection: Connection): Promise<void> {
-        this.sync([connection.session]);
+        // If gallery is available for everyone, send it
+        if (Config.PREFERENCES.minRightForGallery === -1) {
+            this.sync([connection.session]);
+        }
     }
-
+    
+    public async onConnectionAuthenticated(connection: Connection): Promise<void> {
+        // If user can access the gallery
+        if (Config.PREFERENCES.minRightForGallery > -1 && connection.session.user.right >= Config.PREFERENCES.minRightForGallery) {
+            this.sync([connection.session]);
+        }
+    }
+    
     public sanitized(): SanitizedGallery {
         return this.gallery.sanitized();
     }

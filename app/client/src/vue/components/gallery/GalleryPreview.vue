@@ -1,5 +1,5 @@
 <template>
-    <div class="gallery-preview">
+    <div class="gallery-preview" v-if="shownFolders !== null">
         <h2 class="title">Gallery</h2>
         <div class="gallery-content">
 
@@ -72,7 +72,7 @@
         components: { HoverCard, MediaVisualizer },
         data: function() {
             return {
-                shownFolders: [],
+                shownFolders: null,
                 searchInput: '',
 
                 /**

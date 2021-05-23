@@ -4,7 +4,8 @@
     "minRightForAudioRecording": -1,
     "minRightForConnectedList": -1,
     "minRightForPolls": -1,
+    "minRightForGallery": -1,
     "maxReplacedImagesPerMessage": 50,
     "maxReplacedStickersPerMessage": 50,
-    "maxNewlinesPerMessage": 20
+    "maxNewlinesPerMessage": 20,
 }

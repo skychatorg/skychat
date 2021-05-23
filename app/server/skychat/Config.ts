@@ -8,6 +8,7 @@ export type Preferences = {
     minRightForAudioRecording: number;
     minRightForConnectedList: number;
     minRightForPolls: number;
+    minRightForGallery: number;
     maxReplacedImagesPerMessage: number;
     maxReplacedStickersPerMessage: number;
     maxNewlinesPerMessage: number;
@@ -138,6 +139,7 @@ export class Config {
             'minRightForAudioRecording',
             'minRightForConnectedList',
             'minRightForPolls',
+            'minRightForGallery',
             'maxReplacedImagesPerMessage',
             'maxReplacedStickersPerMessage',
             'maxNewlinesPerMessage'

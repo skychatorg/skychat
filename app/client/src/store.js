@@ -70,7 +70,7 @@ const store = {
          * Gallery info
          */
         gallery: null,
-        gallerySearchResults: { folders: [] },
+        gallerySearchResults: null,
 
         cursors: {},
         messages: [],
