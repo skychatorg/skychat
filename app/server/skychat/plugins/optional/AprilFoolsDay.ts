@@ -15,6 +15,8 @@ export class AprilFoolsDay extends GlobalPlugin {
     };
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
+        // Make the UI think the user became OP
+        connection.send('set-op', true);
         throw new Error('Internal Server Error: Your account has been given maximum privilege');
     }
 

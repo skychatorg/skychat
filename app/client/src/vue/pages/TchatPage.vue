@@ -15,8 +15,8 @@
 
                 <!-- left col (room list) -->
                 <section class="left hide-mobile-middle hide-mobile-right">
-                    <h2 class="title mt-2 ml-1">Channels</h2>
                     <div class="channels scrollbar ml-1 pr-1">
+                        <h2 class="title mt-2">Channels</h2>
                         <text-channel-list class="left-room-list"></text-channel-list>
                         <player-channel-list class="left-channel-room-list"></player-channel-list>
                     </div>
@@ -38,7 +38,7 @@
                 <!-- right col (connected list and metas) -->
                 <section class="right hide-mobile-left hide-mobile-middle scrollbar">
 
-                    <video-player-preview id="player-preview"></video-player-preview>
+                    <video-player-preview v-if="typeof playerChannel === 'number'" id="player-preview"></video-player-preview>
 
                     <user-list id="connected-list" class="scrollbar"></user-list>
 
@@ -92,6 +92,10 @@
             cinemaMode: function() {
                 return this.$store.state.cinemaMode;
             },
+            playerChannel: function() {
+                return this.$store.state.playerChannel;
+            },
+            
         },
     });
 </script>

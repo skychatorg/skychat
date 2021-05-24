@@ -1,6 +1,11 @@
 <template>
-    <div class="room-list">
-        <div class="subtitle"><h3>text</h3></div>
+    <div class="room-list" v-show="rooms.length > 1 || op">
+        <div class="subtitle">
+            <h3>
+                text
+                <span v-show="op" @click="createRoom()" class="room-create material-icons md-12">add</span>
+            </h3>
+        </div>
         <hover-card v-for="room in rooms"
             :key="room.id"
             :selected="currentRoom === room.id"
@@ -15,6 +20,16 @@
                     <b>{{room.name}}</b>
                 </div>
                 <div class="room-meta">
+
+                    <!-- delete room (op) -->
+                    <div v-show="currentRoom === room.id && op"
+                        @click="deleteRoom()"
+                        class="room-delete mr-1"
+                        title="Delete this channel">
+                        <i class="material-icons md-14">close</i>
+                    </div>
+
+                    <!-- user count -->
                     <div v-if="roomConnectedUsers[room.id] && roomConnectedUsers[room.id].length > 0"
                         class="room-users mr-1"
                         title="Users in this room">
@@ -38,6 +53,12 @@
             joinRoom: function(id) {
                 this.$client.joinRoom(id);
             },
+            createRoom: function() {
+                this.$client.createRoom();
+            },
+            deleteRoom: function() {
+                this.$client.deleteCurrentRoom();
+            }
         },
         computed: {
             rooms: function() {
@@ -51,6 +72,9 @@
             },
             user: function() {
                 return this.$store.state.user;
+            },
+            op: function() {
+                return this.$store.state.op;
             },
         },
     });
@@ -73,6 +97,11 @@
             font-size: 10px;
             text-transform: uppercase;
             padding-top: 2px;
+        }
+
+        .room-create {
+            cursor: pointer;
+            vertical-align: bottom;
         }
     }
 
@@ -108,6 +137,10 @@
                 .room-users {
                     color: #8ecfff;
                     span { vertical-align: top; }
+                }
+
+                .room-delete {
+                    color: #ff8e8e;
                 }
             }
         }

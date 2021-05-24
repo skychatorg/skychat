@@ -1,6 +1,11 @@
 <template>
-    <div class="channel-list" v-show="playerChannels.length > 0">
-        <div class="subtitle"><h3>video</h3></div>
+    <div class="channel-list" v-show="playerChannels.length > 0 || op">
+        <div class="subtitle">
+            <h3>
+                video
+                <span v-show="op" @click="createChannel()" class="channel-create material-icons md-12">add</span>
+            </h3>
+        </div>
         
         <hover-card v-for="channel in playerChannels"
             :key="channel.id"
@@ -15,6 +20,13 @@
                         <b>{{channel.name}}</b>
                     </div>
                     <div class="channel-meta">
+                        <!-- delete channel (op) -->
+                        <div v-show="playerChannel === channel.id && op"
+                            @click="deleteChannel()"
+                            class="channel-delete mr-1"
+                            title="Delete this channel">
+                            <i class="material-icons md-14">close</i>
+                        </div>
                         <!-- show if there is a video currently playing -->
                         <div v-show="channel.playing"
                             class="channel-player mr-1"
@@ -26,6 +38,7 @@
                     </div>
                 </div>
                 <div class="channel-content-users" v-if="playerChannelUsers[channel.id] && playerChannelUsers[channel.id].length > 0">
+                    <!-- users in the channel -->
                     <div v-for="user of playerChannelUsers[channel.id]"
                         :key="user.username"
                         class="avatar image-bubble"
@@ -61,6 +74,12 @@
                     this.$client.joinPlayerChannel(id);
                 }
             },
+            createChannel: function() {
+                this.$client.sendMessage(`/playerchannelmanage create`);
+            },
+            deleteChannel: function() {
+                this.$client.sendMessage(`/playerchannelmanage delete`);
+            }
         },
         computed: {
             playerChannelUsers: function() {
@@ -75,6 +94,9 @@
             user: function() {
                 return this.$store.state.user;
             },
+            op: function() {
+                return this.$store.state.op;
+            },
         },
     });
 </script>
@@ -86,7 +108,6 @@
 
     .subtitle {
         width: 100%;
-        height: 16px;
         background: #242427;
         margin-top: 4px;
         text-align: center;
@@ -96,6 +117,11 @@
             font-size: 10px;
             text-transform: uppercase;
             padding-top: 2px;
+        }
+
+        .channel-create {
+            cursor: pointer;
+            vertical-align: bottom;
         }
     }
 
@@ -148,6 +174,10 @@
 
                     .channel-player.disabled {
                         color: #8c8c8c;
+                    }
+                    
+                    .channel-delete {
+                        color: #ff8e8e;
                     }
                 }
             }

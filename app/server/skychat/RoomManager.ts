@@ -196,13 +196,13 @@ export class RoomManager {
 
     /**
      * Create a new room
-     * @param id 
      * @param name
      * @returns 
      */
-    public createRoom(id: number, name?: string) {
-        if (this.hasRoomId(id)) {
-            throw new Error(`Room ${id} already exists`);
+    public createRoom(name?: string) {
+        let id = 1;
+        while (this.hasRoomId(id)) {
+            ++ id;
         }
         const room = new Room(id, this);
         if (name) {

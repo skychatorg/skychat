@@ -204,7 +204,7 @@ export abstract class Plugin {
         }
 
         // Check op
-        if (this.opOnly && Config.OP.indexOf(connection.session.identifier) === -1) {
+        if (this.opOnly && ! connection.session.isOP()) {
             throw new Error('Command is only for op');
         }
 

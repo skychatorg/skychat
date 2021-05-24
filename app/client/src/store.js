@@ -26,6 +26,7 @@ const store = {
         cinemaMode: false,
         channel: null,
         connectionState: WebSocket.CLOSED,
+
         user: {
             id: 0,
             username: '*Guest',
@@ -41,6 +42,11 @@ const store = {
                 }
             }
         },
+
+        /**
+         * Whether the current session is OP
+         */
+        op: false,
 
         currentRoom: null,
         
@@ -74,7 +80,7 @@ const store = {
          */
         gallery: null,
         gallerySearchResults: null,
-        isGalleryVisible: true,
+        isGalleryVisible: false,
 
         cursors: {},
         messages: [],
@@ -169,6 +175,9 @@ const store = {
         },
         SET_USER(state, user) {
             state.user = user;
+        },
+        SET_OP(state, op) {
+            state.op = !! op;
         },
         SET_CONNECTED_LIST(state, entries) {
             state.connectedList = entries;

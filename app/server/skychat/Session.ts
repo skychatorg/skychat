@@ -205,7 +205,8 @@ export class Session implements IBroadcaster {
         // If this session was marked as dead, mark it as alive
         this.deadSince = null;
 
-        connection.send('set-user', this.user.sanitized())
+        connection.send('set-user', this.user.sanitized());
+        connection.send('set-op', this.op);
     }
 
     /**
@@ -220,6 +221,7 @@ export class Session implements IBroadcaster {
 
     public setOP(op: boolean) {
         this.op = op;
+        this.send('set-op', this.op);
     }
 
     public isOP(): boolean {

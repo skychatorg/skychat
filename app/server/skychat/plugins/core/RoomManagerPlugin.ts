@@ -22,9 +22,8 @@ export class RoomManagerPlugin extends RoomPlugin {
             ]
         },
         roomcreate: {
-            minCount: 2,
+            minCount: 0,
             params: [
-                {name: 'new room id', pattern: /^([0-9]+)$/},
                 {name: 'name', pattern: /.+/},
             ]
         },
@@ -78,12 +77,8 @@ export class RoomManagerPlugin extends RoomPlugin {
     }
 
     async handleRoomCreate(param: string, connection: Connection): Promise<void> {
-        const roomId = parseInt(param.substr(0, param.indexOf(' ')));
-        const roomName = param.substr(param.indexOf(' ') + 1).trim();
-        if (isNaN(roomId)) {
-            throw new Error('Invalid room id');
-        }
-        const room = this.room.manager.createRoom(roomId, roomName);
+        const roomName = param.trim();
+        const room = this.room.manager.createRoom(roomName);
         const message = UserController.createNeutralMessage({ id: 0, content: `Room ${room.id} has been created` });
         connection.send('message', message.sanitized());
     }
