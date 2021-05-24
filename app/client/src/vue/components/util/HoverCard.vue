@@ -45,6 +45,7 @@
             width: 0;
             transition: all .2s ease-out;
             background: #242427;
+            overflow-y: auto;
         }
 
         &.selected {

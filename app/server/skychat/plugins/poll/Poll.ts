@@ -1,4 +1,3 @@
-import { Config } from "../../Config";
 
 
 export type PollState =  'pending' | 'started' | 'finished';
@@ -63,16 +62,20 @@ export class Poll {
      * @param vote
      */
     public registerVote(identifier: string, vote: boolean) {
-        // If the user is OP, his vote cancels all the others
-        if (Config.isOP(identifier)) {
-            this.opVote = vote;
-            this.votes = {};
-        }
         // If the user is anyone else, register his vote only if an OP did not vote before
         if (typeof this.opVote === 'boolean') {
             return false;
         }
         this.votes[identifier] = vote;
+    }
+
+    /**
+     * Force the result of this poll
+     * @param vote 
+     */
+    public forceResult(vote: boolean) {
+        this.opVote = vote;
+        this.votes = {};
     }
 
     /**

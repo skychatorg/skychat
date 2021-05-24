@@ -7,8 +7,11 @@ const DEFAULT_DOCUMENT_TITLE = "~ SkyChat";
 
 const CURSOR_DECAY_DELAY = 5 * 1000; // Must match value from backend
 
-const CURRENT_VERSION = 1;
-const STORE_SAVED_KEYS = ['playerEnabled'];
+const CURRENT_VERSION = 2;
+const STORE_SAVED_KEYS = [
+    'playerEnabled',
+    'isGalleryVisible',
+];
 
 
 const store = {
@@ -38,7 +41,9 @@ const store = {
                 }
             }
         },
+
         currentRoom: null,
+        
         connectedList: [],
 
         /**
@@ -63,6 +68,13 @@ const store = {
          * Last message missed because the windows was not focused, if any
          */
         lastMissedMessage: null,
+
+        /**
+         * Gallery info
+         */
+        gallery: null,
+        gallerySearchResults: null,
+        isGalleryVisible: true,
 
         cursors: {},
         messages: [],
@@ -271,6 +283,16 @@ const store = {
                 return;
             }
             Vue.set(state.messages, oldMessageIndex, message);
+        },
+        SET_GALLERY(state, gallery) {
+            state.gallery = gallery;
+        },
+        SET_GALLERY_SEARCH_RESULTS(state, gallerySearchResults) {
+            state.gallerySearchResults = gallerySearchResults;
+        },
+        SET_GALLERY_VISIBILITY(state, isGalleryVisible) {
+            state.isGalleryVisible = !! isGalleryVisible;
+            this.commit('SAVE_LOCALSTORAGE');
         },
         SET_PLAYER_STATE(state, playerState) {
             state.playerState = playerState;

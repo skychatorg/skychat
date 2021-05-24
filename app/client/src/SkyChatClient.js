@@ -46,6 +46,9 @@ export class SkyChatClient extends EventEmitter {
         this.on('error', this.onError.bind(this));
         this.on('roll', this.onRoll.bind(this));
 
+        this.on('gallery', this.onGallery.bind(this));
+        this.on('gallery-search', this.onGallerySearchResults.bind(this));
+
         this.on('player-channels', this.onPlayerChannels.bind(this));
         this.on('player-channel', this.onPlayerChannel.bind(this));
         this.on('player-search', this.onPlayerApiSearchResults.bind(this));
@@ -424,6 +427,20 @@ export class SkyChatClient extends EventEmitter {
      */
     onRoll(roll) {
         this.store.commit("SET_ROLL_STATE", roll.state);
+    }
+
+    /**
+     *
+     */
+    onGallery(gallery) {
+        this.store.commit("SET_GALLERY", gallery);
+    }
+
+    /**
+     *
+     */
+    onGallerySearchResults(gallerySearchResults) {
+        this.store.commit("SET_GALLERY_SEARCH_RESULTS", gallerySearchResults);
     }
 
     /**

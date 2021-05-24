@@ -1,4 +1,5 @@
 import { Config } from "../../Config";
+import { Connection } from "../../Connection";
 import { Session } from "../../Session";
 import { SanitizedUser, User } from "../../User";
 import { UserController } from "../../UserController";
@@ -15,7 +16,7 @@ export type VideoInfo = {
     /**
      * Video type (currently only youtube supported)
      */
-    type: 'youtube';
+    type: 'youtube' | 'embed';
 
     /**
      * Video data (for youtube, video id)
@@ -189,11 +190,11 @@ export class PlayerChannel {
      * Return whether a identifier is authroized to manage the player right now
      * @param identifier 
      */
-    public hasPlayerPermission(identifier: string) {
-        if (this.currentVideoInfo && this.currentVideoInfo.user.username === identifier) {
+    public hasPlayerPermission(session: Session) {
+        if (this.currentVideoInfo && this.currentVideoInfo.user.username === session.identifier) {
             return true;
         }
-        if (Config.isOP(identifier)) {
+        if (session.isOP()) {
             return true;
         }
         return false;
@@ -254,11 +255,13 @@ export class PlayerChannel {
     }
 
     /**
-     * Sync a given session
-     * @param session 
+     * Sync a given list of connections
+     * @param connections
      */
-    public syncSession(session: Session) {
-        session.send('player-sync', this.getPlayerData());
+    public syncConnections(connections: Connection[]) {
+        for (const connection of connections) {
+            connection.send('player-sync', this.getPlayerData());
+        }
     }
 
     /**

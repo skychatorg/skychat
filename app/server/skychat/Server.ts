@@ -31,7 +31,7 @@ type EventsDescription = {
  */
 export class Server {
 
-    public static readonly UPLOADED_FILE_REGEXP: RegExp = new RegExp('^' + Config.LOCATION + '/uploads/([-\\/._a-zA-Z0-9]+)$');
+    public static readonly UPLOADED_FILE_REGEXP: RegExp = new RegExp('^' + Config.LOCATION + '/uploads/all/([-\\/._a-zA-Z0-9]+)$');
 
     /**
      * List of accepted events.
@@ -59,8 +59,6 @@ export class Server {
         this.app = express();
         this.app.use(express.static('dist'));
         this.app.use('/uploads', express.static('uploads'));
-        this.app.use('/stickers', express.static('stickers'));
-        this.app.use('/avatars', express.static('avatars'));
         this.app.use(fileUpload({
             limits: { fileSize: 10 * 1024 * 1024 },
             createParentPath: true,

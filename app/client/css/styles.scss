@@ -201,6 +201,14 @@ body .vm--modal {
     color: grey;
     margin-top: 2px;
     margin-bottom: 2px;
+
+    &.clickable {
+        cursor: pointer;
+    }
+
+    .title-icon {
+        vertical-align: bottom;
+    }
 }
 
 * {

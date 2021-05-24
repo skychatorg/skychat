@@ -11,10 +11,10 @@ import { YoutubeFetcher } from "./fetcher/YoutubeFetcher";
  */
 export class YoutubeSearchAndPlayPlugin extends GlobalPlugin {
 
-    static readonly commandName = '~';
+    static readonly commandName = '#';
 
     readonly rules: {[alias: string]: PluginCommandRules} = {
-        '~': {
+        '#': {
             minCount: 1,
             maxCallsPer10Seconds: 2,
             params: [{name: 'search', pattern: /./}]
@@ -40,9 +40,9 @@ export class YoutubeSearchAndPlayPlugin extends GlobalPlugin {
         if (items.length === 0) {
             throw new Error('No result found');
         }
-        const videoInfo = await youtubeFetcher.fetch(items[0].id);
+        const videos = await youtubeFetcher.get(items[0].id);
         
         // Play video
-        channel.add(videoInfo, connection.session.user);
+        channel.add(videos, connection.session.user);
     }
 }

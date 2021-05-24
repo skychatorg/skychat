@@ -48,12 +48,12 @@ export class AvatarPlugin extends GlobalPlugin {
         if (['png', 'jpg', 'jpeg'].indexOf(extension) === -1) {
             throw new Error('Extension not allowed');
         }
-        const newAvatarPath = 'avatars/' + connection.session.identifier + '.' + extension;
+        const newAvatarPath = 'uploads/avatars/' + connection.session.identifier + '.' + extension;
 
         // Remove previous avatar
         const previousAvatarUrl = UserController.getPluginData(connection.session.user, this.commandName);
         const previousAvatarLocalPath = '.' + previousAvatarUrl.substr(Config.LOCATION.length).split('?')[0];
-        if (previousAvatarUrl.match('^avatars\/')) {
+        if (previousAvatarUrl.match('^uploads\/avatars\/')) {
             try {
                 fs.unlinkSync(previousAvatarLocalPath);
             } catch (error) { }

@@ -121,6 +121,11 @@ export class Session implements IBroadcaster {
     public lastMessageDate: Date;
 
     /**
+     * Whether this session is OP
+     */
+    private op: boolean = false;
+
+    /**
      * Date since the last active connection has disconnected. 
      */
     public deadSince: Date | null;
@@ -211,6 +216,14 @@ export class Session implements IBroadcaster {
         this.identifier = user.username.toLowerCase();
         this.user = user;
         this.syncUserData();
+    }
+
+    public setOP(op: boolean) {
+        this.op = op;
+    }
+
+    public isOP(): boolean {
+        return this.op;
     }
 
     /**

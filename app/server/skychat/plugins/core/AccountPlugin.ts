@@ -103,7 +103,7 @@ export class AccountPlugin extends GlobalPlugin {
             throw new Error('Invalid password');
         }
 
-        if (Config.isOP(username)) {
+        if (! connection.session.isOP()) {
             throw new Error('You can not escalate yourself into OP by changing username. Please remove the new username from the OP list, change username, then re-add it.');
         }
 
@@ -129,7 +129,7 @@ export class AccountPlugin extends GlobalPlugin {
         const username = param.split(' ')[0].toLowerCase();
         const password = param.split(' ').slice(1).join(' ');
 
-        if (! Config.isOP(connection.session.identifier)) {
+        if (! connection.session.isOP()) {
             throw new Error('You must be OP to reset an account password');
         }
 

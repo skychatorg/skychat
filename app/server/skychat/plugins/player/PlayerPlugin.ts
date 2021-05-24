@@ -5,6 +5,8 @@ import { RoomManager } from "../../RoomManager";
 import { PlayerChannelManager } from "./PlayerChannelManager";
 import { YoutubeFetcher } from "./fetcher/YoutubeFetcher";
 import { PluginCommandRules } from "../../Plugin";
+import { LinkFetcher } from "./fetcher/LinkFetcher";
+import { VideoFetcher } from "./VideoFetcher";
 
 
 
@@ -15,8 +17,9 @@ export class PlayerPlugin extends GlobalPlugin {
 
     static readonly MIN_RIGHT: number = 10;
 
-    static readonly FETCHERS: {[fetcherName: string]: YoutubeFetcher} = {
+    static readonly FETCHERS: {[fetcherName: string]: VideoFetcher} = {
         'yt': new YoutubeFetcher(),
+        'embed': new LinkFetcher(),
     };
 
     static readonly commandName = 'player';
@@ -110,7 +113,7 @@ export class PlayerPlugin extends GlobalPlugin {
      * @param connection
      */
     public async onNewConnection(connection: Connection): Promise<void> {
-        this.channelManager.sync([connection.session]);
+        this.channelManager.sync([connection]);
     }
 
     /**
@@ -128,9 +131,18 @@ export class PlayerPlugin extends GlobalPlugin {
      * @param connection
      */
     public async onConnectionAuthenticated(connection: Connection): Promise<void> {
-        const channelId = this.getUserData(connection.session.user);
-        if (typeof channelId === 'number') {
-            this.channelManager.joinChannel(connection.session, channelId);
+        // Compare the saved channel id to this session
+        const currentChannel = this.channelManager.getSessionChannel(connection.session);
+        const savedChannelId = this.getUserData(connection.session.user);
+
+        if (typeof savedChannelId === 'number' && (! currentChannel || savedChannelId !== currentChannel.id)) {
+            // If the user is supposed to be in a channel, but this session aint
+            // Make this session join the saved channel
+            this.channelManager.joinChannel(connection.session, savedChannelId);
+
+        } else if (currentChannel) {
+            // If this session is in a yt channel, synchronize this connection
+            currentChannel.syncConnections([connection]);
         }
     }
 
@@ -180,7 +192,7 @@ export class PlayerPlugin extends GlobalPlugin {
      */
     private async handlePlayerChannelManage(param: string, connection: Connection) {
 
-        if (! Config.isOP(connection.session.identifier)) {
+        if (! connection.session.isOP()) {
             throw new Error('Command only for OP');
         }
 
@@ -252,7 +264,7 @@ export class PlayerPlugin extends GlobalPlugin {
     }
 
     /**
-     * Search video/playlists from YT
+     * Synchronize this connection
      * @param param 
      * @param connection 
      * @returns 
@@ -262,7 +274,7 @@ export class PlayerPlugin extends GlobalPlugin {
         if (! channel) {
             return;
         }
-        channel.syncSession(connection.session);
+        channel.syncConnections([connection]);
     }
 
     /**
@@ -304,11 +316,11 @@ export class PlayerPlugin extends GlobalPlugin {
             throw new Error('Invalid fetcher specified');
         }
         const fetcher = PlayerPlugin.FETCHERS[fetcherName];
-        const items = await fetcher.fetch(param);
-        if (items.length === 0) {
+        const videos = await fetcher.get(param);
+        if (videos.length === 0) {
             throw new Error('Unable to fetch items');
         }
-        channel.add(items, connection.session.user);
+        channel.add(videos, connection.session.user);
     }
 
     /**
@@ -327,28 +339,28 @@ export class PlayerPlugin extends GlobalPlugin {
         switch (param) {
 
             case 'replay30':
-                if (! channel.hasPlayerPermission(connection.session.identifier)) {
+                if (! channel.hasPlayerPermission(connection.session)) {
                     throw new Error('You are not authorized to modify the player right now');
                 }
                 channel.moveCursor(- 30 * 1000);
                 break;
             
             case 'skip30':
-                if (! channel.hasPlayerPermission(connection.session.identifier)) {
+                if (! channel.hasPlayerPermission(connection.session)) {
                     throw new Error('You are not authorized to modify the player right now');
                 }
                 channel.moveCursor(+ 30 * 1000);
                 break;
 
             case 'skip':
-                if (! channel.hasPlayerPermission(connection.session.identifier)) {
+                if (! channel.hasPlayerPermission(connection.session)) {
                     throw new Error('You are not authorized to modify the player right now');
                 }
                 channel.skip();
                 break;
 
             case 'flush':
-                if (! Config.isOP(connection.session.identifier)) {
+                if (! connection.session.isOP()) {
                     throw new Error('Only OP can flush the queue');
                 }
                 channel.flushQueue();

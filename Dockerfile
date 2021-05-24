@@ -8,7 +8,7 @@ ARG DOCKER_PORT=8080
 ARG DOCKER_TZ=America/Denver
 
 # Install zip (required for managing backups)
-RUN apt-get update -y && apt-get -y install zip
+RUN apt-get update -y && apt-get -y install zip ffmpeg
 
 # Set timezone
 RUN ln -snf /usr/share/zoneinfo/$DOCKER_TZ /etc/localtime
@@ -22,12 +22,10 @@ RUN useradd -m -u $UID -g $GID -o -s /bin/bash $UNAME
 WORKDIR /app/skychat/
 
 # Mount volumes
-RUN ln -s /var/skychat/avatars  ./avatars
-RUN ln -s /var/skychat/backups  ./backups
 RUN ln -s /var/skychat/config   ./config
-RUN ln -s /var/skychat/database ./database
 RUN ln -s /var/skychat/scripts  ./scripts
-RUN ln -s /var/skychat/stickers ./stickers
+RUN ln -s /var/skychat/database ./database
+RUN ln -s /var/skychat/backups  ./backups
 RUN ln -s /var/skychat/storage  ./storage
 RUN ln -s /var/skychat/uploads  ./uploads
 

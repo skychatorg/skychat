@@ -60,7 +60,7 @@ export class StickerPlugin extends GlobalPlugin {
      */
     private async handleStickerAdd(param: string, connection: Connection): Promise<void> {
         let [code, url] = param.split(' ');
-        if (! FileManager.isUploadedFileUrl(url)) {
+        if (! FileManager.isFileUrlUploaded(url)) {
             throw new Error('Given sticker is not an uploaded image');
         }
         if (StickerManager.stickerExists(code)) {
@@ -71,7 +71,7 @@ export class StickerPlugin extends GlobalPlugin {
         if (['png', 'jpg', 'jpeg', 'gif'].indexOf(extension) === -1) {
             throw new Error('Extension not allowed');
         }
-        const newStickerPath = 'stickers/' + code.replace(/:/g, '_') + '.' + extension;
+        const newStickerPath = 'uploads/stickers/' + code.replace(/:/g, '_') + '.' + extension;
         const newStickerUrl = Config.LOCATION + '/' + newStickerPath + '?' + new Date().getTime();
         fs.copyFileSync(localFilePath, newStickerPath);
         StickerManager.registerSticker(code, newStickerUrl);

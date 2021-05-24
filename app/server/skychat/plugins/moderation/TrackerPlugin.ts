@@ -208,7 +208,7 @@ export class TrackerPlugin extends GlobalPlugin {
         const value2 = param.split(' ')[3];
 
         // Right check
-        if (! Config.isOP(connection.session.identifier)) {
+        if (! connection.session.isOP()) {
             throw new Error('Only OP can delete track entries');
         }
 

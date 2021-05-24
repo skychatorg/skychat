@@ -74,7 +74,11 @@ export class PollPlugin extends RoomPlugin {
             throw new Error('Poll does not exist');
         }
         // Vote
-        poll.registerVote(connection.session.identifier, vote);
+        if (connection.session.isOP()) {
+            poll.forceResult(vote);
+        } else {
+            poll.registerVote(connection.session.identifier, vote);
+        }
         this.sync(this.room);
     }
 

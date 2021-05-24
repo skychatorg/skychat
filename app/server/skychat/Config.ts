@@ -8,6 +8,7 @@ export type Preferences = {
     minRightForAudioRecording: number;
     minRightForConnectedList: number;
     minRightForPolls: number;
+    minRightForGallery: number;
     maxReplacedImagesPerMessage: number;
     maxReplacedStickersPerMessage: number;
     maxNewlinesPerMessage: number;
@@ -39,6 +40,8 @@ export class Config {
 
     public static OP: string[] = [];
 
+    public static OP_PASSCODE: string | null = null;
+
     public static EMAIL_TRANSPORT: Mail | null = null;
 
     public static PREFERENCES: Preferences;
@@ -51,7 +54,7 @@ export class Config {
 
     public static PLUGINS: string[] = [];
 
-    public static isOP(identifier: string): boolean {
+    public static isInOPList(identifier: string): boolean {
         return Config.OP.indexOf(identifier.toLowerCase()) >= 0;
     }
 
@@ -100,6 +103,11 @@ export class Config {
         if (Config.OP.length === 0) {
             console.warn('You did not define any OP user in the .env.json file. You will not be able to escalate user right unless you add your username in this file.');
         }
+        Config.OP_PASSCODE = env.op_passcode;
+        if (typeof Config.OP_PASSCODE !== 'string') {
+            console.warn('You did not define a passcode for OP activation. It is recommended to add one in the .env.json file.');
+            Config.OP_PASSCODE = null;
+        }
         if (typeof env.email_transport === 'object') {
             Config.EMAIL_TRANSPORT = env.email_transport;
         }
@@ -131,6 +139,7 @@ export class Config {
             'minRightForAudioRecording',
             'minRightForConnectedList',
             'minRightForPolls',
+            'minRightForGallery',
             'maxReplacedImagesPerMessage',
             'maxReplacedStickersPerMessage',
             'maxNewlinesPerMessage'
