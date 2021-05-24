@@ -14,7 +14,7 @@ A virtual cinema that allows you to setup your own private screening to enjoy wa
 
 ## Why the SkyChat?
 
-Here is what makes the SkyChat unique compared to the other applications:
+Here is what makes the SkyChat unique compared to the other entertainment platforms:
 
 ~ **A carefully designed user experience, so everything feels nice and smooth**
 
