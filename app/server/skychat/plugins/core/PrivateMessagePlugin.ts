@@ -14,7 +14,8 @@ export class PrivateMessagePlugin extends GlobalPlugin {
 
     readonly rules = {
         mp: {
-            minCount: 2,
+            minCount: 1,
+            maxCount: 1,
             coolDown: 50,
             params: [{name: 'username', pattern: User.USERNAME_REGEXP}]
         }
@@ -28,10 +29,9 @@ export class PrivateMessagePlugin extends GlobalPlugin {
             throw new Error('User not found');
         }
 
-        const content = param.split(' ').slice(1).join(' ');
-
-        const privateMessage = new PrivateMessage({content, user: connection.session.user, to: session.user});
-        connection.session.send('private-message', privateMessage.sanitized());
-        session.send('private-message', privateMessage.sanitized());
+        this.manager.createPrivateRoom([
+            connection.session.identifier,
+            session.identifier
+        ]);
     }
 }

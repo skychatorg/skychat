@@ -10,6 +10,14 @@ import { MessageController } from "./MessageController";
 import { Config } from "./Config";
 import { RoomManager } from "./RoomManager";
 import { RoomPlugin } from "./RoomPlugin";
+import { AudioRecorderPlugin } from "./plugins/core/AudioRecorderPlugin";
+import { ConnectedListPlugin } from "./plugins/core/ConnectedListPlugin";
+import { MessageEditPlugin } from "./plugins/core/MessageEditPlugin";
+import { MessageHistoryPlugin } from "./plugins/core/MessageHistoryPlugin";
+import { MessagePlugin } from "./plugins/core/MessagePlugin";
+import { MessageSeenPlugin } from "./plugins/core/MessageSeenPlugin";
+import { TypingListPlugin } from "./plugins/core/TypingListPlugin";
+import { VoidPlugin } from "./plugins/core/VoidPlugin";
 
 
 export type StoredRoom = {
@@ -49,14 +57,19 @@ export class Room implements IBroadcaster {
     static readonly MESSAGE_HISTORY_VISIBLE_LENGTH = 50;
 
     /**
+     * Room manager
+     */
+    public readonly manager: RoomManager;
+
+    /**
      * This room's unique id
      */
     public readonly id: number;
 
     /**
-     * Room manager
+     * Whether this room's access is based on an identifier whitelist
      */
-    public readonly manager: RoomManager;
+    public readonly isPrivate: boolean;
 
     /**
      * This room name
@@ -84,6 +97,11 @@ export class Room implements IBroadcaster {
     public locked: boolean = false;
 
     /**
+     * Only identifiers in this whitelist can access this room. Only used when isPrivate is set to true.
+     */
+    public whitelist: string[] = [];
+
+    /**
      * Plugins. All aliases of a command/plugin points to the same command instance.
      */
     public readonly commands: {[commandName: string]: RoomPlugin};
@@ -93,13 +111,14 @@ export class Room implements IBroadcaster {
      */
     public readonly plugins: RoomPlugin[];
 
-    constructor(id: number, manager: RoomManager) {
-        this.id = id;
+    constructor(manager: RoomManager, id: number, isPrivate?: boolean) {
         this.manager = manager;
+        this.id = id;
+        this.isPrivate = !! isPrivate;
 
         // Set default value for stored values
-        this.name = `Room ${id}`; 
-        this.enabledPlugins = Config.getPlugins().filter(PluginManager.isRoomPlugin);
+        this.name = `Room ${id}`;
+        this.enabledPlugins = this.getDefaultEnabledPlugins();
 
         // Load storage file if it exists (will override default values)
         this.load();
@@ -111,13 +130,50 @@ export class Room implements IBroadcaster {
         } catch (error) {
             console.warn('Unable to load plugins from storage', this.enabledPlugins);
             // Retry with default plugins
-            this.enabledPlugins = Config.getPlugins().filter(PluginManager.isRoomPlugin);
+            this.enabledPlugins = this.getDefaultEnabledPlugins();
             result = PluginManager.instantiateRoomPlugins(this);
         }
         this.commands = result.commands;
         this.plugins = result.plugins;
 
         setInterval(this.tick.bind(this), Room.TICK_INTERVAL);
+    }
+
+    /**
+     * Get the default list of plugins to enable for this room
+     * @returns 
+     */
+    public getDefaultEnabledPlugins(): string[] {
+        if (this.isPrivate) {
+            return [
+                AudioRecorderPlugin.name,
+                ConnectedListPlugin.name,
+                MessageEditPlugin.name,
+                MessageHistoryPlugin.name,
+                MessagePlugin.name,
+                MessageSeenPlugin.name,
+                TypingListPlugin.name,
+                VoidPlugin.name,
+            ];
+        } else {
+            return Config.getPlugins().filter(PluginManager.isRoomPlugin);
+        }
+    }
+
+    /**
+     * Allow an identifier to access this room (Only for private rooms)
+     * @param identifier 
+     */
+    public allow(identifier: string) {
+        if (! this.isPrivate) {
+            throw new Error('Can not whitelist identifier is a non-private room');
+        }
+        if (this.whitelist.indexOf(identifier) === -1) {
+            this.whitelist.push(identifier);
+            return true;
+        } else {
+            return false;
+        }
     }
 
     /**

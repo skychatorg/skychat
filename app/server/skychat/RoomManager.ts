@@ -64,7 +64,7 @@ export class RoomManager {
                 this.load();
 
                 if (this.rooms.length === 0) {
-                    this.rooms.push(new Room(0, this));
+                    this.rooms.push(new Room(this, 1));
                 }
 
                 // Load last messages from all rooms
@@ -144,8 +144,8 @@ export class RoomManager {
         Message.ID = data.messageId || 0;
 
         // Create rooms
-        const rooms = data.rooms || [0];
-        this.rooms = rooms.map(id => new Room(id, this));
+        const rooms = data.rooms || [1];
+        this.rooms = rooms.map(id => new Room(this, id));
     }
 
     /**
@@ -204,10 +204,25 @@ export class RoomManager {
         while (this.hasRoomId(id)) {
             ++ id;
         }
-        const room = new Room(id, this);
+        const room = new Room(this, id);
         if (name) {
             room.name = name;
         }
+        this.rooms.push(room);
+        return room;
+    }
+
+    /**
+     * Create a new private room
+     * @param whitelist 
+     */
+    public createPrivateRoom(whitelist: string[]) {
+        let id = 1;
+        while (this.hasRoomId(id)) {
+            ++ id;
+        }
+        const room = new Room(this, id, true);
+        whitelist.forEach(identifier => room.allow(identifier));
         this.rooms.push(room);
         return room;
     }

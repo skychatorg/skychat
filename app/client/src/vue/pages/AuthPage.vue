@@ -48,7 +48,7 @@
                 this.$client.register(this.username, this.password);
             },
             onGuestLogin: function() {
-                this.$client.joinRoom(0);
+                this.$client.joinRoom(1);
             }
         },
         computed: {
