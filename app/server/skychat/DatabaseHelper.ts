@@ -12,6 +12,6 @@ export class DatabaseHelper {
     static db: sqlite.Database;
 
     static async load(): Promise<void> {
-        DatabaseHelper.db = await sqlite.open('./database/main.db');
+        DatabaseHelper.db = await sqlite.open('storage/database.db');
     }
 }
