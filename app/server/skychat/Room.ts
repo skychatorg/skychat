@@ -16,6 +16,7 @@ import { MessageEditPlugin } from "./plugins/core/MessageEditPlugin";
 import { MessageHistoryPlugin } from "./plugins/core/MessageHistoryPlugin";
 import { MessagePlugin } from "./plugins/core/MessagePlugin";
 import { MessageSeenPlugin } from "./plugins/core/MessageSeenPlugin";
+import { RoomManagerPlugin } from "./plugins/core/RoomManagerPlugin";
 import { TypingListPlugin } from "./plugins/core/TypingListPlugin";
 import { VoidPlugin } from "./plugins/core/VoidPlugin";
 
@@ -23,11 +24,15 @@ import { VoidPlugin } from "./plugins/core/VoidPlugin";
 export type StoredRoom = {
     name: string;
     enabledPlugins: string[];
+    isPrivate: boolean;
+    whitelist: string[];
 }
 
 export type SanitizedRoom = {
     id: number;
     name: string;
+    isPrivate: boolean;
+    whitelist: string[];
     lastReceivedMessageId: number;
     lastReceivedMessageTimestamp: number;
     plugins: {[pluginName: string]: any};
@@ -45,6 +50,11 @@ export class Room implements IBroadcaster {
      * Room tick duration
      */
     private static TICK_INTERVAL: number = 5 * 1000;
+
+    /**
+     * Current global room id
+     */
+    static CURRENT_ID: number = 1;
 
     /**
      * Number of messages kept in memory
@@ -69,7 +79,7 @@ export class Room implements IBroadcaster {
     /**
      * Whether this room's access is based on an identifier whitelist
      */
-    public readonly isPrivate: boolean;
+    public isPrivate: boolean;
 
     /**
      * This room name
@@ -111,13 +121,23 @@ export class Room implements IBroadcaster {
      */
     public readonly plugins: RoomPlugin[];
 
-    constructor(manager: RoomManager, id: number, isPrivate?: boolean) {
+    constructor(manager: RoomManager, isPrivate?: boolean, id?: number) {
         this.manager = manager;
-        this.id = id;
         this.isPrivate = !! isPrivate;
 
+        // Find unique room id
+        if (typeof id === 'number') {
+            this.id = id;
+            if (this.id + 1 > Room.CURRENT_ID) {
+                Room.CURRENT_ID = this.id + 1;
+            }
+        } else {
+            this.id = Room.CURRENT_ID;
+            ++ Room.CURRENT_ID;
+        }
+        
         // Set default value for stored values
-        this.name = `Room ${id}`;
+        this.name = `Room ${this.id}`;
         this.enabledPlugins = this.getDefaultEnabledPlugins();
 
         // Load storage file if it exists (will override default values)
@@ -153,6 +173,7 @@ export class Room implements IBroadcaster {
                 MessagePlugin.name,
                 MessageSeenPlugin.name,
                 TypingListPlugin.name,
+                RoomManagerPlugin.name,
                 VoidPlugin.name,
             ];
         } else {
@@ -197,6 +218,8 @@ export class Room implements IBroadcaster {
         const data = JSON.parse(fs.readFileSync(this.getStoragePath()).toString()) as StoredRoom;
         this.name = data.name || this.name;
         this.enabledPlugins = data.enabledPlugins || this.enabledPlugins;
+        this.isPrivate = !! data.isPrivate;
+        this.whitelist = data.whitelist;
     }
 
     /**
@@ -206,6 +229,8 @@ export class Room implements IBroadcaster {
         const data: StoredRoom = {
             name: this.name,
             enabledPlugins: this.enabledPlugins,
+            isPrivate: this.isPrivate,
+            whitelist: this.whitelist,
         };
         fs.writeFileSync(this.getStoragePath(), JSON.stringify(data));
         return true;
@@ -420,6 +445,8 @@ export class Room implements IBroadcaster {
         return {
             id: this.id,
             name: this.name,
+            isPrivate: this.isPrivate,
+            whitelist: this.whitelist,
             lastReceivedMessageId: lastMessage ? lastMessage.id : 0,
             lastReceivedMessageTimestamp: lastMessage ? lastMessage.createdTime.getTime() : 0,
             plugins,

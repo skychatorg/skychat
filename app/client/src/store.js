@@ -84,7 +84,6 @@ const store = {
 
         cursors: {},
         messages: [],
-        privateMessages: {},
         playerEnabled: false,
         typingList: [],
         polls: [],
@@ -146,17 +145,6 @@ const store = {
         },
         TOGGLE_CINEMA_MODE(state) {
             state.cinemaMode = ! state.cinemaMode;
-        },
-        SET_CHANNEL(state, channelName) {
-            channelName = channelName.toLowerCase();
-            if (typeof state.privateMessages[channelName] === 'undefined') {
-                Vue.set(state.privateMessages, channelName, {unreadCount: 0, messages: []});
-            }
-            state.channel = channelName;
-            state.privateMessages[channelName].unreadCount = 0;
-        },
-        GOTO_MAIN_CHANNEL(state) {
-            state.channel = null;
         },
         SET_CONFIG(state, config) {
             state.config = config;
@@ -267,23 +255,6 @@ const store = {
             }
             if (lastMessage.content.match(new RegExp('@' + state.user.username.toLowerCase(), 'i'))) {
                 new Audio('/assets/sound/notification.mp3').play();
-            }
-        },
-        NEW_PRIVATE_MESSAGE(state, privateMessage) {
-            const fromUserName = privateMessage.user.username.toLowerCase();
-            const toUserName = privateMessage.to.username.toLowerCase();
-            const otherUserName = (fromUserName === state.user.username.toLowerCase() ? toUserName : fromUserName).toLowerCase();
-
-            if (typeof state.privateMessages[otherUserName] === 'undefined') {
-                Vue.set(state.privateMessages, otherUserName, {unreadCount: 0, messages: []});
-            }
-            state.privateMessages[otherUserName].messages.push(privateMessage);
-            if (state.channel !== otherUserName) {
-                state.privateMessages[otherUserName].unreadCount ++;
-            }
-            if (! state.focused) {
-                state.documentTitle = `New message by ${privateMessage.user.username}`;
-                state.documentTitleBlinking = true;
             }
         },
         MESSAGE_EDIT(state, message) {

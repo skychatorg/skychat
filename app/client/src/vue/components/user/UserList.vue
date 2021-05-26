@@ -17,20 +17,13 @@
         components: {UserListRow},
         methods: {
             onJoinPrivateChannel: function(username) {
-                if (this.$store.state.channel === username.toLowerCase()) {
-                    this.$store.commit('GOTO_MAIN_CHANNEL');
-                } else {
-                    this.$store.commit('SET_CHANNEL', username);
-                }
+                this.$client.sendMessage(`/pm ${username}`);
             }
         },
         computed: {
             sessions: function() {
                 return this.$store.state.connectedList;
             },
-            privateMessages: function() {
-                return this.$store.state.privateMessages;
-            }
         }
     });
 </script>

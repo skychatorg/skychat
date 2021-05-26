@@ -5,8 +5,7 @@
         <video-player v-if="! hidePlayer" class="player" v-show="playerState.current && playerEnabled"/>
 
         <!-- message feeds -->
-        <message-list v-show="! privateMessageChannel" :messages="messages" @select-message="onSelectMessage" class="scrollbar" />
-        <message-list v-show="privateMessageChannel" :messages="privateMessages" @select-message="onSelectMessage" class="scrollbar" />
+        <message-list :messages="messages" @select-message="onSelectMessage" class="scrollbar" />
 
         <!-- typing list -->         
         <typing-list id="typing-list" />
@@ -49,15 +48,6 @@
         computed: {
             playerState: function() {
                 return this.$store.state.playerState;
-            },
-            privateMessageChannel: function() {
-                return this.$store.state.channel;
-            },
-            privateMessages: function() {
-                if (! this.privateMessageChannel) {
-                    return [];
-                }
-                return this.$store.state.privateMessages[this.privateMessageChannel].messages;
             },
             messages: function() {
                 return this.$store.state.messages;

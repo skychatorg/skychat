@@ -18,6 +18,7 @@ import { GlobalPlugin } from "./GlobalPlugin";
 export type StoredSkyChat = {
     guestId: number;
     messageId: number;
+    roomId: number;
     rooms: number[];
 }
 
@@ -64,7 +65,7 @@ export class RoomManager {
                 this.load();
 
                 if (this.rooms.length === 0) {
-                    this.rooms.push(new Room(this, 1));
+                    this.rooms.push(new Room(this, false));
                 }
 
                 // Load last messages from all rooms
@@ -114,14 +115,6 @@ export class RoomManager {
 
                 // On audio received
                 this.server.registerEvent('audio', this.onAudio.bind(this), 0, 30);
-
-                // Periodically send the room list to users
-                setInterval(() => {
-                    Object.values(Session.sessions)
-                        .map(session => {
-                            session.send('room-list', this.rooms.map(room => room.sanitized()));
-                        });
-                }, 5 * 1000);
             });
 
         setInterval(this.tick.bind(this), RoomManager.TICK_INTERVAL);
@@ -142,10 +135,11 @@ export class RoomManager {
         // Register ids
         RoomManager.CURRENT_GUEST_ID = data.guestId || 0;
         Message.ID = data.messageId || 0;
+        Room.CURRENT_ID = data.roomId || 1;
 
         // Create rooms
         const rooms = data.rooms || [1];
-        this.rooms = rooms.map(id => new Room(this, id));
+        this.rooms = rooms.map(id => new Room(this, false, id));
     }
 
     /**
@@ -157,6 +151,7 @@ export class RoomManager {
             const data: StoredSkyChat = {
                 guestId: RoomManager.CURRENT_GUEST_ID,
                 messageId: Message.ID,
+                roomId: Room.CURRENT_ID,
                 rooms: this.rooms.map(room => room.id),
             };
 
@@ -200,16 +195,35 @@ export class RoomManager {
      * @returns 
      */
     public createRoom(name?: string) {
-        let id = 1;
-        while (this.hasRoomId(id)) {
-            ++ id;
-        }
-        const room = new Room(this, id);
+        const room = new Room(this);
         if (name) {
             room.name = name;
         }
         this.rooms.push(room);
+        Object.values(Session.sessions).forEach(session => this.sendRoomList(session));
         return room;
+    }
+
+    /**
+     * Try to find a private room with the exact give whitelist
+     * @param whitelist 
+     * @returns 
+     */
+    public findPrivateRoom(whitelist: string[]): Room | null {
+        return this.rooms.find(room => {
+            if (! room.isPrivate) {
+                return false;
+            }
+            if (room.whitelist.length !== whitelist.length) {
+                return false;
+            }
+            for (let i = 0; i < whitelist.length; ++ i) {
+                if (room.whitelist.indexOf(whitelist[i]) === -1) {
+                    return false;
+                }
+            }
+            return true;
+        }) || null;
     }
 
     /**
@@ -217,13 +231,13 @@ export class RoomManager {
      * @param whitelist 
      */
     public createPrivateRoom(whitelist: string[]) {
-        let id = 1;
-        while (this.hasRoomId(id)) {
-            ++ id;
-        }
-        const room = new Room(this, id, true);
+        const room = new Room(this, true);
         whitelist.forEach(identifier => room.allow(identifier));
         this.rooms.push(room);
+        whitelist
+            .map(identifier => Session.getSessionByIdentifier(identifier))
+            .filter(session => session instanceof Session)
+            .forEach(session => this.sendRoomList(session as Session));
         return room;
     }
 
@@ -246,6 +260,7 @@ export class RoomManager {
         }
         // Remove old room
         this.rooms = this.rooms.filter(room => room.id !== id);
+        Object.values(Session.sessions).forEach(session => this.sendRoomList(session));
     }
 
     /**
@@ -270,6 +285,22 @@ export class RoomManager {
      */
     public getPlugin(commandName: string): GlobalPlugin {
         return this.commands[commandName];
+    }
+
+    /**
+     * Send the list of rooms for a specific connection
+     * @param connection 
+     */
+    public sendRoomList(connectionOrSession: Connection | Session) {
+        // Get the session object
+        const session = connectionOrSession instanceof Connection ? connectionOrSession.session : connectionOrSession;
+        connectionOrSession.send(
+            'room-list',
+            this.rooms
+                .filter(room => ! room.isPrivate || room.whitelist.indexOf(session.identifier) !== -1)
+                .map(room => room.sanitized())
+                .sort((a, b) => (a.isPrivate ? 1 : 0) * (Room.CURRENT_ID + 1) + a.id - ((b.isPrivate ? 1 : 0) * (Room.CURRENT_ID + 1) + b.id))
+        );
     }
 
     /**
@@ -321,7 +352,7 @@ export class RoomManager {
      */
     private async onConnectionCreated(connection: Connection): Promise<void> {
         connection.send('config', Config.toClient());
-        connection.send('room-list', this.rooms.map(room => room.sanitized()));
+        this.sendRoomList(connection);
         this.executeNewConnectionHook(connection);
         connection.webSocket.on('close', () => {
             this.executeConnectionClosedHook(connection);
@@ -382,6 +413,7 @@ export class RoomManager {
             connection.session.setUser(user);
         }
         connection.send('auth-token', UserController.getAuthToken(user.id));
+        this.sendRoomList(connection);
         const room = this.rooms[0];
         await room.attachConnection(connection);
         await this.executeConnectionAuthenticatedHook(connection);

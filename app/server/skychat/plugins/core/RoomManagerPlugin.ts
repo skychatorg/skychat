@@ -2,29 +2,29 @@ import {Connection} from "../../Connection";
 import {RoomPlugin} from "../../RoomPlugin";
 import { UserController } from "../../UserController";
 import { Config } from "../../Config";
+import { Room } from "../../Room";
+import { Session } from "../../Session";
 
 
 export class RoomManagerPlugin extends RoomPlugin {
 
     static readonly commandName = 'room';
 
-    static readonly commandAliases = ['roomset', 'roomcreate', 'roomdelete', 'roomplugin']
-
-    readonly opOnly = true;
+    static readonly commandAliases = ['roomset', 'roomcreate', 'roomdelete', 'roomplugin'];
 
     readonly rules = {
         room: { },
+        roomcreate: {
+            minCount: 0,
+            params: [
+                {name: 'name', pattern: /.+/},
+            ]
+        },
         roomset: {
             minCount: 2,
             params: [
                 {name: 'property', pattern: /^(name)$/},
                 {name: 'value', pattern: /.?/},
-            ]
-        },
-        roomcreate: {
-            minCount: 0,
-            params: [
-                {name: 'name', pattern: /.+/},
             ]
         },
         roomdelete: {maxCount: 0,},
@@ -59,7 +59,28 @@ export class RoomManagerPlugin extends RoomPlugin {
         }
     }
 
+    async handleRoomCreate(param: string, connection: Connection): Promise<void> {
+        if (! connection.session.isOP()) {
+            throw new Error('Only OP can create public rooms');
+        }
+        const roomName = param.trim();
+        const room = this.room.manager.createRoom(roomName);
+        const message = UserController.createNeutralMessage({ id: 0, content: `Room ${room.id} has been created` });
+        connection.send('message', message.sanitized());
+    }
+
+    canManageRoom(session: Session, room: Room): boolean {
+        if (room.isPrivate) {
+            return room.whitelist.indexOf(session.identifier) !== -1;
+        } else {
+            return session.isOP();
+        }
+    }
+
     async handleRoomSet(param: string, connection: Connection): Promise<void> {
+        if (! this.canManageRoom(connection.session, this.room)) {
+            throw new Error('You do not have the permission to modify this room');
+        }
         const property = param.substr(0, param.indexOf(' '));
         const value = param.substr(param.indexOf(' ') + 1).trim();
         
@@ -72,24 +93,27 @@ export class RoomManagerPlugin extends RoomPlugin {
             default:
                 throw new Error(`Invalid property ${property}`);
         }
+        Object.values(Session.sessions).forEach(session => this.room.manager.sendRoomList(session));
         const message = UserController.createNeutralMessage({ id: 0, content: `Room property ${property} set to ${value}` });
         connection.send('message', message.sanitized());
     }
 
-    async handleRoomCreate(param: string, connection: Connection): Promise<void> {
-        const roomName = param.trim();
-        const room = this.room.manager.createRoom(roomName);
-        const message = UserController.createNeutralMessage({ id: 0, content: `Room ${room.id} has been created` });
-        connection.send('message', message.sanitized());
-    }
-
     async handleRoomDelete(param: string, connection: Connection): Promise<void> {
+        if (! this.canManageRoom(connection.session, this.room)) {
+            throw new Error('You do not have the permission to delete this room');
+        }
         await this.room.manager.deleteRoom(this.room.id);
         const message = UserController.createNeutralMessage({ id: 0, content: `Room ${this.room.id} has been deleted` });
         connection.send('message', message.sanitized());
     }
 
     async handleRoomPlugin(param: string, connection: Connection): Promise<void> {
+        if (this.room.isPrivate) {
+            throw new Error('Unable to customize plugins in private rooms');
+        }
+        if (! connection.session.isOP()) {
+            throw new Error('Only OP can manage public room plugins');
+        }
         const add = param[0] === '+';
         const pluginName = param.substr(1);
         

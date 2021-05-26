@@ -15,14 +15,15 @@
             @click.native="joinRoom(room.id)"
         >
             <div class="room-content">
-                <div class="room-icon material-icons md-18">tag</div>
+                <div v-show="! room.isPrivate" class="room-icon material-icons md-18">tag</div>
+                <div v-show="room.isPrivate" class="room-icon material-icons md-14">mail</div>
                 <div class="room-name" :title="room.name">
-                    <b>{{room.name}}</b>
+                    <b>{{ room.isPrivate ? room.whitelist.filter(ident => ident !== user.username.toLowerCase()).join(', ') : room.name }}</b>
                 </div>
                 <div class="room-meta">
 
                     <!-- delete room (op) -->
-                    <div v-show="currentRoom === room.id && op"
+                    <div v-show="canDeleteRoom(room)"
                         @click="deleteRoom()"
                         class="room-delete mr-1"
                         title="Delete this channel">
@@ -50,6 +51,13 @@
         components: { HoverCard },
         props: { },
         methods: {
+            canDeleteRoom: function(room) {
+                if (room.isPrivate) {
+                    return this.currentRoom === room.id && room.whitelist.indexOf(this.user.username.toLowerCase()) !== -1;
+                } else {
+                    return this.currentRoom === room.id && this.op;
+                }
+            },
             joinRoom: function(id) {
                 this.$client.joinRoom(id);
             },

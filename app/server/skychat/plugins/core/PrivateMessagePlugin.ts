@@ -2,13 +2,12 @@ import {Connection} from "../../Connection";
 import {GlobalPlugin} from "../../GlobalPlugin";
 import {Session} from "../../Session";
 import {User} from "../../User";
-import {PrivateMessage} from "../../PrivateMessage";
 import { Config } from "../../Config";
 
 
 export class PrivateMessagePlugin extends GlobalPlugin {
 
-    static readonly commandName = 'mp';
+    static readonly commandName = 'pm';
 
     readonly minRight = Config.PREFERENCES.minRightForPrivateMessages;
 
@@ -16,7 +15,7 @@ export class PrivateMessagePlugin extends GlobalPlugin {
         mp: {
             minCount: 1,
             maxCount: 1,
-            coolDown: 50,
+            maxCallsPer10Seconds: 1,
             params: [{name: 'username', pattern: User.USERNAME_REGEXP}]
         }
     };
@@ -27,6 +26,12 @@ export class PrivateMessagePlugin extends GlobalPlugin {
         const session = Session.getSessionByIdentifier(Session.autocompleteIdentifier(username));
         if (! session) {
             throw new Error('User not found');
+        }
+
+        const privateRoom = this.manager.findPrivateRoom([connection.session.identifier, session.identifier]);
+        if (privateRoom) {
+            // make user join this room
+            throw new Error('A private room already exists');
         }
 
         this.manager.createPrivateRoom([
