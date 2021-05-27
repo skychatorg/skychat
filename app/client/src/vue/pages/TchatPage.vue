@@ -146,6 +146,7 @@
 
             .left {
                 flex-basis: 250px;
+                min-width: 250px;
                 width: 0;
                 height: 100%;
                 display: flex;
@@ -173,6 +174,7 @@
 
             .right {
                 flex-basis: 400px;
+                min-width: 400px;
                 height: 100%;
                 overflow-y: hidden;
                 background: #16161978;

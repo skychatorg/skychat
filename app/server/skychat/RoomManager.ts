@@ -115,6 +115,13 @@ export class RoomManager {
 
                 // On audio received
                 this.server.registerEvent('audio', this.onAudio.bind(this), 0, 30);
+
+                // Periodically send the room list to users
+                setInterval(() => {
+                    Object
+                        .values(Session.sessions)
+                        .map(session => this.sendRoomList(session));
+                }, 20 * 1000);
             });
 
         setInterval(this.tick.bind(this), RoomManager.TICK_INTERVAL);
