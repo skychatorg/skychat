@@ -182,10 +182,10 @@ export class Room implements IBroadcaster {
     }
 
     /**
-     * Allow an identifier to access this room (Only for private rooms)
+     * Allow an identifier to access this room (only for private rooms)
      * @param identifier 
      */
-    public allow(identifier: string) {
+    public allow(identifier: string): boolean {
         if (! this.isPrivate) {
             throw new Error('Can not whitelist identifier is a non-private room');
         }
@@ -195,6 +195,22 @@ export class Room implements IBroadcaster {
         } else {
             return false;
         }
+    }
+
+    /**
+     * Unallow an identifier to access this room (only for private rooms)
+     * @param identifier 
+     */
+    public unallow(identifier: string): boolean {
+        if (! this.isPrivate) {
+            throw new Error('Can not whitelist identifier is a non-private room');
+        }
+        const index = this.whitelist.indexOf(identifier);
+        if (index === -1) {
+            return false;
+        }
+        this.whitelist.splice(index, 1);
+        return true;
     }
 
     /**

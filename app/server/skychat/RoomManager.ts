@@ -240,6 +240,7 @@ export class RoomManager {
     public createPrivateRoom(whitelist: string[]) {
         const room = new Room(this, true);
         whitelist.forEach(identifier => room.allow(identifier));
+        room.name = whitelist.join(', ');
         this.rooms.push(room);
         whitelist
             .map(identifier => Session.getSessionByIdentifier(identifier))

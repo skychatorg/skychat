@@ -18,16 +18,24 @@
                 <div v-show="! room.isPrivate" class="room-icon material-icons md-18">tag</div>
                 <div v-show="room.isPrivate" class="room-icon material-icons md-14">mail</div>
                 <div class="room-name" :title="room.name">
-                    <b>{{ room.isPrivate ? room.whitelist.filter(ident => ident !== user.username.toLowerCase()).join(', ') : room.name }}</b>
+                    <b>{{ getRoomName(room) }}</b>
                 </div>
                 <div class="room-meta">
 
-                    <!-- delete room (op) -->
+                    <!-- delete room (op or private with one person) -->
                     <div v-show="canDeleteRoom(room)"
                         @click="deleteRoom()"
                         class="room-delete mr-1"
-                        title="Delete this channel">
+                        title="Delete this room">
                         <i class="material-icons md-14">close</i>
+                    </div>
+
+                    <!-- leave room (private rooms) -->
+                    <div v-show="canLeaveRoom(room)"
+                        @click="leaveRoom()"
+                        class="room-leave mr-1"
+                        title="Leave this room">
+                        <i class="material-icons md-14">logout</i>
                     </div>
 
                     <!-- user count -->
@@ -51,12 +59,26 @@
         components: { HoverCard },
         props: { },
         methods: {
+            getRoomName: function(room) {
+                if (room.isPrivate) {
+                    if (room.whitelist.length > 1) {
+                        return room.whitelist.filter(ident => ident !== this.user.username.toLowerCase()).join(', ');
+                    } else {
+                        return room.name + ' (closed)';
+                    }
+                } else {
+                    return room.name;
+                }
+            },
             canDeleteRoom: function(room) {
                 if (room.isPrivate) {
-                    return this.currentRoom === room.id && room.whitelist.indexOf(this.user.username.toLowerCase()) !== -1;
+                    return this.currentRoom === room.id && room.whitelist.length === 1;
                 } else {
                     return this.currentRoom === room.id && this.op;
                 }
+            },
+            canLeaveRoom: function(room) {
+                return this.currentRoom === room.id && room.isPrivate && room.whitelist.length > 1;
             },
             joinRoom: function(id) {
                 this.$client.joinRoom(id);
@@ -66,6 +88,9 @@
             },
             deleteRoom: function() {
                 this.$client.deleteCurrentRoom();
+            },
+            leaveRoom: function() {
+                this.$client.leaveCurrentRoom();
             }
         },
         computed: {
@@ -147,7 +172,8 @@
                     span { vertical-align: top; }
                 }
 
-                .room-delete {
+                .room-delete,
+                .room-leave {
                     color: #ff8e8e;
                 }
             }

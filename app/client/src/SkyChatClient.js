@@ -264,10 +264,17 @@ export class SkyChatClient extends EventEmitter {
     }
 
     /**
-     * Delete the current room (OP only)
+     * Delete the current room (OP only or last person in a private room)
      */
     deleteCurrentRoom() {
         this.sendMessage(`/roomdelete`);
+    }
+
+    /**
+     * Leave current room
+     */
+    leaveCurrentRoom() {
+        this.sendMessage(`/roomleave`);
     }
 
     /**
