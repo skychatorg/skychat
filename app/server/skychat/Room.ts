@@ -10,16 +10,29 @@ import { MessageController } from "./MessageController";
 import { Config } from "./Config";
 import { RoomManager } from "./RoomManager";
 import { RoomPlugin } from "./RoomPlugin";
+import { AudioRecorderPlugin } from "./plugins/core/AudioRecorderPlugin";
+import { ConnectedListPlugin } from "./plugins/core/ConnectedListPlugin";
+import { MessageEditPlugin } from "./plugins/core/MessageEditPlugin";
+import { MessageHistoryPlugin } from "./plugins/core/MessageHistoryPlugin";
+import { MessagePlugin } from "./plugins/core/MessagePlugin";
+import { MessageSeenPlugin } from "./plugins/core/MessageSeenPlugin";
+import { RoomManagerPlugin } from "./plugins/core/RoomManagerPlugin";
+import { TypingListPlugin } from "./plugins/core/TypingListPlugin";
+import { VoidPlugin } from "./plugins/core/VoidPlugin";
 
 
 export type StoredRoom = {
     name: string;
     enabledPlugins: string[];
+    isPrivate: boolean;
+    whitelist: string[];
 }
 
 export type SanitizedRoom = {
     id: number;
     name: string;
+    isPrivate: boolean;
+    whitelist: string[];
     lastReceivedMessageId: number;
     lastReceivedMessageTimestamp: number;
     plugins: {[pluginName: string]: any};
@@ -39,6 +52,11 @@ export class Room implements IBroadcaster {
     private static TICK_INTERVAL: number = 5 * 1000;
 
     /**
+     * Current global room id
+     */
+    static CURRENT_ID: number = 1;
+
+    /**
      * Number of messages kept in memory
      */
     static readonly MESSAGE_HISTORY_LENGTH = 1000;
@@ -49,14 +67,19 @@ export class Room implements IBroadcaster {
     static readonly MESSAGE_HISTORY_VISIBLE_LENGTH = 50;
 
     /**
+     * Room manager
+     */
+    public readonly manager: RoomManager;
+
+    /**
      * This room's unique id
      */
     public readonly id: number;
 
     /**
-     * Room manager
+     * Whether this room's access is based on an identifier whitelist
      */
-    public readonly manager: RoomManager;
+    public isPrivate: boolean;
 
     /**
      * This room name
@@ -84,6 +107,11 @@ export class Room implements IBroadcaster {
     public locked: boolean = false;
 
     /**
+     * Only identifiers in this whitelist can access this room. Only used when isPrivate is set to true.
+     */
+    public whitelist: string[] = [];
+
+    /**
      * Plugins. All aliases of a command/plugin points to the same command instance.
      */
     public readonly commands: {[commandName: string]: RoomPlugin};
@@ -93,13 +121,24 @@ export class Room implements IBroadcaster {
      */
     public readonly plugins: RoomPlugin[];
 
-    constructor(id: number, manager: RoomManager) {
-        this.id = id;
+    constructor(manager: RoomManager, isPrivate?: boolean, id?: number) {
         this.manager = manager;
+        this.isPrivate = !! isPrivate;
 
+        // Find unique room id
+        if (typeof id === 'number') {
+            this.id = id;
+            if (this.id + 1 > Room.CURRENT_ID) {
+                Room.CURRENT_ID = this.id + 1;
+            }
+        } else {
+            this.id = Room.CURRENT_ID;
+            ++ Room.CURRENT_ID;
+        }
+        
         // Set default value for stored values
-        this.name = `Room ${id}`; 
-        this.enabledPlugins = Config.getPlugins().filter(PluginManager.isRoomPlugin);
+        this.name = `Room ${this.id}`;
+        this.enabledPlugins = this.getDefaultEnabledPlugins();
 
         // Load storage file if it exists (will override default values)
         this.load();
@@ -111,13 +150,67 @@ export class Room implements IBroadcaster {
         } catch (error) {
             console.warn('Unable to load plugins from storage', this.enabledPlugins);
             // Retry with default plugins
-            this.enabledPlugins = Config.getPlugins().filter(PluginManager.isRoomPlugin);
+            this.enabledPlugins = this.getDefaultEnabledPlugins();
             result = PluginManager.instantiateRoomPlugins(this);
         }
         this.commands = result.commands;
         this.plugins = result.plugins;
 
         setInterval(this.tick.bind(this), Room.TICK_INTERVAL);
+    }
+
+    /**
+     * Get the default list of plugins to enable for this room
+     * @returns 
+     */
+    public getDefaultEnabledPlugins(): string[] {
+        if (this.isPrivate) {
+            return [
+                AudioRecorderPlugin.name,
+                ConnectedListPlugin.name,
+                MessageEditPlugin.name,
+                MessageHistoryPlugin.name,
+                MessagePlugin.name,
+                MessageSeenPlugin.name,
+                TypingListPlugin.name,
+                RoomManagerPlugin.name,
+                VoidPlugin.name,
+            ];
+        } else {
+            return Config.getPlugins().filter(PluginManager.isRoomPlugin);
+        }
+    }
+
+    /**
+     * Allow an identifier to access this room (only for private rooms)
+     * @param identifier 
+     */
+    public allow(identifier: string): boolean {
+        if (! this.isPrivate) {
+            throw new Error('Can not whitelist identifier is a non-private room');
+        }
+        if (this.whitelist.indexOf(identifier) === -1) {
+            this.whitelist.push(identifier);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Unallow an identifier to access this room (only for private rooms)
+     * @param identifier 
+     */
+    public unallow(identifier: string): boolean {
+        if (! this.isPrivate) {
+            throw new Error('Can not whitelist identifier is a non-private room');
+        }
+        const index = this.whitelist.indexOf(identifier);
+        if (index === -1) {
+            return false;
+        }
+        this.whitelist.splice(index, 1);
+        return true;
     }
 
     /**
@@ -141,6 +234,8 @@ export class Room implements IBroadcaster {
         const data = JSON.parse(fs.readFileSync(this.getStoragePath()).toString()) as StoredRoom;
         this.name = data.name || this.name;
         this.enabledPlugins = data.enabledPlugins || this.enabledPlugins;
+        this.isPrivate = !! data.isPrivate;
+        this.whitelist = data.whitelist;
     }
 
     /**
@@ -150,6 +245,8 @@ export class Room implements IBroadcaster {
         const data: StoredRoom = {
             name: this.name,
             enabledPlugins: this.enabledPlugins,
+            isPrivate: this.isPrivate,
+            whitelist: this.whitelist,
         };
         fs.writeFileSync(this.getStoragePath(), JSON.stringify(data));
         return true;
@@ -364,6 +461,8 @@ export class Room implements IBroadcaster {
         return {
             id: this.id,
             name: this.name,
+            isPrivate: this.isPrivate,
+            whitelist: this.whitelist,
             lastReceivedMessageId: lastMessage ? lastMessage.id : 0,
             lastReceivedMessageTimestamp: lastMessage ? lastMessage.createdTime.getTime() : 0,
             plugins,

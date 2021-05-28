@@ -14,7 +14,6 @@ services:
     volumes:
       - ./config:/var/skychat/config:ro
       - ./scripts:/var/skychat/scripts:ro
-      - ./database:/var/skychat/database
       - ./backups:/var/skychat/backups
       - ./storage:/var/skychat/storage
       - ./uploads:/var/skychat/uploads

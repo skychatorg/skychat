@@ -31,12 +31,15 @@ export class SkyChatClient extends EventEmitter {
         this.on('config', this.onConfig.bind(this));
         this.on('room-list', this.onRoomList.bind(this));
         this.on('join-room', this.onJoinRoom.bind(this));
+        
+        this.on('set-user', this.onSetUser.bind(this));
+        this.on('set-op', this.onSetOP.bind(this));
+
         this.on('message', this.onMessage.bind(this));
         this.on('messages', this.onMessages.bind(this));
         this.on('private-message', this.onPrivateMessage.bind(this));
         this.on('message-edit', this.onMessageEdit.bind(this));
         this.on('message-seen', this.onMessageSeen.bind(this));
-        this.on('set-user', this.onSetUser.bind(this));
         this.on('connected-list', this.onConnectedList.bind(this));
         this.on('poll', this.onPoll.bind(this));
         this.on('poll-result', this.onPollResult.bind(this));
@@ -254,6 +257,27 @@ export class SkyChatClient extends EventEmitter {
     }
 
     /**
+     * Create a new room
+     */
+    createRoom() {
+        this.sendMessage(`/roomcreate`);
+    }
+
+    /**
+     * Delete the current room (OP only or last person in a private room)
+     */
+    deleteCurrentRoom() {
+        this.sendMessage(`/roomdelete`);
+    }
+
+    /**
+     * Leave current room
+     */
+    leaveCurrentRoom() {
+        this.sendMessage(`/roomleave`);
+    }
+
+    /**
      * Login
      * @param username
      * @param password
@@ -373,6 +397,14 @@ export class SkyChatClient extends EventEmitter {
      */
     onSetUser(user) {
         this.store.commit('SET_USER', user);
+    }
+
+    /**
+     *
+     * @param user
+     */
+    onSetOP(op) {
+        this.store.commit('SET_OP', op);
     }
 
     /**

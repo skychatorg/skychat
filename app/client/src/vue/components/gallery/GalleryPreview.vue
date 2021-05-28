@@ -23,7 +23,10 @@
                 <div v-for="folder in shownFolders"
                     :key="folder.id">
 
-                    <h3 class="section-title">{{folder.name}}</h3>
+                    <h3 class="section-title">
+                        {{folder.name}}
+                        <span v-show="folder.medias.length === 0 && op" @click="deleteFolder(folder.id)" title="Delete this folder" class="folder-delete material-icons md-14">close</span>
+                    </h3>
 
                     <!-- medias -->
                     <div class="media-list">
@@ -52,7 +55,7 @@
                                         <i class="material-icons md-14">live_tv</i>
                                     </div>
                                     <!-- delete -->
-                                    <div class="media-action" title="Delete" @click.stop="deleteMedia(media)">
+                                    <div v-show="op" class="media-action" title="Delete" @click.stop="deleteMedia(media)">
                                         <i class="material-icons md-14">close</i>
                                     </div>
                                 </div>
@@ -154,6 +157,9 @@
             },
             setGalleryVisibility: function(newVisibility) {
                 this.$store.commit('SET_GALLERY_VISIBILITY', newVisibility);
+            },
+            deleteFolder: function(folderId) {
+                this.$client.sendMessage(`/galleryfolderremove ${folderId}`);
             }
         },
         computed: {
@@ -165,6 +171,9 @@
             },
             isGalleryVisible: function() {
                 return this.$store.state.isGalleryVisible;
+            },
+            op: function() {
+                return this.$store.state.op;
             }
         }
     });
@@ -219,6 +228,11 @@
                     margin-left: 8px;
                     margin-top: 8px;
                     text-align: center;
+
+                    .folder-delete {
+                        cursor: pointer;
+                        color: #ff8e8e;
+                    }
                 }
 
                 .media-list {

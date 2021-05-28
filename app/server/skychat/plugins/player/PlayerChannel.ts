@@ -191,7 +191,7 @@ export class PlayerChannel {
      * @param identifier 
      */
     public hasPlayerPermission(session: Session) {
-        if (this.currentVideoInfo && this.currentVideoInfo.user.username === session.identifier) {
+        if (this.currentVideoInfo && this.currentVideoInfo.user.username.toLowerCase() === session.identifier) {
             return true;
         }
         if (session.isOP()) {

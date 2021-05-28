@@ -3,7 +3,6 @@
          :style="{'border-left-color': session.user.data.plugins.color}"
          :class="{
             'selected': isChanSelected(session.user.username),
-            'has-unread': getUnreadCount(session.user.username) > 0,
             'disconnected': session.connectionCount === 0,
           }">
         <div class="avatar">
@@ -38,10 +37,6 @@
                             <i title="Last activity" class="material-icons md-14 icon-active-time">schedule</i>
                             <span class="text-active-time">{{minutesSinceLastMessage > 30 ? 'afk' : (minutesSinceLastMessage + 'm')}}</span>
                         </template>
-                        <template v-if="getUnreadCount(session.user.username) > 0">
-                            <i title="New messages" class="material-icons md-14 icon-unread-count">email</i>
-                            <span class="text-unread-count">{{getUnreadCount(session.user.username)}}️</span>
-                        </template>
                     </div>
                     <div class="motto" :title="session.user.data.plugins.motto">{{session.user.data.plugins.motto}}&nbsp;</div>
                 </template>
@@ -75,13 +70,6 @@
         methods: {
             isChanSelected(channelName) {
                 return channelName.toLowerCase() === this.$store.state.channel;
-            },
-            getUnreadCount(channelName) {
-                channelName = channelName.toLowerCase();
-                if (typeof this.$store.state.privateMessages[channelName] === 'undefined') {
-                    return 0;
-                }
-                return this.$store.state.privateMessages[channelName].unreadCount;
             },
         },
 

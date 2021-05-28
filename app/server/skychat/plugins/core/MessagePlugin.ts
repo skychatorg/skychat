@@ -30,10 +30,15 @@ export class MessagePlugin extends RoomPlugin {
             // Try to find message in room message cache
             quoted = await this.room.getMessageById(quoteId);
             // Otherwise, try to find the quoted message in the database
-            quoted = quoted || await MessageController.getMessageById(quoteId)
+            quoted = quoted || await MessageController.getMessageById(quoteId);
             // If quote found, remote the quote string from the message
             if (quoted) {
                 content = content.slice(quoteMatch[0].length);
+            }
+            // If message is private
+            const room = quoted.room !== null ? this.room.manager.getRoomById(quoted.room) : null;
+            if (! room || (room.isPrivate && this.room.id !== room.id)) {
+                quoted = null;
             }
         }
 

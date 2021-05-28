@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
 # Initialize db
-if [[ ! -e database/main.db ]]; then
-    sqlite3 database/main.db < database/install.sql;
+if [[ ! -e storage/database.db ]]; then
+    sqlite3 storage/database.db < scripts/database-setup.sql;
 fi
 
 # Initialize .env.json

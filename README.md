@@ -4,7 +4,7 @@
 
 # SkyChat
 
-A virtual cinema that allows you to setup your own private screening to enjoy watching movies, youtube videos, or music with your friends/colleagues/family.
+A virtual cinema to setup your own private screenings. Watch movies, youtube videos, or music with your friends/colleagues/family!
 
 1. [Why the SkyChat?](#why-the-skychat)
 2. [Overview](#overview)
