@@ -4,7 +4,7 @@
 
 # SkyChat
 
-A virtual cinema to setup your own private screenings. Watch movies, youtube videos, or music with your friends/colleagues/family!
+Virtual cinema platform. Setup your own private screenings and watch movies, youtube videos, or music with your friends/colleagues/family!
 
 1. [Why the SkyChat?](#why-the-skychat)
 2. [Overview](#overview)
@@ -16,17 +16,17 @@ A virtual cinema to setup your own private screenings. Watch movies, youtube vid
 
 Here is what makes the SkyChat unique compared to the other entertainment platforms:
 
-~ **A carefully designed user experience, so everything feels nice and smooth**
+~ **Enjoy**
 
-We strongly believe that building the perfect user experience is the key to ensure people continue using an application in the long run. That's why we are constantly and iteratively working on polishing and improving the design and feeling of the SkyChat. 
+Enjoy a well-designed user experience. Building the perfect user experience is the key to ensure people continue using an application in the long run, this is why the SkyChat is the result of a long lasting and iterative work to polish it.
 
-~ **A sense of proximity between each other**
+~ **Connect**
 
-You can see each other cursor users moving around the screen, which allows people to feel connected to each other. There are humans behind the usernames. (This feature can be enabled/disabled in the configuration)
+You can see each other cursor users moving around the screen, which makes people feel connected to each other. This feature can be enabled/disabled in the configuration.
 
-~ **Engaging the community**
+~ **Engage**
 
-Entertainment and customization plugins allow your community to engage in the long term. Examples of such features, which can be enabled/disabled in the configuration:
+Entertainment and customization plugins makes you want to engage in the long term. Examples of such features, which can be enabled/disabled in the configuration:
 - Virtual money with mini-games (racing game, casino roulette)
 - Styling customization for usernames and messages
 - Long-term activity is rewarded with experience points (XP) and ranks
