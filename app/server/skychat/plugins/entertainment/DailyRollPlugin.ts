@@ -11,10 +11,20 @@ import { Timing } from "../../Timing";
 
 
 type GameObject = {
+
+    // Current game state
     state: 'pending' | 'started';
+
+    // Global game message
     gameMessage: Message | null;
+
+    // All sessions that have already chosed a card
     participants: Session[],
-    cards: {[carId: number]: {state: 'pending' | 'chosen' | 'shown', content: number}};
+
+    // Card ids goes from 0 to CARDS_COUNT - 1
+    cards: {[cardId: number]: {state: 'pending' | 'chosen' | 'shown', content: number}};
+
+    // Bets from users
     bets: {[identifier: string]: number};
 };
 
@@ -25,8 +35,6 @@ export class DailyRollPlugin extends RoomPlugin {
      * Scheduled time in hours. E.g. 2.5 means 2h30
      */
     public static readonly SCHEDULED_TIME: number = 21.5;
-
-    public static readonly ENTRY_COST: number = 100;
 
     public static readonly JACKPOT_AMOUNT: number = 50 * 100;
 
@@ -143,6 +151,30 @@ export class DailyRollPlugin extends RoomPlugin {
         // End chosing state
         this.currentGame.state = 'started';
 
+        // Automatically choose a card for remaining users
+        // Find the sessions in this room that did not vote
+        const sessions: Session[] = Array.from(new Set(this.room.connections.map(connection => connection.session)))
+            .filter(session => session.user.right >= 0)
+            .filter(session => typeof this.currentGame!.bets[session.identifier] === 'undefined');
+        // Automatically vote for these sessions
+        for (const session of sessions) {
+            // If all cards chosen
+            if (Object.values(this.currentGame.bets).length >= DailyRollPlugin.CARDS_COUNT) {
+                break;
+            }
+            // Choose a random free card
+            let randomCardId = Math.floor(RandomGenerator.random(8) * DailyRollPlugin.CARDS_COUNT);
+            while (this.currentGame.cards[randomCardId]!.state !== 'pending') {
+                // Find next card, cycling to 0 if exceeding last card
+                if (++ randomCardId > DailyRollPlugin.CARDS_COUNT - 1) {
+                    randomCardId = 0;
+                }
+            }
+            this.currentGame.participants.push(session);
+            this.currentGame.bets[session.identifier] = randomCardId;
+            this.currentGame.cards[randomCardId].state = 'chosen';
+        }
+
         // Re-create game message
         this.currentGame.gameMessage.edit('deleted', '<s>deleted</s>');
         this.room.send('message-edit', this.currentGame.gameMessage.sanitized());
@@ -250,8 +282,7 @@ export class DailyRollPlugin extends RoomPlugin {
         if (this.currentGame.state !== 'pending') {
             throw new Error('Round has already started');
         }
-        const bet = parseInt(param);
-        if (bet < 0 || bet > DailyRollPlugin.CARDS_COUNT - 1) {
+        if (cardId < 0 || cardId > DailyRollPlugin.CARDS_COUNT - 1) {
             throw new Error('Invalid bet');
         }
         if (this.currentGame.cards[cardId].state !== 'pending') {
@@ -260,9 +291,8 @@ export class DailyRollPlugin extends RoomPlugin {
         if (this.currentGame.participants.indexOf(connection.session) !== -1) {
             throw new Error('You have alrady chosen');
         }
-        await UserController.buy(connection.session.user, DailyRollPlugin.ENTRY_COST);
         this.currentGame.participants.push(connection.session);
-        this.currentGame.bets[connection.session.identifier] = bet;
+        this.currentGame.bets[connection.session.identifier] = cardId;
         this.currentGame.cards[cardId].state = 'chosen';
         this.updateGameMessage();
     }
