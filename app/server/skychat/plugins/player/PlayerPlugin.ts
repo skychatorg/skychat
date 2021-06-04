@@ -142,6 +142,7 @@ export class PlayerPlugin extends GlobalPlugin {
 
         } else if (currentChannel) {
             // If this session is in a yt channel, synchronize this connection
+            connection.send('player-channel', currentChannel.id);
             currentChannel.syncConnections([connection]);
         }
     }
