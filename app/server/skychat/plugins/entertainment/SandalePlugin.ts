@@ -12,6 +12,10 @@ import { RoomManager } from "../../RoomManager";
  */
 export class SandalePlugin extends GlobalPlugin {
 
+    static readonly MAX_COUNT = 6;
+
+    static readonly COST_PER_SANDALE = 100;
+
     static readonly commandName = 'sandale';
 
     readonly minRight = 0;
@@ -76,6 +80,9 @@ export class SandalePlugin extends GlobalPlugin {
         if (typeof this.storage.sandales[username] === 'undefined') {
             this.storage.sandales[username] = 0;
         }
+        if (this.getSandaleCount(username) > SandalePlugin.MAX_COUNT) {
+            throw new Error('Too many sandales on this user already');
+        }
         this.storage.sandales[username] += count;
         this.syncStorage();
     }
@@ -91,7 +98,7 @@ export class SandalePlugin extends GlobalPlugin {
         if (! Session.sessionExists(identifier)) {
             throw new Error('User ' + identifier + ' does not exist');
         }
-        await UserController.buy(connection.session.user, (1 + this.getSandaleCount(identifier)));
+        await UserController.buy(connection.session.user, SandalePlugin.COST_PER_SANDALE * (1 + this.getSandaleCount(identifier)));
         this.addSandale(identifier, 1);
     }
 
