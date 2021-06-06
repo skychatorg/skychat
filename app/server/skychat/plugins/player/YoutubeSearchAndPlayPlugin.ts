@@ -43,6 +43,6 @@ export class YoutubeSearchAndPlayPlugin extends GlobalPlugin {
         const videos = await youtubeFetcher.get(items[0].id);
         
         // Play video
-        channel.add(videos, connection.session.user);
+        channel.add(videos, connection.session.user, { allowFailure: false });
     }
 }
