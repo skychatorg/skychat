@@ -52,7 +52,7 @@
                                     </div>
                                     <!-- play (if video) -->
                                     <div v-show="isPlayable(media)" class="media-action" title="Play media" @click.stop="playMedia(media)">
-                                        <i class="material-icons md-14">live_tv</i>
+                                        <i class="material-icons md-14">play_arrow</i>
                                     </div>
                                     <!-- delete -->
                                     <div v-show="op" class="media-action" title="Delete" @click.stop="deleteMedia(media)">

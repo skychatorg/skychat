@@ -112,6 +112,10 @@ export class RoomManagerPlugin extends RoomPlugin {
         }
         this.room.unallow(connection.session.identifier);
         this.room.manager.sendRoomList(connection);
+        this.room.whitelist
+            .map(ident => Session.getSessionByIdentifier(ident))
+            .filter(session => !! session)
+            .forEach(session => this.room.manager.sendRoomList(session as Session));
     }
 
     async handleRoomDelete(param: string, connection: Connection): Promise<void> {

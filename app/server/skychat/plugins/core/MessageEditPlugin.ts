@@ -4,8 +4,6 @@ import { RoomPlugin } from "../../RoomPlugin";
 
 export class MessageEditPlugin extends RoomPlugin {
 
-    public static readonly EDIT_ANY_MIN_RIGHT: number = 100;
-
     static readonly commandName = 'edit';
 
     static readonly commandAliases = ['delete'];
@@ -42,7 +40,7 @@ export class MessageEditPlugin extends RoomPlugin {
         }
 
         // Check rights
-        if (message.user !== connection.session.user && connection.session.user.right < MessageEditPlugin.EDIT_ANY_MIN_RIGHT) {
+        if (message.user !== connection.session.user && ! connection.session.isOP()) {
             throw new Error('You can only edit your own messages');
         }
 

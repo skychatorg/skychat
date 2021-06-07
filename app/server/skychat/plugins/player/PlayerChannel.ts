@@ -168,22 +168,53 @@ export class PlayerChannel {
         this.playNext();
     }
 
+
+    /**
+     * Whether the given video is already in the list or currently playing
+     * @param video 
+     * @returns 
+     */
+    public isVideoPlayingOrInQueue(video: VideoInfo): boolean {
+        if (this.queue.find(q => q.video.type === video.type && q.video.id === video.id)) {
+            return true;
+        }
+        if (this.currentVideoInfo && this.currentVideoInfo.video.type === video.type && this.currentVideoInfo.video.id === video.id) {
+            return true;
+        }
+        return false;
+    }
+
     /**
      * Add one or multiple videos to the queue
      * @param video 
      * @param user 
+     * @param options
      */
-    public add(videoOrVideos: VideoInfo | VideoInfo[], user?: User): any {
+    public add(videoOrVideos: VideoInfo | VideoInfo[], user?: User, options?: { allowFailure: boolean }): number {
         const videos = Array.isArray(videoOrVideos) ? videoOrVideos : [videoOrVideos];
+        options = options || { allowFailure: false };
+        let addedCount = 0;
         for (const video of videos) {
+            // If video is already in the queue
+            if (this.isVideoPlayingOrInQueue(video)) {
+                if (! options.allowFailure) {
+                    throw new Error(`Media ${video.id} is already in the list`);
+                }
+                continue;
+            }
+            // Add video to the queue
             this.queue.push({
                 user: user ? user.sanitized() : UserController.getNeutralUser().sanitized(),
                 video,
             });
+            ++ addedCount;
         }
-        this.fairShuffle();
-        this.sync();
-        this.armPlayNextTimeout();
+        if (addedCount > 0) {
+            this.fairShuffle();
+            this.sync();
+            this.armPlayNextTimeout();
+        }
+        return addedCount;
     }
 
     /**

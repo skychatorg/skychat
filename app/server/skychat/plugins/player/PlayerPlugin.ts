@@ -142,6 +142,7 @@ export class PlayerPlugin extends GlobalPlugin {
 
         } else if (currentChannel) {
             // If this session is in a yt channel, synchronize this connection
+            connection.send('player-channel', currentChannel.id);
             currentChannel.syncConnections([connection]);
         }
     }
@@ -320,7 +321,7 @@ export class PlayerPlugin extends GlobalPlugin {
         if (videos.length === 0) {
             throw new Error('Unable to fetch items');
         }
-        channel.add(videos, connection.session.user);
+        channel.add(videos, connection.session.user, { allowFailure: false });
     }
 
     /**

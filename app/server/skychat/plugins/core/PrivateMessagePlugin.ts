@@ -12,7 +12,7 @@ export class PrivateMessagePlugin extends GlobalPlugin {
     readonly minRight = Config.PREFERENCES.minRightForPrivateMessages;
 
     readonly rules = {
-        mp: {
+        pm: {
             minCount: 1,
             maxCount: 1,
             maxCallsPer10Seconds: 1,
@@ -28,10 +28,15 @@ export class PrivateMessagePlugin extends GlobalPlugin {
             throw new Error('User not found');
         }
 
+        if (session.identifier === connection.session.identifier) {
+            throw new Error('Can not start a private room with yourself');
+        }
+
         const privateRoom = this.manager.findPrivateRoom([connection.session.identifier, session.identifier]);
         if (privateRoom) {
             // make user join this room
-            throw new Error('A private room already exists');
+            await privateRoom.attachConnection(connection);
+            return;
         }
 
         this.manager.createPrivateRoom([

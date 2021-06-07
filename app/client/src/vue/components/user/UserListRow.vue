@@ -1,78 +1,81 @@
 <template>
-    <div class="connected-session"
-         :style="{'border-left-color': session.user.data.plugins.color}"
-         :class="{
-            'selected': isChanSelected(session.user.username),
+    <hover-card
+        :selected="false"
+        :border-color="session.user.data.plugins.color"
+        class="user-list-row"
+        :class="{
             'disconnected': session.connectionCount === 0,
-          }">
-        <div class="avatar">
-            <span class="rank">
-                <img title="User rank" :src="'/assets/images/' + session.user.rank['18']">
-            </span>
-            <div class="image-bubble" :style="{'box-shadow': session.user.data.plugins.halo ? '0 0 4px 4px ' + session.user.data.plugins.color : 'unset'}">
-                <img :src="session.user.data.plugins.avatar">
+        }"
+        @click.native="joinChannel(channel.id)"
+    >
+        <div class="connected-session"
+            :style="{'border-left-color': session.user.data.plugins.color}"
+            :class="{
+                'selected': isChanSelected(session.user.username),
+                'disconnected': session.connectionCount === 0,
+            }">
+            <div class="avatar">
+                <div class="image-bubble" :style="{'box-shadow': session.user.data.plugins.halo ? '0 0 4px 4px ' + session.user.data.plugins.color : 'unset'}">
+                    <img :src="session.user.data.plugins.avatar">
+                </div>
+            </div>
+            <div class="info">
+                <div class="session"
+                    :style="{'color': session.user.data.plugins.color}">
+                    <i v-show="session.user.data.plugins.pinnedicon" class="pinned-icon material-icons md-14">{{session.user.data.plugins.pinnedicon}}</i>
+                    {{session.user.username}}
+                    <sup v-show="session.connectionCount > 1">
+                        {{session.connectionCount}}
+                    </sup>
+                </div>
+                <div class="meta">
+                    <template v-if="session.connectionCount === 0">
+                        <div class="icons">
+                            <i :title="'User has disconnected ' + durationSinceDead + ' ago'" class="material-icons md-14 icon-disconnected">link_off</i>
+                            <span :title="'User has disconnected ' + durationSinceDead + ' ago'" class="text-disconnected">{{durationSinceDead}}</span>
+                        </div>
+                    </template>
+                    <template v-else>
+                        <div class="icons">
+                            <i class="material-icons md-14 icon-yt" v-show="session.user.data.plugins.player !== null" title="Youtube enabled">movie</i>
+                            <i class="material-icons md-14 icon-cursor" v-show="session.user.data.plugins.cursor" title="Cursors enabled">mouse</i>
+                            <template v-if="minutesSinceLastMessage > 0">
+                                <i :title="'Last message sent ' + minutesSinceLastMessage + ' minutes ago'" class="material-icons md-14 icon-active-time">schedule</i>
+                                <span :title="'Last message sent ' + minutesSinceLastMessage + ' minutes ago'" class="text-active-time">{{minutesSinceLastMessage > 30 ? 'afk' : (minutesSinceLastMessage + 'm')}}</span>
+                            </template>
+                        </div>
+                        <div class="motto" :title="session.user.data.plugins.motto">{{session.user.data.plugins.motto}}&nbsp;</div>
+                    </template>
+                </div>
+            </div>
+            <div class="stats" v-show="session.user.right >= 0">
+                <div class="right" title="Right level">
+                    <span>{{session.user.right}}</span>
+                </div>
+                <div class="money" title="Money">
+                    $ {{(session.user.money / 100).toFixed(2)}}
+                </div>
             </div>
         </div>
-        <div class="info">
-            <div class="session"
-                 :style="{'color': session.user.data.plugins.color}">
-                <i v-show="session.user.data.plugins.pinnedicon" class="pinned-icon material-icons md-14">{{session.user.data.plugins.pinnedicon}}</i>
-                {{session.user.username}}
-                <sup v-show="session.connectionCount > 1">
-                    {{session.connectionCount}}
-                </sup>
-            </div>
-            <div class="meta">
-                <template v-if="session.connectionCount === 0">
-                    <div class="icons">
-                        <i :title="'User has disconnected ' + durationSinceDead + ' ago'" class="material-icons md-14 icon-disconnected">link_off</i>
-                        <span :title="'User has disconnected ' + durationSinceDead + ' ago'" class="text-disconnected">{{durationSinceDead}}</span>
-                    </div>
-                </template>
-                <template v-else>
-                    <div class="icons">
-                        <i class="material-icons md-14 icon-yt" v-show="session.user.data.plugins.player !== null" title="Youtube enabled">movie</i>
-                        <i class="material-icons md-14 icon-cursor" v-show="session.user.data.plugins.cursor" title="Cursors enabled">mouse</i>
-                        <template v-if="minutesSinceLastMessage > 0">
-                            <i title="Last activity" class="material-icons md-14 icon-active-time">schedule</i>
-                            <span class="text-active-time">{{minutesSinceLastMessage > 30 ? 'afk' : (minutesSinceLastMessage + 'm')}}</span>
-                        </template>
-                    </div>
-                    <div class="motto" :title="session.user.data.plugins.motto">{{session.user.data.plugins.motto}}&nbsp;</div>
-                </template>
-            </div>
-        </div>
-        <div class="stats" v-show="session.user.right >= 0">
-            <div class="right" title="Right level">
-                <span>{{session.user.right}}</span>
-            </div>
-            <div class="xp" title="User xp">
-                <span>{{session.user.xp}}</span>
-            </div>
-            <div class="money" title="Money">
-                $ {{(session.user.money / 100).toFixed(2)}}
-            </div>
-        </div>
-    </div>
+    </hover-card>
 </template>
 
 <script>
     import Vue from "vue";
+    import HoverCard from "../util/HoverCard";
 
     export default Vue.extend({
-
+        components: { HoverCard },
         props: {
             session: {
                 type: Object
             }
         },
-
         methods: {
             isChanSelected(channelName) {
                 return channelName.toLowerCase() === this.$store.state.channel;
             },
         },
-
         computed: {
             minutesSinceLastMessage: function() {
                 const duration = new Date().getTime() * 0.001 - this.session.lastMessageTime;
@@ -94,33 +97,22 @@
 
 <style lang="scss" scoped>
 
+.user-list-row {
+    margin-bottom: 4px;
+
     .connected-session {
         width: 100%;
         height: 55px;
         display: flex;
         color: white;
         background: #242427;
-        margin-bottom: 4px;
-        border-left: 4px solid #a3a5b4;
-        transition: all 0.2s;
-        cursor: pointer;
+        transition: all .2s;
 
         &.disconnected {
             opacity: .6;
         }
 
-        &.has-unread {
-            background: #e2b14152;
-        }
-
-        &.selected {
-            margin-left: 10px;
-            background: #424248;
-        }
-
-        &:hover:not(.selected) {
-            border-width: 0;
-            margin-left: 4px;
+        &:hover {
             background: #313235;
         }
 
@@ -129,18 +121,7 @@
             height: 55px;
             padding: 10px;
             position: relative;
-            margin-right: 8px;
-
-            >.rank {
-                position: absolute;
-                right: -2px;
-                bottom: 3px;
-                z-index: 10;
-
-                >img {
-                    height: 100%;
-                }
-            }
+            
             >.image-bubble{
                 width: 100%;
                 height: 100%;
@@ -170,8 +151,7 @@
                 display: flex;
 
                 >.icons {
-                    margin-left: 5px;
-                    margin-top: 5px;
+                    margin-top: 2px;
                     flex-grow: 1;
 
                     >.icon-yt {
@@ -206,7 +186,7 @@
                     white-space: nowrap;
                     overflow: hidden;
                     text-overflow: ellipsis;
-                    margin-top: 5px;
+                    margin-top: 2px;
                     flex-basis: calc(100% - 110px);
                     text-align: right;
                 }
@@ -239,11 +219,7 @@
                 font-size: 80%;
                 color: #e4e444;
             }
-            >.xp {
-                flex-grow: 1;
-                font-size: 80%;
-                color: #ff4747;
-            }
         }
     }
+}
 </style>
