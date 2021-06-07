@@ -62,8 +62,7 @@ This is not all, but to discover all features, you may as well launch an instanc
 ### Install and run
 
 If using docker you need:
-- nodejs/npm, any version
-- docker/docker-compose
+- docker & docker-compose
 
 If not using docker, ensure you have the following installed on your system:
 - nodejs >= 10 and npm
@@ -76,13 +75,14 @@ Then, follow these steps:
 git clone https://github.com/skychatorg/skychat.git
 cd skychat
 
-# 2. Generates the .env.json, stickers.json, config files and the database
+# 2. Generates the .env.json and config files in config/
 bash scripts/setup.sh
 
 # 3. (Choose only one) Run the app
-bash scripts/docker-start.sh  # If with docker
-npm i && npm run start        # If without docker
-npm i && npm run dev          # If without docker with fs watcher and auto rebuild/restart
+#   Run with docker:
+bash scripts/docker-start.sh
+#   Run on current host
+npm i && npm run start
 ```
 
 

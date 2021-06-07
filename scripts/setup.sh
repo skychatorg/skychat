@@ -1,10 +1,5 @@
 #!/usr/bin/env bash
 
-# Initialize db
-if [[ ! -e storage/database.db ]]; then
-    sqlite3 storage/database.db < scripts/database-setup.sql;
-fi
-
 # Initialize .env.json
 if [[ ! -e .env.json ]]; then
     cp .env.json.template .env.json;
