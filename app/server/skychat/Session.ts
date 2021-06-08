@@ -151,6 +151,13 @@ export class Session implements IBroadcaster {
         return this.user.id === 0;
     }
 
+    /**
+     * @returns Returns whether all connections have disconnected from this session
+     */
+    public isAlive(): boolean {
+        return ! this.deadSince;
+    }
+
     public getDefaultCleanUpDelay(): number {
         return this.isGuest() ? Session.DEAD_GUEST_SESSION_CLEANUP_DELAY_MS : Session.DEAD_USER_SESSION_CLEANUP_DELAY_MS;
     }

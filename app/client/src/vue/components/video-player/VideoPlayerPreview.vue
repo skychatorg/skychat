@@ -49,13 +49,13 @@
                     
                 <!-- actions -->
                 <div class="preview-actions">
-                    <div v-show="canHandlePlayer()"
+                    <div v-show="canHandlePlayer() && playerState.current && playerState.current.video.duration !== 0"
                         @click="ytReplay30"
                         title="Replay 30 seconds"
                         class="preview-action">
                         <i class="material-icons md-14">replay_30</i>
                     </div>
-                    <div v-show="canHandlePlayer()"
+                    <div v-show="canHandlePlayer() && playerState.current && playerState.current.video.duration !== 0"
                         @click="ytSkip30"
                         title="Skip 30 seconds"
                         class="preview-action">

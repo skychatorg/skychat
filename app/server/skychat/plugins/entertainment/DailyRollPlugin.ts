@@ -97,7 +97,7 @@ export class DailyRollPlugin extends RoomPlugin {
         // Wait for at least 1 user to be there
         while(true) {
             const connectionCount = this.room.connections
-                .filter(connection => ! connection.session.deadSince)
+                .filter(connection => connection.session.isAlive())
                 .length;
             if (connectionCount > 0) {
                 break;

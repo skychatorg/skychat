@@ -135,7 +135,11 @@ export class PlayerChannel {
             this.playNextTimeout = setTimeout(this.playNext.bind(this), 0);
             return;
         }
-        // If currently playing a video, arm the timeout to end the video at the end of it
+        // If currently playing a video which has no duration (plays indefinitively)
+        if (this.currentVideoInfo.video.duration === 0) {
+            return;
+        }
+        // If currently playing a video with a duration, arm the timeout to end the video at the end of it
         const duration = this.currentVideoInfo.video.duration - this.getCursor() + 2 * 1000; // Add 2 seconds of margin before the next video
         this.playNextTimeout = setTimeout(this.playNext.bind(this), duration);
     }
@@ -222,11 +226,23 @@ export class PlayerChannel {
      * @param identifier 
      */
     public hasPlayerPermission(session: Session) {
-        if (this.currentVideoInfo && this.currentVideoInfo.user.username.toLowerCase() === session.identifier) {
-            return true;
-        }
+        // If session is OP
         if (session.isOP()) {
             return true;
+        }
+        // If a media is currently playing
+        if (this.currentVideoInfo) {
+            // Current media owner
+            const owner = this.currentVideoInfo.user.username.toLowerCase();
+            // If media owner is session
+            if (owner === session.identifier) {
+                return true;
+            }
+            // If media owner left
+            const ownerSession = Session.getSessionByIdentifier(owner);
+            if (! ownerSession || ownerSession.isAlive()) {
+                return true;
+            }
         }
         return false;
     }
