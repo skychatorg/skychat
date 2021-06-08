@@ -8,9 +8,9 @@ import { GlobalPlugin } from "../../GlobalPlugin";
 
 export class PollPlugin extends GlobalPlugin {
 
-    public static readonly POLL_CREATION_COOL_DOWN: number = 1 * 1000; // @TODO
+    public static readonly POLL_CREATION_COOL_DOWN: number = 60 * 1000;
 
-    public static readonly POLL_TIMEOUT: number = 10 * 1000;
+    public static readonly POLL_TIMEOUT: number = 30 * 1000;
 
     static readonly commandName = 'poll';
 
