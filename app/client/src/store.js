@@ -86,8 +86,11 @@ const store = {
         messages: [],
         playerEnabled: false,
         typingList: [],
-        polls: [],
-        pollResult: null,
+
+        /**
+         * List of on-going polls
+         */
+        polls: {},
         
         playerApiSearchResult: {},
         playerChannels: [],
@@ -281,17 +284,18 @@ const store = {
             state.playerEnabled = playerEnabled;
             this.commit('SAVE_LOCALSTORAGE');
         },
-        SET_POLLS(state, polls) {
-            if (polls.length > state.polls.length) {
+        SET_POLL(state, poll) {
+
+            // If new poll, play a notification
+            if (typeof state.polls[poll.id] === 'undefined') {
                 new Audio('/assets/sound/new-poll.ogg').play();
             }
-            state.polls = polls;
+
+            // Update the poll
+            Vue.set(state.polls, poll.id, poll);
         },
-        SET_POLL_RESULT(state, pollResult) {
-            state.pollResult = pollResult;
-        },
-        CLEAR_POLL_RESULT(state) {
-            state.pollResult = null;
+        CLEAR_POLL(state, pollId) {
+            Vue.delete(state.polls, pollId);
         },
         SET_TYPING_LIST(state, users) {
             state.typingList = users;

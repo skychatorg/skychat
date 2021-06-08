@@ -2,33 +2,11 @@
 
     <div class="poll-list">
 
-        <h2 class="title" v-show="pollResult || polls.length > 0">Polls</h2>
+        <h2 class="title" v-show="Object.values(polls).length > 0">Polls</h2>
 
-        <div v-if="pollResult">
-            <div class="poll">
-                <div class="info">
-                    <div class="poll-title">
-                        {{pollResult.title}}
-                    </div>
-                    <div class="poll-content">
-                        {{pollResult.content}}
-                        <br>
-                        <div>
-                            RESULT: {{typeof pollResult.result === 'undefined' ? 'NONE' : (pollResult.result ? 'YES' : 'NO')}}
-                        </div>
-                    </div>
-                    <div class="poll-actions">
-                        <button @click="clear" class="skychat-button">
-                            CLEAR
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div v-show="polls.length > 0">
+        <div v-show="Object.values(polls).length > 0">
             <div
-                v-for="poll in polls"
+                v-for="poll in Object.values(polls)"
                 :key="poll.id"
                 class="poll pending">
                 <div class="info">
@@ -37,17 +15,33 @@
                     </div>
                     <div class="poll-content">
                         {{poll.content}}
-                        <div v-if="typeof poll.opVote === 'boolean'">
-                            OP Vote: {{poll.opVote ? 'YES' : 'NO'}}
-                        </div>
                     </div>
-                    <div class="poll-actions" v-show="typeof poll.opVote !== 'boolean'">
+
+                    <!-- If voting in progress -->
+                    <div class="poll-actions" v-if="poll.state !== 'finished' && typeof poll.opVote === 'undefined'">
                         <button @click="vote(poll, true)" class="skychat-button">
                             YES ({{poll.yesCount}})
                         </button>
                         <button @click="vote(poll, false)" class="skychat-button">
                             NO ({{poll.noCount}})
                         </button>
+                    </div>
+
+                    <!-- If voting in progress but an admin forced the result -->
+                    <div class="poll-actions" v-if="poll.state !== 'finished' && typeof poll.opVote !== 'undefined'">
+                        An admin voted `{{ poll.opVote ? 'yes' : 'no' }}`
+                    </div>
+
+                    <!-- If poll finished -->
+                    <div v-if="poll.state === 'finished'">
+                        <div>RESULT: {{typeof poll.result === 'undefined' ? 'NONE' : (poll.result ? 'YES' : 'NO')}}</div>
+                        <div v-if="typeof poll.opVote !== 'undefined'">{{ typeof poll.opVote === 'boolean' ? ' (Vote overridden by admin)' : ''}}</div>
+                        <br>
+                        <div class="poll-actions">
+                            <button @click="clear(poll.id)" class="skychat-button">
+                                CLEAR
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -59,21 +53,21 @@
     import Vue from "vue";
 
     export default Vue.extend({
+        created: function() {
+            this.Object = Object;
+        },
         methods: {
             vote: function(poll, response) {
                 this.$client.vote(poll.id, response);
             },
-            clear: function() {
-                this.$store.commit('CLEAR_POLL_RESULT');
+            clear: function(pollId) {
+                this.$store.commit('CLEAR_POLL', pollId);
             }
         },
         computed: {
             polls: function() {
                 return this.$store.state.polls;
             },
-            pollResult: function() {
-                return this.$store.state.pollResult;
-            }
         }
     });
 </script>
@@ -106,6 +100,7 @@
             >.info {
                 padding-top: 6px;
                 padding-left: 8px;
+                padding-bottom: 10px;
                 position: relative;
                 flex-grow: 1;
                 width: 0;
@@ -128,7 +123,8 @@
                     justify-content: center;
 
                     >* {
-                        margin: 10px;
+                        margin-left: 10px;
+                        margin-right: 10px;
                         flex-grow: 1;
                     }
                 }

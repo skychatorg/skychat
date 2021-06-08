@@ -1,8 +1,15 @@
+import { Room } from "../../Room";
+import { Session } from "../../Session";
 
 
 export type PollState =  'pending' | 'started' | 'finished';
 
 export type PollOptions = {
+
+    /**
+     * Poll audience. Can be a room object, a list of sessions or addressed to everyone
+     */
+    audience: Room | Session[] | '*';
 
     /**
      * Default value
@@ -54,6 +61,7 @@ export class Poll {
         this.title = title;
         this.content = content;
         this.options = options;
+        this.sync();
     }
 
     /**
@@ -67,6 +75,7 @@ export class Poll {
             return false;
         }
         this.votes[identifier] = vote;
+        this.sync();
     }
 
     /**
@@ -76,6 +85,7 @@ export class Poll {
     public forceResult(vote: boolean) {
         this.opVote = vote;
         this.votes = {};
+        this.sync();
     }
 
     /**
@@ -121,6 +131,7 @@ export class Poll {
             setTimeout(() => {
 
                 this.state = 'finished';
+                this.sync();
                 resolve(this.getResult());
             }, this.options.timeout);
         });
@@ -140,5 +151,30 @@ export class Poll {
             noCount: noCount,
             opVote: this.opVote
         }
+    }
+
+    public sync(): void {
+
+        // If polling all
+        if (this.options.audience === '*') {
+            for (const session of Object.values(Session.sessions)) {
+                session.send('poll', this.sanitized());
+            }
+            return;
+        }
+
+        // If polling a room
+        if (this.options.audience instanceof Room) {
+            this.options.audience.send('poll', this.sanitized());
+            return;
+        }
+
+        // If polling sessions
+        if (this.options.audience instanceof Array) {
+            this.options.audience.map(session => session.send('poll', this.sanitized()));
+            return;
+        }
+
+        throw new Error('Unknown audience type');
     }
 }

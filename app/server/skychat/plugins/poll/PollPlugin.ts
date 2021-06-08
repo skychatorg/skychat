@@ -1,17 +1,16 @@
 import { Connection } from "../../Connection";
 import { Plugin } from "../../Plugin";
-import { RoomPlugin } from "../../RoomPlugin";
 import { Poll, PollOptions } from "./Poll";
-import { Room} from "../../Room";
 import { Config } from "../../Config";
+import { GlobalPlugin } from "../../GlobalPlugin";
 
 
 
-export class PollPlugin extends RoomPlugin {
+export class PollPlugin extends GlobalPlugin {
 
-    public static readonly POLL_CREATION_COOL_DOWN: number = 60 * 1000;
+    public static readonly POLL_CREATION_COOL_DOWN: number = 1 * 1000; // @TODO
 
-    public static readonly POLL_TIMEOUT: number = 30 * 1000;
+    public static readonly POLL_TIMEOUT: number = 10 * 1000;
 
     static readonly commandName = 'poll';
 
@@ -19,7 +18,7 @@ export class PollPlugin extends RoomPlugin {
 
     readonly minRight = Config.PREFERENCES.minRightForPolls;
 
-    private polls: {[id: number]: Poll} = [];
+    private polls: { [id: number]: Poll } = [];
 
     readonly rules = {
         poll: {
@@ -53,10 +52,14 @@ export class PollPlugin extends RoomPlugin {
      * @param connection
      */
     private async handlePoll(param: string, connection: Connection) {
-        await this.poll(`${connection.session.user.username} asks:`, param, {
-            defaultValue: undefined,
-            timeout: PollPlugin.POLL_TIMEOUT
-        });
+        await this.poll(
+            `${connection.session.user.username} asks:`,
+            param,
+            {
+                audience: connection.room ? connection.room : '*',
+                defaultValue: undefined,
+                timeout: PollPlugin.POLL_TIMEOUT
+            });
     }
 
     /**
@@ -79,7 +82,6 @@ export class PollPlugin extends RoomPlugin {
         } else {
             poll.registerVote(connection.session.identifier, vote);
         }
-        this.sync(this.room);
     }
 
     /**
@@ -89,44 +91,18 @@ export class PollPlugin extends RoomPlugin {
      * @param options
      */
     public async poll(title: string, content: string, options: PollOptions): Promise<Poll> {
+
+        // Create new poll
         const poll: Poll = new Poll(title, content, options);
         this.polls[poll.id] = poll;
-        this.sync(this.room);
+
+        // Send poll to
         await poll.complete();
+
+        // Clear poll
         delete this.polls[poll.id];
-        this.sync(this.room);
-        this.room.send('poll-result', poll.sanitized());
+
+        // Return poll result
         return poll;
-    }
-
-    /**
-     * Sync clients
-     */
-    public sync(broadcaster: Connection | Room) {
-        if (broadcaster instanceof Room) {
-            for (const connection of broadcaster.connections) {
-                this.sync(connection);
-            }
-            return;
-        }
-        const polls = Object.values(this.polls);
-
-        // If currently no poll
-        if (polls.length === 0) {
-            // Abort
-            broadcaster.send('poll', []);
-            return;
-        }
-
-        const sanitizedPollList = polls.map(poll => poll.sanitized());
-        broadcaster.send('poll', sanitizedPollList);
-    }
-
-    /**
-     * When client join the room, sync the polls
-     * @param connection
-     */
-    async onConnectionJoinedRoom(connection: Connection): Promise<void> {
-        this.sync(connection);
     }
 }
