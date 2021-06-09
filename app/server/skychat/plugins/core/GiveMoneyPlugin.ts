@@ -31,7 +31,7 @@ export class GiveMoneyPlugin extends RoomPlugin {
 
         // Get information about receiver, sender and amount
         const receiverUsername = param.split(' ')[0];
-        const receiverSession = Session.getSessionByIdentifier(Session.autocompleteIdentifier(receiverUsername));
+        const receiverSession = Session.getSessionByIdentifier(receiverUsername);
         if (! receiverSession) {
             throw new Error('User not found');
         }

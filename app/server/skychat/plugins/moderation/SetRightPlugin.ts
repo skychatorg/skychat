@@ -27,10 +27,10 @@ export class SetRightPlugin extends GlobalPlugin {
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
         let [usernameRaw, rightRaw] = param.split(' ');
-        const username = Session.autocompleteIdentifier(usernameRaw);
+        const identifier = usernameRaw.toLowerCase();
         const right = parseInt(rightRaw);
 
-        const session = Session.getSessionByIdentifier(username);
+        const session = Session.getSessionByIdentifier(identifier);
         if (! session) {
             throw new Error('User not found');
         }

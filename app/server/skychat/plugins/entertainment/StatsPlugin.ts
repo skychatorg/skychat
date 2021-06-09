@@ -29,12 +29,11 @@ export class StatsPlugin extends RoomPlugin {
     /**
      * Displays a funny message about the number of minutes a user has spent on the tchat
      * @param alias
-     * @param param
+     * @param username
      * @param connection
      */
-    async run(alias: string, param: string, connection: Connection): Promise<void> {
+    async run(alias: string, username: string, connection: Connection): Promise<void> {
         
-        const username = Session.autocompleteIdentifier(param);
         const session = Session.getSessionByIdentifier(username);
         if (! session) {
             // If user doesn't exist

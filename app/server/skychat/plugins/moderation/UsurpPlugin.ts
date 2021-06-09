@@ -21,8 +21,8 @@ export class UsurpPlugin extends RoomPlugin {
     };
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
-        const identifier = Session.autocompleteIdentifier(param.split(' ')[0]);
-        const commandName = Session.autocompleteIdentifier(param.split(' ')[1]);
+        const identifier = param.split(' ')[0].toLowerCase();
+        const commandName = param.split(' ')[1];
         const session = Session.getSessionByIdentifier(identifier);
         if (! session || session.connections.length === 0) {
             throw new Error('User ' + identifier + ' does not exist');

@@ -74,7 +74,7 @@ export class MutePlugin extends GlobalPlugin {
      * @param connection
      */
     async handleMute(param: string, connection: Connection): Promise<void> {
-        const identifier = Session.autocompleteIdentifier(param.split(' ')[0]);
+        const identifier = param.split(' ')[0].toLowerCase();
         const duration = parseInt(param.split(' ')[1]);
         if (! Session.sessionExists(identifier)) {
             throw new Error('User ' + identifier + ' does not exist');
@@ -88,7 +88,7 @@ export class MutePlugin extends GlobalPlugin {
      * @param connection
      */
     async handleUnmute(param: string, connection: Connection): Promise<void> {
-        const identifier = Session.autocompleteIdentifier(param.split(' ')[0]);
+        const identifier = param.split(' ')[0].toLowerCase();
         if (! Session.sessionExists(identifier)) {
             throw new Error('User ' + identifier + ' does not exist');
         }

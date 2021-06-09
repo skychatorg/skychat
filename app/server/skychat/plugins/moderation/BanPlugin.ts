@@ -94,7 +94,7 @@ export class BanPlugin extends GlobalPlugin {
     }
 
     async handleBan(param: string, connection: Connection) {
-        const identifier = Session.autocompleteIdentifier(param.split(' ')[0]);
+        const identifier = param.split(' ')[0].toLowerCase();
         const typeRaw = param.split(' ')[1] || 'ACCESS';
         const duration = param.split(' ')[2] ? parseInt(param.split(' ')[2]) : null;
         if (typeof (BAN_TYPES as any)[typeRaw] === 'undefined') {
@@ -122,7 +122,7 @@ export class BanPlugin extends GlobalPlugin {
     }
 
     async handleUnban(param: string, connection: Connection) {
-        const identifier = Session.autocompleteIdentifier(param.split(' ')[0]);
+        const identifier = param.split(' ')[0].toLowerCase();
         for (const matchString of Object.keys(this.storage.banned)) {
             const banEntry = this.storage.banned[matchString];
             if (banEntry.source === identifier) {
