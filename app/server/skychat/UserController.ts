@@ -4,7 +4,6 @@ import {Config} from "./Config";
 import {DatabaseHelper} from "./DatabaseHelper";
 import {AuthToken, User} from "./User";
 import SQL from "sql-template-strings";
-import {Plugin} from "./Plugin";
 import {Message, MessageConstructorOptions, MessageMeta} from "./Message";
 import * as _ from "lodash"
 
@@ -18,6 +17,7 @@ export class UserController {
 
     /**
      * Object containing default storage data for each plugin
+     * @TODO update when configuration is hot-reloaded
      */
     private static pluginDefaultStorages: {[name: string]: any} = PluginManager.getPluginsDefaultDataStorageValues(Config.PLUGINS);
 

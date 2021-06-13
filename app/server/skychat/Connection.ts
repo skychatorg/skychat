@@ -185,7 +185,15 @@ export class Connection extends EventEmitter implements IBroadcaster {
     }
 
     /**
-     * Send an error back to the websocket
+     * Send an info message to the websocket
+     * @param message
+     */
+    public sendInfo(message: string): void {
+        this.webSocket.send(JSON.stringify({ event: 'info', data: message }));
+    }
+
+    /**
+     * Send an error to the websocket
      * @param error
      */
     public sendError(error: Error): void {

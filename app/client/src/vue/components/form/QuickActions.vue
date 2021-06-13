@@ -3,15 +3,21 @@
     <div class="quick-actions">
         <h2 class="title">Quick actions</h2>
         <div class="quick-actions-group"
+            :class="{
+                'separator': group.separator
+            }"
             v-for="group in actions"
             :key="group.name"
-            v-show="(cinemaMode && group.showInCinema) || (! cinemaMode && group.showInNonCinema)">
+            v-show="isGroupShown(group)">
             <div class="quick-actions-group-content">
                 <div v-for="action in group.actions"
                      :key="action.id"
                      @click="onActivate(action.id)"
                      class="quick-action"
-                     :class="'action-' + action.id"
+                     :class="{
+                         ['action-' + action.id]: true,
+                         'action-full-width': action.fullWidth,
+                     }"
                      :title="group.name + ': ' + action.title + (action.shortcuts ? ' ' + action.shortcuts.map(shortcut => '['+shortcut+']').join(', ') : '')">
 
                     <div class="icon">
@@ -28,17 +34,20 @@
 <script>
     import Vue from "vue";
     import YoutubeVideoSearcher from "../modal/YoutubeVideoSearcher.vue";
+    import FileManager from "../modal/FileManager.vue";
 
     export default Vue.extend({
 
         data: function() {
+
             return {
 
                 actions: [
                     {
                         name: "Misc (Cinema)",
-                        showInCinema: true,
-                        showInNonCinema: false,
+                        onlyInCinema: true,
+                        onlyInNonCinema: false,
+                        onlyOP: false,
                         actions: [
                             {
                                 id: 'cinema-mode',
@@ -50,8 +59,9 @@
                     },
                     {
                         name: "Youtube",
-                        showInCinema: false,
-                        showInNonCinema: true,
+                        onlyInCinema: false,
+                        onlyInNonCinema: true,
+                        onlyOP: false,
                         actions: [
                             {
                                 id: 'player-toggle',
@@ -69,8 +79,9 @@
                     },
                     {
                         name: "Misc",
-                        showInCinema: false,
-                        showInNonCinema: true,
+                        onlyInCinema: false,
+                        onlyInNonCinema: true,
+                        onlyOP: false,
                         actions: [
                             {
                                 id: 'cursor-toggle',
@@ -88,8 +99,9 @@
                     },
                     {
                         name: "Misc",
-                        showInCinema: false,
-                        showInNonCinema: true,
+                        onlyInCinema: false,
+                        onlyInNonCinema: true,
+                        onlyOP: false,
                         actions: [
                             {
                                 id: 'shop',
@@ -107,8 +119,9 @@
                     },
                     {
                         name: "Games",
-                        showInCinema: false,
-                        showInNonCinema: false,
+                        onlyInCinema: false,
+                        onlyInNonCinema: false,
+                        onlyOP: false,
                         actions: [
                             {
                                 id: 'racing',
@@ -121,6 +134,22 @@
                                 title: "Start a game of roulette",
                                 icon: 'casino',
                                 shortcuts: ['ctrl+o']
+                            },
+                        ]
+                    },
+                    {
+                        name: "OP",
+                        separator: true,
+                        onlyInCinema: false,
+                        onlyInNonCinema: false,
+                        onlyOP: true,
+                        actions: [
+                            {
+                                id: 'file-manager',
+                                title: "Open the file manager",
+                                icon: 'settings',
+                                shortcuts: ['ctrl+shift+c'],
+                                fullWidth: 2,
                             },
                         ]
                     },
@@ -143,6 +172,18 @@
         },
 
         methods: {
+            isGroupShown: function(group) {
+                if (group.onlyInCinema) {
+                    return this.cinemaMode;
+                }
+                if (group.onlyInNonCinema) {
+                    return ! this.cinemaMode;
+                }
+                if (group.onlyOP) {
+                    return this.op;
+                }
+                return true;
+            },
             getActionText: function(id) {
                 switch (id) {
                     case 'player-toggle':
@@ -169,6 +210,8 @@
                         return `<b>Help</b>`;
                     case 'cinema-mode':
                         return `<i class="material-icons md-16" style="color:${this.cinemaMode ? '' : 'gray'}">toggle_${this.cinemaMode ? 'on' : 'off'}</i>`;
+                    case 'file-manager':
+                        return `<b>Open the Control Panel</b>`;
                 }
             },
             onActivate: function(id) {
@@ -200,6 +243,9 @@
                         return this.$client.sendMessage('/help');
                     case 'cinema-mode':
                         return this.$store.commit('TOGGLE_CINEMA_MODE'); 
+                    case 'file-manager':
+                        this.$modal.show(FileManager);
+                        return;
                 }
             },
         },
@@ -210,6 +256,9 @@
             },
             user: function() {
                 return this.$store.state.user;
+            },
+            op: function() {
+                return this.$store.state.op;
             },
             playerEnabled: function() {
                 return this.$store.state.playerEnabled;
@@ -226,6 +275,10 @@
         color: white;
 
         .quick-actions-group {
+            
+            &.separator {
+                margin-top: 10px;
+            }
 
             .quick-actions-group-title {
                 padding-left: 6px;
@@ -269,9 +322,13 @@
                         justify-content: center;
                     }
 
+                    &.action-full-width {
+                        flex: 100%;
+                    }
                     &.action-player-toggle,
                     &.action-cinema-mode,
-                    &.action-player-play {
+                    &.action-player-play,
+                    &.action-file-manager {
                         border-left-color: #ff8f8f !important;
                         .icon {
                             color: #ff8f8f;

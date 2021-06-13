@@ -82,16 +82,47 @@ const store = {
         gallerySearchResults: null,
         isGalleryVisible: false,
 
+        /**
+         * List of current shown cursors on the screen
+         */
         cursors: {},
+
+        rollState: null,
+
+        /**
+         * List of files that can be edited
+         */
+        files: [],
+
+        /**
+         * Currently edited file
+         * @type {null | { filePath: string, content: string }}
+         */
+        file: null,
+
+        /**
+         * 
+         */
         messages: [],
-        playerEnabled: false,
+
+        /**
+         * Current list of typing users
+         */
         typingList: [],
+
+        /**
+         * Whether the player is on/off on the client side
+         */
+        playerEnabled: false,
 
         /**
          * List of on-going polls
          */
         polls: {},
-        
+
+        /**
+         * Player state
+         */
         playerApiSearchResult: {},
         playerChannels: [],
         playerChannel: null,
@@ -331,6 +362,12 @@ const store = {
                 const rollEndSound = new Audio('/assets/sound/roll-end.ogg');
                 rollEndSound.play();
             }
+        },
+        SET_FILE_LIST(state, files) {
+            state.files = files;            
+        },
+        SET_FILE_CONTENT(state, data) {
+            state.file = data;
         },
         SET_PLAYER_API_SEARCH_RESULTS(state, result) {
             state.playerApiSearchResult = result;

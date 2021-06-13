@@ -6,7 +6,6 @@
         :class="{
             'disconnected': session.connectionCount === 0,
         }"
-        @click.native="joinChannel(channel.id)"
     >
         <div class="connected-session"
             :style="{'border-left-color': session.user.data.plugins.color}"

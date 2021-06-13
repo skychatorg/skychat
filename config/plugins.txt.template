@@ -5,6 +5,7 @@ AvatarPlugin
 BackupPlugin
 ColorPlugin
 ConnectedListPlugin
+FileEditorPlugin
 GiveMoneyPlugin
 CursorPlugin
 OPPlugin
