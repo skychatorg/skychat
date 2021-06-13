@@ -42,7 +42,6 @@ export class SkyChatClient extends EventEmitter {
         this.on('message-seen', this.onMessageSeen.bind(this));
         this.on('connected-list', this.onConnectedList.bind(this));
         this.on('poll', this.onPoll.bind(this));
-        this.on('poll-result', this.onPollResult.bind(this));
         this.on('auth-token', this.onAuthToken.bind(this));
         this.on('typing-list', this.onTypingList.bind(this));
         this.on('cursor', this.onCursor.bind(this));
@@ -427,16 +426,8 @@ export class SkyChatClient extends EventEmitter {
      *
      * @param polls
      */
-    onPoll(polls) {
-        this.store.commit('SET_POLLS', polls);
-    }
-
-    /**
-     *
-     * @param pollResult
-     */
-    onPollResult(pollResult) {
-        this.store.commit('SET_POLL_RESULT', pollResult);
+    onPoll(poll) {
+        this.store.commit('SET_POLL', poll);
     }
 
     /**

@@ -38,19 +38,7 @@ export class Session implements IBroadcaster {
      * @param identifier
      */
     public static getSessionByIdentifier(identifier: string): Session | undefined {
-        return Session.sessions[identifier];
-    }
-
-    /**
-     * Autocomplete an identifier to match an active existing identifier
-     * @param identifier
-     */
-    public static autocompleteIdentifier(identifier: string): string {
-        const matches = Object.keys(Session.sessions).filter(i => i.indexOf(identifier.toLowerCase()) === 0);
-        if (matches.length !== 1) {
-            return identifier.toLowerCase();
-        }
-        return matches[0];
+        return Session.sessions[identifier.toLowerCase()];
     }
 
     /**

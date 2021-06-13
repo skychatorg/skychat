@@ -476,7 +476,7 @@ export class RoomManager {
             throw new Error('Audio recordings should be sent in rooms');
         }
         
-        const audioRecorderPlugin = connection.room.getPlugin('audio') as unknown as AudioRecorderPlugin;
+        const audioRecorderPlugin = this.getPlugin('audio') as unknown as AudioRecorderPlugin;
         await audioRecorderPlugin.registerAudioBuffer(buffer, connection);
     }
 }

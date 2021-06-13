@@ -35,8 +35,7 @@ export class IpPlugin extends GlobalPlugin {
             connections = Session.connections;
 
         } else {
-            const username = Session.autocompleteIdentifier(param);
-            const session = Session.getSessionByIdentifier(username);
+            const session = Session.getSessionByIdentifier(param);
             if (! session) {
                 throw new Error('Username not found');
             }

@@ -23,7 +23,7 @@ export class PrivateMessagePlugin extends GlobalPlugin {
     async run(alias: string, param: string, connection: Connection): Promise<void> {
 
         const username = param.split(' ')[0];
-        const session = Session.getSessionByIdentifier(Session.autocompleteIdentifier(username));
+        const session = Session.getSessionByIdentifier(username);
         if (! session) {
             throw new Error('User not found');
         }

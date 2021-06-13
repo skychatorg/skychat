@@ -23,7 +23,7 @@ export class KickPlugin extends GlobalPlugin {
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
 
-        const identifier = Session.autocompleteIdentifier(param);
+        const identifier = param.toLowerCase();
         const session = Session.getSessionByIdentifier(identifier);
         if (! session) {
             throw new Error('Username not found');

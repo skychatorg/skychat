@@ -19,6 +19,7 @@ import { MessageSeenPlugin } from "./plugins/core/MessageSeenPlugin";
 import { RoomManagerPlugin } from "./plugins/core/RoomManagerPlugin";
 import { TypingListPlugin } from "./plugins/core/TypingListPlugin";
 import { VoidPlugin } from "./plugins/core/VoidPlugin";
+import { Session } from "./Session";
 
 
 export type StoredRoom = {
@@ -211,6 +212,13 @@ export class Room implements IBroadcaster {
         }
         this.whitelist.splice(index, 1);
         return true;
+    }
+
+    /**
+     * Get the sessions that have at least one connection within this room
+     */
+    public getSessions(): Session[] {
+        return Array.from(new Set(this.connections.map(c => c.session)));
     }
 
     /**

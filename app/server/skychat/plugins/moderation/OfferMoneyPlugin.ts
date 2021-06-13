@@ -25,8 +25,8 @@ export class OfferMoneyPlugin extends GlobalPlugin {
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
 
-        const username = param.split(' ')[0];
-        const session = Session.getSessionByIdentifier(Session.autocompleteIdentifier(username));
+        const identifier = param.split(' ')[0].toLowerCase();
+        const session = Session.getSessionByIdentifier(identifier);
         if (! session) {
             throw new Error('User not found');
         }

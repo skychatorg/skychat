@@ -94,7 +94,7 @@ export class SandalePlugin extends GlobalPlugin {
      * @param connection
      */
     async run(alias: string, param: string, connection: Connection): Promise<void> {
-        const identifier = Session.autocompleteIdentifier(param);
+        const identifier = param;
         if (! Session.sessionExists(identifier)) {
             throw new Error('User ' + identifier + ' does not exist');
         }

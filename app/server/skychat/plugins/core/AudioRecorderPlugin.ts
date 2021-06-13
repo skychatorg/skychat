@@ -1,11 +1,11 @@
-import {RoomPlugin} from "../../RoomPlugin";
-import {Connection} from "../../Connection";
-import {User} from "../../User";
+import { GlobalPlugin } from "../../GlobalPlugin";
+import { Connection } from "../../Connection";
+import { User } from "../../User";
 import { MessageFormatter } from "../../MessageFormatter";
 import { Config } from "../../Config";
 
 
-export class AudioRecorderPlugin extends RoomPlugin {
+export class AudioRecorderPlugin extends GlobalPlugin {
 
     // Maximum number of recordings to keep in memory
     public static MAX_RECORDING_CACHED: number = 32;
@@ -58,6 +58,16 @@ export class AudioRecorderPlugin extends RoomPlugin {
             throw new Error('Audio recording too long');
         }
 
+        // Get current connection room
+        const roomId = connection.roomId;
+        if (roomId === null) {
+            throw new Error('You need to be in a room to send audio files');
+        }
+        const room = this.manager.getRoomById(roomId);
+        if (! room) {
+            throw new Error('Room does not exist');
+        }
+
         // Register audio buffer
         this.entries[++ this.currentEntryId] = {
             buffer,
@@ -66,7 +76,7 @@ export class AudioRecorderPlugin extends RoomPlugin {
         
         // Send the message to the room
         const content = `[[play audio//audio ${this.currentEntryId}]]`;
-        await this.room.sendMessage({
+        await room.sendMessage({
             formatted: MessageFormatter.getInstance().replaceButtons(content, false, true),
             content: content,
             user: connection.session.user,
