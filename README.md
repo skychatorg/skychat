@@ -59,38 +59,32 @@ This is not all, but to discover all features, you may as well launch an instanc
 
 ## How to install
 
-### Install and run
+### Install in 30 seconds
 
 If using docker you need:
-- docker & docker-compose
+- docker
+- docker-compose
 
 If not using docker, ensure you have the following installed on your system:
-- nodejs >= 10 and npm
-- sqlite3
+- nodejs >= 10
+- sqlite3, zip, ffmpeg (e.g. `apt install -y sqlite3 zip ffmpeg`)
 
-Then, follow these steps:
+Then, follow these 2 steps:
 
 ```bash
-# 1. Clone the repository
-git clone https://github.com/skychatorg/skychat.git
-cd skychat
+# 1. Use the autoinstall script (Clones the repository then executes scripts/setup.sh)
+bash <(wget -q https://raw.githubusercontent.com/skychatorg/skychat/master/scripts/autoinstall.sh -O -) && cd skychat
 
-# 2. Generates the .env.json and config files in config/
-bash scripts/setup.sh
-
-# 3. (Choose only one) Run the app
-#   Run with docker:
+# 2.A. Run the app in docker
 bash scripts/docker-start.sh
-#   Run on current host
-npm i && npm run start
+# 2.B. Run the app on your local host
+npm i && npm start
 ```
 
 
 ### Application setup
 
-By default, the application will be listening to `localhost:8080` and assume it is accessed from `http://localhost:8080`. In order to customize the domain name of your SkyChat application, you will need to edit the `.env.json` file. The fields in the .env.json contain private information related to the application.
-
-The semantic of these fields are defined below:
+By default, the application will be listening to `localhost:8080` and assume it is accessed from `http://localhost:8080`. In order to customize the domain name of your SkyChat application, edit the `.env.json` file. The fields in the .env.json contain the private variables of the application, listed below:
 
 
 | field | type | default | semantic |
@@ -125,15 +119,15 @@ Using the Youtube API is free but there is a daily quota, which when exceeded bl
 npm run dev
 ```
 
-This will start a static file server & websocket server on http://localhost:8080
-When the source files change, the build processes runs automatically
+This will start a static file server & websocket server, available under the location specified in the `.env.json` file.
+When the source files change, the build processes runs automatically.
 
 ## Customize
 
 
 ### Customize preferences
 
-The preferences.json file specifies application preferences. The available fields are detailed below.
+The `config/preferences.json` file specifies application preferences. The available fields are detailed below.
 
 
 | field | type | default | description |
@@ -151,21 +145,23 @@ The preferences.json file specifies application preferences. The available field
 
 ### Customize plugins
 
-Enabled plugins. Must only define classes exported by `app/server/skychat/commands/impl/index.ts`
+The `config/plugins.txt` contains the list of enabled plugins.
+To add a custom plugin, create a plugin object in `app/server/skychat/plugins/user_defined/` then add its name to `config/plugins.txt`.
 
 
 ### Customize ranks
 
-Rank definition (xp threshold and image path). Must be sorted by descending limit. The fields for each rank are:
+`config/ranks.json` contains the rank definition (xp threshold and rank icon paths). Must be sorted by descending limit. The fields for each rank are:
   - limit: XP limit to have this rank. The last rank definition must have `0` as the limit, otherwise new users will not have any rank.
   - images: Image path corresponding to the rank icon for each 18 and 26px sizes. Image paths should be relative to `/assets/images/`.
 
 
 ### Customize the fake message history
 
-This file contains the fake raw messages that are displayed to users whose right level is less than `minRightForMessageHistory` defined in `preferences.json`.
+`config/fakemessages.txt` contains the fake messages shown to users whose right level is less than `minRightForMessageHistory` defined in `preferences.json`. If `minRightForMessageHistory` is set to -1, you do not need to modify the fake messages since not one will see them.
 
 
 ### Customize guest names
 
+`config/guestnames.txt` is the pool of non-logged usernames.
 When a guest logs in, a random name is associated to its session. These names are randomly used from this file. If you want to change these names, keep in mind that they should not contain whitespace characters (anything matched by \s so newline, tab, space, ..). Default random names are animal names.

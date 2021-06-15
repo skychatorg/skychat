@@ -1,14 +1,20 @@
 {
     "compilerOptions": {
-        "outDir": "./build/",
-        "sourceMap": true,
+        "module": "commonjs",
         "strict": true,
-        "noImplicitReturns": true,
-        "module": "es2015",
+        "declaration": true,
+        "removeComments": true,
+        "outDir": "./build/",
+        "target": "es5",
+        "lib": ["ES2019"],
         "moduleResolution": "node",
-        "target": "es5"
+        "sourceMap": true
     },
     "include": [
-        "app/client/src/**/*"
+      "app/server/**/*"
     ],
+    "exclude": [
+        "node_modules",
+        "dist"
+    ]
 }
