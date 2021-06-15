@@ -23,7 +23,7 @@ WORKDIR /app/skychat/
 
 # Mount volumes
 RUN ln -s /var/skychat/config   ./config
-RUN ln -s /var/skychat/script   ./script
+RUN ln -s /var/skychat/scripts  ./scripts
 RUN ln -s /var/skychat/backups  ./backups
 RUN ln -s /var/skychat/storage  ./storage
 RUN ln -s /var/skychat/uploads  ./uploads

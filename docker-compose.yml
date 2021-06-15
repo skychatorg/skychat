@@ -13,7 +13,7 @@ services:
         DOCKER_TZ: "${DOCKER_TZ}"
     volumes:
       - ./config:/var/skychat/config:ro
-      - ./script:/var/skychat/script:ro
+      - ./scripts:/var/skychat/scripts:ro
       - ./backups:/var/skychat/backups
       - ./storage:/var/skychat/storage
       - ./uploads:/var/skychat/uploads
