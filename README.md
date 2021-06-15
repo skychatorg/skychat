@@ -6,6 +6,8 @@
 
 Virtual cinema platform. Setup your own private screenings and watch movies, youtube videos, or music with your friends/colleagues/family!
 
+I am currently setting up a live demonstration server with bots that auto-play youtube playlists to make it feel "alive", but in the meanwhile you can check an empty demo, without support for playing youtube videos [here](https://skychat.benjaminraymond.com/).
+
 1. [Why the SkyChat?](#why-the-skychat)
 2. [Overview](#overview)
 3. [Install it](#how-to-install)
