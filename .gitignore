@@ -1,6 +1,9 @@
+backups
+build
+dist
+node_modules
+storage
+uploads
 .env.json
-build/
-dist/
-node_modules/
 .idea
 .vscode

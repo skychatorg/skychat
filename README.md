@@ -76,11 +76,11 @@ git clone https://github.com/skychatorg/skychat.git
 cd skychat
 
 # 2. Generates the .env.json and config files in config/
-bash scripts/setup.sh
+bash script/setup.sh
 
 # 3. (Choose only one) Run the app
 #   Run with docker:
-bash scripts/docker-start.sh
+bash script/docker-start.sh
 #   Run on current host
 npm i && npm run start
 ```
