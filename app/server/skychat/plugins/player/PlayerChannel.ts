@@ -16,7 +16,7 @@ export type VideoInfo = {
     /**
      * Video type (currently only youtube supported)
      */
-    type: 'youtube' | 'embed';
+    type: 'youtube' | 'twitch' | 'embed';
 
     /**
      * Video data (for youtube, video id)
@@ -240,7 +240,7 @@ export class PlayerChannel {
             }
             // If media owner left
             const ownerSession = Session.getSessionByIdentifier(owner);
-            if (! ownerSession || ownerSession.isAlive()) {
+            if (! ownerSession || ! ownerSession.isAlive()) {
                 return true;
             }
         }
