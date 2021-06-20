@@ -4,7 +4,7 @@
 
 # SkyChat
 
-Virtual cinema platform. Setup your own private screenings and watch movies, youtube videos, or music with your friends/colleagues/family!
+Virtual cinema platform. Setup your own private screenings and watch movies, youtube videos, twitch streams or music with your friends/colleagues/family!
 
 I am currently setting up a live demonstration server with bots that auto-play youtube playlists to make it feel "alive", but in the meanwhile you can [check an empty demo](https://skychat.benjaminraymond.com/), without support for playing youtube videos.
 
@@ -24,11 +24,11 @@ Enjoy a well-designed user experience. Building the perfect user experience is t
 
 ~ **Connect**
 
-You can see each other cursor users moving around the screen, which makes people feel connected to each other. This feature can be enabled/disabled in the configuration.
+You can see each other cursor users moving around the screen, which makes people feel connected to each other. (This can be disabled if it is not your thing though 😉)
 
 ~ **Engage**
 
-Entertainment and customization plugins makes you want to engage in the long term. Examples of such features, which can be enabled/disabled in the configuration:
+How? With entertainment and customization plugins. Lots of them. Here are some examples of such features, which can be enabled/disabled in the configuration:
 - Virtual money with mini-games (racing game, casino roulette)
 - Styling customization for usernames and messages
 - Long-term activity is rewarded with experience points (XP) and ranks
@@ -39,9 +39,11 @@ Entertainment and customization plugins makes you want to engage in the long ter
 
 Here is what it looks like:
 ![overall-screenshot](./doc/screenshot.png)
-### Synchronized Youtube Player
 
-Users can play any youtube video on a shared and synchronized player. Orchestration is implemented through a public queue of videos to play, and decision-making (for instance to skip videos) is done with polls. Democracy 💯. If you want it, setup multiple video channels to allow concurrent screenings.
+
+### Synchronized Youtube / Twitch / Embedded player
+
+Users can play medias from Youtube, Twitch or their local computer in a shared synchronized player. Orchestration is implemented through a public queue of videos to play, and decision-making (for instance to skip videos) is done with polls. Democracy 💯. If you want it, setup multiple video channels to allow concurrent screenings.
 ![youtube-short](./doc/youtube-short.gif)
 
 ### Live cursor visualization and mini-games
