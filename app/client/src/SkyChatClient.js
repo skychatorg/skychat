@@ -45,8 +45,12 @@ export class SkyChatClient extends EventEmitter {
         this.on('auth-token', this.onAuthToken.bind(this));
         this.on('typing-list', this.onTypingList.bind(this));
         this.on('cursor', this.onCursor.bind(this));
+        this.on('info', this.onInfo.bind(this));
         this.on('error', this.onError.bind(this));
         this.on('roll', this.onRoll.bind(this));
+        
+        this.on('file-list', this.onFileList.bind(this));
+        this.on('file-content', this.onFileContent.bind(this));
 
         this.on('gallery', this.onGallery.bind(this));
         this.on('gallery-search', this.onGallerySearchResults.bind(this));
@@ -453,6 +457,20 @@ export class SkyChatClient extends EventEmitter {
     }
 
     /**
+     * 
+     */
+    onFileList(files) {
+        this.store.commit("SET_FILE_LIST", files)
+    }
+
+    /**
+     * 
+     */
+    onFileContent(data) {
+        this.store.commit("SET_FILE_CONTENT", data);
+    }
+
+    /**
      *
      */
     onGallery(gallery) {
@@ -479,6 +497,19 @@ export class SkyChatClient extends EventEmitter {
 
     onPlayerChannel(channelId) {
         this.store.commit('SET_PLAYER_CHANNEL', channelId);
+    }
+
+    /**
+     *
+     */
+    onInfo(info) {
+        new Noty({
+            type: 'info',
+            layout: 'topCenter',
+            theme: 'nest',
+            text: info,
+            timeout: 10 * 1000
+        }).show();
     }
 
     /**

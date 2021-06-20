@@ -1,4 +1,3 @@
-import { Config } from "../../Config";
 import { Connection } from "../../Connection";
 import { GlobalPlugin } from "../../GlobalPlugin";
 import { RoomManager } from "../../RoomManager";
@@ -7,6 +6,7 @@ import { YoutubeFetcher } from "./fetcher/YoutubeFetcher";
 import { PluginCommandRules } from "../../Plugin";
 import { LinkFetcher } from "./fetcher/LinkFetcher";
 import { VideoFetcher } from "./VideoFetcher";
+import { TwitchFetcher } from "./fetcher/TwitchFetcher";
 
 
 
@@ -19,6 +19,7 @@ export class PlayerPlugin extends GlobalPlugin {
 
     static readonly FETCHERS: {[fetcherName: string]: VideoFetcher} = {
         'yt': new YoutubeFetcher(),
+        'twitch': new TwitchFetcher(),
         'embed': new LinkFetcher(),
     };
 

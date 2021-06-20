@@ -13,7 +13,7 @@ export class StickerPlugin extends GlobalPlugin {
 
     static readonly commandAliases = ['stickeradd', 'stickerdel'];
 
-    readonly minRight = 40;
+    readonly opOnly = true;
 
     readonly rules = {
         sticker: { maxCount: 0 },

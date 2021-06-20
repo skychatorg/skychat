@@ -6,6 +6,7 @@
     "types": "build/index.d.ts",
     "main": "build/index.js",
     "scripts": {
+        "destroy": "bash scripts/destroy.sh",
         "setup": "bash scripts/setup.sh",
         "clean:client": "rm -rf dist",
         "clean:server": "rm -rf build",

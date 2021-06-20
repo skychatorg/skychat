@@ -29,7 +29,7 @@ RUN ln -s /var/skychat/storage  ./storage
 RUN ln -s /var/skychat/uploads  ./uploads
 
 # Copy build configuration
-COPY package*.json gulpfile.js tsconfig.*.json webpack.config.js ./
+COPY package*.json gulpfile.js tsconfig.json webpack.config.js ./
 
 # Copy application .env file
 COPY .env.json ./

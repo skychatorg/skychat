@@ -2,7 +2,7 @@
 
 
 # Constants
-BACKUP_DIRS="config scripts database storage uploads"
+BACKUP_DIRS="config scripts storage uploads"
 BACKUP_LOCATION="backups"
 
 

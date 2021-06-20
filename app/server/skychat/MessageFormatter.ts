@@ -9,12 +9,6 @@ import { StickerManager } from './StickerManager';
  */
 export class MessageFormatter {
 
-    public static readonly IMAGE_REPLACE_LIMIT: number = Config.PREFERENCES.maxReplacedImagesPerMessage;
-
-    public static readonly STICKER_REPLACE_LIMIT: number = Config.PREFERENCES.maxReplacedStickersPerMessage;
-
-    public static readonly MAX_NEWLINES_PER_MESSAGE: number = Config.PREFERENCES.maxNewlinesPerMessage;
-
     public static readonly LINK_REGEXP: RegExp = /(^|[ \n]|<br>)((http|https):\/\/[\w?=&.\/-;#~%+@,\[\]:!-]+(?![\w\s?&.\/;#~%"=+@,\[\]:!-]*>))/ig;
 
     private static instance?: MessageFormatter;
@@ -75,7 +69,7 @@ export class MessageFormatter {
         let count = 0;
         return message.replace(/\n/g, () => {
             // If limit reached
-            if (++ count > MessageFormatter.MAX_NEWLINES_PER_MESSAGE) {
+            if (++ count > Config.PREFERENCES.maxNewlinesPerMessage) {
                 return "\n";
             }
             // Otherwise, replace with br
@@ -153,14 +147,14 @@ export class MessageFormatter {
                 // If replacing images by html, replace within limit
                 message = message.replace(new RegExp(imageUrl, 'g'), () => {
                     ++ replacedCount;
-                    if (! trusted && replacedCount > MessageFormatter.IMAGE_REPLACE_LIMIT) {
+                    if (! trusted && replacedCount > Config.PREFERENCES.maxReplacedImagesPerMessage) {
                         return imageUrl;
                     }
                     return html;
                 });
             }
             // If limit was reached when replacing this image, do not replace the next ones
-            if (! trusted && replacedCount > MessageFormatter.IMAGE_REPLACE_LIMIT) {
+            if (! trusted && replacedCount > Config.PREFERENCES.maxReplacedImagesPerMessage) {
                 break;
             }
         }
@@ -194,12 +188,12 @@ export class MessageFormatter {
 
                 message = message.replace(new RegExp(MessageFormatter.escapeRegExp(code), 'g'), () => {
                     ++ replacedCount;
-                    if (replacedCount > MessageFormatter.STICKER_REPLACE_LIMIT) {
+                    if (replacedCount > Config.PREFERENCES.maxReplacedStickersPerMessage) {
                         return code;
                     }
                     return `<img class="skychat-sticker" title="${code}" alt="${code}" src="${sticker}">`;
                 });
-                if (replacedCount > MessageFormatter.STICKER_REPLACE_LIMIT) {
+                if (replacedCount > Config.PREFERENCES.maxReplacedStickersPerMessage) {
                     break;
                 }
             }

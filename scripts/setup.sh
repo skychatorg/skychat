@@ -1,5 +1,17 @@
 #!/usr/bin/env bash
 
+
+# Create empty directories if they do not exist
+if [[ ! -e backups ]]; then
+    mkdir backups;
+fi
+if [[ ! -e uploads ]]; then
+    mkdir -p uploads/{all,avatars,gallery,stickers};
+fi
+if [[ ! -e storage ]]; then
+    mkdir -p storage/{plugins,rooms};
+fi
+
 # Initialize .env.json
 if [[ ! -e .env.json ]]; then
     cp .env.json.template .env.json;
