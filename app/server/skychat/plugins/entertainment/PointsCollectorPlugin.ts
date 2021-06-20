@@ -64,7 +64,7 @@ export class PointsCollectorPlugin extends RoomPlugin {
         }
 
         // Get a reference to the cursor plugin
-        const cursorPlugin = this.room.getPlugin('cursor') as CursorPlugin;
+        const cursorPlugin = this.room.manager.getPlugin('cursor') as CursorPlugin;
 
         // Initialize game object
         this.currentGame = {
