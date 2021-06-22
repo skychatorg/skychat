@@ -51,7 +51,7 @@ export class FileManager {
      * @returns 
      */
     static async getVideoDuration(path: string): Promise<number> {
-        const cmd = `ffprobe -v error -show_format -show_streams ${path} | grep 'duration=' | head -n 1 | cut -d'=' -f2`;
+        const cmd = `ffprobe -v error -show_format -show_streams ${path} | grep 'duration=' | grep -v 'N/A' | head -n 1 | cut -d'=' -f2`;
         const {stdout, stderr} = await ShellHelper.exec(cmd);
         return parseFloat(stdout.trim()) * 1000;
     }

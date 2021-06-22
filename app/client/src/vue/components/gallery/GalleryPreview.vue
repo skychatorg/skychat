@@ -140,7 +140,7 @@
             },
             isPlayable: function(media) {
                 const extensionMtc = media.location.match(/\.([a-z0-9]+)$/);
-                return extensionMtc && ['mp4'].indexOf(extensionMtc[1]) !== -1;
+                return extensionMtc && ['mp4', 'webm'].indexOf(extensionMtc[1]) !== -1;
             },
             playMedia: function(media) {
                 this.$client.sendMessage(`/embed ${media.location}`);

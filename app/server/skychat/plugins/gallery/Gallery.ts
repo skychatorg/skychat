@@ -14,7 +14,7 @@ export type SanitizedGallery = {
 
 export class Gallery {
 
-    static readonly ALLOWED_EXTENSIONS: string[] = ['png', 'jpg', 'jpeg', 'gif', 'mp4'];
+    static readonly ALLOWED_EXTENSIONS: string[] = ['png', 'jpg', 'jpeg', 'gif', 'mp4', 'webm'];
 
     private folders: GalleryFolder[] = [];
 
@@ -47,7 +47,7 @@ export class Gallery {
     buildMediaThumb(mediaUrl: string): string {
         const extension = FileManager.getFileExtension(mediaUrl);
 
-        if (extension === 'mp4') {
+        if (['mp4', 'webm'].indexOf(extension) !== -1) {
             return 'assets/images/icons/video.png';
         }
 

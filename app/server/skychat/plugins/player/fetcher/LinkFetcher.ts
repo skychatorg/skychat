@@ -6,7 +6,7 @@ import { VideoFetcher } from "../VideoFetcher";
 
 export class LinkFetcher implements VideoFetcher {
 
-    static readonly ALLOWED_EXTENSIONS: string[] = ['mp4'];
+    static readonly ALLOWED_EXTENSIONS: string[] = ['mp4', 'webm'];
 
     /**
      * 
