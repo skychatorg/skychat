@@ -21,7 +21,6 @@
                         <player-channel-list class="left-channel-room-list"></player-channel-list>
                     </div>
                     <poll-list class="mb-2 ml-1"></poll-list>
-                    <user-preview class="mb-3 ml-1 mt-1"></user-preview>
                     <quick-actions id="quick-actions"></quick-actions>
                     <div @click="onMobileShowMiddleCol" class="show-mobile" style="text-align: right;">
                         <div class="goto-middle-col">

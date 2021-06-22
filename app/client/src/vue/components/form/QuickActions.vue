@@ -118,26 +118,6 @@
                         ]
                     },
                     {
-                        name: "Games",
-                        onlyInCinema: false,
-                        onlyInNonCinema: false,
-                        onlyOP: false,
-                        actions: [
-                            {
-                                id: 'racing',
-                                title: "Start a race car game",
-                                icon: 'flag',
-                                shortcuts: ['ctrl+r']
-                            },
-                            {
-                                id: 'roll',
-                                title: "Start a game of roulette",
-                                icon: 'casino',
-                                shortcuts: ['ctrl+o']
-                            },
-                        ]
-                    },
-                    {
                         name: "OP",
                         separator: true,
                         onlyInCinema: false,
