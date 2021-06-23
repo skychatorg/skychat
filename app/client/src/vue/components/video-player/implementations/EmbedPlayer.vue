@@ -1,6 +1,7 @@
 <template>
     <div>
         <video
+            ref="player"
             class="player"
             controls=""
             autoplay="1"
@@ -14,17 +15,51 @@
     import Vue from "vue";
 
     export default Vue.extend({
-        data: function() { return { src: '', videoType: '' } },
+        data: function() {
+            return {
+                src: '',
+                videoType: '',
+                audioAnalyzerUpdateInterval: null,
+            };
+        },
         watch: {
             'playerState.current.video': { deep: true, handler: 'update' },
         },
-        mounted: function() { this.update(); },
+        mounted: function() {
+            this.update();
+            },
+        unmounted: function() {
+            clearInterval(this.audioAnalyzerUpdateInterval);
+        },
         methods: {
             update: function() {
+                // Update video information
                 this.src = this.playerState.current.video.id + '#t=' + parseInt(this.playerState.cursor / 1000);
                 const extension = this.playerState.current.video.id.match(/\.([a-z0-9]+)$/)[1];
-                this.videoType = 'video/' + extension ;
-            }
+                this.videoType = 'video/' + extension;
+                // On next tick, update the video stream info
+                Vue.nextTick(() => this.startAudioAnalyser());
+            },
+            startAudioAnalyser: function() {
+                const audioContext = new(window.AudioContext || window.webkitAudioContext)();
+                const analyser = audioContext.createAnalyser();
+                analyser.fftSize = 32;
+
+                const bufferLength = analyser.frequencyBinCount;
+                const dataArray = new Uint8Array(bufferLength);
+                analyser.getByteTimeDomainData(dataArray);
+
+                // Connect the source to be analysed
+                const mediaSource = audioContext.createMediaElementSource(this.$refs.player);
+                mediaSource.connect(analyser); // Connect the video to our custom analyser
+                analyser.connect(audioContext.destination); // Ensures the sound still goes to the browser
+
+                clearInterval(this.audioAnalyzerUpdateInterval);
+                this.audioAnalyzerUpdateInterval = setInterval(() => {
+                    analyser.getByteTimeDomainData(dataArray);
+                    console.log(dataArray);
+                });
+            },
         },
         computed: {
             playerState: function() {
