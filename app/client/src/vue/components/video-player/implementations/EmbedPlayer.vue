@@ -34,7 +34,9 @@
         methods: {
             update: function() {
                 // Update video information
-                this.src = this.playerState.current.video.id + '#t=' + parseInt(this.playerState.cursor / 1000);
+                const timeSinceLastUpdate = new Date().getTime() - this.playerStateLastUpdate.getTime();
+                const startTimeMs = this.playerState.cursor + timeSinceLastUpdate;
+                this.src = this.playerState.current.video.id + '#t=' + parseInt(startTimeMs / 1000);
                 const extension = this.playerState.current.video.id.match(/\.([a-z0-9]+)$/)[1];
                 this.videoType = 'video/' + extension;
                 // On next tick, update the video stream info
@@ -64,6 +66,9 @@
         computed: {
             playerState: function() {
                 return this.$store.state.playerState;
+            },
+            playerStateLastUpdate: function() {
+                return this.$store.state.playerStateLastUpdate;
             },
         }
     });

@@ -131,6 +131,7 @@ const store = {
             queue: [],
             cursor: 0,
         },
+        playerStateLastUpdate: null,
     },
     mutations: {
         LOAD_LOCALSTORAGE(state) {
@@ -310,6 +311,7 @@ const store = {
         },
         SET_PLAYER_STATE(state, playerState) {
             state.playerState = playerState;
+            state.playerStateLastUpdate = new Date();
         },
         SET_PLAYER_ENABLED(state, playerEnabled) {
             state.playerEnabled = playerEnabled;
