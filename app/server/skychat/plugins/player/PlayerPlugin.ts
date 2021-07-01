@@ -7,6 +7,7 @@ import { PluginCommandRules } from "../../Plugin";
 import { LinkFetcher } from "./fetcher/LinkFetcher";
 import { VideoFetcher } from "./VideoFetcher";
 import { TwitchFetcher } from "./fetcher/TwitchFetcher";
+import { PollPlugin } from "../poll/PollPlugin";
 
 
 
@@ -355,11 +356,31 @@ export class PlayerPlugin extends GlobalPlugin {
                 break;
 
             case 'skip':
-                if (! channel.hasPlayerPermission(connection.session)) {
-                    throw new Error('You are not authorized to modify the player right now');
+                // If user has player permission, skip directly
+                if (channel.hasPlayerPermission(connection.session)) {
+                    channel.skip();
+                    return;
                 }
-                channel.skip();
-                break;
+                // If user has no permission, poll to skip
+                const pollPlugin = this.manager.getPlugin('poll') as PollPlugin;
+                const playerData = channel.getPlayerData();
+                if (pollPlugin && playerData.current) {
+                    const result = await pollPlugin.poll(
+                        `${channel.name}: Skip media?`,
+                        `${connection.session.identifier} wants to skip ${playerData.current.video.title}. Skip media?`,
+                        {
+                            audience: channel.sessions,
+                            defaultValue: false,
+                            timeout: 10 * 1000,
+                            minVotes: 2,
+                        }
+                    );
+                    if (result) {
+                        channel.skip();
+                    }
+                    return;
+                }
+                throw new Error('You are not authorized to modify the player right now');
 
             case 'flush':
                 if (! connection.session.isOP()) {
