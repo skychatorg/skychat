@@ -24,8 +24,6 @@ export class MailPlugin extends GlobalPlugin {
         }
     };
 
-    readonly minRight = 30;
-
     private readonly transporter?: Mail;
 
     constructor(manager: RoomManager) {
