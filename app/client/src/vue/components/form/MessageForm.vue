@@ -7,21 +7,21 @@
                 </div>
             </div>
         </div>
-        <div class="image-upload" v-show="! recordingAudio && uploadingFile" title="Uploading..">
+        <div class="form-action image-upload" v-show="! recordingAudio && uploadingFile" title="Uploading..">
             <label for="file-input">
                 <img src="/assets/images/icons/loading.gif"/>
             </label>
         </div>
-        <div class="image-upload" v-show="! recordingAudio && ! uploadingFile" title="Upload an image">
+        <div class="form-action image-upload" v-show="! recordingAudio && ! uploadingFile" title="Upload an image">
             <label for="file-input">
                 <i class="upload-icon material-icons md-28">publish</i>
             </label>
             <input ref="file" @change="onFileInputChange" id="file-input" type="file" />
         </div>
-        <div @click="cancelAudioUpload" class="audio-upload" v-show="recordingAudio" title="Cancel audio recording">
+        <div class="form-action audio-upload" @click="cancelAudioUpload" v-show="recordingAudio" title="Cancel audio recording">
             <i class="upload-icon material-icons md-28">cancel</i>
         </div>
-        <div @click="uploadAudio" class="audio-upload" :class="{'recording': recordingAudio}" title="Send an audio recording">
+        <div class="form-action audio-upload" :class="{'recording': recordingAudio}" @click="uploadAudio" title="Send an audio recording">
             <i class="upload-icon material-icons md-28">mic</i>
         </div>
         <form class="form" onsubmit="return false">
@@ -36,6 +36,9 @@
                       v-model="message"
                       :placeholder="currentRoom ? currentRoom.name + ' / Message' : 'Message'"></textarea>
         </form>
+        <div class="form-action open-gallery" @click="openGallery" title="Access gallery">
+            <i class="material-icons md-28">collections</i>
+        </div>
         <div class="show-mobile">
             <div class="goto-other-cols">
                 <div @click="onMobileShowRightCol" title="See connected list and quick actions" class="goto-right-col">
@@ -48,6 +51,7 @@
 
 <script>
     import Vue from "vue";
+    import GalleryModal from "../modal/GalleryModal.vue";
 
     const MESSAGE_HISTORY_LENGTH = 100;
 
@@ -103,6 +107,10 @@
                     const newHeight = Math.min(3 + this.$refs.input.scrollHeight, 110);
                     this.$refs.input.style.height = newHeight + "px";
                 }
+            },
+
+            openGallery: function() {
+                this.$modal.show(GalleryModal);
             },
 
             uploadAudio: async function() {
@@ -271,18 +279,21 @@
         display: flex;
         padding-left: 6px;
 
-        .image-upload {
+        .form-action {
             flex-basis: 24px;
             display: flex;
             flex-direction: column;
             justify-content: flex-end;
             margin-left: 12px;
-            margin-bottom: 8px;
             color: #cccccc;
+            cursor: pointer;
+        }
+
+        .image-upload {
+            margin-bottom: 8px;
 
             .upload-icon {
                 width: 100%;
-                cursor: pointer;
             }
 
             img {
@@ -296,22 +307,20 @@
         }
 
         .audio-upload {
-            flex-basis: 24px;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-            margin-left: 12px;
             margin-bottom: 10px;
-            color: #cccccc;
 
             .upload-icon {
                 width: 100%;
-                cursor: pointer;
             }
 
             &.recording {
                 color: #ff7d7d;
             }
+        }
+
+        .open-gallery {
+            margin-bottom: 12px;
+            margin-right: 20px;
         }
 
         .goto-left-col,

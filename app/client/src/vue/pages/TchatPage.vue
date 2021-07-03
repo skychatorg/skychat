@@ -41,8 +41,6 @@
 
                     <user-list id="connected-list" class="scrollbar"></user-list>
 
-                    <gallery-preview id="gallery"></gallery-preview>
-
                     <div @click="onMobileShowMiddleCol" class="show-mobile">
                         <div class="goto-middle-col">
                             <i class="material-icons md-28">keyboard_arrow_left</i>
@@ -61,7 +59,6 @@
     import TchatMiddleColumn from "../components/layout/TchatMiddleColumn.vue";
     import PollList from "../components/poll/PollList.vue";
     import UserPreview from "../components/user/UserPreview.vue";
-    import GalleryPreview from "../components/gallery/GalleryPreview.vue";
     import VideoPlayerPreview from "../components/video-player/VideoPlayerPreview.vue";
     import VideoPlayer from "../components/video-player/VideoPlayer.vue";
     import UserList from "../components/user/UserList.vue";
@@ -69,7 +66,7 @@
     import CinemaModeOverlay from "../components/overlay/CinemaModeOverlay.vue";
 
     export default Vue.extend({
-        components: {TextChannelList, GalleryPreview, PlayerChannelList, TchatMiddleColumn, PollList, UserPreview, VideoPlayerPreview, VideoPlayer, UserList, QuickActions, CinemaModeOverlay},
+        components: {TextChannelList, PlayerChannelList, TchatMiddleColumn, PollList, UserPreview, VideoPlayerPreview, VideoPlayer, UserList, QuickActions, CinemaModeOverlay},
         watch: {
             cinemaMode: function() {
 

@@ -10,7 +10,6 @@ const CURSOR_DECAY_DELAY = 5 * 1000; // Must match value from backend
 const CURRENT_VERSION = 2;
 const STORE_SAVED_KEYS = [
     'playerEnabled',
-    'isGalleryVisible',
 ];
 
 
@@ -80,8 +79,7 @@ const store = {
          */
         gallery: null,
         gallerySearchResults: null,
-        isGalleryVisible: false,
-
+        
         /**
          * List of current shown cursors on the screen
          */
@@ -304,10 +302,6 @@ const store = {
         },
         SET_GALLERY_SEARCH_RESULTS(state, gallerySearchResults) {
             state.gallerySearchResults = gallerySearchResults;
-        },
-        SET_GALLERY_VISIBILITY(state, isGalleryVisible) {
-            state.isGalleryVisible = !! isGalleryVisible;
-            this.commit('SAVE_LOCALSTORAGE');
         },
         SET_PLAYER_STATE(state, playerState) {
             state.playerState = playerState;
