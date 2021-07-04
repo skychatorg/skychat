@@ -60,6 +60,8 @@ export type SanitizedPlayerChannel = {
 
 export class PlayerChannel {
 
+    public static readonly HISTORY_LENGTH = 200;
+
     public readonly id: number;
 
     public name: string;
@@ -69,6 +71,13 @@ export class PlayerChannel {
     public readonly sessions: Session[] = [];
 
     public queue: QueuedVideoInfo[] = [];
+
+    public history: QueuedVideoInfo[] = [];
+
+    /**
+     * Keeps track of the dates when user last played a media
+     */
+    public lastPlayedDates: {[userid: string]: Date} = {};
 
     public currentVideoInfo: QueuedVideoInfo | null = null;
 
@@ -84,6 +93,11 @@ export class PlayerChannel {
      * Play next video if possible
      */
     public playNext() {
+        // Save current media to history
+        if (this.currentVideoInfo) {
+            this.history.push(this.currentVideoInfo);
+            this.history.splice(0, this.history.length - PlayerChannel.HISTORY_LENGTH);
+        }
         // If no video left to play
         if (! this.hasNext()) {
             // Remove current video & sync channel
@@ -94,6 +108,7 @@ export class PlayerChannel {
         // Otherwise, play next video
         this.currentVideoInfo = this.queue.shift() as QueuedVideoInfo;
         this.currentVideoInfo.video.startTime = new Date().getTime();
+        this.lastPlayedDates[this.currentVideoInfo.user.id] = new Date();
         this.armPlayNextTimeout();
         this.sync();
     }
@@ -281,9 +296,14 @@ export class PlayerChannel {
             }
             users[queuedVideo.user.id].push(queuedVideo);
         }
+        // Sort users fairly
+        const userIds: number[] = Object.keys(users).map(k => parseInt(k));
+        userIds.sort((id1, id2) => {
+            let getDate = (id: number) => this.lastPlayedDates[id] ? this.lastPlayedDates[id].getTime() : 0;
+            return getDate(id1) - getDate(id2);
+        });
         // Re-build the new queue
         const queue: QueuedVideoInfo[] = [];
-        const userIds: number[] = Object.keys(users).map(k => parseInt(k));
         while (true) {
             let addedCount = 0;
             for (const userId of userIds) {

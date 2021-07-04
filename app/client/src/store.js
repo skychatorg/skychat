@@ -112,7 +112,7 @@ const store = {
         /**
          * Whether the player is on/off on the client side
          */
-        playerEnabled: false,
+        playerEnabled: true,
 
         /**
          * List of on-going polls
