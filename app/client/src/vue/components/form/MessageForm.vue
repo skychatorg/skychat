@@ -36,7 +36,7 @@
                       v-model="message"
                       :placeholder="currentRoom ? currentRoom.name + ' / Message' : 'Message'"></textarea>
         </form>
-        <div class="form-action open-gallery" @click="openGallery" title="Access gallery">
+        <div v-show="gallery" class="form-action open-gallery" @click="openGallery" title="Access gallery">
             <i class="material-icons md-28">collections</i>
         </div>
         <div class="show-mobile">
@@ -253,6 +253,9 @@
             },
             connectedList: function() {
                 return this.$store.state.connectedList;
+            },
+            gallery: function() {
+                return this.$store.state.gallery;
             },
             hasNewContentInOtherRooms: function() {
                 const user = this.$store.state.user;
