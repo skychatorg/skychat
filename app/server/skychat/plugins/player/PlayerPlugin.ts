@@ -365,7 +365,7 @@ export class PlayerPlugin extends GlobalPlugin {
                 const pollPlugin = this.manager.getPlugin('poll') as PollPlugin;
                 const playerData = channel.getPlayerData();
                 if (pollPlugin && playerData.current) {
-                    const result = await pollPlugin.poll(
+                    const poll = await pollPlugin.poll(
                         `${channel.name}: Skip media?`,
                         `${connection.session.identifier} wants to skip ${playerData.current.video.title}. Skip media?`,
                         {
@@ -375,7 +375,7 @@ export class PlayerPlugin extends GlobalPlugin {
                             minVotes: 2,
                         }
                     );
-                    if (result) {
+                    if (poll.getResult()) {
                         channel.skip();
                     }
                     return;
