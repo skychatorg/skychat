@@ -100,6 +100,7 @@ By default, the application will be listening to `localhost:8080` and assume it 
 | users_passwords_salt | string | "$RANDOM_SALT" | Password salt. |
 | users_token_salt     | string | "$RANDOM_SALT" | Token salt. |
 | youtube_api_key      | string | "" | [Youtube api key](#setup-youtube) |
+| google_analytics_id  | string | "" | [Optional google analytics ID](https://analytics.google.com/analytics/web) |
 | op                       | string[] | [] | OP usernames. OP usernames can use the /setright command. |
 | op_passcode              | string? | "$RANDOM_PASSCODE" | OP passcode. Activate your OP session with `/op $op_passcode` |
 | email_transport          | nodemailer.JSONTransport | {"sendmail": true,"newline": "unix","path": "/usr/sbin/sendmail"} | Value given to [nodemailer.createTransport](https://nodemailer.com/about/) to initialize the mailer |
