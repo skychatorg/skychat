@@ -15,13 +15,17 @@
 
                 <!-- left col (room list) -->
                 <section class="left hide-mobile-middle hide-mobile-right">
+                    
                     <div class="channels scrollbar ml-1 pr-1">
                         <h2 class="title mt-2">Channels</h2>
                         <text-channel-list class="left-room-list"></text-channel-list>
                         <player-channel-list class="left-channel-room-list"></player-channel-list>
                     </div>
+
                     <poll-list class="mb-2 ml-1"></poll-list>
+
                     <quick-actions id="quick-actions"></quick-actions>
+
                     <div @click="onMobileShowMiddleCol" class="show-mobile" style="text-align: right;">
                         <div class="goto-middle-col">
                             <i class="material-icons md-28">keyboard_arrow_right</i>

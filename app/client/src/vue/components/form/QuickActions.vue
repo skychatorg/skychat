@@ -1,32 +1,40 @@
 <template>
 
     <div class="quick-actions">
-        <h2 class="title">Quick actions</h2>
-        <div class="quick-actions-group"
-            :class="{
-                'separator': group.separator
-            }"
-            v-for="group in actions"
-            :key="group.name"
-            v-show="isGroupShown(group)">
-            <div class="quick-actions-group-content">
-                <div v-for="action in group.actions"
-                     :key="action.id"
-                     @click="onActivate(action.id)"
-                     class="quick-action"
-                     :class="{
-                         ['action-' + action.id]: true,
-                         'action-full-width': action.fullWidth,
-                     }"
-                     :title="group.name + ': ' + action.title + (action.shortcuts ? ' ' + action.shortcuts.map(shortcut => '['+shortcut+']').join(', ') : '')">
 
-                    <div class="icon">
-                        <i class="material-icons md-14">{{action.icon}}</i>
+        <h2 class="title clickable" @click="setQuickActionsVisibility(! isQuickActionsVisible)" title="Show/Collapse quick actions">
+            Quick actions
+            <i class="material-icons md-12 title-icon">{{ isQuickActionsVisible ? 'expand_more' : 'expand_less' }}</i>
+        </h2>
+
+        <div v-if="isQuickActionsVisible">
+            <div class="quick-actions-group"
+                :class="{
+                    'separator': group.separator
+                }"
+                v-for="group in actions"
+                :key="group.name"
+                v-show="isGroupShown(group)">
+                <div class="quick-actions-group-content">
+                    <div v-for="action in group.actions"
+                        :key="action.id"
+                        @click="onActivate(action.id)"
+                        class="quick-action"
+                        :class="{
+                            ['action-' + action.id]: true,
+                            'action-full-width': action.fullWidth,
+                        }"
+                        :title="group.name + ': ' + action.title + (action.shortcuts ? ' ' + action.shortcuts.map(shortcut => '['+shortcut+']').join(', ') : '')">
+
+                        <div class="icon">
+                            <i class="material-icons md-14">{{action.icon}}</i>
+                        </div>
+
+                        <div class="action" v-html="getActionText(action.id)"></div>
                     </div>
-
-                    <div class="action" v-html="getActionText(action.id)"></div>
                 </div>
             </div>
+
         </div>
     </div>
 </template>
@@ -228,6 +236,9 @@
                         return;
                 }
             },
+            setQuickActionsVisibility: function(visible) {
+                this.$store.commit('SET_QUICK_ACTIONS_VISIBILITY', visible);
+            },
         },
 
         computed: {
@@ -242,6 +253,9 @@
             },
             playerEnabled: function() {
                 return this.$store.state.playerEnabled;
+            },
+            isQuickActionsVisible: function() {
+                return this.$store.state.isQuickActionsVisible;
             },
         }
     });

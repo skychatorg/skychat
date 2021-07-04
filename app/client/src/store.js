@@ -7,9 +7,10 @@ const DEFAULT_DOCUMENT_TITLE = "~ SkyChat";
 
 const CURSOR_DECAY_DELAY = 5 * 1000; // Must match value from backend
 
-const CURRENT_VERSION = 2;
+const CURRENT_VERSION = 3;
 const STORE_SAVED_KEYS = [
     'playerEnabled',
+    'isQuickActionsVisible',
 ];
 
 
@@ -117,6 +118,11 @@ const store = {
          * List of on-going polls
          */
         polls: {},
+
+        /**
+         * Quick actions
+         */
+        isQuickActionsVisible: false,
 
         /**
          * Player state
@@ -323,6 +329,10 @@ const store = {
         },
         CLEAR_POLL(state, pollId) {
             Vue.delete(state.polls, pollId);
+        },
+        SET_QUICK_ACTIONS_VISIBILITY(state, visible) {
+            state.isQuickActionsVisible = !! visible;
+            this.commit('SAVE_LOCALSTORAGE');
         },
         SET_TYPING_LIST(state, users) {
             state.typingList = users;

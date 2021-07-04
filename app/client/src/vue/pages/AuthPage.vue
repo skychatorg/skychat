@@ -48,7 +48,14 @@
                 this.$client.register(this.username, this.password);
             },
             onGuestLogin: function() {
-                this.$client.joinRoom(1);
+
+                // Join room #1
+                this.$client.joinRoom(this.rooms[0].id);
+
+                // Join first player channel
+                if (this.playerChannels.length > 0) {
+                    this.$client.joinPlayerChannel(this.playerChannels[0].id);
+                }
             }
         },
         computed: {
@@ -57,7 +64,13 @@
             },
             currentRoom: function() {
                 return this.$store.state.currentRoom;
-            }
+            },
+            rooms: function() {
+                return this.$store.state.rooms;
+            },
+            playerChannels: function() {
+                return this.$store.state.playerChannels;
+            },
         }
     });
 </script>
