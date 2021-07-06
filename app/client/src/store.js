@@ -136,6 +136,11 @@ const store = {
             cursor: 0,
         },
         playerStateLastUpdate: null,
+
+        /**
+         * Current player intensity
+         */
+        playerIntensity: 0,
     },
     mutations: {
         LOAD_LOCALSTORAGE(state) {
@@ -316,6 +321,9 @@ const store = {
         SET_PLAYER_ENABLED(state, playerEnabled) {
             state.playerEnabled = playerEnabled;
             this.commit('SAVE_LOCALSTORAGE');
+        },
+        SET_PLAYER_INTENSITY(state, intensity) {
+            state.playerIntensity = intensity;
         },
         SET_POLL(state, poll) {
 

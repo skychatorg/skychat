@@ -25,9 +25,10 @@
     import TchatPage from "./pages/TchatPage.vue";
     import AppHeader from "./AppHeader.vue";
     import CursorOverlay from "./components/overlay/CursorOverlay.vue";
+    import AnimatedBackgroundOverlay from "./components/overlay/AnimatedBackgroundOverlay.vue";
 
     export default Vue.extend({
-        components: {AuthPage, AppHeader, TchatPage, CursorOverlay},
+        components: { AuthPage, AppHeader, TchatPage, CursorOverlay, AnimatedBackgroundOverlay },
         mounted: function() {
             this.$mousetrap.bind(Array.from({length: 9}).map((_, i) => `alt+${i + 1}`), (event) => {
                 event.preventDefault();
