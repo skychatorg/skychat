@@ -10,15 +10,15 @@ import { MessageController } from "./MessageController";
 import { Config } from "./Config";
 import { RoomManager } from "./RoomManager";
 import { RoomPlugin } from "./RoomPlugin";
-import { AudioRecorderPlugin } from "./plugins/core/AudioRecorderPlugin";
-import { ConnectedListPlugin } from "./plugins/core/ConnectedListPlugin";
-import { MessageEditPlugin } from "./plugins/core/MessageEditPlugin";
-import { MessageHistoryPlugin } from "./plugins/core/MessageHistoryPlugin";
-import { MessagePlugin } from "./plugins/core/MessagePlugin";
-import { MessageSeenPlugin } from "./plugins/core/MessageSeenPlugin";
-import { RoomManagerPlugin } from "./plugins/core/RoomManagerPlugin";
-import { TypingListPlugin } from "./plugins/core/TypingListPlugin";
-import { VoidPlugin } from "./plugins/core/VoidPlugin";
+import { AudioRecorderPlugin } from "../plugins/core/AudioRecorderPlugin";
+import { ConnectedListPlugin } from "../plugins/core/ConnectedListPlugin";
+import { MessageEditPlugin } from "../plugins/core/MessageEditPlugin";
+import { MessageHistoryPlugin } from "../plugins/core/MessageHistoryPlugin";
+import { MessagePlugin } from "../plugins/core/MessagePlugin";
+import { MessageSeenPlugin } from "../plugins/core/MessageSeenPlugin";
+import { RoomManagerPlugin } from "../plugins/core/RoomManagerPlugin";
+import { TypingListPlugin } from "../plugins/core/TypingListPlugin";
+import { VoidPlugin } from "../plugins/core/VoidPlugin";
 import { Session } from "./Session";
 
 

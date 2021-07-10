@@ -10,7 +10,7 @@ import {UserController} from "./UserController";
 import {Config} from "./Config";
 import * as fs from "fs";
 import {Message} from "./Message";
-import {AudioRecorderPlugin} from "./plugins/core/AudioRecorderPlugin";
+import {AudioRecorderPlugin} from "../plugins/core/AudioRecorderPlugin";
 import { PluginManager } from "./PluginManager";
 import { GlobalPlugin } from "./GlobalPlugin";
 
