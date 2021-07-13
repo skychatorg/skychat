@@ -43,24 +43,24 @@
         methods: {
             logout: function() {
                 this.$client.logout();
-                this.$store.commit('SET_PAGE', 'welcome');
+                this.$store.commit('Main/SET_PAGE', 'welcome');
             },
             login: function() {
-                this.$store.commit('SET_PAGE', 'welcome');
+                this.$store.commit('Main/SET_PAGE', 'welcome');
             },
             gotoRoom() {
-                this.$store.commit('SET_PAGE', 'room');
+                this.$store.commit('Main/SET_PAGE', 'room');
             },
         },
         computed: {
             rooms: function() {
-                return this.$store.state.rooms;
+                return this.$store.state.Main.rooms;
             },
             page: function() {
-                return this.$store.state.page;
+                return this.$store.state.Main.page;
             },
             mobileCurrentPage: function() {
-                return this.$store.state.mobileCurrentPage;
+                return this.$store.state.Main.mobileCurrentPage;
             }
         },
     });

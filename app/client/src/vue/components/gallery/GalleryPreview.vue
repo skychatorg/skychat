@@ -66,6 +66,7 @@
 
 <script>
     import Vue from "vue";
+    import { mapState } from 'vuex';
     import MediaVisualizer from "../modal/MediaVisualizer.vue";
     import HoverCard from "../util/HoverCard";
 
@@ -156,15 +157,11 @@
             }
         },
         computed: {
-            gallery: function() {
-                return this.$store.state.gallery;
-            },
-            gallerySearchResults: function() {
-                return this.$store.state.gallerySearchResults;
-            },
-            op: function() {
-                return this.$store.state.op;
-            }
+            ...mapState('Main', [
+                'gallery',
+                'gallerySearchResults',
+                'op',
+            ]),
         }
     });
 </script>

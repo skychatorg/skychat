@@ -16,6 +16,7 @@
 
 <script>
     import Vue from "vue";
+    import { mapState } from 'vuex';
     import SingleMessage from "./SingleMessage.vue";
     import VideoPlayer from "../video-player/VideoPlayer.vue";
 
@@ -111,9 +112,9 @@
             },
         },
         computed: {
-            lastMessageSeenIds: function() {
-                return this.$store.state.lastMessageSeenIds;
-            }
+            ...mapState('Main', [
+                'lastMessageSeenIds',
+            ]),
         }
     });
 </script>

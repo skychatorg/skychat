@@ -41,6 +41,7 @@
 
 <script>
     import Vue from "vue";
+    import { mapState } from 'vuex';
     import YoutubeVideoSearcher from "../modal/YoutubeVideoSearcher.vue";
     import FileManager from "../modal/FileManager.vue";
 
@@ -205,7 +206,7 @@
             onActivate: function(id) {
                 switch (id) {
                     case 'player-toggle':
-                        this.$store.commit('SET_PLAYER_ENABLED', ! this.playerEnabled);
+                        this.$store.commit('Main/SET_PLAYER_ENABLED', ! this.playerEnabled);
                         this.$client.playerSync();
                         return;
                     case 'cursor-toggle':
@@ -230,33 +231,25 @@
                     case 'help':
                         return this.$client.sendMessage('/help');
                     case 'cinema-mode':
-                        return this.$store.commit('TOGGLE_CINEMA_MODE'); 
+                        return this.$store.commit('Main/TOGGLE_CINEMA_MODE'); 
                     case 'file-manager':
                         this.$modal.show(FileManager);
                         return;
                 }
             },
             setQuickActionsVisibility: function(visible) {
-                this.$store.commit('SET_QUICK_ACTIONS_VISIBILITY', visible);
+                this.$store.commit('Main/SET_QUICK_ACTIONS_VISIBILITY', visible);
             },
         },
 
         computed: {
-            cinemaMode: function() {
-                return this.$store.state.cinemaMode;
-            },
-            user: function() {
-                return this.$store.state.user;
-            },
-            op: function() {
-                return this.$store.state.op;
-            },
-            playerEnabled: function() {
-                return this.$store.state.playerEnabled;
-            },
-            isQuickActionsVisible: function() {
-                return this.$store.state.isQuickActionsVisible;
-            },
+            ...mapState('Main', [
+                'cinemaMode',
+                'user',
+                'op',
+                'playerEnabled',
+                'isQuickActionsVisible',
+            ]),
         }
     });
 </script>

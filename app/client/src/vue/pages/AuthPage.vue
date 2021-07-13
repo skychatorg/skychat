@@ -13,6 +13,7 @@
 
 <script>
     import Vue from "vue";
+    import { mapState } from "vuex";
 
     export default Vue.extend({
         data: function() {
@@ -59,18 +60,12 @@
             }
         },
         computed: {
-            user: function() {
-                return this.$store.state.user;
-            },
-            currentRoom: function() {
-                return this.$store.state.currentRoom;
-            },
-            rooms: function() {
-                return this.$store.state.rooms;
-            },
-            playerChannels: function() {
-                return this.$store.state.playerChannels;
-            },
+            ...mapState('Main', [
+                'user',
+                'currentRoom',
+                'rooms',
+                'playerChannels',
+            ]),
         }
     });
 </script>

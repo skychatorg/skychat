@@ -39,7 +39,6 @@ gulp.task("build-client-scss", function () {
 gulp.task('build-client-javascript', function() {
     const webpackConfig = require('./webpack.config');
     delete webpackConfig.entry;
-    delete webpackConfig.watch;
     return gulp
         .src(srcPaths)
         .pipe(webpack(webpackConfig))
@@ -70,6 +69,7 @@ gulp.task('watch-client-javascript', function () {
     const webpackConfig = require('./webpack.config');
     delete webpackConfig.entry;
     webpackConfig.watch = true;
+    webpackConfig.mode = 'development';
     return gulp
         .src(srcPaths)
         .pipe(webpack(webpackConfig))

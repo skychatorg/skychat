@@ -51,6 +51,7 @@
 
 <script>
     import Vue from "vue";
+    import { mapState } from "vuex";
 
     export default Vue.extend({
         created: function() {
@@ -61,13 +62,13 @@
                 this.$client.vote(poll.id, response);
             },
             clear: function(pollId) {
-                this.$store.commit('CLEAR_POLL', pollId);
+                this.$store.commit('Main/CLEAR_POLL', pollId);
             }
         },
         computed: {
-            polls: function() {
-                return this.$store.state.polls;
-            },
+            ...mapState('Main', [
+                'polls'
+            ]),
         }
     });
 </script>

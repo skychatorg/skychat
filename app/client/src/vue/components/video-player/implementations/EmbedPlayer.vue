@@ -13,6 +13,7 @@
 
 <script>
     import Vue from "vue";
+    import { mapState } from "vuex";
 
     export default Vue.extend({
         data: function() {
@@ -30,7 +31,7 @@
             },
         unmounted: function() {
             clearInterval(this.audioAnalyzerUpdateInterval);
-            this.$store.commit('SET_PLAYER_INTENSITY', avg);
+            this.$store.commit('Main/SET_PLAYER_INTENSITY', avg);
         },
         methods: {
             update: function() {
@@ -60,17 +61,15 @@
                 this.audioAnalyzerUpdateInterval = setInterval(() => {
                     analyser.getByteFrequencyData(dataArray);
                     const avg = dataArray.reduce((acc, curr) => acc + curr / 256, 0) / dataArray.length;
-                    this.$store.commit('SET_PLAYER_INTENSITY', avg);
+                    this.$store.commit('Main/SET_PLAYER_INTENSITY', avg);
                 }, 1000 / 50);
             },
         },
         computed: {
-            playerState: function() {
-                return this.$store.state.playerState;
-            },
-            playerStateLastUpdate: function() {
-                return this.$store.state.playerStateLastUpdate;
-            },
+            ...mapState('Main', [
+                'playerState',
+                'playerStateLastUpdate',
+            ]),
         }
     });
 </script>

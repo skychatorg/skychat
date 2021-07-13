@@ -82,6 +82,7 @@
 
 <script>
     import Vue from "vue";
+    import { mapState } from "vuex";
     import YoutubeVideoSearcher from "../modal/YoutubeVideoSearcher.vue";
 
     export default Vue.extend({
@@ -163,12 +164,10 @@
             },
         },
         computed: {
-            user: function() {
-                return this.$store.state.user;
-            },
-            playerState: function() {
-                return this.$store.state.playerState;
-            },
+            ...mapState('Main', [
+                'user',
+                'playerState',
+            ]),
             nextQueuedEntries: function() {
                 return this.playerState.queue.slice(0, 30);
             }

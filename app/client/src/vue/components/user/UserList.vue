@@ -1,8 +1,8 @@
 <template>
-    <div class="connected-list" v-if="sessions.length > 0">
+    <div class="connected-list" v-if="connectedList.length > 0">
         <h2 class="title">Active now</h2>
         <user-list-row
-                v-for="session in sessions"
+                v-for="session in connectedList"
                 @click.native="() => onJoinPrivateChannel(session.identifier)"
                 :key="session.identifier"
                 :session="session"/>
@@ -11,6 +11,7 @@
 
 <script>
     import Vue from "vue";
+    import { mapState } from "vuex";
     import UserListRow from "./UserListRow.vue";
 
     export default Vue.extend({
@@ -21,9 +22,9 @@
             }
         },
         computed: {
-            sessions: function() {
-                return this.$store.state.connectedList;
-            },
+            ...mapState('Main', [
+                'connectedList'
+            ]),
         }
     });
 </script>

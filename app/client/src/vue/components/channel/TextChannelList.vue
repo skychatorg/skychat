@@ -52,11 +52,11 @@
 
 <script>
     import Vue from "vue";
+    import { mapState } from 'vuex';
     import HoverCard from "../util/HoverCard.vue";
 
     export default Vue.extend({
         components: { HoverCard },
-        props: { },
         methods: {
             getRoomName: function(room) {
                 if (room.isPrivate) {
@@ -93,21 +93,13 @@
             }
         },
         computed: {
-            rooms: function() {
-                return this.$store.state.rooms;
-            },
-            currentRoom: function() {
-                return this.$store.state.currentRoom;
-            },
-            roomConnectedUsers: function() {
-                return this.$store.state.roomConnectedUsers;
-            },
-            user: function() {
-                return this.$store.state.user;
-            },
-            op: function() {
-                return this.$store.state.op;
-            },
+            ...mapState('Main', [
+                'rooms',
+                'currentRoom',
+                'roomConnectedUsers',
+                'user',
+                'op',
+            ]),
         },
     });
 </script>

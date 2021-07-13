@@ -61,6 +61,7 @@
 
 <script>
     import Vue from "vue";
+    import { mapState } from 'vuex';
     import HoverCard from "../util/HoverCard.vue";
 
     export default Vue.extend({
@@ -82,21 +83,13 @@
             }
         },
         computed: {
-            playerChannelUsers: function() {
-                return this.$store.state.playerChannelUsers;
-            },
-            playerChannels: function() {
-                return this.$store.state.playerChannels;
-            },
-            playerChannel: function() {
-                return this.$store.state.playerChannel;
-            },
-            user: function() {
-                return this.$store.state.user;
-            },
-            op: function() {
-                return this.$store.state.op;
-            },
+            ...mapState('Main', [
+                'playerChannelUsers',
+                'playerChannels',
+                'playerChannel',
+                'user',
+                'op',
+            ]),
         },
     });
 </script>

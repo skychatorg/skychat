@@ -58,6 +58,7 @@
 
 <script>
     import Vue from "vue";
+    import { mapState } from "vuex";
     import TextChannelList from "../components/channel/TextChannelList.vue";
     import PlayerChannelList from "../components/channel/PlayerChannelList.vue";
     import TchatMiddleColumn from "../components/layout/TchatMiddleColumn.vue";
@@ -79,23 +80,18 @@
         methods: {
 
             gotoRoom() {
-                this.$store.commit('SET_PAGE', 'room');
+                this.$store.commit('Main/SET_PAGE', 'room');
             },
             onMobileShowMiddleCol: function() {
-                this.$store.commit('SET_MOBILE_PAGE', 'middle');
+                this.$store.commit('Main/SET_MOBILE_PAGE', 'middle');
             },
         },
         computed: {
-            page: function() {
-                return this.$store.state.page;
-            },
-            cinemaMode: function() {
-                return this.$store.state.cinemaMode;
-            },
-            playerChannel: function() {
-                return this.$store.state.playerChannel;
-            },
-            
+            ...mapState('Main', [
+                'page',
+                'cinemaMode',
+                'playerChannel',
+            ]),
         },
     });
 </script>

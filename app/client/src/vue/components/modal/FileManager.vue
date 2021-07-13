@@ -30,6 +30,7 @@
 
 <script>
     import Vue from "vue";
+    import { mapState } from 'vuex';
     import HoverCard from "../util/HoverCard.vue";
 
     export default Vue.extend({
@@ -70,12 +71,10 @@
         },
 
         computed: {
-            files: function() {
-                return this.$store.state.files;
-            },
-            file: function() {
-                return this.$store.state.file;
-            },
+            ...mapState('Main', [
+                'files',
+                'file',
+            ]),
         },
     });
 </script>

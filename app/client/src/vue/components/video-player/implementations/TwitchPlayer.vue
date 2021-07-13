@@ -11,6 +11,7 @@
 
 <script>
     import Vue from "vue";
+    import { mapState } from "vuex";
 
     export default Vue.extend({
         data: function() { return { src: '', previousVideoHash: null, } },
@@ -33,9 +34,9 @@
             }
         },
         computed: {
-            playerState: function() {
-                return this.$store.state.playerState;
-            },
+            ...mapState('Main', [
+                'playerState',
+            ]),
         }
     });
 </script>

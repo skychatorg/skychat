@@ -8,15 +8,16 @@
 
 <script>
     import Vue from "vue";
+    import { mapState } from 'vuex';
 
     export default Vue.extend({
         methods: {
 
         },
         computed: {
-            playerIntensity: function() {
-                return this.$store.state.playerIntensity;
-            },
+            ...mapState('Main', [
+                'playerIntensity',
+            ]),
             gradientCss: function() {
                 let css = 'linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, ';
                 css += `rgba(255, 255, 255, ${this.playerIntensity / 8}) 94%, `;

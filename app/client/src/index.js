@@ -1,7 +1,7 @@
 import Vue from "vue";
 import SkychatApp from "./vue/SkychatApp.vue";
 import { SkyChatClient } from "./SkyChatClient";
-import store from "./store";
+import store from "./vue/store";
 import { AudioRecorder } from "./AudioRecorder";
 import VModal from 'vue-js-modal';
 import Mousetrap from "mousetrap";
@@ -19,7 +19,7 @@ Vue.use(VModal, {
     }
 });
 
-store.commit('LOAD_LOCALSTORAGE');
+store.commit('Main/LOAD_LOCALSTORAGE');
 
 const client = new SkyChatClient(store);
 
@@ -57,14 +57,14 @@ resize();
 
 // Handle document title update when new messages arrive
 window.addEventListener('blur', () => {
-    store.commit('BLUR');
+    store.commit('Main/BLUR');
 });
 
 window.addEventListener('focus', () => {
     if (store.state.lastMissedMessage) {
         client.notifySeenMessage(store.state.lastMissedMessage.id);
     }
-    store.commit('FOCUS');
+    store.commit('Main/FOCUS');
 });
 setInterval(() => {
 

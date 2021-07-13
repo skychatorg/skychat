@@ -34,7 +34,7 @@
                       @keydown.tab.prevent="onKeyUpTab"
                       class="new-message mousetrap"
                       v-model="message"
-                      :placeholder="currentRoom ? currentRoom.name + ' / Message' : 'Message'"></textarea>
+                      :placeholder="currentRoomObject ? currentRoomObject.name + ' / Message' : 'Message'"></textarea>
         </form>
         <div v-show="gallery" class="form-action open-gallery" @click="openGallery" title="Access gallery">
             <i class="material-icons md-28">collections</i>
@@ -51,6 +51,7 @@
 
 <script>
     import Vue from "vue";
+    import { mapState } from 'vuex';
     import GalleryModal from "../modal/GalleryModal.vue";
 
     const MESSAGE_HISTORY_LENGTH = 100;
@@ -76,7 +77,7 @@
 
             message: function(newMessage, oldMessage) {
                 const oldTyping = oldMessage.length > 0 && oldMessage[0] !== '/';
-                const newTyping = ! this.$store.state.channel && newMessage.length > 0 && newMessage[0] !== '/';
+                const newTyping = ! this.$store.state.Main.channel && newMessage.length > 0 && newMessage[0] !== '/';
                 if (newTyping !== oldTyping) {
                     this.$client.setTyping(newTyping);
                 }
@@ -206,8 +207,8 @@
                 this.sentMessageHistory.push(this.message);
                 this.sentMessageHistory.splice(0, this.sentMessageHistory.length - MESSAGE_HISTORY_LENGTH);
                 this.historyIndex = null;
-                if (this.$store.state.channel) {
-                    this.$client.sendPrivateMessage(this.$store.state.channel, this.message);
+                if (this.$store.state.Main.channel) {
+                    this.$client.sendPrivateMessage(this.$store.state.Main.channel, this.message);
                 } else {
                     this.$client.sendMessage(this.message);
                 }
@@ -218,14 +219,14 @@
              * When clicking the arrow to show the right column
              */
             onMobileShowRightCol: function() {
-                this.$store.commit('SET_MOBILE_PAGE', 'right');
+                this.$store.commit('Main/SET_MOBILE_PAGE', 'right');
             },
 
             /**
              * When clicking the arrow to show the left column
              */
             onMobileShowLeftCol: function() {
-                this.$store.commit('SET_MOBILE_PAGE', 'left');
+                this.$store.commit('Main/SET_MOBILE_PAGE', 'left');
             },
 
             /**
@@ -248,29 +249,27 @@
         },
 
         computed: {
-            focused: function() {
-                return this.$store.state.focused;
-            },
-            connectedList: function() {
-                return this.$store.state.connectedList;
-            },
-            gallery: function() {
-                return this.$store.state.gallery;
-            },
+            ...mapState('Main', [
+                'focused',
+                'connectedList',
+                'gallery',
+                'user',
+                'rooms',
+                'currentRoom',
+            ]),
             hasNewContentInOtherRooms: function() {
-                const user = this.$store.state.user;
-                if (user.id <= 0) {
+                if (this.user.id <= 0) {
                     return false;
                 }
-                for (const room of this.$store.state.rooms) {
-                    if ((user.data.plugins.lastseen[room.id] || 0) < room.lastReceivedMessageId) {
+                for (const room of this.rooms) {
+                    if ((this.user.data.plugins.lastseen[room.id] || 0) < room.lastReceivedMessageId) {
                         return true;
                     }
                 }
                 return false;
             },
-            currentRoom: function() {
-                return this.$store.state.rooms.find(room => room.id === this.$store.state.currentRoom);
+            currentRoomObject: function() {
+                return this.rooms.find(room => room.id === this.currentRoom);
             }
         }
     });

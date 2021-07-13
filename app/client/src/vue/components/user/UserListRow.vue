@@ -56,6 +56,7 @@
 
 <script>
     import Vue from "vue";
+    import { mapState } from "vuex";
     import HoverCard from "../util/HoverCard";
 
     export default Vue.extend({
@@ -67,10 +68,13 @@
         },
         methods: {
             isChanSelected(channelName) {
-                return channelName.toLowerCase() === this.$store.state.channel;
+                return channelName.toLowerCase() === this.channel;
             },
         },
         computed: {
+            ...mapState('Main', [
+                'channel',
+            ]),
             minutesSinceLastMessage: function() {
                 const duration = new Date().getTime() * 0.001 - this.session.lastMessageTime;
                 return Math.floor(duration / 60);
