@@ -5,6 +5,7 @@ import { GlobalPlugin } from "../../skychat/GlobalPlugin";
 import { RoomManager } from "../../skychat/RoomManager";
 import { Server } from "../../skychat/Server";
 import { Session } from "../../skychat/Session";
+import { User } from "../../skychat/User";
 import { Gallery, SanitizedGallery } from "./Gallery";
 
 
@@ -17,7 +18,7 @@ export class GalleryPlugin extends GlobalPlugin {
 
     static readonly commandAliases = ['gallerysearch', 'galleryfolderadd', 'galleryfolderremove', 'galleryadd', 'gallerydelete'];
 
-    public readonly minRight = Config.PREFERENCES.minRightForGallery;
+    public readonly minRight = Config.PREFERENCES.minRightForGalleryRead;
 
     readonly rules = {
         gallery: { },
@@ -83,10 +84,19 @@ export class GalleryPlugin extends GlobalPlugin {
         }
     }
 
+    public canWrite(session: Session): boolean {
+        return session.isOP() || session.user.right >= Config.PREFERENCES.minRightForGalleryWrite;
+    }
+
     async run(alias: string, param: string, connection: Connection): Promise<void> {
 
         if (alias === 'gallerysearch') {
             return await this.handleGallerySearch(param, connection);
+        }
+
+        // After this point, all calls must have write permission
+        if (! this.canWrite(connection.session)) {
+            throw new Error('You do not have write permission to the gallery');
         }
         
         if (alias === 'galleryfolderadd') {
@@ -112,27 +122,18 @@ export class GalleryPlugin extends GlobalPlugin {
     }
 
     async handleGalleryFolderAdd(param: string, connection: Connection): Promise<void> {
-        if (! connection.session.isOP()) {
-            throw new Error(`Only OP can manage folders`);
-        }
         const folderName = param.trim();
         const folder = this.gallery.createFolder(folderName);
         this.syncStorage();
     }
 
     async handleGalleryFolderRemove(param: string, connection: Connection): Promise<void> {
-        if (! connection.session.isOP()) {
-            throw new Error(`Only OP can manage folders`);
-        }
         const folderId = parseInt(param);
         this.gallery.deleteFolder(folderId);
         this.syncStorage();
     }
 
     async handleGalleryAdd(param: string, connection: Connection): Promise<void> {
-        if (! connection.session.isOP()) {
-            throw new Error(`Only OP can manage medias`);
-        }
         const [rawLink, rawFolderId, rawTags] = param.split(' ');
         const link = rawLink;
         const folderId = parseInt(rawFolderId);
@@ -145,9 +146,6 @@ export class GalleryPlugin extends GlobalPlugin {
     }
 
     async handleGalleryDelete(param: string, connection: Connection): Promise<void> {
-        if (! connection.session.isOP()) {
-            throw new Error(`Only OP can manage medias`);
-        }
         const [rawFolderId, rawMediaId] = param.split(' ');
         const folderId = parseInt(rawFolderId);
         const mediaId = parseInt(rawMediaId);
@@ -157,14 +155,14 @@ export class GalleryPlugin extends GlobalPlugin {
 
     async onNewConnection(connection: Connection): Promise<void> {
         // If gallery is available for everyone, send it
-        if (Config.PREFERENCES.minRightForGallery === -1) {
+        if (Config.PREFERENCES.minRightForGalleryRead === -1) {
             this.sync([connection.session]);
         }
     }
     
     public async onConnectionAuthenticated(connection: Connection): Promise<void> {
         // If user can access the gallery
-        if (Config.PREFERENCES.minRightForGallery > -1 && connection.session.user.right >= Config.PREFERENCES.minRightForGallery) {
+        if (Config.PREFERENCES.minRightForGalleryRead > -1 && connection.session.user.right >= Config.PREFERENCES.minRightForGalleryRead) {
             this.sync([connection.session]);
         }
     }

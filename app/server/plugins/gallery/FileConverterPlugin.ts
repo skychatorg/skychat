@@ -27,7 +27,7 @@ export class FileConverterPlugin extends GlobalPlugin {
 
     static readonly commandName = 'convert';
 
-    public readonly opOnly = true;
+    public readonly minRight = Config.PREFERENCES.minRightForGalleryWrite;
 
     readonly rules = {
         convert: {
