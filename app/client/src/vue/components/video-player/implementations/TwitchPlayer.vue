@@ -1,7 +1,7 @@
 <template>
     <div>
         <iframe
-            class="player"
+            class="player twitch"
             :src="src"
             frameborder="0"
             allowfullscreen="true"

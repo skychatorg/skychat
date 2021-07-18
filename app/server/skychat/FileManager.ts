@@ -9,8 +9,12 @@ import { ShellHelper } from "./ShellHelper";
 
 export class FileManager {
 
-    static saveFile(file: fileUpload.UploadedFile): string {
+    static getNewFileLocation(extension: string): string {
         const date = new Date();
+        return 'uploads/all/' + date.toISOString().substr(0, 19).replace(/(-|T)/g, '/').replace(/:/g, '-') + '-' + Math.floor(1000000000 * RandomGenerator.random(8)) + '.' + extension;
+    }
+
+    static saveFile(file: fileUpload.UploadedFile): string {
         const mimeTypes: {[mimetype: string]: string} = {
             'image/jpeg': 'jpg',
             'image/jpg': 'jpg',
@@ -18,23 +22,24 @@ export class FileManager {
             'image/gif': 'gif',
             'application/pdf': 'pdf',
             'video/mp4': 'mp4',
+            'video/mkv': 'mkv',
             'video/webm': 'webm',
         };
         if (typeof mimeTypes[file.mimetype] === 'undefined') {
             throw new Error('Invalid mimetype');
         }
         const extension = mimeTypes[file.mimetype];
-        const filePath = 'uploads/all/' + date.toISOString().substr(0, 19).replace(/(-|T)/g, '/').replace(/:/g, '-') + '-' + Math.floor(1000000000 * RandomGenerator.random(8)) + '.' + extension;
+        const filePath = FileManager.getNewFileLocation(extension);
         file.mv(filePath);
         return filePath;
     }
 
     static isFileUrlUploaded(fileUrl: string): boolean {
-        return !! fileUrl.match(new RegExp('^' + MessageFormatter.escapeRegExp(Config.LOCATION + '/uploads/all/') + '([0-9a-zA-Z/-]+)\\.(jpg|jpeg|png|webp|gif|pdf|mp4|webm)$'));
+        return !! fileUrl.match(new RegExp('^' + MessageFormatter.escapeRegExp(Config.LOCATION + '/uploads/all/') + '([0-9a-zA-Z/-]+)\\.(jpg|jpeg|png|webp|gif|pdf|mp4|mkv|webm)$'));
     }
 
     static isFileUrlInGallery(fileUrl: string): boolean {
-        return !! fileUrl.match(new RegExp('^' + MessageFormatter.escapeRegExp(Config.LOCATION + '/uploads/gallery/') + '([0-9]+)/([0-9]+)/([0-9]+)/([0-9a-z-]+)\\.(jpg|jpeg|png|webp|gif|pdf|mp4|webm)$'));
+        return !! fileUrl.match(new RegExp('^' + MessageFormatter.escapeRegExp(Config.LOCATION + '/uploads/gallery/') + '([0-9]+)/([0-9]+)/([0-9]+)/([0-9a-z-]+)\\.(jpg|jpeg|png|webp|gif|pdf|mp4|mkv|webm)$'));
     }
 
     static uploadedFileExists(fileUrl: string): boolean {

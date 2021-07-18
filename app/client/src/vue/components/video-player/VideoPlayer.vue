@@ -20,6 +20,7 @@
         computed: {
             ...mapState('Main', [
                 'playerState',
+                'playerEnabled',
                 'playerStateLastUpdate',
             ]),
         }

@@ -163,7 +163,7 @@ const actions = {
     },
 
     messageSeen({ commit, dispatch }, messageSeen) {
-        commit('SET_LAST_SEEN', messageSeen.data);
+        commit('SET_LAST_SEEN', messageSeen);
         dispatch('generateLastMessageSeenIds');
     },
 
@@ -296,12 +296,12 @@ const mutations = {
     SET_LAST_MESSAGE_SEEN_IDS(state, lastMessageSeenIds) {
         state.lastMessageSeenIds = lastMessageSeenIds;
     },
-    SET_LAST_SEEN(state, data) {
+    SET_LAST_SEEN(state, messageSeen) {
         const entry = state.connectedList.find(e => e.user.id === messageSeen.user);
         if (! entry) {
             return;
         }
-        entry.user.data.plugins.lastseen = data;
+        entry.user.data.plugins.lastseen = messageSeen.data;
     },
     NEW_MESSAGE(state, message) {
         state.messages.push(message);

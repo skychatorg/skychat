@@ -2,7 +2,7 @@
     <div>
         <video
             ref="player"
-            class="player"
+            class="player embed"
             controls=""
             autoplay="1"
             name="media">

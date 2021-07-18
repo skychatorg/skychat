@@ -97,6 +97,22 @@ export class Session implements IBroadcaster {
         Session.connections.forEach(connection => connection.send(event, payload));
     }
 
+    /**
+     * Send an info message to all connected connections
+     * @param message
+     */
+    public sendInfo(message: string): void {
+        this.connections.forEach(c => c.sendInfo(message));
+    }
+
+    /**
+     * Send an error to all connected connections
+     * @param error
+     */
+    public sendError(error: Error): void {
+        this.connections.forEach(c => c.sendError(error));
+    }
+
     public static cleanUpInterval = setInterval(Session.cleanUpAllSessions, 5 * 1000);
 
     /**
