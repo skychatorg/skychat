@@ -1,7 +1,7 @@
 import {google, youtube_v3} from "googleapis";
 import { Config } from "../../../skychat/Config";
 import { VideoInfo } from "../PlayerChannel";
-import { VideoFetcher } from "../VideoFetcher";
+import { VideoFetcher } from "./VideoFetcher";
 
 
 

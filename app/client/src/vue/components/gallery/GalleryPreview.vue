@@ -20,7 +20,7 @@
                     :key="folder.id">
 
                     <h3 class="section-title">
-                        {{folder.name}}
+                        <span :title="'#' + folder.id + ': ' + folder.name">{{folder.name}}</span>
                         <span v-show="folder.medias.length === 0 && op" @click="deleteFolder(folder.id)" title="Delete this folder" class="folder-delete material-icons md-14">close</span>
                     </h3>
 
@@ -40,6 +40,9 @@
                                         class="media-tag">
                                         {{ tag }}
                                     </div>
+                                </div>
+                                <div class="media-extension">
+                                    .{{ media.location.match(/\.([a-z0-9]+)$/)[1] }}
                                 </div>
                                 <div class="media-actions">
                                     <!-- copy -->
@@ -179,8 +182,6 @@
         padding-right: 20px;
 
         .gallery-content {
-            flex-basis: 140px;
-            min-height: 140px;
             background-color: #242427;
             overflow: hidden;
             display: flex;
@@ -225,7 +226,7 @@
                 .media-list {
                     display: flex;
                     margin-top: 4px;
-                    height: 70px;
+                    height: 110px;
 
                     .media-list-arrow {
                         flex-basis: 20px;
@@ -240,9 +241,9 @@
                         .media {
                             margin-left: 6px;
                             margin-right: 6px;
-                            flex-basis: 70px;
-                            min-width: 70px;
-                            height: 70px;
+                            flex-basis: 110px;
+                            min-width: 110px;
+                            height: 110px;
                             background-position: 50%;
                             background-size: cover;
                             position: relative;
@@ -262,6 +263,15 @@
                                     padding: 1px 4px;
                                     background: #00000036;
                                 }
+                            }
+
+                            .media-extension {
+                                position: absolute;
+                                bottom: 0;
+                                right: 0;
+                                margin: 4px;
+                                overflow: hidden;
+                                color: #969696;
                             }
 
                             .media-actions {

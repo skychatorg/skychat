@@ -1,4 +1,4 @@
-import { VideoInfo } from "./PlayerChannel";
+import { VideoInfo } from "../PlayerChannel";
 
 export interface VideoFetcher {
     

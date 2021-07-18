@@ -67,7 +67,7 @@ export class GalleryPlugin extends GlobalPlugin {
     /**
      * @override
      */
-    protected syncStorage(): void {
+    public syncStorage(): void {
         this.storage = this.gallery.sanitized();
         super.syncStorage();
         this.sync();

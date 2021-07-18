@@ -1,5 +1,5 @@
 import { VideoInfo } from "../PlayerChannel";
-import { VideoFetcher } from "../VideoFetcher";
+import { VideoFetcher } from "./VideoFetcher";
 
 
 // <iframe src="https://player.twitch.tv/?channel=wintergaming&parent=www.example.com" frameborder="0" allowfullscreen="true" scrolling="no" height="378" width="620"></iframe>

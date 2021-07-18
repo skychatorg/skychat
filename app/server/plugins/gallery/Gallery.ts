@@ -40,8 +40,24 @@ export class Gallery {
         return true;
     }
 
+    /**
+     * @TODO optimize
+     * @param mediaUrl 
+     * @returns 
+     */
+    getMediaFromUrl(mediaUrl: string): GalleryMedia | null {
+        for (const folder of this.folders) {
+            for (const media of folder.medias) {
+                if (media.location === mediaUrl) {
+                    return media;
+                }
+            }
+        }
+        return null;
+    }
+
     getMediaPath(mediaId: number): string {
-        return `uploads/gallery/${Math.floor(mediaId / 1e6)}/${Math.floor(mediaId / 1e3)}/`;
+        return `uploads/gallery/${Math.floor(mediaId / 1e6)}/${Math.floor(mediaId / 1e3)}/${mediaId}/`;
     }
 
     buildMediaThumb(mediaUrl: string): string {
@@ -56,6 +72,10 @@ export class Gallery {
         }
 
         throw new Error('Unable to build media thumbnail');
+    }
+
+    getRandomName(): string {
+        return Math.floor(RandomGenerator.random(8) * 1e16) + '-' + new Date().toISOString().substr(0, 19).replace(/[-T:]/g, '-');
     }
 
     addMedia(user: User, folderId: number, link: string, tags: string[]) {
@@ -73,7 +93,7 @@ export class Gallery {
         }
         const mediaId = GalleryMedia.getNextId();
         const newMediaDirPath = this.getMediaPath(mediaId);
-        const newMediaFilename = Math.floor(RandomGenerator.random(8) * 1e16) + '-' + new Date().toISOString().substr(0, 19).replace(/[-T:]/g, '-') + '.' + extension;
+        const newMediaFilename = this.getRandomName() + '.' + extension;
         const newMediaPath = newMediaDirPath + newMediaFilename;
         fs.mkdirSync(newMediaDirPath, { recursive: true });
         fs.renameSync(uploadedFilePath, newMediaPath);

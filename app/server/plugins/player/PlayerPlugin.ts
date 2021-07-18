@@ -5,7 +5,7 @@ import { PlayerChannelManager } from "./PlayerChannelManager";
 import { YoutubeFetcher } from "./fetcher/YoutubeFetcher";
 import { PluginCommandRules } from "../../skychat/Plugin";
 import { LinkFetcher } from "./fetcher/LinkFetcher";
-import { VideoFetcher } from "./VideoFetcher";
+import { VideoFetcher } from "./fetcher/VideoFetcher";
 import { TwitchFetcher } from "./fetcher/TwitchFetcher";
 import { PollPlugin } from "../poll/PollPlugin";
 

@@ -1,6 +1,6 @@
 import { FileManager } from "../../../skychat/FileManager";
 import { VideoInfo } from "../PlayerChannel";
-import { VideoFetcher } from "../VideoFetcher";
+import { VideoFetcher } from "./VideoFetcher";
 
 
 

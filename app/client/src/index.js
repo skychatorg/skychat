@@ -70,8 +70,8 @@ setInterval(() => {
 
     // In case the title is not currently blinking, just update it
     if (! store.state.documentTitleBlinking) {
-        if (document.title !== store.state.documentTitle) {
-            document.title = store.state.documentTitle;
+        if (document.title !== store.state.Main.documentTitle) {
+            document.title = store.state.Main.documentTitle;
         }
         return;
     }
