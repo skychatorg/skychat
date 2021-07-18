@@ -1,8 +1,9 @@
 import { VideoInfo } from "../PlayerChannel";
+import { PlayerPlugin } from "../PlayerPlugin";
 
 export interface VideoFetcher {
     
-    get(param: string): Promise<VideoInfo[]>;
+    get(playerPlugin: PlayerPlugin, param: string): Promise<VideoInfo[]>;
 
-    search(type: string, search: string, limit: number): Promise<VideoInfo[]>;
+    search(playerPlugin: PlayerPlugin, type: string, search: string, limit: number): Promise<VideoInfo[]>;
 }

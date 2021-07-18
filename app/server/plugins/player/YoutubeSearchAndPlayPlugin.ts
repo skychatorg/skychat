@@ -36,11 +36,11 @@ export class YoutubeSearchAndPlayPlugin extends GlobalPlugin {
         }
 
         // Search video
-        const items = await youtubeFetcher.search('video', param, 1);
+        const items = await youtubeFetcher.search(playerPlugin, 'video', param, 1);
         if (items.length === 0) {
             throw new Error('No result found');
         }
-        const videos = await youtubeFetcher.get(items[0].id);
+        const videos = await youtubeFetcher.get(playerPlugin, items[0].id);
         
         // Play video
         channel.add(videos, connection.session.user, { allowFailure: false });

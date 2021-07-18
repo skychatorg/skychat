@@ -1,6 +1,7 @@
 import {google, youtube_v3} from "googleapis";
 import { Config } from "../../../skychat/Config";
 import { VideoInfo } from "../PlayerChannel";
+import { PlayerPlugin } from "../PlayerPlugin";
 import { VideoFetcher } from "./VideoFetcher";
 
 
@@ -79,7 +80,7 @@ export class YoutubeFetcher implements VideoFetcher {
         this.youtube = google.youtube({version: 'v3', auth: Config.YOUTUBE_API_KEY});
     }
 
-    async get(param: string): Promise<VideoInfo[]> {
+    async get(playerPlugin: PlayerPlugin, param: string): Promise<VideoInfo[]> {
 
         const [link, type] = param.split(' ');
 
@@ -106,7 +107,7 @@ export class YoutubeFetcher implements VideoFetcher {
      * @param param 
      * @returns 
      */
-    async search(type: string, search: string, limit: number): Promise<VideoInfo[]> {
+    async search(playerPlugin: PlayerPlugin, type: string, search: string, limit: number): Promise<VideoInfo[]> {
         const result = await this.youtube.search.list({
             part: 'snippet',
             q: search,

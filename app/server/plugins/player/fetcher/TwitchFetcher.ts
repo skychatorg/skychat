@@ -1,4 +1,5 @@
 import { VideoInfo } from "../PlayerChannel";
+import { PlayerPlugin } from "../PlayerPlugin";
 import { VideoFetcher } from "./VideoFetcher";
 
 
@@ -7,7 +8,7 @@ import { VideoFetcher } from "./VideoFetcher";
 export class TwitchFetcher implements VideoFetcher {
 
 
-    async get(channelName: string): Promise<VideoInfo[]> {
+    async get(playerPlugin: PlayerPlugin, channelName: string): Promise<VideoInfo[]> {
         channelName = channelName.toLowerCase();
         if (! channelName.match(/^[a-z0-9-_]+$/)) {
             throw new Error('Invalid channel name');
@@ -23,7 +24,7 @@ export class TwitchFetcher implements VideoFetcher {
         return [videoInfo];
     }
     
-    search(type: string, search: string, limit: number): Promise<VideoInfo[]> {
+    search(playerPlugin: PlayerPlugin, type: string, search: string, limit: number): Promise<VideoInfo[]> {
         throw new Error("Method not implemented.");
     }
 }
