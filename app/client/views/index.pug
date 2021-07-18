@@ -1,7 +1,7 @@
 -
     const data = {
         assetsVersion: 1,
-        googleAnalyticsId: 'UA-XXXXXXX-1',
+        googleAnalyticsId: env.google_analytics_id,
         pageFavicon: {
             href: 'assets/favicon.png',
             type: 'image/png'
@@ -34,6 +34,7 @@ html
             | function gtag(){dataLayer.push(arguments);}
             | gtag('js', new Date());
             | gtag('config', '#{data.googleAnalyticsId}');
+    
     body
         div#app
             page

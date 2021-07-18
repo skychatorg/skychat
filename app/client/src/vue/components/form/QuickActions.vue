@@ -1,38 +1,47 @@
 <template>
 
     <div class="quick-actions">
-        <h2 class="title">Quick actions</h2>
-        <div class="quick-actions-group"
-            :class="{
-                'separator': group.separator
-            }"
-            v-for="group in actions"
-            :key="group.name"
-            v-show="isGroupShown(group)">
-            <div class="quick-actions-group-content">
-                <div v-for="action in group.actions"
-                     :key="action.id"
-                     @click="onActivate(action.id)"
-                     class="quick-action"
-                     :class="{
-                         ['action-' + action.id]: true,
-                         'action-full-width': action.fullWidth,
-                     }"
-                     :title="group.name + ': ' + action.title + (action.shortcuts ? ' ' + action.shortcuts.map(shortcut => '['+shortcut+']').join(', ') : '')">
 
-                    <div class="icon">
-                        <i class="material-icons md-14">{{action.icon}}</i>
+        <h2 class="title clickable" @click="setQuickActionsVisibility(! isQuickActionsVisible)" title="Show/Collapse quick actions">
+            Quick actions
+            <i class="material-icons md-12 title-icon">{{ isQuickActionsVisible ? 'expand_more' : 'expand_less' }}</i>
+        </h2>
+
+        <div v-if="isQuickActionsVisible">
+            <div class="quick-actions-group"
+                :class="{
+                    'separator': group.separator
+                }"
+                v-for="group in actions"
+                :key="group.name"
+                v-show="isGroupShown(group)">
+                <div class="quick-actions-group-content">
+                    <div v-for="action in group.actions"
+                        :key="action.id"
+                        @click="onActivate(action.id)"
+                        class="quick-action"
+                        :class="{
+                            ['action-' + action.id]: true,
+                            'action-full-width': action.fullWidth,
+                        }"
+                        :title="group.name + ': ' + action.title + (action.shortcuts ? ' ' + action.shortcuts.map(shortcut => '['+shortcut+']').join(', ') : '')">
+
+                        <div class="icon">
+                            <i class="material-icons md-14">{{action.icon}}</i>
+                        </div>
+
+                        <div class="action" v-html="getActionText(action.id)"></div>
                     </div>
-
-                    <div class="action" v-html="getActionText(action.id)"></div>
                 </div>
             </div>
+
         </div>
     </div>
 </template>
 
 <script>
     import Vue from "vue";
+    import { mapState } from 'vuex';
     import YoutubeVideoSearcher from "../modal/YoutubeVideoSearcher.vue";
     import FileManager from "../modal/FileManager.vue";
 
@@ -118,26 +127,6 @@
                         ]
                     },
                     {
-                        name: "Games",
-                        onlyInCinema: false,
-                        onlyInNonCinema: false,
-                        onlyOP: false,
-                        actions: [
-                            {
-                                id: 'racing',
-                                title: "Start a race car game",
-                                icon: 'flag',
-                                shortcuts: ['ctrl+r']
-                            },
-                            {
-                                id: 'roll',
-                                title: "Start a game of roulette",
-                                icon: 'casino',
-                                shortcuts: ['ctrl+o']
-                            },
-                        ]
-                    },
-                    {
                         name: "OP",
                         separator: true,
                         onlyInCinema: false,
@@ -217,7 +206,7 @@
             onActivate: function(id) {
                 switch (id) {
                     case 'player-toggle':
-                        this.$store.commit('SET_PLAYER_ENABLED', ! this.playerEnabled);
+                        this.$store.commit('Main/SET_PLAYER_ENABLED', ! this.playerEnabled);
                         this.$client.playerSync();
                         return;
                     case 'cursor-toggle':
@@ -242,27 +231,25 @@
                     case 'help':
                         return this.$client.sendMessage('/help');
                     case 'cinema-mode':
-                        return this.$store.commit('TOGGLE_CINEMA_MODE'); 
+                        return this.$store.commit('Main/TOGGLE_CINEMA_MODE'); 
                     case 'file-manager':
                         this.$modal.show(FileManager);
                         return;
                 }
             },
+            setQuickActionsVisibility: function(visible) {
+                this.$store.commit('Main/SET_QUICK_ACTIONS_VISIBILITY', visible);
+            },
         },
 
         computed: {
-            cinemaMode: function() {
-                return this.$store.state.cinemaMode;
-            },
-            user: function() {
-                return this.$store.state.user;
-            },
-            op: function() {
-                return this.$store.state.op;
-            },
-            playerEnabled: function() {
-                return this.$store.state.playerEnabled;
-            },
+            ...mapState('Main', [
+                'cinemaMode',
+                'user',
+                'op',
+                'playerEnabled',
+                'isQuickActionsVisible',
+            ]),
         }
     });
 </script>

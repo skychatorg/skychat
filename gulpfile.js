@@ -1,6 +1,6 @@
-const path = require('path');
 const gulp = require("gulp");
 const sass = require('gulp-sass');
+const fs = require('fs');
 const cleanCSS = require('gulp-clean-css');
 const htmlmin = require('gulp-htmlmin');
 const pug = require('gulp-pug');
@@ -10,7 +10,6 @@ const nodemon = require('gulp-nodemon');
 const webpack = require('webpack-stream');
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
 
-
 const pugPaths = { pages: ['app/client/views/*.pug'] };
 const scssPaths = { pages: ['app/client/css/*.scss'] };
 const resPaths = { pages: ['app/client/assets/**/*'] };
@@ -18,9 +17,13 @@ const srcPaths = 'app/client/src/index.js';
 const serverSrcPaths = ['app/server/**/*.ts', 'app/server/index.ts'];
 const distPath = 'dist';
 
+const env = JSON.parse(fs.readFileSync('.env.json').toString());
+
 gulp.task("build-client-views", () => {
     return gulp.src(pugPaths.pages)
-        .pipe(pug())
+        .pipe(pug({
+            data: { env },
+        }))
         .pipe(htmlmin({ collapseWhitespace: true }))
         .pipe(gulp.dest(distPath))
 });
@@ -36,7 +39,6 @@ gulp.task("build-client-scss", function () {
 gulp.task('build-client-javascript', function() {
     const webpackConfig = require('./webpack.config');
     delete webpackConfig.entry;
-    delete webpackConfig.watch;
     return gulp
         .src(srcPaths)
         .pipe(webpack(webpackConfig))
@@ -67,6 +69,7 @@ gulp.task('watch-client-javascript', function () {
     const webpackConfig = require('./webpack.config');
     delete webpackConfig.entry;
     webpackConfig.watch = true;
+    webpackConfig.mode = 'development';
     return gulp
         .src(srcPaths)
         .pipe(webpack(webpackConfig))

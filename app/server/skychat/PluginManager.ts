@@ -3,7 +3,7 @@ import { Config } from "./Config";
 import { RoomPlugin } from "./RoomPlugin";
 import { GlobalPlugin } from "./GlobalPlugin";
 import { RoomManager } from "./RoomManager";
-const impl = require('./plugins');
+const impl = require('../plugins');
 
 
 /**

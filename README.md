@@ -4,40 +4,22 @@
 
 # SkyChat
 
-Virtual cinema platform. Setup your own private screenings and watch movies, youtube videos, twitch streams or music with your friends/colleagues/family!
-
-I am currently setting up a live demonstration server with bots that auto-play youtube playlists to make it feel "alive", but in the meanwhile you can [check an empty demo](https://skychat.benjaminraymond.com/), without support for playing youtube videos.
-
-1. [Why the SkyChat?](#why-the-skychat)
-2. [Overview](#overview)
-3. [Install it](#how-to-install)
-4. [Customize it](#customize)
-
-
-## Why the SkyChat?
-
-Here is what makes the SkyChat unique compared to the other entertainment platforms:
-
-~ **Enjoy**
-
-Enjoy a well-designed user experience. Building the perfect user experience is the key to ensure people continue using an application in the long run, this is why the SkyChat is the result of a long lasting and iterative work to polish it.
-
-~ **Connect**
-
-You can see each other cursor users moving around the screen, which makes people feel connected to each other. (This can be disabled if it is not your thing though 😉)
-
-~ **Engage**
-
-How? With entertainment and customization plugins. Lots of them. Here are some examples of such features, which can be enabled/disabled in the configuration:
-- Virtual money with mini-games (racing game, casino roulette)
-- Styling customization for usernames and messages
-- Long-term activity is rewarded with experience points (XP) and ranks
-- Custom profile pictures
+1. [Overview](#overview)
+2. [Install it](#how-to-install)
+3. [Customize it](#customize)
 
 
 ## Overview
 
-Here is what it looks like:
+The SkyChat:
+- 📺 Can play medias in a shared synchronized player
+- 💻 Is trivial to install and configure
+- 🔥 Provides a polished and satisfying UI
+- ⚽ Provides entertaining features: Live cursor visualization, Casino roulette, cursor-based football..
+- 🔒 Provides privacy and security: Admin double auth, log fuzzing, shadow ban, TOR detector, ..
+
+
+When multichannel is enabled, here is what it looks like:
 ![overall-screenshot](./doc/screenshot.png)
 
 
@@ -100,6 +82,7 @@ By default, the application will be listening to `localhost:8080` and assume it 
 | users_passwords_salt | string | "$RANDOM_SALT" | Password salt. |
 | users_token_salt     | string | "$RANDOM_SALT" | Token salt. |
 | youtube_api_key      | string | "" | [Youtube api key](#setup-youtube) |
+| google_analytics_id  | string | "" | [Optional google analytics ID](https://analytics.google.com/analytics/web) |
 | op                       | string[] | [] | OP usernames. OP usernames can use the /setright command. |
 | op_passcode              | string? | "$RANDOM_PASSCODE" | OP passcode. Activate your OP session with `/op $op_passcode` |
 | email_transport          | nodemailer.JSONTransport | {"sendmail": true,"newline": "unix","path": "/usr/sbin/sendmail"} | Value given to [nodemailer.createTransport](https://nodemailer.com/about/) to initialize the mailer |

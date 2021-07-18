@@ -17,12 +17,14 @@
 
 <script>
     import Vue from "vue";
+    import { mapState } from 'vuex';
     import MessageList from "../message/MessageList.vue";
     import VideoPlayer from "../video-player/VideoPlayer.vue";
     import TypingList from "../form/TypingList.vue";
     import MessageForm from "../form/MessageForm.vue";
 
     export default Vue.extend({
+
         components: {VideoPlayer, MessageList, TypingList, MessageForm},
         
         props: {
@@ -46,15 +48,11 @@
             },
         },
         computed: {
-            playerState: function() {
-                return this.$store.state.playerState;
-            },
-            messages: function() {
-                return this.$store.state.messages;
-            },
-            playerEnabled: function() {
-                return this.$store.state.playerEnabled;
-            },
+            ...mapState('Main', [
+                'playerState',
+                'messages',
+                'playerEnabled',
+            ]),
         }
     });
 </script>

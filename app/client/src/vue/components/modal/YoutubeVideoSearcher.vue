@@ -15,7 +15,7 @@
         <div class="search-results">
 
             <!-- 1 item -->
-            <div v-for="item in searchResult.items"
+            <div v-for="item in playerApiSearchResult.items"
                  :key="item.id"
                  @click="play(item)"
                  class="search-item">
@@ -37,6 +37,7 @@
 
 <script>
     import Vue from "vue";
+    import { mapState } from 'vuex';
 
     export default Vue.extend({
         data: function() {
@@ -64,7 +65,7 @@
                 this.$client.sendMessage(`/playersearch yt ${this.searchType} ${search}`);
             },
             play: function(item) {
-                if (this.searchResult.type === 'video') {
+                if (this.playerApiSearchResult.type === 'video') {
                     this.$client.sendMessage(`/yt ${item.id} video`);
                 } else {
                     this.$client.sendMessage(`/yt ${item.id} playlist`);
@@ -73,9 +74,9 @@
             }
         },
         computed: {
-            searchResult: function() {
-                return this.$store.state.playerApiSearchResult;
-            }
+            ...mapState('Main', [
+                'playerApiSearchResult',
+            ]),
         }
     });
 </script>

@@ -34,7 +34,7 @@ export class FileManager {
     }
 
     static isFileUrlInGallery(fileUrl: string): boolean {
-        return !! fileUrl.match(new RegExp('^' + MessageFormatter.escapeRegExp(Config.LOCATION + '/uploads/gallery/') + '([0-9]+)/([0-9]+)/([0-9a-z-]+)\\.(jpg|jpeg|png|webp|gif|pdf|mp4|webm)$'));
+        return !! fileUrl.match(new RegExp('^' + MessageFormatter.escapeRegExp(Config.LOCATION + '/uploads/gallery/') + '([0-9]+)/([0-9]+)/([0-9]+)/([0-9a-z-]+)\\.(jpg|jpeg|png|webp|gif|pdf|mp4|webm)$'));
     }
 
     static uploadedFileExists(fileUrl: string): boolean {
@@ -51,7 +51,7 @@ export class FileManager {
      * @returns 
      */
     static async getVideoDuration(path: string): Promise<number> {
-        const cmd = `ffprobe -v error -show_format -show_streams ${path} | grep 'duration=' | head -n 1 | cut -d'=' -f2`;
+        const cmd = `ffprobe -v error -show_format -show_streams ${path} | grep 'duration=' | grep -v 'N/A' | head -n 1 | cut -d'=' -f2`;
         const {stdout, stderr} = await ShellHelper.exec(cmd);
         return parseFloat(stdout.trim()) * 1000;
     }

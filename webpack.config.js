@@ -1,11 +1,10 @@
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
 
 module.exports = {
-    entry: './app/client/src/index.ts',
+    entry: './app/client/src/index.js',
     output: {
         filename: 'bundle.js'
     },
-    watch: true,
     module: {
         rules: [
             {

@@ -7,21 +7,21 @@
                 </div>
             </div>
         </div>
-        <div class="image-upload" v-show="! recordingAudio && uploadingFile" title="Uploading..">
+        <div class="form-action image-upload" v-show="! recordingAudio && uploadingFile" title="Uploading..">
             <label for="file-input">
                 <img src="/assets/images/icons/loading.gif"/>
             </label>
         </div>
-        <div class="image-upload" v-show="! recordingAudio && ! uploadingFile" title="Upload an image">
+        <div class="form-action image-upload" v-show="! recordingAudio && ! uploadingFile" title="Upload an image">
             <label for="file-input">
                 <i class="upload-icon material-icons md-28">publish</i>
             </label>
             <input ref="file" @change="onFileInputChange" id="file-input" type="file" />
         </div>
-        <div @click="cancelAudioUpload" class="audio-upload" v-show="recordingAudio" title="Cancel audio recording">
+        <div class="form-action audio-upload" @click="cancelAudioUpload" v-show="recordingAudio" title="Cancel audio recording">
             <i class="upload-icon material-icons md-28">cancel</i>
         </div>
-        <div @click="uploadAudio" class="audio-upload" :class="{'recording': recordingAudio}" title="Send an audio recording">
+        <div class="form-action audio-upload" :class="{'recording': recordingAudio}" @click="uploadAudio" title="Send an audio recording">
             <i class="upload-icon material-icons md-28">mic</i>
         </div>
         <form class="form" onsubmit="return false">
@@ -34,8 +34,11 @@
                       @keydown.tab.prevent="onKeyUpTab"
                       class="new-message mousetrap"
                       v-model="message"
-                      :placeholder="currentRoom ? currentRoom.name + ' / Message' : 'Message'"></textarea>
+                      :placeholder="currentRoomObject ? currentRoomObject.name + ' / Message' : 'Message'"></textarea>
         </form>
+        <div v-show="gallery" class="form-action open-gallery" @click="openGallery" title="Access gallery">
+            <i class="material-icons md-28">collections</i>
+        </div>
         <div class="show-mobile">
             <div class="goto-other-cols">
                 <div @click="onMobileShowRightCol" title="See connected list and quick actions" class="goto-right-col">
@@ -48,6 +51,8 @@
 
 <script>
     import Vue from "vue";
+    import { mapState } from 'vuex';
+    import GalleryModal from "../modal/GalleryModal.vue";
 
     const MESSAGE_HISTORY_LENGTH = 100;
 
@@ -72,7 +77,7 @@
 
             message: function(newMessage, oldMessage) {
                 const oldTyping = oldMessage.length > 0 && oldMessage[0] !== '/';
-                const newTyping = ! this.$store.state.channel && newMessage.length > 0 && newMessage[0] !== '/';
+                const newTyping = ! this.$store.state.Main.channel && newMessage.length > 0 && newMessage[0] !== '/';
                 if (newTyping !== oldTyping) {
                     this.$client.setTyping(newTyping);
                 }
@@ -103,6 +108,10 @@
                     const newHeight = Math.min(3 + this.$refs.input.scrollHeight, 110);
                     this.$refs.input.style.height = newHeight + "px";
                 }
+            },
+
+            openGallery: function() {
+                this.$modal.show(GalleryModal);
             },
 
             uploadAudio: async function() {
@@ -198,8 +207,8 @@
                 this.sentMessageHistory.push(this.message);
                 this.sentMessageHistory.splice(0, this.sentMessageHistory.length - MESSAGE_HISTORY_LENGTH);
                 this.historyIndex = null;
-                if (this.$store.state.channel) {
-                    this.$client.sendPrivateMessage(this.$store.state.channel, this.message);
+                if (this.$store.state.Main.channel) {
+                    this.$client.sendPrivateMessage(this.$store.state.Main.channel, this.message);
                 } else {
                     this.$client.sendMessage(this.message);
                 }
@@ -210,14 +219,14 @@
              * When clicking the arrow to show the right column
              */
             onMobileShowRightCol: function() {
-                this.$store.commit('SET_MOBILE_PAGE', 'right');
+                this.$store.commit('Main/SET_MOBILE_PAGE', 'right');
             },
 
             /**
              * When clicking the arrow to show the left column
              */
             onMobileShowLeftCol: function() {
-                this.$store.commit('SET_MOBILE_PAGE', 'left');
+                this.$store.commit('Main/SET_MOBILE_PAGE', 'left');
             },
 
             /**
@@ -240,26 +249,27 @@
         },
 
         computed: {
-            focused: function() {
-                return this.$store.state.focused;
-            },
-            connectedList: function() {
-                return this.$store.state.connectedList;
-            },
+            ...mapState('Main', [
+                'focused',
+                'connectedList',
+                'gallery',
+                'user',
+                'rooms',
+                'currentRoom',
+            ]),
             hasNewContentInOtherRooms: function() {
-                const user = this.$store.state.user;
-                if (user.id <= 0) {
+                if (this.user.id <= 0) {
                     return false;
                 }
-                for (const room of this.$store.state.rooms) {
-                    if ((user.data.plugins.lastseen[room.id] || 0) < room.lastReceivedMessageId) {
+                for (const room of this.rooms) {
+                    if ((this.user.data.plugins.lastseen[room.id] || 0) < room.lastReceivedMessageId) {
                         return true;
                     }
                 }
                 return false;
             },
-            currentRoom: function() {
-                return this.$store.state.rooms.find(room => room.id === this.$store.state.currentRoom);
+            currentRoomObject: function() {
+                return this.rooms.find(room => room.id === this.currentRoom);
             }
         }
     });
@@ -271,18 +281,21 @@
         display: flex;
         padding-left: 6px;
 
-        .image-upload {
+        .form-action {
             flex-basis: 24px;
             display: flex;
             flex-direction: column;
             justify-content: flex-end;
             margin-left: 12px;
-            margin-bottom: 8px;
             color: #cccccc;
+            cursor: pointer;
+        }
+
+        .image-upload {
+            margin-bottom: 8px;
 
             .upload-icon {
                 width: 100%;
-                cursor: pointer;
             }
 
             img {
@@ -296,22 +309,20 @@
         }
 
         .audio-upload {
-            flex-basis: 24px;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-            margin-left: 12px;
             margin-bottom: 10px;
-            color: #cccccc;
 
             .upload-icon {
                 width: 100%;
-                cursor: pointer;
             }
 
             &.recording {
                 color: #ff7d7d;
             }
+        }
+
+        .open-gallery {
+            margin-bottom: 12px;
+            margin-right: 20px;
         }
 
         .goto-left-col,

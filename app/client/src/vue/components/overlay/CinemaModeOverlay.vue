@@ -13,7 +13,7 @@
     import QuickActions from "../form/QuickActions.vue";
 
     export default Vue.extend({
-        components: {TchatMiddleColumn, TypingList, MessageForm, QuickActions},
+        components: { TchatMiddleColumn, TypingList, MessageForm, QuickActions },
     });
 </script>
 

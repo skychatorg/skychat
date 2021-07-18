@@ -36,8 +36,6 @@
                     </template>
                     <template v-else>
                         <div class="icons">
-                            <i class="material-icons md-14 icon-yt" v-show="session.user.data.plugins.player !== null" title="Youtube enabled">movie</i>
-                            <i class="material-icons md-14 icon-cursor" v-show="session.user.data.plugins.cursor" title="Cursors enabled">mouse</i>
                             <template v-if="minutesSinceLastMessage > 0">
                                 <i :title="'Last message sent ' + minutesSinceLastMessage + ' minutes ago'" class="material-icons md-14 icon-active-time">schedule</i>
                                 <span :title="'Last message sent ' + minutesSinceLastMessage + ' minutes ago'" class="text-active-time">{{minutesSinceLastMessage > 30 ? 'afk' : (minutesSinceLastMessage + 'm')}}</span>
@@ -51,9 +49,6 @@
                 <div class="right" title="Right level">
                     <span>{{session.user.right}}</span>
                 </div>
-                <div class="money" title="Money">
-                    $ {{(session.user.money / 100).toFixed(2)}}
-                </div>
             </div>
         </div>
     </hover-card>
@@ -61,6 +56,7 @@
 
 <script>
     import Vue from "vue";
+    import { mapState } from "vuex";
     import HoverCard from "../util/HoverCard";
 
     export default Vue.extend({
@@ -72,10 +68,13 @@
         },
         methods: {
             isChanSelected(channelName) {
-                return channelName.toLowerCase() === this.$store.state.channel;
+                return channelName.toLowerCase() === this.channel;
             },
         },
         computed: {
+            ...mapState('Main', [
+                'channel',
+            ]),
             minutesSinceLastMessage: function() {
                 const duration = new Date().getTime() * 0.001 - this.session.lastMessageTime;
                 return Math.floor(duration / 60);
@@ -193,15 +192,11 @@
         }
         >.stats {
             flex-basis: 70px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
             text-align: right;
-            padding-right: 10px;
+            padding-right: 14px;
             font-size: 100%;
             font-weight: 600;
-            padding-top: 4px;
-            padding-bottom: 4px;
+            padding-top: 10px;
 
             >* {
                 display: flex;

@@ -25,9 +25,10 @@
     import TchatPage from "./pages/TchatPage.vue";
     import AppHeader from "./AppHeader.vue";
     import CursorOverlay from "./components/overlay/CursorOverlay.vue";
+    import AnimatedBackgroundOverlay from "./components/overlay/AnimatedBackgroundOverlay.vue";
 
     export default Vue.extend({
-        components: {AuthPage, AppHeader, TchatPage, CursorOverlay},
+        components: { AuthPage, AppHeader, TchatPage, CursorOverlay, AnimatedBackgroundOverlay },
         mounted: function() {
             this.$mousetrap.bind(Array.from({length: 9}).map((_, i) => `alt+${i + 1}`), (event) => {
                 event.preventDefault();
@@ -42,24 +43,24 @@
         methods: {
             logout: function() {
                 this.$client.logout();
-                this.$store.commit('SET_PAGE', 'welcome');
+                this.$store.commit('Main/SET_PAGE', 'welcome');
             },
             login: function() {
-                this.$store.commit('SET_PAGE', 'welcome');
+                this.$store.commit('Main/SET_PAGE', 'welcome');
             },
             gotoRoom() {
-                this.$store.commit('SET_PAGE', 'room');
+                this.$store.commit('Main/SET_PAGE', 'room');
             },
         },
         computed: {
             rooms: function() {
-                return this.$store.state.rooms;
+                return this.$store.state.Main.rooms;
             },
             page: function() {
-                return this.$store.state.page;
+                return this.$store.state.Main.page;
             },
             mobileCurrentPage: function() {
-                return this.$store.state.mobileCurrentPage;
+                return this.$store.state.Main.mobileCurrentPage;
             }
         },
     });

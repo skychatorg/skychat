@@ -13,6 +13,7 @@
 
 <script>
     import Vue from "vue";
+    import { mapState } from "vuex";
 
     export default Vue.extend({
         data: function() {
@@ -48,16 +49,23 @@
                 this.$client.register(this.username, this.password);
             },
             onGuestLogin: function() {
-                this.$client.joinRoom(1);
+
+                // Join room #1
+                this.$client.joinRoom(this.rooms[0].id);
+
+                // Join first player channel
+                if (this.playerChannels.length > 0) {
+                    this.$client.joinPlayerChannel(this.playerChannels[0].id);
+                }
             }
         },
         computed: {
-            user: function() {
-                return this.$store.state.user;
-            },
-            currentRoom: function() {
-                return this.$store.state.currentRoom;
-            }
+            ...mapState('Main', [
+                'user',
+                'currentRoom',
+                'rooms',
+                'playerChannels',
+            ]),
         }
     });
 </script>

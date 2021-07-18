@@ -1,9 +1,9 @@
 <template>
     <div class="room-list" v-show="rooms.length > 1 || op">
-        <div class="subtitle">
+        <div class="subtitle" v-show="op" >
             <h3>
                 text
-                <span v-show="op" @click="createRoom()" class="room-create material-icons md-12">add</span>
+                <span @click="createRoom()" class="room-create material-icons md-12">add</span>
             </h3>
         </div>
         <hover-card v-for="room in rooms"
@@ -15,7 +15,6 @@
             @click.native="joinRoom(room.id)"
         >
             <div class="room-content">
-                <div v-show="! room.isPrivate" class="room-icon material-icons md-18">tag</div>
                 <div v-show="room.isPrivate" class="room-icon material-icons md-14">mail</div>
                 <div class="room-name" :title="room.name">
                     <b>{{ getRoomName(room) }}</b>
@@ -53,11 +52,11 @@
 
 <script>
     import Vue from "vue";
+    import { mapState } from 'vuex';
     import HoverCard from "../util/HoverCard.vue";
 
     export default Vue.extend({
         components: { HoverCard },
-        props: { },
         methods: {
             getRoomName: function(room) {
                 if (room.isPrivate) {
@@ -94,21 +93,13 @@
             }
         },
         computed: {
-            rooms: function() {
-                return this.$store.state.rooms;
-            },
-            currentRoom: function() {
-                return this.$store.state.currentRoom;
-            },
-            roomConnectedUsers: function() {
-                return this.$store.state.roomConnectedUsers;
-            },
-            user: function() {
-                return this.$store.state.user;
-            },
-            op: function() {
-                return this.$store.state.op;
-            },
+            ...mapState('Main', [
+                'rooms',
+                'currentRoom',
+                'roomConnectedUsers',
+                'user',
+                'op',
+            ]),
         },
     });
 </script>
@@ -147,7 +138,7 @@
             display: flex;
 
             .room-icon {
-                flex-basis: 20px;
+                flex-basis: 14px;
                 margin-top: 8px;
                 margin-left: 10px;
             }
@@ -155,7 +146,7 @@
             .room-name {
                 flex-grow: 1;
                 margin-top: 8px;
-                margin-left: 2px;
+                margin-left: 10px;
                 overflow: hidden;
                 white-space: nowrap;
                 text-overflow: ellipsis;

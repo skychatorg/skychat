@@ -1,10 +1,6 @@
 <template>
     <div class="gallery-preview" v-if="shownFolders !== null">
-        <h2 class="title clickable" @click="setGalleryVisibility(! isGalleryVisible)" title="Show/hide the gallery">
-            Gallery
-            <i class="material-icons md-12 title-icon">{{ isGalleryVisible ? 'expand_more' : 'expand_less' }}</i>
-        </h2>
-        <div class="gallery-content" v-if="isGalleryVisible">
+        <div class="gallery-content">
 
             <div class="gallery-search">
                 <input
@@ -24,7 +20,7 @@
                     :key="folder.id">
 
                     <h3 class="section-title">
-                        {{folder.name}}
+                        <span :title="'#' + folder.id + ': ' + folder.name">{{folder.name}}</span>
                         <span v-show="folder.medias.length === 0 && op" @click="deleteFolder(folder.id)" title="Delete this folder" class="folder-delete material-icons md-14">close</span>
                     </h3>
 
@@ -44,6 +40,9 @@
                                         class="media-tag">
                                         {{ tag }}
                                     </div>
+                                </div>
+                                <div class="media-extension">
+                                    .{{ media.location.match(/\.([a-z0-9]+)$/)[1] }}
                                 </div>
                                 <div class="media-actions">
                                     <!-- copy -->
@@ -70,6 +69,7 @@
 
 <script>
     import Vue from "vue";
+    import { mapState } from 'vuex';
     import MediaVisualizer from "../modal/MediaVisualizer.vue";
     import HoverCard from "../util/HoverCard";
 
@@ -140,7 +140,7 @@
             },
             isPlayable: function(media) {
                 const extensionMtc = media.location.match(/\.([a-z0-9]+)$/);
-                return extensionMtc && ['mp4'].indexOf(extensionMtc[1]) !== -1;
+                return extensionMtc && ['mp4', 'webm'].indexOf(extensionMtc[1]) !== -1;
             },
             playMedia: function(media) {
                 this.$client.sendMessage(`/embed ${media.location}`);
@@ -155,26 +155,16 @@
             deleteMedia: function(media) {
                 this.$client.sendMessage(`/gallerydelete ${media.folderId} ${media.id}`);
             },
-            setGalleryVisibility: function(newVisibility) {
-                this.$store.commit('SET_GALLERY_VISIBILITY', newVisibility);
-            },
             deleteFolder: function(folderId) {
                 this.$client.sendMessage(`/galleryfolderremove ${folderId}`);
             }
         },
         computed: {
-            gallery: function() {
-                return this.$store.state.gallery;
-            },
-            gallerySearchResults: function() {
-                return this.$store.state.gallerySearchResults;
-            },
-            isGalleryVisible: function() {
-                return this.$store.state.isGalleryVisible;
-            },
-            op: function() {
-                return this.$store.state.op;
-            }
+            ...mapState('Main', [
+                'gallery',
+                'gallerySearchResults',
+                'op',
+            ]),
         }
     });
 </script>
@@ -192,8 +182,6 @@
         padding-right: 20px;
 
         .gallery-content {
-            flex-basis: 140px;
-            min-height: 140px;
             background-color: #242427;
             overflow: hidden;
             display: flex;
@@ -238,7 +226,7 @@
                 .media-list {
                     display: flex;
                     margin-top: 4px;
-                    height: 70px;
+                    height: 110px;
 
                     .media-list-arrow {
                         flex-basis: 20px;
@@ -253,9 +241,9 @@
                         .media {
                             margin-left: 6px;
                             margin-right: 6px;
-                            flex-basis: 70px;
-                            min-width: 70px;
-                            height: 70px;
+                            flex-basis: 110px;
+                            min-width: 110px;
+                            height: 110px;
                             background-position: 50%;
                             background-size: cover;
                             position: relative;
@@ -275,6 +263,15 @@
                                     padding: 1px 4px;
                                     background: #00000036;
                                 }
+                            }
+
+                            .media-extension {
+                                position: absolute;
+                                bottom: 0;
+                                right: 0;
+                                margin: 4px;
+                                overflow: hidden;
+                                color: #969696;
                             }
 
                             .media-actions {

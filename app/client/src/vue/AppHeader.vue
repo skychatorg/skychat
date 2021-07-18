@@ -58,10 +58,10 @@
 
         computed: {
             user: function() {
-                return this.$store.state.user;
+                return this.$store.state.Main.user;
             },
             borderBottomColor: function() {
-                const state = this.$store.state.connectionState;
+                const state = this.$store.state.Main.connectionState;
                 switch (state) {
 
                     case WebSocket.CONNECTING:

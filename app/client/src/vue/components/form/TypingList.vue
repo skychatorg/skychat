@@ -6,12 +6,13 @@
 
 <script>
     import Vue from "vue";
+    import { mapState } from 'vuex';
 
     export default Vue.extend({
         computed: {
-            typingList: function() {
-                return this.$store.state.typingList;
-            },
+            ...mapState('Main', [
+                'typingList',
+            ]),
             typingListHtml: function() {
 
                 if (this.typingList.length === 0) {

@@ -33,6 +33,7 @@
 
 <script>
     import Vue from "vue";
+    import { mapState } from "vuex";
 
     export default Vue.extend({
         data: function() {
@@ -41,12 +42,10 @@
             }
         },
         computed: {
-            user: function() {
-                return this.$store.state.user;
-            },
-            config: function() {
-                return this.$store.state.config;
-            },
+            ...mapState('Main', [
+                'user',
+                'config',
+            ]),
             xpProgressPct: function() {
                 if (! this.nextRank) {
                     return 0;                

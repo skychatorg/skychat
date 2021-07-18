@@ -15,14 +15,17 @@
 
                 <!-- left col (room list) -->
                 <section class="left hide-mobile-middle hide-mobile-right">
+                    
                     <div class="channels scrollbar ml-1 pr-1">
                         <h2 class="title mt-2">Channels</h2>
                         <text-channel-list class="left-room-list"></text-channel-list>
                         <player-channel-list class="left-channel-room-list"></player-channel-list>
                     </div>
+
                     <poll-list class="mb-2 ml-1"></poll-list>
-                    <user-preview class="mb-3 ml-1 mt-1"></user-preview>
+
                     <quick-actions id="quick-actions"></quick-actions>
+
                     <div @click="onMobileShowMiddleCol" class="show-mobile" style="text-align: right;">
                         <div class="goto-middle-col">
                             <i class="material-icons md-28">keyboard_arrow_right</i>
@@ -42,8 +45,6 @@
 
                     <user-list id="connected-list" class="scrollbar"></user-list>
 
-                    <gallery-preview id="gallery"></gallery-preview>
-
                     <div @click="onMobileShowMiddleCol" class="show-mobile">
                         <div class="goto-middle-col">
                             <i class="material-icons md-28">keyboard_arrow_left</i>
@@ -57,12 +58,12 @@
 
 <script>
     import Vue from "vue";
+    import { mapState } from "vuex";
     import TextChannelList from "../components/channel/TextChannelList.vue";
     import PlayerChannelList from "../components/channel/PlayerChannelList.vue";
     import TchatMiddleColumn from "../components/layout/TchatMiddleColumn.vue";
     import PollList from "../components/poll/PollList.vue";
     import UserPreview from "../components/user/UserPreview.vue";
-    import GalleryPreview from "../components/gallery/GalleryPreview.vue";
     import VideoPlayerPreview from "../components/video-player/VideoPlayerPreview.vue";
     import VideoPlayer from "../components/video-player/VideoPlayer.vue";
     import UserList from "../components/user/UserList.vue";
@@ -70,7 +71,7 @@
     import CinemaModeOverlay from "../components/overlay/CinemaModeOverlay.vue";
 
     export default Vue.extend({
-        components: {TextChannelList, GalleryPreview, PlayerChannelList, TchatMiddleColumn, PollList, UserPreview, VideoPlayerPreview, VideoPlayer, UserList, QuickActions, CinemaModeOverlay},
+        components: {TextChannelList, PlayerChannelList, TchatMiddleColumn, PollList, UserPreview, VideoPlayerPreview, VideoPlayer, UserList, QuickActions, CinemaModeOverlay},
         watch: {
             cinemaMode: function() {
 
@@ -79,23 +80,18 @@
         methods: {
 
             gotoRoom() {
-                this.$store.commit('SET_PAGE', 'room');
+                this.$store.commit('Main/SET_PAGE', 'room');
             },
             onMobileShowMiddleCol: function() {
-                this.$store.commit('SET_MOBILE_PAGE', 'middle');
+                this.$store.commit('Main/SET_MOBILE_PAGE', 'middle');
             },
         },
         computed: {
-            page: function() {
-                return this.$store.state.page;
-            },
-            cinemaMode: function() {
-                return this.$store.state.cinemaMode;
-            },
-            playerChannel: function() {
-                return this.$store.state.playerChannel;
-            },
-            
+            ...mapState('Main', [
+                'page',
+                'cinemaMode',
+                'playerChannel',
+            ]),
         },
     });
 </script>

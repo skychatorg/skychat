@@ -11,6 +11,7 @@
 
 <script>
     import Vue from "vue";
+    import { mapState } from "vuex";
 
     export default Vue.extend({
         data: function() { return { src: '', previousVideoHash: null, } },
@@ -29,16 +30,19 @@
                 src += '?autoplay=1';
                 src += '&origin=' + document.location.origin;
                 if (this.playerState.current.video.duration > 0) {
-                    src += '&start=' + parseInt(this.playerState.cursor / 1000);
+                    const timeSinceLastUpdate = new Date().getTime() - this.playerStateLastUpdate.getTime();
+                    const startTimeMs = this.playerState.cursor + timeSinceLastUpdate;
+                    src += '&start=' + parseInt(startTimeMs / 1000);
                 }
                 this.src = src + '&random=' + Math.random();
                 this.previousVideoHash = hash;
             }
         },
         computed: {
-            playerState: function() {
-                return this.$store.state.playerState;
-            },
+            ...mapState('Main', [
+                'playerState',
+                'playerStateLastUpdate',
+            ]),
         }
     });
 </script>

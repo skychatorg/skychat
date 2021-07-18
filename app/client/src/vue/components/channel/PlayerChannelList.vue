@@ -1,9 +1,9 @@
 <template>
     <div class="channel-list" v-show="playerChannels.length > 0 || op">
-        <div class="subtitle">
+        <div class="subtitle" v-show="op">
             <h3>
                 video
-                <span v-show="op" @click="createChannel()" class="channel-create material-icons md-12">add</span>
+                <span @click="createChannel()" class="channel-create material-icons md-12">add</span>
             </h3>
         </div>
         
@@ -61,6 +61,7 @@
 
 <script>
     import Vue from "vue";
+    import { mapState } from 'vuex';
     import HoverCard from "../util/HoverCard.vue";
 
     export default Vue.extend({
@@ -82,21 +83,13 @@
             }
         },
         computed: {
-            playerChannelUsers: function() {
-                return this.$store.state.playerChannelUsers;
-            },
-            playerChannels: function() {
-                return this.$store.state.playerChannels;
-            },
-            playerChannel: function() {
-                return this.$store.state.playerChannel;
-            },
-            user: function() {
-                return this.$store.state.user;
-            },
-            op: function() {
-                return this.$store.state.op;
-            },
+            ...mapState('Main', [
+                'playerChannelUsers',
+                'playerChannels',
+                'playerChannel',
+                'user',
+                'op',
+            ]),
         },
     });
 </script>

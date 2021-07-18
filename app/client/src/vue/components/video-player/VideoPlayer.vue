@@ -10,6 +10,7 @@
 
 <script>
     import Vue from "vue";
+    import { mapState } from "vuex";
     import YoutubePlayer from "./implementations/YoutubePlayer";
     import TwitchPlayer from "./implementations/TwitchPlayer";
     import EmbedPlayer from "./implementations/EmbedPlayer";
@@ -17,12 +18,10 @@
     export default Vue.extend({
         components: { YoutubePlayer, TwitchPlayer, EmbedPlayer },
         computed: {
-            playerState: function() {
-                return this.$store.state.playerState;
-            },
-            playerEnabled: function() {
-                return this.$store.state.playerEnabled;
-            },
+            ...mapState('Main', [
+                'playerState',
+                'playerStateLastUpdate',
+            ]),
         }
     });
 </script>
