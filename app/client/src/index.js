@@ -61,15 +61,15 @@ window.addEventListener('blur', () => {
 });
 
 window.addEventListener('focus', () => {
-    if (store.state.lastMissedMessage) {
-        client.notifySeenMessage(store.state.lastMissedMessage.id);
+    if (store.state.Main.lastMissedMessage) {
+        client.notifySeenMessage(store.state.Main.lastMissedMessage.id);
     }
     store.commit('Main/FOCUS');
 });
 setInterval(() => {
 
     // In case the title is not currently blinking, just update it
-    if (! store.state.documentTitleBlinking) {
+    if (! store.state.Main.documentTitleBlinking) {
         if (document.title !== store.state.Main.documentTitle) {
             document.title = store.state.Main.documentTitle;
         }
@@ -79,6 +79,6 @@ setInterval(() => {
     const chars = "┤┘┴└├┌┬┐";
     const indexOf = chars.indexOf(document.title[0]);
     const newPosition = (indexOf + 1) % chars.length;
-    document.title = chars[newPosition] + ' ' + store.state.documentTitle;
+    document.title = chars[newPosition] + ' ' + store.state.Main.documentTitle;
 
 }, 1000);

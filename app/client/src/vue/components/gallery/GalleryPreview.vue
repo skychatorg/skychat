@@ -21,7 +21,7 @@
 
                     <h3 class="section-title">
                         <span :title="'#' + folder.id + ': ' + folder.name">{{folder.name}}</span>
-                        <span v-show="folder.medias.length === 0 && op" @click="deleteFolder(folder.id)" title="Delete this folder" class="folder-delete material-icons md-14">close</span>
+                        <span v-show="folder.medias.length === 0 && canWrite" @click="deleteFolder(folder.id)" title="Delete this folder" class="folder-delete material-icons md-14">close</span>
                     </h3>
 
                     <!-- medias -->
@@ -54,7 +54,7 @@
                                         <i class="material-icons md-14">play_arrow</i>
                                     </div>
                                     <!-- delete -->
-                                    <div v-show="op" class="media-action" title="Delete" @click.stop="deleteMedia(media)">
+                                    <div v-show="canWrite" class="media-action" title="Delete" @click.stop="deleteMedia(media)">
                                         <i class="material-icons md-14">close</i>
                                     </div>
                                 </div>
@@ -90,7 +90,7 @@
         watch: {
             'tab': function() {
                 if (this.tab === 'preview') {
-                    this.shownFolders = this.gallery.folders;
+                    this.shownFolders = this.gallery.data.folders;
                 } else {
                     this.shownFolders = this.gallerySearchResults.folders;
                 }
@@ -109,7 +109,7 @@
                     if (this.tab !== 'preview') {
                         return;
                     }
-                    this.shownFolders = this.gallery.folders;
+                    this.shownFolders = this.gallery.data.folders;
                 }
             },
             'gallerySearchResults': {
@@ -124,7 +124,7 @@
         },
         mounted: function() {
             if (this.gallery) {
-                this.shownFolders = this.gallery.folders;
+                this.shownFolders = this.gallery.data.folders;
             }
         },
         methods: {
@@ -157,7 +157,10 @@
             },
             deleteFolder: function(folderId) {
                 this.$client.sendMessage(`/galleryfolderremove ${folderId}`);
-            }
+            },
+            canWrite: function() {
+                return this.gallery && this.gallery.canWrite;
+            },
         },
         computed: {
             ...mapState('Main', [

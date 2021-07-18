@@ -167,14 +167,17 @@ export class GalleryPlugin extends GlobalPlugin {
         }
     }
     
-    public sanitized(): SanitizedGallery {
-        return this.gallery.sanitized();
+    public sanitized(session: Session, limit?: number): { data: SanitizedGallery, canWrite: boolean } {
+        return {
+            data: this.gallery.sanitized(limit),
+            canWrite: this.canWrite(session),
+        };
     }
 
     public sync(sessionsOrNothing?: Session[]): void {
         const sessions: Session[] = sessionsOrNothing || Object.values(Session.sessions);
         for (const session of sessions) {
-            session.send('gallery', this.gallery.sanitized(4));
+            session.send('gallery', this.sanitized(session, 4));
         }
     }
 }

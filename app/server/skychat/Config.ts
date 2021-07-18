@@ -16,7 +16,7 @@ export type Preferences = {
 }
 
 export type PublicConfig = {
-    ranks: {limit: number, images: {[size: string]: string}}[],
+    ranks: { limit: number, images: { [size: string]: string } }[];
 }
 
 export class Config {
@@ -51,7 +51,7 @@ export class Config {
 
     public static FAKE_MESSAGES: string[] = [];
 
-    public static RANKS: {limit: number, images: {[size: string]: string}}[] = [];
+    public static RANKS: { limit: number, images: { [size: string]: string } }[] = [];
 
     public static PLUGINS: string[] = [];
 
