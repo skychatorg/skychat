@@ -26,7 +26,7 @@
 
                     <!-- medias -->
                     <div class="media-list">
-                        <div class="media-list-thumbs">
+                        <div class="media-list-thumbs scrollbar">
                             <!-- 1 media -->
                             <div
                                 v-for="media in folder.medias"
@@ -229,7 +229,8 @@
                 .media-list {
                     display: flex;
                     margin-top: 4px;
-                    height: 110px;
+                    height: 130px;
+                    margin-bottom: 20px;
 
                     .media-list-arrow {
                         flex-basis: 20px;
@@ -239,7 +240,8 @@
                         margin-left: 20px;
                         margin-right: 20px;
                         display: flex;
-                        overflow: hidden;
+                        overflow-x: auto;
+                        overflow-y: hidden;
 
                         .media {
                             margin-left: 6px;

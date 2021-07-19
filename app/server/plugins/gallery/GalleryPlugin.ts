@@ -14,7 +14,7 @@ import { Gallery, SanitizedGallery } from "./Gallery";
  */
 export class GalleryPlugin extends GlobalPlugin {
 
-    static readonly DEFAULT_SHOWN_MEDIAS_PER_FOLDER = 10;
+    static readonly MAX_SHOWN_MEDIAS_PER_FOLDER = 20;
 
     static readonly commandName = 'gallery';
 
@@ -179,7 +179,7 @@ export class GalleryPlugin extends GlobalPlugin {
     public sync(sessionsOrNothing?: Session[]): void {
         const sessions: Session[] = sessionsOrNothing || Object.values(Session.sessions);
         for (const session of sessions) {
-            session.send('gallery', this.sanitized(session, GalleryPlugin.DEFAULT_SHOWN_MEDIAS_PER_FOLDER));
+            session.send('gallery', this.sanitized(session, GalleryPlugin.MAX_SHOWN_MEDIAS_PER_FOLDER));
         }
     }
 }
