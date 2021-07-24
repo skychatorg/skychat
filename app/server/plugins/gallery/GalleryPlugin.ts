@@ -20,7 +20,9 @@ export class GalleryPlugin extends GlobalPlugin {
 
     static readonly commandAliases = ['gallerysearch', 'galleryfolderadd', 'galleryfolderremove', 'galleryadd', 'gallerydelete'];
 
-    public readonly minRight = Config.PREFERENCES.minRightForGalleryRead;
+    public readonly minRight = typeof Config.PREFERENCES.minRightForGalleryRead === 'number' ? Config.PREFERENCES.minRightForGalleryRead : 0;
+
+    public readonly opOnly = Config.PREFERENCES.minRightForGalleryRead === 'op';
 
     readonly rules = {
         gallery: { },
@@ -87,7 +89,15 @@ export class GalleryPlugin extends GlobalPlugin {
     }
 
     public canWrite(session: Session): boolean {
-        return session.isOP() || session.user.right >= Config.PREFERENCES.minRightForGalleryWrite;
+        const expectedRight = Config.PREFERENCES.minRightForGalleryWrite === 'op' ? Infinity : Config.PREFERENCES.minRightForGalleryWrite;
+        const actualRight = session.isOP() ? Infinity : session.user.right;
+        return actualRight >= expectedRight;
+    }
+
+    public canRead(session: Session): boolean {
+        const expectedRight = Config.PREFERENCES.minRightForGalleryRead === 'op' ? Infinity : Config.PREFERENCES.minRightForGalleryRead;
+        const actualRight = session.isOP() ? Infinity : session.user.right;
+        return actualRight >= expectedRight;
     }
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
@@ -163,8 +173,12 @@ export class GalleryPlugin extends GlobalPlugin {
     }
     
     public async onConnectionAuthenticated(connection: Connection): Promise<void> {
+        // If gallery was already sent
+        if (Config.PREFERENCES.minRightForGalleryRead === -1) {
+            return;
+        }
         // If user can access the gallery
-        if (Config.PREFERENCES.minRightForGalleryRead > -1 && connection.session.user.right >= Config.PREFERENCES.minRightForGalleryRead) {
+        if (this.canRead(connection.session)) {
             this.sync([connection.session]);
         }
     }

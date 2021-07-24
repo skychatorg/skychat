@@ -124,8 +124,8 @@ The `config/preferences.json` file specifies application preferences. The availa
 | minRightForAudioRecording     | number |  -1 | Min. right to share and play audio recordings |
 | minRightForConnectedList      | number |  -1 | Min. right to access the list of currently active users |
 | minRightForPolls              | number |  -1 | Min. right to create polls |
-| minRightForGalleryRead        | number |  -1 | Min. right to access the gallery |
-| minRightForGalleryWrite       | number |  -1 | Min. right to add and remove gallery documents |
+| minRightForGalleryRead        | number \| 'op' |  'op' | Min. right to access the gallery |
+| minRightForGalleryWrite       | number \| 'op' |  'op' | Min. right to add and remove gallery documents |
 | maxReplacedImagesPerMessage   | number |  50 | Max. number of replaced images per message |
 | maxReplacedStickersPerMessage | number |  50 | Max. number of replaced stickers per message |
 | maxNewlinesPerMessage         | number |  20 | Max. number of newlines per message |

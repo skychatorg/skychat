@@ -8,8 +8,8 @@ export type Preferences = {
     minRightForAudioRecording: number;
     minRightForConnectedList: number;
     minRightForPolls: number;
-    minRightForGalleryRead: number;
-    minRightForGalleryWrite: number;
+    minRightForGalleryRead: number | 'op';
+    minRightForGalleryWrite: number | 'op';
     maxReplacedImagesPerMessage: number;
     maxReplacedStickersPerMessage: number;
     maxNewlinesPerMessage: number;

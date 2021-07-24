@@ -5,7 +5,7 @@
     "minRightForConnectedList": -1,
     "minRightForPolls": -1,
     "minRightForGalleryRead": 0,
-    "minRightForGalleryWrite": 0,
+    "minRightForGalleryWrite": "op",
     "maxReplacedImagesPerMessage": 50,
     "maxReplacedStickersPerMessage": 50,
     "maxNewlinesPerMessage": 20
