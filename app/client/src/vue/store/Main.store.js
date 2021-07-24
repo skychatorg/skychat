@@ -348,7 +348,7 @@ const mutations = {
     },
     SET_PLAYER_ENABLED(state, playerEnabled) {
         state.playerEnabled = playerEnabled;
-        this.commit('SAVE_LOCALSTORAGE');
+        this.commit('Main/SAVE_LOCALSTORAGE');
     },
     SET_PLAYER_INTENSITY(state, intensity) {
         state.playerIntensity = intensity;
@@ -368,7 +368,7 @@ const mutations = {
     },
     SET_QUICK_ACTIONS_VISIBILITY(state, visible) {
         state.isQuickActionsVisible = !! visible;
-        this.commit('SAVE_LOCALSTORAGE');
+        this.commit('Main/SAVE_LOCALSTORAGE');
     },
     SET_TYPING_LIST(state, users) {
         state.typingList = users;
