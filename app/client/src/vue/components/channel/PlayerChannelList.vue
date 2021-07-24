@@ -23,35 +23,30 @@
                         <!-- delete channel (op) -->
                         <div v-show="playerChannel === channel.id && op"
                             @click="deleteChannel()"
-                            class="channel-delete mr-1"
+                            class="channel-delete"
                             title="Delete this channel">
                             <i class="material-icons md-14">close</i>
                         </div>
-                        <!-- show if there is a video currently playing -->
-                        <div v-show="channel.playing"
-                            class="channel-player mr-1"
-                            :class="{ 'disabled': playerChannel !== channel.id }"
-                            title="A video is currently playing">
-                            <div class="channel-player-owner">{{channel.currentOwner}}</div>
-                            <i class="material-icons md-14">movie</i>
+                        <!-- users in the channel -->
+                        <div v-for="user of (playerChannelUsers[channel.id] || []).slice(0, 5)"
+                            :key="user.username"
+                            class="avatar image-bubble"
+                            :title="user.username + ' is watching'"
+                            :style="{'border': '1px solid ' + user.data.plugins.color}">
+                            <img :src="user.data.plugins.avatar">
                         </div>
                     </div>
                 </div>
-                <div class="channel-content-users" v-if="playerChannelUsers[channel.id] && playerChannelUsers[channel.id].length > 0">
-                    <!-- users in the channel -->
-                    <div v-for="user of playerChannelUsers[channel.id]"
-                        :key="user.username"
-                        class="avatar image-bubble"
-                        :title="user.username + ' is watching'"
-                        :style="{'border': '1px solid ' + user.data.plugins.color}">
-                        <img :src="user.data.plugins.avatar">
-                    </div>
-                    <!-- connected users -->
-                    <div v-if="playerChannelUsers[channel.id] && playerChannelUsers[channel.id].length > 0"
-                        class="channel-users mr-1"
-                        title="Number of watchers">
-                        <i class="material-icons md-14">{{playerChannelUsers[channel.id].length > 1 ? 'group' : 'person'}}</i>
-                        <span>{{ playerChannelUsers[channel.id].length }}</span>
+                <div v-if="channel.currentMedia"
+                    class="channel-content-detail">
+                    <!-- show if there is a video currently playing -->
+                    <div v-show="channel.playing"
+                        class="channel-player"
+                        :class="{ 'disabled': playerChannel !== channel.id }"
+                        :title="'Media added by ' + channel.currentMedia.owner">
+
+                        <div class="channel-player-owner">{{ channel.currentMedia.title }}</div>
+                        <i class="material-icons md-14">movie</i>
                     </div>
                 </div>
             </div>
@@ -128,6 +123,8 @@
 
             .channel-content-info {
                 display: flex;
+                height: 35px;
+                flex-basis: 35px;
 
                 .channel-icon {
                     flex-basis: 20px;
@@ -138,63 +135,64 @@
 
                 .channel-name {
                     flex-grow: 1;
-                    margin-top: 10px;
                     margin-left: 2px;
                     overflow: hidden;
                     white-space: nowrap;
                     text-overflow: ellipsis;
-                    height: 20px;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
                 }
 
                 .channel-meta {
-                    flex-basis: 100px;
+                    flex-basis: 98px;
                     margin-top: 10px;
+                    padding-right: 10px;
                     display: flex;
                     flex-direction: row-reverse;
+                    flex-wrap: nowrap;
+                    overflow: hidden;
 
-                    .channel-player {
-                        color: #ff8f8f;
-
-                        .channel-player-owner {
-                            vertical-align: top;
-                            font-size: 11px;
-                            max-width: 70px;
-                            overflow: hidden;
-                            display: inline-block;
-                            text-overflow: ellipsis;
-                        }
+                    >.avatar {
+                        min-width: 15px;
+                        width: 15px;
+                        height: 15px;
                     }
-
-                    .channel-player.disabled {
-                        color: #8c8c8c;
-                    }
-                    
+                
                     .channel-delete {
                         color: #ff8e8e;
+                        margin: 4px;
                     }
                 }
             }
-            .channel-content-users {
+            .channel-content-detail {
                 display: flex;
                 overflow: hidden;
                 justify-content: flex-end;
                 margin-bottom: 5px;
-                margin-left: 12px;
+                padding-right: 11px;
+                padding-left: 11px;
 
-                .channel-users {
-                    color: #8ecfff;
-                    margin-top: 3px;
-                    margin-left: 6px;
-                    white-space: nowrap;
-                    text-align: right;
-                    span { vertical-align: top; }
+                .channel-player {
+                    color: #ff8f8f;
+                    flex-grow: 1;
+                    width: 0;
+                    display: flex;
+
+                    .channel-player-owner {
+                        vertical-align: top;
+                        font-size: 11px;
+                        flex-grow: 1;
+                        padding-right: 10px;
+                        overflow: hidden;
+                        display: inline-block;
+                        text-overflow: ellipsis;
+                        white-space: nowrap;
+                    }
                 }
 
-                >.avatar {
-                    min-width: 20px;
-                    width: 20px;
-                    height: 20px;
-                    margin: 1px;
+                .channel-player.disabled {
+                    color: #8c8c8c;
                 }
             }
         }

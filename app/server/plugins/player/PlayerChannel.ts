@@ -54,7 +54,10 @@ export type SanitizedPlayerChannel = {
     id: number;
     name: string;
     playing: boolean;
-    currentOwner: string | undefined;
+    currentMedia: {
+        owner: string;
+        title: string;
+    } | undefined;
 }
 
 
@@ -339,7 +342,10 @@ export class PlayerChannel {
             id: this.id,
             name: this.name,
             playing: this.isPlaying(),
-            currentOwner: this.currentVideoInfo ? this.currentVideoInfo.user.username : undefined,
+            currentMedia: this.currentVideoInfo ? {
+                owner: this.currentVideoInfo.user.username,
+                title: this.currentVideoInfo.video.title
+            } : undefined,
         };
     }
 }
