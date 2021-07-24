@@ -5,6 +5,7 @@
                 v-for="filePath in files"
                 :key="filePath"
                 :border-color="'#afafaf'"
+                :clickable="true"
                 :selected="file && file.filePath === filePath"
                 class="file-card"
                 @click.native="loadFile(filePath)"

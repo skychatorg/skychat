@@ -9,6 +9,7 @@
         
         <hover-card v-for="channel in playerChannels"
             :key="channel.id"
+            :clickable="true"
             :selected="playerChannel === channel.id"
             :border-color="'rgb(255, 130, 130)'"
             class="channel"
@@ -115,7 +116,7 @@
 
     .channel {
         min-height: 35px;
-        margin-top: 4px;
+        margin-top: 2px;
 
         .channel-content {
             display: flex;
@@ -157,11 +158,12 @@
                         min-width: 15px;
                         width: 15px;
                         height: 15px;
+                        margin-right: 4px;
                     }
                 
                     .channel-delete {
                         color: #ff8e8e;
-                        margin: 4px;
+                        margin-right: 3px;
                     }
                 }
             }
@@ -170,9 +172,9 @@
                 overflow: hidden;
                 justify-content: flex-end;
                 margin-bottom: 5px;
-                padding-right: 11px;
-                padding-left: 11px;
-
+                padding-right: 14px;
+                padding-left: 10px;
+                
                 .channel-player {
                     color: #ff8f8f;
                     flex-grow: 1;

@@ -8,6 +8,7 @@
         </div>
         <hover-card v-for="room in rooms"
             :key="room.id"
+            :clickable="true"
             :selected="currentRoom === room.id"
             :highlighted="user.id > 0 && (user.data.plugins.lastseen[room.id] || 0) < room.lastReceivedMessageId && currentRoom !== room.id"
             :border-color="'#afafaf'"
@@ -132,7 +133,7 @@
     .room {
         
         height: 35px;
-        margin-top: 4px;
+        margin-top: 2px;
         
         .room-content {
             display: flex;

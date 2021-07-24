@@ -1,49 +1,56 @@
 <template>
-    <div @contextmenu.prevent="$emit('select')" class="message" :style="{'border-left-color': message.user.data.plugins.color}">
-        <div class="avatar image-bubble" :style="{'box-shadow': message.user.data.plugins.halo ? '0 0 4px 4px ' + message.user.data.plugins.color : 'unset'}">
-            <img :src="message.user.data.plugins.avatar">
-        </div>
-        <div class="content selectable" ref="formatted">
-            <div class="user" :style="{'color': message.user.data.plugins.color}">
-                <i v-show="message.user.data.plugins.pinnedicon" class="material-icons md-14">{{message.user.data.plugins.pinnedicon}}</i>
-                 {{message.user.username}}
-                <i v-show="message.meta.device === 'mobile'" class="material-icons user-device md-14">smartphone</i>
+    <hover-card
+        :border-color="message.user.data.plugins.color"
+        class="message-card"
+    >
+        <div class="message"
+            @contextmenu.prevent="$emit('select')">
+            <div class="avatar image-bubble" :style="{'box-shadow': message.user.data.plugins.halo ? '0 0 4px 4px ' + message.user.data.plugins.color : 'unset'}">
+                <img :src="message.user.data.plugins.avatar">
             </div>
+            <div class="content selectable" ref="formatted">
+                <div class="user" :style="{'color': message.user.data.plugins.color}">
+                    <i v-show="message.user.data.plugins.pinnedicon" class="material-icons md-14">{{message.user.data.plugins.pinnedicon}}</i>
+                    {{message.user.username}}
+                    <i v-show="message.meta.device === 'mobile'" class="material-icons user-device md-14">smartphone</i>
+                </div>
 
-            <!-- first quote -->
-            <div class="quote" v-if="message.quoted">
-                <div class="quote-user">{{message.quoted.user.username}}:</div>
-                <!-- second quote -->
-                <div class="quote" v-if="message.quoted.quoted">
-                    <div class="quote-user">{{message.quoted.quoted.user.username}}:</div>
-                    <div class="quote-content" v-html="message.quoted.quoted.formatted"></div>
+                <!-- first quote -->
+                <div class="quote" v-if="message.quoted">
+                    <div class="quote-user">{{message.quoted.user.username}}:</div>
+                    <!-- second quote -->
+                    <div class="quote" v-if="message.quoted.quoted">
+                        <div class="quote-user">{{message.quoted.quoted.user.username}}:</div>
+                        <div class="quote-content" v-html="message.quoted.quoted.formatted"></div>
+                    </div>
+                    <div class="quote-content" v-html="message.quoted.formatted"></div>
                 </div>
-                <div class="quote-content" v-html="message.quoted.formatted"></div>
+                <div class="formatted" v-html="message.formatted"></div>
             </div>
-            <div class="formatted" v-html="message.formatted"></div>
-        </div>
-        <div class="meta selectable">
-            <div class="date">
-                {{formattedDate}}
-            </div>
-            <div class="seen-users">
-                <div v-for="seenUser of seenUsers"
-                    :key="seenUser.username"
-                    class="avatar image-bubble"
-                    :title="'Seen by ' + seenUser.username"
-                    :style="{'border': '1px solid ' + seenUser.data.plugins.color}">
-                    <img :src="seenUser.data.plugins.avatar">
+            <div class="meta selectable">
+                <div class="date">
+                    {{formattedDate}}
+                </div>
+                <div class="seen-users">
+                    <div v-for="seenUser of seenUsers"
+                        :key="seenUser.username"
+                        class="avatar image-bubble"
+                        :title="'Seen by ' + seenUser.username"
+                        :style="{'border': '1px solid ' + seenUser.data.plugins.color}">
+                        <img :src="seenUser.data.plugins.avatar">
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+    </hover-card>
 </template>
 
 <script>
     import Vue from "vue";
-    import { mapState } from 'vuex';
+    import HoverCard from "../util/HoverCard.vue";
     
     export default Vue.extend({
+        components: { HoverCard },
         props: {
             message: {
                 type: Object,
@@ -99,80 +106,79 @@
 
 <style lang="scss" scoped>
 
-    .message {
-        display: flex;
-        flex: 0 0 auto;
-        color: white;
-        background: #242427;
-        margin-top: 4px;
-        border-left: 4px solid #a3a5b4;
-        padding: 6px 10px 6px 12px;
-        -webkit-transition: all 0.2s;
-        -moz-transition: all 0.2s;
-        -ms-transition: all 0.2s;
-        -o-transition: all 0.2s;
-        transition: all 0.2s;
-        transition-property: border-width, margin-left;
+    .message-card {
+        margin-top: 2px;
 
-        &:hover {
-            border-width: 0;
-            margin-left: 4px;
+        &:hover .message {
             background: #313235;
         }
-
-        >.avatar {
-            width: 40px;
-            height: 40px;
-            box-shadow: 1px 1px 10px 0px #ffffff78;
-        }
-
-        >.content {
-            flex-grow: 1;
-            margin-left: 16px;
-            width: 0;
-            word-break: break-word;
+        
+        .message {
+            background: #242427;
             display: flex;
-            flex-direction: column;
+            flex: 0 0 auto;
+            color: white;
+            padding: 6px 10px 6px 12px;
+            transition: .1s all;
+            min-height: 60px;
 
-            >.user {
-                display: inline;
-                color: #a3a5b4;
-                font-weight: 800;
-                font-size: 110%;
-                margin-bottom: 4px;
+            >.avatar {
+                width: 40px;
+                height: 40px;
+                margin-top: 4px;
+                box-shadow: 1px 1px 10px 0px #ffffff78;
             }
 
-            .quote {
-                margin: 10px;
-                padding: 4px 10px;
-                border-left: 5px solid grey;
-
-                >.quote-user {
-                    font-size: 80%;
-                }
-                >.quote-content {
-                    margin-top: 5px;
-                    margin-left: 4px;
-                }
-            }
-        }
-        >.meta {
-            font-size: 70%;
-            display: flex;
-            flex-direction: column;
-            width: 66px;
-            text-align: center;
-
-            >.seen-users {
+            >.content {
+                flex-grow: 1;
+                margin-left: 16px;
+                width: 0;
+                word-break: break-word;
                 display: flex;
-                flex-wrap: wrap;
-                margin-top: 6px;
-                justify-content: center;
+                flex-direction: column;
 
-                >.avatar {
-                    width: 14px;
-                    height: 14px;
-                    margin: 1px;
+                >.user {
+                    display: inline;
+                    color: #a3a5b4;
+                    font-weight: 800;
+                    font-size: 110%;
+                    margin-bottom: 4px;
+                }
+
+                .quote {
+                    margin: 10px;
+                    padding: 4px 10px;
+                    border-left: 5px solid grey;
+
+                    >.quote-user {
+                        font-size: 80%;
+                    }
+                    >.quote-content {
+                        margin-top: 5px;
+                        margin-left: 4px;
+                    }
+                }
+            }
+            >.meta {
+                font-size: 70%;
+                display: flex;
+                flex-direction: column;
+                width: 66px;
+                text-align: center;
+
+                >.seen-users {
+                    display: flex;
+                    flex-wrap: wrap;
+                    margin-top: 6px;
+                    justify-content: center;
+                    max-height: 32px;
+                    overflow: hidden;
+
+                    >.avatar {
+                        width: 14px;
+                        height: 14px;
+                        margin: 1px;
+                    }
                 }
             }
         }

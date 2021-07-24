@@ -3,14 +3,13 @@
             ref="scroller"
             @scroll="onScroll"
             :style="smoothScroll ? 'scroll-behavior: smooth' : ''">
-            
+        
         <single-message v-for="item in messages"
             @select="$emit('select-message', item)"
             @content-loaded="onContentLoaded"
             :key="item.id"
             :message="item"
-            :seen-users="lastMessageSeenIds[item.id] || []"
-            class="message"/>
+            :seen-users="lastMessageSeenIds[item.id] || []"></single-message>
     </div>
 </template>
 
@@ -21,7 +20,7 @@
     import VideoPlayer from "../video-player/VideoPlayer.vue";
 
     export default Vue.extend({
-        components: {VideoPlayer, SingleMessage},
+        components: { VideoPlayer, SingleMessage },
         data: function() {
             return {
                 autoScroll: true,

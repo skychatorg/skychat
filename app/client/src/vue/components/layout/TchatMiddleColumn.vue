@@ -58,7 +58,6 @@
 </script>
 
 <style lang="scss" scoped>
-
     .messages {
         flex-grow: 1;
         display: flex;
@@ -68,16 +67,6 @@
             width: 100%;
             height: 40%;
             max-height: 350px;
-        }
-
-        .messages-feed {
-            flex-grow: 1;
-            margin-left: 10px;
-            margin-right: 10px;
-            height: 0;
-            overflow-y: scroll;
-            display: flex;
-            flex-direction: column;
         }
     }
 </style>
