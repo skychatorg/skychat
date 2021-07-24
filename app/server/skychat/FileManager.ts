@@ -50,6 +50,23 @@ export class FileManager {
         return '.' + url.substr(Config.LOCATION.length).split('?')[0];
     }
 
+    static getFileUrlFromLocalPath(path: string): string {
+        // Remove the leading '.' if there is one
+        if (path.substr(0, 1) === '.') {
+            path = path.substr(1);
+        }
+        // Add the first slash if it is missing
+        if (path.substr(0, 1) !== '/') {
+            path = '/' + path;
+        }
+        return Config.LOCATION + path;
+    }
+
+    static getFileDirectory(path: string): string {
+        const dir = path.substr(0, path.lastIndexOf('/'));
+        return dir.length === 0 ? '.' : dir;
+    }
+
     /**
      * Get a locally stored video duration in ms
      * @param path 

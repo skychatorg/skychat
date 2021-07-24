@@ -18,7 +18,14 @@ export class GalleryPlugin extends GlobalPlugin {
 
     static readonly commandName = 'gallery';
 
-    static readonly commandAliases = ['gallerysearch', 'galleryfolderadd', 'galleryfolderremove', 'galleryadd', 'gallerydelete'];
+    static readonly commandAliases = [
+        'gallerysearch',
+        'galleryfolderadd',
+        'galleryfolderremove',
+        'galleryadd',
+        'galleryset',
+        'gallerydelete'
+    ];
 
     public readonly minRight = typeof Config.PREFERENCES.minRightForGalleryRead === 'number' ? Config.PREFERENCES.minRightForGalleryRead : 0;
 
@@ -48,6 +55,16 @@ export class GalleryPlugin extends GlobalPlugin {
                 {name: "link", pattern: Server.UPLOADED_FILE_REGEXP},
                 {name: "folder", pattern: /^\d+$/},
                 {name: "tags", pattern: /^.+$/},
+            ]
+        },
+        galleryset: {
+            minCount: 4,
+            maxCount: 4,
+            params: [
+                {name: "folderId", pattern: /^\d+$/},
+                {name: "mediaId", pattern: /^\d+$/},
+                {name: "key", pattern: /^(thumb)$/},
+                {name: "value", pattern: /./},
             ]
         },
         gallerydelete: {
@@ -122,6 +139,10 @@ export class GalleryPlugin extends GlobalPlugin {
         if (alias === 'galleryadd') {
             return await this.handleGalleryAdd(param, connection);
         }
+        
+        if (alias === 'galleryset') {
+            return await this.handleGallerySet(param, connection);
+        }
 
         if (alias === 'gallerydelete') {
             return await this.handleGalleryDelete(param, connection);
@@ -144,7 +165,7 @@ export class GalleryPlugin extends GlobalPlugin {
         this.gallery.deleteFolder(folderId);
         this.syncStorage();
     }
-
+    
     async handleGalleryAdd(param: string, connection: Connection): Promise<void> {
         const [rawLink, rawFolderId, rawTags] = param.split(' ');
         const link = rawLink;
@@ -154,6 +175,31 @@ export class GalleryPlugin extends GlobalPlugin {
             throw new Error('File is not stored on this server');
         }
         this.gallery.addMedia(connection.session.user, folderId, link, tags);
+        this.syncStorage();
+    }
+
+    async handleGallerySet(param: string, connection: Connection): Promise<void> {
+        const [rawFolderId, rawMediaId, key, value] = param.split(' ');
+        const folder = this.gallery.getFolderById(parseInt(rawFolderId));
+        if (! folder) {
+            throw new Error('Folder not found');
+        }
+        const media = folder.getMediaById(parseInt(rawMediaId));
+        if (! media) {
+            throw new Error('Media not found');
+        }
+        switch (key) {
+            case 'thumb':
+                if (! FileManager.isFileUrlUploaded(value)) {
+                    throw new Error('Only uploaded files can be used as media thumbnails');
+                }
+                const localPath = FileManager.getLocalPathFromFileUrl(value);
+                media.setThumb(localPath);
+                break;
+            
+            default:
+                throw new Error(`Unable to set unknown key '${key}' on media`);
+        }
         this.syncStorage();
     }
 
