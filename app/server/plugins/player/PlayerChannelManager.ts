@@ -1,7 +1,7 @@
 import { EventEmitter } from "events";
 import { Connection } from "../../skychat/Connection";
 import { Session } from "../../skychat/Session";
-import { PlayerChannel } from "./PlayerChannel";
+import { PlayerChannel, SanitizedPlayerChannel } from "./PlayerChannel";
 import { PlayerPlugin } from "./PlayerPlugin";
 
 
@@ -37,7 +37,7 @@ export class PlayerChannelManager extends EventEmitter {
      * @param id
      * @param name 
      */
-    public createChannel(id: number, name: string) {
+    public createChannel(id: number, name: string): PlayerChannel {
 
         if (this.getChannelById(id)) {
             throw new Error(`Unable to create existing channel ${id}`);
@@ -46,6 +46,7 @@ export class PlayerChannelManager extends EventEmitter {
         const channel = new PlayerChannel(this, id, name);
         this.channels.push(channel);
         this.emit('channels-changed', this.channels);
+        return channel;
     }
 
     /**
@@ -181,7 +182,7 @@ export class PlayerChannelManager extends EventEmitter {
     /**
      * What will be sent to the client
      */
-    public sanitized(): {id: number, name: string}[] {
+    public sanitized(): SanitizedPlayerChannel[] {
         return this.channels.map(channel => channel.sanitized());
     }
 

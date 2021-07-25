@@ -26,6 +26,7 @@
     "author": "",
     "license": "ISC",
     "dependencies": {
+        "@toast-ui/vue-calendar": "^1.1.1",
         "biguint-format": "^1.0.2",
         "escape-html": "^1.0.3",
         "events": "^3.1.0",

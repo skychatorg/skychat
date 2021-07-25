@@ -39,6 +39,9 @@
         <div v-show="gallery" class="form-action open-gallery" @click="openGallery" title="Access gallery">
             <i class="material-icons md-28">collections</i>
         </div>
+        <div class="form-action open-player-schedule" @click="openPlayerSchedule" title="See player schedule">
+            <i class="material-icons md-28">event</i>
+        </div>
         <div class="show-mobile">
             <div class="goto-other-cols">
                 <div @click="onMobileShowRightCol" title="See connected list and quick actions" class="goto-right-col">
@@ -53,6 +56,7 @@
     import Vue from "vue";
     import { mapState } from 'vuex';
     import GalleryModal from "../modal/GalleryModal.vue";
+    import PlayerSchedule from "../modal/PlayerSchedule.vue";
 
     const MESSAGE_HISTORY_LENGTH = 100;
 
@@ -112,6 +116,10 @@
 
             openGallery: function() {
                 this.$modal.show(GalleryModal);
+            },
+
+            openPlayerSchedule: function() {
+                this.$modal.show(PlayerSchedule);
             },
 
             uploadAudio: async function() {
@@ -322,7 +330,12 @@
 
         .open-gallery {
             margin-bottom: 12px;
-            margin-right: 20px;
+            margin-right: 10px;
+        }
+
+        .open-player-schedule {
+            margin-bottom: 12px;
+            margin-right: 10px;
         }
 
         .goto-left-col,

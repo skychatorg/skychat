@@ -78,7 +78,9 @@ body {
     }
 }
 
-.scrollbar {
+.scrollbar,
+.tui-full-calendar-timegrid-container,
+.tui-full-calendar-dayname-container {
 
     /** Firefox */
     scrollbar-color: #555 #343434;

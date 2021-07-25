@@ -1,9 +1,9 @@
-import { Config } from "../../skychat/Config";
 import { Connection } from "../../skychat/Connection";
 import { Session } from "../../skychat/Session";
 import { SanitizedUser, User } from "../../skychat/User";
 import { UserController } from "../../skychat/UserController";
 import { PlayerChannelManager } from "./PlayerChannelManager";
+import { PlayerChannelScheduler, SanitizedScheduler, SchedulerEvent } from "./PlayerChannelScheduler";
 
 
 export type QueuedVideoInfo = {
@@ -58,6 +58,7 @@ export type SanitizedPlayerChannel = {
         owner: string;
         title: string;
     } | undefined;
+    schedule: SanitizedScheduler;
 }
 
 
@@ -71,11 +72,18 @@ export class PlayerChannel {
 
     public readonly manager: PlayerChannelManager;
 
+    public readonly scheduler: PlayerChannelScheduler;
+
     public readonly sessions: Session[] = [];
 
     public queue: QueuedVideoInfo[] = [];
 
     public history: QueuedVideoInfo[] = [];
+
+    /**
+     * Whether this channel is locked (= only OP can interact with it)
+     */
+    public locked: boolean = false;
 
     /**
      * Keeps track of the dates when user last played a media
@@ -90,6 +98,27 @@ export class PlayerChannel {
         this.manager = manager;
         this.id = id;
         this.name = name;
+        this.scheduler = new PlayerChannelScheduler(this);
+    }
+
+    /**
+     * Schedule a media
+     * @param media 
+     * @param start 
+     * @param duration 
+     */
+    public schedule(media: VideoInfo, start: number, duration?: number) {
+        this.scheduler.add(media, start, duration);
+        this.manager.emit('channels-changed', this.manager.channels);
+    }
+
+    /**
+     * Unschedule a media
+     * @param start 
+     */
+    public unschedule(start: number) {
+        this.scheduler.remove(start);
+        this.manager.emit('channels-changed', this.manager.channels);
     }
 
     /**
@@ -240,13 +269,17 @@ export class PlayerChannel {
     }
 
     /**
-     * Return whether a identifier is authroized to manage the player right now
+     * Return whether a identifier is authorized to manage the player right now
      * @param identifier 
      */
     public hasPlayerPermission(session: Session) {
         // If session is OP
         if (session.isOP()) {
             return true;
+        }
+        // If player is locked, no one but OP can modify it
+        if (this.locked) {
+            return false;
         }
         // If a media is currently playing
         if (this.currentVideoInfo) {
@@ -335,7 +368,8 @@ export class PlayerChannel {
     }
 
     /**
-     * What will be sent to the client
+     * What will be sent to the client in the list of channels (All users have this info, even the one not in it)
+     * This object is also saved in the plugin storage
      */
     public sanitized(): SanitizedPlayerChannel {
         return {
@@ -346,6 +380,7 @@ export class PlayerChannel {
                 owner: this.currentVideoInfo.user.username,
                 title: this.currentVideoInfo.video.title
             } : undefined,
+            schedule: this.scheduler.sanitized(),
         };
     }
 }
