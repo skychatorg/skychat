@@ -5,7 +5,7 @@ import {UserController} from "../../skychat/UserController";
 import * as fs from 'fs';
 import { FileManager } from "../../skychat/FileManager";
 import { Server } from "../../skychat/Server";
-import { GlobalPlugin } from "../../skychat/GlobalPlugin";
+import { GlobalPlugin } from "../GlobalPlugin";
 
 
 export class AvatarPlugin extends GlobalPlugin {

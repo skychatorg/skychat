@@ -1,5 +1,5 @@
 import {Connection} from "../../skychat/Connection";
-import {RoomPlugin} from "../../skychat/RoomPlugin";
+import {RoomPlugin} from "../RoomPlugin";
 import {UserController} from "../../skychat/UserController";
 import {Message} from "../../skychat/Message";
 import {Session} from "../../skychat/Session";

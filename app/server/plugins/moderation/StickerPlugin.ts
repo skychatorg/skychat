@@ -1,5 +1,5 @@
 import {Connection} from "../../skychat/Connection";
-import {GlobalPlugin} from "../../skychat/GlobalPlugin";
+import {GlobalPlugin} from "../GlobalPlugin";
 import {Server} from "../../skychat/Server";
 import { FileManager } from "../../skychat/FileManager";
 import * as fs from "fs";

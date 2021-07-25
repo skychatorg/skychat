@@ -1,7 +1,7 @@
 import { Connection } from "../../skychat/Connection";
-import { GlobalPlugin } from "../../skychat/GlobalPlugin";
+import { GlobalPlugin } from "../GlobalPlugin";
 import { PlayerPlugin } from "./PlayerPlugin";
-import { PluginCommandRules } from "../../skychat/Plugin";
+import { PluginCommandRules } from "../Plugin";
 import { YoutubeFetcher } from "./fetcher/YoutubeFetcher";
 
 

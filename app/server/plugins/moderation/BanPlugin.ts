@@ -6,7 +6,7 @@ import * as striptags from "striptags";
 import {MessageFormatter} from "../../skychat/MessageFormatter";
 import { Timing } from "../../skychat/Timing";
 import { Message } from "../../skychat/Message";
-import { GlobalPlugin } from "../../skychat/GlobalPlugin";
+import { GlobalPlugin } from "../GlobalPlugin";
 import { RoomManager } from "../../skychat/RoomManager";
 
 

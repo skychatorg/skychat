@@ -1,7 +1,7 @@
 import {Connection} from "../../skychat/Connection";
 import {User} from "../../skychat/User";
 import {Session} from "../../skychat/Session";
-import { RoomPlugin } from "../../skychat/RoomPlugin";
+import { RoomPlugin } from "../RoomPlugin";
 
 
 /**

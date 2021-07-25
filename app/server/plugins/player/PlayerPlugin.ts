@@ -1,9 +1,9 @@
 import { Connection } from "../../skychat/Connection";
-import { GlobalPlugin } from "../../skychat/GlobalPlugin";
+import { GlobalPlugin } from "../GlobalPlugin";
 import { RoomManager } from "../../skychat/RoomManager";
 import { PlayerChannelManager } from "./PlayerChannelManager";
 import { YoutubeFetcher } from "./fetcher/YoutubeFetcher";
-import { PluginCommandRules } from "../../skychat/Plugin";
+import { PluginCommandRules } from "../Plugin";
 import { LinkFetcher } from "./fetcher/LinkFetcher";
 import { VideoFetcher } from "./fetcher/VideoFetcher";
 import { TwitchFetcher } from "./fetcher/TwitchFetcher";

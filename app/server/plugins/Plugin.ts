@@ -1,10 +1,10 @@
-import {Connection} from "./Connection";
+import {Connection} from "../skychat/Connection";
 import * as fs from "fs";
-import { Session } from "./Session";
-import { User } from "./User";
-import { Room } from "./Room";
-import { Config } from "./Config";
-import { UserController } from "./UserController";
+import { Session } from "../skychat/Session";
+import { User } from "../skychat/User";
+import { Room } from "../skychat/Room";
+import { Config } from "../skychat/Config";
+import { UserController } from "../skychat/UserController";
 
 
 /**

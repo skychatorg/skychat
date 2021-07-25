@@ -3,7 +3,7 @@ import {User} from "../../skychat/User";
 import {Session} from "../../skychat/Session";
 import {ConnectedListPlugin} from "../core/ConnectedListPlugin";
 import {UserController} from "../../skychat/UserController";
-import {GlobalPlugin} from "../../skychat/GlobalPlugin";
+import {GlobalPlugin} from "../GlobalPlugin";
 
 
 export class SetRightPlugin extends GlobalPlugin {

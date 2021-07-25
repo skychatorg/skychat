@@ -1,5 +1,5 @@
 import {Connection} from "../../skychat/Connection";
-import {GlobalPlugin} from "../../skychat/GlobalPlugin";
+import {GlobalPlugin} from "../GlobalPlugin";
 import {ColorPlugin} from "./ColorPlugin";
 import {User} from "../../skychat/User";
 import {ConnectedListPlugin} from "../core/ConnectedListPlugin";

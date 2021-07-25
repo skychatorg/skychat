@@ -5,7 +5,7 @@ import * as striptags from "striptags";
 import {UserController} from "../../skychat/UserController";
 import * as geoip from "geoip-lite";
 import {MessageFormatter} from "../../skychat/MessageFormatter";
-import { GlobalPlugin } from "../../skychat/GlobalPlugin";
+import { GlobalPlugin } from "../GlobalPlugin";
 
 
 export class IpPlugin extends GlobalPlugin {

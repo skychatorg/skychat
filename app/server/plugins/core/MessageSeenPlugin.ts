@@ -1,4 +1,4 @@
-import {RoomPlugin} from "../../skychat/RoomPlugin";
+import {RoomPlugin} from "../RoomPlugin";
 import {Connection} from "../../skychat/Connection";
 import {UserController} from "../../skychat/UserController";
 

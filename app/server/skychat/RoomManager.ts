@@ -12,7 +12,7 @@ import * as fs from "fs";
 import {Message} from "./Message";
 import {AudioRecorderPlugin} from "../plugins/core/AudioRecorderPlugin";
 import { PluginManager } from "./PluginManager";
-import { GlobalPlugin } from "./GlobalPlugin";
+import { GlobalPlugin } from "../plugins/GlobalPlugin";
 
 
 export type StoredSkyChat = {

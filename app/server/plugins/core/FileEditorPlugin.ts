@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import { Config } from "../../skychat/Config";
 import { Connection } from "../../skychat/Connection";
-import { GlobalPlugin } from "../../skychat/GlobalPlugin";
+import { GlobalPlugin } from "../GlobalPlugin";
 
 
 export class FileEditorPlugin extends GlobalPlugin {

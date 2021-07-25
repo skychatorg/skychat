@@ -1,5 +1,5 @@
-import {PluginCommandRules} from "../../skychat/Plugin";
-import {RoomPlugin} from "../../skychat/RoomPlugin";
+import {PluginCommandRules} from "../Plugin";
+import {RoomPlugin} from "../RoomPlugin";
 import {Connection} from "../../skychat/Connection";
 import * as striptags from "striptags";
 import {Config} from "../../skychat/Config";

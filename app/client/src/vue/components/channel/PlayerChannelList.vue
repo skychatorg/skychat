@@ -29,12 +29,19 @@
                             <i class="material-icons md-14">close</i>
                         </div>
                         <!-- users in the channel -->
-                        <div v-for="user of (playerChannelUsers[channel.id] || []).slice(0, 5)"
+                        <div v-for="user of (playerChannelUsers[channel.id] || []).slice(0, 4)"
                             :key="user.username"
                             class="avatar image-bubble"
                             :title="user.username + ' is watching'"
                             :style="{'border': '1px solid ' + user.data.plugins.color}">
                             <img :src="user.data.plugins.avatar">
+                        </div>
+                        <!-- represents other users -->
+                        <div v-if="(playerChannelUsers[channel.id] || []).length > 4"
+                            :title="(playerChannelUsers[channel.id].length - 4) + 'others are watching'"
+                            class="avatar"
+                        >
+                            <i class="material-icons md-14">more_horiz</i>
                         </div>
                     </div>
                 </div>
@@ -146,7 +153,7 @@
                 }
 
                 .channel-meta {
-                    flex-basis: 98px;
+                    flex-basis: 105px;
                     margin-top: 10px;
                     padding-right: 10px;
                     display: flex;

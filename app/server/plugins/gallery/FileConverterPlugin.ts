@@ -1,5 +1,5 @@
 import {Connection} from "../../skychat/Connection";
-import { GlobalPlugin } from "../../skychat/GlobalPlugin";
+import { GlobalPlugin } from "../GlobalPlugin";
 import { RoomManager } from "../../skychat/RoomManager";
 import { GalleryMedia } from "./GalleryMedia";
 import { GalleryPlugin } from "./GalleryPlugin";

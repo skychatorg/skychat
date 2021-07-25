@@ -1,4 +1,4 @@
-import { GlobalPlugin } from "../../skychat/GlobalPlugin";
+import { GlobalPlugin } from "../GlobalPlugin";
 import { Connection } from "../../skychat/Connection";
 import { User } from "../../skychat/User";
 import { MessageFormatter } from "../../skychat/MessageFormatter";

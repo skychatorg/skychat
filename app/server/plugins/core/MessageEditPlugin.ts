@@ -1,5 +1,5 @@
 import {Connection} from "../../skychat/Connection";
-import { RoomPlugin } from "../../skychat/RoomPlugin";
+import { RoomPlugin } from "../RoomPlugin";
 
 
 export class MessageEditPlugin extends RoomPlugin {

@@ -1,7 +1,7 @@
 import { Room } from "./Room";
 import { Config } from "./Config";
-import { RoomPlugin } from "./RoomPlugin";
-import { GlobalPlugin } from "./GlobalPlugin";
+import { RoomPlugin } from "../plugins/RoomPlugin";
+import { GlobalPlugin } from "../plugins/GlobalPlugin";
 import { RoomManager } from "./RoomManager";
 const impl = require('../plugins');
 
