@@ -262,7 +262,7 @@ export class RoomManager {
             throw new Error(`Room ${id} not found`);
         }
         // Move all connections to another room
-        const anyRoom: Room = this.rooms.find(room => room.id !== id) as Room;
+        const anyRoom: Room = this.rooms.find(room => room.id !== id && ! room.isPrivate) as Room;
         for (const connection of anyRoom.connections) {
             await anyRoom.attachConnection(connection);
         }
@@ -394,6 +394,11 @@ export class RoomManager {
         if (! room) {
             throw new Error('Invalid room specified');
         }
+        if (room.isPrivate) {
+            if (room.whitelist.indexOf(connection.session.identifier) === -1) {
+                throw new Error('You are not allowed to join this room');
+            }
+        }
         await room.attachConnection(connection);
     }
 
@@ -422,9 +427,11 @@ export class RoomManager {
         }
         connection.send('auth-token', UserController.getAuthToken(user.id));
         this.sendRoomList(connection);
-        const room = this.rooms[0];
-        await room.attachConnection(connection);
-        await this.executeConnectionAuthenticatedHook(connection);
+        const room = this.rooms.find(room => ! room.isPrivate);
+        if (room) {
+            await room.attachConnection(connection);
+            await this.executeConnectionAuthenticatedHook(connection);
+        }
     }
 
     /**
