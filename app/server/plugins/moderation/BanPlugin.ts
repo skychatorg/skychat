@@ -13,6 +13,7 @@ import { RoomManager } from "../../skychat/RoomManager";
 enum BAN_TYPES {
     ACCESS = 0,
     SHADOW = 1,
+    BUG = 2,
 };
 
 
@@ -180,10 +181,19 @@ export class BanPlugin extends GlobalPlugin {
 
             // Only send new messages to himself
             if (message.startsWith('/message ')) {
-                connection.send('message', new Message({id: ++Message.ID, room: connection.roomId, content: message.substr('/message'.length), user: connection.session.user}).sanitized());
+                connection.send('message', new Message({
+                    id: Message.ID + 1, room: connection.roomId,
+                    content: message.substr('/message'.length),
+                    user: connection.session.user
+                }).sanitized());
                 connection.session.lastMessageDate = new Date();
                 return `/void`;
             }
+        }
+        // If bug banned, make user lag
+        if (this.isBanned(connection, BAN_TYPES.BUG)) {
+            // Make message lag from 0 to 20s randomly
+            await Timing.sleep(20 * Math.random() * 1000);
         }
         return message;
     }
