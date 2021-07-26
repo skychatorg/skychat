@@ -63,10 +63,6 @@ export class PlayerChannelScheduler {
         // Check that the duration is ok & build the event object
         duration = duration || media.duration || PlayerChannelScheduler.DEFAULT_DURATION;
         const event: SchedulerEvent = { start, duration, media };
-        // Check that the start time is after now
-        if (event.start + event.duration < new Date().getTime()) {
-            throw new Error('Can not schedule media in the past');
-        }
         // Insert the event
         this.insertEvent(event);
     }

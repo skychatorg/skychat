@@ -26,7 +26,7 @@
                     </h3>
 
                     <!-- medias -->
-                    <div class="media-list">
+                    <div class="media-list scrollbar">
                         <!-- 1 media -->
                         <div
                             v-for="media in folder.medias"
@@ -175,15 +175,17 @@
 
     .gallery-preview {
         width: 100%;
+        height: 100%;
         display: flex;
         flex-direction: column;
-        padding-left: 6px;
         color: white;
-        margin-bottom: 6px;
-        margin-top: 10px;
-        padding-right: 20px;
+        padding-bottom: 10px;
+        padding-top: 10px;
+        padding-left: 6px;
+        padding-right: 6px;
 
         .gallery-content {
+            height: 100%;
             background-color: #242427;
             overflow: hidden;
             display: flex;
@@ -239,9 +241,10 @@
                         margin-bottom: 20px;
                         margin-left: 20px;
                         margin-right: 20px;
+                        padding-bottom: 10px;
                         max-width: 100%;
-                        flex-wrap: wrap;
-                        overflow: hidden;
+                        flex-wrap: nowrap;
+                        overflow-y: auto;
 
                         .media-list-arrow {
                             flex-basis: 20px;
