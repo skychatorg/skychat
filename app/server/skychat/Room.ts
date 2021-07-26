@@ -332,12 +332,8 @@ export class Room implements IBroadcaster {
      * Get a plugin instance by its name
      * @param name
      */
-    public getPlugin(name: string): Plugin {
-        const plugin: Plugin | undefined = this.commands[name];
-        if (! plugin) {
-            throw new Error('Plugin not found');
-        }
-        return plugin;
+    public getPlugin(name: string): Plugin | undefined {
+        return this.commands[name];
     }
     
     /**
