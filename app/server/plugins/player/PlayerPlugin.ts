@@ -9,6 +9,8 @@ import { VideoFetcher } from "./fetcher/VideoFetcher";
 import { TwitchFetcher } from "./fetcher/TwitchFetcher";
 import { PollPlugin } from "../poll/PollPlugin";
 import { SanitizedPlayerChannel } from "./PlayerChannel";
+import { Session } from "../../skychat/Session";
+import { Config } from "../../skychat/Config";
 
 
 
@@ -16,11 +18,6 @@ import { SanitizedPlayerChannel } from "./PlayerChannel";
  * 
  */
 export class PlayerPlugin extends GlobalPlugin {
-
-    /**
-     * @TODO add in config/preferences.json
-     */
-    static readonly MIN_RIGHT: number = 10;
 
     static readonly FETCHERS: {[fetcherName: string]: VideoFetcher} = {
         'yt': new YoutubeFetcher(),
@@ -141,45 +138,6 @@ export class PlayerPlugin extends GlobalPlugin {
     }
 
     /**
-     * @hook When a connection is created, send to this connection the list of channels
-     * @param connection
-     */
-    public async onNewConnection(connection: Connection): Promise<void> {
-        this.channelManager.sync([connection]);
-    }
-
-    /**
-     * @hook When a connection is closed, cleanup the session if required
-     * @param connection
-     */
-    public async onConnectionClosed(connection: Connection): Promise<void> {
-        if (connection.session.connections.length === 0) {
-            this.channelManager.leaveChannel(connection.session);
-        }
-    }
-
-    /**
-     * @hook When a connection successfully authenticated, make him join its channel
-     * @param connection
-     */
-    public async onConnectionAuthenticated(connection: Connection): Promise<void> {
-        // Compare the saved channel id to this session
-        const currentChannel = this.channelManager.getSessionChannel(connection.session);
-        const savedChannelId = this.getUserData(connection.session.user);
-
-        if (typeof savedChannelId === 'number' && (! currentChannel || savedChannelId !== currentChannel.id)) {
-            // If the user is supposed to be in a channel, but this session aint
-            // Make this session join the saved channel
-            this.channelManager.joinChannel(connection.session, savedChannelId);
-
-        } else if (currentChannel) {
-            // If this session is in a yt channel, synchronize this connection
-            connection.send('player-channel', currentChannel.id);
-            currentChannel.syncConnections([connection]);
-        }
-    }
-
-    /**
      * Plugin entry point
      */
     public async run(alias: string, param: string, connection: Connection) {
@@ -223,6 +181,28 @@ export class PlayerPlugin extends GlobalPlugin {
             default:
                 throw new Error('Unsupported action');
         }
+    }
+
+    /**
+     * Return whether a session has the right to play a media
+     * @param session 
+     * @returns 
+     */
+    public canAddMedia(session: Session) {
+        const expectedRight = Config.PREFERENCES.minRightForPlayerAddMedia === 'op' ? Infinity : Config.PREFERENCES.minRightForPlayerAddMedia;
+        const actualRight = session.isOP() ? Infinity : session.user.right;
+        return actualRight >= expectedRight;
+    }
+
+    /**
+     * Return whether a session has the right to manage the schedule
+     * @param session 
+     * @returns 
+     */
+    public canSchedule(session: Session) {
+        const expectedRight = Config.PREFERENCES.minRightForPlayerManageSchedule === 'op' ? Infinity : Config.PREFERENCES.minRightForPlayerManageSchedule;
+        const actualRight = session.isOP() ? Infinity : session.user.right;
+        return actualRight >= expectedRight;
     }
 
     /**
@@ -325,7 +305,7 @@ export class PlayerPlugin extends GlobalPlugin {
      * @returns 
      */
     private async handlePlayerSearch(param: string, connection: Connection) {
-        if (connection.session.user.right < PlayerPlugin.MIN_RIGHT) {
+        if (! this.canAddMedia(connection.session)) {
             throw new Error('Unable to perform this action');
         }
         const fetcherName = param.split(' ')[0];
@@ -346,8 +326,8 @@ export class PlayerPlugin extends GlobalPlugin {
      * @returns 
      */
     private async handlePlayerSchedule(param: string, connection: Connection) {
-        if (connection.session.user.right < PlayerPlugin.MIN_RIGHT) {
-            throw new Error('Unable to perform this action');
+        if (! this.canSchedule(connection.session)) {
+            throw new Error('You do not have the permission to schedule medias');
         }
         const channel = this.channelManager.getSessionChannel(connection.session);
         if (! channel) {
@@ -379,8 +359,8 @@ export class PlayerPlugin extends GlobalPlugin {
      * @param connection 
      * @returns 
      */
-     private async handlePlayerUnschedule(param: string, connection: Connection) {
-        if (connection.session.user.right < PlayerPlugin.MIN_RIGHT) {
+    private async handlePlayerUnschedule(param: string, connection: Connection) {
+        if (! this.canSchedule(connection.session)) {
             throw new Error('Unable to perform this action');
         }
         const channel = this.channelManager.getSessionChannel(connection.session);
@@ -402,7 +382,7 @@ export class PlayerPlugin extends GlobalPlugin {
      * @returns 
      */
     private async handlePlayerFetch(fetcherName: string, param: string, connection: Connection) {
-        if (connection.session.user.right < PlayerPlugin.MIN_RIGHT) {
+        if (! this.canAddMedia(connection.session)) {
             throw new Error('Unable to perform this action');
         }
         const channel = this.channelManager.getSessionChannel(connection.session);
@@ -488,6 +468,45 @@ export class PlayerPlugin extends GlobalPlugin {
                 }
                 channel.flushQueue();
                 break;
+        }
+    }
+
+    /**
+     * @hook When a connection is created, send to this connection the list of channels
+     * @param connection
+     */
+    public async onNewConnection(connection: Connection): Promise<void> {
+        this.channelManager.sync([connection]);
+    }
+
+    /**
+     * @hook When a connection is closed, cleanup the session if required
+     * @param connection
+     */
+    public async onConnectionClosed(connection: Connection): Promise<void> {
+        if (connection.session.connections.length === 0) {
+            this.channelManager.leaveChannel(connection.session);
+        }
+    }
+
+    /**
+     * @hook When a connection successfully authenticated, make him join its channel
+     * @param connection
+     */
+    public async onConnectionAuthenticated(connection: Connection): Promise<void> {
+        // Compare the saved channel id to this session
+        const currentChannel = this.channelManager.getSessionChannel(connection.session);
+        const savedChannelId = this.getUserData(connection.session.user);
+
+        if (typeof savedChannelId === 'number' && (! currentChannel || savedChannelId !== currentChannel.id)) {
+            // If the user is supposed to be in a channel, but this session aint
+            // Make this session join the saved channel
+            this.channelManager.joinChannel(connection.session, savedChannelId);
+
+        } else if (currentChannel) {
+            // If this session is in a yt channel, synchronize this connection
+            connection.send('player-channel', currentChannel.id);
+            currentChannel.syncConnections([connection]);
         }
     }
 }

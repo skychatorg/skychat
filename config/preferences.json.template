@@ -6,6 +6,8 @@
     "minRightForPolls": -1,
     "minRightForGalleryRead": 0,
     "minRightForGalleryWrite": "op",
+    "minRightForPlayerAddMedia": 0,
+    "minRightForPlayerManageSchedule": "op",
     "maxReplacedImagesPerMessage": 50,
     "maxReplacedStickersPerMessage": 50,
     "maxNewlinesPerMessage": 20

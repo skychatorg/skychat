@@ -23,7 +23,8 @@ export class YoutubeSearchAndPlayPlugin extends GlobalPlugin {
     
     public async run(alias: string, param: string, connection: Connection) {
         
-        if (connection.session.user.right < PlayerPlugin.MIN_RIGHT) {
+        const plugin = this.manager.getPlugin('player') as PlayerPlugin;
+        if (! plugin.canAddMedia(connection.session)) {
             throw new Error('Unable to perform this action');
         }
 

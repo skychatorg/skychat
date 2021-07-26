@@ -10,6 +10,8 @@ export type Preferences = {
     minRightForPolls: number;
     minRightForGalleryRead: number | 'op';
     minRightForGalleryWrite: number | 'op';
+    minRightForPlayerAddMedia: number | 'op';
+    minRightForPlayerManageSchedule: number | 'op';
     maxReplacedImagesPerMessage: number;
     maxReplacedStickersPerMessage: number;
     maxNewlinesPerMessage: number;
@@ -142,6 +144,8 @@ export class Config {
             'minRightForPolls',
             'minRightForGalleryRead',
             'minRightForGalleryWrite',
+            'minRightForPlayerAddMedia',
+            'minRightForPlayerManageSchedule',
             'maxReplacedImagesPerMessage',
             'maxReplacedStickersPerMessage',
             'maxNewlinesPerMessage'
