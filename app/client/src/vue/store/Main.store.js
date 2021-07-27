@@ -125,6 +125,7 @@ const state = {
      */
     playerApiSearchResult: {},
     playerChannels: [],
+    playerChannelId: null,
     playerChannel: null,
     playerState: {
         current: null,
@@ -420,7 +421,8 @@ const mutations = {
     },
 
     SET_PLAYER_CHANNEL(state, channelId) {
-        state.playerChannel = channelId;
+        state.playerChannelId = channelId;
+        state.playerChannel = state.playerChannels.find(c => c.id === channelId);
     }
 };
 

@@ -10,7 +10,7 @@
         <hover-card v-for="channel in playerChannels"
             :key="channel.id"
             :clickable="true"
-            :selected="playerChannel === channel.id"
+            :selected="playerChannelId === channel.id"
             :border-color="'rgb(255, 130, 130)'"
             class="channel"
             @click.native="joinChannel(channel.id)"
@@ -22,7 +22,7 @@
                     </div>
                     <div class="channel-meta">
                         <!-- delete channel (op) -->
-                        <div v-show="playerChannel === channel.id && op"
+                        <div v-show="playerChannelId === channel.id && op"
                             @click="deleteChannel()"
                             class="channel-delete"
                             title="Delete this channel">
@@ -50,7 +50,7 @@
                     <!-- show if there is a video currently playing -->
                     <div v-show="channel.playing"
                         class="channel-player"
-                        :class="{ 'disabled': playerChannel !== channel.id }"
+                        :class="{ 'disabled': playerChannelId !== channel.id }"
                         :title="'Media added by ' + channel.currentMedia.owner">
 
                         <div class="channel-player-owner">{{ channel.currentMedia.title }}</div>
@@ -72,7 +72,7 @@
         props: { },
         methods: {
             joinChannel: function(id) {
-                if (this.playerChannel === id) {
+                if (this.playerChannelId === id) {
                     this.$client.leavePlayerChannel();
                 } else {
                     this.$client.joinPlayerChannel(id);
@@ -89,7 +89,7 @@
             ...mapState('Main', [
                 'playerChannelUsers',
                 'playerChannels',
-                'playerChannel',
+                'playerChannelId',
                 'user',
                 'op',
             ]),

@@ -28,17 +28,20 @@ export class LinkFetcher implements VideoFetcher {
         const duration = await FileManager.getVideoDuration(localPath);
         // If file coming from the gallery, get the associated media
         let title = `Media.${extension}`;
+        let thumb: string | undefined = undefined;
         if (FileManager.isFileUrlInGallery(link) && playerPlugin.manager.getPlugin('gallery')) {
             const gallery = (playerPlugin.manager.getPlugin('gallery') as GalleryPlugin).gallery;
             const media = gallery.getMediaFromUrl(link);
             if (media) {
                 title = media.tags.join(' ') + '.' + extension;
+                thumb = media.thumb;
             }
         }
         return {
             type: 'embed',
             id: localPath,
             startCursor: 0,
+            thumb,
             duration,
             title,
         };
