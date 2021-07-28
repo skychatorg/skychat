@@ -10,7 +10,7 @@
 ## Overview
 
 The SkyChat:
-- 📺 Can play medias in a shared synchronized player. Medias can be self-hosted, from Youtube or Twitch (more incoming)
+- 📺 Can play medias in a shared synchronized player. Medias can be self-hosted, from Youtube or Twitch
 - 📁 Allows to organize uploaded medias into folders and tag them
 - 📆 Lets you schedule medias to play at specific datetimes
 - ⚽ Provides entertaining features: Live cursor visualization, Casino roulette, cursor-based football, ..
