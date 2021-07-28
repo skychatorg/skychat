@@ -1,7 +1,7 @@
 import { Connection } from "../../skychat/Connection";
 import { DatabaseHelper } from "../../skychat/DatabaseHelper";
 import SQL from "sql-template-strings";
-import { GlobalPlugin } from "../../skychat/GlobalPlugin";
+import { GlobalPlugin } from "../GlobalPlugin";
 import { RoomManager } from "../../skychat/RoomManager";
 
 

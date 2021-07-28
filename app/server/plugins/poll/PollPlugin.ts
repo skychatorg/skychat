@@ -1,8 +1,8 @@
 import { Connection } from "../../skychat/Connection";
-import { Plugin } from "../../skychat/Plugin";
+import { Plugin } from "../Plugin";
 import { Poll, PollOptions } from "./Poll";
 import { Config } from "../../skychat/Config";
-import { GlobalPlugin } from "../../skychat/GlobalPlugin";
+import { GlobalPlugin } from "../GlobalPlugin";
 
 
 

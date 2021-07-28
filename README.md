@@ -23,9 +23,14 @@ When multichannel is enabled, here is what it looks like:
 ![overall-screenshot](./doc/screenshot.png)
 
 
-### Synchronized Youtube / Twitch / Embedded player
+### Synchronized media player
 
-Users can play medias from Youtube, Twitch or their local computer in a shared synchronized player. Orchestration is implemented through a public queue of videos to play, and decision-making (for instance to skip videos) is done with polls. Democracy 💯. If you want it, setup multiple video channels to allow concurrent screenings.
+Users can play Youtube, Twitch and self-hosted videos in a shared synchronized players.
+
+The player has two modes:
+- A 'free' mode, selected by default, where any user can add a media. Orchestration is implemented through a public queue of videos to play, and decision-making (for instance to skip videos) is done with polls.
+- A 'schedule' mode, when users with privilege schedule a media to play at a specific time. These medias can not be skipped, and users can view the schedule to see what medias will play in the upcoming days. When the scheduled media finishes, the player goes back in 'free' mode.
+
 ![youtube-short](./doc/youtube-short.gif)
 
 ### Live cursor visualization and mini-games
@@ -119,15 +124,18 @@ The `config/preferences.json` file specifies application preferences. The availa
 
 | field | type | default | description |
 |-------|------|---------|-------------|
-| minRightForPrivateMessages    | number |  -1 | Min. right to send private messages |
-| minRightForMessageHistory     | number |  -1 | Min. right to access room message history |
-| minRightForAudioRecording     | number |  -1 | Min. right to share and play audio recordings |
-| minRightForConnectedList      | number |  -1 | Min. right to access the list of currently active users |
-| minRightForPolls              | number |  -1 | Min. right to create polls |
-| minRightForGallery            | number |  -1 | Min. right to access the gallery |
-| maxReplacedImagesPerMessage   | number |  50 | Max. number of replaced images per message |
-| maxReplacedStickersPerMessage | number |  50 | Max. number of replaced stickers per message |
-| maxNewlinesPerMessage         | number |  20 | Max. number of newlines per message |
+| minRightForPrivateMessages      | number |  -1 | Min. right to send private messages |
+| minRightForMessageHistory       | number |  -1 | Min. right to access room message history |
+| minRightForAudioRecording       | number |  -1 | Min. right to share and play audio recordings |
+| minRightForConnectedList        | number |  -1 | Min. right to access the list of currently active users |
+| minRightForPolls                | number |  -1 | Min. right to create polls |
+| minRightForGalleryRead          | number \| 'op' |  'op' | Min. right to access the gallery |
+| minRightForGalleryWrite         | number \| 'op' |  'op' | Min. right to add and remove gallery documents |
+| minRightForPlayerAddMedia       | number \| 'op' |  'op' | Min. right to add medias to the player |
+| minRightForPlayerManageSchedule | number \| 'op' |  'op' | Min. right to manage the player schedules |
+| maxReplacedImagesPerMessage     | number |  50 | Max. number of replaced images per message |
+| maxReplacedStickersPerMessage   | number |  50 | Max. number of replaced stickers per message |
+| maxNewlinesPerMessage           | number |  20 | Max. number of newlines per message |
 
 
 ### Customize plugins

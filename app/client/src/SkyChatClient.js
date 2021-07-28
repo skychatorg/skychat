@@ -346,7 +346,7 @@ export class SkyChatClient extends EventEmitter {
      */
     onMessage(message) {
         this.store.commit('Main/NEW_MESSAGE', message);
-        if (this.store.state.Main.user.right >= 0 && this.store.state.focused) {
+        if (this.store.state.Main.user.right >= 0 && this.store.state.Main.focused) {
             this.notifySeenMessage(message.id);
         }
     }
@@ -357,7 +357,7 @@ export class SkyChatClient extends EventEmitter {
      */
     onMessages(messages) {
         this.store.commit('Main/NEW_MESSAGES', messages);
-        if (this.store.state.Main.user.right >= 0 && this.store.state.focused && messages.length > 0) {
+        if (this.store.state.Main.user.right >= 0 && this.store.state.Main.focused && messages.length > 0) {
             this.notifySeenMessage(messages[messages.length - 1].id);
         }
     }
@@ -388,10 +388,10 @@ export class SkyChatClient extends EventEmitter {
 
     /**
      *
-     * @param data
+     * @param messageSeen
      */
-    onMessageSeen(data) {
-        this.store.commit('Main/MESSAGE_SEEN', data);
+    onMessageSeen(messageSeen) {
+        this.store.dispatch('Main/messageSeen', messageSeen);
     }
 
     /**
@@ -412,10 +412,10 @@ export class SkyChatClient extends EventEmitter {
 
     /**
      *
-     * @param users
+     * @param connectedList
      */
-    onConnectedList(users) {
-        this.store.commit('Main/SET_CONNECTED_LIST', users);
+    onConnectedList(connectedList) {
+        this.store.dispatch('Main/setConnectedList', connectedList);
     }
 
     /**

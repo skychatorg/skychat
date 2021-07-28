@@ -1,6 +1,6 @@
-import {Connection} from "./Connection";
+import {Connection} from "../skychat/Connection";
 import {Plugin} from "./Plugin";
-import { RoomManager } from "./RoomManager";
+import { RoomManager } from "../skychat/RoomManager";
 
 
 /**

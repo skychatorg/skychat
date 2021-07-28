@@ -125,6 +125,7 @@ const state = {
      */
     playerApiSearchResult: {},
     playerChannels: [],
+    playerChannelId: null,
     playerChannel: null,
     playerState: {
         current: null,
@@ -147,6 +148,70 @@ const getters = {
 // Actions 
 const actions = {
     
+    setConnectedList({ state, commit, dispatch }, connectedList) {
+        commit('SET_CONNECTED_LIST', connectedList);
+
+        // Update hash list of last message seen ids
+        dispatch('generateLastMessageSeenIds');
+        dispatch('generateRoomConnectedCounts');
+
+        // Update self entry
+        const selfEntry = connectedList.find(entry => entry.user.username === state.user.username);
+        if (! selfEntry) {
+            return;
+        }
+        commit('SET_USER', selfEntry.user);
+    },
+
+    messageSeen({ commit, dispatch }, messageSeen) {
+        commit('SET_LAST_SEEN', messageSeen);
+        dispatch('generateLastMessageSeenIds');
+    },
+
+    generateRoomConnectedCounts({ commit, state }) {
+        const roomConnectedUsers = {};
+        const playerChannelUsers = {};
+        for (const entry of state.connectedList) {
+
+            // Update room entries
+            for (const roomId of entry.rooms) {
+                if (typeof roomConnectedUsers[roomId] === 'undefined') {
+                    roomConnectedUsers[roomId] = [];
+                }
+                roomConnectedUsers[roomId].push(entry.user);
+            }
+
+            // Update player channel entries
+            const playerChannelId = entry.user.data.plugins.player;
+            if (playerChannelId !== null) {
+                if (typeof playerChannelUsers[playerChannelId] === 'undefined') {
+                    playerChannelUsers[playerChannelId] = [];
+                }
+                playerChannelUsers[playerChannelId].push(entry.user);
+            }
+        }
+        commit('SET_ROOM_CONNECTED_USERS', roomConnectedUsers);
+        commit('SET_PLAYER_CHANNEL_USERS', playerChannelUsers);
+    },
+
+    generateLastMessageSeenIds({ commit, state }) {
+
+        // Update last seen message ids
+        const lastSeen = {};
+        const roomId = state.currentRoom;
+        for (const entry of state.connectedList) {
+            const entries = entry.user.data.plugins.lastseen;
+            if (! entries || ! entries[roomId]) {
+                continue;
+            }
+            const lastSeenId = entries[roomId];
+            if (typeof lastSeen[lastSeenId] === 'undefined') {
+                lastSeen[lastSeenId] = [];
+            }
+            lastSeen[lastSeenId].push(entry.user);
+        }
+        commit('SET_LAST_MESSAGE_SEEN_IDS', lastSeen);
+    },
 };
 
 // Mutations
@@ -220,69 +285,24 @@ const mutations = {
     SET_OP(state, op) {
         state.op = !! op;
     },
-    SET_CONNECTED_LIST(state, entries) {
-        state.connectedList = entries;
-
-        // Update hash list of last message seen ids
-        this.commit('GENERATE_LAST_MESSAGE_SEEN_IDS');
-        this.commit('GENERATE_ROOM_CONNECTED_COUNTS');
-
-        // Update self entry
-        const selfEntry = entries.find(entry => entry.user.username === state.user.username);
-        if (! selfEntry) {
-            return;
-        }
-        this.commit('SET_USER', selfEntry.user);
+    SET_CONNECTED_LIST(state, connectedList) {
+        state.connectedList = connectedList;
     },
-    MESSAGE_SEEN(state, data) {
-        const entry = state.connectedList.find(e => e.user.id === data.user);
+    SET_ROOM_CONNECTED_USERS(state, roomConnectedUsers) {
+        state.roomConnectedUsers = roomConnectedUsers;
+    },
+    SET_PLAYER_CHANNEL_USERS(state, playerChannelUsers) {
+        state.playerChannelUsers = playerChannelUsers;
+    },
+    SET_LAST_MESSAGE_SEEN_IDS(state, lastMessageSeenIds) {
+        state.lastMessageSeenIds = lastMessageSeenIds;
+    },
+    SET_LAST_SEEN(state, messageSeen) {
+        const entry = state.connectedList.find(e => e.user.id === messageSeen.user);
         if (! entry) {
             return;
         }
-        entry.user.data.plugins.lastseen = data.data;
-        this.commit('GENERATE_LAST_MESSAGE_SEEN_IDS');
-    },
-    GENERATE_LAST_MESSAGE_SEEN_IDS(state) {
-        // Update last seen message ids
-        const lastSeen = {};
-        const roomId = state.currentRoom;
-        for (const entry of state.connectedList) {
-            const entries = entry.user.data.plugins.lastseen;
-            if (! entries || ! entries[roomId]) {
-                continue;
-            }
-            const lastSeenId = entries[roomId];
-            if (typeof lastSeen[lastSeenId] === 'undefined') {
-                lastSeen[lastSeenId] = [];
-            }
-            lastSeen[lastSeenId].push(entry.user);
-        }
-        state.lastMessageSeenIds = lastSeen;
-    },
-    GENERATE_ROOM_CONNECTED_COUNTS(state) {
-        const roomConnectedUsers = {};
-        const playerChannelUsers = {};
-        for (const entry of state.connectedList) {
-
-            // Update room entries
-            for (const roomId of entry.rooms) {
-                if (typeof roomConnectedUsers[roomId] === 'undefined') {
-                    roomConnectedUsers[roomId] = [];
-                }
-                roomConnectedUsers[roomId].push(entry.user);
-            }
-
-            // Update player channel entries
-            const playerChannelId = entry.user.data.plugins.player;
-            if (playerChannelId !== null) {
-                if (typeof playerChannelUsers[playerChannelId] === 'undefined') {
-                    playerChannelUsers[playerChannelId] = [];
-                }
-                playerChannelUsers[playerChannelId].push(entry.user);
-            }
-        }
-        state.roomConnectedUsers = roomConnectedUsers;
-        state.playerChannelUsers = playerChannelUsers;
+        entry.user.data.plugins.lastseen = messageSeen.data;
     },
     NEW_MESSAGE(state, message) {
         state.messages.push(message);
@@ -329,7 +349,7 @@ const mutations = {
     },
     SET_PLAYER_ENABLED(state, playerEnabled) {
         state.playerEnabled = playerEnabled;
-        this.commit('SAVE_LOCALSTORAGE');
+        this.commit('Main/SAVE_LOCALSTORAGE');
     },
     SET_PLAYER_INTENSITY(state, intensity) {
         state.playerIntensity = intensity;
@@ -349,7 +369,7 @@ const mutations = {
     },
     SET_QUICK_ACTIONS_VISIBILITY(state, visible) {
         state.isQuickActionsVisible = !! visible;
-        this.commit('SAVE_LOCALSTORAGE');
+        this.commit('Main/SAVE_LOCALSTORAGE');
     },
     SET_TYPING_LIST(state, users) {
         state.typingList = users;
@@ -401,7 +421,8 @@ const mutations = {
     },
 
     SET_PLAYER_CHANNEL(state, channelId) {
-        state.playerChannel = channelId;
+        state.playerChannelId = channelId;
+        state.playerChannel = state.playerChannels.find(c => c.id === channelId);
     }
 };
 

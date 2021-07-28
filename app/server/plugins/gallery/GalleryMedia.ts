@@ -1,4 +1,5 @@
 import { FileManager } from "../../skychat/FileManager";
+import * as fs from 'fs';
 
 
 export type SanitizedGalleryMedia = {
@@ -12,6 +13,13 @@ export type SanitizedGalleryMedia = {
 
 
 export class GalleryMedia {
+
+    public static readonly THUMB_EXTENSIONS = [
+        'jpg',
+        'jpeg',
+        'png',
+        'gif',
+    ];
 
     private static CURRENT_ID: number = 1;
 
@@ -51,6 +59,19 @@ export class GalleryMedia {
             throw new Error('Unable to find media extension');
         }
         return mtc[1];
+    }
+
+    setThumb(imagePath: string) {
+        if (! fs.existsSync(imagePath)) {
+            throw new Error('File does not exist');
+        }
+        const extension = FileManager.getFileExtension(imagePath);
+        if (GalleryMedia.THUMB_EXTENSIONS.indexOf(extension) === -1) {
+            throw new Error('Extension not allowed');
+        }
+        const thumbPath = FileManager.getFileDirectory(this.getLocalPath()) + '/thumb.' + extension;
+        fs.copyFileSync(imagePath, thumbPath);
+        this.thumb = FileManager.getFileUrlFromLocalPath(thumbPath);
     }
 
     sanitized(): SanitizedGalleryMedia {

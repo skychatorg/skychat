@@ -1,5 +1,5 @@
 import { Connection } from "../../skychat/Connection";
-import { GlobalPlugin } from "../../skychat/GlobalPlugin";
+import { GlobalPlugin } from "../GlobalPlugin";
 
 
 export class AprilFoolsDay extends GlobalPlugin {

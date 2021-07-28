@@ -1,5 +1,5 @@
 import {Connection} from "../../skychat/Connection";
-import {RoomPlugin} from "../../skychat/RoomPlugin";
+import {RoomPlugin} from "../RoomPlugin";
 import {UserController} from "../../skychat/UserController";
 import * as striptags from "striptags";
 import {MessageFormatter} from "../../skychat/MessageFormatter";

@@ -17,46 +17,45 @@
 
                 <!-- 1 folder -->
                 <div v-for="folder in shownFolders"
-                    :key="folder.id">
+                    :key="folder.id"
+                    class="gallery-folder">
 
                     <h3 class="section-title">
                         <span :title="'#' + folder.id + ': ' + folder.name">{{folder.name}}</span>
-                        <span v-show="folder.medias.length === 0 && op" @click="deleteFolder(folder.id)" title="Delete this folder" class="folder-delete material-icons md-14">close</span>
+                        <span v-show="folder.medias.length === 0 && canWrite()" @click="deleteFolder(folder.id)" title="Delete this folder" class="folder-delete material-icons md-14">close</span>
                     </h3>
 
                     <!-- medias -->
-                    <div class="media-list">
-                        <div class="media-list-thumbs">
-                            <!-- 1 media -->
-                            <div
-                                v-for="media in folder.medias"
-                                :key="media.id"
-                                :style="{'background-image': 'url(' + media.thumb + ')'}"
-                                @click="openMedia(media)"
-                                class="media">
-                                <div class="media-title" :title="media.tags.join(', ')">
-                                    <div v-for="tag in media.tags"
-                                        :key="tag"
-                                        class="media-tag">
-                                        {{ tag }}
-                                    </div>
+                    <div class="media-list scrollbar">
+                        <!-- 1 media -->
+                        <div
+                            v-for="media in folder.medias"
+                            :key="media.id"
+                            :style="{'background-image': 'url(' + media.thumb + ')'}"
+                            @click="openMedia(media)"
+                            class="media">
+                            <div class="media-title" :title="media.tags.join(', ')">
+                                <div v-for="tag in media.tags"
+                                    :key="tag"
+                                    class="media-tag">
+                                    {{ tag }}
                                 </div>
-                                <div class="media-extension">
-                                    .{{ media.location.match(/\.([a-z0-9]+)$/)[1] }}
+                            </div>
+                            <div class="media-extension">
+                                .{{ media.location.match(/\.([a-z0-9]+)$/)[1] }}
+                            </div>
+                            <div class="media-actions">
+                                <!-- copy -->
+                                <div class="media-action" title="Copy link to clipboard" @click.stop="copyMediaLink(media)">
+                                    <i class="material-icons md-14">content_copy</i>
                                 </div>
-                                <div class="media-actions">
-                                    <!-- copy -->
-                                    <div class="media-action" title="Copy link to clipboard" @click.stop="copyMediaLink(media)">
-                                        <i class="material-icons md-14">content_copy</i>
-                                    </div>
-                                    <!-- play (if video) -->
-                                    <div v-show="isPlayable(media)" class="media-action" title="Play media" @click.stop="playMedia(media)">
-                                        <i class="material-icons md-14">play_arrow</i>
-                                    </div>
-                                    <!-- delete -->
-                                    <div v-show="op" class="media-action" title="Delete" @click.stop="deleteMedia(media)">
-                                        <i class="material-icons md-14">close</i>
-                                    </div>
+                                <!-- play (if video) -->
+                                <div v-show="isPlayable(media)" class="media-action" title="Play media" @click.stop="playMedia(media)">
+                                    <i class="material-icons md-14">play_arrow</i>
+                                </div>
+                                <!-- delete -->
+                                <div v-show="canWrite()" class="media-action" title="Delete" @click.stop="deleteMedia(media)">
+                                    <i class="material-icons md-14">close</i>
                                 </div>
                             </div>
                         </div>
@@ -90,7 +89,7 @@
         watch: {
             'tab': function() {
                 if (this.tab === 'preview') {
-                    this.shownFolders = this.gallery.folders;
+                    this.shownFolders = this.gallery.data.folders;
                 } else {
                     this.shownFolders = this.gallerySearchResults.folders;
                 }
@@ -109,7 +108,7 @@
                     if (this.tab !== 'preview') {
                         return;
                     }
-                    this.shownFolders = this.gallery.folders;
+                    this.shownFolders = this.gallery.data.folders;
                 }
             },
             'gallerySearchResults': {
@@ -124,7 +123,7 @@
         },
         mounted: function() {
             if (this.gallery) {
-                this.shownFolders = this.gallery.folders;
+                this.shownFolders = this.gallery.data.folders;
             }
         },
         methods: {
@@ -157,7 +156,10 @@
             },
             deleteFolder: function(folderId) {
                 this.$client.sendMessage(`/galleryfolderremove ${folderId}`);
-            }
+            },
+            canWrite: function() {
+                return this.gallery && this.gallery.canWrite;
+            },
         },
         computed: {
             ...mapState('Main', [
@@ -173,15 +175,17 @@
 
     .gallery-preview {
         width: 100%;
+        height: 100%;
         display: flex;
         flex-direction: column;
-        padding-left: 6px;
         color: white;
-        margin-bottom: 6px;
-        margin-top: 10px;
-        padding-right: 20px;
+        padding-bottom: 10px;
+        padding-top: 10px;
+        padding-left: 6px;
+        padding-right: 6px;
 
         .gallery-content {
+            height: 100%;
             background-color: #242427;
             overflow: hidden;
             display: flex;
@@ -210,40 +214,48 @@
             .gallery-results {
                 flex-grow: 1;
                 overflow-y: auto;
+                display: flex;
+                flex-direction: column;
 
-                .section-title {
-                    color: grey;
-                    margin-left: 8px;
-                    margin-top: 8px;
-                    text-align: center;
-
-                    .folder-delete {
-                        cursor: pointer;
-                        color: #ff8e8e;
-                    }
-                }
-
-                .media-list {
+                .gallery-folder {
                     display: flex;
-                    margin-top: 4px;
-                    height: 110px;
+                    flex-direction: column;
 
-                    .media-list-arrow {
-                        flex-basis: 20px;
+                    .section-title {
+                        color: grey;
+                        margin-left: 8px;
+                        margin-top: 8px;
+                        text-align: center;
+                        flex-basis: 22px;
+
+                        .folder-delete {
+                            cursor: pointer;
+                            color: #ff8e8e;
+                        }
                     }
 
-                    .media-list-thumbs {
+                    .media-list {
+                        display: flex;
+                        margin-top: 4px;
+                        max-height: 320px;
+                        margin-bottom: 20px;
                         margin-left: 20px;
                         margin-right: 20px;
-                        display: flex;
-                        overflow: hidden;
+                        padding-bottom: 10px;
+                        max-width: 100%;
+                        flex-wrap: nowrap;
+                        overflow-y: auto;
+
+                        .media-list-arrow {
+                            flex-basis: 20px;
+                        }
 
                         .media {
                             margin-left: 6px;
                             margin-right: 6px;
-                            flex-basis: 110px;
-                            min-width: 110px;
-                            height: 110px;
+                            flex-basis: 120px;
+                            min-width: 120px;
+                            height: 160px;
                             background-position: 50%;
                             background-size: cover;
                             position: relative;

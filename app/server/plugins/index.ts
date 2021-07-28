@@ -7,3 +7,6 @@ export * from "./optional";
 export * from "./poll";
 export * from "./user_defined";
 export * from "./player";
+export { GlobalPlugin } from "./GlobalPlugin";
+export { RoomPlugin } from "./RoomPlugin";
+export { Plugin } from "./Plugin";

@@ -1,5 +1,6 @@
 <template>
     <hover-card
+        :clickable="true"
         :selected="false"
         :border-color="session.user.data.plugins.color"
         class="user-list-row"
@@ -96,7 +97,7 @@
 <style lang="scss" scoped>
 
 .user-list-row {
-    margin-bottom: 4px;
+    margin-top: 2px;
 
     .connected-session {
         width: 100%;
@@ -120,7 +121,7 @@
             padding: 10px;
             position: relative;
             
-            >.image-bubble{
+            >.image-bubble {
                 width: 100%;
                 height: 100%;
             }

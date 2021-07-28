@@ -3,6 +3,7 @@
         :class="{
             'selected': selected,
             'highlighted': highlighted,
+            'clickable': clickable,
         }">
         <div class="hover-card-border" :style="{'background-color': borderColor}"></div>
         <div class="hover-card-content">
@@ -15,7 +16,7 @@
     import Vue from "vue";
 
     export default Vue.extend({
-        props: ['selected', 'highlighted', 'borderColor'],
+        props: ['clickable', 'selected', 'highlighted', 'borderColor'],
     });
 </script>
 
@@ -25,7 +26,6 @@
 
         width: 100%;
         display: flex;
-        cursor: pointer;
         color: white;
         justify-content: end;
         justify-items: end;
@@ -44,6 +44,10 @@
             transition: all .2s ease-out;
             background: #242427;
             overflow-y: auto;
+        }
+
+        &.clickable {
+            cursor: pointer;
         }
 
         &.selected {

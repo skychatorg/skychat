@@ -2,7 +2,7 @@ import {Connection} from "../../skychat/Connection";
 import {User} from "../../skychat/User";
 import {ConnectedListPlugin} from "./ConnectedListPlugin";
 import {UserController} from "../../skychat/UserController";
-import { GlobalPlugin } from "../../skychat/GlobalPlugin";
+import { GlobalPlugin } from "../GlobalPlugin";
 import { Session } from "../../skychat/Session";
 import { RoomManager } from "../../skychat/RoomManager";
 

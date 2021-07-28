@@ -1,7 +1,7 @@
 import {Connection} from "../../skychat/Connection";
 import { Config } from "../../skychat/Config";
 import { MessageController } from "../../skychat/MessageController";
-import { RoomPlugin } from "../../skychat/RoomPlugin";
+import { RoomPlugin } from "../RoomPlugin";
 
 
 export class MessagePlugin extends RoomPlugin {

@@ -1,7 +1,7 @@
-import { Connection } from "./Connection";
-import { Message } from "./Message";
+import { Connection } from "../skychat/Connection";
+import { Message } from "../skychat/Message";
 import { Plugin } from "./Plugin";
-import { Room } from "./Room";
+import { Room } from "../skychat/Room";
 
 
 export abstract class RoomPlugin extends Plugin {

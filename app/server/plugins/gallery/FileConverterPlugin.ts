@@ -1,14 +1,13 @@
 import {Connection} from "../../skychat/Connection";
-import { GlobalPlugin } from "../../skychat/GlobalPlugin";
+import { GlobalPlugin } from "../GlobalPlugin";
 import { RoomManager } from "../../skychat/RoomManager";
 import { GalleryMedia } from "./GalleryMedia";
 import { GalleryPlugin } from "./GalleryPlugin";
 import { spawn } from 'child_process';
 import { UserController } from "../../skychat/UserController";
 import * as fs from 'fs';
-import { Gallery } from "./Gallery";
-import { RandomGenerator } from "../../skychat/RandomGenerator";
 import { Config } from "../../skychat/Config";
+import { Session } from "../../skychat/Session";
 
 
 /**
@@ -27,7 +26,9 @@ export class FileConverterPlugin extends GlobalPlugin {
 
     static readonly commandName = 'convert';
 
-    public readonly opOnly = true;
+    public readonly minRight = typeof Config.PREFERENCES.minRightForGalleryWrite === 'number' ? Config.PREFERENCES.minRightForGalleryWrite : 0;
+
+    public readonly opOnly = Config.PREFERENCES.minRightForGalleryWrite === 'op';
 
     readonly rules = {
         convert: {
@@ -80,7 +81,18 @@ export class FileConverterPlugin extends GlobalPlugin {
         }
 
         // Run convert function
-        const convertedMediaPath: string = await method.bind(this)(gallery, connection, media);
+        let convertedMediaPath: string | undefined;
+        let thrownError: Error | undefined;
+        try {
+            convertedMediaPath = await method.bind(this)(connection, media);
+        } catch (error) {
+            thrownError = error;
+        }
+        const session = Session.getSessionByIdentifier(connection.session.identifier);
+        session && session.send('message', UserController.createNeutralMessage({ id: 0, content: `@${session.identifier} ` + (thrownError ? thrownError.message : 'File conversion finished')}).sanitized());
+        if (thrownError || ! convertedMediaPath) {
+            return;
+        }
 
         // Convert successful: Create new media and move converted file
         const mediaId = GalleryMedia.getNextId();
@@ -102,11 +114,22 @@ export class FileConverterPlugin extends GlobalPlugin {
         galleryPlugin.syncStorage();
     }
 
-    async webm_to_mp4(gallery: Gallery, connection: Connection, media: GalleryMedia) {
-        return this.convertVideoToMP4(gallery, connection, 'webm', media);
+    async webm_to_mp4(connection: Connection, media: GalleryMedia) {
+        return this.convertVideoToMP4(connection, 'webm', media);
     }
 
-    convertVideoToMP4(gallery: Gallery, connection: Connection, sourceType: string, media: GalleryMedia) {
+    async mkv_to_mp4(connection: Connection, media: GalleryMedia) {
+        return this.convertVideoToMP4(connection, 'mkv', media);
+    }
+
+    /**
+     * Convert any video to MP4 (supported in all browsers)
+     * @param connection 
+     * @param sourceType 
+     * @param media 
+     * @returns 
+     */
+    convertVideoToMP4(connection: Connection, sourceType: string, media: GalleryMedia) {
         return new Promise((resolve, reject) => {
             const currentMediaPath = media.getLocalPath();
             const convertedMediaPath = currentMediaPath.replace(new RegExp('\\.' + sourceType + '$'), `.mp4`);
@@ -115,35 +138,25 @@ export class FileConverterPlugin extends GlobalPlugin {
             const spawnArgs = rawCommand.substr(spawn0.length + 1).split(' ');
 
             // Prepare a message which will track the updates
-            const message = UserController.createNeutralMessage({ content: `Converting..`, });
+            const message = UserController.createNeutralMessage({ content: `Started file conversion`, });
             connection.send('message', message.sanitized());
 
             const process = spawn(spawn0, spawnArgs);
 
-            process.stdout.on("data", data => {
-                message.append(data);
-                connection.send('message-edit', message.sanitized());
-            });
+            // STDOUT/STDERR
+            process.stdout.on("data", data => { console.info(data.toString()); });
+            process.stderr.on("data", data => { console.info(data.toString()); });
 
-            process.stderr.on("data", data => {
-                message.append(data);
-                connection.send('message-edit', message.sanitized());
-            });
-
-            process.on('error', (error) => {
-                message.append(`\nProcess errro: ${error}`);
-                connection.send('message-edit', message.sanitized());
+            // Process error
+            process.on('error', error => {
                 reject(`Unable to convert file`);
             });
 
+            // Process finished
             process.on("close", code => {
-                message.append(`child process exited with code ${code}`);
-                connection.send('message-edit', message.sanitized());
 
                 // If there was an error (file is not there)
                 if (! fs.existsSync(convertedMediaPath)) {
-                    message.append(`\nUnable to convert file.`);
-                    connection.send('message-edit', message.sanitized());
                     reject(`Unable to convert file`);
                     return;
                 }

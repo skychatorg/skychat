@@ -1,5 +1,5 @@
 import {Connection} from "../../skychat/Connection";
-import {GlobalPlugin} from "../../skychat/GlobalPlugin";
+import {GlobalPlugin} from "../GlobalPlugin";
 import {Session} from "../../skychat/Session";
 import {User} from "../../skychat/User";
 import { Config } from "../../skychat/Config";

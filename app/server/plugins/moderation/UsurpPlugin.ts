@@ -1,7 +1,7 @@
 import {Connection} from "../../skychat/Connection";
 import {User} from "../../skychat/User";
 import {Session} from "../../skychat/Session";
-import { RoomPlugin } from "../../skychat/RoomPlugin";
+import { RoomPlugin } from "../RoomPlugin";
 
 
 /**
@@ -27,7 +27,10 @@ export class UsurpPlugin extends RoomPlugin {
         if (! session || session.connections.length === 0) {
             throw new Error('User ' + identifier + ' does not exist');
         }
-        const command = this.room.getPlugin(commandName);
+        const command = this.room.getPlugin(commandName) || this.room.manager.getPlugin(commandName);
+        if (! command) {
+            throw new Error(`Command ${commandName} does not exist`);
+        }
         await command.run(
             commandName,
             param.split(' ').slice(2).join(' '),

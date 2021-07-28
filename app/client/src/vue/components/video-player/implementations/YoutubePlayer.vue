@@ -1,7 +1,7 @@
 <template>
     <div>
         <iframe ref="player"
-                class="player"
+                class="player youtube"
                 :src="src"
                 frameborder="0"
                 allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"

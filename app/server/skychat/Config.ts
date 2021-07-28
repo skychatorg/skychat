@@ -8,14 +8,17 @@ export type Preferences = {
     minRightForAudioRecording: number;
     minRightForConnectedList: number;
     minRightForPolls: number;
-    minRightForGallery: number;
+    minRightForGalleryRead: number | 'op';
+    minRightForGalleryWrite: number | 'op';
+    minRightForPlayerAddMedia: number | 'op';
+    minRightForPlayerManageSchedule: number | 'op';
     maxReplacedImagesPerMessage: number;
     maxReplacedStickersPerMessage: number;
     maxNewlinesPerMessage: number;
 }
 
 export type PublicConfig = {
-    ranks: {limit: number, images: {[size: string]: string}}[],
+    ranks: { limit: number, images: { [size: string]: string } }[];
 }
 
 export class Config {
@@ -50,7 +53,7 @@ export class Config {
 
     public static FAKE_MESSAGES: string[] = [];
 
-    public static RANKS: {limit: number, images: {[size: string]: string}}[] = [];
+    public static RANKS: { limit: number, images: { [size: string]: string } }[] = [];
 
     public static PLUGINS: string[] = [];
 
@@ -139,7 +142,10 @@ export class Config {
             'minRightForAudioRecording',
             'minRightForConnectedList',
             'minRightForPolls',
-            'minRightForGallery',
+            'minRightForGalleryRead',
+            'minRightForGalleryWrite',
+            'minRightForPlayerAddMedia',
+            'minRightForPlayerManageSchedule',
             'maxReplacedImagesPerMessage',
             'maxReplacedStickersPerMessage',
             'maxNewlinesPerMessage'

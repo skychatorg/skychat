@@ -1,7 +1,5 @@
 <template>
-    <div>
-        <gallery-preview></gallery-preview>
-    </div>
+    <gallery-preview></gallery-preview>
 </template>
 
 <script>

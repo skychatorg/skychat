@@ -41,7 +41,7 @@
                 <!-- right col (connected list and metas) -->
                 <section class="right hide-mobile-left hide-mobile-middle scrollbar">
 
-                    <video-player-preview v-if="typeof playerChannel === 'number'" id="player-preview"></video-player-preview>
+                    <video-player-preview v-if="typeof playerChannelId === 'number'" id="player-preview"></video-player-preview>
 
                     <user-list id="connected-list" class="scrollbar"></user-list>
 
@@ -90,7 +90,7 @@
             ...mapState('Main', [
                 'page',
                 'cinemaMode',
-                'playerChannel',
+                'playerChannelId',
             ]),
         },
     });
@@ -179,8 +179,7 @@
                 padding-bottom: 4px;
 
                 #player-preview {
-                    flex-basis: 160px;
-                    min-height: 160px;
+                    margin-bottom: 20px;
                 }
 
                 #connected-list {

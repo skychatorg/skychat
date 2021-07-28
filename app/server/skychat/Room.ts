@@ -1,7 +1,7 @@
 import {Connection} from "./Connection";
 import {IBroadcaster} from "./IBroadcaster";
 import {Message, MessageConstructorOptions} from "./Message";
-import {Plugin} from "./Plugin";
+import {Plugin} from "../plugins/Plugin";
 import {PluginManager} from "./PluginManager";
 import * as fs from "fs";
 import SQL from "sql-template-strings";
@@ -9,7 +9,7 @@ import {DatabaseHelper} from "./DatabaseHelper";
 import { MessageController } from "./MessageController";
 import { Config } from "./Config";
 import { RoomManager } from "./RoomManager";
-import { RoomPlugin } from "./RoomPlugin";
+import { RoomPlugin } from "../plugins/RoomPlugin";
 import { AudioRecorderPlugin } from "../plugins/core/AudioRecorderPlugin";
 import { ConnectedListPlugin } from "../plugins/core/ConnectedListPlugin";
 import { MessageEditPlugin } from "../plugins/core/MessageEditPlugin";
@@ -332,12 +332,8 @@ export class Room implements IBroadcaster {
      * Get a plugin instance by its name
      * @param name
      */
-    public getPlugin(name: string): Plugin {
-        const plugin: Plugin | undefined = this.commands[name];
-        if (! plugin) {
-            throw new Error('Plugin not found');
-        }
-        return plugin;
+    public getPlugin(name: string): Plugin | undefined {
+        return this.commands[name];
     }
     
     /**

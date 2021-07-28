@@ -3,16 +3,16 @@
         <div class="youtube-preview pr-2">
 
             <!-- preview container -->
-            <div class="preview-image-container">
+            <div class="preview-image-container"
+                :style="{
+                    'background-image': playerState.current ? `url(${playerState.current.video.thumb})` : 'none'
+                }">
 
                 <!-- progress bars -->
                 <div class="progress-bar progress-bar-top" :class="'custom-color-' + progressBarColor" :style="{'width': (100 * cursorPercent) + '%'}"></div>
                 <div class="progress-bar progress-bar-bottom" :class="'custom-color-' + progressBarColor" :style="{'width': (100 * cursorPercent) + '%'}"></div>
                 <div class="progress-bar progress-bar-left" :class="'custom-color-' + progressBarColor" :style="{'height': (100 * cursorPercent) + '%'}"></div>
                 <div class="progress-bar progress-bar-right" :class="'custom-color-' + progressBarColor" :style="{'height': (100 * cursorPercent) + '%'}"></div>
-
-                <!-- image preview -->
-                <img class="preview-thumb" v-if="playerState.current" :src="playerState.current.video.thumb">
     
                 <!-- title -->
                 <div class="preview-title" v-if="playerState.current">{{playerState.current.video.title}}</div>
@@ -35,7 +35,7 @@
                         <!-- video preview image -->
                         <div class="image avatar">
                             <div class="image-bubble" :style="'box-shadow: #' + progressBarColor +' 0 0 4px 0;'">
-                                <img data-v-193da69e="" :src="video.video.thumb">
+                                <img :src="video.video.thumb">
                             </div>
                         </div>
 
@@ -47,7 +47,17 @@
                     </div>
                 </div>
                     
-                <!-- actions -->
+                <!-- bottom actions -->
+                <div v-if="nextEvent" class="preview-actions next-event">
+                    <b>{{ new Date(nextEvent.start).toLocaleTimeString() }}</b>
+                    <div class="video-in-queue">
+                        <div class="image avatar">
+                            <div class="image-bubble" :style="'box-shadow: #' + progressBarColor +' 0 0 4px 0;'">
+                                <img :src="nextEvent.media.thumb">
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <div class="preview-actions">
                     <div v-show="canHandlePlayer() && playerState.current && playerState.current.video.duration !== 0"
                         @click="ytReplay30"
@@ -167,7 +177,16 @@
             ...mapState('Main', [
                 'user',
                 'playerState',
+                'playerChannels',
+                'playerChannel',
             ]),
+            nextEvent: function() {
+                if (! this.playerChannel) {
+                    return null;
+                }
+                const nextEvents = this.playerChannel.schedule.events.filter(event => event.start + event.duration > new Date().getTime());
+                return nextEvents.length > 0 ? nextEvents[0] : null;
+            },
             nextQueuedEntries: function() {
                 return this.playerState.queue.slice(0, 30);
             }
@@ -180,7 +199,7 @@
     .youtube-preview {
 
         width: 100%;
-        height: 160px;
+        height: 230px;
         display: flex;
         padding-left: 6px;
         color: white;
@@ -189,6 +208,9 @@
             position: relative;
             flex-basis: 284.444444444px;
             background-color: black;
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center;
             
             > .progress-bar {
                 position: absolute;
@@ -216,13 +238,6 @@
                 }
             }
 
-            > .preview-thumb {
-                position: absolute;
-                width: 100%;
-                height: 100%;
-                padding: 2px;
-            }
-
             > .preview-title {
                 position: absolute;
                 left: 8px;
@@ -232,9 +247,12 @@
                 -ms-text-overflow: ellipsis;
                 text-overflow: ellipsis;
                 margin-bottom: 2px;
-                width: calc(100% - 16px);
+                max-width: calc(100% - 16px);
                 font-size: 120%;
                 font-weight: 600;
+                padding: 4px;
+                background-color: #0000004d;
+                border-radius: 4px;
             }
 
             > .sliding-window {
@@ -267,11 +285,6 @@
             position: relative;
             overflow: hidden;
             z-index: 1;
-
-            >.preview-thumb {
-                flex-grow: 1;
-                width: 0;
-            }
 
         }
 
@@ -337,37 +350,36 @@
                 justify-content: center;
                 position: relative;
                 padding: 4px;
+            }
 
-                .video-in-queue {
-                    display: flex;
+            .video-in-queue {
+                display: flex;
+                justify-content: center;
+                margin: 5px;
+                position: relative;
+
+                .image {
                     width: 40px;
                     height: 40px;
-                    margin: 5px;
-                    position: relative;
+                    display: flex;
 
-                    .image {
-                        width: 40px;
-                        height: 40px;
-                        display: flex;
-
-                        .image-bubble {
-                            transition: all 1s ease-in-out;
-                        }
+                    .image-bubble {
+                        transition: all 1s ease-in-out;
                     }
-                    svg {
-                        position: absolute;
-                        top: -5px;
-                        left: -5px;
+                }
+                svg {
+                    position: absolute;
+                    top: -5px;
+                    left: -5px;
 
-                        circle {
-                            fill: none;
-                            transition: all 1s ease-in-out;
-                            stroke-width: 2px;
-                            stroke-dasharray: 1000;
-                            transform-origin: center center;
-                            transform: rotate(-85deg);
-                            animation: rotate 60s linear infinite;
-                        }
+                    circle {
+                        fill: none;
+                        transition: all 1s ease-in-out;
+                        stroke-width: 2px;
+                        stroke-dasharray: 1000;
+                        transform-origin: center center;
+                        transform: rotate(-85deg);
+                        animation: rotate 60s linear infinite;
                     }
                 }
             }
@@ -377,6 +389,15 @@
                 display: flex;
                 justify-content: center;
                 padding-top: 4px;
+                width: inherit;
+
+                &.next-event {
+                    flex-basis: 60px;
+                    text-align: center;
+                    flex-direction: column;
+                    background: #424248;
+                    font-size: 80%;
+                }
 
                 .preview-action {
                     flex-grow: 1;
