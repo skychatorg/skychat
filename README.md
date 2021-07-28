@@ -2,21 +2,20 @@
     <img src="./app/client/assets/assets/logo.png">
 </p>
 
-# SkyChat
-
-1. [Overview](#overview)
-2. [Install it](#how-to-install)
-3. [Customize it](#customize)
-
+<p align="center"><a href="#overview">Overview</a> → <a href="#how-to-install">Install</a> → <a href="#customize">Customize</a> → <a href="#contribute">Contribute</a></p>
+<p align="right">Like this project? Please give a star ⭐</p>
+    
+</p>
 
 ## Overview
 
 The SkyChat:
-- 📺 Can play medias in a shared synchronized player
-- 💻 Is trivial to install and configure
-- 🔥 Provides a polished and satisfying UI
-- ⚽ Provides entertaining features: Live cursor visualization, Casino roulette, cursor-based football..
+- 📺 Can play medias in a shared synchronized player. Medias can be self-hosted, from Youtube or Twitch (more incoming)
+- 📁 Allows to organize uploaded medias into folders and tag them
+- 📆 Lets you schedule medias to play at specific datetimes
+- ⚽ Provides entertaining features: Live cursor visualization, Casino roulette, cursor-based football, ..
 - 🔒 Provides privacy and security: Admin double auth, log fuzzing, shadow ban, TOR detector, ..
+- 💻 Is trivial to install & configure
 
 
 When multichannel is enabled, here is what it looks like:
@@ -104,16 +103,6 @@ Using the Youtube API is free but there is a daily quota, which when exceeded bl
 3. Copy the generated API key, and paste it in your `.env.json` file (the variable name is `youtube_api_key`)
 4. Restart the server
 
-
-### Develop
-
-```bash
-npm run dev
-```
-
-This will start a static file server & websocket server, available under the location specified in the `.env.json` file.
-When the source files change, the build processes runs automatically.
-
 ## Customize
 
 
@@ -160,3 +149,24 @@ To add a custom plugin, create a plugin object in `app/server/skychat/plugins/us
 
 `config/guestnames.txt` is the pool of non-logged usernames.
 When a guest logs in, a random name is associated to its session. These names are randomly used from this file. If you want to change these names, keep in mind that they should not contain whitespace characters (anything matched by \s so newline, tab, space, ..). Default random names are animal names.
+
+
+
+## Contribute
+
+### Develop
+
+To watch, build and run a local SkyChat server, use:
+
+```bash
+npm run dev
+```
+
+This will start a static file server & websocket server, available under the location specified in the `.env.json` file.
+When the source files change, the build processes re-runs automatically.
+
+### Add features
+
+Please use only one of the following to suggest new features (or bug fixes):
+- Create a pull request
+- Open an issue with your proposal 
