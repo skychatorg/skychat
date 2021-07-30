@@ -38,7 +38,7 @@
                         </div>
                         <!-- represents other users -->
                         <div v-if="(playerChannelUsers[channel.id] || []).length > 4"
-                            :title="(playerChannelUsers[channel.id].length - 4) + 'others are watching'"
+                            :title="(playerChannelUsers[channel.id].length - 4) + ' others are watching'"
                             class="avatar"
                         >
                             <i class="material-icons md-14">more_horiz</i>

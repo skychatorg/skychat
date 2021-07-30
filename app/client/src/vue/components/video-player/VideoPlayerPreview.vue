@@ -217,12 +217,12 @@
                 transition: all 1s ease-in-out;
 
                 &.progress-bar-top {
-                    height: 4px;
+                    height: 2px;
                     top: 0;
                     right: 0;
                 }
                 &.progress-bar-bottom {
-                    height: 4px;
+                    height: 2px;
                     bottom: 0;
                     left: 0;
                 }
