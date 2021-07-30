@@ -365,6 +365,8 @@
 
                     .image-bubble {
                         transition: all 1s ease-in-out;
+                        width: 100%;
+                        height: 100%;
                     }
                 }
                 svg {
