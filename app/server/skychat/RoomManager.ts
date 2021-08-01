@@ -33,9 +33,9 @@ export class RoomManager {
 
     private static CURRENT_GUEST_ID: number = 0;
 
-    private rooms: Room[] = [];
-
     private readonly server: Server;
+
+    public rooms: Room[] = [];
 
     /**
      * Plugins. All aliases of a command/plugin points to the same command instance.

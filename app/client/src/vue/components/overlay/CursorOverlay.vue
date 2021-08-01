@@ -37,7 +37,7 @@
             document.addEventListener('mousemove', event => {
                 const x = event.clientX / window.innerWidth;
                 const y = event.clientY / window.innerHeight;
-                if (this.$store.state.Main.currentRoom !== null && this.cursor) {
+                if (this.currentRoom !== null && this.cursor) {
                     this.sendCursorPosition(x, y);
                 }
             });
@@ -58,6 +58,7 @@
         computed: {
             ...mapState('Main', {
                 'cursorList': state => Object.values(state.cursors),
+                'currentRoom': state => state.currentRoom,
                 'cursor': state => state.user.data.plugins.cursor,
             }),
         }

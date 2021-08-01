@@ -8,16 +8,20 @@ import { Timing } from "../../skychat/Timing";
 import { Message } from "../../skychat/Message";
 import { GlobalPlugin } from "../GlobalPlugin";
 import { RoomManager } from "../../skychat/RoomManager";
+import { MessageHistoryPlugin } from "../core/MessageHistoryPlugin";
 
 
 enum BAN_TYPES {
     ACCESS = 0,
     SHADOW = 1,
     BUG = 2,
+    SPAM = 3,
 };
 
 
 export class BanPlugin extends GlobalPlugin {
+
+    static readonly TICK_INTERVAL = 1000;
 
     static readonly BAN_COMMAND: string = 'ban';
 
@@ -65,6 +69,8 @@ export class BanPlugin extends GlobalPlugin {
         super(manager);
 
         this.loadStorage();
+
+        setInterval(() => this.tick(), BanPlugin.TICK_INTERVAL);
     }
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
@@ -211,6 +217,55 @@ export class BanPlugin extends GlobalPlugin {
         if (this.isBanned(connection, BAN_TYPES.ACCESS)) {
             connection.close(Connection.CLOSE_KICKED, 'You have been disconnected');
             throw new Error();
+        }
+    }
+
+    private async tick(): Promise<void> {
+
+        const getRandomUser = (sessions: Session[]): User => {
+            return sessions[Math.floor(Math.random() * sessions.length)].user;
+        };
+
+        // All sessions
+        const sessions = Object.values(Session.sessions);
+
+        const connectionsToSpam: Connection[] = [];
+        for (const session of sessions) {
+            for (const connection of session.connections) {
+                if (this.isBanned(connection, BAN_TYPES.SPAM)) {
+                    connectionsToSpam.push(connection);
+                }
+            }
+        }
+
+        // If there is at least one connection which needs to be spammed
+        if (connectionsToSpam.length > 0) {
+
+            // Get the function that returns a fake message
+            const messageHistory = this.manager.rooms[0].getPlugin('messagehistory') as MessageHistoryPlugin | null;
+            let getFakeMessage: (user: User) => Message;
+            if (messageHistory) {
+                getFakeMessage = (user: User): Message => {
+                    const hash = new Date().getTime() * 1000 + Math.floor((Math.random() * 900 + 100));
+                    return messageHistory.getFakeMessage(hash, Message.ID + 1, user);
+                };
+            } else {
+                getFakeMessage = (user: User): Message => new Message({
+                    id: Message.ID + 1,
+                    content: 'hello 🥐',
+                    user,
+                });
+            }
+
+            // Build the list of spam messages
+            const messages: Message[] = Array.from({ length: 6 }).map(() => getFakeMessage(getRandomUser(sessions)));
+
+            // Spam all connections
+            for (const connection of connectionsToSpam) {
+                for (const message of messages) {
+                    setTimeout(() => connection.send('message', message.sanitized()), Math.random() * BanPlugin.TICK_INTERVAL);
+                }
+            }
         }
     }
 }
