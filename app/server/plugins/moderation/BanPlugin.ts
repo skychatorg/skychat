@@ -14,7 +14,7 @@ import { MessageHistoryPlugin } from "../core/MessageHistoryPlugin";
 enum BAN_TYPES {
     ACCESS = 0,
     SHADOW = 1,
-    BUG = 2,
+    LAG = 2,
     SPAM = 3,
 };
 
@@ -197,7 +197,7 @@ export class BanPlugin extends GlobalPlugin {
             }
         }
         // If bug banned, make user lag
-        if (this.isBanned(connection, BAN_TYPES.BUG)) {
+        if (this.isBanned(connection, BAN_TYPES.LAG)) {
             // Make message lag from 0 to 20s randomly
             await Timing.sleep(20 * Math.random() * 1000);
         }
