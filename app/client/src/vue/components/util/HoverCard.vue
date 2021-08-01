@@ -51,7 +51,7 @@
         }
 
         &.selected {
-            margin-left: 4px;
+            margin-left: -4px;
         }
 
         &:hover:not(.selected) {

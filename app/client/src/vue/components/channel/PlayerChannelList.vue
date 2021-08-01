@@ -1,9 +1,9 @@
 <template>
     <div class="channel-list" v-show="playerChannels.length > 0 || op">
-        <div class="subtitle" v-show="op">
+        <div class="subtitle">
             <h3>
                 video
-                <span @click="createChannel()" class="channel-create material-icons md-12">add</span>
+                <span v-show="op" @click="createChannel()" class="channel-create material-icons md-12">add</span>
             </h3>
         </div>
         
@@ -101,11 +101,12 @@
 
 .channel-list {
     color: white;
+    padding-left: 4px;
 
     .subtitle {
         width: 100%;
         background: #242427;
-        margin-top: 4px;
+        margin-top: 2px;
         text-align: center;
 
         h3 {
