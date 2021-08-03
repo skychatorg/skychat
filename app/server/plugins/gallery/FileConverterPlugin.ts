@@ -8,6 +8,7 @@ import { UserController } from "../../skychat/UserController";
 import * as fs from 'fs';
 import { Config } from "../../skychat/Config";
 import { Session } from "../../skychat/Session";
+import { exec } from 'child_process';
 
 
 /**
@@ -26,6 +27,8 @@ export class FileConverterPlugin extends GlobalPlugin {
 
     static readonly commandName = 'convert';
 
+    static readonly commandAliases = ['convertinfo'];
+
     public readonly minRight = typeof Config.PREFERENCES.minRightForGalleryWrite === 'number' ? Config.PREFERENCES.minRightForGalleryWrite : 0;
 
     public readonly opOnly = Config.PREFERENCES.minRightForGalleryWrite === 'op';
@@ -33,11 +36,16 @@ export class FileConverterPlugin extends GlobalPlugin {
     readonly rules = {
         convert: {
             minCount: 2,
-            maxCount: 2,
             params: [
                 { name: "media location", pattern: /.+/ },
                 { name: "convert destination", pattern: /^([a-z0-9]+)$/ },
+                { name: "options", pattern: /./ },
             ]
+        },
+        convertinfo: {
+            minCount: 1,
+            maxCount: 1,
+            params: [{ name: "media location", pattern: /.+/ }]
         },
     }
     
@@ -56,9 +64,41 @@ export class FileConverterPlugin extends GlobalPlugin {
             throw new Error('Gallery plugin not found');
         }
 
+        if (alias === 'convertinfo') {
+            await this.handleConvertInfo(param, connection, galleryPlugin);
+            return;
+        }
+
+        if (alias === 'convert') {
+            await this.handleConvert(param, connection, galleryPlugin);
+            return;
+        }
+    }
+
+    async handleConvertInfo(param: string, connection: Connection, galleryPlugin: GalleryPlugin): Promise<void> {
+
         const gallery = galleryPlugin.gallery;
 
-        const [mediaUrl, convertDestination] = param.split(' ');
+        const media = gallery.getMediaFromUrl(param);
+        if (! media) {
+            throw new Error('Media does not exist');
+        }
+
+        const folder = gallery.getFolderById(media.folderId);
+        if (! folder) {
+            throw new Error('Folder does not exist');
+        }
+
+        const result = await this.getVideoInfo(media);
+        const message = UserController.createNeutralMessage({ content: result || 'Error', });
+        connection.send('message', message.sanitized());
+    }
+
+    async handleConvert(param: string, connection: Connection, galleryPlugin: GalleryPlugin): Promise<void> {
+
+        const gallery = galleryPlugin.gallery;
+
+        const [mediaUrl, convertDestination, ...convertOptions] = param.split(' ');
         const media = gallery.getMediaFromUrl(mediaUrl);
         if (! media) {
             throw new Error('Media does not exist');
@@ -84,7 +124,7 @@ export class FileConverterPlugin extends GlobalPlugin {
         let convertedMediaPath: string | undefined;
         let thrownError: Error | undefined;
         try {
-            convertedMediaPath = await method.bind(this)(connection, media);
+            convertedMediaPath = await method.bind(this)(connection, media, convertOptions.join(' '));
         } catch (error) {
             thrownError = error;
         }
@@ -114,12 +154,12 @@ export class FileConverterPlugin extends GlobalPlugin {
         galleryPlugin.syncStorage();
     }
 
-    async webm_to_mp4(connection: Connection, media: GalleryMedia) {
-        return this.convertVideoToMP4(connection, 'webm', media);
+    async webm_to_mp4(connection: Connection, media: GalleryMedia, options: string) {
+        return this.convertVideoToMP4(connection, 'webm', media, options);
     }
 
-    async mkv_to_mp4(connection: Connection, media: GalleryMedia) {
-        return this.convertVideoToMP4(connection, 'mkv', media);
+    async mkv_to_mp4(connection: Connection, media: GalleryMedia, options: string) {
+        return this.convertVideoToMP4(connection, 'mkv', media, options);
     }
 
     /**
@@ -129,11 +169,11 @@ export class FileConverterPlugin extends GlobalPlugin {
      * @param media 
      * @returns 
      */
-    convertVideoToMP4(connection: Connection, sourceType: string, media: GalleryMedia) {
+    convertVideoToMP4(connection: Connection, sourceType: string, media: GalleryMedia, options?: string) {
         return new Promise((resolve, reject) => {
             const currentMediaPath = media.getLocalPath();
             const convertedMediaPath = currentMediaPath.replace(new RegExp('\\.' + sourceType + '$'), `.mp4`);
-            const rawCommand = `ffmpeg -i ${currentMediaPath} ${convertedMediaPath} -y`;
+            const rawCommand = `ffmpeg -i ${currentMediaPath} ${convertedMediaPath} -y` + (options ? ' ' + options : '');
             const spawn0 = rawCommand.split(' ')[0];
             const spawnArgs = rawCommand.substr(spawn0.length + 1).split(' ');
 
@@ -162,6 +202,28 @@ export class FileConverterPlugin extends GlobalPlugin {
                 }
 
                 resolve(convertedMediaPath);
+            });
+        });
+    }
+
+    /**
+     * 
+     * @param media 
+     */
+    getVideoInfo(media: GalleryMedia): Promise<string> {
+        return new Promise((resolve, reject) => {
+
+            const currentMediaPath = media.getLocalPath();
+            const rawCommand = `ffmpeg -i ${currentMediaPath} 2>&1 | grep "Stream #"`;
+
+            exec(rawCommand, (error, stdout, stderr) => {
+                if (error) {
+                    reject(error);
+                    return;
+                }
+
+                const result = stdout.trim();
+                resolve(result);
             });
         });
     }
