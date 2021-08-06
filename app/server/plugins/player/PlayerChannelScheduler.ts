@@ -155,6 +155,7 @@ export class PlayerChannelScheduler {
             // Empty the channel queue
             this.playerChannel.locked = true;
             this.playerChannel.flushQueue();
+            this.playerChannel.skip();
             this.playerChannel.add(currentEvent.media);
         }
 
