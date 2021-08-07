@@ -41,9 +41,11 @@ export class GalleryFolder {
     }
 
     deleteMedia(mediaId: number){
-        if (! this.getMediaById(mediaId)) {
+        const media = this.getMediaById(mediaId);
+        if (! media) {
             throw new Error(`Media ${mediaId} not found`);
         }
+        media.delete();
         this.medias = this.medias.filter(media => media.id !== mediaId);
     }
 

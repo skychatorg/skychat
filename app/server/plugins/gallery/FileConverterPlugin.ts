@@ -173,7 +173,7 @@ export class FileConverterPlugin extends GlobalPlugin {
         return new Promise((resolve, reject) => {
             const currentMediaPath = media.getLocalPath();
             const convertedMediaPath = currentMediaPath.replace(new RegExp('\\.' + sourceType + '$'), `.mp4`);
-            const rawCommand = `ffmpeg -i ${currentMediaPath} ${convertedMediaPath} -y` + (options ? ' ' + options : '');
+            const rawCommand = `ffmpeg -i ${currentMediaPath} -y ${options || ''} ${convertedMediaPath}`;
             const spawn0 = rawCommand.split(' ')[0];
             const spawnArgs = rawCommand.substr(spawn0.length + 1).split(' ');
 
