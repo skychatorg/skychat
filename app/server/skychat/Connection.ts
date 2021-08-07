@@ -58,6 +58,7 @@ export class Connection extends EventEmitter implements IBroadcaster {
         session.attachConnection(this);
         this.webSocket.on('message', message => this.onMessage(message));
         this.webSocket.on('close', (code, message) => this.onClose(code, message));
+        this.webSocket.on('error', (error) => this.onError(error));
 
         setTimeout(this.sendPing.bind(this), Connection.PING_INTERVAL_MS);
         this.on('pong', this.onPong.bind(this));
@@ -154,6 +155,14 @@ export class Connection extends EventEmitter implements IBroadcaster {
         if (this.room) {
             this.room.detachConnection(this);
         }
+    }
+
+    /**
+     * Error on the websocket
+     * @param error 
+     */
+    private async onError(error: Error): Promise<void> {
+        console.error(`WebSocket error`, this, error);
     }
 
     /**
