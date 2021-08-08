@@ -67,7 +67,7 @@ export class ConnectedListPlugin extends GlobalPlugin {
         // Build a list of anon sessions to send to guests
         let anonSessions =  Object.values(Session.sessions)
             .map(sess => sess.sanitized())
-            .map(sess => ({...sess, user: { ...sess.user, money: 0, right: 0, xp: 0 }}))
+            .map(sess => ({...sess, user: { ...sess.user, money: 0, right: -1, xp: 0 }}))
             .sort((a, b) => {
                 if (a.connectionCount === 0 || b.connectionCount === 0) {
                     return b.connectionCount - a.connectionCount;

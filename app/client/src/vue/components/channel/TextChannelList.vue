@@ -1,9 +1,9 @@
 <template>
     <div class="room-list" v-show="rooms.length > 1 || op">
-        <div class="subtitle" v-show="op" >
+        <div class="subtitle">
             <h3>
                 text
-                <span @click="createRoom()" class="room-create material-icons md-12">add</span>
+                <span v-show="op" @click="createRoom()" class="room-create material-icons md-12">add</span>
             </h3>
         </div>
         <hover-card v-for="room in rooms"
@@ -109,12 +109,12 @@
 
 .room-list {
     color: white;
+    padding-left: 4px;
 
     .subtitle {
         width: 100%;
-        height: 16px;
         background: #242427;
-        margin-top: 4px;
+        margin-top: 2px;
         text-align: center;
 
         h3 {

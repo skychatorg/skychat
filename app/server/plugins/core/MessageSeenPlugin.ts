@@ -26,7 +26,7 @@ export class MessageSeenPlugin extends RoomPlugin {
         lastseen: {
             minCount: 1,
             maxCount: 1,
-            maxCallsPer10Seconds: 20,
+            maxCallsPer10Seconds: 40,
             params: [
                 {
                     name: 'message id',

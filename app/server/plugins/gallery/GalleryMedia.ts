@@ -74,6 +74,10 @@ export class GalleryMedia {
         this.thumb = FileManager.getFileUrlFromLocalPath(thumbPath);
     }
 
+    delete() {
+        fs.unlinkSync(this.getLocalPath());
+    }
+
     sanitized(): SanitizedGalleryMedia {
         return {
             id: this.id,

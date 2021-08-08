@@ -4,6 +4,8 @@ import {Message} from "../../skychat/Message";
 import {Room} from "../../skychat/Room";
 import {Config} from "../../skychat/Config";
 import { StickerManager } from "../../skychat/StickerManager";
+import { User } from "../../skychat/User";
+import { UserController } from "../../skychat/UserController";
 
 
 export class MessageHistoryPlugin extends RoomPlugin {
@@ -31,27 +33,37 @@ export class MessageHistoryPlugin extends RoomPlugin {
 
             // Each fake message correspond to a real message
             const realMessage = this.room.messages[i];
-            const fakeTextIndex = (realMessage.createdTime.getTime() + realMessage.id) % Config.FAKE_MESSAGES.length;
-            const addSticker = realMessage.createdTime.getTime() % 4 === 0;
-            const stickerIndex = realMessage.createdTime.getTime() % stickers.length;
-
-            // Get the fake message content
-            let fakeText = Config.FAKE_MESSAGES[fakeTextIndex];
-            // Randomly add a sticker
-            if (addSticker) {
-                fakeText += ' ' + stickers[stickerIndex];
-            }
-
-            // Build the message object and send it
-            fakeMessages.push(new Message({
-                id: this.room.messages[i].id,
-                room: this.room.id,
-                content: fakeText,
-                createdTime: this.room.messages[i].createdTime,
-                user: this.room.messages[i].user
-            }).sanitized());
-
+            const hash = realMessage.createdTime.getTime() + realMessage.id;
+            const message = this.getFakeMessage(hash, realMessage.id, realMessage.user, realMessage.room, realMessage.createdTime);
+            fakeMessages.push(message.sanitized());
         }
         connection.send('messages', fakeMessages);
+    }
+
+    /**
+     * Build a fake message
+     * @param hash Hash to randomize the message content and stickers
+     * @param id 
+     * @param user 
+     * @param room 
+     * @param createdTime 
+     * @returns 
+     */
+    getFakeMessage(hash: number, id: number, user: User, room?: number | null, createdTime?: Date): Message {
+
+        hash = Math.floor(hash);
+        const stickers = Object.keys(StickerManager.stickers);
+        const fakeTextIndex = hash % Config.FAKE_MESSAGES.length;
+        const addSticker = hash % 4 === 0;
+        const stickerIndex = hash % stickers.length;
+        const content = Config.FAKE_MESSAGES[fakeTextIndex] + (addSticker ? ' ' + stickers[stickerIndex] : '');
+
+        return new Message({
+            id,
+            user,
+            room,
+            content: content,
+            createdTime: createdTime || new Date(),
+        });
     }
 }

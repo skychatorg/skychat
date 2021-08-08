@@ -118,10 +118,11 @@ export class Gallery {
     }
 
     search(query: string) {
-        const matches = this.folders
-            .map(folder => folder.search(query))
-            .filter(folder => folder.medias.length > 0);
-        return { folders: matches };
+        const matches = [];
+        for (const folder of this.folders) {
+            matches.push(...folder.search(query));
+        }
+        return matches;
     }
 
     sanitized(limit?: number): SanitizedGallery {

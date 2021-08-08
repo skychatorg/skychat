@@ -225,13 +225,13 @@ export abstract class Plugin {
             if (typeof this.coolDownEntries[identifier] !== 'undefined') {
                 // If cool down still applies
                 if (new Date() < new Date(this.coolDownEntries[identifier].last.getTime() + coolDown)) {
-                    throw new Error('Cool down for ' + alias + ' still applies');
+                    throw new Error(`${alias}: Cool down still applies`);
                 }
                 // If 10 second window entry still valid
                 if (this.coolDownEntries[identifier].first.getTime() + 10 * 1000 > new Date().getTime()) {
                     // If maximum number of calls per 10 seconds reached
                     if (this.coolDownEntries[identifier].count > maxCallsPer10Seconds) {
-                        throw new Error('10 seconds window cool down still applies');
+                        throw new Error(`${alias}: 10 seconds window cool down still applies`);
                     }
                 }
             }

@@ -1,5 +1,5 @@
 <template>
-    <div class="gallery-preview" v-if="shownFolders !== null">
+    <div class="gallery-preview" v-if="gallery.data !== null">
         <div class="gallery-content">
 
             <div class="gallery-search">
@@ -9,14 +9,15 @@
                     placeholder="Search medias">
             </div>
 
-            <div class="gallery-results scrollbar">
+            <!-- Gallery preview -->
+            <div v-if="tab === 'preview'" class="gallery-results scrollbar">
 
-                <h3 v-show="shownFolders.length === 0" class="section-title">
-                    {{ tab === 'preview' ? 'no media' : 'no matches' }}
+                <h3 v-show="gallery.data.folders.length === 0" class="section-title">
+                    no media
                 </h3>
 
                 <!-- 1 folder -->
-                <div v-for="folder in shownFolders"
+                <div v-for="folder in gallery.data.folders"
                     :key="folder.id"
                     class="gallery-folder">
 
@@ -27,38 +28,28 @@
 
                     <!-- medias -->
                     <div class="media-list scrollbar">
-                        <!-- 1 media -->
-                        <div
+                        <gallery-media
                             v-for="media in folder.medias"
                             :key="media.id"
-                            :style="{'background-image': 'url(' + media.thumb + ')'}"
-                            @click="openMedia(media)"
-                            class="media">
-                            <div class="media-title" :title="media.tags.join(', ')">
-                                <div v-for="tag in media.tags"
-                                    :key="tag"
-                                    class="media-tag">
-                                    {{ tag }}
-                                </div>
-                            </div>
-                            <div class="media-extension">
-                                .{{ media.location.match(/\.([a-z0-9]+)$/)[1] }}
-                            </div>
-                            <div class="media-actions">
-                                <!-- copy -->
-                                <div class="media-action" title="Copy link to clipboard" @click.stop="copyMediaLink(media)">
-                                    <i class="material-icons md-14">content_copy</i>
-                                </div>
-                                <!-- play (if video) -->
-                                <div v-show="isPlayable(media)" class="media-action" title="Play media" @click.stop="playMedia(media)">
-                                    <i class="material-icons md-14">play_arrow</i>
-                                </div>
-                                <!-- delete -->
-                                <div v-show="canWrite()" class="media-action" title="Delete" @click.stop="deleteMedia(media)">
-                                    <i class="material-icons md-14">close</i>
-                                </div>
-                            </div>
-                        </div>
+                            :media="media" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gallery search results -->
+            <div v-if="tab === 'search'" class="gallery-results scrollbar">
+
+                <h3 v-show="gallerySearchResults.length === 0" class="section-title">
+                    no matches
+                </h3>
+
+                <!-- medias -->
+                <div class="gallery-search-results">
+                    <div class="media-list scrollbar">
+                        <gallery-media
+                            v-for="media in gallerySearchResults"
+                            :key="media.id"
+                            :media="media" />
                     </div>
                 </div>
             </div>
@@ -71,13 +62,13 @@
     import { mapState } from 'vuex';
     import MediaVisualizer from "../modal/MediaVisualizer.vue";
     import HoverCard from "../util/HoverCard";
+    import GalleryMedia from "./GalleryMedia";
 
 
     export default Vue.extend({
-        components: { HoverCard, MediaVisualizer },
+        components: { HoverCard, MediaVisualizer, GalleryMedia },
         data: function() {
             return {
-                shownFolders: null,
                 searchInput: '',
 
                 /**
@@ -87,13 +78,6 @@
             }
         },
         watch: {
-            'tab': function() {
-                if (this.tab === 'preview') {
-                    this.shownFolders = this.gallery.data.folders;
-                } else {
-                    this.shownFolders = this.gallerySearchResults.folders;
-                }
-            },
             'searchInput': function() {
                 if (this.searchInput === '') {
                     this.tab = 'preview';
@@ -109,15 +93,6 @@
                         return;
                     }
                     this.shownFolders = this.gallery.data.folders;
-                }
-            },
-            'gallerySearchResults': {
-                deep: true,
-                handler: function() {
-                    if (this.tab !== 'search') {
-                        return;
-                    }
-                    this.shownFolders = this.gallerySearchResults.folders;
                 }
             },
         },
@@ -216,6 +191,8 @@
                 overflow-y: auto;
                 display: flex;
                 flex-direction: column;
+                padding-top: 10px;
+                padding-bottom: 10px;
 
                 .gallery-folder {
                     display: flex;
@@ -233,6 +210,7 @@
                             color: #ff8e8e;
                         }
                     }
+                
 
                     .media-list {
                         display: flex;
@@ -245,75 +223,19 @@
                         max-width: 100%;
                         flex-wrap: nowrap;
                         overflow-y: auto;
+                    }
+                }
 
-                        .media-list-arrow {
-                            flex-basis: 20px;
-                        }
+                .gallery-search-results {
+                    flex-grow: 1;
 
-                        .media {
-                            margin-left: 6px;
-                            margin-right: 6px;
-                            flex-basis: 120px;
-                            min-width: 120px;
-                            height: 160px;
-                            background-position: 50%;
-                            background-size: cover;
-                            position: relative;
-                            cursor: pointer;
+                    .media-list {
+                        display: flex;
+                        flex-wrap: wrap;
+                        justify-content: center;
 
-                            .media-title {
-                                margin: 4px;
-                                display: flex;
-                                flex-wrap: nowrap;
-                                overflow: hidden;
-
-                                .media-tag {
-                                    white-space: nowrap;
-                                    margin-right: 4px;
-                                    border: 1px solid #6a6a6a;
-                                    border-radius: 4px;
-                                    padding: 1px 4px;
-                                    background: #00000036;
-                                }
-                            }
-
-                            .media-extension {
-                                position: absolute;
-                                bottom: 0;
-                                right: 0;
-                                margin: 4px;
-                                overflow: hidden;
-                                color: #969696;
-                            }
-
-                            .media-actions {
-                                display: flex;
-                                position: absolute;
-                                bottom: 0;
-                                left: 0;
-                                width: 100%;
-                                height: 0;
-                                overflow: hidden;
-                                transition: height 0.2s;
-
-                                .media-action {
-                                    flex-grow: 1;
-                                    text-align: center;
-                                    display: flex;
-                                    flex-direction: column;
-                                    justify-content: center;
-                                    background-color: #2c2d31;
-                                    transition: background-color 0.2s;
-
-                                    &:hover {
-                                        background-color: #3f4144;
-                                    }
-                                }
-                            }
-
-                            &:hover .media-actions {
-                                height: 18px;
-                            }
+                        & > * {
+                            margin-top: 10px;
                         }
                     }
                 }
