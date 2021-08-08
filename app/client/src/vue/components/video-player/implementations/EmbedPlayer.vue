@@ -5,6 +5,7 @@
             class="player embed"
             controls=""
             autoplay="1"
+            :src="src"
             name="media">
             <source :src="src" :type="videoType">
         </video>
@@ -21,6 +22,7 @@
                 src: '',
                 videoType: '',
                 audioAnalyzerUpdateInterval: null,
+                previousVideoHash: null,
             };
         },
         watch: {
@@ -35,14 +37,22 @@
         },
         methods: {
             update: function() {
-                // Update video information
+                // Get current cursor time
                 const timeSinceLastUpdate = new Date().getTime() - this.playerStateLastUpdate.getTime();
-                const startTimeMs = this.playerState.cursor + timeSinceLastUpdate;
-                this.src = this.playerState.current.video.id + '#t=' + parseInt(startTimeMs / 1000);
-                const extension = this.playerState.current.video.id.match(/\.([a-z0-9]+)$/)[1];
-                this.videoType = 'video/' + extension;
-                // On next tick, update the video stream info
-                Vue.nextTick(() => this.startAudioAnalyser());
+                const currentTime = parseInt((this.playerState.cursor + timeSinceLastUpdate) / 1000);
+                const hash = JSON.stringify(this.playerState.current.video.id);
+                if (hash === this.previousVideoHash) {
+                    // If video did not change since last sync, update time
+                    this.$refs.player.currentTime = currentTime;
+                } else {
+                    // If new video, update the player
+                    this.src = `${this.playerState.current.video.id}#t=${currentTime}`;
+                    const extension = this.playerState.current.video.id.match(/\.([a-z0-9]+)$/)[1];
+                    this.videoType = 'video/' + extension;
+                    // On next tick, update the video stream info
+                    Vue.nextTick(() => this.startAudioAnalyser());
+                    this.previousVideoHash = hash;
+                }
             },
             startAudioAnalyser: function() {
                 const audioContext = new(window.AudioContext || window.webkitAudioContext)();

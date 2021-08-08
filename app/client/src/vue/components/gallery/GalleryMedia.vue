@@ -98,8 +98,9 @@
         .media-title {
             margin: 4px;
             display: flex;
-            flex-wrap: nowrap;
+            flex-wrap: wrap;
             overflow: hidden;
+            justify-content: center;
 
             .media-tag {
                 white-space: nowrap;
