@@ -53,18 +53,22 @@ export class GalleryFolder {
         this.medias = mediasInfo.map(media => new GalleryMedia(media));
     }
 
-    search(query: string): SanitizedGalleryFolder {
-        return {
-            id: this.id,
-            name: this.name,
-            medias: this.medias
-                .filter(media => {
-                    // Try to find a tag which is in the query
-                    const match = media.tags.find(tag => tag.indexOf(query) !== -1);
-                    return !! match;
-                })
-                .map(media => media.sanitized())
-        };
+    search(query: string): SanitizedGalleryMedia[] {
+        return this
+            .medias
+            .filter(media => {
+                // For each tag in the query
+                const tags = query.toLowerCase().split(/[ ]+/g);
+                for (const tag of tags) {
+                    // The tag should be contained by one of the media tag
+                    const match = media.tags.find(t => t.indexOf(tag) !== -1);
+                    if (! match) {
+                        return false;
+                    }
+                }
+                return true;
+            })
+            .map(media => media.sanitized());
     }
 
     sanitized(limit?: number): SanitizedGalleryFolder {
