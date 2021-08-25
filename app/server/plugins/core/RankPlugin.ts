@@ -12,7 +12,7 @@ import { RoomManager } from "../../skychat/RoomManager";
 
 export class RankPlugin extends GlobalPlugin {
 
-    public static readonly MAX_INACTIVITY_DURATION_MS: number = 10 * 60 * 1000;
+    public static readonly MAX_INACTIVITY_DURATION_MS: number = 5 * 60 * 1000;
 
     static readonly commandName = 'rank';
 
