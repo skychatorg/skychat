@@ -27,6 +27,7 @@
     "license": "ISC",
     "dependencies": {
         "@toast-ui/vue-calendar": "^1.1.1",
+        "aws-sdk": "^2.973.0",
         "biguint-format": "^1.0.2",
         "escape-html": "^1.0.3",
         "events": "^3.1.0",
@@ -48,6 +49,7 @@
         "sqlite3": "^5.0.2",
         "striptags": "^3.1.1",
         "ua-parser-js": "^0.7.21",
+        "uuid": "^8.3.2",
         "vue-js-modal": "^2.0.0-rc.3",
         "vuex": "^3.4.0",
         "ws": "^7.3.0"

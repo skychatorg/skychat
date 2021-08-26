@@ -2,26 +2,23 @@
     <hover-card
         :clickable="true"
         :selected="false"
-        :border-color="session.user.data.plugins.color"
         class="user-list-row"
         :class="{
             'disconnected': session.connectionCount === 0,
         }"
     >
         <div class="connected-session"
-            :style="{'border-left-color': session.user.data.plugins.color}"
             :class="{
                 'selected': isChanSelected(session.user.username),
                 'disconnected': session.connectionCount === 0,
             }">
             <div class="avatar">
-                <div class="image-bubble" :style="{'box-shadow': session.user.data.plugins.halo ? '0 0 4px 4px ' + session.user.data.plugins.color : 'unset'}">
+                <div class="image-bubble" :style="{ 'border-color': session.user.data.plugins.halo ? session.user.data.plugins.color : '#afafaf' }">
                     <img :src="session.user.data.plugins.avatar">
                 </div>
             </div>
             <div class="info">
-                <div class="session"
-                    :style="{'color': session.user.data.plugins.color}">
+                <div class="session">
                     <i v-show="session.user.data.plugins.pinnedicon" class="pinned-icon material-icons md-14">{{session.user.data.plugins.pinnedicon}}</i>
                     {{session.user.username}}
                     <sup v-show="session.connectionCount > 1">
@@ -124,6 +121,8 @@
             >.image-bubble {
                 width: 100%;
                 height: 100%;
+                border-style: solid;
+                border-width: 2px;
             }
         }
         >.info {
@@ -137,7 +136,7 @@
 
             >.session {
                 display: inline;
-                color: #a3a5b4;
+                color: #afafaf;
                 font-weight: 800;
                 font-size: 110%;
                 flex-basis: 20px;

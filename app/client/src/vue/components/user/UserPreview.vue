@@ -12,7 +12,7 @@
             <div class="user-preview-info">
                 
                 <div class="session"
-                    :style="{'color': user.data.plugins.color}">
+                    :style="{ 'color': user.data.plugins.color }">
                     {{user.username}}
                 </div>
 
@@ -20,7 +20,7 @@
                 <div class="progress-bar">
 
                     <!-- Progress bar -->
-                    <div class="progress-bar-progress" :style="{width: xpProgressPct + '%'}"></div>
+                    <div class="progress-bar-progress" :style="{ width: xpProgressPct + '%' }"></div>
 
                     <!-- Rank icons -->
                     <div class="rank current-rank" :title="'Current rank unlocked at ' + currentRank.limit + ' xp'"><img :src="'/assets/images/' + currentRank.images['26']"></div>
