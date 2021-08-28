@@ -19,7 +19,6 @@
             </div>
             <div class="info">
                 <div class="session">
-                    <i v-show="session.user.data.plugins.pinnedicon" class="pinned-icon material-icons md-14">{{session.user.data.plugins.pinnedicon}}</i>
                     {{session.user.username}}
                     <sup v-show="session.connectionCount > 1">
                         {{session.connectionCount}}
@@ -34,12 +33,15 @@
                     </template>
                     <template v-else>
                         <div class="icons">
+                            <i v-show="session.user.data.plugins.pinnedicon" class="pinned-icon material-icons md-14" :style="{ 'color': session.user.data.plugins.color }">{{ session.user.data.plugins.pinnedicon }}</i>
                             <template v-if="minutesSinceLastMessage > 0">
                                 <i :title="'Last message sent ' + minutesSinceLastMessage + ' minutes ago'" class="material-icons md-14 icon-active-time">schedule</i>
                                 <span :title="'Last message sent ' + minutesSinceLastMessage + ' minutes ago'" class="text-active-time">{{minutesSinceLastMessage > 30 ? 'afk' : (minutesSinceLastMessage + 'm')}}</span>
                             </template>
                         </div>
-                        <div class="motto" :title="session.user.data.plugins.motto">{{session.user.data.plugins.motto}}&nbsp;</div>
+                        <div class="motto" :title="session.user.data.plugins.motto">
+                            {{session.user.data.plugins.motto}}
+                        </div>
                     </template>
                 </div>
             </div>
@@ -122,7 +124,7 @@
                 width: 100%;
                 height: 100%;
                 border-style: solid;
-                border-width: 2px;
+                border-width: 3px;
             }
         }
         >.info {
