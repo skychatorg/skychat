@@ -18,7 +18,7 @@
                 </div>
             </div>
             <div class="info">
-                <div class="session">
+                <div class="session" :style="{ 'color': session.user.data.plugins.color }">
                     {{session.user.username}}
                     <sup v-show="session.connectionCount > 1">
                         {{session.connectionCount}}

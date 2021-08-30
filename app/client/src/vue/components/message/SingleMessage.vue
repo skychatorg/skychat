@@ -8,7 +8,7 @@
                 <img :src="message.user.data.plugins.avatar">
             </div>
             <div class="content selectable" ref="formatted">
-                <div class="user">
+                <div class="user" :style="{ 'color': message.user.data.plugins.color }">
                     {{ message.user.username }}
                     <i v-show="message.meta.device === 'mobile'" class="material-icons user-device md-14">smartphone</i>
                 </div>
