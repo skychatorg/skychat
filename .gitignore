@@ -7,3 +7,5 @@ uploads
 .env.json
 .idea
 .vscode
+
+convert-script

@@ -4,6 +4,7 @@ import {User} from "../../skychat/User";
 import {Session} from "../../skychat/Session";
 import {UserController} from "../../skychat/UserController";
 import { RoomManager } from "../../skychat/RoomManager";
+import { MessageController } from "../../skychat/MessageController";
 
 
 /**
@@ -99,6 +100,17 @@ export class SandalePlugin extends GlobalPlugin {
             throw new Error('User ' + identifier + ' does not exist');
         }
         await UserController.buy(connection.session.user, SandalePlugin.COST_PER_SANDALE * (1 + this.getSandaleCount(identifier)));
+        // Notify everyone but the user who is sandalized
+        const messageContent = `${connection.session.identifier} just sandalized ${identifier}`;
+        const message = UserController.createNeutralMessage({ id: 0, content: messageContent, });
+        if (connection.room) {
+            connection.room.connections.forEach(c => {
+                if (c.session.identifier === identifier) {
+                    return;
+                }
+                c.send('message', message.sanitized());
+            });
+        }
         this.addSandale(identifier, 1);
     }
 
@@ -116,7 +128,7 @@ export class SandalePlugin extends GlobalPlugin {
         const sandales = this.getSandaleCount(username);
         if (sandales > 0) {
             this.removeSandale(username, 1);
-            return '/message ' + ':sandale:'.repeat(sandales);
+            return '/message ' + '👞'.repeat(sandales);
         }
         return message;
     }

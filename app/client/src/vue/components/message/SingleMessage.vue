@@ -1,17 +1,15 @@
 <template>
     <hover-card
-        :border-color="message.user.data.plugins.color"
         class="message-card"
     >
         <div class="message"
             @contextmenu.prevent="$emit('select')">
-            <div class="avatar image-bubble" :style="{'box-shadow': message.user.data.plugins.halo ? '0 0 4px 4px ' + message.user.data.plugins.color : 'unset'}">
+            <div class="avatar image-bubble" :style="{ 'border-color': message.user.data.plugins.halo ? message.user.data.plugins.color : '#afafaf' }">
                 <img :src="message.user.data.plugins.avatar">
             </div>
             <div class="content selectable" ref="formatted">
-                <div class="user" :style="{'color': message.user.data.plugins.color}">
-                    <i v-show="message.user.data.plugins.pinnedicon" class="material-icons md-14">{{message.user.data.plugins.pinnedicon}}</i>
-                    {{message.user.username}}
+                <div class="user" :style="{ 'color': message.user.data.plugins.color }">
+                    {{ message.user.username }}
                     <i v-show="message.meta.device === 'mobile'" class="material-icons user-device md-14">smartphone</i>
                 </div>
 
@@ -123,10 +121,11 @@
             min-height: 60px;
 
             >.avatar {
-                width: 40px;
-                height: 40px;
-                margin-top: 4px;
-                box-shadow: 1px 1px 10px 0px #ffffff78;
+                width: 42px;
+                height: 42px;
+                margin-top: 2px;
+                border-width: 3px;
+                border-style: solid;
             }
 
             >.content {
@@ -139,7 +138,7 @@
 
                 >.user {
                     display: inline;
-                    color: #a3a5b4;
+                    color: #afafaf;
                     font-weight: 800;
                     font-size: 110%;
                     margin-bottom: 4px;

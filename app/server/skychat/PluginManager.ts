@@ -20,7 +20,8 @@ export class PluginManager {
             
             // Check if the command/plugin exists
             if (typeof impl[pluginName] !== 'function') {
-                throw new Error(`Unable to load command/plugin ${pluginName}. Ensure the corresponding file is there and the plugin class exported.`);
+                console.warn(new Error(`Unable to load command/plugin ${pluginName}. Ensure the corresponding file is there and the plugin class exported.`));
+                continue;
             }
 
             // Check plugin type
@@ -58,7 +59,8 @@ export class PluginManager {
             
             // Check if the command/plugin exists
             if (typeof impl[pluginName] !== 'function') {
-                throw new Error(`Unable to load command/plugin ${pluginName}. Ensure the corresponding file is there and the plugin class exported.`);
+                console.warn(new Error(`Unable to load command/plugin ${pluginName}. Ensure the corresponding file is there and the plugin class exported.`));
+                continue;
             }
 
             // Check plugin type
@@ -107,7 +109,8 @@ export class PluginManager {
         for (let pluginName of plugins) {
             // Check if the command/plugin exists
             if (typeof impl[pluginName] !== 'function') {
-                throw new Error(`Unable to load command/plugin ${pluginName}. Ensure the corresponding file is there and the plugin class exported.`);
+                console.warn(new Error(`Unable to load command/plugin ${pluginName}. Ensure the corresponding file is there and the plugin class exported.`));
+                continue;
             }
             // Get the constructor
             const PluginConstructor = impl[pluginName];

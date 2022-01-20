@@ -103,7 +103,7 @@ export class AccountPlugin extends GlobalPlugin {
             throw new Error('Invalid password');
         }
 
-        if (! connection.session.isOP()) {
+        if (! connection.session.isOP() && Config.isInOPList(username)) {
             throw new Error('You can not escalate yourself into OP by changing username. Please remove the new username from the OP list, change username, then re-add it.');
         }
 

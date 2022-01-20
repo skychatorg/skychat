@@ -2,27 +2,23 @@
     <hover-card
         :clickable="true"
         :selected="false"
-        :border-color="session.user.data.plugins.color"
         class="user-list-row"
         :class="{
             'disconnected': session.connectionCount === 0,
         }"
     >
         <div class="connected-session"
-            :style="{'border-left-color': session.user.data.plugins.color}"
             :class="{
                 'selected': isChanSelected(session.user.username),
                 'disconnected': session.connectionCount === 0,
             }">
             <div class="avatar">
-                <div class="image-bubble" :style="{'box-shadow': session.user.data.plugins.halo ? '0 0 4px 4px ' + session.user.data.plugins.color : 'unset'}">
+                <div class="image-bubble" :style="{ 'border-color': session.user.data.plugins.halo ? session.user.data.plugins.color : '#afafaf' }">
                     <img :src="session.user.data.plugins.avatar">
                 </div>
             </div>
             <div class="info">
-                <div class="session"
-                    :style="{'color': session.user.data.plugins.color}">
-                    <i v-show="session.user.data.plugins.pinnedicon" class="pinned-icon material-icons md-14">{{session.user.data.plugins.pinnedicon}}</i>
+                <div class="session" :style="{ 'color': session.user.data.plugins.color }">
                     {{session.user.username}}
                     <sup v-show="session.connectionCount > 1">
                         {{session.connectionCount}}
@@ -37,12 +33,15 @@
                     </template>
                     <template v-else>
                         <div class="icons">
+                            <i v-show="session.user.data.plugins.pinnedicon" class="pinned-icon material-icons md-14" :style="{ 'color': session.user.data.plugins.color }">{{ session.user.data.plugins.pinnedicon }}</i>
                             <template v-if="minutesSinceLastMessage > 0">
                                 <i :title="'Last message sent ' + minutesSinceLastMessage + ' minutes ago'" class="material-icons md-14 icon-active-time">schedule</i>
                                 <span :title="'Last message sent ' + minutesSinceLastMessage + ' minutes ago'" class="text-active-time">{{minutesSinceLastMessage > 30 ? 'afk' : (minutesSinceLastMessage + 'm')}}</span>
                             </template>
                         </div>
-                        <div class="motto" :title="session.user.data.plugins.motto">{{session.user.data.plugins.motto}}&nbsp;</div>
+                        <div class="motto" :title="session.user.data.plugins.motto">
+                            {{session.user.data.plugins.motto}}
+                        </div>
                     </template>
                 </div>
             </div>
@@ -124,6 +123,8 @@
             >.image-bubble {
                 width: 100%;
                 height: 100%;
+                border-style: solid;
+                border-width: 3px;
             }
         }
         >.info {
@@ -137,7 +138,7 @@
 
             >.session {
                 display: inline;
-                color: #a3a5b4;
+                color: #afafaf;
                 font-weight: 800;
                 font-size: 110%;
                 flex-basis: 20px;
