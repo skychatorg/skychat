@@ -42,7 +42,6 @@
         "node-fetch": "^2.6.1",
         "node-sass": "^4.14.1",
         "nodemailer": "^6.4.6",
-        "risibank": "^1.0.2",
         "sha256": "^0.2.0",
         "sql-template-strings": "^2.2.2",
         "sqlite": "^4.0.23",

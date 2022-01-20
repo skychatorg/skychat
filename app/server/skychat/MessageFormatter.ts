@@ -166,8 +166,8 @@ export class MessageFormatter {
      * @param message
      */
     public replaceRisiBankStickers(message: string, remove?: boolean): string {
-        const risibankImageRegExp = /https:\/\/api.risibank.fr\/cache\/stickers\/d([0-9]+)\/([0-9]+)-([A-Za-z0-9-_\[\]]+?)\.(jpg|jpeg|gif|png)/g;
-        const replaceStr = '<a class="skychat-risibank-sticker" href="//risibank.fr/stickers/$2-0" target="_blank"><img src="//api.risibank.fr/cache/stickers/d$1/$2-$3.$4"></a>';
+        const risibankImageRegExp = /https:\/\/risibank.fr\/cache\/medias\/([0-9]+)\/([0-9]+)\/([0-9]+)\/([0-9]+)\/([\w]+)\.(jpg|jpeg|gif|png)/g;
+        const replaceStr = '<a class="skychat-risibank-sticker" href="//risibank.fr/media/$4-media" target="_blank"><img src="//risibank.fr/cache/medias/$1/$2/$3/$4/$5.$6"></a>';
         if (remove) {
             return message.replace(risibankImageRegExp, '');
         }

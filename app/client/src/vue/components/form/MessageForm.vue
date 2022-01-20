@@ -24,9 +24,9 @@
         <div class="form-action audio-upload" :class="{'recording': recordingAudio}" @click="uploadAudio" title="Send an audio recording">
             <i class="upload-icon material-icons md-28">mic</i>
         </div>
-        <!-- <div class="form-action risibank" @click="openRisiBank" title="Ajouter un média RisiBank">
-            <img src="/assets/images/icons/risibank.png"/>
-        </div> -->
+        <div class="form-action risibank" @click="openRisiBank" title="Ajouter un média RisiBank">
+            <img src="/assets/images/icons/risibank.png" width="18" height="18" />
+        </div>
         <form class="form" onsubmit="return false">
             <textarea ref="input"
                       rows="1"
@@ -147,7 +147,13 @@
             },
 
             openRisiBank: function() {
-                console.log('Open RisiBank', RisiBank);
+                RisiBank.activate({
+                    type: 'overlay',
+                    theme: 'dark',
+                    onSelectMedia: ({ media }) => {
+                        this.setMessage(this.message + ' ' + media.cache_url + ' ');
+                    },
+                })
             },
 
             /**
@@ -336,7 +342,7 @@
         }
 
         .risibank {
-
+            margin-bottom: 12px;
         }
 
         .open-gallery {
