@@ -47,7 +47,10 @@
             </div>
             <div class="stats" v-show="session.user.right >= 0">
                 <div class="right" title="Right level">
-                    <span>{{session.user.right}}</span>
+                    <span>{{ session.user.right }}</span>
+                </div>
+                <div class="money" title="Money">
+                    <span>$ {{ session.user.money || 0 }}</span>
                 </div>
             </div>
         </div>
@@ -214,6 +217,7 @@
                 flex-grow: 1;
                 font-size: 80%;
                 color: #e4e444;
+                margin-top: 14px;
             }
         }
     }
