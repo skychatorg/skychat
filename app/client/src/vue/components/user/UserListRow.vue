@@ -50,7 +50,7 @@
                     <span>{{ session.user.right }}</span>
                 </div>
                 <div class="money" title="Money">
-                    <span>$ {{ session.user.money || 0 }}</span>
+                    <span>$ {{ ((session.user.money || 0) / 100).toFixed(2) }}</span>
                 </div>
             </div>
         </div>
