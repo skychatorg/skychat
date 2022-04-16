@@ -209,7 +209,7 @@ export class MessageFormatter {
         if (remove) {
             text = text.replace(MessageFormatter.LINK_REGEXP, '');
         } else {
-            text = text.replace(MessageFormatter.LINK_REGEXP, '$1<a class="skychat-link" target="_blank" rel="nofollow" href="$2">$2</a>');
+            text = text.replace(MessageFormatter.LINK_REGEXP, '$1<a class="skychat-link" target="_blank" rel="nofollow noopener noreferrer" href="$2">$2</a>');
         }
         return text;
     }
