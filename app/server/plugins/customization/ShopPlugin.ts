@@ -60,8 +60,9 @@ export class ShopPlugin extends GlobalPlugin {
                 {id: 22, name: 'limegreen', value: '#32cd32', price: ShopPlugin.COLORS_TIER_3_COST},
                 {id: 23, name: 'yellow', value: '#e4e400', price: ShopPlugin.COLORS_TIER_3_COST},
                 {id: 24, name: 'orange', value: '#e67e00', price: ShopPlugin.COLORS_TIER_3_COST},
-                {id: 25, name: 'orangered', value: '#ff4500', price: ShopPlugin.COLORS_TIER_3_COST},
-                {id: 26, name: 'bestred', value: '#ff2424', price: ShopPlugin.COLORS_TIER_3_COST},
+                // Disabled because too flashy
+                // {id: 25, name: 'orangered', value: '#ff4500', price: ShopPlugin.COLORS_TIER_3_COST},
+                // {id: 26, name: 'bestred', value: '#ff2424', price: ShopPlugin.COLORS_TIER_3_COST},
             ],
             preview: (value, user) => `
                 <div style="color:${value};border-left: 4px solid ${value};padding-left: 6px;">
