@@ -1,12 +1,14 @@
 <template>
     <div class="message-form">
-        <div class="show-mobile">
-            <div class="goto-other-cols">
-                <div @click="onMobileShowLeftCol" title="See rooms and account info" class="goto-left-col" :class="{'has-new': hasNewContentInOtherRooms}">
-                    <i class="material-icons md-28">keyboard_arrow_left</i>
-                </div>
+
+        <!-- Go to left col -->
+        <div class="show-mobile goto-other-cols">
+            <div @click="onMobileShowLeftCol" title="See rooms and account info" class="goto-left-col" :class="{'has-new': hasNewContentInOtherRooms}">
+                <i class="material-icons md-28">keyboard_arrow_left</i>
             </div>
         </div>
+
+        <!-- Upload -->
         <div class="form-action image-upload" v-show="! recordingAudio && uploadingFile" title="Uploading..">
             <label for="file-input">
                 <img src="/assets/images/icons/loading.gif"/>
@@ -18,15 +20,21 @@
             </label>
             <input ref="file" @change="onFileInputChange" id="file-input" type="file" />
         </div>
+
+        <!-- Audio recorder -->
         <div class="form-action audio-upload" @click="cancelAudioUpload" v-show="recordingAudio" title="Cancel audio recording">
             <i class="upload-icon material-icons md-28">cancel</i>
         </div>
         <div class="form-action audio-upload" :class="{'recording': recordingAudio}" @click="uploadAudio" title="Send an audio recording">
             <i class="upload-icon material-icons md-28">mic</i>
         </div>
+
+        <!-- RisiBank -->
         <div class="form-action risibank" @click="openRisiBank" title="Ajouter un média RisiBank">
             <img src="/assets/images/icons/risibank.png" width="18" height="18" />
         </div>
+
+        <!-- Message -->
         <form class="form" onsubmit="return false">
             <textarea ref="input"
                       rows="1"
@@ -39,17 +47,21 @@
                       v-model="message"
                       :placeholder="currentRoomObject ? currentRoomObject.name + ' / Message' : 'Message'"></textarea>
         </form>
-        <div v-show="gallery" class="form-action open-gallery" @click="openGallery" title="Access gallery">
+
+        <!-- Collections -->
+        <div class="form-action open-gallery" v-show="gallery" @click="openGallery" title="Access gallery">
             <i class="material-icons md-28">collections</i>
         </div>
+
+        <!-- Player schedule -->
         <div class="form-action open-player-schedule" @click="openPlayerSchedule" title="See player schedule">
             <i class="material-icons md-28">event</i>
         </div>
-        <div class="show-mobile">
-            <div class="goto-other-cols">
-                <div @click="onMobileShowRightCol" title="See connected list and quick actions" class="goto-right-col">
-                    <i class="material-icons md-28">keyboard_arrow_right</i>
-                </div>
+
+        <!-- Go to right col -->
+        <div class="show-mobile goto-other-cols">
+            <div @click="onMobileShowRightCol" title="See connected list and quick actions" class="goto-right-col">
+                <i class="material-icons md-28">keyboard_arrow_right</i>
             </div>
         </div>
     </div>
@@ -298,122 +310,149 @@
 
 <style lang="scss" scoped>
 
+@media screen and (max-width: 600px) {
+
     .message-form {
-        display: flex;
-        padding-left: 6px;
+        padding-bottom: 50px;
+
+        .form {
+            position: absolute;
+            bottom: 0;
+            left: 5px;
+            width: calc(100% - 10px);
+        }
 
         .form-action {
-            flex-basis: 24px;
+            flex-grow: 1;
+
+            &.risibank {
+                display: flex !important;
+                flex-direction: row !important;
+                justify-content: center !important;
+                margin-top: 8px !important;
+            }
+        }
+    }
+}
+
+.message-form {
+    position: relative;
+    display: flex;
+
+    .form-action {
+        flex-basis: 24px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        text-align: center;
+        margin-left: 12px;
+        color: #cccccc;
+        cursor: pointer;
+        height: 100%;
+    }
+
+    .image-upload {
+        margin-bottom: 8px;
+
+        .upload-icon {
+            width: 100%;
+        }
+
+        img {
+            width: 100%;
+            cursor: wait;
+        }
+
+        >input {
+            display: none;
+        }
+    }
+
+    .audio-upload {
+        margin-bottom: 10px;
+
+        .upload-icon {
+            width: 100%;
+        }
+
+        &.recording {
+            color: #ff7d7d;
+        }
+    }
+
+    .risibank {
+        margin-bottom: 12px;
+    }
+
+    .open-gallery {
+        margin-bottom: 12px;
+        margin-right: 10px;
+    }
+
+    .open-player-schedule {
+        margin-bottom: 12px;
+        margin-right: 10px;
+    }
+
+    .goto-left-col,
+    .goto-right-col {
+        cursor: pointer;
+    }
+
+    .form {
+        flex-grow: 1;
+        padding: 4px 10px 4px 10px;
+        display: flex;
+
+        >.new-message {
+            flex-grow: 1;
+            height: 38px;
+            padding: 10px;
+            resize: none;
+            border: none;
+            background: #2c2d31;
+            color: white;
+            outline-style: none;
+            box-shadow: none;
+            font-family: inherit;
+            -webkit-transition: box-shadow 0.2s;
+            -moz-transition: box-shadow 0.2s;
+            -ms-transition: box-shadow 0.2s;
+            -o-transition: box-shadow 0.2s;
+            transition: box-shadow 0.2s;
+        }
+
+        >.new-message:focus {
+            box-shadow: 1px 1px 14px #d1d4f53b;
+        }
+    }
+
+    .goto-other-cols {
+
+        display: flex;
+        height: 100%;
+
+        .goto-left-col {
+            color: #cccccc;
+            height: 100%;
             display: flex;
             flex-direction: column;
-            justify-content: flex-end;
-            margin-left: 12px;
-            color: #cccccc;
-            cursor: pointer;
-        }
+            justify-content: center;
+            margin-left: 10px;
 
-        .image-upload {
-            margin-bottom: 8px;
-
-            .upload-icon {
-                width: 100%;
-            }
-
-            img {
-                width: 100%;
-                cursor: wait;
-            }
-
-            >input {
-                display: none;
-            }
-        }
-
-        .audio-upload {
-            margin-bottom: 10px;
-
-            .upload-icon {
-                width: 100%;
-            }
-
-            &.recording {
+            &.has-new {
                 color: #ff7d7d;
             }
         }
 
-        .risibank {
-            margin-bottom: 12px;
-        }
-
-        .open-gallery {
-            margin-bottom: 12px;
-            margin-right: 10px;
-        }
-
-        .open-player-schedule {
-            margin-bottom: 12px;
-            margin-right: 10px;
-        }
-
-        .goto-left-col,
         .goto-right-col {
-            cursor: pointer;
-        }
-
-        .form {
-            flex-grow: 1;
-            padding: 4px 10px 4px 10px;
-            display: flex;
-
-            >.new-message {
-                flex-grow: 1;
-                height: 38px;
-                padding: 10px;
-                resize: none;
-                border: none;
-                background: #2c2d31;
-                color: white;
-                outline-style: none;
-                box-shadow: none;
-                font-family: inherit;
-                -webkit-transition: box-shadow 0.2s;
-                -moz-transition: box-shadow 0.2s;
-                -ms-transition: box-shadow 0.2s;
-                -o-transition: box-shadow 0.2s;
-                transition: box-shadow 0.2s;
-            }
-
-            >.new-message:focus {
-                box-shadow: 1px 1px 14px #d1d4f53b;
-            }
-        }
-
-        .goto-other-cols {
-
-            display: flex;
+            color: #cccccc;
             height: 100%;
-
-            .goto-left-col {
-                color: #cccccc;
-                height: 100%;
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                margin-left: 10px;
-
-                &.has-new {
-                    color: #ff7d7d;
-                }
-            }
-
-            .goto-right-col {
-                color: #cccccc;
-                height: 100%;
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                margin-right: 10px;
-            }
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            margin-right: 10px;
         }
     }
+}
 </style>
