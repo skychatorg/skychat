@@ -2,7 +2,7 @@
 
 
 # Constants
-BACKUP_DIRS="config scripts storage uploads/avatars uploads/stickers"
+BACKUP_DIRS="config storage uploads/avatars uploads/stickers"
 BACKUP_LOCATION="backups"
 
 

@@ -12,7 +12,6 @@ services:
         GID: ${DOCKER_GID}
         DOCKER_TZ: "${DOCKER_TZ}"
     volumes:
-      - ./scripts:/var/skychat/scripts:ro
       - ./config:/var/skychat/config
       - ./backups:/var/skychat/backups
       - ./storage:/var/skychat/storage

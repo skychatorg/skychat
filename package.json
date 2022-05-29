@@ -6,8 +6,8 @@
     "types": "build/index.d.ts",
     "main": "build/index.js",
     "scripts": {
-        "destroy": "bash scripts/destroy.sh",
-        "setup": "bash scripts/setup.sh",
+        "destroy": "bash app/script/destroy.sh",
+        "setup": "bash app/script/setup.sh",
         "clean:client": "rm -rf dist",
         "clean:server": "rm -rf build",
         "clean": "npm run clean:client && npm run clean:server",
@@ -15,8 +15,8 @@
         "kill": "ps aux | grep 'node --max-old-space-size=8192 build/server.js' | awk '{print $2}' | xargs kill -9",
         "dev": "PRODUCTION=false npm run clean && ./node_modules/gulp/bin/gulp.js watch",
         "start": "npm run build && node build/server.js",
-        "start:docker": "bash scripts/docker-start.sh",
-        "backup": "bash scripts/backup.sh"
+        "start:docker": "bash app/script/docker-start.sh",
+        "backup": "bash app/script/backup.sh"
     },
     "keywords": [],
     "author": "",

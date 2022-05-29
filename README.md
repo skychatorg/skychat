@@ -19,7 +19,7 @@ The SkyChat:
 
 
 When multichannel is enabled, here is what it looks like:
-![overall-screenshot](./doc/screenshot.png)
+![overall-screenshot](./app/doc/screenshot.png)
 
 
 ### Synchronized media player
@@ -30,18 +30,18 @@ The player has two modes:
 - A 'free' mode, selected by default, where any user can add a media. Orchestration is implemented through a public queue of videos to play, and decision-making (for instance to skip videos) is done with polls.
 - A 'schedule' mode, when users with privilege schedule a media to play at a specific time. These medias can not be skipped, and users can view the schedule to see what medias will play in the upcoming days. When the scheduled media finishes, the player goes back in 'free' mode.
 
-![youtube-short](./doc/youtube-short.gif)
+![youtube-short](./app/doc/youtube-short.gif)
 
 ### Live cursor visualization and mini-games
 
 Users can interact and play with integrated mini-games (which can be disabled in the configuration).
 Users can also see each other cursors moving in real time. This gives a sense of proximity between users. This is the most iconic feature of the SkyChat.
-![cursor-roll](./doc/cursor-roll.gif)
+![cursor-roll](./app/doc/cursor-roll.gif)
 
 ### Cinema mode
 
 If watching long videos, documentaries, or tv shows, the cinema-mode allows users to watch the video in full-screen and have the tchat minimized on the bottom-right of the screen.
-![cinema-mode](./doc/cinema-mode.gif)
+![cinema-mode](./app/doc/cinema-mode.gif)
 
 ### And much more
 
@@ -62,11 +62,11 @@ If not using docker, ensure you have the following installed on your system:
 Then, follow these 2 steps:
 
 ```bash
-# 1. Use the autoinstall script (Clones the repository then executes scripts/setup.sh)
-bash <(wget -q https://raw.githubusercontent.com/skychatorg/skychat/master/scripts/autoinstall.sh -O -) && cd skychat
+# 1. Use the autoinstall script (Clones the repository then executes app/script/setup.sh)
+bash <(wget -q https://raw.githubusercontent.com/skychatorg/skychat/master/app/script/autoinstall.sh -O -) && cd skychat
 
 # 2.A. Run the app in docker
-bash scripts/docker-start.sh
+bash app/script/docker-start.sh
 # 2.B. Run the app on your local host
 npm i && npm start
 ```

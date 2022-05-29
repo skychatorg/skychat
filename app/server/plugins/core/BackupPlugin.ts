@@ -26,7 +26,7 @@ export class BackupPlugin extends GlobalPlugin {
 
     public makeBackup(): Promise<string> {
         return new Promise((resolve, reject) => {
-            exec('bash scripts/backup.sh', (error, stdout, stderr) => {
+            exec('bash app/script/backup.sh', (error, stdout, stderr) => {
                 // If backup fails
                 if (error || stderr) {
                     return reject(error || new Error(stderr));
