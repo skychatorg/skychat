@@ -252,14 +252,14 @@
              * When clicking the arrow to show the right column
              */
             onMobileShowRightCol: function() {
-                this.$store.commit('Main/SET_MOBILE_PAGE', 'right');
+                this.$store.dispatch('Main/setMobilePage', 'right');
             },
 
             /**
              * When clicking the arrow to show the left column
              */
             onMobileShowLeftCol: function() {
-                this.$store.commit('Main/SET_MOBILE_PAGE', 'left');
+                this.$store.dispatch('Main/setMobilePage', 'left');
             },
 
             /**

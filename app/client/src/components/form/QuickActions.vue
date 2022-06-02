@@ -206,7 +206,7 @@
             onActivate: function(id) {
                 switch (id) {
                     case 'player-toggle':
-                        this.$store.commit('Main/SET_PLAYER_ENABLED', ! this.playerEnabled);
+                        this.$store.dispatch('Main/setPlayerEnabled', ! this.playerEnabled);
                         this.$client.playerSync();
                         return;
                     case 'cursor-toggle':
@@ -231,14 +231,14 @@
                     case 'help':
                         return this.$client.sendMessage('/help');
                     case 'cinema-mode':
-                        return this.$store.commit('Main/TOGGLE_CINEMA_MODE'); 
+                        return this.$store.dispatch('Main/toggleCinemaMode'); 
                     case 'file-manager':
                         this.$modal.show(FileManager);
                         return;
                 }
             },
             setQuickActionsVisibility: function(visible) {
-                this.$store.commit('Main/SET_QUICK_ACTIONS_VISIBILITY', visible);
+                this.$store.dispatch('Main/setQuickActionsVisibility', visible);
             },
         },
 

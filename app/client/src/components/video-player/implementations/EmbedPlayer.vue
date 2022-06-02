@@ -33,7 +33,7 @@
             },
         unmounted: function() {
             clearInterval(this.audioAnalyzerUpdateInterval);
-            this.$store.commit('Main/SET_PLAYER_INTENSITY', avg);
+            //this.$store.commit('Main/SET_PLAYER_INTENSITY', avg);
         },
         methods: {
             update: function() {
@@ -71,7 +71,7 @@
                 this.audioAnalyzerUpdateInterval = setInterval(() => {
                     analyser.getByteFrequencyData(dataArray);
                     const avg = dataArray.reduce((acc, curr) => acc + curr / 256, 0) / dataArray.length;
-                    this.$store.commit('Main/SET_PLAYER_INTENSITY', avg);
+                    //this.$store.commit('Main/SET_PLAYER_INTENSITY', avg);
                 }, 1000 / 50);
             },
         },

@@ -43,13 +43,13 @@
         methods: {
             logout: function() {
                 this.$client.logout();
-                this.$store.commit('Main/SET_PAGE', 'welcome');
+                this.$store.dispatch('Main/setPage', 'welcome');
             },
             login: function() {
-                this.$store.commit('Main/SET_PAGE', 'welcome');
+                this.$store.dispatch('Main/setPage', 'welcome');
             },
             gotoRoom() {
-                this.$store.commit('Main/SET_PAGE', 'room');
+                this.$store.dispatch('Main/setPage', 'room');
             },
         },
         computed: {

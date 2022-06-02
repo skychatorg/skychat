@@ -1,11 +1,11 @@
 import Vue from "vue";
-import SkychatApp from "./vue/SkychatApp.vue";
-import { SkyChatClient } from "./SkyChatClient";
-import store from "./vue/store";
-import { AudioRecorder } from "./AudioRecorder";
+import SkychatApp from "./SkychatApp.vue";
+import { SkyChatClient } from "./lib/SkyChatClient";
+import store from "./store";
+import { AudioRecorder } from "./lib/AudioRecorder";
 import VModal from 'vue-js-modal';
 import Mousetrap from "mousetrap";
-import { ClipboardHelper } from "./ClipboardHelper";
+import { ClipboardHelper } from "./lib/ClipboardHelper";
 
 
 Vue.use(VModal, {
@@ -19,7 +19,7 @@ Vue.use(VModal, {
     }
 });
 
-store.commit('Main/LOAD_LOCALSTORAGE');
+store.dispatch('Main/loadPreferences');
 
 const client = new SkyChatClient(store);
 
@@ -38,14 +38,8 @@ Vue.prototype.$mousetrap = new Mousetrap();
 
 const app = new Vue({
     el: "#app",
-    template: `
-    <div id="root">
-        <skychat-app/>
-    </div>
-    `,
-    components: {
-        SkychatApp
-    }
+    template: `<div id="root"><skychat-app/></div>`,
+    components: { SkychatApp },
 });
 
 // Handle height on mobile phones
@@ -57,14 +51,14 @@ resize();
 
 // Handle document title update when new messages arrive
 window.addEventListener('blur', () => {
-    store.commit('Main/BLUR');
+    store.commit('Main/blur');
 });
 
 window.addEventListener('focus', () => {
     if (store.state.Main.lastMissedMessage) {
         client.notifySeenMessage(store.state.Main.lastMissedMessage.id);
     }
-    store.commit('Main/FOCUS');
+    store.dispatch('Main/focus');
 });
 setInterval(() => {
 

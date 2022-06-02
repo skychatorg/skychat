@@ -1,6 +1,6 @@
 import { FileManager } from "../../skychat/FileManager";
 import { RandomGenerator } from "../../skychat/RandomGenerator";
-import { GalleryFolder, GalleryFolderOptions, SanitizedGalleryFolder } from "./GalleryFolder";
+import { GalleryFolder, SanitizedGalleryFolder } from "./GalleryFolder";
 import { GalleryMedia, SanitizedGalleryMedia } from "./GalleryMedia";
 import * as fs from 'fs';
 import { Config } from "../../skychat/Config";
@@ -117,7 +117,7 @@ export class Gallery {
         folder.deleteMedia(mediaId);
     }
 
-    search(query: string) {
+    search(query: string): SanitizedGalleryMedia[] {
         const matches = [];
         for (const folder of this.folders) {
             matches.push(...folder.search(query));

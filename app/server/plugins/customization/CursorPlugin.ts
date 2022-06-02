@@ -114,7 +114,7 @@ export class CursorPlugin extends GlobalPlugin {
             if (! UserController.getPluginData(conn.session.user, this.commandName)) {
                 continue;
             }
-            conn.send('cursor', { x, y, user });
+            conn.send('cursor', { x, y, user: user.sanitized() });
         }
     }
 

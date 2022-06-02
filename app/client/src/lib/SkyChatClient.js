@@ -37,7 +37,7 @@ export class SkyChatClient extends EventEmitter {
 
         this.on('message', this.onMessage.bind(this));
         this.on('messages', this.onMessages.bind(this));
-        this.on('private-message', this.onPrivateMessage.bind(this));
+        //this.on('private-message', this.onPrivateMessage.bind(this));
         this.on('message-edit', this.onMessageEdit.bind(this));
         this.on('message-seen', this.onMessageSeen.bind(this));
         this.on('connected-list', this.onConnectedList.bind(this));

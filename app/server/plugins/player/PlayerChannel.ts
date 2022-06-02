@@ -92,7 +92,7 @@ export class PlayerChannel {
 
     public currentVideoInfo: QueuedVideoInfo | null = null;
 
-    public playNextTimeout: NodeJS.Timeout | null = null;
+    public playNextTimeout: any = null;
 
     constructor(manager: PlayerChannelManager, id: number, name: string) {
         this.manager = manager;

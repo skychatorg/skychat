@@ -80,10 +80,10 @@
         methods: {
 
             gotoRoom() {
-                this.$store.commit('Main/SET_PAGE', 'room');
+                this.$store.dispatch('Main/setPage', 'room');
             },
             onMobileShowMiddleCol: function() {
-                this.$store.commit('Main/SET_MOBILE_PAGE', 'middle');
+                this.$store.dispatch('Main/setMobilePage', 'middle');
             },
         },
         computed: {

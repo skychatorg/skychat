@@ -6,7 +6,7 @@
         "removeComments": true,
         "outDir": "./build/",
         "target": "ES5",
-        "lib": ["ES2019", "DOM"],
+        "lib": ["ES2019"],
         "moduleResolution": "node",
         "sourceMap": false
     },

@@ -22,6 +22,11 @@ module.exports = {
                 }
             },
             {
+                test: /\.tsx?$/,
+                use: 'ts-loader',
+                exclude: /node_modules/,
+            },
+            {
                 test: /\.(png|jpg|gif|svg)$/,
                 loader: 'file-loader',
                 options: {
@@ -46,7 +51,7 @@ module.exports = {
         ]
     },
     resolve: {
-        extensions: ['.js', '.vue', '.json'],
+        extensions: ['.ts', '.js', '.vue', '.json'],
         alias: {
             'vue$': 'vue/dist/vue.esm.js'
         }
