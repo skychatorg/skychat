@@ -2,11 +2,11 @@
 
     <div class="poll-list">
 
-        <h2 class="title" v-show="Object.values(polls).length > 0">Polls</h2>
+        <h2 class="title" v-show="Object.values(clientState.polls).length > 0">Polls</h2>
 
-        <div v-show="Object.values(polls).length > 0">
+        <div v-show="Object.values(clientState.polls).length > 0">
             <div
-                v-for="poll in Object.values(polls)"
+                v-for="poll in Object.values(clientState.polls)"
                 :key="poll.id"
                 class="poll pending">
                 <div class="info">
@@ -50,27 +50,30 @@
 </template>
 
 <script>
-    import Vue from "vue";
-    import { mapState } from "vuex";
+import Vue from "vue";
+import { mapGetters, mapActions } from "vuex";
 
-    export default Vue.extend({
-        created: function() {
-            this.Object = Object;
+export default Vue.extend({
+    created: function() {
+        this.Object = Object;
+    },
+    methods: {
+        ...mapActions('SkyChatClient', [
+            "sendMessage",
+        ]),
+        vote: function(poll, response) {
+            this.sendMessage(`/poll ${poll.id} ${answer ? 'y' : 'n'}`);
         },
-        methods: {
-            vote: function(poll, response) {
-                this.$client.vote(poll.id, response);
-            },
-            clear: function(pollId) {
-                this.$store.commit('Main/CLEAR_POLL', pollId);
-            }
-        },
-        computed: {
-            ...mapState('Main', [
-                'polls'
-            ]),
+        clear: function(pollId) {
+            //this.$store.commit('App/CLEAR_POLL', pollId);
         }
-    });
+    },
+    computed: {
+        ...mapGetters('SkyChatClient', [
+            'clientState'
+        ]),
+    }
+});
 </script>
 
 <style lang="scss" scoped>

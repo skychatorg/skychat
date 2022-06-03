@@ -2,16 +2,16 @@
     "compilerOptions": {
         "module": "commonjs",
         "strict": true,
-        "declaration": true,
+        "declaration": false,
         "removeComments": true,
-        "outDir": "./build/",
         "target": "ES5",
-        "lib": ["ES2019"],
+        "lib": ["ES2019", "DOM"],
+        "outDir": "./app/api/dist",
         "moduleResolution": "node",
         "sourceMap": false
     },
     "include": [
-        "app/server/**/*"
+        "app/api/client.ts"
     ],
     "exclude": [
         "node_modules",

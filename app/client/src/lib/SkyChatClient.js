@@ -21,7 +21,7 @@ export class SkyChatClient extends EventEmitter {
         this.webSocket.addEventListener('open', this.onWebSocketConnect.bind(this));
         this.webSocket.addEventListener('message', this.onWebSocketMessage.bind(this));
         this.webSocket.addEventListener('close', this.onWebSocketClose.bind(this));
-        this.store.commit('Main/SET_CONNECTION_STATE', WebSocket.CONNECTING);
+        this.store.commit('App/SET_CONNECTION_STATE', WebSocket.CONNECTING);
     }
 
     /**
@@ -105,14 +105,14 @@ export class SkyChatClient extends EventEmitter {
      * When receiving config object from server
      */
     onConfig(config) {
-        this.store.commit('Main/SET_CONFIG', config);
+        this.store.commit('App/SET_CONFIG', config);
     }
 
     /**
      * When receiving the room list
      */
     onRoomList(rooms) {
-        this.store.commit('Main/SET_ROOM_LIST', rooms);
+        this.store.commit('App/SET_ROOM_LIST', rooms);
     }
 
     /**
@@ -125,7 +125,7 @@ export class SkyChatClient extends EventEmitter {
         }
         this.lastPingDate = new Date();
         setTimeout(this.sendPing.bind(this), SkyChatClient.PING_INTERVAL_MS);
-        this.store.commit('Main/SET_CONNECTION_STATE', WebSocket.OPEN);
+        this.store.commit('App/SET_CONNECTION_STATE', WebSocket.OPEN);
         this.firstConnection = false;
     }
 
@@ -150,7 +150,7 @@ export class SkyChatClient extends EventEmitter {
      *
      */
     onWebSocketClose(event) {
-        this.store.commit('Main/SET_CONNECTION_STATE', WebSocket.CLOSED);
+        this.store.commit('App/SET_CONNECTION_STATE', WebSocket.CLOSED);
         if (event.code === 4403) {
             new Noty({
                 type: 'error',
@@ -334,7 +334,7 @@ export class SkyChatClient extends EventEmitter {
      * @param roomId
      */
     onJoinRoom(roomId) {
-        this.store.commit('Main/SET_CURRENT_ROOM', roomId);
+        this.store.commit('App/SET_CURRENT_ROOM', roomId);
         if (roomId !== null) {
             this.sendMessage('/messagehistory');
         }
@@ -345,8 +345,8 @@ export class SkyChatClient extends EventEmitter {
      * @param message
      */
     onMessage(message) {
-        this.store.commit('Main/NEW_MESSAGE', message);
-        if (this.store.state.Main.user.right >= 0 && this.store.state.Main.focused) {
+        this.store.commit('App/NEW_MESSAGE', message);
+        if (this.store.state.App.user.right >= 0 && this.store.state.App.focused) {
             this.notifySeenMessage(message.id);
         }
     }
@@ -356,8 +356,8 @@ export class SkyChatClient extends EventEmitter {
      * @param messages
      */
     onMessages(messages) {
-        this.store.commit('Main/NEW_MESSAGES', messages);
-        if (this.store.state.Main.user.right >= 0 && this.store.state.Main.focused && messages.length > 0) {
+        this.store.commit('App/NEW_MESSAGES', messages);
+        if (this.store.state.App.user.right >= 0 && this.store.state.App.focused && messages.length > 0) {
             this.notifySeenMessage(messages[messages.length - 1].id);
         }
     }
@@ -375,7 +375,7 @@ export class SkyChatClient extends EventEmitter {
      * @param privateMessage
      */
     onPrivateMessage(privateMessage) {
-        this.store.commit('Main/NEW_PRIVATE_MESSAGE', privateMessage);
+        this.store.commit('App/NEW_PRIVATE_MESSAGE', privateMessage);
     }
 
     /**
@@ -383,7 +383,7 @@ export class SkyChatClient extends EventEmitter {
      * @param message
      */
     onMessageEdit(message) {
-        this.store.commit('Main/MESSAGE_EDIT', message);
+        this.store.commit('App/MESSAGE_EDIT', message);
     }
 
     /**
@@ -391,7 +391,7 @@ export class SkyChatClient extends EventEmitter {
      * @param messageSeen
      */
     onMessageSeen(messageSeen) {
-        this.store.dispatch('Main/messageSeen', messageSeen);
+        this.store.dispatch('App/messageSeen', messageSeen);
     }
 
     /**
@@ -399,7 +399,7 @@ export class SkyChatClient extends EventEmitter {
      * @param user
      */
     onSetUser(user) {
-        this.store.commit('Main/SET_USER', user);
+        this.store.commit('App/SET_USER', user);
     }
 
     /**
@@ -407,7 +407,7 @@ export class SkyChatClient extends EventEmitter {
      * @param user
      */
     onSetOP(op) {
-        this.store.commit('Main/SET_OP', op);
+        this.store.commit('App/SET_OP', op);
     }
 
     /**
@@ -415,7 +415,7 @@ export class SkyChatClient extends EventEmitter {
      * @param connectedList
      */
     onConnectedList(connectedList) {
-        this.store.dispatch('Main/setConnectedList', connectedList);
+        this.store.dispatch('App/setConnectedList', connectedList);
     }
 
     /**
@@ -423,7 +423,7 @@ export class SkyChatClient extends EventEmitter {
      * @param playerState
      */
     onPlayerSync(playerState) {
-        this.store.commit('Main/SET_PLAYER_STATE', playerState);
+        this.store.commit('App/SET_PLAYER_STATE', playerState);
     }
 
     /**
@@ -431,7 +431,7 @@ export class SkyChatClient extends EventEmitter {
      * @param polls
      */
     onPoll(poll) {
-        this.store.commit('Main/SET_POLL', poll);
+        this.store.commit('App/SET_POLL', poll);
     }
 
     /**
@@ -439,64 +439,64 @@ export class SkyChatClient extends EventEmitter {
      * @param users
      */
     onTypingList(users) {
-        this.store.commit('Main/SET_TYPING_LIST', users);
+        this.store.commit('App/SET_TYPING_LIST', users);
     }
 
     /**
      *
      */
     onCursor(cursor) {
-        this.store.commit('Main/NEW_CURSOR', cursor);
+        this.store.commit('App/NEW_CURSOR', cursor);
     }
 
     /**
      *
      */
     onRoll(roll) {
-        this.store.commit("Main/SET_ROLL_STATE", roll.state);
+        this.store.commit("App/SET_ROLL_STATE", roll.state);
     }
 
     /**
      * 
      */
     onFileList(files) {
-        this.store.commit("Main/SET_FILE_LIST", files)
+        this.store.commit("App/SET_FILE_LIST", files)
     }
 
     /**
      * 
      */
     onFileContent(data) {
-        this.store.commit("Main/SET_FILE_CONTENT", data);
+        this.store.commit("App/SET_FILE_CONTENT", data);
     }
 
     /**
      *
      */
     onGallery(gallery) {
-        this.store.commit("Main/SET_GALLERY", gallery);
+        this.store.commit("App/SET_GALLERY", gallery);
     }
 
     /**
      *
      */
     onGallerySearchResults(gallerySearchResults) {
-        this.store.commit("Main/SET_GALLERY_SEARCH_RESULTS", gallerySearchResults);
+        this.store.commit("App/SET_GALLERY_SEARCH_RESULTS", gallerySearchResults);
     }
 
     /**
      *
      */
     onPlayerApiSearchResults(items) {
-        this.store.commit("Main/SET_PLAYER_API_SEARCH_RESULTS", items);
+        this.store.commit("App/SET_PLAYER_API_SEARCH_RESULTS", items);
     }
 
     onPlayerChannels(channels) {
-        this.store.commit('Main/SET_PLAYER_CHANNELS', channels);
+        this.store.commit('App/SET_PLAYER_CHANNELS', channels);
     }
 
     onPlayerChannel(channelId) {
-        this.store.commit('Main/SET_PLAYER_CHANNEL', channelId);
+        this.store.commit('App/SET_PLAYER_CHANNEL', channelId);
     }
 
     /**

@@ -13,7 +13,7 @@
 
 <script>
     import Vue from "vue";
-    import { mapState } from "vuex";
+    import { mapGetters, mapActions } from "vuex";
 
     export default Vue.extend({
         data: function() {
@@ -23,48 +23,50 @@
             }
         },
         watch: {
-            user: function() {
-                if (this.user.right >= 0) {
+            'clientState.user': function() {
+                if (this.clientState.user.right >= 0) {
                     new Noty({
                         type: 'success',
                         layout: 'topCenter',
                         theme: 'nest',
-                        text: "Welcome back, " + this.user.username,
+                        text: "Welcome back, " + this.clientState.user.username,
                         timeout: 2000
                     }).show();
                     this.$emit('gotoroom');
                 }
             },
-            currentRoom: function() {
-                if (this.currentRoom !== null) {
+            'clientState.currentRoom': function() {
+                if (this.clientState.currentRoom !== null) {
                     this.$emit('gotoroom');
                 }
             }
         },
         methods: {
+            ...mapActions('SkyChatClient', [
+                'sendMessage',
+                'login',
+                'register',
+            ]),
             onLogin: function() {
-                this.$client.login(this.username, this.password);
+                this.login({ username: this.username, password: this.password });
             },
             onRegister: function() {
-                this.$client.register(this.username, this.password);
+                this.register({ username: this.username, password: this.password });
             },
             onGuestLogin: function() {
 
                 // Join room #1
-                this.$client.joinRoom(this.rooms[0].id);
+                this.joinRoom(this.clientState.rooms[0].id);
 
                 // Join first player channel
-                if (this.playerChannels.length > 0) {
-                    this.$client.joinPlayerChannel(this.playerChannels[0].id);
+                if (this.clientState.playerChannels.length > 0) {
+                    this.sendMessage('/playerchannel join ' + this.clientState.playerChannels[0].id);
                 }
             }
         },
         computed: {
-            ...mapState('Main', [
-                'user',
-                'currentRoom',
-                'rooms',
-                'playerChannels',
+            ...mapGetters('SkyChatClient', [
+                'clientState',
             ]),
         }
     });

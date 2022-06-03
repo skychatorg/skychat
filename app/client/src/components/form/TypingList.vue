@@ -6,25 +6,25 @@
 
 <script>
     import Vue from "vue";
-    import { mapState } from 'vuex';
+    import { mapGetters } from 'vuex';
 
     export default Vue.extend({
         computed: {
-            ...mapState('Main', [
-                'typingList',
+            ...mapGetters('SkyChatClient', [
+                'clientState',
             ]),
             typingListHtml: function() {
 
-                if (this.typingList.length === 0) {
+                if (this.clientState.typingList.length === 0) {
                     return '';
                 }
 
-                if (this.typingList.length === 1) {
-                    return `${this.typingList[0].username} is typing..`;
+                if (this.clientState.typingList.length === 1) {
+                    return `${this.clientState.typingList[0].username} is typing..`;
                 }
 
-                if (this.typingList.length <= 3) {
-                    const usernames = this.typingList.map(user => user.username);
+                if (this.clientState.typingList.length <= 3) {
+                    const usernames = this.clientState.typingList.map(user => user.username);
                     return `${usernames.join(', ')} are typing..`;
                 }
 

@@ -9,7 +9,6 @@
     >
         <div class="connected-session"
             :class="{
-                'selected': isChanSelected(session.user.username),
                 'disconnected': session.connectionCount === 0,
             }">
             <div class="avatar">
@@ -59,7 +58,6 @@
 
 <script>
     import Vue from "vue";
-    import { mapState } from "vuex";
     import HoverCard from "../util/HoverCard";
 
     export default Vue.extend({
@@ -69,15 +67,7 @@
                 type: Object
             }
         },
-        methods: {
-            isChanSelected(channelName) {
-                return channelName.toLowerCase() === this.channel;
-            },
-        },
         computed: {
-            ...mapState('Main', [
-                'channel',
-            ]),
             minutesSinceLastMessage: function() {
                 const duration = new Date().getTime() * 0.001 - this.session.lastMessageTime;
                 return Math.floor(duration / 60);

@@ -57,43 +57,41 @@
 </template>
 
 <script>
-    import Vue from "vue";
-    import { mapState } from "vuex";
-    import TextChannelList from "../components/channel/TextChannelList.vue";
-    import PlayerChannelList from "../components/channel/PlayerChannelList.vue";
-    import TchatMiddleColumn from "../components/layout/TchatMiddleColumn.vue";
-    import PollList from "../components/poll/PollList.vue";
-    import UserPreview from "../components/user/UserPreview.vue";
-    import VideoPlayerPreview from "../components/video-player/VideoPlayerPreview.vue";
-    import VideoPlayer from "../components/video-player/VideoPlayer.vue";
-    import UserList from "../components/user/UserList.vue";
-    import QuickActions from "../components/form/QuickActions.vue";
-    import CinemaModeOverlay from "../components/overlay/CinemaModeOverlay.vue";
+import Vue from "vue";
+import { mapGetters, mapActions } from "vuex";
+import TextChannelList from "../components/channel/TextChannelList.vue";
+import PlayerChannelList from "../components/channel/PlayerChannelList.vue";
+import TchatMiddleColumn from "../components/layout/TchatMiddleColumn.vue";
+import PollList from "../components/poll/PollList.vue";
+import UserPreview from "../components/user/UserPreview.vue";
+import VideoPlayerPreview from "../components/video-player/VideoPlayerPreview.vue";
+import VideoPlayer from "../components/video-player/VideoPlayer.vue";
+import UserList from "../components/user/UserList.vue";
+import QuickActions from "../components/form/QuickActions.vue";
+import CinemaModeOverlay from "../components/overlay/CinemaModeOverlay.vue";
 
-    export default Vue.extend({
-        components: {TextChannelList, PlayerChannelList, TchatMiddleColumn, PollList, UserPreview, VideoPlayerPreview, VideoPlayer, UserList, QuickActions, CinemaModeOverlay},
-        watch: {
-            cinemaMode: function() {
-
-            },
+export default Vue.extend({
+    components: { TextChannelList, PlayerChannelList, TchatMiddleColumn, PollList, UserPreview, VideoPlayerPreview, VideoPlayer, UserList, QuickActions, CinemaModeOverlay },
+    methods: {
+        ...mapActions('App', [
+            'setPage',
+            'setMobilePage',
+        ]),
+        gotoRoom() {
+            this.setPage('room');
         },
-        methods: {
-
-            gotoRoom() {
-                this.$store.dispatch('Main/setPage', 'room');
-            },
-            onMobileShowMiddleCol: function() {
-                this.$store.dispatch('Main/setMobilePage', 'middle');
-            },
+        onMobileShowMiddleCol: function() {
+            this.setMobilePage('middle');
         },
-        computed: {
-            ...mapState('Main', [
-                'page',
-                'cinemaMode',
-                'playerChannelId',
-            ]),
-        },
-    });
+    },
+    computed: {
+        ...mapGetters('App', [
+            'page',
+            'cinemaMode',
+            'playerChannelId',
+        ]),
+    },
+});
 </script>
 
 <style lang="scss" scoped>

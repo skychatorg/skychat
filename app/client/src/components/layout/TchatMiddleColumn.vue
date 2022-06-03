@@ -2,7 +2,7 @@
     <div class="messages">
 
         <!-- player -->
-        <video-player v-if="! hidePlayer" class="player" v-show="playerState.current && playerEnabled"/>
+        <video-player v-if="! hidePlayer" class="player" v-show="clientState.player.current && playerEnabled"/>
 
         <!-- message feeds -->
         <message-list :messages="messages" @select-message="onSelectMessage" class="scrollbar" />
@@ -17,7 +17,7 @@
 
 <script>
     import Vue from "vue";
-    import { mapState } from 'vuex';
+    import { mapGetters } from 'vuex';
     import MessageList from "../message/MessageList.vue";
     import VideoPlayer from "../video-player/VideoPlayer.vue";
     import TypingList from "../form/TypingList.vue";
@@ -48,11 +48,13 @@
             },
         },
         computed: {
-            ...mapState('Main', [
-                'playerState',
-                'messages',
+            ...mapGetters('App', [
                 'playerEnabled',
             ]),
+            ...mapGetters('SkyChatClient', [
+                'messages',
+                'clientState',
+            ])
         }
     });
 </script>

@@ -45,6 +45,7 @@
 
 <script>
     import Vue from "vue";
+import { mapActions } from "vuex";
     import HoverCard from "../util/HoverCard.vue";
     
     export default Vue.extend({
@@ -70,6 +71,9 @@
             this.bindContentLoaded();
         },
         methods: {
+            ...mapActions('SkyChatClient', [
+                'sendMessage',
+            ]),
             bindContentLoaded: function() {
                 // Get images
                 const images = Array.from(this.$refs.formatted.getElementsByTagName('img'));
@@ -85,7 +89,7 @@
                         if (button.dataset.action[0] === '/' && button.dataset.trusted === 'false' && ! confirm('Send "' + button.dataset.action + '"?')) {
                             return;
                         }
-                        this.$client.sendMessage(button.dataset.action);
+                        this.sendMessage(button.dataset.action);
                     });
                 }
             }

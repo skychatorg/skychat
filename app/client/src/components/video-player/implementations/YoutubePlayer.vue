@@ -11,27 +11,27 @@
 
 <script>
     import Vue from "vue";
-    import { mapState } from "vuex";
+    import { mapGetters } from "vuex";
 
     export default Vue.extend({
         data: function() { return { src: '', previousVideoHash: null, } },
         watch: {
-            'playerState.current.video': { deep: true, handler: 'update' },
+            'clientState.player.current.video': { deep: true, handler: 'update' },
         },
         mounted: function() { this.update(); },
         methods: {
             update: function() {
                 // If video did not change since last sync, pass
-                const hash = JSON.stringify(this.playerState.current.video);
+                const hash = JSON.stringify(this.clientState.player.current.video);
                 if (hash === this.previousVideoHash) {
                     return;
                 }
-                let src = 'https://www.youtube.com/embed/' + this.playerState.current.video.id;
+                let src = 'https://www.youtube.com/embed/' + this.clientState.player.current.video.id;
                 src += '?autoplay=1';
                 src += '&origin=' + document.location.origin;
-                if (this.playerState.current.video.duration > 0) {
-                    const timeSinceLastUpdate = new Date().getTime() - this.playerStateLastUpdate.getTime();
-                    const startTimeMs = this.playerState.cursor + timeSinceLastUpdate;
+                if (this.clientState.player.current.video.duration > 0) {
+                    const timeSinceLastUpdate = new Date().getTime() - this.clientState.playerStateLastUpdate.getTime();
+                    const startTimeMs = this.clientState.player.cursor + timeSinceLastUpdate;
                     src += '&start=' + parseInt(startTimeMs / 1000);
                 }
                 this.src = src + '&random=' + Math.random();
@@ -39,9 +39,8 @@
             }
         },
         computed: {
-            ...mapState('Main', [
-                'playerState',
-                'playerStateLastUpdate',
+            ...mapGetters('SkyChatClient', [
+                'clientState',
             ]),
         }
     });

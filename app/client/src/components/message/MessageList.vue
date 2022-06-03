@@ -9,13 +9,13 @@
             @content-loaded="onContentLoaded"
             :key="item.id"
             :message="item"
-            :seen-users="lastMessageSeenIds[item.id] || []"></single-message>
+            :seen-users="clientState.messageIdToLastSeenUsers[item.id] || []"></single-message>
     </div>
 </template>
 
 <script>
     import Vue from "vue";
-    import { mapState } from 'vuex';
+    import { mapGetters } from 'vuex';
     import SingleMessage from "./SingleMessage.vue";
     import VideoPlayer from "../video-player/VideoPlayer.vue";
 
@@ -111,8 +111,8 @@
             },
         },
         computed: {
-            ...mapState('Main', [
-                'lastMessageSeenIds',
+            ...mapGetters('SkyChatClient', [
+                'clientState',
             ]),
         }
     });

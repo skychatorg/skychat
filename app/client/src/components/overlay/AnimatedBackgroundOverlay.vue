@@ -7,25 +7,25 @@
 </template>
 
 <script>
-    import Vue from "vue";
-    import { mapState } from 'vuex';
+import Vue from "vue";
+import { mapGetters } from 'vuex';
 
-    export default Vue.extend({
-        methods: {
+export default Vue.extend({
+    methods: {
 
+    },
+    computed: {
+        ...mapGetters('App', [
+            'playerIntensity',
+        ]),
+        gradientCss: function() {
+            let css = 'linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, ';
+            css += `rgba(255, 255, 255, ${this.playerIntensity / 8}) 94%, `;
+            css += `rgba(255, 255, 255, ${this.playerIntensity / 4}) 100%`;
+            return css;
         },
-        computed: {
-            ...mapState('Main', [
-                'playerIntensity',
-            ]),
-            gradientCss: function() {
-                let css = 'linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, ';
-                css += `rgba(255, 255, 255, ${this.playerIntensity / 8}) 94%, `;
-                css += `rgba(255, 255, 255, ${this.playerIntensity / 4}) 100%`;
-                return css;
-            },
-        }
-    });
+    }
+});
 </script>
 
 <style lang="scss" scoped>

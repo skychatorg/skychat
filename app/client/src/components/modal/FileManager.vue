@@ -2,11 +2,11 @@
     <div class="file-manager">
         <div class="file-list">
             <hover-card
-                v-for="filePath in files"
+                v-for="filePath in clientState.files"
                 :key="filePath"
                 :border-color="'#afafaf'"
                 :clickable="true"
-                :selected="file && file.filePath === filePath"
+                :selected="clientState.file && clientState.file.filePath === filePath"
                 class="file-card"
                 @click.native="loadFile(filePath)"
             >
@@ -15,14 +15,14 @@
                 </div>
             </hover-card>
         </div>
-        <div class="file-editor" v-if="file">
+        <div class="file-editor" v-if="clientState.file">
             <div class="file-content">
-                <p>Editing {{ file.filePath }}</p>
+                <p>Editing {{ clientState.file.filePath }}</p>
                 <textarea class="editor scrollbar" v-model="content" spellcheck=”false”></textarea>
             </div>
             <div class="actions">
                 <button
-                    v-show="content !== file.content"
+                    v-show="content !== clientState.file.content"
                     @click="save" class="skychat-button">Save</button>
             </div>
         </div>
@@ -31,7 +31,7 @@
 
 <script>
     import Vue from "vue";
-    import { mapState } from 'vuex';
+    import { mapActions, mapGetters } from 'vuex';
     import HoverCard from "../util/HoverCard.vue";
 
     export default Vue.extend({
@@ -47,34 +47,36 @@
         },
 
         watch: {
-            'file.filePath': function() {
-                this.content = this.file.content;
+            'clientState.file.filePath': function() {
+                this.content = this.clientState.file.content;
             },
         },
 
         mounted: function() {
             this.update();
-            if (this.file) {
-                this.content = this.file.content;
+            if (this.clientState.file) {
+                this.content = this.clientState.file.content;
             }
         },
 
         methods: {
+            ...mapActions('SkyChatClient', [
+                'sendMessage',
+            ]),
             update: function() {
-                this.$client.sendMessage('/filelist');
+                this.sendMessage('/filelist');
             },
             loadFile: function(filePath) {
-                this.$client.sendMessage('/fileget ' + filePath);
+                this.sendMessage('/fileget ' + filePath);
             },
             save: function() {
-                this.$client.sendMessage(`/fileset ${this.file.filePath} ${this.content}`);
+                this.sendMessage(`/fileset ${this.clientState.file.filePath} ${this.content}`);
             },
         },
 
         computed: {
-            ...mapState('Main', [
-                'files',
-                'file',
+            ...mapGetters('SkyChatClient', [
+                'clientState',
             ]),
         },
     });

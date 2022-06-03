@@ -39,7 +39,7 @@
             <textarea ref="input"
                       rows="1"
                       @keydown.enter.exact.prevent
-                      @keydown.enter.exact="sendMessage"
+                      @keydown.enter.exact="onSend"
                       @keyup.up="navigateIntoHistory(-1)"
                       @keyup.down="navigateIntoHistory(1)"
                       @keydown.tab.prevent="onKeyUpTab"
@@ -49,7 +49,7 @@
         </form>
 
         <!-- Collections -->
-        <div class="form-action open-gallery" v-show="gallery" @click="openGallery" title="Access gallery">
+        <div class="form-action open-gallery" v-show="clientState.gallery" @click="openGallery" title="Access gallery">
             <i class="material-icons md-28">collections</i>
         </div>
 
@@ -69,7 +69,7 @@
 
 <script>
     import Vue from "vue";
-    import { mapState } from 'vuex';
+    import { mapActions, mapGetters } from 'vuex';
     import GalleryModal from "../modal/GalleryModal.vue";
     import PlayerSchedule from "../modal/PlayerSchedule.vue";
 
@@ -96,9 +96,9 @@
 
             message: function(newMessage, oldMessage) {
                 const oldTyping = oldMessage.length > 0 && oldMessage[0] !== '/';
-                const newTyping = ! this.$store.state.Main.channel && newMessage.length > 0 && newMessage[0] !== '/';
+                const newTyping = ! this.clientState.currentPlayerChannel && newMessage.length > 0 && newMessage[0] !== '/';
                 if (newTyping !== oldTyping) {
-                    this.$client.setTyping(newTyping);
+                    this.sendMessage('/t ' + (newTyping ? 'on' : 'off'));
                 }
                 Vue.nextTick(() => this.updateMessageInputHeight());
             },
@@ -109,6 +109,12 @@
         },
 
         methods: {
+            ...mapActions('App', [
+                'setMobilePage',
+            ]),
+            ...mapActions('SkyChatClient', [
+                'sendMessage',
+            ]),
 
             getMessage: function() {
                 return this.message;
@@ -141,7 +147,7 @@
                 if (this.recordingAudio) {
                     // Stop recording
                     const {blob, uri, audio} = await this.recordingAudioStopCb();
-                    this.$client.webSocket.send(blob);
+                    this.sendRaw(blob);
                 } else {
                     // Start recording
                     this.recordingAudioStopCb = await this.$audio.start();
@@ -232,19 +238,15 @@
             /**
              * Send the message
              */
-            sendMessage: function() {
+            onSend: function() {
                 if (this.message === "") {
                     return;
                 }
-                this.$client.setTyping(false);
+                this.sendMessage('/t off');
                 this.sentMessageHistory.push(this.message);
                 this.sentMessageHistory.splice(0, this.sentMessageHistory.length - MESSAGE_HISTORY_LENGTH);
                 this.historyIndex = null;
-                if (this.$store.state.Main.channel) {
-                    this.$client.sendPrivateMessage(this.$store.state.Main.channel, this.message);
-                } else {
-                    this.$client.sendMessage(this.message);
-                }
+                this.sendMessage(this.message);
                 this.message = '';
             },
 
@@ -252,14 +254,14 @@
              * When clicking the arrow to show the right column
              */
             onMobileShowRightCol: function() {
-                this.$store.dispatch('Main/setMobilePage', 'right');
+                this.setMobilePage('setMobilePage', 'right');
             },
 
             /**
              * When clicking the arrow to show the left column
              */
             onMobileShowLeftCol: function() {
-                this.$store.dispatch('Main/setMobilePage', 'left');
+                this.setMobilePage('setMobilePage', 'left');
             },
 
             /**
@@ -271,7 +273,7 @@
                 if (! username) {
                     return;
                 }
-                const matches = this.connectedList
+                const matches = this.clientState.connectedList
                     .map(entry => entry.identifier)
                     .filter(identifier => identifier.indexOf(username) === 0);
                 if (matches.length !== 1) {
@@ -282,27 +284,25 @@
         },
 
         computed: {
-            ...mapState('Main', [
+            ...mapGetters('App', [
                 'focused',
-                'connectedList',
-                'gallery',
-                'user',
-                'rooms',
-                'currentRoom',
+            ]),
+            ...mapGetters('SkyChatClient', [
+                'clientState',
             ]),
             hasNewContentInOtherRooms: function() {
-                if (this.user.id <= 0) {
+                if (this.clientState.user.id <= 0) {
                     return false;
                 }
-                for (const room of this.rooms) {
-                    if ((this.user.data.plugins.lastseen[room.id] || 0) < room.lastReceivedMessageId) {
+                for (const room of this.clientState.rooms) {
+                    if ((this.clientState.user.data.plugins.lastseen[room.id] || 0) < room.lastReceivedMessageId) {
                         return true;
                     }
                 }
                 return false;
             },
             currentRoomObject: function() {
-                return this.rooms.find(room => room.id === this.currentRoom);
+                return this.clientState.rooms.find(room => room.id === this.clientState.currentRoomId);
             }
         }
     });

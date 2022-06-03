@@ -19,24 +19,16 @@ Vue.use(VModal, {
     }
 });
 
-store.dispatch('Main/loadPreferences');
-
-const client = new SkyChatClient(store);
+store.dispatch('SkyChatClient/init');
+store.dispatch('App/loadPreferences');
 
 Vue.prototype.$clipboard = ClipboardHelper;
-
 Vue.prototype.$audio = AudioRecorder;
-
 Vue.prototype.$store = store;
-
 Vue.prototype.$noty = d => new Noty(d).show();
-
-Vue.prototype.$client = client;
-Vue.prototype.$client.connect();
-
 Vue.prototype.$mousetrap = new Mousetrap();
 
-const app = new Vue({
+new Vue({
     el: "#app",
     template: `<div id="root"><skychat-app/></div>`,
     components: { SkychatApp },
@@ -51,21 +43,21 @@ resize();
 
 // Handle document title update when new messages arrive
 window.addEventListener('blur', () => {
-    store.commit('Main/blur');
+    store.commit('App/blur');
 });
 
 window.addEventListener('focus', () => {
-    if (store.state.Main.lastMissedMessage) {
-        client.notifySeenMessage(store.state.Main.lastMissedMessage.id);
+    if (store.state.App.missedMessages.length > 0) {
+        client.notifySeenMessage(store.state.App.missedMessages[store.state.App.missedMessages.length - 1].id);
     }
-    store.dispatch('Main/focus');
+    store.dispatch('App/focus');
 });
 setInterval(() => {
 
     // In case the title is not currently blinking, just update it
-    if (! store.state.Main.documentTitleBlinking) {
-        if (document.title !== store.state.Main.documentTitle) {
-            document.title = store.state.Main.documentTitle;
+    if (! store.state.App.documentTitleBlinking) {
+        if (document.title !== store.state.App.documentTitle) {
+            document.title = store.state.App.documentTitle;
         }
         return;
     }
@@ -73,6 +65,6 @@ setInterval(() => {
     const chars = "┤┘┴└├┌┬┐";
     const indexOf = chars.indexOf(document.title[0]);
     const newPosition = (indexOf + 1) % chars.length;
-    document.title = chars[newPosition] + ' ' + store.state.Main.documentTitle;
+    document.title = chars[newPosition] + ' ' + store.state.App.documentTitle;
 
 }, 1000);

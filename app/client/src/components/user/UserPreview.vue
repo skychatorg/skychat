@@ -5,15 +5,15 @@
         <div class="user-preview ml-1">
             <div class="user-preview-avatar">
                 <div class="image-bubble" >
-                    <img :src="user.data.plugins.avatar">
+                    <img :src="clientState.user.data.plugins.avatar">
                 </div>
             </div>
 
             <div class="user-preview-info">
                 
                 <div class="session"
-                    :style="{ 'color': user.data.plugins.color }">
-                    {{user.username}}
+                    :style="{ 'color': clientState.user.data.plugins.color }">
+                    {{ clientState.user.username }}
                 </div>
 
                 <!-- rank progress bar -->
@@ -32,38 +32,32 @@
 </template>
 
 <script>
-    import Vue from "vue";
-    import { mapState } from "vuex";
+import Vue from "vue";
+import { mapGetters } from "vuex";
 
-    export default Vue.extend({
-        data: function() {
-            return {
-
+export default Vue.extend({
+    computed: {
+        ...mapGetters('SkyChatClient', [
+            'clientState',
+        ]),
+        xpProgressPct: function() {
+            if (! this.nextRank) {
+                return 0;                
             }
+            return Math.max(1, Math.floor(100 * (this.clientState.user.xp - this.currentRank.limit) / (this.nextRank.limit - this.currentRank.limit)));
         },
-        computed: {
-            ...mapState('Main', [
-                'user',
-                'config',
-            ]),
-            xpProgressPct: function() {
-                if (! this.nextRank) {
-                    return 0;                
-                }
-                return Math.max(1, Math.floor(100 * (this.user.xp - this.currentRank.limit) / (this.nextRank.limit - this.currentRank.limit)));
-            },
-            currentRank: function() {
-                return this.config.ranks.filter(rank => this.user.xp >= rank.limit)[0];
-            },
-            nextRank: function() {
-                const remainingRanks = this.config.ranks.filter(rank => this.user.xp < rank.limit);
-                if (remainingRanks.length === 0) {
-                    return null;
-                }
-                return remainingRanks[remainingRanks.length - 1];
+        currentRank: function() {
+            return this.clientState.config.ranks.filter(rank => this.clientState.user.xp >= rank.limit)[0];
+        },
+        nextRank: function() {
+            const remainingRanks = this.clientState.config.ranks.filter(rank => this.clientState.user.xp < rank.limit);
+            if (remainingRanks.length === 0) {
+                return null;
             }
+            return remainingRanks[remainingRanks.length - 1];
         }
-    });
+    }
+});
 </script>
 
 <style lang="scss" scoped>

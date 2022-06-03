@@ -11,31 +11,31 @@
 
 <script>
     import Vue from "vue";
-    import { mapState } from "vuex";
+    import { mapGetters } from "vuex";
 
     export default Vue.extend({
         data: function() { return { src: '', previousVideoHash: null, } },
         watch: {
-            'playerState.current.video': { deep: true, handler: 'update' },
+            'clientState.player.current.video': { deep: true, handler: 'update' },
         },
         mounted: function() { this.update(); },
         methods: {
             update: function() {
                 // If video did not change since last sync, pass
-                const hash = JSON.stringify(this.playerState.current.video);
+                const hash = JSON.stringify(this.clientState.player.current.video);
                 if (hash === this.previousVideoHash) {
                     return;
                 }
                 let src = `https://player.twitch.tv/`;
-                src += `?channel=${this.playerState.current.video.id}`;
+                src += `?channel=${this.clientState.player.current.video.id}`;
                 src += `&parent=${document.location.hostname}`;
                 this.src = src + '&random=' + Math.random();
                 this.previousVideoHash = hash;
             }
         },
         computed: {
-            ...mapState('Main', [
-                'playerState',
+            ...mapGetters('SkyChatClient', [
+                'clientState',
             ]),
         }
     });

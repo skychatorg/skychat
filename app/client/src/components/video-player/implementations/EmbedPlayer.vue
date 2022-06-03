@@ -14,7 +14,7 @@
 
 <script>
     import Vue from "vue";
-    import { mapState } from "vuex";
+    import { mapGetters } from "vuex";
 
     export default Vue.extend({
         data: function() {
@@ -26,28 +26,28 @@
             };
         },
         watch: {
-            'playerState.current.video': { deep: true, handler: 'update' },
+            'clientState.player.current.video': { deep: true, handler: 'update' },
         },
         mounted: function() {
             this.update();
             },
         unmounted: function() {
             clearInterval(this.audioAnalyzerUpdateInterval);
-            //this.$store.commit('Main/SET_PLAYER_INTENSITY', avg);
+            //this.$store.commit('App/SET_PLAYER_INTENSITY', avg);
         },
         methods: {
             update: function() {
                 // Get current cursor time
-                const timeSinceLastUpdate = new Date().getTime() - this.playerStateLastUpdate.getTime();
-                const currentTime = parseInt((this.playerState.cursor + timeSinceLastUpdate) / 1000);
-                const hash = JSON.stringify(this.playerState.current.video.id);
+                const timeSinceLastUpdate = new Date().getTime() - this.clientState.playerStateLastUpdate.getTime();
+                const currentTime = parseInt((this.clientState.player.cursor + timeSinceLastUpdate) / 1000);
+                const hash = JSON.stringify(this.clientState.player.current.video.id);
                 if (hash === this.previousVideoHash) {
                     // If video did not change since last sync, update time
                     this.$refs.player.currentTime = currentTime;
                 } else {
                     // If new video, update the player
-                    this.src = `${this.playerState.current.video.id}#t=${currentTime}`;
-                    const extension = this.playerState.current.video.id.match(/\.([a-z0-9]+)$/)[1];
+                    this.src = `${this.clientState.player.current.video.id}#t=${currentTime}`;
+                    const extension = this.clientState.player.current.video.id.match(/\.([a-z0-9]+)$/)[1];
                     this.videoType = 'video/' + extension;
                     // On next tick, update the video stream info
                     Vue.nextTick(() => this.startAudioAnalyser());
@@ -71,14 +71,13 @@
                 this.audioAnalyzerUpdateInterval = setInterval(() => {
                     analyser.getByteFrequencyData(dataArray);
                     const avg = dataArray.reduce((acc, curr) => acc + curr / 256, 0) / dataArray.length;
-                    //this.$store.commit('Main/SET_PLAYER_INTENSITY', avg);
+                    //this.$store.commit('App/SET_PLAYER_INTENSITY', avg);
                 }, 1000 / 50);
             },
         },
         computed: {
-            ...mapState('Main', [
-                'playerState',
-                'playerStateLastUpdate',
+            ...mapGetters('SkyChatClient', [
+                'clientState',
             ]),
         }
     });

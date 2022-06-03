@@ -1,5 +1,5 @@
 <template>
-    <div class="gallery-preview" v-if="gallery.data !== null">
+    <div class="gallery-preview" v-if="clientState.gallery.data !== null">
         <div class="gallery-content">
 
             <div class="gallery-search">
@@ -12,12 +12,12 @@
             <!-- Gallery preview -->
             <div v-if="tab === 'preview'" class="gallery-results scrollbar">
 
-                <h3 v-show="gallery.data.folders.length === 0" class="section-title">
+                <h3 v-show="clientState.gallery.data.folders.length === 0" class="section-title">
                     no media
                 </h3>
 
                 <!-- 1 folder -->
-                <div v-for="folder in gallery.data.folders"
+                <div v-for="folder in clientState.gallery.data.folders"
                     :key="folder.id"
                     class="gallery-folder">
 
@@ -39,7 +39,7 @@
             <!-- Gallery search results -->
             <div v-if="tab === 'search'" class="gallery-results scrollbar">
 
-                <h3 v-show="gallerySearchResults.length === 0" class="section-title">
+                <h3 v-show="clientState.gallerySearchResults.length === 0" class="section-title">
                     no matches
                 </h3>
 
@@ -47,7 +47,7 @@
                 <div class="gallery-search-results">
                     <div class="media-list scrollbar">
                         <gallery-media
-                            v-for="media in gallerySearchResults"
+                            v-for="media in clientState.gallerySearchResults"
                             :key="media.id"
                             :media="media" />
                     </div>
@@ -59,7 +59,7 @@
 
 <script>
     import Vue from "vue";
-    import { mapState } from 'vuex';
+    import { mapActions, mapGetters } from 'vuex';
     import MediaVisualizer from "../modal/MediaVisualizer.vue";
     import HoverCard from "../util/HoverCard";
     import GalleryMedia from "./GalleryMedia";
@@ -83,10 +83,10 @@
                     this.tab = 'preview';
                 } else {
                     this.tab = 'search';
-                    this.$client.sendMessage(`/gallerysearch ${this.searchInput}`);
+                    this.sendMessage(`/gallerysearch ${this.searchInput}`);
                 }
             },
-            'gallery': {
+            'clientState.gallery': {
                 deep: true,
                 handler: function() {
                     if (this.tab !== 'preview') {
@@ -97,11 +97,14 @@
             },
         },
         mounted: function() {
-            if (this.gallery) {
-                this.shownFolders = this.gallery.data.folders;
+            if (this.clientState.gallery) {
+                this.shownFolders = this.clientState.gallery.data.folders;
             }
         },
         methods: {
+            ...mapActions('SkyChatClient', [
+                'sendMessage',
+            ]),
             copyMediaLink: function(media) {
                 this.$clipboard.copy(media.location);
                 Vue.prototype.$noty({
@@ -117,7 +120,7 @@
                 return extensionMtc && ['mp4', 'webm'].indexOf(extensionMtc[1]) !== -1;
             },
             playMedia: function(media) {
-                this.$client.sendMessage(`/embed ${media.location}`);
+                this.sendMessage(`/embed ${media.location}`);
             },
             openMedia: function(media) {
                 this.$modal.show(
@@ -127,20 +130,18 @@
                 )
             },
             deleteMedia: function(media) {
-                this.$client.sendMessage(`/gallerydelete ${media.folderId} ${media.id}`);
+                this.sendMessage(`/gallerydelete ${media.folderId} ${media.id}`);
             },
             deleteFolder: function(folderId) {
-                this.$client.sendMessage(`/galleryfolderremove ${folderId}`);
+                this.sendMessage(`/galleryfolderremove ${folderId}`);
             },
             canWrite: function() {
-                return this.gallery && this.gallery.canWrite;
+                return this.clientState.gallery && this.clientState.gallery.canWrite;
             },
         },
         computed: {
-            ...mapState('Main', [
-                'gallery',
-                'gallerySearchResults',
-                'op',
+            ...mapGetters('SkyChatClient', [
+                'clientState.',
             ]),
         }
     });

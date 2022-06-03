@@ -5,7 +5,7 @@
             <!-- preview container -->
             <div class="preview-image-container"
                 :style="{
-                    'background-image': playerState.current ? `url(${playerState.current.video.thumb})` : 'none'
+                    'background-image': clientState.player.current ? `url(${clientState.player.current.video.thumb})` : 'none'
                 }">
 
                 <!-- progress bars -->
@@ -15,7 +15,7 @@
                 <div class="progress-bar progress-bar-right" :class="'custom-color-' + progressBarColor" :style="{'height': (100 * cursorPercent) + '%'}"></div>
     
                 <!-- title -->
-                <div class="preview-title" v-if="playerState.current">{{playerState.current.video.title}}</div>
+                <div class="preview-title" v-if="clientState.player.current">{{clientState.player.current.video.title}}</div>
 
                 <!-- sliding window that closes over the image -->
                 <div class="sliding-window top" :class="{['custom-color-' + progressBarColor]: true, 'closed': cursorPercent >= 1}"></div>
@@ -59,19 +59,19 @@
                     </div>
                 </div>
                 <div class="preview-actions">
-                    <div v-show="canHandlePlayer() && playerState.current && playerState.current.video.duration !== 0"
+                    <div v-show="canHandlePlayer() && clientState.player.current && clientState.player.current.video.duration !== 0"
                         @click="ytReplay30"
                         title="Replay 30 seconds"
                         class="preview-action">
                         <i class="material-icons md-14">replay_30</i>
                     </div>
-                    <div v-show="canHandlePlayer() && playerState.current && playerState.current.video.duration !== 0"
+                    <div v-show="canHandlePlayer() && clientState.player.current && clientState.player.current.video.duration !== 0"
                         @click="ytSkip30"
                         title="Skip 30 seconds"
                         class="preview-action">
                         <i class="material-icons md-14">forward_30</i>
                     </div>
-                    <div v-show="playerState.current"
+                    <div v-show="clientState.player.current"
                         @click="ytSkip"
                         title="Skip video"
                         class="preview-action">
@@ -92,7 +92,7 @@
 
 <script>
     import Vue from "vue";
-    import { mapState } from "vuex";
+    import { mapGetters, mapActions } from "vuex";
     import YoutubeVideoSearcher from "../modal/YoutubeVideoSearcher.vue";
 
     export default Vue.extend({
@@ -120,10 +120,13 @@
             }
         },
         methods: {
+            ...mapActions('SkyChatClient', [
+                "sendMessage",
+            ]),
             updateQueueWaitDurations: function() {
                 let waitDuration = 0;
-                if (this.playerState.current) {
-                    waitDuration += this.playerState.current.video.duration - (new Date().getTime() - this.playerState.current.video.startTime);
+                if (this.clientState.player.current) {
+                    waitDuration += this.clientState.player.current.video.duration - (new Date().getTime() - this.clientState.player.current.video.startTime);
                 }
                 let waitDurations = [];
                 for (const entry of this.nextQueuedEntries) {
@@ -134,21 +137,21 @@
                 this.queueWaitDurations = waitDurations;
             },
             updateCurrentDuration: function() {
-                if (! this.playerState.current) {
+                if (! this.clientState.player.current) {
                     this.cursorPercent = 1.;
                     return;
                 }
-                if (this.playerState.current.video.duration === 0) {
+                if (this.clientState.player.current.video.duration === 0) {
                     this.cursorPercent = 0;
                     return;
                 }
-                let pct = (new Date().getTime() - this.playerState.current.video.startTime + this.playerState.current.video.startCursor) / this.playerState.current.video.duration;
+                let pct = (new Date().getTime() - this.clientState.player.current.video.startTime + this.clientState.player.current.video.startCursor) / this.clientState.player.current.video.duration;
                 pct = Math.max(0, pct);
                 pct = Math.min(1, pct);
                 this.cursorPercent = pct;
             },
             updateProgressBarColor: function() {
-                if (! this.playerState.current) {
+                if (! this.clientState.player.current) {
                     this.progressBarColor = '000000';
                     return;
                 }
@@ -158,37 +161,34 @@
                 this.progressBarColor = colors[newIndex];
             },
             ytReplay30: function() {
-                this.$client.sendMessage('/player replay30');
+                this.sendMessage('/player replay30');
             },
             ytSkip30: function() {
-                this.$client.sendMessage('/player skip30');
+                this.sendMessage('/player skip30');
             },
             ytSkip: function() {
-                this.$client.sendMessage('/player skip');
+                this.sendMessage('/player skip');
             },
             ytAdd: function() {
                 this.$modal.show(YoutubeVideoSearcher);
             },
             canHandlePlayer: function() {
-                return this.playerState.current && this.user && this.user.id === this.playerState.current.user.id;
+                return this.clientState.player.current && this.clientState.user && this.clientState.user.id === this.clientState.player.current.user.id;
             },
         },
         computed: {
-            ...mapState('Main', [
-                'user',
-                'playerState',
-                'playerChannels',
-                'playerChannel',
+            ...mapGetters('SkyChatClient', [
+                'clientState',
             ]),
             nextEvent: function() {
-                if (! this.playerChannel) {
+                if (! this.clientState.currentPlayerChannel) {
                     return null;
                 }
-                const nextEvents = this.playerChannel.schedule.events.filter(event => event.start + event.duration > new Date().getTime());
+                const nextEvents = this.clientState.currentPlayerChannel.schedule.events.filter(event => event.start + event.duration > new Date().getTime());
                 return nextEvents.length > 0 ? nextEvents[0] : null;
             },
             nextQueuedEntries: function() {
-                return this.playerState.queue.slice(0, 30);
+                return this.clientState.player.queue.slice(0, 30);
             }
         }
     });

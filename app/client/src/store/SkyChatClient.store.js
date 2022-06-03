@@ -1,4 +1,5 @@
-import { SkyChatClient } from '../../../api/client.ts';
+import { SkyChatClient } from '../../../../build/client.js';
+
 
 // Connect to SkyChatClient
 const client = new SkyChatClient();
@@ -44,7 +45,10 @@ const actions = {
         client.on('message-edit', (message) => {
             commit('editMessage', message);
         });
-        client.connect();
+
+        const protocol = document.location.protocol === 'http:' ? 'ws' : 'wss';
+        const url = protocol + '://' + document.location.host;
+        client.connect(url);
     },
 
     /**
@@ -84,6 +88,14 @@ const actions = {
      */
     sendMessage: ({ }, message) => {
         client.sendMessage(message);
+    },
+
+    /**
+     * Send a raw message (blob, binary data) to the server
+     * @param {*} data
+     */
+    sendRaw: ({ }, data) => {
+        client.sendRaw(data);
     }
 };
 
@@ -91,6 +103,7 @@ const actions = {
 const mutations = {
 
     setClientState: (state, clientState) => {
+        console.log('clientState', clientState);
         // Room id changed
         if (state.clientState.roomId !== clientState.roomId) {
             // Clear messages

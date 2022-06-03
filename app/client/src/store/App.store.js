@@ -52,6 +52,11 @@ const state = {
     playerEnabled: true,
 
     /**
+     * Whether the cursors are visible
+     */
+    cursorEnabled: true,
+
+    /**
      * Quick actions
      */
     isQuickActionsVisible: false,
@@ -68,6 +73,7 @@ const getters = {
     cinemaMode: state => state.cinemaMode,
     missedMessages: state => state.missedMessages,
     playerEnabled: state => state.playerEnabled,
+    playerIntensity: state => 0,
     isQuickActionsVisible: state => state.isQuickActionsVisible,
 };
 
@@ -104,6 +110,10 @@ const actions = {
 
     setPlayerEnabled: ({ commit }, playerEnabled) => {
         commit('setPlayerEnabled', playerEnabled);
+    },
+
+    setCursorEnabled: ({ commit }, cursorEnabled) => {
+        commit('setCursorEnabled', cursorEnabled);
     },
 
     setQuickActionsVisibility: ({ commit }, isQuickActionsVisible) => {
@@ -170,12 +180,17 @@ const mutations = {
 
     setPlayerEnabled(state, playerEnabled) {
         state.playerEnabled = playerEnabled;
-        this.commit('Main/savePreferences');
+        this.commit('App/savePreferences');
+    },
+
+    setCursorEnabled(state, cursorEnabled) {
+        state.cursorEnabled = cursorEnabled;
+        this.commit('App/savePreferences');
     },
 
     setQuickActionsVisibility(state, visible) {
         state.isQuickActionsVisible = !! visible;
-        this.commit('Main/savePreferences');
+        this.commit('App/savePreferences');
     },
 };
 

@@ -32,7 +32,7 @@
 
 <script>
     import Vue from "vue";
-    import { mapState } from 'vuex';
+    import { mapActions, mapGetters } from 'vuex';
     import MediaVisualizer from "../modal/MediaVisualizer.vue";
     import HoverCard from "../util/HoverCard";
 
@@ -41,6 +41,9 @@
         components: { HoverCard, MediaVisualizer },
         props: ['media'],
         methods: {
+            ...mapActions('SkyChatClient', [
+                'sendMessage',
+            ]),
             copyMediaLink: function(media) {
                 this.$clipboard.copy(media.location);
                 Vue.prototype.$noty({
@@ -56,7 +59,7 @@
                 return extensionMtc && ['mp4', 'webm'].indexOf(extensionMtc[1]) !== -1;
             },
             playMedia: function(media) {
-                this.$client.sendMessage(`/embed ${media.location}`);
+                this.sendMessage(`/embed ${media.location}`);
             },
             openMedia: function(media) {
                 this.$modal.show(
@@ -66,17 +69,15 @@
                 )
             },
             deleteMedia: function(media) {
-                this.$client.sendMessage(`/gallerydelete ${media.folderId} ${media.id}`);
+                this.sendMessage(`/gallerydelete ${media.folderId} ${media.id}`);
             },
             canWrite: function() {
-                return this.gallery && this.gallery.canWrite;
+                return this.clientState.gallery && this.gallery.clientState.canWrite;
             },
         },
         computed: {
-            ...mapState('Main', [
-                'gallery',
-                'gallerySearchResults',
-                'op',
+            ...mapGetters('SkyChatClient', [
+                'clientState',
             ]),
         }
     });

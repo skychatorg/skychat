@@ -48,8 +48,8 @@ export declare interface SkyChatClient {
     on(event: 'gallery',            listener: (gallery: { data: SanitizedGallery, canWrite: boolean }) => any): this;
     on(event: 'gallery-search',     listener: (medias: SanitizedGalleryMedia[]) => any): this;
 
-    on(event: 'player-channels',    listener: (playerChannel: Array<SanitizedPlayerChannel>) => any): this;
-    on(event: 'player-channel',     listener: (channelId: number) => any): this;
+    on(event: 'player-channels',    listener: (playerChannels: Array<SanitizedPlayerChannel>) => any): this;
+    on(event: 'player-channel',     listener: (channelId: number | null) => any): this;
     on(event: 'player-search',      listener: (data: { type: string, items: Array<VideoInfo> }) => any): this;
     on(event: 'player-sync',        listener: (data: { current: QueuedVideoInfo | null, queue: QueuedVideoInfo[], cursor: number }) => any): this;
 }
@@ -81,6 +81,7 @@ export class SkyChatClient extends EventEmitter {
     private _gallerySearchResults: SanitizedGalleryMedia[] = [];
     private _playerChannels: Array<SanitizedPlayerChannel> = [];
     private _currentPlayerChannelId: number | null = null;
+    private _currentPlayerChannel: SanitizedPlayerChannel | null = null;
     private _playerApiSearchResult: { type: string, items: Array<VideoInfo> } | null = null;
     private _player: { current: QueuedVideoInfo | null, queue: QueuedVideoInfo[], cursor: number } = { current: null, queue: [], cursor: 0 };
     private _playerLastUpdate: Date | null = null;
@@ -306,8 +307,19 @@ export class SkyChatClient extends EventEmitter {
         this.emit('update', this.state);
     }
 
-    private _onPlayerChannel(currentPlayerChannelId: number) {
+    private _onPlayerChannel(currentPlayerChannelId: number | null) {
+        if (currentPlayerChannelId === null) {
+            this._currentPlayerChannelId = null;
+            this._currentPlayerChannel = null;
+            this.emit('update', this.state);
+            return;
+        }
+        const playerChannel = this._playerChannels.find(channel => channel.id === currentPlayerChannelId);
+        if (typeof playerChannel === 'undefined') {
+            throw new Error('Player channel not found');
+        }
         this._currentPlayerChannelId = currentPlayerChannelId;
+        this._currentPlayerChannel = playerChannel;
         this.emit('update', this.state);
     }
 
@@ -316,8 +328,8 @@ export class SkyChatClient extends EventEmitter {
         this.emit('update', this.state);
     }
 
-    private _onPlayerSync(playerState: { current: QueuedVideoInfo | null, queue: QueuedVideoInfo[], cursor: number }) {
-        this._player = playerState;
+    private _onPlayerSync(player: { current: QueuedVideoInfo | null, queue: QueuedVideoInfo[], cursor: number }) {
+        this._player = player;
         this._playerLastUpdate = new Date();
         this.emit('update', this.state);
     }
@@ -356,6 +368,7 @@ export class SkyChatClient extends EventEmitter {
             gallerySearchResults: this._gallerySearchResults,
             playerChannels: this._playerChannels,
             currentPlayerChannelId: this._currentPlayerChannelId,
+            currentPlayerChannel: this._currentPlayerChannel,
             playerApiSearchResult: this._playerApiSearchResult,
             player: this._player,
             playerLastUpdate: this._playerLastUpdate,
@@ -370,14 +383,14 @@ export class SkyChatClient extends EventEmitter {
         this._websocket.addEventListener('open', this._onWebSocketConnect.bind(this));
         this._websocket.addEventListener('message', this._onWebSocketMessage.bind(this));
         this._websocket.addEventListener('close', this._onWebSocketClose.bind(this));
-        // this.store.commit('Main/SET_CONNECTION_STATE', WebSocket.CONNECTING);
+        // this.store.commit('App/SET_CONNECTION_STATE', WebSocket.CONNECTING);
     }
 
     /**
      * Send a last message seen notification
      * @param messageId
      */
-    private notifySeenMessage(messageId: number) {
+    notifySeenMessage(messageId: number) {
         this.sendMessage(`/lastseen ${messageId}`);
     }
 
@@ -406,7 +419,7 @@ export class SkyChatClient extends EventEmitter {
         //         this._sendEvent('set-token', JSON.parse(authToken));
         //     }
         // }
-        // this.store.commit('Main/SET_CONNECTION_STATE', WebSocket.OPEN);
+        // this.store.commit('App/SET_CONNECTION_STATE', WebSocket.OPEN);
     }
 
     /**
@@ -415,7 +428,7 @@ export class SkyChatClient extends EventEmitter {
      */
     private _onWebSocketMessage(message: any) {
         // If raw audio received
-        if (message.data instanceof Blob) {
+        if (message.data && message.data.constructor === Blob) {
             this.emit('audio', message.data);
             return;
         }
@@ -430,22 +443,12 @@ export class SkyChatClient extends EventEmitter {
      *
      */
     private _onWebSocketClose(event: any) {
-        // this.store.commit('Main/SET_CONNECTION_STATE', WebSocket.CLOSED);
+        // this.store.commit('App/SET_CONNECTION_STATE', WebSocket.CLOSED);
         if (event.code === 4403) {
             // 4403 means kick -> no auto re-connect
             return;
         }
         setTimeout(this.connect.bind(this), 1000);
-    }
-
-
-    /**
-     * Send cursor position
-     * @param x
-     * @param y
-     */
-    sendCursor(x: number, y: number) {
-        this.sendMessage('/c ' + x + ' ' + y);
     }
 
     /**
@@ -457,58 +460,13 @@ export class SkyChatClient extends EventEmitter {
     }
 
     /**
-     * Send a PM to the given username
-     * @param username
-     * @param message
+     * Send anything (blob, binary)
      */
-    sendPrivateMessage(username: string, message: string) {
-        return this.sendMessage('/mp ' + username + ' ' + message);
-    }
-
-    /**
-     * Set typing state
-     * @param typing
-     */
-    setTyping(typing: boolean) {
-        this.sendMessage('/t ' + (typing ? 'on' : 'off'));
-    }
-
-    /**
-     * Set this user's avatar
-     * @param avatar Url to an uploaded file
-     */
-    setAvatar(avatar: string) {
-        this.sendMessage('/avatar ' + avatar);
-    }
-
-    /**
-     * Asks for the current player to be synchronized
-     */
-    playerSync() {
-        this.sendMessage('/playersync');
-    }
-
-    /**
-     * Leave a player channel
-     */
-    leavePlayerChannel() {
-        this.sendMessage('/playerchannel leave');
-    }
-
-    /**
-     * Join a player channel
-     * @param id
-     */
-    joinPlayerChannel(id: number) {
-        this.sendMessage('/playerchannel join ' + id);
-    }
-
-    /**
-     * Set cursor state
-     * @param state
-     */
-    cursorSetState(state: boolean) {
-        this.sendMessage('/cursor ' + (state ? 'on' : 'off'));
+    sendRaw(data: any) {
+        if (! this._websocket) {
+            return;
+        }
+        this._websocket.send(data);
     }
 
     /**
@@ -517,27 +475,6 @@ export class SkyChatClient extends EventEmitter {
      */
     join(roomId: number) {
         this._sendEvent('join-room', { roomId });
-    }
-
-    /**
-     * Create a new room
-     */
-    createRoom() {
-        this.sendMessage(`/roomcreate`);
-    }
-
-    /**
-     * Delete the current room (OP only or last person in a private room)
-     */
-    deleteCurrentRoom() {
-        this.sendMessage(`/roomdelete`);
-    }
-
-    /**
-     * Leave current room
-     */
-    leaveCurrentRoom() {
-        this.sendMessage(`/roomleave`);
     }
 
     /**
@@ -568,14 +505,5 @@ export class SkyChatClient extends EventEmitter {
      */
     register(username: string, password: string) {
         this._sendEvent('register', { username, password });
-    }
-
-    /**
-     * Register
-     * @param pollId
-     * @param answer
-     */
-    vote(pollId: number, answer: boolean) {
-        this.sendMessage(`/vote ${pollId} ${answer ? 'y' : 'n'}`);
     }
 }

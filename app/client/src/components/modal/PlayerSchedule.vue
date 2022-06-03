@@ -26,7 +26,7 @@
 
 <script>
     import Vue from "vue";
-    import { mapState } from 'vuex';
+    import { mapGetters } from 'vuex';
     import 'tui-calendar/dist/tui-calendar.css';
     import { Calendar } from '@toast-ui/vue-calendar';
 
@@ -121,8 +121,7 @@
         },
 
         watch: {
-
-            'playerChannels': {
+            'clientState.playerChannels': {
                 deep: true,
                 handler() { this.buildCalendar(); },
             },
@@ -130,13 +129,13 @@
 
         methods: {
             buildCalendar: function() {
-                this.calendars = this.playerChannels.map(channel => ({
+                this.calendars = this.clientState.playerChannels.map(channel => ({
                     id: channel.id.toString(),
                     name: channel.name,
                     color: 'white',
                 }));
                 this.schedules = [].concat(
-                    ... this.playerChannels.map(channel =>
+                    ... this.clientState.playerChannels.map(channel =>
                             channel.schedule.events.map(event => ({
                                 id: `${channel.id}:${event.start}`,
                                 calendarId: channel.id.toString(),
@@ -154,8 +153,8 @@
         },
 
         computed: {
-            ...mapState('Main', [
-                'playerChannels',
+            ...mapGetters('SkyChatClient', [
+                'clientState',
             ]),
         },
     });

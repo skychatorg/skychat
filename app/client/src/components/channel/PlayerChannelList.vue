@@ -1,16 +1,16 @@
 <template>
-    <div class="channel-list" v-show="playerChannels.length > 0 || op">
+    <div class="channel-list" v-show="clientState.playerChannels.length > 0 || clientState.op">
         <div class="subtitle">
             <h3>
                 video
-                <span v-show="op" @click="createChannel()" class="channel-create material-icons md-12">add</span>
+                <span v-show="clientState.op" @click="createChannel()" class="channel-create material-icons md-12">add</span>
             </h3>
         </div>
         
-        <hover-card v-for="channel in playerChannels"
+        <hover-card v-for="channel in clientState.playerChannels"
             :key="channel.id"
             :clickable="true"
-            :selected="playerChannelId === channel.id"
+            :selected="clientState.currentPlayerChannelId === channel.id"
             :border-color="'rgb(255, 130, 130)'"
             class="channel"
             @click.native="joinChannel(channel.id)"
@@ -22,14 +22,14 @@
                     </div>
                     <div class="channel-meta">
                         <!-- delete channel (op) -->
-                        <div v-show="playerChannelId === channel.id && op"
+                        <div v-show="clientState.currentPlayerChannelId === channel.id && clientState.op"
                             @click="deleteChannel()"
                             class="channel-delete"
                             title="Delete this channel">
                             <i class="material-icons md-14">close</i>
                         </div>
                         <!-- users in the channel -->
-                        <div v-for="user of (playerChannelUsers[channel.id] || []).slice(0, 4)"
+                        <div v-for="user of (clientState.playerChannelUsers[channel.id] || []).slice(0, 4)"
                             :key="user.username"
                             class="avatar image-bubble"
                             :title="user.username + ' is watching'"
@@ -37,8 +37,8 @@
                             <img :src="user.data.plugins.avatar">
                         </div>
                         <!-- represents other users -->
-                        <div v-if="(playerChannelUsers[channel.id] || []).length > 4"
-                            :title="(playerChannelUsers[channel.id].length - 4) + ' others are watching'"
+                        <div v-if="(clientState.playerChannelUsers[channel.id] || []).length > 4"
+                            :title="(clientState.playerChannelUsers[channel.id].length - 4) + ' others are watching'"
                             class="avatar"
                         >
                             <i class="material-icons md-14">more_horiz</i>
@@ -50,7 +50,7 @@
                     <!-- show if there is a video currently playing -->
                     <div v-show="channel.playing"
                         class="channel-player"
-                        :class="{ 'disabled': playerChannelId !== channel.id }"
+                        :class="{ 'disabled': clientState.currentPlayerChannelId !== channel.id }"
                         :title="'Media added by ' + channel.currentMedia.owner">
 
                         <div class="channel-player-owner">{{ channel.currentMedia.title }}</div>
@@ -64,34 +64,33 @@
 
 <script>
     import Vue from "vue";
-    import { mapState } from 'vuex';
+    import { mapActions, mapGetters } from 'vuex';
     import HoverCard from "../util/HoverCard.vue";
 
     export default Vue.extend({
         components: { HoverCard },
         props: { },
         methods: {
+            ...mapActions('SkyChatClient', [
+                'sendMessage',
+            ]),
             joinChannel: function(id) {
-                if (this.playerChannelId === id) {
-                    this.$client.leavePlayerChannel();
+                if (this.clientState.currentPlayerChannelId === id) {
+                    this.sendMessage('/playerchannel leave');
                 } else {
-                    this.$client.joinPlayerChannel(id);
+                    this.sendMessage('/playerchannel join ' + id);
                 }
             },
             createChannel: function() {
-                this.$client.sendMessage(`/playerchannelmanage create`);
+                this.sendMessage(`/playerchannelmanage create`);
             },
             deleteChannel: function() {
-                this.$client.sendMessage(`/playerchannelmanage delete`);
+                this.sendMessage(`/playerchannelmanage delete`);
             }
         },
         computed: {
-            ...mapState('Main', [
-                'playerChannelUsers',
-                'playerChannels',
-                'playerChannelId',
-                'user',
-                'op',
+            ...mapGetters('SkyChatClient', [
+                'clientState',
             ]),
         },
     });

@@ -41,7 +41,7 @@
 
 <script>
     import Vue from "vue";
-    import { mapState } from 'vuex';
+    import { mapActions, mapGetters } from 'vuex';
     import YoutubeVideoSearcher from "../modal/YoutubeVideoSearcher.vue";
     import FileManager from "../modal/FileManager.vue";
 
@@ -161,6 +161,15 @@
         },
 
         methods: {
+            ...mapActions('App', [
+                'setPlayerEnabled',
+                'setCursorEnabled',
+                'toggleCinemaMode',
+                'setQuickActionsVisibility',
+            ]),
+            ...mapActions('SkyChatClient', [
+                'sendMessage',
+            ]),
             isGroupShown: function(group) {
                 if (group.onlyInCinema) {
                     return this.cinemaMode;
@@ -169,7 +178,7 @@
                     return ! this.cinemaMode;
                 }
                 if (group.onlyOP) {
-                    return this.op;
+                    return this.clientState.op;
                 }
                 return true;
             },
@@ -178,7 +187,7 @@
                     case 'player-toggle':
                         return `<i class="material-icons md-16" style="color:${this.playerEnabled ? '' : 'gray'}">toggle_${this.playerEnabled ? 'on' : 'off'}</i>`;
                     case 'cursor-toggle':
-                        return `<i class="material-icons md-16" style="color:${this.user.data.plugins.cursor ? '' : 'gray'}">toggle_${this.user.data.plugins.cursor ? 'on' : 'off'}</i>`;
+                        return `<i class="material-icons md-16" style="color:${this.clientState.user.data.plugins.cursor ? '' : 'gray'}">toggle_${this.clientState.user.data.plugins.cursor ? 'on' : 'off'}</i>`;
                     case 'player-play':
                         return `<b>Play</b>`;
                     case 'shop':
@@ -206,49 +215,50 @@
             onActivate: function(id) {
                 switch (id) {
                     case 'player-toggle':
-                        this.$store.dispatch('Main/setPlayerEnabled', ! this.playerEnabled);
-                        this.$client.playerSync();
+                        this.setPlayerEnabled(! this.playerEnabled);
+                        this.sendMessage('/yt sync');
                         return;
                     case 'cursor-toggle':
-                        return this.$client.cursorSetState(! this.user.data.plugins.cursor);
+                        return this.setCursorEnabled(! this.clientState.user.data.plugins.cursor);
                     case 'player-play':
                         this.$modal.show(YoutubeVideoSearcher);
                         return;
                     case 'shop':
-                        return this.$client.sendMessage('/shop');
+                        return this.sendMessage('/shop');
                     case 'shop-color':
-                        return this.$client.sendMessage('/shoplist color');
+                        return this.sendMessage('/shoplist color');
                     case 'shop-halo':
-                        return this.$client.sendMessage('/shoplist halo');
+                        return this.sendMessage('/shoplist halo');
                     case 'shop-pinnedicon':
-                        return this.$client.sendMessage('/shoplist pinnedicon');
+                        return this.sendMessage('/shoplist pinnedicon');
                     case 'racing':
-                        return this.$client.sendMessage('/racing start');
+                        return this.sendMessage('/racing start');
                     case 'guess':
-                        return this.$client.sendMessage('/guess start');
+                        return this.sendMessage('/guess start');
                     case 'roll':
-                        return this.$client.sendMessage('/roll start');
+                        return this.sendMessage('/roll start');
                     case 'help':
-                        return this.$client.sendMessage('/help');
+                        return this.sendMessage('/help');
                     case 'cinema-mode':
-                        return this.$store.dispatch('Main/toggleCinemaMode'); 
+                        return this.toggleCinemaMode();
                     case 'file-manager':
                         this.$modal.show(FileManager);
                         return;
                 }
             },
             setQuickActionsVisibility: function(visible) {
-                this.$store.dispatch('Main/setQuickActionsVisibility', visible);
+                this.setQuickActionsVisibility(visible);
             },
         },
 
         computed: {
-            ...mapState('Main', [
+            ...mapGetters('App', [
                 'cinemaMode',
-                'user',
-                'op',
                 'playerEnabled',
                 'isQuickActionsVisible',
+            ]),
+            ...mapGetters('SkyChatClient', [
+                'clientState',
             ]),
         }
     });

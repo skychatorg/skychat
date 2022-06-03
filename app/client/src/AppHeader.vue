@@ -11,31 +11,33 @@
             <!-- user info top right -->
             <div class="nav-user">
                 <div class="username">
-                    <p>{{user.username}}</p>
-                    <span v-show="user.right === -1" @click="$emit('login')" class="logout-button">login</span>
-                    <span v-show="user.right >= 0" @click="$emit('logout')" class="logout-button">logout</span>
+                    <p>{{clientState.user.username}}</p>
+                    <span v-show="clientState.user.right === -1" @click="$emit('login')" class="logout-button">login</span>
+                    <span v-show="clientState.user.right >= 0" @click="$emit('logout')" class="logout-button">logout</span>
                 </div>
                 <div class="image-bubble nav-avatar" @click="onAvatarClick" title="Change avatar">
-                    <img :src="user.data.plugins.avatar">
+                    <img :src="clientState.user.data.plugins.avatar">
                 </div>
             </div>
         </nav>
-        <input ref="file" @change="setAvatar" type="file" style="position: fixed; top: -2000px; left: -2000px;" />
+        <input ref="file" @change="onSetAvatar" type="file" style="position: fixed; top: -2000px; left: -2000px;" />
     </header>
 </template>
 
 <script>
     import Vue from "vue";
+import { mapActions, mapGetters } from "vuex";
 
     export default Vue.extend({
 
         methods: {
-
+            ...mapActions('SkyChatClient', [
+                'sendMessage',
+            ]),
             onAvatarClick: function() {
                 this.$refs.file.click();
             },
-
-            setAvatar: async function() {
+            onSetAvatar: async function() {
                 try {
                     const data = new FormData();
                     data.append('file', this.$refs.file.files[0]);
@@ -43,7 +45,7 @@
                     if (result.status === 500) {
                         throw new Error('Unable to upload: ' + result.message);
                     }
-                    this.$client.setAvatar(document.location.href + result.path);
+                    this.sendMessage(`/avatar ${document.location.href + result.path}`);
                 } catch (e) {
                     new Noty({
                         type: 'error',
@@ -57,11 +59,13 @@
         },
 
         computed: {
-            user: function() {
-                return this.$store.state.Main.user;
-            },
+            ...mapGetters('SkyChatClient', [
+                'clientState',
+            ]),
             borderBottomColor: function() {
-                const state = this.$store.state.Main.connectionState;
+                // TODO: Handle websocket connection state
+                //const state = this.$store.state.App.connectionState;
+                const state = WebSocket.OPEN;
                 switch (state) {
 
                     case WebSocket.CONNECTING:

@@ -15,7 +15,7 @@
         <div class="search-results">
 
             <!-- 1 item -->
-            <div v-for="item in playerApiSearchResult.items"
+            <div v-for="item in clientState.playerApiSearchResult.items"
                  :key="item.id"
                  @click="play(item)"
                  class="search-item">
@@ -37,7 +37,7 @@
 
 <script>
     import Vue from "vue";
-    import { mapState } from 'vuex';
+    import { mapActions, mapGetters } from 'vuex';
 
     export default Vue.extend({
         data: function() {
@@ -61,21 +61,24 @@
             }
         },
         methods: {
+            ...mapActions('SkyChatClient', [
+                'sendMessage',
+            ]),
             search: function(search) {
-                this.$client.sendMessage(`/playersearch yt ${this.searchType} ${search}`);
+                this.sendMessage(`/playersearch yt ${this.searchType} ${search}`);
             },
             play: function(item) {
-                if (this.playerApiSearchResult.type === 'video') {
-                    this.$client.sendMessage(`/yt ${item.id} video`);
+                if (this.clientState.playerApiSearchResult.type === 'video') {
+                    this.sendMessage(`/yt ${item.id} video`);
                 } else {
-                    this.$client.sendMessage(`/yt ${item.id} playlist`);
+                    this.sendMessage(`/yt ${item.id} playlist`);
                 }
                 this.$emit('close');
             }
         },
         computed: {
-            ...mapState('Main', [
-                'playerApiSearchResult',
+            ...mapGetters('SkyChatClient', [
+                'clientState',
             ]),
         }
     });

@@ -3,7 +3,7 @@
         <div class="subtitle">
             <h3>
                 text
-                <span v-show="op" @click="createRoom()" class="room-create material-icons md-12">add</span>
+                <span v-show="op" @click="onCreateRoom()" class="room-create material-icons md-12">add</span>
             </h3>
         </div>
         <hover-card v-for="room in rooms"
@@ -53,12 +53,16 @@
 
 <script>
     import Vue from "vue";
-    import { mapState } from 'vuex';
+    import { mapActions, mapGetters } from 'vuex';
     import HoverCard from "../util/HoverCard.vue";
 
     export default Vue.extend({
         components: { HoverCard },
         methods: {
+            ...mapActions('SkyChatClient', [
+                'sendMessage',
+                'joinRoom',
+            ]),
             getRoomName: function(room) {
                 if (room.isPrivate) {
                     if (room.whitelist.length > 1) {
@@ -81,20 +85,20 @@
                 return this.currentRoom === room.id && room.isPrivate && room.whitelist.length > 1;
             },
             joinRoom: function(id) {
-                this.$client.joinRoom(id);
+                this.joinRoom(id);
             },
-            createRoom: function() {
-                this.$client.createRoom();
+            onCreateRoom: function() {
+                this.sendMessage('/roomcreate');
             },
             deleteRoom: function() {
-                this.$client.deleteCurrentRoom();
+                this.sendMessage('/roomdelete');
             },
             leaveRoom: function() {
-                this.$client.leaveCurrentRoom();
+                this.sendMessage('/roomleave');
             }
         },
         computed: {
-            ...mapState('Main', [
+            ...mapGetters('App', [
                 'rooms',
                 'currentRoom',
                 'roomConnectedUsers',
