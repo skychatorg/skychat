@@ -2,16 +2,17 @@
     "compilerOptions": {
         "module": "commonjs",
         "strict": true,
-        "declaration": true,
+        "declaration": false,
         "removeComments": true,
-        "outDir": "./build/",
-        "target": "es5",
-        "lib": ["ES2019"],
+        "target": "ES5",
+        "lib": ["ES2019", "DOM"],
         "moduleResolution": "node",
-        "sourceMap": true
+        "rootDir": "app/",
+        "sourceMap": false
     },
     "include": [
-      "app/server/**/*"
+        "app/api/cient.ts",
+        "app/server/**/*",
     ],
     "exclude": [
         "node_modules",

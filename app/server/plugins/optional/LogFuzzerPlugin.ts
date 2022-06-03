@@ -22,7 +22,7 @@ export class LogFuzzerPlugin extends GlobalPlugin {
      */
     protected storage: {lastId: number} = {lastId: 0};
 
-    private tickTimeout?: NodeJS.Timeout;
+    private tickTimeout?: any;
 
     constructor(manager: RoomManager) {
         super(manager);

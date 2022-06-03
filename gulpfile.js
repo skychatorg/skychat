@@ -8,13 +8,12 @@ const ts = require('gulp-typescript');
 const tsProject = ts.createProject('tsconfig.json');
 const nodemon = require('gulp-nodemon');
 const webpack = require('webpack-stream');
-const VueLoaderPlugin = require('vue-loader/lib/plugin');
 
 const pugPaths = { pages: ['app/client/views/*.pug'] };
 const scssPaths = { pages: ['app/client/css/*.scss'] };
 const resPaths = { pages: ['app/client/assets/**/*'] };
 const srcPaths = 'app/client/src/index.js';
-const serverSrcPaths = ['app/server/**/*.ts', 'app/server/index.ts'];
+const serverSrcPaths = ['app/api/client.ts', 'app/server/**/*.ts'];
 const distPath = 'dist';
 
 const env = JSON.parse(fs.readFileSync('.env.json').toString());
@@ -53,7 +52,7 @@ gulp.task('build-server-typescript', function() {
 
 gulp.task('build-client', gulp.parallel('build-client-views', 'build-client-scss', 'build-client-assets', 'build-client-javascript'));
 gulp.task('build-server', gulp.parallel('build-server-typescript'));
-gulp.task('build', gulp.parallel('build-client', 'build-server'));
+gulp.task('build', gulp.series('build-server', 'build-client'));
 
 gulp.task('watch-server-typescript', function (done) {
     nodemon({
@@ -76,7 +75,7 @@ gulp.task('watch-client-javascript', function () {
         .pipe(gulp.dest(distPath));
 });
 
-gulp.task('watch-server', gulp.series('build-server', 'watch-server-typescript'));
-gulp.task('watch-client', gulp.series('build-client', 'watch-client-javascript'));
-gulp.task('watch', gulp.parallel('watch-client', 'watch-server'));
+gulp.task('watch-server', gulp.series('watch-server-typescript'));
+gulp.task('watch-client', gulp.series('watch-client-javascript'));
+gulp.task('watch', gulp.series('build', gulp.parallel('watch-client', 'watch-server')));
 gulp.task('default', gulp.series('watch'));
