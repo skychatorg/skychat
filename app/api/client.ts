@@ -59,6 +59,8 @@ export class SkyChatClient extends EventEmitter {
 
     static readonly CURSOR_DECAY_DELAY = 10 * 1e3;
 
+    static readonly LOCAL_STORAGE_TOKEN_KEY = 'skychat-token';
+
     private _websocket: WebSocket | null = null;
 
     private _user: SanitizedUser = defaultUser;
@@ -68,7 +70,7 @@ export class SkyChatClient extends EventEmitter {
     private _messageIdToLastSeenUsers: { [id: number]: Array<SanitizedUser> } = {};
     private _roomConnectedUsers: { [roomId: number]: Array<SanitizedUser> } = {};
     private _playerChannelUsers: { [roomId: number]: Array<SanitizedUser> } = {};
-    private _roomList: Array<SanitizedRoom> = [];
+    private _rooms: Array<SanitizedRoom> = [];
     private _currentRoomId: number | null = null;
     private _typingList: Array<SanitizedUser> = [];
     private _polls: { [id: number]: SanitizedPoll } = {};
@@ -142,6 +144,13 @@ export class SkyChatClient extends EventEmitter {
     }
 
     private _onToken(token: AuthToken | null) {
+        if (typeof localStorage !== 'undefined') {
+            if (token) {
+                localStorage.setItem(SkyChatClient.LOCAL_STORAGE_TOKEN_KEY, JSON.stringify(token));
+            } else {
+                localStorage.removeItem(SkyChatClient.LOCAL_STORAGE_TOKEN_KEY);
+            }
+        }
         this._token = token;
         this.emit('update', this.state);
     }
@@ -197,8 +206,8 @@ export class SkyChatClient extends EventEmitter {
         this._playerChannelUsers = playerChannelUsers;
     }
 
-    private _onRoomList(roomList: Array<SanitizedRoom>) {
-        this._roomList = roomList;
+    private _onRoomList(rooms: Array<SanitizedRoom>) {
+        this._rooms = rooms;
         this.emit('update', this.state);
     }
 
@@ -348,6 +357,7 @@ export class SkyChatClient extends EventEmitter {
      */
     get state() {
         return {
+            websocketReadyState: this._websocket ? this._websocket.readyState : WebSocket.CLOSED,
             user: this._user,
             config: this._config,
             token: this._token,
@@ -355,7 +365,7 @@ export class SkyChatClient extends EventEmitter {
             messageIdToLastSeenUsers: this._messageIdToLastSeenUsers,
             roomConnectedUsers: this._roomConnectedUsers,
             playerChannelUsers: this._playerChannelUsers,
-            roomList: this._roomList,
+            rooms: this._rooms,
             currentRoomId: this._currentRoomId,
             typingList: this._typingList,
             polls: this._polls,
@@ -383,7 +393,7 @@ export class SkyChatClient extends EventEmitter {
         this._websocket.addEventListener('open', this._onWebSocketConnect.bind(this));
         this._websocket.addEventListener('message', this._onWebSocketMessage.bind(this));
         this._websocket.addEventListener('close', this._onWebSocketClose.bind(this));
-        // this.store.commit('App/SET_CONNECTION_STATE', WebSocket.CONNECTING);
+        this.emit('update', this.state);
     }
 
     /**
@@ -392,63 +402,6 @@ export class SkyChatClient extends EventEmitter {
      */
     notifySeenMessage(messageId: number) {
         this.sendMessage(`/lastseen ${messageId}`);
-    }
-
-    /**
-     * Emit an event to the server
-     * @param eventName
-     * @param payload
-     */
-    private _sendEvent(eventName: string, payload: any) {
-        if (! this._websocket) {
-            return;
-        }
-        this._websocket.send(JSON.stringify({
-            event: eventName,
-            data: payload
-        }));
-    }
-
-    /**
-     * When the connection is made with the websocket server
-     */
-    private _onWebSocketConnect() {
-        // if (typeof localStorage !== 'undefined') {
-        //     const authToken = localStorage.getItem(SkyChatClient.LOCAL_STORAGE_TOKEN_KEY);
-        //     if (authToken) {
-        //         this._sendEvent('set-token', JSON.parse(authToken));
-        //     }
-        // }
-        // this.store.commit('App/SET_CONNECTION_STATE', WebSocket.OPEN);
-    }
-
-    /**
-     * When a message is received on the websocket
-     * @param message
-     */
-    private _onWebSocketMessage(message: any) {
-        // If raw audio received
-        if (message.data && message.data.constructor === Blob) {
-            this.emit('audio', message.data);
-            return;
-        }
-        // Otherwise, if normal json message received
-        const data = JSON.parse(message.data);
-        const eventName = data.event;
-        const eventPayload = data.data;
-        this.emit(eventName, eventPayload);
-    }
-
-    /**
-     *
-     */
-    private _onWebSocketClose(event: any) {
-        // this.store.commit('App/SET_CONNECTION_STATE', WebSocket.CLOSED);
-        if (event.code === 4403) {
-            // 4403 means kick -> no auto re-connect
-            return;
-        }
-        setTimeout(this.connect.bind(this), 1000);
     }
 
     /**
@@ -490,9 +443,9 @@ export class SkyChatClient extends EventEmitter {
      * Logout
      */
     logout() {
-        // if (typeof localStorage !== 'undefined') {
-        //     localStorage.removeItem(SkyChatClient.LOCAL_STORAGE_TOKEN_KEY);
-        // }
+        if (typeof localStorage !== 'undefined') {
+            localStorage.removeItem(SkyChatClient.LOCAL_STORAGE_TOKEN_KEY);
+        }
         if (this._websocket) {
             this._websocket.close();
         }
@@ -505,5 +458,62 @@ export class SkyChatClient extends EventEmitter {
      */
     register(username: string, password: string) {
         this._sendEvent('register', { username, password });
+    }
+
+    /**
+     * Emit an event to the server
+     * @param eventName
+     * @param payload
+     */
+    private _sendEvent(eventName: string, payload: any) {
+        if (! this._websocket) {
+            return;
+        }
+        this._websocket.send(JSON.stringify({
+            event: eventName,
+            data: payload
+        }));
+    }
+
+    /**
+     * When the connection is made with the websocket server
+     */
+    private _onWebSocketConnect() {
+        if (typeof localStorage !== 'undefined') {
+            const authToken = localStorage.getItem(SkyChatClient.LOCAL_STORAGE_TOKEN_KEY);
+            if (authToken) {
+                this._sendEvent('set-token', JSON.parse(authToken));
+            }
+        }
+        this.emit('update', this.state);
+    }
+
+    /**
+     * When a message is received on the websocket
+     * @param message
+     */
+    private _onWebSocketMessage(message: any) {
+        // If raw audio received
+        if (message.data && message.data.constructor === Blob) {
+            this.emit('audio', message.data);
+            return;
+        }
+        // Otherwise, if normal json message received
+        const data = JSON.parse(message.data);
+        const eventName = data.event;
+        const eventPayload = data.data;
+        this.emit(eventName, eventPayload);
+    }
+
+    /**
+     *
+     */
+    private _onWebSocketClose(event: any) {
+        this.emit('update', this.state);
+        if (event.code === 4403) {
+            // 4403 means kick -> no auto re-connect
+            return;
+        }
+        setTimeout(this.connect.bind(this), 1000);
     }
 }

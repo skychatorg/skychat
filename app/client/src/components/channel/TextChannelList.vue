@@ -1,16 +1,16 @@
 <template>
-    <div class="room-list" v-show="rooms.length > 1 || op">
+    <div class="room-list" v-show="clientState.rooms.length > 1 || clientState.op">
         <div class="subtitle">
             <h3>
                 text
-                <span v-show="op" @click="onCreateRoom()" class="room-create material-icons md-12">add</span>
+                <span v-show="clientState.op" @click="onCreateRoom()" class="room-create material-icons md-12">add</span>
             </h3>
         </div>
-        <hover-card v-for="room in rooms"
+        <hover-card v-for="room in clientState.rooms"
             :key="room.id"
             :clickable="true"
-            :selected="currentRoom === room.id"
-            :highlighted="user.id > 0 && (user.data.plugins.lastseen[room.id] || 0) < room.lastReceivedMessageId && currentRoom !== room.id"
+            :selected="clientState.currentRoomId === room.id"
+            :highlighted="clientState.user.id > 0 && (clientState.user.data.plugins.lastseen[room.id] || 0) < room.lastReceivedMessageId && clientState.currentRoomId !== room.id"
             :border-color="'#afafaf'"
             class="room"
             @click.native="joinRoom(room.id)"
@@ -39,11 +39,11 @@
                     </div>
 
                     <!-- user count -->
-                    <div v-if="roomConnectedUsers[room.id] && roomConnectedUsers[room.id].length > 0"
+                    <div v-if="clientState.roomConnectedUsers[room.id] && clientState.roomConnectedUsers[room.id].length > 0"
                         class="room-users mr-1"
                         title="Users in this room">
-                        <i class="material-icons md-14">{{roomConnectedUsers[room.id].length > 1 ? 'group' : 'person'}}</i>
-                        <span>{{ roomConnectedUsers[room.id].length }}</span>
+                        <i class="material-icons md-14">{{clientState.roomConnectedUsers[room.id].length > 1 ? 'group' : 'person'}}</i>
+                        <span>{{ clientState.roomConnectedUsers[room.id].length }}</span>
                     </div>
                 </div>
             </div>
@@ -66,7 +66,7 @@
             getRoomName: function(room) {
                 if (room.isPrivate) {
                     if (room.whitelist.length > 1) {
-                        return room.whitelist.filter(ident => ident !== this.user.username.toLowerCase()).join(', ');
+                        return room.whitelist.filter(ident => ident !== this.clientState.user.username.toLowerCase()).join(', ');
                     } else {
                         return room.name + ' (closed)';
                     }
@@ -76,13 +76,13 @@
             },
             canDeleteRoom: function(room) {
                 if (room.isPrivate) {
-                    return this.currentRoom === room.id && room.whitelist.length === 1;
+                    return this.clientState.currentRoomId === room.id && room.whitelist.length === 1;
                 } else {
-                    return this.currentRoom === room.id && this.op;
+                    return this.clientState.currentRoomId === room.id && this.clientState.op;
                 }
             },
             canLeaveRoom: function(room) {
-                return this.currentRoom === room.id && room.isPrivate && room.whitelist.length > 1;
+                return this.clientState.currentRoomId === room.id && room.isPrivate && room.whitelist.length > 1;
             },
             joinRoom: function(id) {
                 this.joinRoom(id);
@@ -98,12 +98,8 @@
             }
         },
         computed: {
-            ...mapGetters('App', [
-                'rooms',
-                'currentRoom',
-                'roomConnectedUsers',
-                'user',
-                'op',
+            ...mapGetters('SkyChatClient', [
+                'clientState',
             ]),
         },
     });

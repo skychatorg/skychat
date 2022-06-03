@@ -44,7 +44,7 @@ const state = {
     /**
      * List of missed messages, that were missed because the window was not focused
      */
-    missedMessages: null,
+    missedMessages: [],
 
     /**
      * Whether the player is on/off
@@ -79,6 +79,38 @@ const getters = {
 
 // Actions 
 const actions = {
+
+    init: async ({ state, dispatch, commit }) => {
+        await dispatch('loadPreferences');
+        
+        // Handle height on mobile phones
+        const resize = () => {
+            document.body.style.height = window.innerHeight + 'px';
+        };
+        window.addEventListener('resize', resize);
+        resize();
+        
+        // Handle document title update when new messages arrive
+        window.addEventListener('blur', () => dispatch('blur'));
+        window.addEventListener('focus', () => dispatch('focus'));
+
+        setInterval(() => {
+        
+            // In case the title is not currently blinking, just update it
+            if (! state.documentTitleBlinking) {
+                if (document.title !== state.documentTitle) {
+                    document.title = state.documentTitle;
+                }
+                return;
+            }
+        
+            const chars = "┤┘┴└├┌┬┐";
+            const indexOf = chars.indexOf(document.title[0]);
+            const newPosition = (indexOf + 1) % chars.length;
+            document.title = chars[newPosition] + ' ' + state.documentTitle;
+        
+        }, 1000);
+    },
     
     loadPreferences: ({ commit }) => {
         commit('loadPreferences');
@@ -88,7 +120,10 @@ const actions = {
         commit('loadPreferences');
     },
 
-    focus: ({ commit }) => {
+    focus: ({ state, commit }) => {
+        if (state.missedMessages.length > 0) {
+            client.notifySeenMessage(store.state.App.missedMessages[store.state.App.missedMessages.length - 1].id);
+        }
         commit('focus');
     },
 

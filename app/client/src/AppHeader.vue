@@ -63,10 +63,9 @@ import { mapActions, mapGetters } from "vuex";
                 'clientState',
             ]),
             borderBottomColor: function() {
-                // TODO: Handle websocket connection state
                 //const state = this.$store.state.App.connectionState;
-                const state = WebSocket.OPEN;
-                switch (state) {
+                const state = this.clientState.websocketReadyState;
+                switch (this.clientState.websocketReadyState) {
 
                     case WebSocket.CONNECTING:
                     case WebSocket.CLOSED:

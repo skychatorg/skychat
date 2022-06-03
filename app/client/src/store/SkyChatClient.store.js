@@ -33,17 +33,27 @@ const actions = {
      * Initialize client (subscribe to relevant events) & make initial socket connection
      */
     init: ({ commit }) => {
-        client.on('state', () => {
-            commit('setClientState', client.state);
+        client.on('update', () => commit('setClientState', client.state));
+        client.on('message', message => commit('addMessage', message));
+        client.on('messages', messages => commit('addMessages', messages));
+        client.on('message-edit', message => commit('editMessage', message));
+        client.on('info', info => {
+            new Noty({
+                type: 'info',
+                layout: 'topCenter',
+                theme: 'nest',
+                text: info,
+                timeout: 6 * 1000
+            }).show();
         });
-        client.on('message', (message) => {
-            commit('addMessage', message);
-        });
-        client.on('messages', (messages) => {
-            commit('addMessages', messages);
-        });
-        client.on('message-edit', (message) => {
-            commit('editMessage', message);
+        client.on('error', error => {
+            new Noty({
+                type: 'error',
+                layout: 'topCenter',
+                theme: 'nest',
+                text: error,
+                timeout: 6 * 1000
+            }).show();
         });
 
         const protocol = document.location.protocol === 'http:' ? 'ws' : 'wss';
@@ -103,7 +113,6 @@ const actions = {
 const mutations = {
 
     setClientState: (state, clientState) => {
-        console.log('clientState', clientState);
         // Room id changed
         if (state.clientState.roomId !== clientState.roomId) {
             // Clear messages
@@ -114,18 +123,18 @@ const mutations = {
 
     addMessage(state, message) {
         state.messages.push(message);
-        // TODO: Handle quote
-        // if (message.content.match(new RegExp('@' + state.user.username.toLowerCase(), 'i'))) {
-        //     new Audio('/assets/sound/notification.mp3').play();
-        // }
+        // TODO: Moe this to App?
+        if (message.content.match(new RegExp('@' + state.clientState.user.username.toLowerCase(), 'i'))) {
+            new Audio('/assets/sound/notification.mp3').play();
+        }
     },
 
     addMessages(state, messages) {
         state.messages.push(...messages);
-        // TODO: Handle quote
-        // if (messages.find(message => message.content.match(new RegExp('@' + state.user.username.toLowerCase(), 'i')))) {
-        //     new Audio('/assets/sound/notification.mp3').play();
-        // }
+        // TODO: Moe this to App?
+        if (messages.find(message => message.content.match(new RegExp('@' + state.clientState.user.username.toLowerCase(), 'i')))) {
+            new Audio('/assets/sound/notification.mp3').play();
+        }
     },
 
     editMessage(state, message) {

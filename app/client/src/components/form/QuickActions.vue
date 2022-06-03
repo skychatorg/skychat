@@ -163,7 +163,6 @@
         methods: {
             ...mapActions('App', [
                 'setPlayerEnabled',
-                'setCursorEnabled',
                 'toggleCinemaMode',
                 'setQuickActionsVisibility',
             ]),
@@ -219,7 +218,7 @@
                         this.sendMessage('/yt sync');
                         return;
                     case 'cursor-toggle':
-                        return this.setCursorEnabled(! this.clientState.user.data.plugins.cursor);
+                        return this.sendMessage(`/cursor ${this.clientState.user.data.plugins.cursor ? 'off' : 'on'}`);
                     case 'player-play':
                         this.$modal.show(YoutubeVideoSearcher);
                         return;
