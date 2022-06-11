@@ -96,7 +96,8 @@
 
             message: function(newMessage, oldMessage) {
                 const oldTyping = oldMessage.length > 0 && oldMessage[0] !== '/';
-                const newTyping = ! this.clientState.currentPlayerChannel && newMessage.length > 0 && newMessage[0] !== '/';
+                const newTyping = newMessage.length > 0 && newMessage[0] !== '/';
+                console.log(oldTyping, newTyping);
                 if (newTyping !== oldTyping) {
                     this.sendMessage('/t ' + (newTyping ? 'on' : 'off'));
                 }

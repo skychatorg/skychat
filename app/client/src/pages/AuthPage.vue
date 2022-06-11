@@ -35,8 +35,8 @@
                     this.$emit('gotoroom');
                 }
             },
-            'clientState.currentRoom': function() {
-                if (this.clientState.currentRoom !== null) {
+            'clientState.currentRoomId': function() {
+                if (this.clientState.currentRoomId !== null) {
                     this.$emit('gotoroom');
                 }
             }
@@ -44,6 +44,7 @@
         methods: {
             ...mapActions('SkyChatClient', [
                 'sendMessage',
+                'join',
                 'login',
                 'register',
             ]),
@@ -56,7 +57,7 @@
             onGuestLogin: function() {
 
                 // Join room #1
-                this.joinRoom(this.clientState.rooms[0].id);
+                this.join(this.clientState.rooms[0].id);
 
                 // Join first player channel
                 if (this.clientState.playerChannels.length > 0) {
