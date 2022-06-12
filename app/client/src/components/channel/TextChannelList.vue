@@ -13,7 +13,7 @@
             :highlighted="clientState.user.id > 0 && (clientState.user.data.plugins.lastseen[room.id] || 0) < room.lastReceivedMessageId && clientState.currentRoomId !== room.id"
             :border-color="'#afafaf'"
             class="room"
-            @click.native="joinRoom(room.id)"
+            @click.native="join(room.id)"
         >
             <div class="room-content">
                 <div v-show="room.isPrivate" class="room-icon material-icons md-14">mail</div>
@@ -61,7 +61,7 @@
         methods: {
             ...mapActions('SkyChatClient', [
                 'sendMessage',
-                'joinRoom',
+                'join',
             ]),
             getRoomName: function(room) {
                 if (room.isPrivate) {
@@ -84,8 +84,8 @@
             canLeaveRoom: function(room) {
                 return this.clientState.currentRoomId === room.id && room.isPrivate && room.whitelist.length > 1;
             },
-            joinRoom: function(id) {
-                this.joinRoom(id);
+            join: function(id) {
+                this.join(id);
             },
             onCreateRoom: function() {
                 this.sendMessage('/roomcreate');

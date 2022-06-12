@@ -38,7 +38,7 @@ export default Vue.extend({
             if (! room) {
                 return;
             }
-            this.joinRoom(room.id);
+            this.join(room.id);
         });
     },
     methods: {
@@ -46,7 +46,7 @@ export default Vue.extend({
             'setPage',
         ]),
         ...mapActions('SkyChatClient', [
-            'joinRoom',
+            'join',
             'logout',
         ]),
         onLogout: function() {
