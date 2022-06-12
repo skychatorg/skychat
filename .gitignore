@@ -1,9 +1,14 @@
+.idea
+.vscode
+
+.env.json
+
 backups
 build
 dist
 node_modules
 storage
 uploads
-.env.json
-.idea
-.vscode
+
+config/*.txt
+config/*.json

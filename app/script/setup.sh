@@ -14,7 +14,7 @@ fi
 
 # Initialize .env.json
 if [[ ! -e .env.json ]]; then
-    cp .env.json.template .env.json;
+    cp app/template/.env.json.template .env.json;
 
     # Generate random salts
     generate_salt() {
@@ -36,32 +36,37 @@ if [[ ! -e .env.json ]]; then
     generate_passcode
 fi
 
+# Create config directory if it does not exist
+if [[ ! -e config ]]; then
+    mkdir config;
+fi
+
 # Initialize plugins.txt
 if [[ ! -e config/plugins.txt ]]; then
-    cp config/plugins.txt.template config/plugins.txt;
+    cp app/template/plugins.txt.template config/plugins.txt;
 fi
 
 # Initialize ranks.json
 if [[ ! -e config/ranks.json ]]; then
-    cp config/ranks.json.template config/ranks.json;
+    cp app/template/ranks.json.template config/ranks.json;
 fi
 
 # Initialize stickers.json
 if [[ ! -e config/stickers.json ]]; then
-    cp config/stickers.json.template config/stickers.json;
+    cp app/template/stickers.json.template config/stickers.json;
 fi
 
 # Initialize preferences.json
 if [[ ! -e config/preferences.json ]]; then
-    cp config/preferences.json.template config/preferences.json;
+    cp app/template/preferences.json.template config/preferences.json;
 fi
 
 # Initialize guest names list file
 if [[ ! -e config/guestnames.txt ]]; then
-    cp config/guestnames.txt.template config/guestnames.txt;
+    cp app/template/guestnames.txt.template config/guestnames.txt;
 fi
 
 # Initialize fake messages list file
 if [[ ! -e config/fakemessages.txt ]]; then
-    cp config/fakemessages.txt.template config/fakemessages.txt;
+    cp app/template/fakemessages.txt.template config/fakemessages.txt;
 fi
