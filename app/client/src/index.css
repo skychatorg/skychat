@@ -1,0 +1,79 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    :root {
+        --color-skygray-white: 244 244 255;
+        --color-skygray-lightest: 160 160 160;
+        --color-skygray-lighter: 115 115 115;
+        --color-skygray-light: 84 84 88;
+        --color-skygray-casual: 61 61 61;
+        --color-skygray-dark: 40 40 40;
+        --color-skygray-darker: 17 17 17;
+        --color-skygray-black: 0 0 3;
+
+
+        --color-primary: 119 155 233;
+        --color-primary-light: 182 200 244;
+        --color-secondary: 161 111 218;
+        --color-secondary-light: 211 173 255;
+        --color-tertiary: 250 88 182;
+        --color-tertiary-light: 247 166 219;
+        
+        --color-info: 119 155 233;
+        --color-info-light: 182 200 244;
+        --color-warn: 228 159 77;
+        --color-warn-light: 244 175 125;
+        --color-danger: 255 69 103;
+        --color-danger-light: 255 120 150;
+    }
+}
+
+.form-control {
+    @apply inline-block rounded-2xl bg-skygray-dark hover:bg-skygray-casual px-4 py-2 placeholder-skygray-lighter text-skygray-white;
+    @apply transition-all;
+}
+
+body {
+    color: white;
+    background: black;
+    height: 100%;
+    height: 100vh;
+    overflow: hidden;
+
+    --page-max-width: 1640px;
+    --page-col-left-width: 350px;
+    --page-col-right-width: 350px;
+
+    font-family: 'Lato', sans-serif;
+}
+
+#app {
+    height: 100%;
+}
+
+
+
+
+.scrollbar {
+
+    /** Firefox */
+    scrollbar-color: #555 #343434;
+    scrollbar-width: 10px;
+}
+.scrollbar:hover {
+    scrollbar-color: #888 #343434;
+}
+.scrollbar::-webkit-scrollbar {
+    width: 10px;
+}
+.scrollbar::-webkit-scrollbar-track {
+    background: #343434;
+}
+.scrollbar::-webkit-scrollbar-thumb {
+    background: #555;
+}
+.scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #888;
+}

@@ -1,5 +1,4 @@
 import { EventEmitter } from "events";
-import { Blob } from "node-fetch";
 import { PublicConfig, SanitizedMessage, SanitizedUser, AuthToken, SanitizedSession, SanitizedRoom, SanitizedPoll, SanitizedGallery, SanitizedGalleryMedia, SanitizedPlayerChannel, VideoInfo, QueuedVideoInfo } from "../server";
 
 
@@ -194,7 +193,8 @@ export class SkyChatClient extends EventEmitter {
                 roomConnectedUsers[roomId].push(entry.user);
             }
             // Update player channel entries
-            const playerChannelId = entry.user.data.plugins.player;
+            const playerChannelData = entry.user.data.plugins.player;
+            const playerChannelId = playerChannelData && typeof playerChannelData.channel === 'number' ? playerChannelData.channel : null;
             if (playerChannelId !== null) {
                 if (typeof playerChannelUsers[playerChannelId] === 'undefined') {
                     playerChannelUsers[playerChannelId] = [];
@@ -367,6 +367,7 @@ export class SkyChatClient extends EventEmitter {
             playerChannelUsers: this._playerChannelUsers,
             rooms: this._rooms,
             currentRoomId: this._currentRoomId,
+            currentRoom: this._rooms.find(room => room.id === this._currentRoomId) || null,
             typingList: this._typingList,
             polls: this._polls,
             cursors: this._cursors, // TODO: Move cursors to separate object to save performances?

@@ -7,11 +7,11 @@
         "target": "ES5",
         "lib": ["ES2019", "DOM"],
         "moduleResolution": "node",
-        "rootDir": "app/",
+        "rootDir": "app/server/",
+        "outDir": "build/",
         "sourceMap": false
     },
     "include": [
-        "app/api/cient.ts",
         "app/server/**/*",
     ],
     "exclude": [
