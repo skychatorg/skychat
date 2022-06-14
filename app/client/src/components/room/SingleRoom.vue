@@ -1,5 +1,5 @@
 <script setup>
-import { defineProps, computed } from 'vue';
+import { computed } from 'vue';
 import { useClientStore } from '@/stores/client';
 import HoverCard from '@/components/util/HoverCard.vue';
 
@@ -70,7 +70,7 @@ const iconRef = computed(() => {
         :selected="selectedRef"
     >
         <div
-            @click="client.join(props.room.id)"
+            @click="client.state.currentRoomId !== props.room.id && client.join(props.room.id)"
             class="py-2 px-3 flex flex-row select-none"
         >
 
@@ -87,16 +87,16 @@ const iconRef = computed(() => {
                 <p
                     v-if="hasUnreadRef"
                     class="text-warn font-bold mr-2"
-                    title="This channel has unread messages"
+                    title="This room has unread messages"
                 >
-                    <fa icon="circle-dot" size="xs" />
+                    <fa icon="bell" size="xs" />
                 </p>
 
                 <!-- User count -->
                 <p
                     v-show="(client.state.roomConnectedUsers[props.room.id] || []).length > 0"
                     class="text-primary font-bold"
-                    :title="((client.state.roomConnectedUsers[props.room.id] || []).length) + ' users in this channel'"
+                    :title="((client.state.roomConnectedUsers[props.room.id] || []).length) + ' users in this room'"
                 >
                     <fa icon="users" size="xs" /> {{ (client.state.roomConnectedUsers[props.room.id] || []).length }}
                 </p>

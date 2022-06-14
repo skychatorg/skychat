@@ -1,6 +1,4 @@
 <script setup>
-// Props
-import { defineProps } from 'vue';
 
 
 defineProps({
@@ -53,7 +51,7 @@ defineProps({
         }"
     >
         <div class="colored-border"></div>
-        <div class="content grow bg-skygray-dark hover:bg-skygray-casual">
+        <div class="content grow hover:bg-skygray-white/10">
             <slot />
         </div>
     </div>
@@ -64,17 +62,17 @@ defineProps({
     transition: all .2s ease-out;
 }
 .hover-card.selected {
-    transform: translateX(0.5em);
+    transform: translateX(6px);
 }
 .hover-card > .colored-border {
     min-width: 6px;
     width: 6px;
     transition: all .2s ease-out;
     background-color: v-bind(borderColor);
-    z-index: 1;
 }
 .hover-card:hover:not(.selected) > .colored-border {
-    transform: translateX(6px);
+    transform: translateX(-3px);
+    filter: brightness(1.25);
 }
 .hover-card:nth-child(1) .colored-border {
     border-top-left-radius: v-bind("useBorderRadius ? '4px' : '0'");
@@ -85,7 +83,6 @@ defineProps({
     border-bottom-right-radius: v-bind("useBorderRadius ? '4px' : '0'");
 }
 .hover-card > .content {
-    z-index: 2;
     transition: all .2s ease-out;
 }
 .hover-card.selected > .content {

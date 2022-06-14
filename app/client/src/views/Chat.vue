@@ -1,7 +1,7 @@
 <script setup>
 import { useClientStore } from '@/stores/client';
-import ChannelList from '@/components/channel/ChannelList.vue';
-import PlayerChannelList from '@/components/channel/PlayerChannelList.vue';
+import RoomList from '@/components/room/RoomList.vue';
+import PlayerChannelList from '@/components/playerchannel/PlayerChannelList.vue';
 import PlayerPannel from '@/components/player/PlayerPannel.vue';
 import MessagePannel from '@/components/message/MessagePannel.vue';
 import NewMessageForm from '@/components/message/NewMessageForm.vue';
@@ -14,17 +14,16 @@ const client = useClientStore();
 <template>
     <div class="chat-view h-0 flex flex-row grow">
         
-        <div class="left-col h-full flex flex-col bg-skygray-darker">
-
-            <div class="pl-2 pr-4 py-2 grow">
-                <ChannelList />
+        <div class="left-col h-full flex flex-col bg-skygray-darker/50">
+            <div class="pl-2 pr-4 py-6 grow">
+                <RoomList />
             </div>
-            <div class="pl-2 pr-4 py-2">
+            <div class="pl-2 pr-4 py-6">
                 <PlayerChannelList />
             </div>
         </div>
 
-        <div class="middle-col grow h-full flex flex-col bg-skygray-darker">
+        <div class="middle-col grow h-full flex flex-col bg-skygray-darker/50">
             <div class="">
                 <PlayerPannel />
             </div>
@@ -34,7 +33,7 @@ const client = useClientStore();
             </div>
         </div>
 
-        <div class="right-col h-full p-4 bg-skygray-darker">
+        <div class="right-col h-full p-4 bg-skygray-darker/50">
             <div class="pl-2 pr-4 py-2">
                 <ConnectedList />
             </div>

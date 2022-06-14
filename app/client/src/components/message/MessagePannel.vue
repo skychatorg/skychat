@@ -21,7 +21,7 @@ watch(() => client.messages, () => {
 
 <template>
     <div
-        class="overflow-y-auto scroll-smooth pl-2 py-2 scrollbar bg-skygray-dark"
+        class="overflow-y-auto scroll-smooth pl-2 py-2 scrollbar "
         ref="messagePannel"
     >
         <SingleMessage

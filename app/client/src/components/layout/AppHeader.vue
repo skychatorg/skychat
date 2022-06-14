@@ -8,16 +8,15 @@ const client = useClientStore();
 </script>
 
 <template>
-    <header class="header bg-skygray-dark w-full">
+    <header class="header bg-skygray-white/10 backdrop-brightness-150 w-full">
         <div class="header-content grid grid-cols-12">
             <div class="col-start-1 col-span-3 my-4 ml-8 flex">
-                <img class="logo" src="/assets/logo.png" width="60" height="60">
-                <div class="text-skygray-lightest text-xl font-bold ml-12 mt-2">
+                <img class="hidden logo" src="/assets/logo.png" width="60" height="60">
+                <div class="text-skygray-lightest text-xl font-bold mt-2">
                     SkyChat
                 </div>
             </div>
             <div class="col-start-10 col-span-3 text-center flex flex-col justify-center">
-                {{ client.state.user.username }}
             </div>
         </div>
     </header>

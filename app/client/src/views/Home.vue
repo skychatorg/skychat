@@ -36,7 +36,7 @@ const joinAsGuest = function() {
     <div class="home-view">
 
         <!-- Row -->
-        <div class="auth bg-skygray-darker p-4 rounded w-full text-center">
+        <div class="auth bg-skygray-darker/25 p-4 rounded w-full text-center">
 
             <!-- Main content -->
             <p class="font-bold mt-2 mb-8 text-3xl">Login / Register</p>

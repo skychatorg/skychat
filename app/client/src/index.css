@@ -31,7 +31,7 @@
 }
 
 .form-control {
-    @apply inline-block rounded-2xl bg-skygray-dark hover:bg-skygray-casual px-4 py-2 placeholder-skygray-lighter text-skygray-white;
+    @apply inline-block rounded-2xl bg-skygray-dark/25 hover:bg-skygray-casual/25 px-4 py-2 placeholder-skygray-lighter text-skygray-white;
     @apply transition-all;
 }
 
@@ -47,6 +47,9 @@ body {
     --page-col-right-width: 350px;
 
     font-family: 'Lato', sans-serif;
+
+    background-image: url('/assets/background.avif');
+    background-size: cover;
 }
 
 #app {
@@ -57,7 +60,6 @@ body {
 
 
 .scrollbar {
-
     /** Firefox */
     scrollbar-color: #555 #343434;
     scrollbar-width: 10px;

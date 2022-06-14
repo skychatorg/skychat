@@ -3,6 +3,8 @@ import { computed } from 'vue';
 import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
 import HoverCard from '@/components/util/HoverCard.vue';
+import UserBigAvatar from '@/components/user/UserBigAvatar.vue';
+import UserMiniAvatar from '@/components/user/UserMiniAvatar.vue';
 
 const app = useAppStore();
 const client = useClientStore();
@@ -23,6 +25,11 @@ const formattedDate = computed(() => {
     return `${hours}:${minutes}:${seconds}`;
 });
 
+// Users whose last seen message is this message
+const lastSeenUsers = computed(() => {
+    return (client.state.messageIdToLastSeenUsers[props.message.id] || []).slice(0, 6)
+});
+
 </script>
 
 <template>
@@ -31,22 +38,15 @@ const formattedDate = computed(() => {
         :selectable="true"
         :selected="false"
     >
-        <div class="py-1 px-3 flex flex-row">
+        <div class="single-message py-1 px-3 flex flex-row">
 
-            <!-- Avatar bubble -->
-            <div
-                class="left-col rounded-2xl border border-2 overflow-hidden mt-1"
-                :style="{
-                    borderColor: message.user.data.plugins.color,
-                }"
-            >
-                <img :src="message.user.data.plugins.avatar" class="object-cover h-full" alt="" />
-            </div>
+            <UserBigAvatar
+                class="mt-1"
+                :user="message.user"
+            />
 
-            <!-- Right col -->
-            <div class="right-col grow pl-4">
-
-                <!-- First row (user + date) -->
+            <div class="grow pl-4">
+                <!-- First row -->
                 <div class="flex">
                     <div
                         class="grow font-bold"
@@ -56,21 +56,31 @@ const formattedDate = computed(() => {
                     >
                         {{ message.user.username }}
                     </div>
-                    <div class="basis-16 text-xs text-right text-skygray-lighter">{{ formattedDate }}</div>
                 </div>
-
                 <!-- Message content -->
                 <div class="text-skygray-white" v-html="message.formatted"></div>
+            </div>
+
+            <div class="basis-16 w-16 flex flex-col text-center">
+                <span class="text-xs text-skygray-lighter">
+                    {{ formattedDate }}
+                </span>
+                <div class="mt-2 flex justify-center -space-x-1.5">
+                    <UserMiniAvatar
+                        v-for="user in lastSeenUsers"
+                        :key="user.identifier"
+                        :user="user"
+                        class="transition transition-all hover:-translate-y-0.5 hover:scale-110"
+                    />
+                </div>
             </div>
         </div>
     </HoverCard>
 </template>
 
 <style scoped>
-.left-col {
-    min-width: 40px;
-    width: 40px;
-    min-height: 40px;
-    height: 40px;
+.single-message:not(:hover) .actions {
+    /* Hide element */
+    display: none;
 }
 </style>

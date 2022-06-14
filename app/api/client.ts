@@ -193,8 +193,7 @@ export class SkyChatClient extends EventEmitter {
                 roomConnectedUsers[roomId].push(entry.user);
             }
             // Update player channel entries
-            const playerChannelData = entry.user.data.plugins.player;
-            const playerChannelId = playerChannelData && typeof playerChannelData.channel === 'number' ? playerChannelData.channel : null;
+            const playerChannelId = entry.user.data.plugins.player;
             if (playerChannelId !== null) {
                 if (typeof playerChannelUsers[playerChannelId] === 'undefined') {
                     playerChannelUsers[playerChannelId] = [];

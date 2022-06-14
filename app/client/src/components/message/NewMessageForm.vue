@@ -28,9 +28,9 @@ let typingListStr = computed(() => {
 </script>
 
 <template>
-    <div class="py-2 px-4">
+    <div class="pt-2 pb-4 px-4">
         <!-- Typing list -->
-        <p class="typing-list pl-4 pb-1 text-xs">
+        <p class="h-5 pl-4 pb-1 text-xs">
             {{ typingListStr }}
         </p>
         <!-- New message form -->
@@ -55,7 +55,4 @@ let typingListStr = computed(() => {
 </template>
 
 <style scoped>
-.typing-list {
-    min-height: 1.75em;
-}
 </style>
