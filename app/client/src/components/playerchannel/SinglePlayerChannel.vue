@@ -27,21 +27,25 @@ const usersRef = computed(() => {
         :useBorderRadius="true"
         :borderColor="'rgb(var(--color-secondary))'"
         :selectable="true"
-        :selected="client.state.currentPlayerChannelId === props.playerChannel.id"
-        @click="client.sendMessage(`/playerchannel ${client.state.currentPlayerChannelId === props.playerChannel.id ? 'leave' : 'join'} ${props.playerChannel.id}`)"
+        :selected="client.state.currentPlayerChannelId === playerChannel.id"
+        @click="client.sendMessage(`/playerchannel ${client.state.currentPlayerChannelId === playerChannel.id ? 'leave' : 'join'} ${playerChannel.id}`)"
+        class=""
     >
         <div class="px-3 py-1 select-none">
 
             <!-- Channel info -->
-            <div class="h-6">
+            <div class="h-6 w-0 min-w-full whitespace-nowrap overflow-hidden text-ellipsis">
 
                 <!-- Channel name -->
-                {{ props.playerChannel.name }}
+                {{ playerChannel.name }}
 
                 <!-- If playing, show media title -->
-                <template v-if="props.playerChannel.playing">
-                    {{ props.playerChannel.currentMedia.title }}
-                </template>
+                <span
+                    v-if="playerChannel.playing"
+                    :title="playerChannel.currentMedia.title + ' - added by ' + playerChannel.currentMedia.owner"
+                >
+                    - {{ playerChannel.currentMedia.title }}
+                </span>
             </div>
 
             <!-- Show users in media channel -->

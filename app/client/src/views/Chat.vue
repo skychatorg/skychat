@@ -24,9 +24,7 @@ const client = useClientStore();
         </div>
 
         <div class="middle-col grow h-full flex flex-col bg-skygray-darker/50">
-            <div class="">
-                <PlayerPannel />
-            </div>
+            <PlayerPannel />
             <MessagePannel class="grow" />
             <div class="basis-12">
                 <NewMessageForm />
