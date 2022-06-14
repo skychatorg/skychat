@@ -13,7 +13,7 @@ const props = defineProps({
 });
 
 // Whether has unread
-const hasUnreadRef = computed(() => {
+const hasUnread = computed(() => {
 
     if (client.state.user.id === 0) {
         return false;
@@ -35,20 +35,18 @@ const hasUnreadRef = computed(() => {
 });
 
 // Whether this room is selected
-const selectedRef = computed(() => {
+const selected = computed(() => {
     return client.state.currentRoomId === props.room.id;
 });
 
 // Choose border color
-const borderColorRef = computed(() => {
-    if (selectedRef.value) {
-        return '--color-skygray-white';
-    } else if (hasUnreadRef.value) {
+const borderColor = computed(() => {
+    if (hasUnread.value) {
         return '--color-warn';
     } else if (props.room.isPrivate) {
-        return '--color-skygray-lighter';
+        return '--color-secondary';
     } else {
-        return '--color-skygray-white';
+        return '--color-secondary';
     }
 });
 
@@ -56,7 +54,7 @@ const borderColorRef = computed(() => {
 const iconRef = computed(() => {
     return {
         name: props.room.isPrivate ? 'lock' : 'globe',
-        classes: selectedRef.value ? 'text-skygray-white' : 'text-skygray-lightest',
+        classes: selected.value ? 'text-skygray-white' : 'text-skygray-lightest',
     };
 });
 
@@ -65,9 +63,9 @@ const iconRef = computed(() => {
 <template>
     <HoverCard
         :useBorderRadius="true"
-        :borderColor="'rgb(var(' + borderColorRef + '))'"
+        :borderColor="'rgb(var(' + borderColor + '))'"
         :selectable="true"
-        :selected="selectedRef"
+        :selected="selected"
     >
         <div
             @click="client.state.currentRoomId !== props.room.id && client.join(props.room.id)"
@@ -85,7 +83,7 @@ const iconRef = computed(() => {
 
                 <!-- Unread -->
                 <p
-                    v-if="hasUnreadRef"
+                    v-if="hasUnread"
                     class="text-warn font-bold mr-2"
                     title="This room has unread messages"
                 >

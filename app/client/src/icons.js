@@ -9,6 +9,8 @@ import {
     faGlobe,
     faLock,
     faEllipsis,
+    faClock,
+    faLinkSlash,
 } from '@fortawesome/free-solid-svg-icons';
 
 library.add(
@@ -20,6 +22,8 @@ library.add(
     faGlobe,
     faLock,
     faEllipsis,
+    faClock,
+    faLinkSlash,
 );
 
 export default library;

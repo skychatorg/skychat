@@ -11,7 +11,6 @@ const client = useClientStore();
 
 <template>
     <div>
-
         <p class="pl-4 font-bold text-skygray-casual">Active now</p>
         <div>
             <SingleConnectedUser

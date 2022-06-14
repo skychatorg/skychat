@@ -1,11 +1,13 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
 import HoverCard from '@/components/util/HoverCard.vue';
 
 const app = useAppStore();
 const client = useClientStore();
+
+const message = ref(null);
 
 let typingListStr = computed(() => {
 
@@ -25,6 +27,14 @@ let typingListStr = computed(() => {
     return `multiple users are currently typing..`;
 });
 
+// Watch when the new message input changes. The change does not necessarily come from this component, as the message input can be prepared elsewhere.
+watch(() => app.newMessage, (newValue, oldValue) => {
+    // Focus message input if not already focused
+    if (document.activeElement !== message.value) {
+        message.value.focus();
+    }
+});
+
 </script>
 
 <template>
@@ -38,16 +48,17 @@ let typingListStr = computed(() => {
 
             <!-- New message input -->
             <input
+                ref="message"
                 class="form-control grow"
                 type="text"
                 :placeholder="'New message / ' + client.state.currentRoom.name"
                 v-bind:value="app.newMessage"
-                v-on:input="app.newMessage = $event.target.value"
+                v-on:input="app.setMessage($event.target.value)"
                 @keydown.enter="app.sendMessage"
             />
 
             <!-- Send button -->
-            <button class="form-control ml-2">
+            <button @click="app.sendMessage" class="form-control ml-2">
                 <fa icon="paper-plane" />
             </button>
         </div>

@@ -33,7 +33,7 @@ const client = useClientStore();
             </div>
         </div>
 
-        <div class="right-col h-full p-4 bg-skygray-darker/50">
+        <div class="right-col h-full p-4 overflow-auto scrollbar bg-skygray-darker/50">
             <div class="pl-2 pr-4 py-2">
                 <ConnectedList />
             </div>

@@ -21,6 +21,14 @@ export const useClientStore = defineStore('client', {
         messages: [],
     }),
 
+    getters: {
+
+        /**
+         * Track only the last received message. Useful to be used in a watcher.
+         */
+        lastMessage: state => state.messages[state.messages.length - 1] || null,
+    },
+
     actions: {
 
         /**
@@ -41,19 +49,11 @@ export const useClientStore = defineStore('client', {
             // On new message
             client.on('message', message => {
                 this.messages.push(message);
-                // TODO: Moe this to App?
-                if (message.content.match(new RegExp('@' + this.state.user.username.toLowerCase(), 'i'))) {
-                    new Audio('/assets/sound/notification.mp3').play();
-                }
             });
 
             // On new messages
             client.on('messages', messages => {
                 this.messages.push(...messages);
-                // TODO: Moe this to App?
-                if (messages.find(message => message.content.match(new RegExp('@' + this.state.user.username.toLowerCase(), 'i')))) {
-                    new Audio('/assets/sound/notification.mp3').play();
-                }
             });
 
             // Message edit
@@ -62,7 +62,7 @@ export const useClientStore = defineStore('client', {
                 if (messageIndex === -1) {
                     return;
                 }
-                Vue.set(this.messages, messageIndex, message);
+                this.messages[messageIndex] = message;
             });
 
             client.on('info', info => {

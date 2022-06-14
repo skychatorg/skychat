@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, onMounted, defineEmits, ref, watch } from 'vue';
 import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
 import HoverCard from '@/components/util/HoverCard.vue';
@@ -9,12 +9,16 @@ import UserMiniAvatar from '@/components/user/UserMiniAvatar.vue';
 const app = useAppStore();
 const client = useClientStore();
 
+const emit = defineEmits(['content-changed']);
+
 const props = defineProps({
     message: {
         type: Object,
         required: true,
     },
 });
+
+const content = ref(null);
 
 // Shown date
 const formattedDate = computed(() => {
@@ -27,18 +31,59 @@ const formattedDate = computed(() => {
 
 // Users whose last seen message is this message
 const lastSeenUsers = computed(() => {
-    return (client.state.messageIdToLastSeenUsers[props.message.id] || []).slice(0, 6)
+    return (client.state.messageIdToLastSeenUsers[props.message.id] || []).slice(0, 6);
 });
+
+// When content is mounted, listen for events for buttons
+onMounted(() => {
+
+    // Images
+    const images = Array.from(content.value.getElementsByTagName('img'));
+    for (const image of images) {
+        image.addEventListener('load', () => {
+            emit('content-changed');
+        });
+    }
+
+    // Get buttons
+    const buttons = Array.from(content.value.getElementsByClassName('skychat-button'));
+    for (const button of buttons) {
+        button.addEventListener('click', () => {
+            if (button.dataset.action[0] === '/' && button.dataset.trusted === 'false' && ! confirm('Send "' + button.dataset.action + '"?')) {
+                return;
+            }
+            client.sendMessage(button.dataset.action);
+        });
+    }
+});
+
+// When interacting with a message
+const messageInteract = () => {
+
+    // Cycle between these texts
+    const editText = '/edit ' + props.message.id + ' ' + props.message.content;
+    const deleteText = '/delete ' + props.message.id;
+    const quoteText = '@' + props.message.id + ' ';
+    const rotation = [quoteText, editText, deleteText];
+
+    // Find whether we have one of these text set already & Decide new text
+    const currentPosition = rotation.indexOf(app.newMessage);
+    const newPosition = (currentPosition + 1) % rotation.length;
+
+    // Set new text & Focus on input
+    app.setMessage(rotation[newPosition]);
+};
 
 </script>
 
 <template>
     <HoverCard
         :borderColor="message.user.data.plugins.color"
-        :selectable="true"
+        :selectable="false"
         :selected="false"
+        @contextmenu.prevent="messageInteract"
     >
-        <div class="single-message py-1 px-3 flex flex-row">
+        <div class="py-1 px-3 flex flex-row">
 
             <UserBigAvatar
                 class="mt-1"
@@ -58,7 +103,11 @@ const lastSeenUsers = computed(() => {
                     </div>
                 </div>
                 <!-- Message content -->
-                <div class="text-skygray-white" v-html="message.formatted"></div>
+                <div
+                    class="text-skygray-white"
+                    v-html="message.formatted"
+                    ref="content"
+                ></div>
             </div>
 
             <div class="basis-16 w-16 flex flex-col text-center">
@@ -79,8 +128,4 @@ const lastSeenUsers = computed(() => {
 </template>
 
 <style scoped>
-.single-message:not(:hover) .actions {
-    /* Hide element */
-    display: none;
-}
 </style>

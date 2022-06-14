@@ -8,9 +8,9 @@ const client = useClientStore();
 </script>
 
 <template>
-    <header class="header bg-skygray-white/10 backdrop-brightness-150 w-full">
+    <header class="h-16 bg-skygray-white/10 backdrop-brightness-150 w-full">
         <div class="header-content grid grid-cols-12">
-            <div class="col-start-1 col-span-3 my-4 ml-8 flex">
+            <div class="col-start-1 col-span-3 my-3 ml-8 flex">
                 <img class="hidden logo" src="/assets/logo.png" width="60" height="60">
                 <div class="text-skygray-lightest text-xl font-bold mt-2">
                     SkyChat
@@ -23,10 +23,6 @@ const client = useClientStore();
 </template>
 
 <style scoped>
-.header {
-    min-height: 70px;
-    flex-basis: 70px;
-}
 .header-content {
     width: 100%;
     max-width: var(--page-max-width);

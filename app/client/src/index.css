@@ -79,3 +79,51 @@ body {
 .scrollbar::-webkit-scrollbar-thumb:hover {
     background: #888;
 }
+
+
+
+.skychat-sticker {
+    max-width: 80px;
+    max-height: 80px;
+}
+.skychat-risibank-sticker {
+    display: inline-block;
+}
+.skychat-risibank-sticker > img {
+    max-width: 100px;
+    max-height: 100px;
+}
+.skychat-image img {
+    max-width: 100px;
+    max-height: 100px;
+}
+.skychat-button {
+    padding: 2px 10px;
+    border-radius: 10px;
+    background-color: transparent;
+    color: white;
+    border: 1px solid #777777;
+    cursor: pointer;
+}
+.skychat-button .skychat-button-info {
+    color: #f3aaaa;
+}
+
+.skychat-link {
+    text-decoration: none;
+    color: white;
+}
+
+.skychat-table {
+    text-align: left;
+    width: 100%;
+    border-collapse: collapse;
+}
+.skychat-table tr {
+    border-bottom: 1pt solid #4e4e4e;
+
+}
+.skychat-table tr td,
+.skychat-table tr th {
+    padding: 2px;
+}

@@ -31,11 +31,6 @@ export const useAppStore = defineStore('app', {
         documentTitleBlinking: false,
     
         /**
-         * Current page
-         */
-        page: 'welcome',
-    
-        /**
          * Current sub page if on mobile
          */
         mobileCurrentPage: 'middle',
@@ -119,6 +114,28 @@ export const useAppStore = defineStore('app', {
                     clientStore.sendMessage(`/t off`);
                 }
             });
+
+            // Listen for when the last received message changed
+            watch(() => clientStore.lastMessage, message => {
+
+                // If no message
+                if (! message) {
+                    return;
+                }
+
+                // Quoted?
+                if (message.content.match(new RegExp('@' + clientStore.state.user.username.toLowerCase(), 'i'))) {
+                    new Audio('/assets/sound/notification.mp3').play();
+                }
+
+                // If app is not focused, skip
+                if (! this.focused) {
+                    return;
+                }
+
+                // Send last seen notification
+                clientStore.notifySeenMessage(message.id);
+            });
         },
         
         loadPreferences: function() {
@@ -152,6 +169,10 @@ export const useAppStore = defineStore('app', {
             }));
         },
 
+        setMessage: function(message) {
+            this.newMessage = message;
+        },
+
         sendMessage: function() {
             const clientStore = useClientStore();
             clientStore.sendMessage(this.newMessage);
@@ -171,10 +192,6 @@ export const useAppStore = defineStore('app', {
     
         blur: function() {
             this.focused = false;
-        },
-    
-        setPage: page => {
-            this.page = page;
         },
     
         setMobilePage: mobileCurrentPage => {
