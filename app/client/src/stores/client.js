@@ -74,9 +74,7 @@ export const useClientStore = defineStore('client', {
                 toast.error(error);
             });
             const protocol = document.location.protocol === 'http:' ? 'ws' : 'wss';
-            //const url = protocol + '://' + document.location.host;
-            // TODO: fix
-            const url = 'ws://localhost:8081';
+            const url = protocol + '://' + document.location.host;
             client.connect(url);
         },
 

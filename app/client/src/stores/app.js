@@ -1,14 +1,17 @@
 import { watch } from 'vue';
 import { defineStore } from 'pinia'
 import { useClientStore } from './client';
+import { useToast } from 'vue-toastification';
+
 
 const DEFAULT_DOCUMENT_TITLE = "~ SkyChat";
 
-const CURRENT_VERSION = 3;
+const CURRENT_VERSION = 5;
 const STORE_SAVED_KEYS = [
-    'playerEnabled',
-    'isQuickActionsVisible',
+    'playerMode',
 ];
+
+const toast = useToast();
 
 
 export const useAppStore = defineStore('app', {
@@ -21,44 +24,47 @@ export const useAppStore = defineStore('app', {
         focused: true,
     
         /**
-         * Current document title
+         * Current document title & whether it's blinking
          */
-        documentTitle: DEFAULT_DOCUMENT_TITLE,
-    
+        documentTitle: {
+            value: DEFAULT_DOCUMENT_TITLE,
+            blinking: false,
+        },
+
         /**
-         * Whether the document is currently blinking
+         * Player mode
          */
-        documentTitleBlinking: false,
+        playerMode: {
     
-        /**
-         * Current sub page if on mobile
-         */
-        mobileCurrentPage: 'middle',
-    
-        /**
-         * Whether the cinema mode is currently enabled
-         */
-        cinemaMode: false,
+            /**
+             * Whether the player is on/off
+             * @type {Boolean}
+             */
+            enabled: true,
+
+            /**
+             * Current player size
+             * @type {'xs'|'sm'|'md'|'lg'}
+             */
+            size: 'md',
+
+            /**
+             * Whether the queue should be shown
+             * @type {Boolean}
+             */
+            queueEnabled: false,
+
+            /**
+             * Whether currently in cinema mode
+             * @type {Boolean}
+             */
+            cinemaMode: false,
+        },
     
         /**
          * List of missed messages, that were missed because the window was not focused
          */
         missedMessages: [],
-    
-        /**
-         * Whether the player is on/off
-         */
-        playerEnabled: true,
-    
-        /**
-         * Whether the cursors are visible
-         */
-        cursorEnabled: true,
-    
-        /**
-         * Quick actions
-         */
-        isQuickActionsVisible: false,
 
         /**
          * New message being typed
@@ -81,6 +87,15 @@ export const useAppStore = defineStore('app', {
             };
             window.addEventListener('resize', resize);
             resize();
+
+            // Handle file upload on paste
+            const fileUpload = async event => {
+                const files = event.clipboardData.files;
+                for (const file of files) {
+                    await this.upload(file);
+                }
+            };
+            window.addEventListener('paste', fileUpload);
             
             // Handle document title update when new messages arrive
             window.addEventListener('blur', () => this.blur());
@@ -90,9 +105,9 @@ export const useAppStore = defineStore('app', {
             setInterval(() => {
             
                 // In case the title is not currently blinking, just update it
-                if (! this.documentTitleBlinking) {
-                    if (document.title !== this.documentTitle) {
-                        document.title = this.documentTitle;
+                if (! this.documentTitle.blinking) {
+                    if (document.title !== this.documentTitle.value) {
+                        document.title = this.documentTitle.value;
                     }
                     return;
                 }
@@ -100,7 +115,7 @@ export const useAppStore = defineStore('app', {
                 const chars = "┤┘┴└├┌┬┐";
                 const indexOf = chars.indexOf(document.title[0]);
                 const newPosition = (indexOf + 1) % chars.length;
-                document.title = chars[newPosition] + ' ' + this.documentTitle;
+                document.title = chars[newPosition] + ' ' + this.documentTitle.value;
             }, 1000);
 
             // Listen for own state change
@@ -152,7 +167,7 @@ export const useAppStore = defineStore('app', {
             // Load values from local storage
             for (const key of STORE_SAVED_KEYS) {
                 if (typeof preferences.values[key] !== 'undefined') {
-                    Vue.set(this, key, preferences.values[key]);
+                    this[key] = preferences.values[key];
                 }
             }
         },
@@ -165,7 +180,7 @@ export const useAppStore = defineStore('app', {
             // Save preferences
             localStorage.setItem('preferences', JSON.stringify({
                 version: CURRENT_VERSION,
-                values: Object.fromEntries(STORE_SAVED_KEYS.map(key => [key, state[key]])),
+                values: Object.fromEntries(STORE_SAVED_KEYS.map(key => [key, this[key]])),
             }));
         },
 
@@ -174,6 +189,9 @@ export const useAppStore = defineStore('app', {
         },
 
         sendMessage: function() {
+            if (this.newMessage.trim().length === 0) {
+                return;
+            }
             const clientStore = useClientStore();
             clientStore.sendMessage(this.newMessage);
             this.newMessage = '';
@@ -185,8 +203,8 @@ export const useAppStore = defineStore('app', {
                 clientStore.notifySeenMessage(this.missedMessages[this.missedMessages.length - 1].id);
             }
             this.focused = true;
-            this.documentTitle = DEFAULT_DOCUMENT_TITLE;
-            this.documentTitleBlinking = false;
+            this.documentTitle.value = DEFAULT_DOCUMENT_TITLE;
+            this.documentTitle.blinking = false;
             this.missedMessages = [];
         },
     
@@ -194,27 +212,60 @@ export const useAppStore = defineStore('app', {
             this.focused = false;
         },
     
-        setMobilePage: mobileCurrentPage => {
-            this.mobileCurrentPage = mobileCurrentPage;
-        },
-    
-        toggleCinemaMode: function() {
-            this.cinemaMode = ! this.cinemaMode;
-        },
-    
-        setPlayerEnabled: playerEnabled => {
-            this.playerEnabled = playerEnabled;
+        setPlayerEnabled: function(playerEnabled) {
+            this.playerMode.enabled = playerEnabled;
             this.savePreferences();
         },
-    
-        setCursorEnabled: cursorEnabled => {
-            this.cursorEnabled = cursorEnabled;
+
+        expandPlayer: function() {
+            this.playerMode.size = {
+                xs: 'sm',
+                sm: 'md',
+                md: 'lg',
+                lg: 'lg',
+            }[this.playerMode.size] || 'md';
             this.savePreferences();
         },
-    
-        setQuickActionsVisibility: isQuickActionsVisible => {
-            this.isQuickActionsVisible = isQuickActionsVisible;
+
+        shrinkPlayer: function() {
+            this.playerMode.size = {
+                lg: 'md',
+                md: 'sm',
+                sm: 'xs',
+                xs: 'xs',
+            }[this.playerMode.size] || 'md';
             this.savePreferences();
+        },
+
+        toggleShowPlayerQueue: function() {
+            this.playerMode.queueEnabled = ! this.playerMode.queueEnabled;
+            this.savePreferences();
+        },
+
+        /**
+         * Upload a given file
+         */
+        upload: async function(file) {
+            try {
+
+                toast.info('File uploading...');
+
+                // Create form and send request to backend
+                const data = new FormData();
+                data.append('file', file);
+                const result = await (await fetch("/upload", {method: 'POST', body: data})).json();
+                if (result.status === 500) {
+                    throw new Error('Unable to upload: ' + result.message);
+                }
+
+                // Set message to uploaded file
+                this.newMessage += this.newMessage + ' ' + document.location.origin + '/' + result.path;
+
+                toast.success('File uploaded');
+
+            } catch (e) {
+                toast.error(e.message || 'Unable to upload file');
+            }
         },
     },
 });

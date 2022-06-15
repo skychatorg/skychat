@@ -465,7 +465,7 @@ export class RoomManager {
 
         // Get command object
         if (typeof connection.room.commands[commandName] === 'undefined') {
-            throw new Error('This command does not exist');
+            throw new Error(`Command '${commandName}' is not provided in this room`);
         }
         const command = connection.room.commands[commandName];
 

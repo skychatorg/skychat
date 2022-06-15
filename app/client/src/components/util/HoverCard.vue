@@ -46,12 +46,12 @@ defineProps({
     <div
         class="hover-card flex flex-row"
         :class="{
+            'selectable': selectable,
             'selected': selected,
-            'cursor-pointer ': selectable,
         }"
     >
         <div class="colored-border"></div>
-        <div class="content grow hover:bg-skygray-white/10">
+        <div class="content grow" :class="{ 'hover:bg-skygray-white/10': selectable }">
             <slot />
         </div>
     </div>

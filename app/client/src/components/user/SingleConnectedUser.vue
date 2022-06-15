@@ -47,6 +47,8 @@ const formattedDurationSinceDead = computed(() => {
         :useBorderRadius="true"
         :selectable="true"
         :selected="false"
+        class="cursor-pointer"
+        @click="client.sendMessage('/pm ' + entry.user.username)"
     >
         <div
             class="py-2 px-3 flex flex-row"

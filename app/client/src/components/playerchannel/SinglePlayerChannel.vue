@@ -29,7 +29,7 @@ const usersRef = computed(() => {
         :selectable="true"
         :selected="client.state.currentPlayerChannelId === playerChannel.id"
         @click="client.sendMessage(`/playerchannel ${client.state.currentPlayerChannelId === playerChannel.id ? 'leave' : 'join'} ${playerChannel.id}`)"
-        class=""
+        class="cursor-pointer"
     >
         <div class="px-3 py-1 select-none">
 

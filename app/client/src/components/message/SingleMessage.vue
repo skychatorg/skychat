@@ -16,6 +16,10 @@ const props = defineProps({
         type: Object,
         required: true,
     },
+    selectable: {
+        type: Boolean,
+        default: true,
+    },
 });
 
 const content = ref(null);
@@ -63,7 +67,7 @@ const messageInteract = () => {
     // Cycle between these texts
     const editText = '/edit ' + props.message.id + ' ' + props.message.content;
     const deleteText = '/delete ' + props.message.id;
-    const quoteText = '@' + props.message.id + ' ';
+    const quoteText = '@' + props.message.id + ' ';
     const rotation = [quoteText, editText, deleteText];
 
     // Find whether we have one of these text set already & Decide new text
@@ -79,7 +83,7 @@ const messageInteract = () => {
 <template>
     <HoverCard
         :borderColor="message.user.data.plugins.color"
-        :selectable="false"
+        :selectable="selectable"
         :selected="false"
         @contextmenu.prevent="messageInteract"
     >
@@ -102,9 +106,16 @@ const messageInteract = () => {
                         {{ message.user.username }}
                     </div>
                 </div>
+                <!-- Quoted message -->
+                <SingleMessage
+                    v-if="message.quoted"
+                    :message="message.quoted"
+                    :selectable="false"
+                    class="mt-2 mb-4"
+                />
                 <!-- Message content -->
                 <div
-                    class="text-skygray-white"
+                    class="text-skygray-white w-0 min-w-full whitespace-pre-wrap overflow-hidden break-words"
                     v-html="message.formatted"
                     ref="content"
                 ></div>

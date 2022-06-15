@@ -66,6 +66,7 @@ const iconRef = computed(() => {
         :borderColor="'rgb(var(' + borderColor + '))'"
         :selectable="true"
         :selected="selected"
+        class="cursor-pointer"
     >
         <div
             @click="client.state.currentRoomId !== props.room.id && client.join(props.room.id)"

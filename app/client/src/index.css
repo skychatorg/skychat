@@ -30,9 +30,38 @@
     }
 }
 
+/* Form element */
 .form-control {
     @apply inline-block rounded-2xl bg-skygray-dark/25 hover:bg-skygray-casual/25 px-4 py-2 placeholder-skygray-lighter text-skygray-white;
     @apply transition-all;
+}
+
+/* Button */
+.btn {
+    @apply rounded-lg px-2 py-1 border-2 border-skygray-light bg-skygray-casual/25 hover:bg-skygray-light/25 transition;
+}
+.btn.active {
+    @apply bg-skygray-light/50;
+}
+.btn.disabled {
+    @apply pointer-events-none text-skygray-dark/50 bg-skygray-dark/25;
+}
+
+/* Button group */
+.btn-group {
+    @apply border-2 border-skygray-light/50 rounded-lg flex;
+}
+.btn-group > .btn {
+    @apply border-0 rounded-none grow;
+}
+.btn-group > .btn:nth-child(1) {
+    @apply rounded-l-lg;
+}
+.btn-group > .btn:not(:nth-last-child(1)) {
+    @apply border-r-2 border-skygray-casual/25;
+}
+.btn-group > .btn:nth-last-child(1) {
+    @apply rounded-r-lg;
 }
 
 body {

@@ -24,7 +24,7 @@ const playerImpl = computed(() => {
 
 <template>
     <div>
-        <component v-if="app.playerEnabled && playerImpl" :is="playerImpl" />
+        <component v-if="app.playerMode.enabled && playerImpl" :is="playerImpl" />
     </div>
 </template>
 
