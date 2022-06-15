@@ -5,6 +5,7 @@ import { useClientStore } from '@/stores/client';
 import HoverCard from '@/components/util/HoverCard.vue';
 import UserBigAvatar from '@/components/user/UserBigAvatar.vue';
 import UserMiniAvatar from '@/components/user/UserMiniAvatar.vue';
+import UserMiniAvatarCollection from '@/components/user/UserMiniAvatarCollection.vue';
 
 const app = useAppStore();
 const client = useClientStore();
@@ -122,17 +123,13 @@ const messageInteract = () => {
             </div>
 
             <div class="basis-16 w-16 flex flex-col text-center">
-                <span class="text-xs text-skygray-lighter">
+                <span class="grow text-xs text-skygray-lighter">
                     {{ formattedDate }}
                 </span>
-                <div class="mt-2 flex justify-center -space-x-1.5">
-                    <UserMiniAvatar
-                        v-for="user in lastSeenUsers"
-                        :key="user.identifier"
-                        :user="user"
-                        class="transition transition-all hover:-translate-y-0.5 hover:scale-110"
-                    />
-                </div>
+                <UserMiniAvatarCollection
+                    :users="lastSeenUsers"
+                    class="my-2"
+                />
             </div>
         </div>
     </HoverCard>

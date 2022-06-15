@@ -1,13 +1,14 @@
 <script setup>
 import { useClientStore } from '@/stores/client';
 import SinglePlayerChannel from '@/components/playerchannel/SinglePlayerChannel.vue';
+import SectionTitle from '@/components/util/SectionTitle.vue';
 
 const client = useClientStore();
 </script>
 
 <template>
     <div>
-        <h2 class=" pl-4 font-bold text-skygray-casual">Media channels</h2>
+        <SectionTitle>Media channels</SectionTitle>
         <div class="px-2">
             <SinglePlayerChannel
                 v-for="playerChannel in client.state.playerChannels"

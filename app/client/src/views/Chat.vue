@@ -14,8 +14,8 @@ const client = useClientStore();
 <template>
     <div class="chat-view h-0 flex flex-row grow">
         
-        <div class="left-col h-full flex flex-col bg-skygray-darker/50">
-            <div class="pl-2 pr-4 py-6 grow">
+        <div class="left-col h-full flex flex-col bg-skygray-lighter/10 backdrop-brightness-125">
+            <div class="pl-2 pr-4 py-6 grow overflow-y-auto scrollbar">
                 <RoomList />
             </div>
             <div class="pl-2 pr-4 py-6">
@@ -23,15 +23,15 @@ const client = useClientStore();
             </div>
         </div>
 
-        <div class="middle-col grow h-full flex flex-col bg-skygray-darker/50">
-            <PlayerPannel />
-            <MessagePannel class="grow" />
+        <div class="middle-col grow h-full flex flex-col">
+            <PlayerPannel class="bg-skygray-lighter/10 backdrop-brightness-125" />
+            <MessagePannel class="grow bg-skygray-white/10 backdrop-brightness-150" />
             <div class="basis-12">
-                <NewMessageForm />
+                <NewMessageForm class="bg-skygray-lighter/10 backdrop-brightness-125" />
             </div>
         </div>
 
-        <div class="right-col h-full p-4 overflow-auto scrollbar bg-skygray-darker/50">
+        <div class="right-col h-full p-4 overflow-auto scrollbar bg-skygray-lighter/10 backdrop-brightness-125">
             <div class="pl-2 pr-4 py-2">
                 <ConnectedList />
             </div>

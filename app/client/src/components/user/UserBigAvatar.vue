@@ -11,7 +11,7 @@ const props = defineProps({
 
 <template>
     <div
-        class="w-10 h-10 rounded-xl border border-2 overflow-hidden"
+        class="w-10 h-10 rounded-xl border border-2 overflow-hidden bg-black"
         :style="{
             borderColor: props.user.data.plugins.color,
         }"

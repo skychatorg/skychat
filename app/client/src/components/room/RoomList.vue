@@ -1,13 +1,14 @@
 <script setup>
 import { useClientStore } from '@/stores/client';
 import SingleRoom from '@/components/room/SingleRoom.vue';
+import SectionTitle from '@/components/util/SectionTitle.vue';
 
 const client = useClientStore();
 </script>
 
 <template>
     <div>
-        <p class=" pl-6 mb-1 font-bold text-skygray-casual">Rooms</p>
+        <SectionTitle>Rooms</SectionTitle>
         <div class="px-2">
             <SingleRoom
                 v-for="room in client.state.rooms"
@@ -19,5 +20,4 @@ const client = useClientStore();
 </template>
 
 <style scoped>
-
 </style>

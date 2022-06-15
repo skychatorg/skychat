@@ -1,5 +1,5 @@
 <script setup>
-import { watch, ref, nextTick } from 'vue';
+import { nextTick, watch, ref, reactive } from 'vue';
 import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
 import SingleMessage from '@/components/message/SingleMessage.vue';
@@ -9,15 +9,82 @@ const client = useClientStore();
 
 const messagePannel = ref(null);
 
-const scrollToBottom = () => {
-    // Wait for next tick for the message to be mounted into the DOM
+const scrollState = reactive({
+    auto: true,
+    smooth: true,
+    scrolling: false,
+});
+
+
+const distanceToBottom = function() {
+    return messagePannel.value.scrollHeight - messagePannel.value.offsetHeight - messagePannel.value.scrollTop;
+};
+
+const scrollToBottomIfAutoScroll = function() {
+    if (! scrollState.auto) {
+        return;
+    }
+    // We need to wait 1 tick for the message to be rendered
     nextTick(() => {
-        console.log('scrolling to bottom');
-        messagePannel.value.scrollTop = messagePannel.value.scrollHeight;
+        scrollToBottom(distanceToBottom() > 200);
     });
 };
 
-watch(() => client.messages, scrollToBottom, { deep: true });
+const scrollToBottom = (immediate) => {
+    // If already auto scrolling, abort
+    if (scrollState.scrolling) {
+        return;
+    }
+    if (distanceToBottom() <= 0) {
+        return;
+    }
+    // Set scrolling state to true
+    scrollState.scrolling = true;
+    // If in immediate mode
+    if (immediate) {
+        // Disable smooth scroll
+        scrollState.smooth = false;
+        // Wait for smooth scroll to be disabled
+        nextTick(() => {
+            // Scroll directly to bottom
+            messagePannel.value.scrollTop = messagePannel.value.scrollHeight;
+            // Re-enable smooth scroll
+            scrollState.smooth = true;
+            // Update scrolling state
+            scrollState.scrolling = false;
+        });
+    } else {
+        // Smoothly scroll to bottom
+        messagePannel.value.scrollTop = messagePannel.value.scrollHeight;
+        // In a few ms, check if still need to scroll
+        setTimeout(() => {
+            // Update state
+            scrollState.scrolling = false;
+            // If still need to scroll
+            const distance = distanceToBottom();
+            if (distance > 1) {
+                scrollToBottom(distance > 200);
+            }
+        }, 100);
+    }
+};
+
+// When the list of messages changes, scroll to bottom
+watch(() => client.messages, scrollToBottomIfAutoScroll, { deep: true });
+
+// When scrolling in the div either auto or manually
+const onScroll = () => {
+    if (scrollState.scrolling) {
+        return;
+    }
+    const distance = distanceToBottom();
+    if (distance > 60) {
+        // Stop auto scroll
+        scrollState.auto = false;
+    } else if (distance < 30) {
+        scrollState.auto = true;
+    }
+};
 
 </script>
 
@@ -25,12 +92,14 @@ watch(() => client.messages, scrollToBottom, { deep: true });
     <div
         class="overflow-y-auto scroll-smooth pl-2 py-2 scrollbar "
         ref="messagePannel"
+        @scroll="onScroll"
+        :style="smoothScroll ? 'scroll-behavior: smooth' : ''">
     >
         <SingleMessage
             v-for="message in client.messages"
             :key="message.id"
             :message="message"
-            @content-changed="scrollToBottom"
+            @content-changed="scrollToBottom(false)"
         />
     </div>
 </template>

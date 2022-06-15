@@ -259,7 +259,7 @@ export const useAppStore = defineStore('app', {
                 }
 
                 // Set message to uploaded file
-                this.newMessage += this.newMessage + ' ' + document.location.origin + '/' + result.path;
+                this.newMessage += ' ' + document.location.origin + '/' + result.path;
 
                 toast.success('File uploaded');
 

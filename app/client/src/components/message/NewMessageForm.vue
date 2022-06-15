@@ -13,6 +13,7 @@ const client = useClientStore();
 const risibank = new RisiBank();
 
 const message = ref(null);
+const messageTextAreaRows = ref(1);
 const fileUploadInput = ref(null);
 const historyIndex = ref(null);
 const sentMessageHistory = ref([]);
@@ -35,39 +36,17 @@ let typingListStr = computed(() => {
     return `multiple users are currently typing..`;
 });
 
-/**
- * TODO: Put this somewhere else
- */
-function placeCaretAtEnd(el) {
-    el.focus();
-    if (typeof window.getSelection != "undefined" && typeof document.createRange != "undefined") {
-        const range = document.createRange();
-        range.selectNodeContents(el);
-        range.collapse(false);
-        const sel = window.getSelection();
-        sel.removeAllRanges();
-        sel.addRange(range);
-    } else if (typeof document.body.createTextRange != "undefined") {
-        const textRange = document.body.createTextRange();
-        textRange.moveToElementText(el);
-        textRange.collapse(false);
-        textRange.select();
-    }
-}
 
 // Watch when the new message input changes. The change does not necessarily come from this component, as the message input can be prepared elsewhere.
 watch(() => app.newMessage, (newValue, oldValue) => {
     // Auto-set the message value
-    if (newValue !== message.value.innerText) {
-        message.value.innerText = newValue;
+    if (newValue !== message.value.value) {
+        message.value.value = newValue;
     }
     // Focus message input if not already focused
     if (document.activeElement !== message.value) {
         message.value.focus();
     }
-    nextTick(() => {
-        placeCaretAtEnd(message.value);
-    });
 });
 
 
@@ -76,17 +55,22 @@ watch(() => app.newMessage, (newValue, oldValue) => {
  */
 const onMessageInput = event => {
 
-    let newMessage = event.target.innerText;
+    let newMessage = event.target.value;
 
     // Catches when pressing enter while the message input is empty.
     // Also catches the enter input just after a message is sent, to prevent it from being added to the message content.
     if (newMessage.trim() === '') {
         newMessage = '';
-        message.value.innerText = '';
+        message.value.value = '';
     }
 
     // Otherwise, set the message
     app.setMessage(newMessage);
+
+    // Infer number of lines of the text area and make it scale accordingly
+    let lineCount = newMessage.split('\n').length;
+    lineCount = Math.min(lineCount, 5);
+    messageTextAreaRows.value = lineCount;
 };
 
 /**
@@ -109,6 +93,7 @@ const sendMessage = function() {
     sentMessageHistory.value.push(app.newMessage);
     sentMessageHistory.value.splice(0, sentMessageHistory.value.length - MESSAGE_HISTORY_LENGTH);
     historyIndex.value = null;
+    messageTextAreaRows.value = 1;
     app.sendMessage();
 };
 
@@ -124,10 +109,27 @@ const openRisiBank = function() {
         ...RisiBank.Defaults.Overlay.Dark,
 
         // Add selected image (risibank) to specified text area
-        onSelectMedia: ({ media }) => {
-            app.setMessage(`${app.newMessage} ${media.cache_url} `);
-        },
+        onSelectMedia: RisiBank.Actions.addRisiBankImageLink(message.value),
     });
+};
+
+
+/**
+ * Autocomplete the username
+ */
+const onKeyUpTab = function() {
+    const messageMatch = app.newMessage.match(/([*a-zA-Z0-9_-]+)$/);
+    const username = messageMatch ? messageMatch[0].toLowerCase() : null;
+    if (! username) {
+        return;
+    }
+    const matches = client.state.connectedList
+        .map(entry => entry.identifier)
+        .filter(identifier => identifier.indexOf(username) === 0);
+    if (matches.length !== 1) {
+        return;
+    }
+    app.setMessage(app.newMessage.substr(0, app.newMessage.length - username.length) + matches[0]);
 };
 
 /**
@@ -144,7 +146,7 @@ const onFileInputChange = async () => {
 <template>
     <div class="pt-2 pb-4 px-4">
         <!-- Typing list -->
-        <p class="h-5 pl-32 text-xs text-skygray-lighter">
+        <p class="h-5 pl-32 text-xs text-skygray-lightest">
             {{ typingListStr }}
         </p>
         <!-- New message form -->
@@ -172,19 +174,20 @@ const onFileInputChange = async () => {
                 <img src="/assets/images/icons/risibank.png" class="p-1 w-6 h-6">
             </button>
 
-            <!-- New message input -->
-            <div
+            <!-- New message -->
+            <textarea
                 ref="message"
-                class="form-control ml-2 w-0 grow max-h-48 overflow-y-auto overflow-x-hidden scrollbar whitespace-pre-wrap"
+                :rows="messageTextAreaRows"
+                class="form-control ml-2 w-0 grow overflow-x-hidden scrollbar"
                 type="text"
                 :placeholder="'New message / ' + client.state.currentRoom.name"
                 @input="onMessageInput"
                 @keyup.up="onNavigateIntoHistory($event, -1)"
                 @keyup.down="onNavigateIntoHistory($event, 1)"
+                @keydown.tab.prevent="onKeyUpTab"
                 @keydown.shift.enter.stop=""
                 @keydown.enter.exact.stop="sendMessage"
-                contenteditable="true"
-            ></div>
+            ></textarea>
 
             <!-- Send button -->
             <button @click="sendMessage" class="form-control ml-2 h-fit align-bottom">

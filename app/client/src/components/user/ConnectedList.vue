@@ -3,6 +3,7 @@ import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
 import HoverCard from '@/components/util/HoverCard.vue';
 import SingleConnectedUser from '@/components/user/SingleConnectedUser.vue';
+import SectionTitle from '@/components/util/SectionTitle.vue';
 
 const app = useAppStore();
 const client = useClientStore();
@@ -11,7 +12,7 @@ const client = useClientStore();
 
 <template>
     <div>
-        <p class="pl-4 font-bold text-skygray-casual">Active now</p>
+        <SectionTitle>Active now</SectionTitle>
         <div>
             <SingleConnectedUser
                 v-for="entry in client.state.connectedList"

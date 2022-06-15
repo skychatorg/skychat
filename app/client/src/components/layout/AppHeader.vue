@@ -8,7 +8,7 @@ const client = useClientStore();
 </script>
 
 <template>
-    <header class="h-16 bg-skygray-white/10 backdrop-brightness-150 w-full">
+    <header class="h-16 bg-skygray-lighter/10 backdrop-brightness-125 w-full">
         <div class="header-content grid grid-cols-12">
             <div class="col-start-1 col-span-3 my-3 ml-8 flex">
                 <img class="hidden logo" src="/assets/logo.png" width="60" height="60">

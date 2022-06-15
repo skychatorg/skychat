@@ -10,7 +10,7 @@
         "destroy": "bash app/script/destroy.sh",
         "setup": "bash app/script/setup.sh",
         "client:dev": "vite build --emptyOutDir --watch",
-        "client:build": "vite build",
+        "client:build": "vite build --emptyOutDir",
         "server:build": "PRODUCTION=true tsc",
         "server:dev": "PRODUCTION=false tsc-watch --onSuccess \"node build/server.js\"",
         "server:kill": "ps aux | grep 'node --max-old-space-size=8192 build/server.js' | awk '{print $2}' | xargs kill -9",

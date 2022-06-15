@@ -44,18 +44,31 @@ const borderColor = computed(() => {
     if (hasUnread.value) {
         return '--color-warn';
     } else if (props.room.isPrivate) {
-        return '--color-secondary';
+        return '--color-skygray-lightest';
     } else {
-        return '--color-secondary';
+        return '--color-skygray-lightest';
+    }
+});
+
+// Formatted room name
+const formattedName = computed(() => {
+    if (props.room.isPrivate) {
+        const otherUsernames = props.room.whitelist.filter(identifier => client.state.user.username.toLowerCase() !== identifier);
+        return `@${otherUsernames.join(', @')}`;
+    } else {
+        return props.room.name;
     }
 });
 
 // Choose icon to show and icon color
-const iconRef = computed(() => {
-    return {
-        name: props.room.isPrivate ? 'lock' : 'globe',
-        classes: selected.value ? 'text-skygray-white' : 'text-skygray-lightest',
-    };
+const icon = computed(() => {
+    if (props.room.isPrivate) {
+        return {
+            name: 'lock',
+            classes: selected.value ? 'text-skygray-white' : 'text-skygray-lightest',
+        };
+    }
+    return null;
 });
 
 </script>
@@ -69,14 +82,14 @@ const iconRef = computed(() => {
         class="cursor-pointer"
     >
         <div
-            @click="client.state.currentRoomId !== props.room.id && client.join(props.room.id)"
+            @click="client.state.currentRoomId !== room.id && client.join(room.id)"
             class="py-2 px-3 flex flex-row select-none"
         >
 
             <!-- Room name -->
             <div class="grow">
-                <fa class="mr-1" :class="iconRef.classes" :icon="iconRef.name" />
-                {{ props.room.name }}
+                <fa v-if="icon" class="mr-1" :class="icon.classes" :icon="icon.name" />
+                {{ formattedName }}
             </div>
 
             <!-- Icons -->
@@ -93,11 +106,11 @@ const iconRef = computed(() => {
 
                 <!-- User count -->
                 <p
-                    v-show="(client.state.roomConnectedUsers[props.room.id] || []).length > 0"
+                    v-show="(client.state.roomConnectedUsers[room.id] || []).length > 0"
                     class="text-primary font-bold"
-                    :title="((client.state.roomConnectedUsers[props.room.id] || []).length) + ' users in this room'"
+                    :title="((client.state.roomConnectedUsers[room.id] || []).length) + ' users in this room'"
                 >
-                    <fa icon="users" size="xs" /> {{ (client.state.roomConnectedUsers[props.room.id] || []).length }}
+                    <fa icon="users" size="xs" /> {{ (client.state.roomConnectedUsers[room.id] || []).length }}
                 </p>
             </div>
         </div>

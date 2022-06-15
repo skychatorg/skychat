@@ -22,12 +22,16 @@ const playerHeightCss = computed(() => {
     }[app.playerMode.size];
 });
 
+const showPlayer = computed(() => {
+    return client.state.player.current && app.playerMode.enabled;
+});
+
 const showQueue = computed(() => {
     return client.state.player.queue.length && app.playerMode.queueEnabled;
 });
 
 const showPannel = computed(() => {
-    return client.state.player.current || showQueue.value;
+    return showPlayer.value || showQueue.value;
 });
 
 const openModal = () => {
@@ -46,7 +50,7 @@ const openModal = () => {
         >
 
             <!-- Actual player implementation -->
-            <MediaPlayer v-if="client.state.player.current" class="player grow" />
+            <MediaPlayer v-if="showPlayer" class="player grow" />
 
             <!-- Queue if shown -->
             <MediaQueue v-if="showQueue" class="overflow-y-auto h-0 min-h-full scrollbar queue" />

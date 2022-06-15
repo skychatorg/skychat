@@ -3,7 +3,7 @@ import { computed } from 'vue';
 import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
 import HoverCard from '@/components/util/HoverCard.vue';
-import UserMiniAvatar from '@/components/user/UserMiniAvatar.vue';
+import UserMiniAvatarCollection from '@/components/user/UserMiniAvatarCollection.vue';
 
 const app = useAppStore();
 const client = useClientStore();
@@ -16,7 +16,7 @@ const props = defineProps({
 });
 
 // Users in current player channel
-const usersRef = computed(() => {
+const users = computed(() => {
     return client.state.playerChannelUsers[props.playerChannel.id] || [];
 });
 
@@ -25,7 +25,7 @@ const usersRef = computed(() => {
 <template>
     <HoverCard
         :useBorderRadius="true"
-        :borderColor="'rgb(var(--color-secondary))'"
+        :borderColor="'rgb(var(--color-skygray-lightest))'"
         :selectable="true"
         :selected="client.state.currentPlayerChannelId === playerChannel.id"
         @click="client.sendMessage(`/playerchannel ${client.state.currentPlayerChannelId === playerChannel.id ? 'leave' : 'join'} ${playerChannel.id}`)"
@@ -50,11 +50,7 @@ const usersRef = computed(() => {
 
             <!-- Show users in media channel -->
             <div class="h-6 pt-1 flex justify-start space-x-1">
-                <UserMiniAvatar
-                    v-for="user in usersRef"
-                    :key="user.id"
-                    :user="user"
-                />
+                <UserMiniAvatarCollection :users="users" />
             </div>
         </div>
     </HoverCard>

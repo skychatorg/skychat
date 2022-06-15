@@ -49,19 +49,17 @@
 
 /* Button group */
 .btn-group {
-    @apply border-2 border-skygray-light/50 rounded-lg flex;
+    @apply border-2 border-skygray-light/50 rounded-lg flex overflow-hidden;
 }
 .btn-group > .btn {
     @apply border-0 rounded-none grow;
 }
 .btn-group > .btn:nth-child(1) {
-    @apply rounded-l-lg;
 }
 .btn-group > .btn:not(:nth-last-child(1)) {
     @apply border-r-2 border-skygray-casual/25;
 }
 .btn-group > .btn:nth-last-child(1) {
-    @apply rounded-r-lg;
 }
 
 body {
@@ -72,7 +70,7 @@ body {
     overflow: hidden;
 
     --page-max-width: 1640px;
-    --page-col-left-width: 350px;
+    --page-col-left-width: 280px;
     --page-col-right-width: 350px;
 
     font-family: 'Lato', sans-serif;
@@ -100,7 +98,7 @@ body {
     width: 10px;
 }
 .scrollbar::-webkit-scrollbar-track {
-    background: #343434;
+    background: #34343422;
 }
 .scrollbar::-webkit-scrollbar-thumb {
     background: #555;
@@ -110,19 +108,20 @@ body {
 }
 
 
-
 .skychat-sticker {
+    @apply inline-block align-baseline;
     max-width: 80px;
     max-height: 80px;
 }
 .skychat-risibank-sticker {
-    display: inline-block;
+    @apply inline-block align-baseline;
 }
 .skychat-risibank-sticker > img {
     max-width: 100px;
     max-height: 100px;
 }
 .skychat-image img {
+    @apply inline-block align-baseline;
     max-width: 100px;
     max-height: 100px;
 }

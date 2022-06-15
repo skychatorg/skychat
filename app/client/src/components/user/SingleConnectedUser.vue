@@ -43,7 +43,7 @@ const formattedDurationSinceDead = computed(() => {
 
 <template>
     <HoverCard
-        :borderColor="'rgb(var(--color-primary))'"
+        :borderColor="props.entry.deadSinceTime ? 'rgb(var(--color-skygray-casual))' : 'rgb(var(--color-skygray-lightest))'"
         :useBorderRadius="true"
         :selectable="true"
         :selected="false"
