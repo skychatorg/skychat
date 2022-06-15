@@ -178,7 +178,7 @@ const onFileInputChange = async () => {
             <textarea
                 ref="message"
                 :rows="messageTextAreaRows"
-                class="form-control ml-2 w-0 grow overflow-x-hidden scrollbar"
+                class="form-control ml-2 w-0 grow overflow-x-hidden scrollbar resize-none"
                 type="text"
                 :placeholder="'New message / ' + client.state.currentRoom.name"
                 @input="onMessageInput"

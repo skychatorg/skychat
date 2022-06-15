@@ -16,7 +16,7 @@ const props = defineProps({
             v-for="user in users"
             :key="user.identifier"
             :user="user"
-            class="transition transition-all hover:-translate-y-0.5 hover:scale-110"
+            class="transition transition-all hover:-translate-y-0.5 hover:scale-125"
         />
     </div>
 </template>

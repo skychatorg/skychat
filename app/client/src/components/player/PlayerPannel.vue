@@ -57,14 +57,14 @@ const openModal = () => {
         </div>
 
         <!-- Pannel contro bar -->
-        <div class="basis-12 p-2 opacity-0 group-hover:opacity-100 transition duration-200">
+        <div class="basis-12 p-2 opacity-100 lg:opacity-0 group-hover:opacity-100 transition duration-200">
 
             <div class="grid grid-cols-12 gap-2 text-skygray-lighter">
             
                 <!-- Player type (big to disabled) -->
                 <div class="col-span-4 btn-group">
                     <button
-                        class="btn text-sm"
+                        class="hidden btn text-sm"
                         :class="{ 'active': app.playerMode.cinemaMode, 'disabled': ! showPannel }"
                         @click="toast.error('The cinema mode is not yet implemented.')"
                     >
@@ -115,7 +115,7 @@ const openModal = () => {
                 </div>
             
                 <!-- Player actions -->
-                <div class="col-start-9 col-span-3 btn-group">
+                <div class="col-start-8 col-span-3 btn-group">
                     <button class="btn text-sm disabled">
                         <fa icon="forward-step" />
                     </button>
@@ -128,7 +128,7 @@ const openModal = () => {
                 </div>
             
                 <!-- Queue -->
-                <div class="col-start-12 col-span-1 btn-group">
+                <div class="col-start-11 col-span-2 btn-group">
                     <button
                         class="btn text-sm"
                         :class="{

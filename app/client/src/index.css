@@ -70,8 +70,8 @@ body {
     overflow: hidden;
 
     --page-max-width: 1640px;
-    --page-col-left-width: 280px;
-    --page-col-right-width: 350px;
+    --page-col-left-width: 260px;
+    --page-col-right-width: 340px;
 
     font-family: 'Lato', sans-serif;
 

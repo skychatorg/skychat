@@ -3,7 +3,9 @@ import { defineStore } from 'pinia'
 import { SkyChatClient } from '../../../api/client.ts';
 
 // Connect to SkyChatClient
-const client = new SkyChatClient();
+const protocol = document.location.protocol === 'http:' ? 'ws' : 'wss';
+const url = protocol + '://' + document.location.host;
+const client = new SkyChatClient(url);
 
 
 export const useClientStore = defineStore('client', {
@@ -73,9 +75,7 @@ export const useClientStore = defineStore('client', {
                 const toast = useToast();
                 toast.error(error);
             });
-            const protocol = document.location.protocol === 'http:' ? 'ws' : 'wss';
-            const url = protocol + '://' + document.location.host;
-            client.connect(url);
+            client.connect();
         },
 
         /**

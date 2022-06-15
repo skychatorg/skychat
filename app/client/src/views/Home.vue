@@ -1,6 +1,6 @@
 <script setup>
 import { reactive, watch } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
+import { useRouter } from 'vue-router';
 import { useClientStore } from '@/stores/client';
 
 const client = useClientStore();

@@ -87,7 +87,7 @@ export class SkyChatClient extends EventEmitter {
     private _player: { current: QueuedVideoInfo | null, queue: QueuedVideoInfo[], cursor: number } = { current: null, queue: [], cursor: 0 };
     private _playerLastUpdate: Date | null = null;
 
-    constructor() {
+    constructor(public readonly url: string) {
         super();
 
         // Auth & Config
@@ -102,9 +102,9 @@ export class SkyChatClient extends EventEmitter {
         this.on('typing-list', this._onTypingList.bind(this));
 
         // Messages
-        this.on('message', this._onMessage.bind(this));
-        this.on('messages', this._onMessages.bind(this));
-        this.on('message-edit', this._onMessageEdit.bind(this));
+        // this.on('message', this._onMessage.bind(this));
+        // this.on('messages', this._onMessages.bind(this));
+        // this.on('message-edit', this._onMessageEdit.bind(this));
         this.on('message-seen', this._onMessageSeen.bind(this));
 
         // Games & Features
@@ -130,6 +130,9 @@ export class SkyChatClient extends EventEmitter {
         // Meta
         this.on('info', this._onInfo.bind(this));
         this.on('error', this._onError.bind(this));
+
+        // URL
+        this.url = url;
     }
 
     private _onConfig(config: PublicConfig) {
@@ -220,30 +223,6 @@ export class SkyChatClient extends EventEmitter {
     private _onTypingList(typingList: Array<SanitizedUser>) {
         this._typingList = typingList;
         this.emit('update', this.state);
-    }
-    
-    private _onMessage(message: SanitizedMessage) {
-        // TODO: Handle in store
-        // this._messages.push(message);
-        // this._focused && this.notifySeenMessage(message.id);
-    }
-    
-    private _onMessages(messages: Array<SanitizedMessage>) {
-        // TODO: Handle in store
-        // if (messages.length === 0) {
-        //     return;
-        // }
-        // this._messages.push(...messages);
-        // this._focused && this.notifySeenMessage(messages[messages.length - 1].id);
-    }
-    
-    private _onMessageEdit(message: unknown) {
-        // TODO: Handle in store
-        // const oldMessageIndex = this._messages.findIndex(oldMessage => oldMessage.id === message.id);
-        // if (oldMessageIndex === -1) {
-        //     return;
-        // }
-        // this._messages[oldMessageIndex] = message;
     }
     
     private _onMessageSeen(messageSeen: { user: number, data: any }) {
@@ -388,8 +367,8 @@ export class SkyChatClient extends EventEmitter {
     /**
      * Connect to the server
      */
-    connect(url: string) {
-        this._websocket = new WebSocket(url);
+    connect() {
+        this._websocket = new WebSocket(this.url);
         this._websocket.addEventListener('open', this._onWebSocketConnect.bind(this));
         this._websocket.addEventListener('message', this._onWebSocketMessage.bind(this));
         this._websocket.addEventListener('close', this._onWebSocketClose.bind(this));
