@@ -18,7 +18,6 @@ const client = useClientStore();
         <HoverCard
             v-for="(entry, index) in client.state.player.queue"
             :key="index"
-            :selected="index === 0"
             :selectable="false"
         >
             <div class="py-1 px-1 flex">

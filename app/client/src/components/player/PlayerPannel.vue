@@ -3,9 +3,11 @@ import { computed } from 'vue';
 import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
 import { useToast } from "vue-toastification";
+import { $vfm } from 'vue-final-modal';
 import HoverCard from '@/components/util/HoverCard.vue';
 import MediaPlayer from '@/components/player/MediaPlayer.vue';
 import MediaQueue from '@/components/player/MediaQueue.vue';
+import YoutubeVideoSearcherModal from '@/components/modal/YoutubeVideoSearcherModal.vue';
 
 const app = useAppStore();
 const client = useClientStore();
@@ -28,6 +30,10 @@ const showPannel = computed(() => {
     return client.state.player.current || showQueue.value;
 });
 
+const openModal = () => {
+   $vfm.show({ component: YoutubeVideoSearcherModal });
+};
+
 </script>
 
 <template>
@@ -43,7 +49,7 @@ const showPannel = computed(() => {
             <MediaPlayer v-if="client.state.player.current" class="player grow" />
 
             <!-- Queue if shown -->
-            <MediaQueue v-if="showQueue" class="queue w-0" />
+            <MediaQueue v-if="showQueue" class="overflow-y-auto h-0 min-h-full scrollbar queue" />
         </div>
 
         <!-- Pannel contro bar -->
@@ -109,7 +115,10 @@ const showPannel = computed(() => {
                     <button class="btn text-sm disabled">
                         <fa icon="forward-step" />
                     </button>
-                    <button class="btn text-sm">
+                    <button
+                        @click="openModal"
+                        class="btn text-sm"
+                    >
                         <fa icon="plus" />
                     </button>
                 </div>
@@ -119,7 +128,7 @@ const showPannel = computed(() => {
                     <button
                         class="btn text-sm"
                         :class="{
-                            'disabled': ! showPannel,
+                            'disabled': ! client.state.player.queue.length,
                             'active': showQueue,
                         }"
                         @click="app.toggleShowPlayerQueue"
@@ -140,6 +149,7 @@ const showPannel = computed(() => {
 }
 
 .queue {
+    min-width: 16rem;
     flex-basis: 16rem;
 }
 </style>

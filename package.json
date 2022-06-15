@@ -9,7 +9,7 @@
         "clean": "rm -rf dist build",
         "destroy": "bash app/script/destroy.sh",
         "setup": "bash app/script/setup.sh",
-        "client:dev": "vite build --watch",
+        "client:dev": "vite build --emptyOutDir --watch",
         "client:build": "vite build",
         "server:build": "PRODUCTION=true tsc",
         "server:dev": "PRODUCTION=false tsc-watch --onSuccess \"node build/server.js\"",
@@ -51,6 +51,7 @@
         "ua-parser-js": "^0.7.21",
         "uuid": "^8.3.2",
         "vue": "^3.2.25",
+        "vue-final-modal": "^3.4.4",
         "vue-router": "^4.0.16",
         "vue-toastification": "^2.0.0-rc.5",
         "ws": "^7.3.0"

@@ -2,6 +2,8 @@ import { createApp } from 'vue';
 import { createPinia } from 'pinia';
 import { createRouter, createWebHashHistory } from 'vue-router';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+import { vfmPlugin } from 'vue-final-modal';
+
 
 import Toast from "vue-toastification";
 // Import the CSS or use your own!
@@ -40,7 +42,8 @@ import './index.css';
     // Use router
     app.use(router);
 
-    // Toast
+    // Other utilities
+    app.use(vfmPlugin);
     app.use(Toast, { position: 'top-center' });
 
     // Better way of doing this?
