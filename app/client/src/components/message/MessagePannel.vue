@@ -93,7 +93,7 @@ const onScroll = () => {
         class="overflow-y-auto scroll-smooth pl-2 py-2 scrollbar "
         ref="messagePannel"
         @scroll="onScroll"
-        :style="smoothScroll ? 'scroll-behavior: smooth' : ''">
+        :style="smoothScroll ? 'scroll-behavior: smooth' : ''"
     >
         <SingleMessage
             v-for="message in client.messages"

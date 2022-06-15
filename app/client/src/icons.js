@@ -31,6 +31,7 @@ import {
     faToggleOff,
     faForwardStep,
     faUpload,
+    faArrowPointer,
 } from '@fortawesome/free-solid-svg-icons';
 
 library.add(
@@ -64,6 +65,7 @@ library.add(
     faToggleOff,
     faForwardStep,
     faUpload,
+    faArrowPointer,
 );
 
 export default library;
