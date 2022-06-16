@@ -109,7 +109,7 @@ export const useAppStore = defineStore('app', {
 
             // Auto-check document title every second
             setInterval(() => {
-            
+
                 // In case the title is not currently blinking, just update it
                 if (! this.documentTitle.blinking) {
                     if (document.title !== this.documentTitle.value) {
@@ -121,7 +121,7 @@ export const useAppStore = defineStore('app', {
                 const chars = "┤┘┴└├┌┬┐";
                 const indexOf = chars.indexOf(document.title[0]);
                 const newPosition = (indexOf + 1) % chars.length;
-                document.title = chars[newPosition] + ' ' + this.documentTitle.value;
+                document.title = chars[newPosition] + ' 🔔 ' + this.documentTitle.value;
             }, 1000);
 
             // Listen for own state change
@@ -149,8 +149,10 @@ export const useAppStore = defineStore('app', {
                     new Audio('/assets/sound/notification.mp3').play();
                 }
 
-                // If app is not focused, skip
+                // If app is not focused, create notification
                 if (! this.focused) {
+                    this.documentTitle.value = `${message.user.username} send a message!`;
+                    this.documentTitle.blinking = true;
                     return;
                 }
 

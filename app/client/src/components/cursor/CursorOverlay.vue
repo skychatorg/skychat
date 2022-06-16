@@ -48,8 +48,8 @@ const cursorList = computed(() => Object.values(client.state.cursors));
 </script>
 
 <template>
-    <div class="pointer-events-none fixed opacity-10">
-        <div class="w-fit h-fit transition ease-out duration-200 relative"
+    <div class="pointer-events-none fixed opacity-25">
+        <div class="w-fit h-fit transition duration-200 relative"
             v-for="entry in cursorList"
             :key="entry.cursor.user.id"
             :style="{
@@ -58,7 +58,7 @@ const cursorList = computed(() => Object.values(client.state.cursors));
         >
             <fa
                 icon="arrow-pointer"
-                class="absolute top-0 left-0"
+                class="absolute top-0 left-0 text-primary"
             />
             <UserMiniAvatar
                 :user="entry.cursor.user"
