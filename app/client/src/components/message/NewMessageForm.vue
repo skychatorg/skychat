@@ -1,5 +1,5 @@
 <script setup>
-import { nextTick, computed, ref, watch } from 'vue';
+import { onMounted, computed, ref, watch } from 'vue';
 import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
 import { AudioRecorder } from '@/lib/AudioRecorder';
@@ -50,6 +50,11 @@ watch(() => app.newMessage, (newValue, oldValue) => {
     }
 });
 
+// Focus message input when app is newly focused
+watch(() => app.focused, focused => focused && message.value.focus());
+
+// Focus message input when app changes room
+watch(() => client.state.currentRoomId, currentRoomId => currentRoomId && message.value.focus());
 
 /**
  * When the message changes
@@ -185,7 +190,7 @@ const cancelAudio = function() {
 <template>
     <div class="p-2">
         <!-- Typing list -->
-        <p class="h-5 pl-2 lg:pl-32 text-xs text-skygray-lightest">
+        <p class="h-5 pl-2 text-xs text-skygray-lightest">
             {{ typingListStr }}
         </p>
         <!-- New message form -->
