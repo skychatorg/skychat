@@ -2,6 +2,7 @@
 import { nextTick, computed, ref, watch } from 'vue';
 import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
+import { AudioRecorder } from '@/lib/AudioRecorder';
 import { RisiBank } from 'risibank-web-api';
 import HoverCard from '@/components/util/HoverCard.vue';
 
@@ -156,6 +157,29 @@ const hasUnreadMessagesInOtherRooms = computed(() => {
     return false;
 });
 
+/**
+ * Start an audio upload
+ */
+const recordingAudio = ref(false);
+const recordingAudioStopCb = ref(null);
+const uploadAudio = async function() {
+    if (recordingAudio.value) {
+        // Stop recording
+        const {blob, uri, audio} = await recordingAudioStopCb.value();
+        client.sendRaw(blob);
+    } else {
+        // Start recording
+        recordingAudioStopCb.value = await AudioRecorder.start();
+    }
+    recordingAudio.value = ! recordingAudio.value;
+};
+const cancelAudio = function() {
+    if (recordingAudio.value) {
+        recordingAudioStopCb.value();
+    }
+    recordingAudio.value = false;
+};
+
 </script>
 
 <template>
@@ -210,6 +234,23 @@ const hasUnreadMessagesInOtherRooms = computed(() => {
                         id="file-input"
                         class="hidden"
                     />
+                </div>
+
+                <!-- Send audio -->
+                <div title="Send an audio" class="ml-2">
+                    <button
+                        class="px-1 form-control"
+                        @click="uploadAudio"
+                    >
+                        <fa icon="microphone" :class="{ 'text-primary': recordingAudio }" />
+                    </button>
+                    <button
+                        v-show="recordingAudio"
+                        class="ml-2 px-1 form-control"
+                        @click="cancelAudio"
+                    >
+                        <fa icon="ban" class="text-danger" />
+                    </button>
                 </div>
 
                 <!-- RisiBank -->

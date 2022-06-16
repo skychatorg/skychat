@@ -18,7 +18,7 @@ The SkyChat:
 - 💻 Is trivial to install & configure
 
 
-When multichannel is enabled, here is what it looks like:
+Here is what the application looks like:
 ![overall-screenshot](./app/doc/screenshot.png)
 
 

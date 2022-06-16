@@ -48,6 +48,11 @@ export const useClientStore = defineStore('client', {
                 this.state = client.state;
             });
 
+            // Audio received
+            client.on('audio', blob => {
+                new Audio(URL.createObjectURL(blob)).play();
+            });
+
             // On new message
             client.on('message', message => {
                 this.messages.push(message);

@@ -38,6 +38,7 @@ import {
     faComments,
     faGears,
     faMobileScreen,
+    faMicrophone,
 } from '@fortawesome/free-solid-svg-icons';
 
 library.add(
@@ -78,6 +79,7 @@ library.add(
     faComments,
     faGears,
     faMobileScreen,
+    faMicrophone,
 );
 
 export default library;
