@@ -27,7 +27,35 @@
         --color-warn-light: 244 175 125;
         --color-danger: 255 69 103;
         --color-danger-light: 255 120 150;
+
+        --color-scrollbar-track: #34343422;
+        --color-scrollbar-thumb: rgba(78, 78, 78, 0.253);
+        --color-scrollbar-thumb-hover: #888;
     }
+}
+
+
+/** Firefox */
+.scrollbar {
+    scrollbar-color: var(--color-scrollbar-thumb) var(--color-scrollbar-track);
+    scrollbar-width: 0.5rem;
+}
+.scrollbar:hover {
+    scrollbar-color: var(--color-scrollbar-thumb-hover) var(--color-scrollbar-track);
+}
+
+/** Chrome */
+.scrollbar::-webkit-scrollbar { width: 0.5rem; }
+.scrollbar::-webkit-scrollbar-track { background: transparent; }
+.scrollbar::-webkit-scrollbar-thumb { background: transparent; }
+.scrollbar::-webkit-scrollbar-thumb:hover { background: transparent; }
+.scrollbar:hover::-webkit-scrollbar-track { background: var(--color-scrollbar-track); }
+.scrollbar:hover::-webkit-scrollbar-thumb { background: var(--color-scrollbar-thumb); }
+.scrollbar:hover::-webkit-scrollbar-thumb:hover { background: var(--color-scrollbar-thumb-hover); }
+@media (hover: hover) {
+    .scrollbar:hover::-webkit-scrollbar-track { background: var(--color-scrollbar-track); }
+    .scrollbar:hover::-webkit-scrollbar-thumb { background: var(--color-scrollbar-thumb); }
+    .scrollbar:hover::-webkit-scrollbar-thumb:hover { background: var(--color-scrollbar-thumb-hover); }
 }
 
 /* Form element */
@@ -84,47 +112,37 @@ body {
 }
 
 
-
-
-.scrollbar {
-    /** Firefox */
-    scrollbar-color: #555 #343434;
-    scrollbar-width: 10px;
-}
-.scrollbar:hover {
-    scrollbar-color: #888 #343434;
-}
-.scrollbar::-webkit-scrollbar {
-    width: 10px;
-}
-.scrollbar::-webkit-scrollbar-track {
-    background: #34343422;
-}
-.scrollbar::-webkit-scrollbar-thumb {
-    background: #555;
-}
-.scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #888;
-}
-
-
+/* Sticker */
 .skychat-sticker {
     @apply inline-block align-baseline;
     max-width: 80px;
     max-height: 80px;
 }
+
+/* RisiBank Sticker */
 .skychat-risibank-sticker {
     @apply inline-block align-baseline;
+    width: 90px;
+    height: 60px;
 }
 .skychat-risibank-sticker > img {
-    max-width: 100px;
-    max-height: 100px;
+    object-fit: contain;
+    height: 100%;
+    width: 100%;
 }
-.skychat-image img {
+
+/* Image */
+.skychat-image {
     @apply inline-block align-baseline;
-    max-width: 100px;
-    max-height: 100px;
+    width: 120px;
+    height: 80px;
 }
+.skychat-image > img {
+    object-fit: contain;
+    height: 100%;
+    width: 100%;
+}
+
 .skychat-button {
     padding: 2px 10px;
     border-radius: 10px;

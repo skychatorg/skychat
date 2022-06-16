@@ -105,6 +105,7 @@ const messageInteract = () => {
                         }"
                     >
                         {{ message.user.username }}
+                        <fa v-if="message.meta.device === 'mobile'" icon="mobile-screen" class="ml-1" />
                     </div>
                 </div>
                 <!-- Quoted message -->
@@ -112,7 +113,7 @@ const messageInteract = () => {
                     v-if="message.quoted"
                     :message="message.quoted"
                     :selectable="false"
-                    class="mt-2 mb-4"
+                    class="mt-2 mb-4 opacity-50"
                 />
                 <!-- Message content -->
                 <div

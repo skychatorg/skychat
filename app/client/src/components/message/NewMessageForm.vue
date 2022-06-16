@@ -141,58 +141,117 @@ const onFileInputChange = async () => {
     }
 };
 
+/**
+ * Whether the user has unread messages in any other rooms
+ */
+const hasUnreadMessagesInOtherRooms = computed(() => {
+    if (client.state.user.id <= 0) {
+        return false;
+    }
+    for (const room of client.state.rooms) {
+        if ((client.state.user.data.plugins.lastseen[room.id] || 0) < room.lastReceivedMessageId) {
+            return true;
+        }
+    }
+    return false;
+});
+
 </script>
 
 <template>
-    <div class="pt-2 pb-4 px-4">
+    <div class="p-2">
         <!-- Typing list -->
-        <p class="h-5 pl-32 text-xs text-skygray-lightest">
+        <p class="h-5 pl-2 lg:pl-32 text-xs text-skygray-lightest">
             {{ typingListStr }}
         </p>
         <!-- New message form -->
-        <div class="flex">
+        <div class="flex flex-col-reverse lg:flex-row flex-nowrap">
 
-            <!-- Upload media -->
-            <div title="Upload a media">
-                <label
-                    class="form-control cursor-pointer"
-                    for="file-input"
-                >
-                    <fa icon="upload" />
-                </label>
-                <input
-                    ref="fileUploadInput"
-                    @change="onFileInputChange"
-                    type="file"
-                    id="file-input"
-                    class="hidden"
-                />
+            <!-- Add elements to message -->
+            <div class="flex justify-center">
+
+                <!-- Go to room list -->
+                <div class="lg:hidden grow">
+                    <button
+                        class="form-control"
+                        @click="app.mobileSetView('left')"
+                    >
+                        <fa
+                            icon="chevron-left" 
+                            :class="{
+                                'text-danger': hasUnreadMessagesInOtherRooms,
+                            }"
+                        />
+                        <fa
+                            v-if="hasUnreadMessagesInOtherRooms"
+                            icon="bell"
+                            class="ml-2 text-danger"
+                        />
+                        <fa
+                            v-else
+                            icon="gears"
+                            class="ml-2"
+                        />
+                    </button>
+                </div>
+
+                <!-- Upload media -->
+                <div title="Upload a media">
+                    <label
+                        class="form-control cursor-pointer"
+                        for="file-input"
+                    >
+                        <fa icon="upload" />
+                    </label>
+                    <input
+                        ref="fileUploadInput"
+                        @change="onFileInputChange"
+                        type="file"
+                        id="file-input"
+                        class="hidden"
+                    />
+                </div>
+
+                <!-- RisiBank -->
+                <button @click="openRisiBank" class="form-control ml-2 h-fit align-bottom">
+                    <img src="/assets/images/icons/risibank.png" class="p-1 w-6 h-6">
+                </button>
+
+                <!-- Go to user list -->
+                <div class="lg:hidden grow text-end">
+                    <button
+                        class="form-control"
+                        @click="app.mobileSetView('right')"
+                    >
+                        <fa icon="users" class="mr-2" />
+                        <fa icon="chevron-right" />
+                    </button>
+                </div>
             </div>
 
-            <!-- RisiBank -->
-            <button @click="openRisiBank" class="form-control ml-2 h-fit align-bottom">
-                <img src="/assets/images/icons/risibank.png" class="p-1 w-6 h-6">
-            </button>
+            <!-- Message & send button -->
+            <div class="mb-2 lg:mb-0 grow w-full lg:w-0 flex">
 
-            <!-- New message -->
-            <textarea
-                ref="message"
-                :rows="messageTextAreaRows"
-                class="form-control ml-2 w-0 grow overflow-x-hidden scrollbar resize-none"
-                type="text"
-                :placeholder="'New message / ' + client.state.currentRoom.name"
-                @input="onMessageInput"
-                @keyup.up="onNavigateIntoHistory($event, -1)"
-                @keyup.down="onNavigateIntoHistory($event, 1)"
-                @keydown.tab.prevent="onKeyUpTab"
-                @keydown.shift.enter.stop=""
-                @keydown.enter.exact.stop="sendMessage"
-            ></textarea>
+                <!-- New message -->
+                <textarea
+                    ref="message"
+                    :rows="messageTextAreaRows"
+                    class="form-control lg:ml-2 scrollbar resize-none grow"
+                    type="text"
+                    :placeholder="'New message / ' + client.state.currentRoom.name"
+                    @input="onMessageInput"
+                    @keyup.up="onNavigateIntoHistory($event, -1)"
+                    @keyup.down="onNavigateIntoHistory($event, 1)"
+                    @keydown.tab.prevent="onKeyUpTab"
+                    @keydown.shift.enter.stop=""
+                    @keydown.enter.exact.stop="sendMessage"
+                ></textarea>
 
-            <!-- Send button -->
-            <button @click="sendMessage" class="form-control ml-2 h-fit align-bottom">
-                <fa icon="paper-plane" />
-            </button>
+                <!-- Send button -->
+                <button @click="sendMessage" class="form-control ml-2 h-fit align-bottom">
+                    <fa icon="paper-plane" />
+                </button>
+            </div>
         </div>
     </div>
 </template>

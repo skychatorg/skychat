@@ -1,4 +1,5 @@
 <script setup>
+import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
 import RoomList from '@/components/room/RoomList.vue';
 import PlayerChannelList from '@/components/playerchannel/PlayerChannelList.vue';
@@ -7,6 +8,7 @@ import MessagePannel from '@/components/message/MessagePannel.vue';
 import NewMessageForm from '@/components/message/NewMessageForm.vue';
 import ConnectedList from '@/components/user/ConnectedList.vue';
 
+const app = useAppStore();
 const client = useClientStore();
 
 </script>
@@ -16,38 +18,73 @@ const client = useClientStore();
         
         <div
             class="
-                left-col h-full flex flex-col bg-skygray-lighter/10 backdrop-brightness-125
-                hidden lg:block
+                h-full flex flex-col bg-skygray-lighter/10 backdrop-brightness-125
+                w-full lg:w-[var(--page-col-left-width)] lg:flex
             "
+            :class="{
+                'hidden': app.mobileView !== 'left',
+            }"
         >
-            <div class="pl-2 pr-4 py-6 grow overflow-y-auto scrollbar">
-                <RoomList />
-            </div>
-            <div class="pl-2 pr-4 py-6">
-                <PlayerChannelList />
+            <RoomList class="pl-2 pr-4 my-6 grow overflow-y-auto scrollbar" />
+            <PlayerChannelList class="pl-2 pr-4 mt-3 mb-2" />
+            <div class="p-2 text-end lg:hidden">
+                <button
+                    class="form-control mr-2"
+                    @click="app.mobileSetView('middle')"
+                >
+                    <fa icon="comments" class="mr-2" />
+                    <fa icon="chevron-right" />
+                </button>
+                <button
+                    class="form-control"
+                    @click="app.mobileSetView('right')"
+                >
+                    <fa icon="users" class="mr-2" />
+                    <fa icon="chevron-right" />
+                </button>
             </div>
         </div>
 
         <div
             class="
-                middle-col grow h-full flex flex-col
+                w-0 grow h-full flex flex-col
+                lg:flex
             "
+            :class="{
+                'hidden': app.mobileView !== 'middle',
+            }"
         >
             <PlayerPannel class="bg-skygray-lighter/10 backdrop-brightness-125" />
             <MessagePannel class="grow bg-skygray-white/10 backdrop-brightness-150" />
-            <div class="basis-12">
-                <NewMessageForm class="bg-skygray-lighter/10 backdrop-brightness-125" />
-            </div>
+            <NewMessageForm class="basis-12 bg-skygray-lighter/10 backdrop-brightness-125" />
         </div>
 
         <div
             class="
-                right-col h-full p-4 overflow-auto scrollbar bg-skygray-lighter/10 backdrop-brightness-125
-                hidden lg:block
+                h-full flex flex-col bg-skygray-lighter/10 backdrop-brightness-125
+                lg:flex
+                w-full lg:w-[var(--page-col-right-width)] lg:flex
             "
+            :class="{
+                'hidden': app.mobileView !== 'right',
+            }"
         >
-            <div class="pl-2 pr-4 py-2">
-                <ConnectedList />
+            <ConnectedList class="pl-2 pr-4 mt-6 grow h-0 overflow-y-auto scrollbar" />
+            <div class="p-2 lg:hidden">
+                <button
+                    class="form-control mr-2"
+                    @click="app.mobileSetView('left')"
+                >
+                    <fa icon="chevron-left" class="mr-2" />
+                    <fa icon="gears" />
+                </button>
+                <button
+                    class="form-control"
+                    @click="app.mobileSetView('middle')"
+                >
+                    <fa icon="chevron-left" class="mr-2" />
+                    <fa icon="comments" />
+                </button>
             </div>
         </div>
     </div>

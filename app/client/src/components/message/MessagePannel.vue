@@ -90,10 +90,12 @@ const onScroll = () => {
 
 <template>
     <div
-        class="overflow-y-auto scroll-smooth pl-2 py-2 scrollbar "
+        class="overflow-x-hidden overflow-y-auto scroll-smooth pl-2 scrollbar "
         ref="messagePannel"
         @scroll="onScroll"
-        :style="smoothScroll ? 'scroll-behavior: smooth' : ''"
+        :style="{
+            'scroll-behavior': scrollState.smooth ? 'smooth' : 'auto',
+        }"
     >
         <SingleMessage
             v-for="message in client.messages"

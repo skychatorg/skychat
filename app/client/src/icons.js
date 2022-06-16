@@ -33,6 +33,11 @@ import {
     faUpload,
     faArrowPointer,
     faArrowRightFromBracket,
+    faChevronLeft,
+    faChevronRight,
+    faComments,
+    faGears,
+    faMobileScreen,
 } from '@fortawesome/free-solid-svg-icons';
 
 library.add(
@@ -68,6 +73,11 @@ library.add(
     faUpload,
     faArrowPointer,
     faArrowRightFromBracket,
+    faChevronLeft,
+    faChevronRight,
+    faComments,
+    faGears,
+    faMobileScreen,
 );
 
 export default library;

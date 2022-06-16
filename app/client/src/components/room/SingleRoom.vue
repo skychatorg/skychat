@@ -24,14 +24,8 @@ const hasUnread = computed(() => {
         return false;
     }
 
-    // If never seen any message in this room, then it's unread
-    if (typeof client.state.user.data.plugins.lastseen[props.room.id] === 'undefined') {
-        return true;
-    }
-
-    // Check last seen id vs last received id
-    const lastSeenId = client.state.user.data.plugins.lastseen[props.room.id];
-    return props.room.lastReceivedMessageId > lastSeenId;
+    // Check last seen message in this room vs last received message in this room
+    return (client.state.user.data.plugins.lastseen[props.room.id] || 0) < props.room.lastReceivedMessageId;
 });
 
 // Whether this room is selected
@@ -42,7 +36,7 @@ const selected = computed(() => {
 // Choose border color
 const borderColor = computed(() => {
     if (hasUnread.value) {
-        return '--color-warn';
+        return '--color-danger';
     } else if (props.room.isPrivate) {
         return '--color-skygray-lightest';
     } else {
@@ -98,7 +92,7 @@ const icon = computed(() => {
                 <!-- Unread -->
                 <p
                     v-if="hasUnread"
-                    class="text-warn font-bold mr-2"
+                    class="text-danger font-bold mr-2"
                     title="This room has unread messages"
                 >
                     <fa icon="bell" size="xs" />

@@ -70,6 +70,12 @@ export const useAppStore = defineStore('app', {
          * New message being typed
          */
         newMessage: '',
+
+        /**
+         * Current shown view on mobile devices
+         * @type {'left'|'middle'|'right'}
+         */
+        mobileView: 'middle',
     }),
 
     actions: {
@@ -266,6 +272,13 @@ export const useAppStore = defineStore('app', {
             } catch (e) {
                 toast.error(e.message || 'Unable to upload file');
             }
+        },
+
+        /**
+         * Change currently shown view on mobile devices
+         */
+        mobileSetView: function(view) {
+            this.mobileView = view;
         },
     },
 });
