@@ -1,6 +1,9 @@
 <p align="center">
-    <img src="./app/client/assets/assets/logo.png">
+    <img src="./app/client/public/assets/logo.png"><br>
+    Future-proof virtual cinema platform
 </p>
+
+<hr>
 
 <p align="center"><a href="#overview">Overview</a> → <a href="#how-to-install">Install</a> → <a href="#customize">Customize</a> → <a href="#contribute">Contribute</a></p>
 <p align="right">Like this project? Please give a star ⭐</p>
@@ -9,43 +12,15 @@
 
 ## Overview
 
-The SkyChat:
-- 📺 Can play medias in a shared synchronized player. Medias can be self-hosted, from Youtube or Twitch
-- 📁 Allows to organize uploaded medias into folders and tag them
-- 📆 Lets you schedule medias to play at specific datetimes
-- ⚽ Provides entertaining features: Live cursor visualization, Casino roulette, cursor-based football, ..
-- 🔒 Provides privacy and security: Admin double auth, log fuzzing, shadow ban, TOR detector, ..
-- 💻 Is trivial to install & configure
+The SkyChat lets you:
+- 📺 Play medias in a shared synchronized player (Youtube, Twitch, self-hosted)
+- 📁 Organize self-hosted medias in folders to easily search & play them.
+- ⚽ Have fun with live cursor visualization, casino roulette, cursor-based football, etc..
+- 🔒 Feel safe. OP double auth, log fuzzing, shadow ban, TOR network detection/ban, etc..
+- 💻 Install and set it up in 2 minutes.
 
 
-Here is what the application looks like:
 ![overall-screenshot](./app/doc/screenshot.png)
-
-
-### Synchronized media player
-
-Users can play Youtube, Twitch and self-hosted videos in a shared synchronized players.
-
-The player has two modes:
-- A 'free' mode, selected by default, where any user can add a media. Orchestration is implemented through a public queue of videos to play, and decision-making (for instance to skip videos) is done with polls.
-- A 'schedule' mode, when users with privilege schedule a media to play at a specific time. These medias can not be skipped, and users can view the schedule to see what medias will play in the upcoming days. When the scheduled media finishes, the player goes back in 'free' mode.
-
-![youtube-short](./app/doc/youtube-short.gif)
-
-### Live cursor visualization and mini-games
-
-Users can interact and play with integrated mini-games (which can be disabled in the configuration).
-Users can also see each other cursors moving in real time. This gives a sense of proximity between users. This is the most iconic feature of the SkyChat.
-![cursor-roll](./app/doc/cursor-roll.gif)
-
-### Cinema mode
-
-If watching long videos, documentaries, or tv shows, the cinema-mode allows users to watch the video in full-screen and have the tchat minimized on the bottom-right of the screen.
-![cinema-mode](./app/doc/cinema-mode.gif)
-
-### And much more
-
-This is not all, but to discover all features, you may as well launch an instance and try it yourself!
 
 ## How to install
 

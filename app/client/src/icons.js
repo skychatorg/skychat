@@ -39,6 +39,8 @@ import {
     faGears,
     faMobileScreen,
     faMicrophone,
+    faThumbsUp,
+    faThumbsDown,
 } from '@fortawesome/free-solid-svg-icons';
 
 library.add(
@@ -80,6 +82,8 @@ library.add(
     faGears,
     faMobileScreen,
     faMicrophone,
+    faThumbsUp,
+    faThumbsDown,
 );
 
 export default library;

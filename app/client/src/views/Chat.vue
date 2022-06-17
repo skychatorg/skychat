@@ -7,6 +7,7 @@ import PlayerPannel from '@/components/player/PlayerPannel.vue';
 import MessagePannel from '@/components/message/MessagePannel.vue';
 import NewMessageForm from '@/components/message/NewMessageForm.vue';
 import ConnectedList from '@/components/user/ConnectedList.vue';
+import PollList from '@/components/poll/PollList.vue';
 
 const app = useAppStore();
 const client = useClientStore();
@@ -55,6 +56,7 @@ const client = useClientStore();
             }"
         >
             <PlayerPannel class="bg-skygray-lighter/10 backdrop-brightness-125" />
+            <PollList class="bg-skygray-lighter/10 backdrop-brightness-125" />
             <MessagePannel class="grow bg-skygray-white/10 backdrop-brightness-150" />
             <NewMessageForm class="basis-12 bg-skygray-lighter/10 backdrop-brightness-125" />
         </div>

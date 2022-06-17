@@ -151,13 +151,20 @@ export const useAppStore = defineStore('app', {
 
                 // If app is not focused, create notification
                 if (! this.focused) {
-                    this.documentTitle.value = `${message.user.username} send a message!`;
+                    this.documentTitle.value = `${message.user.username}: ${message.content.substr(0, 3) + '...'}`;
                     this.documentTitle.blinking = true;
                     return;
                 }
 
                 // Send last seen notification
                 clientStore.notifySeenMessage(message.id);
+            });
+
+            // Watch for new polls
+            watch(() => Object.keys(clientStore.state.polls).length, (newLength, oldLength) => {
+                if (newLength > oldLength) {
+                    new Audio('/assets/sound/new-poll.ogg').play();
+                }
             });
         },
         

@@ -37,11 +37,11 @@
 
 /** Firefox */
 .scrollbar {
-    scrollbar-color: var(--color-scrollbar-thumb) var(--color-scrollbar-track);
-    scrollbar-width: 0.5rem;
+    scrollbar-color: transparent transparent;
+    scrollbar-width: thin;
 }
 .scrollbar:hover {
-    scrollbar-color: var(--color-scrollbar-thumb-hover) var(--color-scrollbar-track);
+    scrollbar-color: var(--color-scrollbar-thumb) var(--color-scrollbar-track);
 }
 
 /** Chrome */

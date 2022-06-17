@@ -90,7 +90,7 @@ const onScroll = () => {
 
 <template>
     <div
-        class="overflow-x-hidden overflow-y-auto scroll-smooth pl-2 scrollbar "
+        class="overflow-x-hidden overflow-y-auto scroll-smooth pl-2 scrollbar"
         ref="messagePannel"
         @scroll="onScroll"
         :style="{

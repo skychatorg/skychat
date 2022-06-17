@@ -116,7 +116,13 @@ const openModal = () => {
             
                 <!-- Player actions -->
                 <div class="col-start-8 col-span-3 btn-group">
-                    <button class="btn text-sm disabled">
+                    <button
+                        @click="client.sendMessage('/player skip')"
+                        class="btn text-sm"
+                        :class="{
+                            'disabled': ! showPlayer,
+                        }"
+                    >
                         <fa icon="forward-step" />
                     </button>
                     <button

@@ -238,6 +238,12 @@ export class SkyChatClient extends EventEmitter {
     private _onPoll(poll: SanitizedPoll) {
         this._polls[poll.id] = poll;
         this.emit('update', this.state);
+        if (poll.state === 'finished') {
+            setTimeout(() => {
+                delete this._polls[poll.id];
+                this.emit('update', this.state);
+            }, 10 * 1000);
+        }
     }
 
     private _onCursor(cursor: { x: number, y: number, user: SanitizedUser }) {
