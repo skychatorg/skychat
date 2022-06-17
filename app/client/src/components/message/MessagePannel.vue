@@ -1,5 +1,5 @@
 <script setup>
-import { nextTick, watch, ref, reactive } from 'vue';
+import { onMounted, nextTick, watch, ref, reactive } from 'vue';
 import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
 import SingleMessage from '@/components/message/SingleMessage.vue';
@@ -29,6 +29,11 @@ const scrollToBottomIfAutoScroll = function() {
         scrollToBottom(distanceToBottom() > 200);
     });
 };
+
+// Detect when the pannel size changes to scroll to bottom
+onMounted(() => {
+    new ResizeObserver(scrollToBottomIfAutoScroll).observe(messagePannel.value);
+});
 
 const scrollToBottom = (immediate) => {
     // If already auto scrolling, abort
@@ -85,7 +90,6 @@ const onScroll = () => {
         scrollState.auto = true;
     }
 };
-
 </script>
 
 <template>

@@ -19,6 +19,10 @@ const fileUploadInput = ref(null);
 const historyIndex = ref(null);
 const sentMessageHistory = ref([]);
 
+onMounted(() => {
+    message.value.focus();
+});
+
 let typingListStr = computed(() => {
 
     let typingUsers = client.state.typingList;
