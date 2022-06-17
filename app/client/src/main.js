@@ -3,7 +3,7 @@ import { createPinia } from 'pinia';
 import { createRouter, createWebHashHistory } from 'vue-router';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { vfmPlugin } from 'vue-final-modal';
-
+import mousetrap from 'mousetrap';
 
 import Toast from "vue-toastification";
 // Import the CSS or use your own!
@@ -42,8 +42,14 @@ import './index.css';
     // Use router
     app.use(router);
 
-    // Other utilities
+    // Mousetrap
+    app.config.globalProperties.$mousetrap = mousetrap;
+    app.provide('mousetrap', mousetrap);
+    
+    // Modal
     app.use(vfmPlugin);
+
+    // Toast
     app.use(Toast, { position: 'top-center' });
 
     // Better way of doing this?

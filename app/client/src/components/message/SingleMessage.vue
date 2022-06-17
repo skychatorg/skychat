@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, defineEmits, ref, watch } from 'vue';
+import { inject, nextTick, computed, onMounted, defineEmits, ref, watch } from 'vue';
 import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
 import HoverCard from '@/components/util/HoverCard.vue';
@@ -39,8 +39,9 @@ const lastSeenUsers = computed(() => {
     return (client.state.messageIdToLastSeenUsers[props.message.id] || []).slice(0, 6);
 });
 
-// When content is mounted, listen for events for buttons
-onMounted(() => {
+// listen for events for buttons
+const bindMessageContentEvents = () => {
+
 
     // Images
     const images = Array.from(content.value.getElementsByTagName('img'));
@@ -60,7 +61,9 @@ onMounted(() => {
             client.sendMessage(button.dataset.action);
         });
     }
-});
+};
+onMounted(bindMessageContentEvents);
+watch(() => props.message.formatted, () => nextTick(bindMessageContentEvents));
 
 // When interacting with a message
 const messageInteract = () => {

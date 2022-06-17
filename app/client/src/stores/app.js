@@ -2,6 +2,7 @@ import { watch } from 'vue';
 import { defineStore } from 'pinia'
 import { useClientStore } from './client';
 import { useToast } from 'vue-toastification';
+import mousetrap from 'mousetrap';
 
 
 const DEFAULT_DOCUMENT_TITLE = "~ SkyChat";
@@ -12,7 +13,6 @@ const STORE_SAVED_KEYS = [
 ];
 
 const toast = useToast();
-
 
 export const useAppStore = defineStore('app', {
 
@@ -165,6 +165,25 @@ export const useAppStore = defineStore('app', {
                 if (newLength > oldLength) {
                     new Audio('/assets/sound/new-poll.ogg').play();
                 }
+            });
+
+            // Bind keys
+
+            // ARROW + SHIFT + UP/DOWN: Switch player sizes
+            mousetrap.bind('shift+down', () => this.expandPlayer());
+            mousetrap.bind('shift+up', () => this.shrinkPlayer());
+            
+            // ARROW + ALT + UP/DOWN: Switch rooms
+            mousetrap.bind('alt+down', () => {
+                const newRoomIndex = (clientStore.state.rooms.indexOf(clientStore.state.currentRoom) + 1) % clientStore.state.rooms.length;
+                clientStore.join(clientStore.state.rooms[newRoomIndex].id);
+            });
+            mousetrap.bind('alt+up', () => {
+                let newRoomIndex = (clientStore.state.rooms.indexOf(clientStore.state.currentRoom) - 1);
+                if (newRoomIndex < 0) {
+                    newRoomIndex = clientStore.state.rooms.length - 1;
+                }
+                clientStore.join(clientStore.state.rooms[newRoomIndex].id);
             });
         },
         
