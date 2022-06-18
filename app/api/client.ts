@@ -494,9 +494,16 @@ export class SkyChatClient extends EventEmitter {
      *
      */
     private _onWebSocketClose(event: any) {
+        // Reset some (not all) values
+        this._currentRoomId = null;
+        this._typingList = [];
+        this._polls = {};
+        this._cursors = {};
+        this._roll = { state: false };
+        // Send state update
         this.emit('update', this.state);
+        // If kicked, do not try to auto re-connect
         if (event.code === 4403) {
-            // 4403 means kick -> no auto re-connect
             return;
         }
         setTimeout(this.connect.bind(this), 1000);

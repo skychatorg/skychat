@@ -151,7 +151,7 @@ export const useAppStore = defineStore('app', {
 
                 // If app is not focused, create notification
                 if (! this.focused) {
-                    this.documentTitle.value = `${message.user.username}: ${message.content.substr(0, 3) + '...'}`;
+                    this.documentTitle.value = `${message.user.username}: ${message.content.substr(0, 8) + '...'}`;
                     this.documentTitle.blinking = true;
                     return;
                 }

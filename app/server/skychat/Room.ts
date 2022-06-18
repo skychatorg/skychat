@@ -103,17 +103,12 @@ export class Room implements IBroadcaster {
     public messages: Message[] = [];
 
     /**
-     * Whether a room is locked. If a room is locked, it is not possible to broadcast new messages or start new games.
-     */
-    public locked: boolean = false;
-
-    /**
      * Only identifiers in this whitelist can access this room. Only used when isPrivate is set to true.
      */
     public whitelist: string[] = [];
 
     /**
-     * Plugins. All aliases of a command/plugin points to the same command instance.
+     * Plugins. All plugin aliases points to the same command plugin instance.
      */
     public readonly commands: {[commandName: string]: RoomPlugin};
 
@@ -311,13 +306,31 @@ export class Room implements IBroadcaster {
      * Send the history of last messages to a specific connection
      * @param connection
      */
-    public sendHistory(connection: Connection): void {
-        // Send message history to the connection that just joined this room
-        const messages = [];
-        for (let i = Math.max(0, this.messages.length - Room.MESSAGE_HISTORY_VISIBLE_LENGTH); i < this.messages.length; ++ i) {
-            messages.push(this.messages[i].sanitized());
+    public sendHistory(connection: Connection, lastId?: number, count?: number): void {
+
+        // Default number of messages to send
+        count = count || Room.MESSAGE_HISTORY_VISIBLE_LENGTH;
+
+        // Will start to send messages from this index in this.messages until `count` messages afterwards
+        let startFromIndex = Math.max(0, this.messages.length - 1 - count);
+
+        // If no lastId is provided, send the last messages
+        if (lastId) {
+            // Find the message in history whose id is greater than lastId
+            const index = this.messages.findIndex(m => m.id > lastId);
+            if (index !== -1) {
+                startFromIndex = index - count - 1;
+            }
         }
-        connection.send('messages', messages);
+
+        // Send messages
+        const messages = this.messages
+            .slice(startFromIndex, startFromIndex + count)
+            .map(message => message.sanitized());
+
+        if (messages.length > 0) {
+            connection.send('messages', messages);
+        }
     }
 
     /**
@@ -408,10 +421,7 @@ export class Room implements IBroadcaster {
      * Send a new message to the room
      * @param options
      */
-    public async sendMessage(options: MessageConstructorOptions & {connection?: Connection}, bypassLock?: boolean): Promise<Message> {
-        if (this.locked && ! bypassLock) {
-            throw new Error('Unable to broadcast message because the room is locked');
-        }
+    public async sendMessage(options: MessageConstructorOptions & {connection?: Connection}): Promise<Message> {
         options.meta = options.meta || {};
         if (options.connection) {
             options.meta.device = options.connection.device;

@@ -32,29 +32,36 @@ const connectionStatus = computed(() => {
 <template>
     <header class="header h-16 bg-skygray-lighter/10 backdrop-brightness-125 w-full flex">
 
+            <!-- Left col (empty for now) -->
+            <div class="w-0 lg:w-[var(--page-col-left-width)]"></div>
+
             <!-- Logo -->
-            <a
-                href="/"
-                class="pl-6 logo text-center flex flex-col justify-center text-center"
-            >
-                <img class="inline" src="/assets/logo.png" width="60" height="60">
-            </a>
+            <div class="pl-6 lg:pl-0 grow text-center flex lg:justify-center" href="/">
+                <div class="flex flex-col justify-center">
+                    <a href="/"><img src="/assets/logo.png" width="60" height="40.5" ></a>
+                </div>
+            </div>
 
             <!-- User -->
-            <div class="grow flex justify-end pr-4">
+            <div class="p-2 w-0 w-[var(--page-col-right-width)]">
                 <template v-if="connectionStatus === 'connected'">
                     <div class="flex items-center">
                         <UserBigAvatar :user="client.state.user" />
                         <div class="flex flex-col">
-                            <span class="ml-2">{{ client.state.user.username }}</span>
+                            <span class="ml-2">
+                                {{ client.state.user.username }}
+                            </span>
                             <button @click="logout">
                                 <fa icon="arrow-right-from-bracket" />
                             </button>
                         </div>
                     </div>
                 </template>
-                <template v-else>
-                    disconnected
+                <template v-if="connectionStatus === 'connecting'">
+                    <p class="p-4 text-primary font-bold text-center">Connecting..</p>
+                </template>
+                <template v-if="connectionStatus === 'disconnected'">
+                    <p class="p-4 text-danger font-bold text-center">Disconnected</p>
                 </template>
             </div>
     </header>
@@ -65,10 +72,5 @@ const connectionStatus = computed(() => {
     width: 100%;
     max-width: var(--page-max-width);
     margin: 0 auto;
-}
-.logo {
-    width: var(--page-col-left-width);
-    max-width: var(--page-col-left-width);
-    min-width: var(--page-col-left-width);
 }
 </style>

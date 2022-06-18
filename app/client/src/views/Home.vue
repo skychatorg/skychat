@@ -28,6 +28,10 @@ const joinAsGuest = function() {
     }
 };
 
+const login = function() {
+    client.login({ username: state.username, password: state.password });
+};
+
 </script>
 
 <template>
@@ -40,14 +44,14 @@ const joinAsGuest = function() {
 
             <!-- Main content -->
             <p class="font-bold mt-2 mb-8 text-3xl">Login / Register</p>
-            <form class="px-4 grid grid-cols-4 gap-4">
+            <form class="px-4 grid grid-cols-4 gap-4" @submit="login">
                 <input class="form-control col-start-1 col-span-4" type="text" autocomplete="username" placeholder="Username" v-model="state.username" />
                 <input class="form-control col-start-1 col-span-4" type="password" autocomplete="current-password" placeholder="Password" v-model="state.password" />
-                <button @click="client.login({ username: state.username, password: state.password })" class="form-control col-span-2">Login</button>
-                <button @click="client.register({ username: state.username, password: state.password })" class="form-control col-span-2">Register</button>
+                <button type="submit" class="form-control col-span-2">Login</button>
+                <button @click.prevent.stop="client.register({ username: state.username, password: state.password })" class="form-control col-span-2">Register</button>
                 <hr class="col-span-4">
                 <p class="col-span-4">or</p>
-                <button @click="joinAsGuest" class="form-control col-start-2 col-span-2">Continue as guest</button>
+                <button @click.prevent.stop="joinAsGuest" class="form-control col-start-2 col-span-2">Continue as guest</button>
             </form>
         </div>
     </div>

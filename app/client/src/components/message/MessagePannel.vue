@@ -79,9 +79,19 @@ watch(() => client.messages, scrollToBottomIfAutoScroll, { deep: true });
 
 // When scrolling in the div either auto or manually
 const onScroll = () => {
+    // If scrolling automatically, do not touch auto-scroll state
     if (scrollState.scrolling) {
         return;
     }
+    // If scrolled to top
+    if (messagePannel.value.scrollTop === 0) {
+        // Try to find a message with non-0 id
+        const realMessage = client.messages.find(m => m.id);
+        if (realMessage) {
+            client.sendMessage('/messagehistory ' + realMessage.id);
+        }
+    }
+    // Depending on distance to bottom, decide whether to keep auto-scroll
     const distance = distanceToBottom();
     if (distance > 60) {
         // Stop auto scroll
@@ -105,7 +115,7 @@ const onScroll = () => {
             v-for="message in client.messages"
             :key="message.id"
             :message="message"
-            @content-changed="scrollToBottom(false)"
+            @content-changed="scrollToBottomIfAutoScroll"
         />
     </div>
 </template>
