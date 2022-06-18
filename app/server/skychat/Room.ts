@@ -312,7 +312,7 @@ export class Room implements IBroadcaster {
         count = count || Room.MESSAGE_HISTORY_VISIBLE_LENGTH;
 
         // Will start to send messages from this index in this.messages until `count` messages afterwards
-        let startFromIndex = Math.max(0, this.messages.length - 1 - count);
+        let startFromIndex = Math.max(0, this.messages.length - count);
 
         // If no lastId is provided, send the last messages
         if (lastId) {

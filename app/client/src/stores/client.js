@@ -60,17 +60,18 @@ export const useClientStore = defineStore('client', {
 
             // On new messages
             client.on('messages', messages => {
-                // If messages are prior to what we currently have
-                const firstRealMessage = this.messages.find(m => m.id);
-                if (firstRealMessage && messages[messages.length - 1].id < firstRealMessage.id) {
-                    // Add messages to the beginning of the array
-                    this.messages = messages.concat(this.messages);
-                }
-                // If messages are after what we currently have
-                else {
-                    // Add messages to the end of the array
-                    this.messages = this.messages.concat(messages);
-                }
+                this.messages.push(...messages);
+                // // If messages are prior to what we currently have
+                // const firstRealMessage = this.messages.find(m => m.id);
+                // if (firstRealMessage && messages[messages.length - 1].id < firstRealMessage.id) {
+                //     // Add messages to the beginning of the array
+                //     this.messages = messages.concat(this.messages);
+                // }
+                // // If messages are after what we currently have
+                // else {
+                //     // Add messages to the end of the array
+                //     this.messages = this.messages.concat(messages);
+                // }
             });
 
             // Message edit

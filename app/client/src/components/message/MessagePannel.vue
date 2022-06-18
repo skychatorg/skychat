@@ -84,13 +84,13 @@ const onScroll = () => {
         return;
     }
     // If scrolled to top
-    if (messagePannel.value.scrollTop === 0) {
-        // Try to find a message with non-0 id
-        const realMessage = client.messages.find(m => m.id);
-        if (realMessage) {
-            client.sendMessage('/messagehistory ' + realMessage.id);
-        }
-    }
+    // if (messagePannel.value.scrollTop === 0) {
+    //     // Try to find a message with non-0 id
+    //     const realMessage = client.messages.find(m => m.id);
+    //     if (realMessage) {
+    //         client.sendMessage('/messagehistory ' + realMessage.id);
+    //     }
+    // }
     // Depending on distance to bottom, decide whether to keep auto-scroll
     const distance = distanceToBottom();
     if (distance > 60) {
