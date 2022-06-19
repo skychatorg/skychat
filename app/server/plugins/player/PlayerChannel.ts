@@ -269,6 +269,22 @@ export class PlayerChannel {
     }
 
     /**
+     * Retrieve an entry in the queue if it exists. If not, returns null.
+     */
+    public getQueueEntry(type: string, id: VideoInfo["id"]): QueuedVideoInfo | null {
+        return this.queue.find(q => q.video.type === type && q.video.id === id) || null;
+    }
+    
+    /**
+     * Remove a specific video from the queue
+     * @param video 
+     */
+    public remove(video: VideoInfo) {
+        this.queue = this.queue.filter(q => q.video.type !== video.type || q.video.id !== video.id);
+        this.sync();
+    }
+
+    /**
      * Return whether a identifier is authorized to manage the player right now
      * @param identifier 
      */

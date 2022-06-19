@@ -34,6 +34,7 @@ export class PlayerPlugin extends GlobalPlugin {
         'playerchannel',
         'playersync',
         'playersearch',
+        'playerremovevideo',
         'schedule',
         'unschedule',
     ].concat(Object.keys(PlayerPlugin.FETCHERS));
@@ -77,6 +78,16 @@ export class PlayerPlugin extends GlobalPlugin {
                 {name: 'param', pattern: new RegExp(`^${Object.keys(PlayerPlugin.FETCHERS).join('|')}$`)},
                 {name: 'type', pattern: /./},
                 {name: 'search', pattern: /./},
+            ]
+        },
+        playerremovevideo: {
+            minCount: 2,
+            maxCount: 2,
+            coolDown: 100,
+            maxCallsPer10Seconds: 10,
+            params: [
+                { name: 'type', pattern: /./ },
+                { name: 'id', pattern: /./ },
             ]
         },
         schedule: {
@@ -170,6 +181,10 @@ export class PlayerPlugin extends GlobalPlugin {
 
             case 'playersearch':
                 await this.handlePlayerSearch(param, connection);
+                break;
+
+            case 'playerremovevideo':
+                await this.handlePlayerRemoveVideo(param, connection);
                 break;
 
             case 'schedule':
@@ -319,6 +334,33 @@ export class PlayerPlugin extends GlobalPlugin {
         const search = param.substr(fetcherName.length + 1 + type.length + 1);
         const items = await fetcher.search(this, type, search, 10);
         connection.send('player-search', { type, items });
+    }
+
+    /**
+     * Remove a given media from the list
+     * @param param 
+     * @param connection 
+     */
+    private async handlePlayerRemoveVideo(param: string, connection: Connection) {
+        if (! this.canAddMedia(connection.session)) {
+            throw new Error('Unable to perform this action');
+        }
+        const channel = this.channelManager.getSessionChannel(connection.session);
+        if (! channel) {
+            throw new Error('Join a channel to manage medias');
+        }
+        const mediaType = param.split(' ')[0];
+        const mediaId = param.split(' ')[1];
+        console.log(`Removing media ${mediaType} / ${mediaId}`);
+        const queueEntry = channel.getQueueEntry(mediaType, mediaId);
+        if (! queueEntry) {
+            throw new Error('No such video in the queue');
+        }
+        // If user not matching and not OP
+        if (queueEntry.user.id !== connection.session.user.id && ! connection.session.isOP()) {
+            throw new Error('You are not allowed to remove this video');
+        }
+        channel.remove(queueEntry.video);
     }
     
     /**

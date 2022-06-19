@@ -45,16 +45,18 @@ const connectionStatus = computed(() => {
             <!-- User -->
             <div class="p-2 w-0 w-[var(--page-col-right-width)]">
                 <template v-if="connectionStatus === 'connected'">
-                    <div class="flex items-center">
-                        <UserBigAvatar :user="client.state.user" />
-                        <div class="flex flex-col">
-                            <span class="ml-2">
+                    <div class="flex items-center mr-2">
+
+                        <div class="grow flex flex-col mr-4">
+                            <span class="text-right">
                                 {{ client.state.user.username }}
                             </span>
-                            <button @click="logout">
+                            <button @click="logout" class="text-right">
                                 <fa icon="arrow-right-from-bracket" />
                             </button>
                         </div>
+                        
+                        <UserBigAvatar :user="client.state.user" />
                     </div>
                 </template>
                 <template v-if="connectionStatus === 'connecting'">

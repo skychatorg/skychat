@@ -41,6 +41,7 @@ import {
     faMicrophone,
     faThumbsUp,
     faThumbsDown,
+    faXmark,
 } from '@fortawesome/free-solid-svg-icons';
 
 library.add(
@@ -84,6 +85,7 @@ library.add(
     faMicrophone,
     faThumbsUp,
     faThumbsDown,
+    faXmark,
 );
 
 export default library;

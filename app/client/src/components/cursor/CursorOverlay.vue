@@ -48,7 +48,7 @@ const cursorList = computed(() => Object.values(client.state.cursors));
 </script>
 
 <template>
-    <div class="pointer-events-none fixed opacity-25">
+    <div class="pointer-events-none fixed opacity-25 z-10">
         <div class="w-fit h-fit transition duration-200 relative"
             v-for="entry in cursorList"
             :key="entry.cursor.user.id"

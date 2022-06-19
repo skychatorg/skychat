@@ -31,8 +31,16 @@ const client = useClientStore();
                 >
                     {{ entry.video.title }}
                 </div>
-                <div class="mx-2 text-skygray-lighter">
-                    3m
+                <div
+                    v-if="client.state.op || entry.user.id === client.state.user.id"
+                    class="btn-group mx-2"
+                >
+                    <button
+                        @click="client.sendMessage(`/playerremovevideo ${entry.video.type} ${entry.video.id}`)"
+                        class="btn text-xs text-danger"
+                    >
+                        <fa icon="xmark" />
+                    </button>
                 </div>
             </div>
         </HoverCard>

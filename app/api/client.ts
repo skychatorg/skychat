@@ -248,10 +248,6 @@ export class SkyChatClient extends EventEmitter {
 
     private _onCursor(cursor: { x: number, y: number, user: SanitizedUser }) {
         const identifier = cursor.user.username.toLowerCase();
-        // Skip own cursor
-        if (identifier === this._user.username.toLowerCase()) {
-            return;
-        }
         this._cursors[identifier] = { date: new Date(), cursor };
         // Clean up the cursors
         if (Math.random() < 0.05) {
