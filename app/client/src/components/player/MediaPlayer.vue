@@ -5,6 +5,7 @@ import { useClientStore } from '@/stores/client';
 import YoutubePlayer from '@/components/player/impl/YoutubePlayer.vue';
 import TwitchPlayer from '@/components/player/impl/TwitchPlayer.vue';
 import EmbedPlayer from '@/components/player/impl/EmbedPlayer.vue';
+import IFramePlayer from '@/components/player/impl/IFramePlayer.vue';
 
 const app = useAppStore();
 const client = useClientStore();
@@ -17,6 +18,7 @@ const playerImpl = computed(() => {
         youtube: YoutubePlayer,
         twitch: TwitchPlayer,
         embed: EmbedPlayer,
+        iframe: IFramePlayer,
     }[client.state.player.current.video.type] || null;
 });
 

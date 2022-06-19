@@ -65,7 +65,7 @@ export class Room implements IBroadcaster {
     /**
      * Number of messages sent to clients that join the room. Must be lower than message history length.
      */
-    static readonly MESSAGE_HISTORY_VISIBLE_LENGTH = 50;
+    static readonly MESSAGE_HISTORY_VISIBLE_LENGTH = 25;
 
     /**
      * Room manager

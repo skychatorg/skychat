@@ -75,7 +75,20 @@ const scrollToBottom = (immediate) => {
 };
 
 // When the list of messages changes, scroll to bottom
-watch(() => client.messages, scrollToBottomIfAutoScroll, { deep: true });
+watch(() => client.messages.length, (newMessageCount, oldMessageCount) => {
+    if (newMessageCount < oldMessageCount) {
+        return;
+    }
+    scrollToBottomIfAutoScroll();
+    if (! scrollState.auto && messagePannel.value.scrollTop === 0) {
+        const previousScrollHeight = messagePannel.value.scrollHeight;
+        nextTick(() => {
+            const newElementsHeight = messagePannel.value.scrollHeight - previousScrollHeight;
+            // Set scroll position back to where it was before appending elements
+            messagePannel.value.scrollTop = newElementsHeight;
+        });
+    }
+});
 
 // When scrolling in the div either auto or manually
 const onScroll = () => {
@@ -84,13 +97,9 @@ const onScroll = () => {
         return;
     }
     // If scrolled to top
-    // if (messagePannel.value.scrollTop === 0) {
-    //     // Try to find a message with non-0 id
-    //     const realMessage = client.messages.find(m => m.id);
-    //     if (realMessage) {
-    //         client.sendMessage('/messagehistory ' + realMessage.id);
-    //     }
-    // }
+    if (messagePannel.value.scrollTop === 0) {
+        client.loadPreviousMessages();
+    }
     // Depending on distance to bottom, decide whether to keep auto-scroll
     const distance = distanceToBottom();
     if (distance > 60) {
@@ -104,11 +113,11 @@ const onScroll = () => {
 
 <template>
     <div
-        class="overflow-x-hidden overflow-y-auto scroll-smooth pl-2 scrollbar"
+        class="overflow-x-hidden overflow-y-auto pl-2 scrollbar"
         ref="messagePannel"
         @scroll="onScroll"
         :style="{
-            'scroll-behavior': scrollState.smooth ? 'smooth' : 'auto',
+            'scroll-behavior': scrollState.smooth && scrollState.auto ? 'smooth' : 'auto',
         }"
     >
         <SingleMessage

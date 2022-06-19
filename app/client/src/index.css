@@ -29,7 +29,7 @@
         --color-danger-light: 255 120 150;
 
         --color-scrollbar-track: #34343422;
-        --color-scrollbar-thumb: rgba(78, 78, 78, 0.253);
+        --color-scrollbar-thumb: rgba(78, 78, 78, 0.5);
         --color-scrollbar-thumb-hover: #888;
     }
 }

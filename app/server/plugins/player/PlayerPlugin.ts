@@ -5,6 +5,7 @@ import { PlayerChannelManager } from "./PlayerChannelManager";
 import { YoutubeFetcher } from "./fetcher/YoutubeFetcher";
 import { PluginCommandRules } from "../Plugin";
 import { LinkFetcher } from "./fetcher/LinkFetcher";
+import { IFrameFetcher } from "./fetcher/IFrameFetcher";
 import { VideoFetcher } from "./fetcher/VideoFetcher";
 import { TwitchFetcher } from "./fetcher/TwitchFetcher";
 import { PollPlugin } from "../poll/PollPlugin";
@@ -23,6 +24,7 @@ export class PlayerPlugin extends GlobalPlugin {
         'yt': new YoutubeFetcher(),
         'twitch': new TwitchFetcher(),
         'embed': new LinkFetcher(),
+        'iframe': new IFrameFetcher(),
     };
 
     static readonly commandName = 'player';

@@ -60,18 +60,10 @@ export const useClientStore = defineStore('client', {
 
             // On new messages
             client.on('messages', messages => {
-                this.messages.push(...messages);
-                // // If messages are prior to what we currently have
-                // const firstRealMessage = this.messages.find(m => m.id);
-                // if (firstRealMessage && messages[messages.length - 1].id < firstRealMessage.id) {
-                //     // Add messages to the beginning of the array
-                //     this.messages = messages.concat(this.messages);
-                // }
-                // // If messages are after what we currently have
-                // else {
-                //     // Add messages to the end of the array
-                //     this.messages = this.messages.concat(messages);
-                // }
+                // Filter messages we already have, if any
+                messages = messages.filter(message => message.id === 0 || ! this.messages.find(m => m.id === message.id));
+                // Prepend new messages (we always get previous messages in this event)
+                this.messages = messages.concat(this.messages);
             });
 
             // Message edit
@@ -101,6 +93,19 @@ export const useClientStore = defineStore('client', {
         join: function(roomId) {
             this.messages = [];
             client.join(roomId);
+        },
+
+        /**
+         * Load previous messages
+         */
+        loadPreviousMessages: function() {
+            // Find first message with non-zero id,
+            // Because we need to give this reference to the server to get messages prior to it
+            const realMessage = this.messages.find(m => m.id);
+            if (! realMessage) {
+                return false;
+            }
+            this.sendMessage('/messagehistory ' + realMessage.id);
         },
 
         /**
