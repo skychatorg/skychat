@@ -1,189 +1,143 @@
-<template>
-    <hover-card
-        class="message-card"
-    >
-        <div class="message"
-            @contextmenu.prevent="$emit('select')">
-            <div class="avatar image-bubble" :style="{ 'border-color': message.user.data.plugins.halo ? message.user.data.plugins.color : '#afafaf' }">
-                <img :src="message.user.data.plugins.avatar">
-            </div>
-            <div class="content selectable" ref="formatted">
-                <div class="user" :style="{ 'color': message.user.data.plugins.color }">
-                    {{ message.user.username }}
-                    <i v-show="message.meta.device === 'mobile'" class="material-icons user-device md-14">smartphone</i>
-                </div>
+<script setup>
+import { inject, nextTick, computed, onMounted, defineEmits, ref, watch } from 'vue';
+import { useAppStore } from '@/stores/app';
+import { useClientStore } from '@/stores/client';
+import HoverCard from '@/components/util/HoverCard.vue';
+import UserBigAvatar from '@/components/user/UserBigAvatar.vue';
+import UserMiniAvatar from '@/components/user/UserMiniAvatar.vue';
+import UserMiniAvatarCollection from '@/components/user/UserMiniAvatarCollection.vue';
 
-                <!-- first quote -->
-                <div class="quote" v-if="message.quoted">
-                    <div class="quote-user">{{message.quoted.user.username}}:</div>
-                    <!-- second quote -->
-                    <div class="quote" v-if="message.quoted.quoted">
-                        <div class="quote-user">{{message.quoted.quoted.user.username}}:</div>
-                        <div class="quote-content" v-html="message.quoted.quoted.formatted"></div>
-                    </div>
-                    <div class="quote-content" v-html="message.quoted.formatted"></div>
-                </div>
-                <div class="formatted" v-html="message.formatted"></div>
-            </div>
-            <div class="meta selectable">
-                <div class="date">
-                    {{formattedDate}}
-                </div>
-                <div class="seen-users">
-                    <div v-for="seenUser of seenUsers"
-                        :key="seenUser.username"
-                        class="avatar image-bubble"
-                        :title="'Seen by ' + seenUser.username"
-                        :style="{'border': '1px solid ' + seenUser.data.plugins.color}">
-                        <img :src="seenUser.data.plugins.avatar">
-                    </div>
-                </div>
-            </div>
-        </div>
-    </hover-card>
-</template>
+const app = useAppStore();
+const client = useClientStore();
 
-<script>
-    import Vue from "vue";
-import { mapActions } from "vuex";
-    import HoverCard from "../util/HoverCard.vue";
-    
-    export default Vue.extend({
-        components: { HoverCard },
-        props: {
-            message: {
-                type: Object,
-                required: true,
-            },
-            seenUsers: {
-                type: Array,
-                required: true
+const emit = defineEmits(['content-changed']);
+
+const props = defineProps({
+    message: {
+        type: Object,
+        required: true,
+    },
+    selectable: {
+        type: Boolean,
+        default: true,
+    },
+});
+
+const content = ref(null);
+
+// Shown date
+const formattedDate = computed(() => {
+    const date = new Date(props.message.createdTimestamp * 1000);
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    const seconds = date.getSeconds().toString().padStart(2, '0');
+    return `${hours}:${minutes}:${seconds}`;
+});
+
+// Users whose last seen message is this message
+const lastSeenUsers = computed(() => {
+    return (client.state.messageIdToLastSeenUsers[props.message.id] || []).slice(0, 6);
+});
+
+// listen for events for buttons
+const bindMessageContentEvents = () => {
+
+
+    // Images
+    const images = Array.from(content.value.getElementsByTagName('img'));
+    for (const image of images) {
+        image.addEventListener('load', () => {
+            emit('content-changed');
+        });
+    }
+
+    // Get buttons
+    const buttons = Array.from(content.value.getElementsByClassName('skychat-button'));
+    for (const button of buttons) {
+        button.addEventListener('click', () => {
+            if (button.dataset.action[0] === '/' && button.dataset.trusted === 'false' && ! confirm('Send "' + button.dataset.action + '"?')) {
+                return;
             }
-        },
-        watch: {
-            'message.formatted': function() {
-                Vue.nextTick(() => {
-                    this.bindContentLoaded();
-                });
-            }
-        },
-        mounted: function() {
-            this.bindContentLoaded();
-        },
-        methods: {
-            ...mapActions('SkyChatClient', [
-                'sendMessage',
-            ]),
-            bindContentLoaded: function() {
-                // Get images
-                const images = Array.from(this.$refs.formatted.getElementsByTagName('img'));
-                for (const image of images) {
-                    image.addEventListener('load', () => {
-                        this.$emit('content-loaded');
-                    });
-                }
-                // Get buttons
-                const buttons = Array.from(this.$refs.formatted.getElementsByClassName('skychat-button'));
-                for (const button of buttons) {
-                    button.addEventListener('click', () => {
-                        if (button.dataset.action[0] === '/' && button.dataset.trusted === 'false' && ! confirm('Send "' + button.dataset.action + '"?')) {
-                            return;
-                        }
-                        this.sendMessage(button.dataset.action);
-                    });
-                }
-            }
-        },
-        computed: {
-            formattedDate: function() {
-                const date = new Date(this.message.createdTimestamp * 1000);
-                const hours = date.getHours().toString().padStart(2, '0');
-                const minutes = date.getMinutes().toString().padStart(2, '0');
-                const seconds = date.getSeconds().toString().padStart(2, '0');
-                return `${hours}:${minutes}:${seconds}`;
-            }
-        }
-    });
+            client.sendMessage(button.dataset.action);
+        });
+    }
+};
+onMounted(bindMessageContentEvents);
+watch(() => props.message.formatted, () => nextTick(bindMessageContentEvents));
+
+// When interacting with a message
+const messageInteract = () => {
+
+    // Cycle between these texts
+    const editText = '/edit ' + props.message.id + ' ' + props.message.content;
+    const deleteText = '/delete ' + props.message.id;
+    const quoteText = '@' + props.message.id + ' ';
+    const rotation = [quoteText, editText, deleteText];
+
+    // Find whether we have one of these text set already & Decide new text
+    const currentPosition = rotation.indexOf(app.newMessage);
+    const newPosition = (currentPosition + 1) % rotation.length;
+
+    // Set new text & Focus on input
+    app.setMessage(rotation[newPosition]);
+};
+
 </script>
 
-<style lang="scss" scoped>
+<template>
+    <HoverCard
+        :borderColor="message.user.data.plugins.color"
+        :selectable="selectable"
+        :selected="false"
+        @contextmenu.prevent="messageInteract"
+    >
+        <div class="py-1 px-3 flex flex-row">
 
-    .message-card {
-        margin-top: 2px;
+            <UserBigAvatar
+                class="mt-1"
+                :user="message.user"
+            />
 
-        &:hover .message {
-            background: #313235;
-        }
-        
-        .message {
-            background: #242427;
-            display: flex;
-            flex: 0 0 auto;
-            color: white;
-            padding: 6px 10px 6px 12px;
-            transition: .1s all;
-            min-height: 60px;
+            <div class="grow pl-4">
+                <!-- First row -->
+                <div class="flex">
+                    <div
+                        class="grow font-bold"
+                        :style="{
+                            color: message.user.data.plugins.color,
+                        }"
+                    >
+                        {{ message.user.username }}
+                        <fa v-if="message.meta.device === 'mobile'" icon="mobile-screen" class="ml-1" />
+                    </div>
+                </div>
+                <!-- Quoted message -->
+                <SingleMessage
+                    v-if="message.quoted"
+                    :message="message.quoted"
+                    :selectable="false"
+                    class="mt-2 mb-4 opacity-50"
+                />
+                <!-- Message content -->
+                <div
+                    class="text-skygray-white w-0 min-w-full whitespace-pre-wrap overflow-hidden break-words"
+                    v-html="message.formatted"
+                    ref="content"
+                ></div>
+            </div>
 
-            >.avatar {
-                width: 42px;
-                height: 42px;
-                margin-top: 2px;
-                border-width: 3px;
-                border-style: solid;
-            }
+            <div class="basis-16 w-16 flex flex-col text-center">
+                <span class="grow text-xs text-skygray-lighter">
+                    {{ formattedDate }}
+                </span>
+                <UserMiniAvatarCollection
+                    :users="lastSeenUsers"
+                    class="my-2"
+                />
+            </div>
+        </div>
+    </HoverCard>
+</template>
 
-            >.content {
-                flex-grow: 1;
-                margin-left: 16px;
-                width: 0;
-                word-break: break-word;
-                display: flex;
-                flex-direction: column;
-
-                >.user {
-                    display: inline;
-                    color: #afafaf;
-                    font-weight: 800;
-                    font-size: 110%;
-                    margin-bottom: 4px;
-                }
-
-                .quote {
-                    margin: 10px;
-                    padding: 4px 10px;
-                    border-left: 5px solid grey;
-
-                    >.quote-user {
-                        font-size: 80%;
-                    }
-                    >.quote-content {
-                        margin-top: 5px;
-                        margin-left: 4px;
-                    }
-                }
-            }
-            >.meta {
-                font-size: 70%;
-                display: flex;
-                flex-direction: column;
-                width: 66px;
-                text-align: center;
-
-                >.seen-users {
-                    display: flex;
-                    flex-wrap: wrap;
-                    margin-top: 6px;
-                    justify-content: center;
-                    max-height: 32px;
-                    overflow: hidden;
-
-                    >.avatar {
-                        width: 14px;
-                        height: 14px;
-                        margin: 1px;
-                    }
-                }
-            }
-        }
-    }
+<style scoped>
 </style>

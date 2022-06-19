@@ -105,7 +105,10 @@ export class Connection extends EventEmitter implements IBroadcaster {
     }
 
     public get closed(): boolean {
-        return ! this.webSocket || [WebSocket.OPEN, WebSocket.CONNECTING].indexOf(this.webSocket.readyState) === -1;
+        if (! this.webSocket) {
+            return true;
+        }
+        return this.webSocket.readyState === WebSocket.CLOSED || this.webSocket.readyState === WebSocket.CLOSING;
     }
 
     /**
@@ -142,7 +145,7 @@ export class Connection extends EventEmitter implements IBroadcaster {
 
         } catch (error) {
 
-            this.sendError(error);
+            this.sendError(error as Error);
         }
     }
 

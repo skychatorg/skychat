@@ -1,5 +1,4 @@
 import { EventEmitter } from "events";
-import { Blob } from "node-fetch";
 import { PublicConfig, SanitizedMessage, SanitizedUser, AuthToken, SanitizedSession, SanitizedRoom, SanitizedPoll, SanitizedGallery, SanitizedGalleryMedia, SanitizedPlayerChannel, VideoInfo, QueuedVideoInfo } from "../server";
 
 
@@ -88,7 +87,7 @@ export class SkyChatClient extends EventEmitter {
     private _player: { current: QueuedVideoInfo | null, queue: QueuedVideoInfo[], cursor: number } = { current: null, queue: [], cursor: 0 };
     private _playerLastUpdate: Date | null = null;
 
-    constructor() {
+    constructor(public readonly url: string) {
         super();
 
         // Auth & Config
@@ -103,9 +102,9 @@ export class SkyChatClient extends EventEmitter {
         this.on('typing-list', this._onTypingList.bind(this));
 
         // Messages
-        this.on('message', this._onMessage.bind(this));
-        this.on('messages', this._onMessages.bind(this));
-        this.on('message-edit', this._onMessageEdit.bind(this));
+        // this.on('message', this._onMessage.bind(this));
+        // this.on('messages', this._onMessages.bind(this));
+        // this.on('message-edit', this._onMessageEdit.bind(this));
         this.on('message-seen', this._onMessageSeen.bind(this));
 
         // Games & Features
@@ -131,6 +130,9 @@ export class SkyChatClient extends EventEmitter {
         // Meta
         this.on('info', this._onInfo.bind(this));
         this.on('error', this._onError.bind(this));
+
+        // URL
+        this.url = url;
     }
 
     private _onConfig(config: PublicConfig) {
@@ -223,30 +225,6 @@ export class SkyChatClient extends EventEmitter {
         this.emit('update', this.state);
     }
     
-    private _onMessage(message: SanitizedMessage) {
-        // TODO: Handle in store
-        // this._messages.push(message);
-        // this._focused && this.notifySeenMessage(message.id);
-    }
-    
-    private _onMessages(messages: Array<SanitizedMessage>) {
-        // TODO: Handle in store
-        // if (messages.length === 0) {
-        //     return;
-        // }
-        // this._messages.push(...messages);
-        // this._focused && this.notifySeenMessage(messages[messages.length - 1].id);
-    }
-    
-    private _onMessageEdit(message: unknown) {
-        // TODO: Handle in store
-        // const oldMessageIndex = this._messages.findIndex(oldMessage => oldMessage.id === message.id);
-        // if (oldMessageIndex === -1) {
-        //     return;
-        // }
-        // this._messages[oldMessageIndex] = message;
-    }
-    
     private _onMessageSeen(messageSeen: { user: number, data: any }) {
         const entry = this._connectedList.find(e => e.user.id === messageSeen.user);
         if (! entry) {
@@ -260,6 +238,12 @@ export class SkyChatClient extends EventEmitter {
     private _onPoll(poll: SanitizedPoll) {
         this._polls[poll.id] = poll;
         this.emit('update', this.state);
+        if (poll.state === 'finished') {
+            setTimeout(() => {
+                delete this._polls[poll.id];
+                this.emit('update', this.state);
+            }, 10 * 1000);
+        }
     }
 
     private _onCursor(cursor: { x: number, y: number, user: SanitizedUser }) {
@@ -367,6 +351,7 @@ export class SkyChatClient extends EventEmitter {
             playerChannelUsers: this._playerChannelUsers,
             rooms: this._rooms,
             currentRoomId: this._currentRoomId,
+            currentRoom: this._rooms.find(room => room.id === this._currentRoomId) || null,
             typingList: this._typingList,
             polls: this._polls,
             cursors: this._cursors, // TODO: Move cursors to separate object to save performances?
@@ -388,8 +373,8 @@ export class SkyChatClient extends EventEmitter {
     /**
      * Connect to the server
      */
-    connect(url: string) {
-        this._websocket = new WebSocket(url);
+    connect() {
+        this._websocket = new WebSocket(this.url);
         this._websocket.addEventListener('open', this._onWebSocketConnect.bind(this));
         this._websocket.addEventListener('message', this._onWebSocketMessage.bind(this));
         this._websocket.addEventListener('close', this._onWebSocketClose.bind(this));
@@ -509,9 +494,16 @@ export class SkyChatClient extends EventEmitter {
      *
      */
     private _onWebSocketClose(event: any) {
+        // Reset some (not all) values
+        this._currentRoomId = null;
+        this._typingList = [];
+        this._polls = {};
+        this._cursors = {};
+        this._roll = { state: false };
+        // Send state update
         this.emit('update', this.state);
+        // If kicked, do not try to auto re-connect
         if (event.code === 4403) {
-            // 4403 means kick -> no auto re-connect
             return;
         }
         setTimeout(this.connect.bind(this), 1000);

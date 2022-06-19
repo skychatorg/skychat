@@ -14,11 +14,21 @@ export class MessageHistoryPlugin extends RoomPlugin {
 
     readonly hidden = true;
 
+    readonly rules = {
+        messagehistory: {
+            minCount: 0,
+            coolDown: 100,
+            params: [
+                { pattern: /^([0-9]+)$/, name: 'lastId' },
+            ]
+        },
+    };
+
     async run(alias: string, param: string, connection: Connection): Promise<void> {
 
         // If user has the right to access the full history
         if (connection.session.user.right >= Config.PREFERENCES.minRightForMessageHistory) {
-            this.room.sendHistory(connection);
+            this.room.sendHistory(connection, parseInt(param) || 0);
             return;
         }
 

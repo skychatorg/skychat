@@ -1,4 +1,3 @@
-
 export class AudioRecorder {
     
     static async start() {

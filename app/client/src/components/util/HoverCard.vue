@@ -1,79 +1,91 @@
+<script setup>
+
+
+defineProps({
+
+    /**
+     * Whether this hover card is selectable
+     */
+    selectable: {
+        type: Boolean,
+        required: false,
+        default: () => true,
+    },
+
+    /**
+     * Whether this hover card is selected
+     */
+    selected: {
+        type: Boolean,
+        required: false,
+        default: () => false,
+    },
+
+    /**
+     * Tailwind class name for the border color
+     */
+    borderColor: {
+        type: String,
+        required: false,
+        default: () => 'rgb(var(--color-skygray-light))',
+    },
+
+    /**
+     * Whether to use border radius on first and last card elements relative to container
+     */
+    useBorderRadius: {
+        type: Boolean,
+        required: false,
+        default: () => true,
+    },
+});
+
+</script>
+
 <template>
-    <div class="hover-card"
+    <div
+        class="hover-card flex flex-row"
         :class="{
+            'selectable': selectable,
             'selected': selected,
-            'highlighted': highlighted,
-            'clickable': clickable,
-        }">
-        <div class="hover-card-border" :style="{'background-color': borderColor}"></div>
-        <div class="hover-card-content">
-            <slot></slot>
+        }"
+    >
+        <div class="colored-border"></div>
+        <div class="content grow" :class="{ 'hover:bg-skygray-white/10': selectable }">
+            <slot />
         </div>
     </div>
 </template>
 
-<script>
-    import Vue from "vue";
-
-    export default Vue.extend({
-        props: ['clickable', 'selected', 'highlighted', 'borderColor'],
-    });
-</script>
-
-<style lang="scss" scoped>
-
-    .hover-card {
-
-        width: 100%;
-        display: flex;
-        color: white;
-        justify-content: end;
-        justify-items: end;
-        transition: all .2s ease-out;
-
-        .hover-card-border {
-            width: 4px;
-            flex-basis: 4px;
-            background-color: rgb(175, 175, 175);
-            transition: all .2s ease-out;
-        }
-
-        .hover-card-content {
-            flex-grow: 1;
-            width: 0;
-            transition: all .2s ease-out;
-            background: #242427;
-            overflow-y: auto;
-        }
-
-        &.clickable {
-            cursor: pointer;
-        }
-
-        &.selected {
-            margin-left: -4px;
-        }
-
-        &:hover:not(.selected) {
-
-            .hover-card-border {
-                flex-basis: 0;
-                width: 0;
-                margin-left: 4px;
-            }
-
-            .hover-card-content {
-                background: #313235;
-            }
-        }
-
-        &.selected .hover-card-content {
-            background: #424248;
-        }
-
-        &.highlighted .hover-card-content {
-            background: #e2b14152;
-        }
-    }
-
+<style scoped>
+.hover-card {
+    transition: all .2s ease-out;
+}
+.hover-card.selected {
+    transform: translateX(6px);
+}
+.hover-card > .colored-border {
+    min-width: 6px;
+    width: 6px;
+    transition: all .2s ease-out;
+    background-color: v-bind(borderColor);
+}
+.hover-card:hover:not(.selected) > .colored-border {
+    transform: translateX(-3px);
+    filter: brightness(1.25);
+}
+.hover-card:nth-child(1) .colored-border {
+    border-top-left-radius: v-bind("useBorderRadius ? '4px' : '0'");
+    border-top-right-radius: v-bind("useBorderRadius ? '4px' : '0'");
+}
+.hover-card:nth-last-child(1) .colored-border {
+    border-bottom-left-radius: v-bind("useBorderRadius ? '4px' : '0'");
+    border-bottom-right-radius: v-bind("useBorderRadius ? '4px' : '0'");
+}
+.hover-card > .content {
+    transition: all .2s ease-out;
+}
+.hover-card.selected > .content {
+    background-color: rgb(var(--color-skygray-light));
+}
 </style>
