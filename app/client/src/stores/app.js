@@ -153,6 +153,7 @@ export const useAppStore = defineStore('app', {
                 if (! this.focused) {
                     this.documentTitle.value = `${message.user.username}: ${message.content.substr(0, 8) + '...'}`;
                     this.documentTitle.blinking = true;
+                    this.missedMessages.push(message);
                     return;
                 }
 
@@ -234,7 +235,11 @@ export const useAppStore = defineStore('app', {
         focus: function() {
             const clientStore = useClientStore();
             if (this.missedMessages.length > 0) {
-                clientStore.notifySeenMessage(this.missedMessages[this.missedMessages.length - 1].id);
+                // Find last message with non-zero id
+                const realMessages = this.missedMessages.filter(message => message.id !== 0);
+                if (realMessages.length > 0) {
+                    clientStore.notifySeenMessage(realMessages[realMessages.length - 1].id);
+                }
             }
             this.focused = true;
             this.documentTitle.value = DEFAULT_DOCUMENT_TITLE;
