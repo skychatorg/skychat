@@ -42,6 +42,9 @@ import {
     faThumbsUp,
     faThumbsDown,
     faXmark,
+    faFolderTree,
+    faCopy,
+    faPlay,
 } from '@fortawesome/free-solid-svg-icons';
 
 library.add(
@@ -86,6 +89,9 @@ library.add(
     faThumbsUp,
     faThumbsDown,
     faXmark,
+    faFolderTree,
+    faCopy,
+    faPlay,
 );
 
 export default library;

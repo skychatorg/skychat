@@ -102,27 +102,8 @@ const addToQueue = item => {
 </template>
 
 <style scoped>
-::v-deep(.modal-container) {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-::v-deep(.modal-content) {
-    display: flex;
-    flex-direction: column;
-    margin: 0 1rem;
-    padding: 1rem;
-    border-radius: 0.25rem;
-    width: 100%;
-    max-width: 700px;
-    height: 100%;
-    max-height: 80vh;
-    overflow-y: auto;
-    background: black;
-}
-.modal__title {
-    font-size: 1.5rem;
-    font-weight: 700;
-}
+
+@import url('./modal.css');
+
 
 </style>

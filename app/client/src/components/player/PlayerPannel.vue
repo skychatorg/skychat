@@ -8,6 +8,8 @@ import HoverCard from '@/components/util/HoverCard.vue';
 import MediaPlayer from '@/components/player/MediaPlayer.vue';
 import MediaQueue from '@/components/player/MediaQueue.vue';
 import YoutubeVideoSearcherModal from '@/components/modal/YoutubeVideoSearcherModal.vue';
+import GalleryModal from '@/components/modal/GalleryModal.vue';
+
 
 const app = useAppStore();
 const client = useClientStore();
@@ -34,8 +36,12 @@ const showPannel = computed(() => {
     return showPlayer.value || showQueue.value;
 });
 
-const openModal = () => {
+const openYoutubeModal = () => {
    $vfm.show({ component: YoutubeVideoSearcherModal });
+};
+
+const openGalleryModal = () => {
+   $vfm.show({ component: GalleryModal });
 };
 
 </script>
@@ -115,7 +121,7 @@ const openModal = () => {
                 </div>
             
                 <!-- Player actions -->
-                <div class="col-start-8 col-span-3 btn-group">
+                <div class="col-start-7 col-span-4 btn-group">
                     <button
                         @click="client.sendMessage('/player skip')"
                         class="btn text-sm"
@@ -126,10 +132,16 @@ const openModal = () => {
                         <fa icon="forward-step" />
                     </button>
                     <button
-                        @click="openModal"
+                        @click="openYoutubeModal"
                         class="btn text-sm"
                     >
                         <fa icon="plus" />
+                    </button>
+                    <button
+                        @click="openGalleryModal"
+                        class="btn text-sm"
+                    >
+                        <fa icon="folder-tree" />
                     </button>
                 </div>
             
