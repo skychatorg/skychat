@@ -40,7 +40,6 @@
         "lodash": "^4.17.15",
         "mousetrap": "^1.6.5",
         "node-fetch": "^2.6.1",
-        "node-sass": "^4.14.1",
         "nodemailer": "^6.4.6",
         "pinia": "^2.0.14",
         "risibank-web-api": "^0.0.2",

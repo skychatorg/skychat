@@ -17,7 +17,7 @@ const updateSrc = () => {
     }
     
     // Get current cursor time
-    const timeSinceLastUpdate = new Date().getTime() - client.state.playerStateLastUpdate.getTime();
+    const timeSinceLastUpdate = new Date().getTime() - client.state.playerLastUpdate.getTime();
     const currentTime = parseInt((client.state.player.cursor + timeSinceLastUpdate) / 1000);
     const videoHash = JSON.stringify(client.state.player.current.video.id);
     if (videoHash === previousVideoHash.value) {
