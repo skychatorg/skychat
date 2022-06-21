@@ -65,12 +65,9 @@ export class ShopPlugin extends GlobalPlugin {
                 // {id: 26, name: 'bestred', value: '#ff2424', price: ShopPlugin.COLORS_TIER_3_COST},
             ],
             preview: (value, user) => `
-                <div style="color:${value};border-left: 4px solid ${value};padding-left: 6px;">
-                    <div class="skychat-halo-preview" style="box-shadow:${user.data.plugins.halo ? '0px 0px 3px 2px ' + value : 'unset'}">
-                        &nbsp;
-                    </div>
+                <p style="color:${value}; border-left: 4px solid ${value}; padding-left: 16px; height: 24px; white-space: nowrap;">
                     <b>${user.username}</b>
-                </div>
+                </p>
             `,
             sellRatio: 0.4,
         },
@@ -80,92 +77,15 @@ export class ShopPlugin extends GlobalPlugin {
                 {id: 1, name: 'halo', value: true, price: 50 * 100},
             ],
             preview: (value, user) => `
-                <div style="color:${user.data.plugins.color};border-left: 4px solid ${user.data.plugins.color};padding-left: 6px;">
-                    <div class="skychat-halo-preview" style="box-shadow:${value ? '0px 0px 3px 2px ' + user.data.plugins.color : 'unset'}">
-                        &nbsp;
-                    </div>
+                <p style="color:${user.data.plugins.color}; border-left: 4px solid ${user.data.plugins.color}; padding-left: 16px; height: 24px; white-space: nowrap;">
                     <b>${user.username}</b>
-                </div>
+                </p>
             `,
             sellRatio: 0.4,
         },
-        'pinnedicon': {
-            items: [
-                [ 0, '' ],
-                [ 1, 'blur_on' ],
-                [ 2, 'accessible' ],
-                [ 3, 'accessible_forward' ],
-                [ 4, 'not_accessible' ],
-                [ 5, 'api' ],
-                [ 6, 'biotech' ],
-                [ 7, 'account_balance' ],
-                [ 8, 'lens' ],
-                [ 9, 'whatshot' ],
-                [ 10, 'psychology' ],
-                [ 11, 'wb_sunny' ],
-                [ 12, 'filter_vintage' ],
-                [ 13, 'monetization_on' ],
-                [ 16, 'military_tech' ],
-                [ 17, 'self_improvement' ],
-                [ 18, 'sports_volleyball' ],
-                [ 19, 'sports_esports' ],
-                [ 20, 'sports_soccer' ],
-                [ 21, 'sports_rugby' ],
-                [ 22, 'sports_score' ],
-                [ 25, 'sports_handball' ],
-                [ 26, 'sports_football' ],
-                [ 27, 'sports_bar' ],
-                [ 28, 'pregnant_woman' ],
-                [ 29, 'anchor' ],
-                [ 30, 'pan_tool' ],
-                [ 31, 'pets' ],
-                [ 32, 'visibility' ],
-                [ 33, 'album' ],
-                [ 35, 'battery_charging_full' ],
-                [ 36, 'memory' ],
-                [ 37, 'security' ],
-                [ 38, 'sim_card' ],
-                [ 39, 'airplanemode_active' ],
-                [ 40, 'videogame_asset' ],
-                [ 42, 'bedtime' ],
-                [ 43, 'trending_down' ],
-                [ 44, 'trending_up' ],
-                [ 45, 'brightness_low' ],
-                [ 46, 'brightness_high' ],
-                [ 47, 'camera' ],
-                [ 48, 'laptop' ],
-                [ 49, 'flash_on' ],
-                [ 50, 'local_fire_department' ],
-                [ 51, 'my_location' ],
-                [ 52, 'navigation' ],
-                [ 53, 'ac_unit' ],
-                [ 54, 'grass' ],
-                [ 55, 'spa' ],
-                [ 56, 'smoking_rooms' ],
-                [ 58, 'coronavirus' ],
-                [ 59, 'science' ],
-                [ 60, 'star' ],
-                [ 61, 'gamepad' ],
-                [ 62, 'bubble_chart' ]
-            ].map((data: any[], index: number) => ({
-                id: data[0],
-                name: data[1],
-                value: data[1],
-                price: data[1] === '' ? 0 : 5000
-            })),
-            preview: (value, user) => `
-                <div style="color:${user.data.plugins.color};border-left: 4px solid ${user.data.plugins.color};padding-left: 6px;">
-                    <div class="skychat-halo-preview" style="box-shadow:${user.data.plugins.halo ? '0px 0px 3px 2px ' + user.data.plugins.color : 'unset'}">
-                        &nbsp;
-                    </div>
-                    <i class="material-icons md-14">${value}</i> <b>${user.username}</b>
-                </div>
-            `,
-            sellRatio: 0.4,
-        }
     };
 
-    public static readonly TYPE_REGEXP: RegExp = /^(color|halo|pinnedicon)$/;
+    public static readonly TYPE_REGEXP: RegExp = /^(color|halo)$/;
 
     static readonly commandName = 'shop';
 
@@ -408,7 +328,6 @@ export class ShopPlugin extends GlobalPlugin {
         switch (type) {
             case 'color':
             case 'halo':
-            case 'pinnedicon':
                 await UserController.savePluginData(user, type, item.value);
                 break;
         }
@@ -431,7 +350,6 @@ export class ShopPlugin extends GlobalPlugin {
         switch (type) {
             case 'color':
             case 'halo':
-            case 'pinnedicon':
                 return (await UserController.getPluginData(user, type)) === item.value;
         }
     }
