@@ -21,6 +21,17 @@ export class MessageFormatter {
         return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
     }
 
+    /**
+     * Get command name from the message
+     * @param message
+     */
+    public static parseCommand(message: string): {param: string, commandName: string} {
+        message = message.trim();
+        const commandName = message.split(' ')[0].substr(1).toLowerCase();
+        const param = message.substr(commandName.length + 2);
+        return {param, commandName};
+    }
+
     public static getInstance(): MessageFormatter {
         if (! MessageFormatter.instance) {
             MessageFormatter.instance = new MessageFormatter();

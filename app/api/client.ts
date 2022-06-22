@@ -8,7 +8,6 @@ const defaultUser: SanitizedUser = {
     money: 0,
     xp: 0,
     right: -1,
-    rank: {},
     data: {
         plugins: {
             avatar: '',

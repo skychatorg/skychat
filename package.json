@@ -12,9 +12,9 @@
         "build:client": "vite build --emptyOutDir",
         "build:server": "PRODUCTION=true tsc",
         "build": "npm run build:client && npm run build:server",
-        "client:dev": "vite build --emptyOutDir --watch",
-        "server:dev": "PRODUCTION=false tsc-watch --onSuccess \"node build/server.js\"",
-        "server:kill": "ps aux | grep 'node --max-old-space-size=8192 build/server.js' | awk '{print $2}' | xargs kill -9",
+        "dev:client": "vite build --emptyOutDir --watch",
+        "dev:server": "PRODUCTION=false tsc-watch --onSuccess \"node build/server.js\"",
+        "kill": "ps aux | grep 'node --max-old-space-size=8192 build/server.js' | awk '{print $2}' | xargs kill -9",
         "start": "npm run build && node build/server.js",
         "start:docker": "bash app/script/docker-start.sh",
         "backup": "bash app/script/backup.sh"

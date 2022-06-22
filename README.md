@@ -64,6 +64,7 @@ By default, the application will be listening to `localhost:8080` and assume it 
 | hostname                 | string | "localhost" | Hostname the server will listen to |
 | port                     | number | 8080 | Server port |
 | ssl                      | false or {certificate:string,key:string}  | false | SSL configuration (paths to certificate and key files). Use false if SSL is disabled. |
+| plugins              | string[] | [] | List of enabled plugin groups. It is possible to disable the player, games, the gallery or other features by removing a plugin group from this list |
 | users_passwords_salt | string | "$RANDOM_SALT" | Password salt. |
 | users_token_salt     | string | "$RANDOM_SALT" | Token salt. |
 | youtube_api_key      | string | "" | [Youtube api key](#setup-youtube) |
@@ -108,18 +109,23 @@ The `config/preferences.json` file specifies application preferences. The availa
 | maxNewlinesPerMessage           | number |  20 | Max. number of newlines per message |
 
 
-### Customize plugins
+### Disabling features
 
-The `config/plugins.txt` contains the list of enabled plugins.
-To add a custom plugin, create a plugin object in `app/server/skychat/plugins/user_defined/` then add its name to `config/plugins.txt`.
+Plugins are grouped in so-called `PluginGroup` instances. It is possible to disable specific features of the application by removing the plugin group name from the `env.json` file. By default, these plugin groups are included:
+
+| name | removable | description |
+|---------------------------|-----------|------------------------------------------------|
+| CorePluginGroup           | ❌         | Basic features for the SkyChat to run properly |
+| PlayerPluginGroup         | ✅         | Shared player functionnality |
+| GamesPluginGroup          | ✅         | All the fun features, live cursor visualization and mini games |
+| ExtraSecurityPluginGroup  | ✅         | Log fuzzer, TOR auto-ban, IP history tracker, user usurp command |
+| GalleryPluginGroup        | ✅         | Gallery for self-hosted medias |
+| UserDefinedPluginGroup    | ✅         | Custom plugins. By default, this plugin group contains no plugin, but any user-created plugin will be held by this instance |
 
 
-### Customize ranks
+### Adding features
 
-`config/ranks.json` contains the rank definition (xp threshold and rank icon paths). Must be sorted by descending limit. The fields for each rank are:
-  - limit: XP limit to have this rank. The last rank definition must have `0` as the limit, otherwise new users will not have any rank.
-  - images: Image path corresponding to the rank icon for each 18 and 26px sizes. Image paths should be relative to `/assets/images/`.
-
+The SkyChat is easily extensible through plugins. You can define custom plugins in `app/server/skychat/plugins/user_defined/`. It will be automatically loaded during the next application startup.
 
 ### Customize the fake message history
 

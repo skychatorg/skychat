@@ -67,7 +67,7 @@ const formattedDurationSinceDead = computed(() => {
                     <div
                         class="grow font-bold"
                         :style="{
-                            color: entry.user.data.plugins.color,
+                            color: entry.user.data.plugins.custom.color,
                         }"
                     >
                         {{ entry.user.username }}
@@ -115,6 +115,3 @@ const formattedDurationSinceDead = computed(() => {
         </div>
     </HoverCard>
 </template>
-
-<style scoped>
-</style>

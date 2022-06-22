@@ -1,11 +1,11 @@
-import {PluginManager} from "./PluginManager";
+import * as _ from "lodash";
 import * as sha256 from "sha256";
 import {Config} from "./Config";
 import {DatabaseHelper} from "./DatabaseHelper";
 import {AuthToken, User} from "./User";
 import SQL from "sql-template-strings";
 import {Message, MessageConstructorOptions, MessageMeta} from "./Message";
-import * as _ from "lodash"
+import { globalPluginGroup } from "../plugins/GlobalPluginGroup";
 
 
 export class UserController {
@@ -16,21 +16,16 @@ export class UserController {
     public static AUTH_TOKEN_VALIDITY: number = 1000 * 60 * 60 * 24 * 7;
 
     /**
-     * Object containing default storage data for each plugin
-     * @TODO update when configuration is hot-reloaded
-     */
-    private static pluginDefaultStorages: {[name: string]: any} = PluginManager.getPluginsDefaultDataStorageValues(Config.PLUGINS);
-
-    /**
+     * 
      */
     public static getPluginDefaultData(pluginName: string): any {
-        return _.cloneDeep(this.pluginDefaultStorages[pluginName]);
+        return _.cloneDeep(globalPluginGroup.defaultDataStorageValues[pluginName]);
     }
 
     /**
      */
     public static getPluginsDefaultData(): {[pluginName: string]: any} {
-        return _.cloneDeep(this.pluginDefaultStorages);
+        return _.cloneDeep(globalPluginGroup.defaultDataStorageValues);
     }
 
     /**
@@ -40,8 +35,9 @@ export class UserController {
         return new User(0, identifier || '[ Server ]', null, '', 0, 0, 0, {
             plugins: {
                 avatar: Config.LOCATION + '/assets/images/avatars/server.png',
-                color: 'rgb(65, 105, 225)',
-                halo: true,
+                custom: {
+                    color: 'rgb(65, 105, 225)',
+                },
             }
         });
     }

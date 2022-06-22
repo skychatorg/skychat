@@ -6,13 +6,14 @@ import {DatabaseHelper} from "./DatabaseHelper";
 import {User} from "./User";
 import * as iof from "io-filter";
 import {Room} from "./Room";
-import {UserController} from "./UserController";
-import {Config} from "./Config";
+import { UserController } from "./UserController";
+import { Config } from "./Config";
 import * as fs from "fs";
 import {Message} from "./Message";
-import {AudioRecorderPlugin} from "../plugins/core/AudioRecorderPlugin";
-import { PluginManager } from "./PluginManager";
+import {AudioRecorderPlugin} from "../plugins/core/global/AudioRecorderPlugin";
 import { GlobalPlugin } from "../plugins/GlobalPlugin";
+import { globalPluginGroup } from "../plugins/GlobalPluginGroup";
+import { MessageFormatter } from "./MessageFormatter";
 
 
 export type StoredSkyChat = {
@@ -27,7 +28,7 @@ export type StoredSkyChat = {
  */
 export class RoomManager {
 
-    public static readonly STORAGE_MAIN_FILE: string = 'storage/main.json';
+    static readonly STORAGE_MAIN_FILE: string = 'storage/main.json';
 
     private static TICK_INTERVAL: number = 5 * 1000;
 
@@ -35,17 +36,17 @@ export class RoomManager {
 
     private readonly server: Server;
 
-    public rooms: Room[] = [];
+    rooms: Room[] = [];
 
     /**
      * Plugins. All aliases of a command/plugin points to the same command instance.
      */
-    public commands: {[commandName: string]: GlobalPlugin} = {};
+    commands: {[commandName: string]: GlobalPlugin} = {};
 
     /**
      * Plugins sorted by descending priority
      */
-    public plugins: GlobalPlugin[] = [];
+    plugins: GlobalPlugin[] = [];
 
     constructor() {
 
@@ -74,9 +75,8 @@ export class RoomManager {
                 }
 
                 // Load global plugins
-                const {commands, plugins} = PluginManager.instantiateGlobalPlugins(this);
-                this.commands = commands;
-                this.plugins = plugins;
+                this.plugins = globalPluginGroup.instantiateGlobalPlugins(this);
+                this.commands = globalPluginGroup.extractCommandObjectFromPlugins(this.plugins) as {[commandName: string]: GlobalPlugin};
 
                 // On register
                 this.server.registerEvent(
@@ -449,7 +449,7 @@ export class RoomManager {
         payload = await this.executeNewMessageHook(payload, connection);
 
         // Parse command name and message content
-        const {param, commandName} = PluginManager.parseCommand(payload);
+        const { param, commandName } = MessageFormatter.parseCommand(payload);
 
         // If command linked to a global plugin
         if (typeof this.commands[commandName] !== 'undefined') {
