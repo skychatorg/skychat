@@ -53,9 +53,6 @@ export class RoomManager {
         // Create server instance
         this.server = new Server(this.getNewSession.bind(this));
 
-        // Register hooks
-        this.server.onConnectionCreated = this.onConnectionCreated.bind(this);
-
         // Load database then register server events
         DatabaseHelper
             .load()
@@ -77,6 +74,9 @@ export class RoomManager {
                 // Load global plugins
                 this.plugins = globalPluginGroup.instantiateGlobalPlugins(this);
                 this.commands = globalPluginGroup.extractCommandObjectFromPlugins(this.plugins) as {[commandName: string]: GlobalPlugin};
+
+                // Register hooks
+                this.server.onConnectionCreated = this.onConnectionCreated.bind(this);
 
                 // On register
                 this.server.registerEvent(
