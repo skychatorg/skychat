@@ -122,6 +122,7 @@ Plugins are grouped in so-called `PluginGroup` instances. It is possible to disa
 | GalleryPluginGroup        | ✅         | Gallery for self-hosted medias |
 | UserDefinedPluginGroup    | ✅         | Custom plugins. By default, this plugin group contains no plugin, but any user-created plugin will be held by this instance |
 
+In private rooms, only core plugins are loaded.
 
 ### Adding features
 

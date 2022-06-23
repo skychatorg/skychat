@@ -128,6 +128,11 @@ export class Room implements IBroadcaster {
         this.pluginGroupNames = [CorePluginGroup.name];
         this.load();
 
+        // If in a private room, we always only load core plugins
+        if (this.isPrivate) {
+            this.pluginGroupNames = [CorePluginGroup.name];
+        }
+
         // Load all plugins
         this.plugins = globalPluginGroup.instantiateRoomPlugins(this);
         this.commands = globalPluginGroup.extractCommandObjectFromPlugins(this.plugins) as {[commandName: string]: RoomPlugin};
