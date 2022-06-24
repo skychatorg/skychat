@@ -3,7 +3,6 @@ import { AprilFoolsDay } from "./global/AprilFoolsDay";
 import { CursorPlugin } from "./global/CursorPlugin";
 import { MoneyFarmerPlugin } from "./global/MoneyFarmerPlugin";
 import { OfferMoneyPlugin } from "./global/OfferMoneyPlugin";
-import { SandalePlugin } from "./global/SandalePlugin";
 import { DailyRollPlugin } from "./room/DailyRollPlugin";
 import { GuessTheNumberPlugin } from "./room/GuessTheNumberPlugin";
 import { PointsCollectorPlugin } from "./room/PointsCollectorPlugin";
@@ -30,6 +29,5 @@ export class GamesPluginGroup extends PluginGroup {
         CursorPlugin,
         MoneyFarmerPlugin,
         OfferMoneyPlugin,
-        SandalePlugin,
     ];
 }
