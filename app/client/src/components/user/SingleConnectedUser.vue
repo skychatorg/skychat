@@ -71,6 +71,7 @@ const formattedDurationSinceDead = computed(() => {
                         }"
                     >
                         {{ entry.user.username }}
+                        <sup v-if="entry.connectionCount > 1">{{ entry.connectionCount }}</sup>
                     </div>
                     <div class="text-xs text-right text-skygray-lighter flex justify-end space-x-4 pt-1">
                         <span v-show="entry.user.id > 0" class="text-yellow-300">{{ formattedMoney }}</span>
