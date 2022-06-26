@@ -28,6 +28,7 @@ import { SetRightPlugin } from "./global/SetRightPlugin";
 import { BanPlugin } from "./global/BanPlugin";
 import { IpPlugin } from "./global/IpPlugin";
 import { KickPlugin } from "./global/KickPlugin";
+import { XpTickerPlugin } from "./global/XpTickerPlugin";
 
 
 export class CorePluginGroup extends PluginGroup {
@@ -62,5 +63,6 @@ export class CorePluginGroup extends PluginGroup {
         SetRightPlugin,
         StickerPlugin,
         VoidPlugin,
+        XpTickerPlugin,
     ];
 }
