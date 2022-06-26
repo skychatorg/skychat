@@ -7,7 +7,7 @@
         "target": "ES5",
         "lib": ["ES2019", "DOM"],
         "moduleResolution": "node",
-        "rootDir": "app/server/",
+        "rootDir": "./app/server/",
         "outDir": "build/",
         "sourceMap": false
     },

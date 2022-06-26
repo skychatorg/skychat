@@ -1,11 +1,10 @@
 import { Config } from "../../skychat/Config";
-import {Connection} from "../../skychat/Connection";
+import { Connection } from "../../skychat/Connection";
 import { FileManager } from "../../skychat/FileManager";
 import { GlobalPlugin } from "../GlobalPlugin";
 import { RoomManager } from "../../skychat/RoomManager";
 import { Server } from "../../skychat/Server";
 import { Session } from "../../skychat/Session";
-import { User } from "../../skychat/User";
 import { Gallery, SanitizedGallery } from "./Gallery";
 
 

@@ -52,17 +52,17 @@ const openGalleryModal = () => {
         <!-- Pannel content -->
         <div
             v-if="showPannel"
-            class="grow flex transition"
+            class="pannel-content grow flex transition"
         >
 
             <!-- Actual player implementation -->
-            <MediaPlayer v-if="showPlayer" class="player grow" />
+            <MediaPlayer v-if="showPlayer" class="player overflow-hidden grow" />
 
             <!-- Queue if shown -->
             <MediaQueue v-if="showQueue" class="overflow-y-auto h-0 min-h-full scrollbar queue" />
         </div>
 
-        <!-- Pannel contro bar -->
+        <!-- Pannel control bar -->
         <div class="basis-12 p-2 opacity-100 lg:opacity-0 group-hover:opacity-100 transition duration-200">
 
             <div class="grid grid-cols-12 gap-2 text-skygray-lighter">
@@ -164,10 +164,10 @@ const openGalleryModal = () => {
 </template>
 
 <style scoped>
-.player {
+.pannel-content {
 
     /* Pannel total size */
-    min-height: v-bind(playerHeightCss);
+    height: v-bind(playerHeightCss);
 }
 
 .queue {

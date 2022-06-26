@@ -67,14 +67,15 @@ const formattedDurationSinceDead = computed(() => {
                     <div
                         class="grow font-bold"
                         :style="{
-                            color: entry.user.data.plugins.color,
+                            color: entry.user.data.plugins.custom.color,
                         }"
                     >
                         {{ entry.user.username }}
+                        <sup v-if="entry.connectionCount > 1">{{ entry.connectionCount }}</sup>
                     </div>
                     <div class="text-xs text-right text-skygray-lighter flex justify-end space-x-4 pt-1">
-                        <span v-show="entry.user.right > 0" class="text-primary">{{ entry.user.right }}</span>
                         <span v-show="entry.user.id > 0" class="text-yellow-300">{{ formattedMoney }}</span>
+                        <span v-show="entry.user.right > 0" class="text-primary">{{ entry.user.right }}</span>
                     </div>
                 </div>
 
@@ -115,6 +116,3 @@ const formattedDurationSinceDead = computed(() => {
         </div>
     </HoverCard>
 </template>
-
-<style scoped>
-</style>

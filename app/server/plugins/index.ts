@@ -1,10 +1,7 @@
 export * from "./core";
-export * from "./customization";
-export * from "./entertainment";
+export * from "./games";
 export * from "./gallery";
-export * from "./moderation";
-export * from "./optional";
-export * from "./poll";
+export * from "./security_extra";
 export * from "./user_defined";
 export * from "./player";
 export { GlobalPlugin } from "./GlobalPlugin";

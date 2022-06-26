@@ -18,7 +18,7 @@ export type Preferences = {
 }
 
 export type PublicConfig = {
-    ranks: { limit: number, images: { [size: string]: string } }[];
+    
 }
 
 export class Config {
@@ -55,7 +55,7 @@ export class Config {
 
     public static RANKS: { limit: number, images: { [size: string]: string } }[] = [];
 
-    public static PLUGINS: string[] = [];
+    public static PLUGIN_GROUP_NAMES: string[] = [];
 
     public static isInOPList(identifier: string): boolean {
         return Config.OP.indexOf(identifier.toLowerCase()) >= 0;
@@ -64,10 +64,6 @@ export class Config {
     public static getRandomGuestName(): string {
         const index = Math.floor(Math.random() * Config.GUEST_NAMES.length);
         return Config.GUEST_NAMES[index];
-    }
-
-    public static getPlugins(): string[] {
-        return Config.PLUGINS;
     }
 
     public static toClient(): PublicConfig {
@@ -90,6 +86,7 @@ export class Config {
             Config.SSL_CERTIFICATE = env.ssl.certificate;
             Config.SSL_CERTIFICATE_KEY = env.ssl.key;
         }
+        Config.PLUGIN_GROUP_NAMES = env.plugins;
         Config.USERS_PASSWORD_SALT = env.users_passwords_salt;
         if (Config.USERS_PASSWORD_SALT.length === 0) {
             throw new Error('Please set the password salt in the .env.json file before running the application.');
@@ -126,8 +123,6 @@ export class Config {
             console.warn('No fake messages found (fakemessages.txt file is empty). Using a single empty fake message.');
             Config.GUEST_NAMES.push('');
         }
-        // Load plugins
-        Config.PLUGINS = fs.readFileSync('config/plugins.txt').toString().trim().split("\n").map(l => l.trim()).filter(l => l.length > 0);
         // Load ranks
         Config.RANKS = JSON.parse(fs.readFileSync('config/ranks.json').toString());
         if (Config.RANKS.length === 0) {

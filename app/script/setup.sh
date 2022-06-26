@@ -41,16 +41,6 @@ if [[ ! -e config ]]; then
     mkdir config;
 fi
 
-# Initialize plugins.txt
-if [[ ! -e config/plugins.txt ]]; then
-    cp app/template/plugins.txt.template config/plugins.txt;
-fi
-
-# Initialize ranks.json
-if [[ ! -e config/ranks.json ]]; then
-    cp app/template/ranks.json.template config/ranks.json;
-fi
-
 # Initialize stickers.json
 if [[ ! -e config/stickers.json ]]; then
     cp app/template/stickers.json.template config/stickers.json;

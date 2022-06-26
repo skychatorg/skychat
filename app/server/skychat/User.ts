@@ -20,7 +20,6 @@ export type SanitizedUser = {
     xp: number;
     right: number;
     data: UserData;
-    rank: {[size: string]: string};
 }
 
 
@@ -35,15 +34,6 @@ export class User {
     static readonly DEFAULT_DATA_OBJECT: UserData = {
         plugins: {}
     };
-
-    /**
-     * Get the rank image of this user from an xp amount
-     */
-    static getRankByXp(xp: number): {limit: number, images: {[size: string]: string}} {
-        const entry = Config.RANKS
-            .filter(entry => xp >= entry.limit)[0];
-        return entry ? entry : Config.RANKS[Config.RANKS.length - 1];
-    }
 
     /**
      * Username regexp (including guests)
@@ -118,7 +108,6 @@ export class User {
             right: this.right,
             xp: this.xp,
             data: this.data,
-            rank: User.getRankByXp(this.xp).images
         }
     }
 }

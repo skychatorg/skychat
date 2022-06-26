@@ -8,7 +8,7 @@ import { LinkFetcher } from "./fetcher/LinkFetcher";
 import { IFrameFetcher } from "./fetcher/IFrameFetcher";
 import { VideoFetcher } from "./fetcher/VideoFetcher";
 import { TwitchFetcher } from "./fetcher/TwitchFetcher";
-import { PollPlugin } from "../poll/PollPlugin";
+import { PollPlugin } from "../core/global/PollPlugin";
 import { SanitizedPlayerChannel } from "./PlayerChannel";
 import { Session } from "../../skychat/Session";
 import { Config } from "../../skychat/Config";

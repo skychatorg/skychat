@@ -1,30 +1,21 @@
-import {Connection} from "./Connection";
-import {IBroadcaster} from "./IBroadcaster";
-import {Message, MessageConstructorOptions} from "./Message";
-import {Plugin} from "../plugins/Plugin";
-import {PluginManager} from "./PluginManager";
 import * as fs from "fs";
 import SQL from "sql-template-strings";
-import {DatabaseHelper} from "./DatabaseHelper";
+import { Connection } from "./Connection";
+import { IBroadcaster } from "./IBroadcaster";
+import { Message, MessageConstructorOptions } from "./Message";
+import { Plugin } from "../plugins/Plugin";
+import { DatabaseHelper } from "./DatabaseHelper";
 import { MessageController } from "./MessageController";
-import { Config } from "./Config";
 import { RoomManager } from "./RoomManager";
 import { RoomPlugin } from "../plugins/RoomPlugin";
-import { AudioRecorderPlugin } from "../plugins/core/AudioRecorderPlugin";
-import { ConnectedListPlugin } from "../plugins/core/ConnectedListPlugin";
-import { MessageEditPlugin } from "../plugins/core/MessageEditPlugin";
-import { MessageHistoryPlugin } from "../plugins/core/MessageHistoryPlugin";
-import { MessagePlugin } from "../plugins/core/MessagePlugin";
-import { MessageSeenPlugin } from "../plugins/core/MessageSeenPlugin";
-import { RoomManagerPlugin } from "../plugins/core/RoomManagerPlugin";
-import { TypingListPlugin } from "../plugins/core/TypingListPlugin";
-import { VoidPlugin } from "../plugins/core/VoidPlugin";
 import { Session } from "./Session";
+import { CorePluginGroup } from "../plugins";
+import { globalPluginGroup } from "../plugins/GlobalPluginGroup";
 
 
 export type StoredRoom = {
     name: string;
-    enabledPlugins: string[];
+    pluginGroupNames: string[];
     isPrivate: boolean;
     whitelist: string[];
 }
@@ -88,9 +79,9 @@ export class Room implements IBroadcaster {
     public name: string;
 
     /**
-     * List of enabled plugins
+     * List of enabled plugin groups
      */
-    public enabledPlugins: string[] = [];
+    public pluginGroupNames: string[] = [];
 
     /**
      * Connections that are within this room
@@ -132,49 +123,21 @@ export class Room implements IBroadcaster {
             ++ Room.CURRENT_ID;
         }
         
-        // Set default value for stored values
+        // Set default value for stored values then load storage file if it exists (will override default values)
         this.name = `Room ${this.id}`;
-        this.enabledPlugins = this.getDefaultEnabledPlugins();
-
-        // Load storage file if it exists (will override default values)
+        this.pluginGroupNames = [CorePluginGroup.name];
         this.load();
 
-        // Instantiate plugins
-        let result: {commands: {[commandName: string]: RoomPlugin}, plugins: RoomPlugin[]};
-        try {
-            result = PluginManager.instantiateRoomPlugins(this);
-        } catch (error) {
-            console.warn('Unable to load plugins from storage', this.enabledPlugins);
-            // Retry with default plugins
-            this.enabledPlugins = this.getDefaultEnabledPlugins();
-            result = PluginManager.instantiateRoomPlugins(this);
+        // If in a private room, we always only load core plugins
+        if (this.isPrivate) {
+            this.pluginGroupNames = [CorePluginGroup.name];
         }
-        this.commands = result.commands;
-        this.plugins = result.plugins;
+
+        // Load all plugins
+        this.plugins = globalPluginGroup.instantiateRoomPlugins(this);
+        this.commands = globalPluginGroup.extractCommandObjectFromPlugins(this.plugins) as {[commandName: string]: RoomPlugin};
 
         setInterval(this.tick.bind(this), Room.TICK_INTERVAL);
-    }
-
-    /**
-     * Get the default list of plugins to enable for this room
-     * @returns 
-     */
-    public getDefaultEnabledPlugins(): string[] {
-        if (this.isPrivate) {
-            return [
-                AudioRecorderPlugin.name,
-                ConnectedListPlugin.name,
-                MessageEditPlugin.name,
-                MessageHistoryPlugin.name,
-                MessagePlugin.name,
-                MessageSeenPlugin.name,
-                TypingListPlugin.name,
-                RoomManagerPlugin.name,
-                VoidPlugin.name,
-            ];
-        } else {
-            return Config.getPlugins().filter(PluginManager.isRoomPlugin);
-        }
     }
 
     /**
@@ -224,7 +187,7 @@ export class Room implements IBroadcaster {
     }
 
     /**
-     * Try to load this room's data from disk
+     * Try to load this room's data from disk storage
      */
     private load(): void {
         // If the storage does not exist, create it
@@ -236,7 +199,7 @@ export class Room implements IBroadcaster {
         // Otherwise, load data from this file
         const data = JSON.parse(fs.readFileSync(this.getStoragePath()).toString()) as StoredRoom;
         this.name = data.name || this.name;
-        this.enabledPlugins = data.enabledPlugins || this.enabledPlugins;
+        this.pluginGroupNames = data.pluginGroupNames || this.pluginGroupNames;
         this.isPrivate = !! data.isPrivate;
         this.whitelist = data.whitelist;
     }
@@ -247,7 +210,7 @@ export class Room implements IBroadcaster {
     private save(): boolean {
         const data: StoredRoom = {
             name: this.name,
-            enabledPlugins: this.enabledPlugins,
+            pluginGroupNames: this.pluginGroupNames,
             isPrivate: this.isPrivate,
             whitelist: this.whitelist,
         };
