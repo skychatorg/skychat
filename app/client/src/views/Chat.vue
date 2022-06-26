@@ -55,7 +55,7 @@ const client = useClientStore();
                 'hidden': app.mobileView !== 'middle',
             }"
         >
-            <PlayerPannel class="bg-skygray-lighter/5 backdrop-brightness-125" />
+            <PlayerPannel v-if="client.state.currentPlayerChannel" class="bg-skygray-lighter/5 backdrop-brightness-125" />
             <PollList class="bg-skygray-lighter/5 backdrop-brightness-125" />
             <MessagePannel class="grow bg-skygray-white/5 backdrop-brightness-150" />
             <NewMessageForm class="basis-12 bg-skygray-lighter/5 backdrop-brightness-125" />

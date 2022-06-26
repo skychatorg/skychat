@@ -192,7 +192,6 @@ export class BanPlugin extends GlobalPlugin {
                     content: message.substr('/message'.length),
                     user: connection.session.user
                 }).sanitized());
-                connection.session.lastMessageDate = new Date();
                 return `/void`;
             }
         }

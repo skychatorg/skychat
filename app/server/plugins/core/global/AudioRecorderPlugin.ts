@@ -86,8 +86,11 @@ export class AudioRecorderPlugin extends GlobalPlugin {
             }
         });
 
-        // Update the date of the last sent message
-        connection.session.lastMessageDate = new Date();
+        // Update last interaction dates
+        connection.session.lastInteractionDate = new Date();
+        if (! room.isPrivate) {
+            connection.session.lastPublicMessageSentDate = new Date();
+        }
 
         // Delete old entry
         delete this.entries[this.currentEntryId - AudioRecorderPlugin.MAX_RECORDING_CACHED];

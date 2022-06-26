@@ -23,7 +23,7 @@ const formattedMoney = computed(() => {
 
 // Number of minutes since the last message was sent
 const minutesSinceLastMessage = computed(() => {
-    const duration = new Date().getTime() * 0.001 - props.entry.lastMessageTime;
+    const duration = new Date().getTime() * 0.001 - props.entry.lastInteractionTime;
     return Math.floor(duration / 60);
 });
 

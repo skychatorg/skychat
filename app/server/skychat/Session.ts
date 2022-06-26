@@ -12,7 +12,7 @@ export type SanitizedSession = {
 
     deadSinceTime?: number;
 
-    lastMessageTime: number;
+    lastInteractionTime: number;
 
     user: SanitizedUser;
 
@@ -122,7 +122,15 @@ export class Session implements IBroadcaster {
 
     public connections: Connection[];
 
-    public lastMessageDate: Date;
+    /**
+     * Date of last sent message
+     */
+    public lastInteractionDate: Date;
+
+    /**
+     * Date of last sent message
+     */
+    public lastPublicMessageSentDate: Date;
 
     /**
      * Whether this session is OP
@@ -144,7 +152,8 @@ export class Session implements IBroadcaster {
         this.connections = [];
         this.identifier = identifier;
         this.user = new User(0, identifier, null, '', 0, 0, -1);
-        this.lastMessageDate = new Date();
+        this.lastInteractionDate = new Date();
+        this.lastPublicMessageSentDate = new Date();
         this.deadSince = null;
     }
 
@@ -267,7 +276,7 @@ export class Session implements IBroadcaster {
             connectionCount: this.connections.length,
             rooms: Array.from(new Set(this.connections.filter(c => c.room).map(c => c.room!.id))),
             deadSinceTime: this.deadSince ? this.deadSince.getTime() * 0.001 : undefined,
-            lastMessageTime: this.lastMessageDate.getTime() * 0.001,
+            lastInteractionTime: this.lastInteractionDate.getTime() * 0.001,
             user: this.user.sanitized()
         }
     }

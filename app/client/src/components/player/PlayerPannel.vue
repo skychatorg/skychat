@@ -138,6 +138,7 @@ const openGalleryModal = () => {
                         <fa icon="plus" />
                     </button>
                     <button
+                        v-if="client.state.gallery"
                         @click="openGalleryModal"
                         class="btn text-sm"
                     >

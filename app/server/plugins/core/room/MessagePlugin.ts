@@ -51,6 +51,8 @@ export class MessagePlugin extends RoomPlugin {
         });
 
         // Update the date of the last sent message
-        connection.session.lastMessageDate = new Date();
+        if (! this.room.isPrivate) {
+            connection.session.lastPublicMessageSentDate = new Date();
+        }
     }
 }

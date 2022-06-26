@@ -34,7 +34,7 @@ export class XpTickerPlugin extends GlobalPlugin {
                 continue;
             }
             // If user inactive for too long, continue
-            if (session.lastMessageDate.getTime() + XpTickerPlugin.MAX_INACTIVITY_DURATION_MS < new Date().getTime()) {
+            if (session.lastPublicMessageSentDate.getTime() + XpTickerPlugin.MAX_INACTIVITY_DURATION_MS < new Date().getTime()) {
                 continue;
             }
             await UserController.giveXP(session.user, 1);

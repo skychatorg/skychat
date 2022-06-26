@@ -469,6 +469,9 @@ export class RoomManager {
         }
         const command = connection.room.commands[commandName];
 
+        // Register last session interaction
+        connection.session.lastInteractionDate = new Date();
+
         // Execute the room plugin
         await command.execute(commandName, param, connection);
     }

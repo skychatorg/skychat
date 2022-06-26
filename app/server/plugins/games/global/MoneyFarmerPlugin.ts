@@ -52,7 +52,7 @@ export class MoneyFarmerPlugin extends GlobalPlugin {
                 continue;
             }
             // If user inactive for too long, continue
-            if (session.lastMessageDate.getTime() + MoneyFarmerPlugin.MAX_INACTIVITY_DURATION_MS < new Date().getTime()) {
+            if (session.lastPublicMessageSentDate.getTime() + MoneyFarmerPlugin.MAX_INACTIVITY_DURATION_MS < new Date().getTime()) {
                 continue;
             }
 
