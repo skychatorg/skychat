@@ -173,7 +173,6 @@ export class RoomManager {
      * Clean-up function, executed once in a while
      */
     private tick(): void {
-
         this.save();
         this.server.cleanup();
     }

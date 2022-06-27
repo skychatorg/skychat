@@ -67,7 +67,7 @@ export class CursorPlugin extends GlobalPlugin {
         // For every connection in the room
         for (const conn of Session.connections) {
             // If the user has cursors disabled, don't send
-            if (! UserController.getPluginData(conn.session.user, this.commandName)) {
+            if (! UserController.getUserPluginData(conn.session.user, this.commandName)) {
                 continue;
             }
             // If identifier is to be ignored

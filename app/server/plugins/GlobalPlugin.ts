@@ -36,6 +36,13 @@ export abstract class GlobalPlugin extends Plugin {
     }
 
     /**
+     * Storage path for global plugins
+     */
+    public getStoragePath(): string {
+        return `${Plugin.STORAGE_BASE_PATH}/plugins/global`;
+    }
+
+    /**
      * Executed when a new messages comes in
      * @abstract
      * @param message

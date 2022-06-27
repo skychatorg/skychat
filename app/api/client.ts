@@ -517,10 +517,9 @@ export class SkyChatClient extends EventEmitter {
                 
                 // Cursor
                 case BinaryMessageTypes.CURSOR:
-                    const cursor = view;
-                    const id = cursor.getUint32(2, true);
-                    const x = cursor.getFloat32(6, true);
-                    const y = cursor.getFloat32(10, true);
+                    const id = view.getUint32(2, true);
+                    const x = view.getFloat32(6, true);
+                    const y = view.getFloat32(10, true);
                     const entry = this._connectedList.find(entry => entry.user.id === id);
                     this.emit('cursor', {
                         user: entry ? entry.user : defaultUser,

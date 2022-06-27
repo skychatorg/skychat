@@ -177,7 +177,7 @@ export class UserController {
      * @param user
      * @param pluginName
      */
-    public static getPluginData<T>(user: User, pluginName: string): any {
+    public static getUserPluginData<T>(user: User, pluginName: string): any {
         return typeof user.data.plugins[pluginName] === 'undefined' ? this.getPluginDefaultData(pluginName) : user.data.plugins[pluginName];
     }
 

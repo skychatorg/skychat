@@ -1,5 +1,5 @@
-import {Connection} from "../../../skychat/Connection";
-import {Session} from "../../../skychat/Session";
+import { Connection } from "../../../skychat/Connection";
+import { Session } from "../../../skychat/Session";
 import { Config } from "../../../skychat/Config";
 import { GlobalPlugin } from "../../GlobalPlugin";
 import { RoomManager } from "../../../skychat/RoomManager";
@@ -9,6 +9,16 @@ import { RoomManager } from "../../../skychat/RoomManager";
  * Handle the list of currently active connections
  */
 export class ConnectedListPlugin extends GlobalPlugin {
+
+    /**
+     * Maximum interval between two syncs, to ensure data is consistent on the client-side
+     */
+    static readonly MAX_SYNC_DELAY = 30 * 1000;
+
+    /**
+     * Minimum interval between two syncs, to save bandwidth
+     */
+    static readonly MIN_SYNC_DELAY = 3 * 1000;
 
     static readonly commandName = 'connectedlist';
 
@@ -29,7 +39,7 @@ export class ConnectedListPlugin extends GlobalPlugin {
     /**
      * Debounced timeout to send a sync command to clients
      */
-    syncDebounced: NodeJS.Timeout | null = null;
+    syncDebouncedTimeout: NodeJS.Timeout | null = null;
 
     /**
      * Last date when clients were synchronized
@@ -40,7 +50,7 @@ export class ConnectedListPlugin extends GlobalPlugin {
         super(manager);
 
         this.loadStorage();
-        setInterval(this.tick.bind(this), 6 * 1000);
+        setInterval(this.tick.bind(this), ConnectedListPlugin.MAX_SYNC_DELAY);
     }
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
@@ -69,27 +79,29 @@ export class ConnectedListPlugin extends GlobalPlugin {
     }
 
     private tick(): void {
-        this.sync();
+
+        // If last sync was long ago, we make a sync request
+        if (this.syncLastDate.getTime() + ConnectedListPlugin.MIN_SYNC_DELAY < new Date().getTime()) {
+            this._syncNow();
+            return;
+        }
     }
 
     public sync(): void {
 
-        // Multiple sync requests can arrive at the same time, so we debounce them to avoid sending too many of them
-        const debounceSecs = 3;
-
-        // If last sync was more than 30s ago
-        if (this.syncLastDate.getTime() + debounceSecs * 1000 < new Date().getTime()) {
+        // If last sync was long ago, we can sync directly
+        if (this.syncLastDate.getTime() + ConnectedListPlugin.MIN_SYNC_DELAY < new Date().getTime()) {
             this._syncNow();
             return;
         }
 
-        // Cancel old re-sync request if any
-        if (this.syncDebounced) {
-            clearTimeout(this.syncDebounced);
+        // Cancel old re-sync request if any and create request to re-sync when enough time has passed
+        if (this.syncDebouncedTimeout) {
+            clearTimeout(this.syncDebouncedTimeout);
         }
-
-        // Resync when 30s is elapsed since this.syncLastDate
-        this.syncDebounced = setTimeout(this._syncNow.bind(this), debounceSecs * 1000 - (new Date().getTime() - this.syncLastDate.getTime()));
+        const timeSinceLastSync = new Date().getTime() - this.syncLastDate.getTime();
+        const remainingWaitTime = ConnectedListPlugin.MIN_SYNC_DELAY - timeSinceLastSync;
+        this.syncDebouncedTimeout = setTimeout(this._syncNow.bind(this), remainingWaitTime);
     }
 
     private _syncNow() {

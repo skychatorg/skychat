@@ -154,11 +154,11 @@ export abstract class Plugin {
     }
 
     /**
-     * Get this plugin's storage path
+     * Get this plugin's storage path.
+     * Path differ depending on whether the plugin is global or per-room.
+     * @abstract
      */
-    public getStoragePath(): string {
-        return `${Plugin.STORAGE_BASE_PATH}/plugins/global`;
-    }
+    public abstract getStoragePath(): string;
 
     /**
      * Get a summary of this plugin state to include in the room list
@@ -173,7 +173,7 @@ export abstract class Plugin {
      * @returns 
      */
     public getUserData(user: User): any {
-        return UserController.getPluginData(user, this.commandName);
+        return UserController.getUserPluginData(user, this.commandName);
     }
 
     /**

@@ -51,7 +51,7 @@ export class AvatarPlugin extends GlobalPlugin {
         const newAvatarPath = 'uploads/avatars/' + connection.session.identifier + '.' + extension;
 
         // Remove previous avatar
-        const previousAvatarUrl = UserController.getPluginData(connection.session.user, this.commandName);
+        const previousAvatarUrl = UserController.getUserPluginData(connection.session.user, this.commandName);
         const previousAvatarLocalPath = '.' + previousAvatarUrl.substr(Config.LOCATION.length).split('?')[0];
         if (previousAvatarUrl.match('^uploads\/avatars\/')) {
             try {
