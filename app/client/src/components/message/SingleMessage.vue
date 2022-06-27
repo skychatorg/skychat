@@ -10,7 +10,7 @@ import UserMiniAvatarCollection from '@/components/user/UserMiniAvatarCollection
 const app = useAppStore();
 const client = useClientStore();
 
-const emit = defineEmits(['content-changed']);
+const emit = defineEmits(['content-size-changed']);
 
 const props = defineProps({
     message: {
@@ -47,7 +47,7 @@ const bindMessageContentEvents = () => {
     const images = Array.from(content.value.getElementsByTagName('img'));
     for (const image of images) {
         image.addEventListener('load', () => {
-            emit('content-changed');
+            emit('content-size-changed');
         });
     }
 

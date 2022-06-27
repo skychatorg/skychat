@@ -512,7 +512,9 @@ export class SkyChatClient extends EventEmitter {
 
                 // Audio
                 case BinaryMessageTypes.AUDIO:
-                    this.emit('audio', messageData);
+                    const messageId = view.getUint32(2, true);
+                    const audioBlob = message.data.slice(6);
+                    this.emit('audio', { id: messageId, blob: audioBlob });
                     break;
                 
                 // Cursor

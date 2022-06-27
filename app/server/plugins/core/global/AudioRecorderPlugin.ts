@@ -71,20 +71,11 @@ export class AudioRecorderPlugin extends GlobalPlugin {
             throw new Error('Room does not exist');
         }
 
-        // Register audio buffer
-        const buffer = Buffer.alloc(data.length + 2);
-        // Copy message type
-        buffer.writeUInt16LE(messageType, 0);
-        // Copy data
-        data.copy(buffer, 2);
-        this.entries[++ this.currentEntryId] = {
-            buffer: buffer,
-            user: connection.session.user,
-        };
+        ++ this.currentEntryId;
         
         // Send the message to the room
         const content = `[[play audio//audio ${this.currentEntryId}]]`;
-        await room.sendMessage({
+        const message = await room.sendMessage({
             formatted: MessageFormatter.getInstance().replaceButtons(content, false, true),
             content: content,
             user: connection.session.user,
@@ -93,6 +84,21 @@ export class AudioRecorderPlugin extends GlobalPlugin {
                 audio: this.currentEntryId
             }
         });
+
+        // Create new buffer entry, which will be sent as-is to the client
+        // We preprend the message type and id to the audio file
+        const buffer = Buffer.alloc(data.length + 4 + 2);
+        // Add meta-data
+        buffer.writeUInt16LE(messageType, 0);
+        buffer.writeInt32LE(message.id, 2);
+        // Add data
+        data.copy(buffer, 6);
+
+        // Save new binary buffer
+        this.entries[this.currentEntryId] = {
+            buffer: buffer,
+            user: connection.session.user,
+        };
 
         // Update last interaction dates
         connection.session.lastInteractionDate = new Date();

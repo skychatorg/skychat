@@ -124,7 +124,7 @@ const onScroll = () => {
             v-for="message in client.messages"
             :key="message.id"
             :message="message"
-            @content-changed="scrollToBottomIfAutoScroll"
+            @content-size-changed="scrollToBottomIfAutoScroll"
         />
     </div>
 </template>

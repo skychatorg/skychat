@@ -49,8 +49,17 @@ export const useClientStore = defineStore('client', {
             });
 
             // Audio received
-            client.on('audio', blob => {
-                new Audio(URL.createObjectURL(blob)).play();
+            client.on('audio', ({ id, blob }) => {
+                // Try and find the message that corresponds to the audio
+                const message = this.messages.find(message => message.id === id);
+                if (! message) {
+                    console.warn(`Could not find message with id ${id}`);
+                    return;
+                }
+                // Update the message with the audio blob
+                message.formatted = `
+                    <audio src=${URL.createObjectURL(blob)} controls autoplay></audio>
+                `;
             });
 
             // On new message
