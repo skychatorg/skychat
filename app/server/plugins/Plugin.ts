@@ -79,7 +79,7 @@ export abstract class Plugin {
     public static readonly commandAliases: string[] = [];
 
     /**
-     * If the plugin uses storage, it needs to define a default value for its custom entry in user data object.
+     * If the plugin uses user storage, it needs to define a default value for its custom entry in user data object.
      */
     public static readonly defaultDataStorageValue?: any;
 
@@ -287,4 +287,16 @@ export abstract class Plugin {
         user: User,
         room: Room | null
     ): Promise<void>;
+
+    /**
+     * When binary data is received
+     * @abstract
+     * @param connection
+     * @param messageType
+     * @param data
+     * @returns Whether the data was handled. If returning true, no other plugin will be able to handle binary data.
+     */
+    public async onBinaryDataReceived(connection: Connection, messageType: number, data: Buffer): Promise<Boolean> {
+        return false
+    }
 }

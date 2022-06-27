@@ -140,11 +140,18 @@ export const useClientStore = defineStore('client', {
         },
 
         /**
-         * Send a raw message (blob, binary data) to the server
-         * @param {*} data
+         * Send an audio message to the server
+         * @param {Blob} blob 
          */
-        sendRaw: (data) => {
-            client.sendRaw(data);
+        sendAudio: blob => {
+            client.sendAudio(blob);
+        },
+
+        /**
+         * Send user cursor position
+         */
+        sendCursorPosition: (x, y) => {
+            client.sendCursorPosition(x, y);
         },
 
         /**

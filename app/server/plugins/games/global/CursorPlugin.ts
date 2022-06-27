@@ -4,11 +4,11 @@ import {User} from "../../../skychat/User";
 import {UserController} from "../../../skychat/UserController";
 import { Session } from "../../../skychat/Session";
 import { RoomManager } from "../../../skychat/RoomManager";
+import { BinaryMessageTypes } from "../../../../api/BinaryMessageTypes";
 
 
 /**
  * Handle cursor events
- * @TODO handle cursors mapping periodical cleanup
  */
 export class CursorPlugin extends GlobalPlugin {
 
@@ -16,27 +16,25 @@ export class CursorPlugin extends GlobalPlugin {
 
     static readonly defaultDataStorageValue = true;
 
-    static readonly commandName = 'cursor';
-
-    static readonly commandAliases = ['c'];
+    static readonly commandName = 'c';
 
     readonly minRight = -1;
 
     readonly hidden = true;
 
-    public readonly cursors: {[identifier: string]: {x: number, y: number, lastSent: Date}} = {};
+    /**
+     * Recent received cursor positions. Kept for other plugins.
+     */
+    public readonly cursors: { [identifier: string]: { x: number, y: number, lastSent: Date } } = {};
 
     readonly rules = {
-        cursor: {
-            minCount: 1,
-            maxCount: 1,
-            params: [{name: "action", pattern: /^(on|off)$/}]
-        },
         c: {
             minCount: 2,
             maxCount: 2,
             maxCallsPer10Seconds: 100,
-            params: [{name: "x", pattern: /^\d+(\.\d+)?$/}, {name: "y", pattern: /^\d+(\.\d+)?$/}]
+            params: [
+                { name: "x", pattern: /^\d+(\.\d+)?$/}, {name: "y", pattern: /^\d+(\.\d+)?$/ }
+            ]
         }
     };
 
@@ -47,30 +45,6 @@ export class CursorPlugin extends GlobalPlugin {
     }
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
-        if (alias === 'cursor') {
-            await this.handleToggle(param, connection);
-        } else {
-            await this.handleCursorEvent(param, connection);
-        }
-    }
-
-    /**
-     * On cursor toggle event.
-     * @param param
-     * @param connection
-     */
-    async handleToggle(param: string, connection: Connection): Promise<void> {
-        const cursorEnabled = param === 'on';
-        await UserController.savePluginData(connection.session.user, this.commandName, cursorEnabled);
-        connection.session.syncUserData();
-    }
-
-    /**
-     * On cursor event. Forward the cursor position to every connection in the room that has cursors enabled
-     * @param param
-     * @param connection
-     */
-    async handleCursorEvent(param: string, connection: Connection): Promise<void> {
         // Else, unpack cursor position
         const [xRaw, yRaw] = param.split(' ');
         const [x, y] = [parseFloat(xRaw), parseFloat(yRaw)];
@@ -79,25 +53,7 @@ export class CursorPlugin extends GlobalPlugin {
             x, y,
             lastSent: new Date()
         };
-        // For every connection
-        for (const session of Object.values(Session.sessions)) {
-            for (const conn of session.connections) {
-                // If the user has cursors disabled
-                if (! UserController.getPluginData(conn.session.user, this.commandName)) {
-                    // Abort
-                    continue;
-                }
-                // Do not send cursor events to the owner
-                if (conn.session.identifier === connection.session.identifier) {
-                    continue;
-                }
-                // And send it to this client
-                conn.send('cursor', {
-                    x, y, 
-                    user: connection.session.user.sanitized()
-                });
-            }
-        }
+        this.sendCursorPosition(connection.session.user, x, y, [connection.session.identifier]);
     }
 
     /**
@@ -106,7 +62,7 @@ export class CursorPlugin extends GlobalPlugin {
      * @param x 
      * @param y 
      */
-    async sendCursorPosition(user: User, x: number, y: number): Promise<void> {
+    async sendCursorPosition(user: User, x: number, y: number, identifierIgnoreList?: string[]): Promise<void> {
 
         // For every connection in the room
         for (const conn of Session.connections) {
@@ -114,7 +70,16 @@ export class CursorPlugin extends GlobalPlugin {
             if (! UserController.getPluginData(conn.session.user, this.commandName)) {
                 continue;
             }
-            conn.send('cursor', { x, y, user: user.sanitized() });
+            // If identifier is to be ignored
+            if (identifierIgnoreList && identifierIgnoreList.includes(conn.session.identifier)) {
+                continue;
+            }
+            const buffer = Buffer.alloc(14);
+            buffer.writeUInt16LE(BinaryMessageTypes.CURSOR, 0);
+            buffer.writeUInt32LE(user.id, 2);
+            buffer.writeFloatLE(x, 6);
+            buffer.writeFloatLE(y, 10);
+            conn.webSocket.send(buffer);
         }
     }
 
@@ -130,5 +95,22 @@ export class CursorPlugin extends GlobalPlugin {
                 delete this.cursors[identifier];
             }
         }
+    }
+
+    /**
+     * Cursors are sent in binary format to save bandwidth.
+     */
+    async onBinaryDataReceived(connection: Connection, messageType: number, data: Buffer): Promise<Boolean> {
+        if (messageType !== BinaryMessageTypes.CURSOR) {
+            return false;
+        }
+        // If user not logged in
+        if (! connection.session.user.id) {
+            return true;
+        }
+        const x = data.readFloatLE(0);
+        const y = data.readFloatLE(4);
+        await this.execute(this.commandName, `${x} ${y}`, connection);
+        return true;
     }
 }

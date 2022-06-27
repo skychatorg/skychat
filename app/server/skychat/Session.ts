@@ -4,6 +4,8 @@ import {IBroadcaster} from "./IBroadcaster";
 import {SanitizedRoom} from "./Room";
 
 
+export const BinaryMessageTypes = 123;
+
 export type SanitizedSession = {
 
     identifier: string;

@@ -39,7 +39,7 @@ const sendCursorPosition = (x, y) => {
         timeout = setTimeout(() => sendCursorPosition(x, y), CURSOR_POSITION_DELAY_MS - delay);
         return;
     }
-    client.sendMessage(`/c ${x} ${y}`);
+    client.sendCursorPosition(x, y);
     lastSentDate.value = new Date();
 };
 

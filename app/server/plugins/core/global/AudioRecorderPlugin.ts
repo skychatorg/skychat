@@ -3,6 +3,7 @@ import { Connection } from "../../../skychat/Connection";
 import { User } from "../../../skychat/User";
 import { MessageFormatter } from "../../../skychat/MessageFormatter";
 import { Config } from "../../../skychat/Config";
+import { BinaryMessageTypes } from "../../../../api/BinaryMessageTypes";
 
 
 export class AudioRecorderPlugin extends GlobalPlugin {
@@ -27,7 +28,7 @@ export class AudioRecorderPlugin extends GlobalPlugin {
 
     private currentEntryId: number = 0;
 
-    public entries: {[id: number]: {buffer: Buffer, user: User}} = {};
+    public entries: { [id: number]: { buffer: Buffer, user: User } } = {};
 
     /**
      * Send an audio recording to the client
@@ -44,17 +45,19 @@ export class AudioRecorderPlugin extends GlobalPlugin {
     }
 
     /**
-     * Register an audio recording
-     * @param buffer
-     * @param connection 
+     * Cursors are sent in binary format to save bandwidth.
      */
-    async registerAudioBuffer(buffer: Buffer, connection: Connection): Promise<void> {
+    async onBinaryDataReceived(connection: Connection, messageType: number, data: Buffer): Promise<Boolean> {
+
+        if (messageType !== BinaryMessageTypes.AUDIO) {
+            return false;
+        }
 
         if (connection.session.user.right < Config.PREFERENCES.minRightForAudioRecording) {
             throw new Error('You do not have the permission to save audio files');
         }
 
-        if (buffer.length > AudioRecorderPlugin.MAX_BUFFER_LENGTH) {
+        if (data.length > AudioRecorderPlugin.MAX_BUFFER_LENGTH) {
             throw new Error('Audio recording too long');
         }
 
@@ -69,8 +72,13 @@ export class AudioRecorderPlugin extends GlobalPlugin {
         }
 
         // Register audio buffer
+        const buffer = Buffer.alloc(data.length + 2);
+        // Copy message type
+        buffer.writeUInt16LE(messageType, 0);
+        // Copy data
+        data.copy(buffer, 2);
         this.entries[++ this.currentEntryId] = {
-            buffer,
+            buffer: buffer,
             user: connection.session.user,
         };
         
@@ -94,5 +102,6 @@ export class AudioRecorderPlugin extends GlobalPlugin {
 
         // Delete old entry
         delete this.entries[this.currentEntryId - AudioRecorderPlugin.MAX_RECORDING_CACHED];
+        return true;
     }
 }

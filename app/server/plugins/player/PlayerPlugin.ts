@@ -351,7 +351,6 @@ export class PlayerPlugin extends GlobalPlugin {
         }
         const mediaType = param.split(' ')[0];
         const mediaId = param.split(' ')[1];
-        console.log(`Removing media ${mediaType} / ${mediaId}`);
         const queueEntry = channel.getQueueEntry(mediaType, mediaId);
         if (! queueEntry) {
             throw new Error('No such video in the queue');

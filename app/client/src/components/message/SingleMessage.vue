@@ -108,7 +108,9 @@ const messageInteract = () => {
                         }"
                     >
                         {{ message.user.username }}
-                        <fa v-if="message.meta.device === 'mobile'" icon="mobile-screen" class="ml-1" />
+                        <sup v-if="message.meta.device === 'mobile'">
+                            <fa icon="mobile-screen" class="ml-1" />
+                        </sup>
                     </div>
                 </div>
                 <!-- Quoted message -->

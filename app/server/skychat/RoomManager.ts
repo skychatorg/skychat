@@ -108,13 +108,13 @@ export class RoomManager {
                     }));
 
                 // Join a room
-                this.server.registerEvent('join-room', this.onJoinRoom.bind(this), 0, 120, new iof.ObjectFilter({roomId: new iof.NumberFilter(0, Infinity, false)}));
+                this.server.registerEvent('join-room', this.onJoinRoom.bind(this), 0, 120, new iof.ObjectFilter({ roomId: new iof.NumberFilter(0, Infinity, false) }));
 
                 // On message sent
                 this.server.registerEvent('message', this.onMessage.bind(this), 0, Infinity, 'string');
 
                 // On audio received
-                this.server.registerEvent('audio', this.onAudio.bind(this), 0, 30);
+                this.server.registerEvent('binary-message', this.onBinaryMessage.bind(this), 0, 180, new iof.ObjectFilter({ type: new iof.NumberFilter(0, Infinity, false), data: new iof.ValueTypeFilter('object') }));
 
                 // Periodically send the room list to users
                 setInterval(() => {
@@ -476,17 +476,24 @@ export class RoomManager {
         await command.execute(commandName, param, connection);
     }
 
-    /**
-     * When an audio buffer is received
-     * @param buffer 
-     */
-    private async onAudio(buffer: Buffer, connection: Connection): Promise<void> {
+    private async onBinaryMessage({ type, data }: { type: number, data: Buffer }, connection: Connection): Promise<void> {
 
-        if (! connection.room) {
-            throw new Error('Audio recordings should be sent in rooms');
+        // Try to find a global plugin that wants to handle the binary message
+        for (const plugin of this.plugins) {
+            if (await plugin.onBinaryDataReceived(connection, type, data)) {
+                return;
+            }
         }
-        
-        const audioRecorderPlugin = this.getPlugin('audio') as unknown as AudioRecorderPlugin;
-        await audioRecorderPlugin.registerAudioBuffer(buffer, connection);
+
+        // Try to find a room plugin that wants to handle the binary message
+        if (connection.room) {
+            for (const plugin of connection.room.plugins) {
+                if (await plugin.onBinaryDataReceived(connection, type, data)) {
+                    return;
+                }
+            }
+        }
+
+        throw new Error('Binary message not handled');
     }
 }

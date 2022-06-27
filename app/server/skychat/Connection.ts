@@ -1,11 +1,14 @@
+
 import * as WebSocket from "ws";
 import * as http from "http";
-import {Data} from "ws";
-import {EventEmitter} from "events";
-import {Room} from "./Room";
-import {Session} from "./Session";
-import {IBroadcaster} from "./IBroadcaster";
-import {UAParser} from "ua-parser-js";
+import { UAParser } from "ua-parser-js";
+import { Data } from "ws";
+import { EventEmitter } from "events";
+import { Room } from "./Room";
+import { Session } from "./Session";
+import { IBroadcaster } from "./IBroadcaster";
+import { BinaryMessageTypes } from "../../api/BinaryMessageTypes";
+
 
 
 /**
@@ -39,6 +42,11 @@ export class Connection extends EventEmitter implements IBroadcaster {
     public readonly device: string;
 
     public readonly ip: string;
+
+    /**
+     * Maps message types to specific handlers
+     */
+    public readonly binaryMessageHandlers: { [keyCode: string]: (data: Buffer) => void } = {};
 
     private lastPingDate: Date;
 
@@ -121,7 +129,9 @@ export class Connection extends EventEmitter implements IBroadcaster {
 
             // If data is not of type string, fail with error
             if (data instanceof Buffer) {
-                this.emit('audio', data);
+                const messageType = data.readUInt16LE(0);
+                const messageData = data.slice(2);
+                this.emit('binary-message', { type: messageType, data: messageData });
                 return;
             }
 

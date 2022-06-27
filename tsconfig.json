@@ -7,11 +7,12 @@
         "target": "ES5",
         "lib": ["ES2019", "DOM"],
         "moduleResolution": "node",
-        "rootDir": "./app/server/",
+        "rootDir": "./app/",
         "outDir": "build/",
         "sourceMap": false
     },
     "include": [
+        "app/api/**/*",
         "app/server/**/*",
     ],
     "exclude": [

@@ -179,7 +179,7 @@ const uploadAudio = async function() {
     if (recordingAudio.value) {
         // Stop recording
         const {blob, uri, audio} = await recordingAudioStopCb.value();
-        client.sendRaw(blob);
+        client.sendAudio(blob);
     } else {
         // Start recording
         recordingAudioStopCb.value = await AudioRecorder.start();

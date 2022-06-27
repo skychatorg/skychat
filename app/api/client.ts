@@ -1,4 +1,5 @@
 import { EventEmitter } from "events";
+import { BinaryMessageTypes } from "./BinaryMessageTypes";
 import { PublicConfig, SanitizedMessage, SanitizedUser, AuthToken, SanitizedSession, SanitizedRoom, SanitizedPoll, SanitizedGallery, SanitizedGalleryMedia, SanitizedPlayerChannel, VideoInfo, QueuedVideoInfo } from "../server";
 
 
@@ -395,11 +396,37 @@ export class SkyChatClient extends EventEmitter {
     /**
      * Send anything (blob, binary)
      */
-    sendRaw(data: any) {
+    _sendRaw(data: any) {
         if (! this._websocket) {
             return;
         }
         this._websocket.send(data);
+    }
+    
+    /**
+     * Send an audio file
+     * @param blob 
+     */
+    sendAudio(blob: Blob) {
+        this._sendRaw(new Blob([
+            new Uint16Array([BinaryMessageTypes.AUDIO]),
+            blob
+        ]));
+    }
+    
+    /**
+     * Send current cursor position
+     * @param x 
+     * @param y 
+     */
+    sendCursorPosition(x: number, y: number) {
+        if (! this._user || ! this._user.id) {
+            return;
+        }
+        this._sendRaw(new Blob([
+            new Uint16Array([BinaryMessageTypes.CURSOR]),
+            new Float32Array([x, y]),
+        ]));
     }
 
     /**
@@ -472,10 +499,41 @@ export class SkyChatClient extends EventEmitter {
      * When a message is received on the websocket
      * @param message
      */
-    private _onWebSocketMessage(message: any) {
+    private async _onWebSocketMessage(message: any) {
         // If raw audio received
         if (message.data && message.data.constructor === Blob) {
-            this.emit('audio', message.data);
+            // Read message type, which is the first 2 bytes (UInt16)
+            const buffer = await message.data.arrayBuffer();
+            const view = new DataView(buffer);
+            const messageType = view.getUint16(0, true);
+            const messageData = message.data.slice(2);
+
+            switch (messageType) {
+
+                // Audio
+                case BinaryMessageTypes.AUDIO:
+                    this.emit('audio', messageData);
+                    break;
+                
+                // Cursor
+                case BinaryMessageTypes.CURSOR:
+                    const cursor = view;
+                    const id = cursor.getUint32(2, true);
+                    const x = cursor.getFloat32(6, true);
+                    const y = cursor.getFloat32(10, true);
+                    const entry = this._connectedList.find(entry => entry.user.id === id);
+                    this.emit('cursor', {
+                        user: entry ? entry.user : defaultUser,
+                        x,
+                        y,
+                    });
+                    break;
+                
+                // Unknown
+                default:
+                    console.warn(`Unknown message type: ${messageType}`);
+                    break;
+            }
             return;
         }
         // Otherwise, if normal json message received
