@@ -58,7 +58,10 @@ export const useClientStore = defineStore('client', {
                 }
                 // Update the message with the audio blob
                 message.formatted = `
-                    <audio src=${URL.createObjectURL(blob)} controls autoplay></audio>
+                    <audio class="skychat-audio-tag" controls autoplay>
+                        <source src="${URL.createObjectURL(blob)}" type="audio/wav">
+                        Your browser does not support the audio element.
+                    </audio>
                 `;
             });
 

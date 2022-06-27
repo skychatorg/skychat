@@ -143,6 +143,12 @@ body {
     width: 100%;
 }
 
+/* Audio */
+.skychat-audio-tag {
+    @apply inline;
+    height: 34px;
+}
+
 .skychat-button {
     padding: 2px 10px;
     border-radius: 10px;
