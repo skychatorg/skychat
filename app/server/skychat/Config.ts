@@ -53,8 +53,6 @@ export class Config {
 
     public static FAKE_MESSAGES: string[] = [];
 
-    public static RANKS: { limit: number, images: { [size: string]: string } }[] = [];
-
     public static PLUGIN_GROUP_NAMES: string[] = [];
 
     public static isInOPList(identifier: string): boolean {
@@ -66,9 +64,12 @@ export class Config {
         return Config.GUEST_NAMES[index];
     }
 
+    /**
+     * If any data is to be known by the client, it should be sent here.
+     */
     public static toClient(): PublicConfig {
         return {
-            ranks: Config.RANKS,
+
         }
     }
 
@@ -122,12 +123,6 @@ export class Config {
         if (Config.FAKE_MESSAGES.length === 0) {
             console.warn('No fake messages found (fakemessages.txt file is empty). Using a single empty fake message.');
             Config.GUEST_NAMES.push('');
-        }
-        // Load ranks
-        Config.RANKS = JSON.parse(fs.readFileSync('config/ranks.json').toString());
-        if (Config.RANKS.length === 0) {
-            console.warn('No rank defined in config/ranks.json');
-            Config.RANKS.push({limit: 0, images: { "18": "", "26": "" }});
         }
         // Load preferences.json
         Config.PREFERENCES = JSON.parse(fs.readFileSync('config/preferences.json').toString());

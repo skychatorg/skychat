@@ -1,16 +1,15 @@
-import {Server} from "./Server";
-import {Connection} from "./Connection";
+import * as fs from "fs";
 import * as http from "http";
-import {Session} from "./Session";
-import {DatabaseHelper} from "./DatabaseHelper";
-import {User} from "./User";
 import * as iof from "io-filter";
-import {Room} from "./Room";
+import { Server } from "./Server";
+import { Connection } from "./Connection";
+import { Session } from "./Session";
+import { DatabaseHelper } from "./DatabaseHelper";
+import { User } from "./User";
+import { Room } from "./Room";
 import { UserController } from "./UserController";
 import { Config } from "./Config";
-import * as fs from "fs";
-import {Message} from "./Message";
-import {AudioRecorderPlugin} from "../plugins/core/global/AudioRecorderPlugin";
+import { Message } from "./Message";
 import { GlobalPlugin } from "../plugins/GlobalPlugin";
 import { globalPluginGroup } from "../plugins/GlobalPluginGroup";
 import { MessageFormatter } from "./MessageFormatter";
@@ -53,76 +52,68 @@ export class RoomManager {
         // Create server instance
         this.server = new Server(this.getNewSession.bind(this));
 
-        // Load database then register server events
-        DatabaseHelper
-            .load()
-            .then(async () => {
+        // Try to load this instance's settings from storage
+        // Load rooms from storage
+        this.load();
 
-                // Try to load this instance's settings from storage
-                // Load rooms from storage
-                this.load();
+        if (this.rooms.length === 0) {
+            this.rooms.push(new Room(this, false));
+        }
 
-                if (this.rooms.length === 0) {
-                    this.rooms.push(new Room(this, false));
-                }
+        // Load last messages from all rooms (do not wait on it)
+        Promise.all(this.rooms.map(room => room.loadLastMessagesFromDB()));
 
-                // Load last messages from all rooms
-                for (const room of this.rooms) {
-                    await room.loadLastMessagesFromDB();
-                }
+        // Load global plugins
+        this.plugins = globalPluginGroup.instantiateGlobalPlugins(this);
+        this.commands = globalPluginGroup.extractCommandObjectFromPlugins(this.plugins) as {[commandName: string]: GlobalPlugin};
 
-                // Load global plugins
-                this.plugins = globalPluginGroup.instantiateGlobalPlugins(this);
-                this.commands = globalPluginGroup.extractCommandObjectFromPlugins(this.plugins) as {[commandName: string]: GlobalPlugin};
+        // Register hooks
+        this.server.onConnectionCreated = this.onConnectionCreated.bind(this);
 
-                // Register hooks
-                this.server.onConnectionCreated = this.onConnectionCreated.bind(this);
+        // On register
+        this.server.registerEvent(
+            'register', this.onRegister.bind(this),
+            500, 2, // 0.5 second cooldown, max 2 attempts / minute
+            new iof.ObjectFilter({
+                username: new iof.RegExpFilter(User.USERNAME_LOGGED_REGEXP),
+                password: new iof.RegExpFilter(/^.{4,512}$/),
+            }));
 
-                // On register
-                this.server.registerEvent(
-                    'register', this.onRegister.bind(this),
-                    500, 2, // 0.5 second cooldown, max 2 attempts / minute
-                    new iof.ObjectFilter({
-                        username: new iof.RegExpFilter(User.USERNAME_LOGGED_REGEXP),
-                        password: new iof.RegExpFilter(/^.{4,512}$/),
-                    }));
+        // Login by username & password
+        this.server.registerEvent(
+            'login', this.onLogin.bind(this),
+            500, 5, // 0.5 second cooldown, max 5 attempts / minute
+            new iof.ObjectFilter({
+                username: new iof.RegExpFilter(User.USERNAME_LOGGED_REGEXP),
+                password: new iof.RegExpFilter(/^.{4,512}$/),
+            }));
 
-                // Login by username & password
-                this.server.registerEvent(
-                    'login', this.onLogin.bind(this),
-                    500, 5, // 0.5 second cooldown, max 5 attempts / minute
-                    new iof.ObjectFilter({
-                        username: new iof.RegExpFilter(User.USERNAME_LOGGED_REGEXP),
-                        password: new iof.RegExpFilter(/^.{4,512}$/),
-                    }));
+        // Login using token
+        this.server.registerEvent(
+            'set-token',
+            this.onSetToken.bind(this),
+            0, 30, // no cooldown, max 30 attemtps / minute
+            new iof.ObjectFilter({
+                userId: new iof.NumberFilter(1, Infinity, false),
+                timestamp: new iof.NumberFilter(- Infinity, Infinity, false),
+                signature: new iof.ValueTypeFilter('string'),
+            }));
 
-                // Login using token
-                this.server.registerEvent(
-                    'set-token',
-                    this.onSetToken.bind(this),
-                    0, 30, // no cooldown, max 30 attemtps / minute
-                    new iof.ObjectFilter({
-                        userId: new iof.NumberFilter(1, Infinity, false),
-                        timestamp: new iof.NumberFilter(- Infinity, Infinity, false),
-                        signature: new iof.ValueTypeFilter('string'),
-                    }));
+        // Join a room
+        this.server.registerEvent('join-room', this.onJoinRoom.bind(this), 0, 120, new iof.ObjectFilter({ roomId: new iof.NumberFilter(0, Infinity, false) }));
 
-                // Join a room
-                this.server.registerEvent('join-room', this.onJoinRoom.bind(this), 0, 120, new iof.ObjectFilter({ roomId: new iof.NumberFilter(0, Infinity, false) }));
+        // On message sent
+        this.server.registerEvent('message', this.onMessage.bind(this), 0, Infinity, 'string');
 
-                // On message sent
-                this.server.registerEvent('message', this.onMessage.bind(this), 0, Infinity, 'string');
+        // On audio received
+        this.server.registerEvent('binary-message', this.onBinaryMessage.bind(this), 0, 180, new iof.ObjectFilter({ type: new iof.NumberFilter(0, Infinity, false), data: new iof.ValueTypeFilter('object') }));
 
-                // On audio received
-                this.server.registerEvent('binary-message', this.onBinaryMessage.bind(this), 0, 180, new iof.ObjectFilter({ type: new iof.NumberFilter(0, Infinity, false), data: new iof.ValueTypeFilter('object') }));
-
-                // Periodically send the room list to users
-                setInterval(() => {
-                    Object
-                        .values(Session.sessions)
-                        .map(session => this.sendRoomList(session));
-                }, 20 * 1000);
-            });
+        // Periodically send the room list to users
+        setInterval(() => {
+            Object
+                .values(Session.sessions)
+                .map(session => this.sendRoomList(session));
+        }, 20 * 1000);
 
         setInterval(this.tick.bind(this), RoomManager.TICK_INTERVAL);
     }

@@ -1,4 +1,4 @@
-import {Connection} from "../../skychat/Connection";
+import { Connection } from "../../skychat/Connection";
 import { GlobalPlugin } from "../GlobalPlugin";
 import { RoomManager } from "../../skychat/RoomManager";
 import { GalleryMedia } from "./GalleryMedia";
@@ -126,7 +126,7 @@ export class FileConverterPlugin extends GlobalPlugin {
         try {
             convertedMediaPath = await method.bind(this)(connection, media, convertOptions.join(' '));
         } catch (error) {
-            thrownError = error;
+            thrownError = error as Error;
         }
         const session = Session.getSessionByIdentifier(connection.session.identifier);
         session && session.send('message', UserController.createNeutralMessage({ id: 0, content: `@${session.identifier} ` + (thrownError ? thrownError.message : 'File conversion finished')}).sanitized());
