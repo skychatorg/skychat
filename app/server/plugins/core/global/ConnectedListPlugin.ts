@@ -26,6 +26,16 @@ export class ConnectedListPlugin extends GlobalPlugin {
         }
     }
 
+    /**
+     * Debounced timeout to send a sync command to clients
+     */
+    syncDebounced: NodeJS.Timeout | null = null;
+
+    /**
+     * Last date when clients were synchronized
+     */
+    syncLastDate: Date = new Date();
+
     constructor(manager: RoomManager) {
         super(manager);
 
@@ -63,6 +73,28 @@ export class ConnectedListPlugin extends GlobalPlugin {
     }
 
     public sync(): void {
+
+        // Multiple sync requests can arrive at the same time, so we debounce them to avoid sending too many of them
+        const debounceSecs = 3;
+
+        // If last sync was more than 30s ago
+        if (this.syncLastDate.getTime() + debounceSecs * 1000 < new Date().getTime()) {
+            this._syncNow();
+            return;
+        }
+
+        // Cancel old re-sync request if any
+        if (this.syncDebounced) {
+            clearTimeout(this.syncDebounced);
+        }
+
+        // Resync when 30s is elapsed since this.syncLastDate
+        this.syncDebounced = setTimeout(this._syncNow.bind(this), debounceSecs * 1000 - (new Date().getTime() - this.syncLastDate.getTime()));
+    }
+
+    private _syncNow() {
+
+        this.syncLastDate = new Date();
 
         // Build a list of anon sessions to send to guests
         let anonSessions =  Object.values(Session.sessions)
