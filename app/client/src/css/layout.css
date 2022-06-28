@@ -1,5 +1,6 @@
 
 body {
+    @apply relative;
     color: white;
     background: black;
     height: 100%;

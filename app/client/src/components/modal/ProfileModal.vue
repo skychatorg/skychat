@@ -15,18 +15,17 @@ const client = useClientStore();
     <ModalTemplate
         id="profile"
         title="Preferences"
-        v-if="app.modals.profile"
     >
 
         <!-- Color -->
         <SectionSubTitle>
             Custom color
         </SectionSubTitle>
-        <div class="mt-2 px-16 flex flex-wrap gap-2 justify-center">
+        <div class="mt-2 w-full md:w-2/3 lg:w-[120px] mx-auto flex flex-wrap gap-2 justify-center">
             <div
                 v-for="color, index in client.state.custom.color"
                 :key="index"
-                class="w-4 h-4 cursor-pointer transition-all hover:rounded"
+                class="w-6 h-6 lg:w-4 lg:h-4 cursor-pointer transition-all hover:rounded"
                 :style="{
                     backgroundColor: color.value,
                 }"
@@ -36,6 +35,3 @@ const client = useClientStore();
         </div>
     </ModalTemplate>
 </template>
-
-<style scoped>
-</style>

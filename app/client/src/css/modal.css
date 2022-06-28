@@ -1,10 +1,19 @@
 #modals {
-    @apply relative;
+    @apply fixed top-0 left-0 w-full h-full mt-[var(--page-header-height)];
+    @apply pointer-events-none;
 }
 
-#modals .modal {
-    @apply fixed right-0 h-full bg-secondary/10 backdrop-blur-lg p-4;
-    @apply w-full lg:w-[var(--modal-width)];
+#modals #modal-container {
+    @apply relative h-full mx-auto w-full max-w-[var(--page-max-width)] transition-all;
+}
 
-    top: var(--page-header-height);
+#modals #modal-container:not(:empty) {
+    @apply backdrop-grayscale backdrop-blur;
+    @apply pointer-events-auto;
+}
+
+#modals #modal-container .modal {
+    @apply absolute top-0 right-0 h-full bg-secondary/10 backdrop-blur-lg p-4;
+    @apply w-full lg:w-[var(--modal-width)];
+    @apply pointer-events-auto;
 }

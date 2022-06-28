@@ -231,7 +231,7 @@ const cancelAudio = function() {
                 <!-- Upload media -->
                 <div title="Upload a media" class="flex flex-col justify-end">
                     <label
-                        class="form-control cursor-pointer"
+                        class="form-control cursor-pointer w-12"
                         for="file-input"
                     >
                         <fa icon="upload" />
@@ -247,25 +247,27 @@ const cancelAudio = function() {
 
                 <!-- Send audio -->
                 <div title="Send an audio" class="ml-2 flex flex-col justify-end">
-                    <button
-                        class="px-1 form-control"
-                        @click="uploadAudio"
-                    >
-                        <fa icon="microphone" :class="{ 'text-primary': recordingAudio }" />
-                    </button>
-                    <button
-                        v-show="recordingAudio"
-                        class="ml-2 px-1 form-control"
-                        @click="cancelAudio"
-                    >
-                        <fa icon="ban" class="text-danger" />
-                    </button>
+                    <div class="flex">
+                        <button
+                            class="w-12 form-control"
+                            @click="uploadAudio"
+                        >
+                            <fa icon="microphone" :class="{ 'text-primary': recordingAudio }" />
+                        </button>
+                        <button
+                            v-show="recordingAudio"
+                            class="ml-2 w-12 form-control"
+                            @click="cancelAudio"
+                        >
+                            <fa icon="ban" class="text-danger" />
+                        </button>
+                    </div>
                 </div>
 
                 <!-- RisiBank -->
                 <div title="Add a media from RisiBank" class="flex flex-col justify-end">
-                    <button @click="openRisiBank" class="form-control ml-2 h-fit align-bottom">
-                        <img src="/assets/images/icons/risibank.png" class="p-1 w-6 h-6">
+                    <button @click="openRisiBank" class="form-control ml-2 w-12 h-10 align-bottom">
+                        <img src="/assets/images/icons/risibank.png" class="w-4 h-4">
                     </button>
                 </div>
 

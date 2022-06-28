@@ -1,3 +1,6 @@
+const defaultTheme = require('tailwindcss/defaultTheme');
+
+
 /** @type {import('tailwindcss').Config} */
 module.exports = {
     content: [
@@ -6,6 +9,9 @@ module.exports = {
     ],
     theme: {
         extend: {
+            screens: {
+                max: '1640px',
+            },
             colors: {
 
                 // Shades of gray
