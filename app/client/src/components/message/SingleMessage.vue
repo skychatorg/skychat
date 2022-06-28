@@ -86,7 +86,7 @@ const messageInteract = () => {
 
 <template>
     <HoverCard
-        :borderColor="message.user.data.plugins.color"
+        :borderColor="message.user.data.plugins.custom.color"
         :selectable="selectable"
         :selected="false"
         @contextmenu.prevent="messageInteract"
@@ -104,7 +104,7 @@ const messageInteract = () => {
                     <div
                         class="grow font-bold"
                         :style="{
-                            color: message.user.data.plugins.color,
+                            color: message.user.data.plugins.custom.color,
                         }"
                     >
                         {{ message.user.username }}

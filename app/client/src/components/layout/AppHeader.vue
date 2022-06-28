@@ -50,10 +50,15 @@ const connectionStatus = computed(() => {
                         <div class="grow flex flex-col mr-4">
                             <span class="text-right">
                                 {{ client.state.user.username }}
+                                <button @click="app.toggleModal('profile')" class="ml-2">
+                                    <fa icon="pen-to-square" />
+                                </button>
                             </span>
-                            <button @click="logout" class="text-right">
-                                <fa icon="arrow-right-from-bracket" />
-                            </button>
+                            <div class="flex justify-end">
+                                <button @click="logout">
+                                    <fa icon="arrow-right-from-bracket" />
+                                </button>
+                            </div>
                         </div>
                         
                         <UserBigAvatar :user="client.state.user" />
@@ -71,6 +76,7 @@ const connectionStatus = computed(() => {
 
 <style scoped>
 .header {
+    height: var(--page-header-height);
     width: 100%;
     max-width: var(--page-max-width);
     margin: 0 auto;

@@ -1,0 +1,68 @@
+
+/* Sticker */
+.skychat-sticker {
+    @apply inline-block align-baseline;
+    max-width: 80px;
+    max-height: 80px;
+}
+
+/* RisiBank Sticker */
+.skychat-risibank-sticker {
+    @apply inline-block align-baseline;
+    width: 90px;
+    height: 60px;
+}
+.skychat-risibank-sticker > img {
+    object-fit: contain;
+    height: 100%;
+    width: 100%;
+}
+
+/* Image */
+.skychat-image {
+    @apply inline-block align-baseline;
+    width: 120px;
+    height: 80px;
+}
+.skychat-image > img {
+    object-fit: contain;
+    height: 100%;
+    width: 100%;
+}
+
+/* Audio */
+.skychat-audio-tag {
+    @apply inline;
+    height: 34px;
+}
+
+.skychat-button {
+    padding: 2px 10px;
+    border-radius: 10px;
+    background-color: transparent;
+    color: white;
+    border: 1px solid #777777;
+    cursor: pointer;
+}
+.skychat-button .skychat-button-info {
+    color: #f3aaaa;
+}
+
+.skychat-link {
+    text-decoration: none;
+    color: white;
+}
+
+.skychat-table {
+    text-align: left;
+    width: 100%;
+    border-collapse: collapse;
+}
+.skychat-table tr {
+    border-bottom: 1pt solid #4e4e4e;
+
+}
+.skychat-table tr td,
+.skychat-table tr th {
+    padding: 2px;
+}

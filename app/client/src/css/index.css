@@ -1,0 +1,48 @@
+@import './layout.css';
+@import './modal.css';
+@import './scrollbar.css';
+@import './skychat.css';
+@import './util.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    :root {
+
+        --page-header-height: 4rem;
+        --page-max-width: 1640px;
+        --page-col-left-width: 260px;
+        --page-col-right-width: 340px;
+        --modal-width: 400px;
+
+        --color-skygray-white: 244 244 255;
+        --color-skygray-lightest: 160 160 160;
+        --color-skygray-lighter: 115 115 115;
+        --color-skygray-light: 84 84 88;
+        --color-skygray-casual: 61 61 61;
+        --color-skygray-dark: 40 40 40;
+        --color-skygray-darker: 17 17 17;
+        --color-skygray-black: 0 0 3;
+
+
+        --color-primary: 119 155 233;
+        --color-primary-light: 182 200 244;
+        --color-secondary: 161 111 218;
+        --color-secondary-light: 211 173 255;
+        --color-tertiary: 250 88 182;
+        --color-tertiary-light: 247 166 219;
+        
+        --color-info: 119 155 233;
+        --color-info-light: 182 200 244;
+        --color-warn: 228 159 77;
+        --color-warn-light: 244 175 125;
+        --color-danger: 255 69 103;
+        --color-danger-light: 255 120 150;
+
+        --color-scrollbar-track: #34343422;
+        --color-scrollbar-thumb: rgba(78, 78, 78, 0.5);
+        --color-scrollbar-thumb-hover: #888;
+    }
+}

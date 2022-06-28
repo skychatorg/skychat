@@ -15,6 +15,8 @@ export type CustomizationElementValue = {
     value: any;
 };
 
+export type CustomizationElements = {[key: string]: CustomizationElementValue[]};
+
 export class CustomizationPlugin extends GlobalPlugin {
 
     /**
@@ -25,41 +27,45 @@ export class CustomizationPlugin extends GlobalPlugin {
     /**
      * All possible customization keys/values
      */
-    static readonly ITEMS: {[key: string]: CustomizationElementValue[]} = {
+    static readonly ITEMS: CustomizationElements = {
 
         [CustomizationPlugin.KEY_COLOR]: [
-            { id: 0, name: 'default', value: '#aaaaaa' },
 
-            { id: 1, name: 'darkgray', value: '#656565' },
-            { id: 2, name: 'purewhite', value: '#ffffff' },
+            // Grays
+            { id: 0, name: 'Dark Dark Dark Dark Gray', value: '#454545' },
+            { id: 1, name: 'Dark Dark Dark Gray', value: '#555555' },
+            { id: 2, name: 'Dark Dark Gray', value: '#656565' },
+            { id: 3, name: 'Dark Gray', value: '#757575' },
+            { id: 4, name: 'Boring Gray', value: '#888888' },
+            { id: 5, name: 'Gray', value: '#aaaaaa' },
+            { id: 6, name: 'lightgray', value: '#cccccc' },
+            { id: 7, name: 'Light Gray', value: '#dddddd' },
+            { id: 8, name: 'Light Light Gray', value: '#eeeeee' },
+            { id: 9, name: 'Light Light Light Gray', value: '#f6f6f6' },
 
-            { id: 3, name: 'crimson', value: '#ec375a' },
-            { id: 4, name: 'palevioletred', value: '#db7093' },
-            { id: 5, name: 'lavenderblush', value: '#e6a2b9' },
-            { id: 6, name: 'lightpurple', value: '#ea5fea' },
-            { id: 7, name: 'lavender', value: '#9494e0' },
-            { id: 8, name: 'steelblue', value: '#4b9fd5' },
-            { id: 9, name: 'teal', value: '#008080' },
-            { id: 10, name: 'lightcyan', value: '#82e2e2' },
-            { id: 11, name: 'springgreen', value: '#00ff7f' },
-            { id: 12, name: 'olive', value: '#808000' },
-            { id: 13, name: 'lemonchiffon', value: '#fffacd' },
-            { id: 14, name: 'tan', value: '#f4a460' },
+            // https://coolors.co/ff4769-f7457c-f34486-ee428f-e640a2-dd3db4-d53bc7-cc38da-c837e4-c436ed
+            { id: 10, name: 'Fiery Rose', value: '#FF4769' },
+            { id: 11, name: 'Light French Rose', value: '#F7457C' },
+            { id: 12, name: 'French Rose', value: '#F34486' },
+            { id: 13, name: 'French Fuchsia', value: '#EE428F' },
+            { id: 14, name: 'Light Frostbite', value: '#E640A2' },
+            { id: 15, name: 'Frostbite', value: '#DD3DB4' },
+            { id: 16, name: 'Light Light Steel Pink', value: '#D53BC7' },
+            { id: 17, name: 'Steel Pink', value: '#CC38DA' },
+            { id: 18, name: 'Steel Pink', value: '#C837E4' },
+            { id: 19, name: 'Phlox', value: '#C436ED' },
 
-            { id: 15, name: 'purple', value: '#ae1e68' },
-            { id: 16, name: 'rebeccapurple', value: '#a348ff' },
-            { id: 17, name: 'royalblue', value: '#4169e1' },
-            { id: 18, name: 'oldblue', value: '#4c80bb' },
-            { id: 19, name: 'darkcyan', value: '#046380' },
-            { id: 20, name: 'turquoise', value: '#40e0d0' },
-            { id: 21, name: 'green', value: '#388e3c' },
-            { id: 22, name: 'limegreen', value: '#32cd32' },
-            { id: 23, name: 'yellow', value: '#e4e400' },
-            { id: 24, name: 'orange', value: '#e67e00' },
-
-            // Disabled because too flashy
-            // {id: 25, name: 'orangered', value: '#ff4500', price: ShopPlugin.COLORS_TIER_3_COST},
-            // {id: 26, name: 'bestred', value: '#ff2424', price: ShopPlugin.COLORS_TIER_3_COST},
+            // https://coolors.co/bb33ff-bc47ff-b65cff-a35cff-7e47ff-5447ff-4778ff-4788ff-5c9aff-70b5ff
+            { id: 20, name: 'Electric Purple', value: '#BB33FF' },
+            { id: 21, name: 'Phlox Purple', value: '#BC47FF' },
+            { id: 22, name: 'Medium Orchid', value: '#B65CFF' },
+            { id: 23, name: 'Medium Purple', value: '#A35CFF' },
+            { id: 24, name: 'Majorelle Purple', value: '#7E47FF' },
+            { id: 25, name: 'Majorelle Blue', value: '#5447FF' },
+            { id: 26, name: 'Blue Crayola', value: '#4778FF' },
+            { id: 27, name: 'United Nations Blue', value: '#4788FF' },
+            { id: 28, name: 'Cornflower Blue', value: '#5C9AFF' },
+            { id: 29, name: 'French Sky Blue', value: '#70B5FF' },
         ],
     };
 
@@ -112,5 +118,14 @@ export class CustomizationPlugin extends GlobalPlugin {
         data[type] = item.value;
         this.saveUserData(connection.session.user, data);
         (this.manager.getPlugin('connectedlist') as ConnectedListPlugin).sync();
+    }
+
+    /**
+     * Send the list of all items to the new connection
+     * @abstract
+     * @param connection
+     */
+    async onNewConnection(connection: Connection): Promise<void> {
+        connection.send('custom', CustomizationPlugin.ITEMS);
     }
 }

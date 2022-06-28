@@ -6,7 +6,7 @@ import { useToast } from 'vue-toastification';
 import { $vfm } from 'vue-final-modal';
 import HoverCard from '@/components/util/HoverCard.vue';
 import GalleryMedia from '@/components/gallery/GalleryMedia.vue';
-import GalleryMediaVisualizerModal from '@/components/modal/GalleryMediaVisualizerModal.vue';
+import GalleryMediaVisualizerModal from '@/components/modal-legacy/GalleryMediaVisualizerModal.vue';
 
 
 const app = useAppStore();

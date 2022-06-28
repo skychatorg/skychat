@@ -1,0 +1,25 @@
+
+
+
+/** Firefox */
+.scrollbar {
+    scrollbar-color: transparent transparent;
+    scrollbar-width: thin;
+}
+.scrollbar:hover {
+    scrollbar-color: var(--color-scrollbar-thumb) var(--color-scrollbar-track);
+}
+
+/** Chrome */
+.scrollbar::-webkit-scrollbar { width: 0.5rem; }
+.scrollbar::-webkit-scrollbar-track { background: transparent; }
+.scrollbar::-webkit-scrollbar-thumb { background: transparent; }
+.scrollbar::-webkit-scrollbar-thumb:hover { background: transparent; }
+.scrollbar:hover::-webkit-scrollbar-track { background: var(--color-scrollbar-track); }
+.scrollbar:hover::-webkit-scrollbar-thumb { background: var(--color-scrollbar-thumb); }
+.scrollbar:hover::-webkit-scrollbar-thumb:hover { background: var(--color-scrollbar-thumb-hover); }
+@media (hover: hover) {
+    .scrollbar:hover::-webkit-scrollbar-track { background: var(--color-scrollbar-track); }
+    .scrollbar:hover::-webkit-scrollbar-thumb { background: var(--color-scrollbar-thumb); }
+    .scrollbar:hover::-webkit-scrollbar-thumb:hover { background: var(--color-scrollbar-thumb-hover); }
+}

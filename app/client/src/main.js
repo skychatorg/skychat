@@ -6,7 +6,6 @@ import { vfmPlugin } from 'vue-final-modal';
 import mousetrap from 'mousetrap';
 
 import Toast from "vue-toastification";
-// Import the CSS or use your own!
 import "vue-toastification/dist/index.css";
 
 import App from './App.vue';
@@ -15,7 +14,7 @@ import Chat from '@/views/Chat.vue';
 import { useAppStore } from '@/stores/app';
 
 import library from './icons';
-import './index.css';
+import './css/index.css';
 
 
 

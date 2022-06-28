@@ -7,8 +7,8 @@ import { $vfm } from 'vue-final-modal';
 import HoverCard from '@/components/util/HoverCard.vue';
 import MediaPlayer from '@/components/player/MediaPlayer.vue';
 import MediaQueue from '@/components/player/MediaQueue.vue';
-import YoutubeVideoSearcherModal from '@/components/modal/YoutubeVideoSearcherModal.vue';
-import GalleryModal from '@/components/modal/GalleryModal.vue';
+import YoutubeVideoSearcherModal from '@/components/modal-legacy/YoutubeVideoSearcherModal.vue';
+import GalleryModal from '@/components/modal-legacy/GalleryModal.vue';
 
 
 const app = useAppStore();

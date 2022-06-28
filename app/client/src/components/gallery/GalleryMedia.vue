@@ -1,9 +1,9 @@
 <script setup>
-//import MediaVisualizer from "../modal/MediaVisualizer.vue";
+//import MediaVisualizer from "../modal-legacy/MediaVisualizer.vue";
 import { useClientStore } from '@/stores/client';
 import { useToast } from 'vue-toastification';
 import { $vfm } from 'vue-final-modal';
-import GalleryMediaVisualizerModal from '@/components/modal/GalleryMediaVisualizerModal.vue';
+import GalleryMediaVisualizerModal from '@/components/modal-legacy/GalleryMediaVisualizerModal.vue';
 
 const client = useClientStore();
 const toast = useToast();

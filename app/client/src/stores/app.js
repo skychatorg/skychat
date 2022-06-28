@@ -76,6 +76,17 @@ export const useAppStore = defineStore('app', {
          * @type {'left'|'middle'|'right'}
          */
         mobileView: 'middle',
+
+        /**
+         * Currently opened modals
+         */
+        modals: {
+
+            /**
+             * Whether the profile modal is currently opened
+             */
+            profile: false,
+        },
     }),
 
     actions: {
@@ -312,6 +323,16 @@ export const useAppStore = defineStore('app', {
          */
         mobileSetView: function(view) {
             this.mobileView = view;
+        },
+
+        /**
+         * Open a modal by its name
+         */
+        toggleModal: function(name) {
+            if (typeof this.modals[name] === 'undefined') {
+                throw new Error('Unknown modal: ' + name);
+            }
+            this.modals[name] = ! this.modals[name];
         },
     },
 });

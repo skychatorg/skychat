@@ -1,0 +1,10 @@
+#modals {
+    @apply relative;
+}
+
+#modals .modal {
+    @apply fixed right-0 h-full bg-secondary/10 backdrop-blur-lg p-4;
+    @apply w-full lg:w-[var(--modal-width)];
+
+    top: var(--page-header-height);
+}

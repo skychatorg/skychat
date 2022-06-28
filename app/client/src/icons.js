@@ -45,6 +45,7 @@ import {
     faFolderTree,
     faCopy,
     faPlay,
+    faPenToSquare,
 } from '@fortawesome/free-solid-svg-icons';
 
 library.add(
@@ -92,6 +93,7 @@ library.add(
     faFolderTree,
     faCopy,
     faPlay,
+    faPenToSquare,
 );
 
 export default library;

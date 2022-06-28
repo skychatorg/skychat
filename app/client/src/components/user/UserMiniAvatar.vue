@@ -13,7 +13,7 @@ const props = defineProps({
     <div
         class="w-4 h-4 rounded border-2 overflow-hidden bg-black"
         :style="{
-            borderColor: props.user.data.plugins.color,
+            borderColor: props.user.data.plugins.custom.color,
         }"
         :title="props.user.username"
     >
