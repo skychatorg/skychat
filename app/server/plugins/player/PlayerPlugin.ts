@@ -12,6 +12,7 @@ import { PollPlugin } from "../core/global/PollPlugin";
 import { SanitizedPlayerChannel } from "./PlayerChannel";
 import { Session } from "../../skychat/Session";
 import { Config } from "../../skychat/Config";
+import { GalleryFetcher } from "./fetcher/GalleryFetcher";
 
 
 
@@ -25,6 +26,7 @@ export class PlayerPlugin extends GlobalPlugin {
         'twitch': new TwitchFetcher(),
         'embed': new LinkFetcher(),
         'iframe': new IFrameFetcher(),
+        'galleryadd': new GalleryFetcher(),
     };
 
     static readonly commandName = 'player';

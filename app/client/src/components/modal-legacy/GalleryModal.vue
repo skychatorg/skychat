@@ -5,7 +5,7 @@ import { useClientStore } from '@/stores/client';
 import { useToast } from 'vue-toastification';
 import { $vfm } from 'vue-final-modal';
 import HoverCard from '@/components/util/HoverCard.vue';
-import GalleryMedia from '@/components/gallery/GalleryMedia.vue';
+import GalleryMedia from '@/components/modal-legacy/GalleryMedia.vue';
 import GalleryMediaVisualizerModal from '@/components/modal-legacy/GalleryMediaVisualizerModal.vue';
 
 

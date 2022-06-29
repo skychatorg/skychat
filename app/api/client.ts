@@ -47,7 +47,6 @@ export declare interface SkyChatClient {
     on(event: 'file-content',       listener: (data: { filePath: string, content: string }) => any): this;
 
     on(event: 'gallery',            listener: (gallery: { data: SanitizedGallery, canWrite: boolean }) => any): this;
-    on(event: 'gallery-search',     listener: (medias: SanitizedGalleryMedia[]) => any): this;
 
     on(event: 'player-channels',    listener: (playerChannels: Array<SanitizedPlayerChannel>) => any): this;
     on(event: 'player-channel',     listener: (channelId: number | null) => any): this;
@@ -82,7 +81,6 @@ export class SkyChatClient extends EventEmitter {
     private _files: Array<string> = [];
     private _file: { filePath: string, content: string } | null = null;
     private _gallery: SanitizedGallery | null = null;
-    private _gallerySearchResults: SanitizedGalleryMedia[] = [];
     private _playerChannels: Array<SanitizedPlayerChannel> = [];
     private _currentPlayerChannelId: number | null = null;
     private _currentPlayerChannel: SanitizedPlayerChannel | null = null;
@@ -123,7 +121,6 @@ export class SkyChatClient extends EventEmitter {
 
         // Gallery
         this.on('gallery', this._onGallery.bind(this));
-        this.on('gallery-search', this._onGallerySearchResults.bind(this));
 
         // Player
         this.on('player-channels', this._onPlayerChannels.bind(this));
@@ -295,11 +292,6 @@ export class SkyChatClient extends EventEmitter {
         this.emit('update', this.state);
     }
 
-    private _onGallerySearchResults(gallerySearchResults: any) {
-        this._gallerySearchResults = gallerySearchResults;
-        this.emit('update', this.state);
-    }
-
     private _onPlayerChannels(playerChannels: Array<SanitizedPlayerChannel>) {
         this._playerChannels = playerChannels;
         this.emit('update', this.state);
@@ -366,7 +358,6 @@ export class SkyChatClient extends EventEmitter {
             files: this._files,
             file: this._file,
             gallery: this._gallery,
-            gallerySearchResults: this._gallerySearchResults,
             playerChannels: this._playerChannels,
             currentPlayerChannelId: this._currentPlayerChannelId,
             currentPlayerChannel: this._currentPlayerChannel,

@@ -46,6 +46,9 @@ import {
     faCopy,
     faPlay,
     faPenToSquare,
+    faFolder,
+    faFile,
+    faArrowLeft,
 } from '@fortawesome/free-solid-svg-icons';
 
 library.add(
@@ -94,6 +97,9 @@ library.add(
     faCopy,
     faPlay,
     faPenToSquare,
+    faFolder,
+    faFile,
+    faArrowLeft,
 );
 
 export default library;

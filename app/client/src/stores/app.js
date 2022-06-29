@@ -86,6 +86,11 @@ export const useAppStore = defineStore('app', {
              * Whether the profile modal is currently opened
              */
             profile: false,
+
+            /**
+             * Modal to navigate in the gallery
+             */
+            gallery: false,
         },
     }),
 

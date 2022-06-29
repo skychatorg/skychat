@@ -39,7 +39,7 @@ export class FileManager {
     }
 
     static isFileUrlInGallery(fileUrl: string): boolean {
-        return !! fileUrl.match(new RegExp('^' + MessageFormatter.escapeRegExp(Config.LOCATION + '/uploads/gallery/') + '([0-9]+)/([0-9]+)/([0-9]+)/([0-9a-z-]+)\\.(jpg|jpeg|png|webp|gif|pdf|mp4|mkv|webm)$'));
+        return !! fileUrl.match(new RegExp('^' + MessageFormatter.escapeRegExp(Config.LOCATION + '/gallery/') + '([a-zA-Z0-9-_\/]+)\.[a-z0-9]+$'));
     }
 
     static uploadedFileExists(fileUrl: string): boolean {

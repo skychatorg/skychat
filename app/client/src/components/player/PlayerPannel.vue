@@ -8,7 +8,7 @@ import HoverCard from '@/components/util/HoverCard.vue';
 import MediaPlayer from '@/components/player/MediaPlayer.vue';
 import MediaQueue from '@/components/player/MediaQueue.vue';
 import YoutubeVideoSearcherModal from '@/components/modal-legacy/YoutubeVideoSearcherModal.vue';
-import GalleryModal from '@/components/modal-legacy/GalleryModal.vue';
+import GalleryModal from '@/components/modal/GalleryModal.vue';
 
 
 const app = useAppStore();
@@ -38,10 +38,6 @@ const showPannel = computed(() => {
 
 const openYoutubeModal = () => {
    $vfm.show({ component: YoutubeVideoSearcherModal });
-};
-
-const openGalleryModal = () => {
-   $vfm.show({ component: GalleryModal });
 };
 
 </script>
@@ -139,7 +135,7 @@ const openGalleryModal = () => {
                     </button>
                     <button
                         v-if="client.state.gallery"
-                        @click="openGalleryModal"
+                        @click="app.toggleModal('gallery')"
                         class="btn text-sm"
                     >
                         <fa icon="folder-tree" />
@@ -161,6 +157,8 @@ const openGalleryModal = () => {
                 </div>
             </div>
         </div>
+
+        <GalleryModal />
     </div>
 </template>
 

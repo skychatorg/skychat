@@ -10,6 +10,7 @@ export type Preferences = {
     minRightForPolls: number;
     minRightForGalleryRead: number | 'op';
     minRightForGalleryWrite: number | 'op';
+    minRightForGalleryDelete: number | 'op';
     minRightForPlayerAddMedia: number | 'op';
     minRightForPlayerManageSchedule: number | 'op';
     maxReplacedImagesPerMessage: number;

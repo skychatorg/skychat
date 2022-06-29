@@ -6,6 +6,7 @@
     "minRightForPolls": -1,
     "minRightForGalleryRead": 0,
     "minRightForGalleryWrite": "op",
+    "minRightForGalleryDelete": "op",
     "minRightForPlayerAddMedia": 0,
     "minRightForPlayerManageSchedule": "op",
     "maxReplacedImagesPerMessage": 50,

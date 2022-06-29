@@ -1,0 +1,1 @@
+export { GalleryPluginGroup } from "./GalleryPluginGroup";
