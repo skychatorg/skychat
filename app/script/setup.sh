@@ -6,7 +6,10 @@ if [[ ! -e backups ]]; then
     mkdir backups;
 fi
 if [[ ! -e uploads ]]; then
-    mkdir -p uploads/{all,avatars,gallery,stickers};
+    mkdir -p uploads/{all,avatars,stickers};
+fi
+if [[ ! -e gallery ]]; then
+    mkdir -p gallery;
 fi
 if [[ ! -e storage ]]; then
     mkdir -p storage/{plugins,rooms};

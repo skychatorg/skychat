@@ -4,7 +4,7 @@
 }
 
 #modals #modal-container {
-    @apply relative h-full mx-auto w-full max-w-[var(--page-max-width)] transition-all;
+    @apply relative h-[calc(100vh-var(--page-header-height))] mx-auto w-full max-w-[var(--page-max-width)] transition-all;
 }
 
 #modals #modal-container:not(:empty) {
@@ -13,7 +13,7 @@
 }
 
 #modals #modal-container .modal {
-    @apply absolute top-0 right-0 h-full bg-secondary/10 backdrop-blur-lg p-4;
-    @apply w-full lg:w-[var(--modal-width)];
+    @apply absolute top-0 right-0 bg-secondary/10 backdrop-blur-lg p-4;
+    @apply h-full w-full lg:w-[var(--modal-width)];
     @apply pointer-events-auto;
 }

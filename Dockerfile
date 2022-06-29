@@ -25,6 +25,7 @@ WORKDIR /app/skychat/
 RUN ln -s /var/skychat/config   ./config
 RUN ln -s /var/skychat/backups  ./backups
 RUN ln -s /var/skychat/storage  ./storage
+RUN ln -s /var/skychat/gallery  ./gallery
 RUN ln -s /var/skychat/uploads  ./uploads
 
 # Copy build configuration

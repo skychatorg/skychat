@@ -20,7 +20,8 @@ const leaveFolder = () => {
     client.sendMessage(`/galleryls ${folderList.value.join('/')}`);
 };
 const playFile = file => {
-    client.sendMessage(`/galleryadd ${folderList.value.join('/')}/${file}`);
+    const filePath = folderList.value.length === 0 ? file : `${folderList.value.join('/')}/${file}`;
+    client.sendMessage(`/galleryadd ${filePath}`);
 };
 
 </script>
@@ -41,48 +42,49 @@ const playFile = file => {
             />
 
             <!-- Folder & Files -->
-            <div class="flex flex-col mb-2">
-                <HoverCard
-                    :selectable="true"
-                    :borderColor="'rgb(var(--color-primary))'"
-                >
-                    <div
-                        @click="leaveFolder()"
-                        class="cursor-pointer select-none px-4 py-2"
+            <div class="px-2 flex flex-col">
+                <div class="mb-2 flex flex-col">
+                    <HoverCard
+                        :selectable="true"
+                        :borderColor="'rgb(var(--color-primary))'"
                     >
-                        <fa icon="arrow-left" class="mr-2" />
-                    </div>
-                </HoverCard>
-                <HoverCard
-                    v-for="folder in client.state.gallery.folders"
-                    :key="folder"
-                    :selectable="true"
-                    :borderColor="'rgb(var(--color-primary))'"
-                >
-                    <div
-                        @click="enterFolder(folder)"
-                        class="cursor-pointer select-none px-4 py-2"
+                        <div
+                            @click="leaveFolder()"
+                            class="cursor-pointer select-none px-4 py-2"
+                        >
+                            <fa icon="arrow-left" class="mr-2" />
+                        </div>
+                    </HoverCard>
+                    <HoverCard
+                        v-for="folder in client.state.gallery.folders"
+                        :key="folder"
+                        :selectable="true"
+                        :borderColor="'rgb(var(--color-primary))'"
                     >
-                        <fa icon="folder" class="mr-2" /> {{ folder }}
-                    </div>
-                </HoverCard>
-            </div>
-
-            <div class="flex flex-col">
-                <HoverCard
-                    v-for="file in client.state.gallery.files"
-                    :key="file"
-                    :selectable="true"
-                    :selected="false"
-                    :borderColor="'rgb(var(--color-secondary))'"
-                >
-                    <div
-                        @click="playFile(file)"
-                        class="cursor-pointer select-none px-4 py-2"
+                        <div
+                            @click="enterFolder(folder)"
+                            class="cursor-pointer select-none px-4 py-2"
+                        >
+                            <fa icon="folder" class="mr-2" /> {{ folder }}
+                        </div>
+                    </HoverCard>
+                </div>
+                <div class="flex flex-col">
+                    <HoverCard
+                        v-for="file in client.state.gallery.files"
+                        :key="file"
+                        :selectable="true"
+                        :selected="false"
+                        :borderColor="'rgb(var(--color-secondary))'"
                     >
-                        <fa icon="file" class="mr-2" /> {{ file }}
-                    </div>
-                </HoverCard>
+                        <div
+                            @click="playFile(file)"
+                            class="cursor-pointer select-none px-4 py-2"
+                        >
+                            <fa icon="file" class="mr-2" /> {{ file }}
+                        </div>
+                    </HoverCard>
+                </div>
             </div>
         </div>
     </ModalTemplate>
