@@ -4,7 +4,7 @@ import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
 import YoutubePlayer from '@/components/player/impl/YoutubePlayer.vue';
 import TwitchPlayer from '@/components/player/impl/TwitchPlayer.vue';
-import EmbedPlayer from '@/components/player/impl/EmbedPlayer.vue';
+import GalleryPlayer from '@/components/player/impl/GalleryPlayer.vue';
 import IFramePlayer from '@/components/player/impl/IFramePlayer.vue';
 
 const app = useAppStore();
@@ -17,7 +17,7 @@ const playerImpl = computed(() => {
     return {
         youtube: YoutubePlayer,
         twitch: TwitchPlayer,
-        embed: EmbedPlayer,
+        gallery: GalleryPlayer,
         iframe: IFramePlayer,
     }[client.state.player.current.video.type] || null;
 });

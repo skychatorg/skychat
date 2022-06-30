@@ -7,7 +7,8 @@ backups
 build
 config
 dist
-gallery
 node_modules
 storage
 uploads
+
+/gallery

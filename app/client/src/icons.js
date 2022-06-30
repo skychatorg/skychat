@@ -49,6 +49,10 @@ import {
     faFolder,
     faFile,
     faArrowLeft,
+    faVideo,
+    faImage,
+    faMusic,
+    faClosedCaptioning,
 } from '@fortawesome/free-solid-svg-icons';
 
 library.add(
@@ -100,6 +104,10 @@ library.add(
     faFolder,
     faFile,
     faArrowLeft,
+    faVideo,
+    faImage,
+    faMusic,
+    faClosedCaptioning,
 );
 
 export default library;

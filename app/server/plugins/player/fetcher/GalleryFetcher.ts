@@ -1,4 +1,4 @@
-import { GalleryPlugin } from "../../gallery-v2/GalleryPlugin";
+import { GalleryPlugin } from "../../gallery/GalleryPlugin";
 import { VideoInfo } from "../PlayerChannel";
 import { PlayerPlugin } from "../PlayerPlugin";
 import { VideoFetcher } from "./VideoFetcher";
@@ -25,7 +25,7 @@ export class GalleryFetcher implements VideoFetcher {
         const playableFileInfo = await gallery.getPlayableFileInfo(filePath);
 
         return {
-            type: 'embed',
+            type: 'gallery',
             id: playableFileInfo.url,
             title: playableFileInfo.title,
             duration: playableFileInfo.duration,

@@ -13,7 +13,21 @@
 }
 
 #modals #modal-container .modal {
-    @apply absolute top-0 right-0 bg-secondary/10 backdrop-blur-lg p-4;
+    @apply transition-all absolute top-0 right-0 bg-secondary/10 backdrop-blur-xl p-4;
     @apply h-full w-full lg:w-[var(--modal-width)];
     @apply pointer-events-auto;
+}
+
+#modals #modal-container .modal:nth-child(1) { z-index: 29; }
+#modals #modal-container .modal:nth-child(2) { z-index: 28; }
+#modals #modal-container .modal:nth-child(3) { z-index: 27; }
+#modals #modal-container .modal:nth-child(4) { z-index: 26; }
+#modals #modal-container .modal:nth-child(5) { z-index: 25; }
+#modals #modal-container .modal:nth-child(6) { z-index: 24; }
+#modals #modal-container .modal:nth-child(7) { z-index: 23; }
+#modals #modal-container .modal:nth-child(8) { z-index: 22; }
+#modals #modal-container .modal:nth-child(9) { z-index: 21; }
+
+#modals #modal-container .modal:not(:nth-child(1)) {
+    opacity: 0;
 }

@@ -1,13 +1,16 @@
 import { promises as fs } from 'fs';
-import { VideoInfo } from '../../player/PlayerChannel';
 import { Config } from '../../../skychat/Config';
 import { FileManager } from '../../../skychat/FileManager';
 
 
+export type FileType = 'video' | 'audio' | 'image' | 'subtitle' | 'unknown';
+
+
 export type FolderContent = {
     exists: boolean;
+    thumb?: string;
     folders: String[];
-    files: String[];
+    files: { name: String, type: FileType }[];
 };
 
 export type PlayableFileInfo = {
@@ -23,7 +26,20 @@ export class Gallery {
 
     static readonly FILE_PATH_REGEX = /^[^/][a-zA-Z0-9-_/]+\/[a-zA-Z0-9-_]+\.[a-z0-9]+$/;
 
-    static readonly PLAYABLE_FILES_EXTENSION = ['mp4', 'webm'];
+    static readonly THUMB_FILE_NAMES = ['thumb.png', 'thumb.jpg', 'thumb.jpeg'];
+
+    static readonly EXTENSION_FILE_TYPES: {[key: string]: FileType} = {
+        'mp4': 'video',
+        'webm': 'video',
+        'vtt': 'subtitle',
+        'mp3': 'audio',
+        'ogg': 'audio',
+        'jpg': 'image',
+        'jpeg': 'image',
+        'png': 'image',
+    };
+
+    static readonly DEFAULT_FILE_TYPE = 'unknown';
 
     static readonly BASE_PATH = 'gallery/';
 
@@ -52,10 +68,19 @@ export class Gallery {
             const fileNames = await fs.readdir(Gallery.BASE_PATH + folderPath);
             for (const fileName of fileNames) {
                 const stats = await fs.stat(Gallery.BASE_PATH + folderPath + '/' + fileName);
+                if (! folderContent.thumb && Gallery.THUMB_FILE_NAMES.includes(fileName)) {
+                    folderContent.thumb = Config.LOCATION + '/' + Gallery.BASE_PATH + folderPath + '/' + fileName;
+                }
                 if (stats.isFile()) {
-                    folderContent.files.push(fileName);
-                } else {
+                    const ext = fileName.split('.').pop() as string;
+                    folderContent.files.push({
+                        name: fileName,
+                        type: Gallery.EXTENSION_FILE_TYPES[ext] || Gallery.DEFAULT_FILE_TYPE,
+                    });
+                } else if (stats.isDirectory()) {
                     folderContent.folders.push(fileName);
+                } else {
+                    console.warn('Unknown file type', fileName);
                 }
             }
         } catch (err) {
@@ -80,6 +105,25 @@ export class Gallery {
     }
 
     /**
+     * Ensure a file type exists and get its type
+     */
+    async getFileType(filePath: string): Promise<string> {
+        this.checkFilePath(filePath);
+
+        try {
+            const stats = await fs.stat(Gallery.BASE_PATH + filePath);
+            if (stats.isFile()) {
+                const ext = filePath.split('.').pop() as string;
+                return Gallery.EXTENSION_FILE_TYPES[ext] || Gallery.DEFAULT_FILE_TYPE;
+            } else {
+                return Gallery.DEFAULT_FILE_TYPE;
+            }
+        } catch (err) {
+            return Gallery.DEFAULT_FILE_TYPE;
+        }
+    }
+
+    /**
      * Tells whether a file exists in the gallery
      */
     async getPlayableFileInfo(filePath: string): Promise<PlayableFileInfo> {
@@ -89,9 +133,9 @@ export class Gallery {
             throw new Error('File does not exist');
         }
 
-        const extension = filePath.split('.').pop() || 'unknown';
-        if (! Gallery.PLAYABLE_FILES_EXTENSION.includes(extension)) {
-            throw new Error('File extension not allowed');
+        const fileType = await this.getFileType(filePath);
+        if (fileType !== 'video') {
+            throw new Error('File is not a video');
         }
 
         return {

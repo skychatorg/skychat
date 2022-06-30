@@ -1,6 +1,6 @@
 export * from "./core";
 export * from "./games";
-export * from "./gallery-v2";
+export * from "./gallery";
 export * from "./security_extra";
 export * from "./user_defined";
 export * from "./player";

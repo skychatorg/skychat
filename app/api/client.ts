@@ -1,6 +1,6 @@
 import { EventEmitter } from "events";
 import { BinaryMessageTypes } from "./BinaryMessageTypes";
-import { PublicConfig, CustomizationElements, SanitizedMessage, SanitizedUser, AuthToken, SanitizedSession, SanitizedRoom, SanitizedPoll, SanitizedGallery, SanitizedGalleryMedia, SanitizedPlayerChannel, VideoInfo, QueuedVideoInfo } from "../server";
+import { PublicConfig, CustomizationElements, SanitizedMessage, SanitizedUser, AuthToken, SanitizedSession, SanitizedRoom, SanitizedPoll, SanitizedPlayerChannel, VideoInfo, QueuedVideoInfo } from "../server";
 
 
 const defaultUser: SanitizedUser = {
@@ -46,7 +46,8 @@ export declare interface SkyChatClient {
     on(event: 'file-list',          listener: (files: Array<string>) => any): this;
     on(event: 'file-content',       listener: (data: { filePath: string, content: string }) => any): this;
 
-    on(event: 'gallery',            listener: (gallery: { data: SanitizedGallery, canWrite: boolean }) => any): this;
+    // TODO: Type
+    on(event: 'gallery',            listener: (gallery: { data: any}) => any): this;
 
     on(event: 'player-channels',    listener: (playerChannels: Array<SanitizedPlayerChannel>) => any): this;
     on(event: 'player-channel',     listener: (channelId: number | null) => any): this;
@@ -80,7 +81,7 @@ export class SkyChatClient extends EventEmitter {
     private _op: Boolean = false;
     private _files: Array<string> = [];
     private _file: { filePath: string, content: string } | null = null;
-    private _gallery: SanitizedGallery | null = null;
+    private _gallery: any | null = null; // TODO: Type
     private _playerChannels: Array<SanitizedPlayerChannel> = [];
     private _currentPlayerChannelId: number | null = null;
     private _currentPlayerChannel: SanitizedPlayerChannel | null = null;
