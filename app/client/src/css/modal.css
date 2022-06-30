@@ -13,7 +13,7 @@
 }
 
 #modals #modal-container .modal {
-    @apply transition-all absolute top-0 right-0 bg-secondary/10 backdrop-blur-xl p-4;
+    @apply transition-all absolute top-0 right-0 bg-secondary/10 backdrop-blur-2xl p-4;
     @apply h-full w-full lg:w-[var(--modal-width)];
     @apply pointer-events-auto;
 }

@@ -22,7 +22,7 @@ const updateSrc = () => {
     const videoHash = JSON.stringify(client.state.player.current.video.id);
     if (videoHash === previousVideoHash.value) {
         // If video did not change since last sync, update time
-        player.value.currentTime = currentTime;
+        // player.value.currentTime = currentTime;
         return;
     }
 

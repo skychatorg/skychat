@@ -2,7 +2,7 @@ import { Config } from "../../skychat/Config";
 import { Connection } from "../../skychat/Connection";
 import { GlobalPlugin } from "../GlobalPlugin";
 import { Session } from "../../skychat/Session";
-import { Gallery } from "./impl/Gallery";
+import { Gallery } from "./Gallery";
 
 
 /**

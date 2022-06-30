@@ -30,7 +30,7 @@ const connectionStatus = computed(() => {
 </script>
 
 <template>
-    <header class="header h-16 backdrop-brightness-150 w-full flex">
+    <header class="header h-16 w-full flex bg-skygray-white/10 backdrop-brightness-150 backdrop-blur">
 
             <!-- Left col (empty for now) -->
             <div class="w-0 lg:w-[var(--page-col-left-width)]"></div>

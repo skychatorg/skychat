@@ -39,6 +39,7 @@ onMounted(updateSrc);
         class="w-full h-full"
         frameborder="0"
         allowfullscreen="true"
+        allow="autoplay"
         referrerpolicy="no-referrer"></iframe>
 </template>
 

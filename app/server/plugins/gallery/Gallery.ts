@@ -1,6 +1,6 @@
 import { promises as fs } from 'fs';
-import { Config } from '../../../skychat/Config';
-import { FileManager } from '../../../skychat/FileManager';
+import { Config } from '../../skychat/Config';
+import { FileManager } from '../../skychat/FileManager';
 
 
 export type FileType = 'video' | 'audio' | 'image' | 'subtitle' | 'unknown';

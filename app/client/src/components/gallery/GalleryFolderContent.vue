@@ -110,7 +110,7 @@ const getFileColor = ({ name, type }) => {
                         <div class="basis-7">
                             <fa :icon="getFileIcon(file)" class="mr-2" />
                         </div>
-                        <div :title="file.name" class="w-0 grow overflow-x-hidden text-ellipsis">
+                        <div :title="file.name" class="w-0 grow overflow-x-hidden whitespace-nowrap text-ellipsis">
                             {{ file.name }}
                         </div>
                     </div>

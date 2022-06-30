@@ -20,7 +20,7 @@ const client = useClientStore();
         
         <div
             class="
-                h-full flex flex-col bg-skygray-lighter/5 backdrop-brightness-125
+                h-full flex flex-col bg-skygray-lighter/5 backdrop-blur-2xl backdrop-brightness-125
                 w-full lg:w-[var(--page-col-left-width)] lg:flex
             "
             :class="{
@@ -56,15 +56,15 @@ const client = useClientStore();
                 'hidden': app.mobileView !== 'middle',
             }"
         >
-            <PlayerPannel v-if="client.state.currentPlayerChannel" class="bg-skygray-lighter/5 backdrop-brightness-125" />
-            <PollList class="bg-skygray-lighter/5 backdrop-brightness-125" />
-            <MessagePannel class="grow bg-skygray-white/5 backdrop-brightness-150" />
-            <NewMessageForm class="basis-12 bg-skygray-lighter/5 backdrop-brightness-125" />
+            <PlayerPannel v-if="client.state.currentPlayerChannel" class="bg-skygray-lighter/5 backdrop-blur-2xl backdrop-brightness-125" />
+            <PollList class="bg-skygray-lighter/5 backdrop-blur-2xl backdrop-brightness-125" />
+            <MessagePannel class="grow bg-skygray-white/10 backdrop-brightness-125 backdrop-blur-2xl" />
+            <NewMessageForm class="basis-12 bg-skygray-lighter/5 backdrop-blur-2xl backdrop-brightness-125" />
         </div>
 
         <div
             class="
-                h-full flex flex-col bg-skygray-lighter/5 backdrop-brightness-125
+                h-full flex flex-col bg-skygray-lighter/5 backdrop-blur-2xl backdrop-brightness-125
                 lg:flex
                 w-full lg:w-[var(--page-col-right-width)] lg:flex
             "

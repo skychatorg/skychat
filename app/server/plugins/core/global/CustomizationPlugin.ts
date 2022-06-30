@@ -32,12 +32,12 @@ export class CustomizationPlugin extends GlobalPlugin {
         [CustomizationPlugin.KEY_COLOR]: [
 
             // Grays
-            { id: 0, name: 'Dark Dark Dark Dark Gray', value: '#454545' },
-            { id: 1, name: 'Dark Dark Dark Gray', value: '#555555' },
-            { id: 2, name: 'Dark Dark Gray', value: '#656565' },
-            { id: 3, name: 'Dark Gray', value: '#757575' },
-            { id: 4, name: 'Boring Gray', value: '#888888' },
-            { id: 5, name: 'Gray', value: '#aaaaaa' },
+            { id: 0, name: 'Dark Dark Dark Dark Gray', value: '#656565' },
+            { id: 1, name: 'Dark Dark Dark Gray', value: '#757575' },
+            { id: 2, name: 'Dark Dark Gray', value: '#858585' },
+            { id: 3, name: 'Dark Gray', value: '#959595' },
+            { id: 4, name: 'Boring Gray', value: '#aaaaaa' },
+            { id: 5, name: 'Gray', value: '#bbbbbb' },
             { id: 6, name: 'lightgray', value: '#cccccc' },
             { id: 7, name: 'Light Gray', value: '#dddddd' },
             { id: 8, name: 'Light Light Gray', value: '#eeeeee' },
