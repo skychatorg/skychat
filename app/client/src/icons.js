@@ -53,6 +53,7 @@ import {
     faImage,
     faMusic,
     faClosedCaptioning,
+    faArrowUpRightFromSquare,
 } from '@fortawesome/free-solid-svg-icons';
 
 library.add(
@@ -108,6 +109,7 @@ library.add(
     faImage,
     faMusic,
     faClosedCaptioning,
+    faArrowUpRightFromSquare,
 );
 
 export default library;
