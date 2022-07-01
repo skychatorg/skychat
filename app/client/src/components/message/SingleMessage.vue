@@ -129,7 +129,7 @@ const messageInteract = () => {
             </div>
 
             <div class="basis-16 w-16 flex flex-col text-center">
-                <span class="grow text-xs text-skygray-lighter">
+                <span class="grow text-xs text-skygray-lightest">
                     {{ formattedDate }}
                 </span>
                 <UserMiniAvatarCollection

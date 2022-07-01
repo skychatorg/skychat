@@ -21,8 +21,10 @@ const updateSrc = () => {
     const currentTime = parseInt((client.state.player.cursor + timeSinceLastUpdate) / 1000);
     const videoHash = JSON.stringify(client.state.player.current.video.id);
     if (videoHash === previousVideoHash.value) {
-        // If video did not change since last sync, update time
-        // player.value.currentTime = currentTime;
+        // If player is too far un-synchronized, we force re-sync cursor
+        if (Math.abs(currentTime - player.value.currentTime) > 10) {
+            player.value.currentTime = currentTime;
+        }
         return;
     }
 
