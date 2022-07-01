@@ -1,18 +1,27 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useClientStore } from '@/stores/client';
 import HoverCard from '@/components/util/HoverCard.vue';
 
 const client = useClientStore();
 
+onMounted(() => {
+    folderList.value = [];
+    refresh();
+});
+
+const refresh = () => {
+    client.sendMessage(`/galleryls ${folderList.value.join('/')}`);
+};
+
 const folderList = ref([]);
 const enterFolder = folderName => {
     folderList.value.push(folderName);
-    client.sendMessage(`/galleryls ${folderList.value.join('/')}`);
+    refresh();
 };
 const leaveFolder = () => {
     folderList.value.pop();
-    client.sendMessage(`/galleryls ${folderList.value.join('/')}`);
+    refresh();
 };
 const playFile = ({ name, type }) => {
     
