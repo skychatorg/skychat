@@ -72,13 +72,22 @@ const client = useClientStore();
             }"
         >
             <ConnectedList class="pl-2 pr-4 mt-6 grow h-0 overflow-y-auto scrollbar" />
-            <div v-if="client.state.gallery" class="pl-4 pr-6 mt-3 mb-2 flex">
+            <div v-if="client.state.gallery || client.state.player.queue.length > 0" class="pl-4 pr-6 mt-3 mb-2 grid grid-cols-2 gap-4">
                 <button
                     v-show="client.state.gallery"
-                    class="form-control grow"
                     @click="app.toggleModal('gallery')"
+                    title="Open gallery"
+                    class="form-control col-start-1 col-span-1"
                 >
-                    Gallery
+                    <fa icon="folder-tree" />
+                </button>
+                <button
+                    v-show="client.state.player.queue.length > 0"
+                    @click="app.toggleModal('playerQueue')"
+                    title="Open player queue"
+                    class="form-control col-start-2 col-span-1"
+                >
+                    <fa icon="list" />
                 </button>
             </div>
             <div class="p-2 lg:hidden">

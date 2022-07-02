@@ -49,12 +49,6 @@ export const useAppStore = defineStore('app', {
             size: 'md',
 
             /**
-             * Whether the queue should be shown
-             * @type {Boolean}
-             */
-            queueEnabled: false,
-
-            /**
              * Whether currently in cinema mode
              * @type {Boolean}
              */
@@ -96,6 +90,11 @@ export const useAppStore = defineStore('app', {
              * Modal to add videos from youtube
              */
             youtubeVideoSearcher: false,
+
+            /**
+             * List of next videos to play
+             */
+            playerQueue: false,
         },
     }),
 
@@ -294,11 +293,6 @@ export const useAppStore = defineStore('app', {
                 sm: 'xs',
                 xs: 'xs',
             }[this.playerMode.size] || 'md';
-            this.savePreferences();
-        },
-
-        toggleShowPlayerQueue: function() {
-            this.playerMode.queueEnabled = ! this.playerMode.queueEnabled;
             this.savePreferences();
         },
 

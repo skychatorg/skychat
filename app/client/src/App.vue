@@ -5,6 +5,7 @@ import CursorOverlay from '@/components/cursor/CursorOverlay.vue';
 import YoutubeVideoSearcherModal from '@/components/modal/YoutubeVideoSearcherModal.vue';
 import GalleryModal from '@/components/modal/GalleryModal.vue';
 import ProfileModal from '@/components/modal/ProfileModal.vue';
+import PlayerQueueModal from '@/components/modal/PlayerQueueModal.vue';
 </script>
 
 <template>
@@ -15,6 +16,7 @@ import ProfileModal from '@/components/modal/ProfileModal.vue';
         <ProfileModal />
         <YoutubeVideoSearcherModal />
         <GalleryModal />
+        <PlayerQueueModal />
         <router-view class="grow"></router-view>
     </div>
 </template>
