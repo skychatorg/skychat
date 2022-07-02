@@ -1,6 +1,6 @@
 <script setup>
 import ModalTemplate from '@/components/modal/ModalTemplate.vue';
-import GalleryFolderContent from '@/components/gallery/GalleryFolderContent.vue';
+import GalleryPannel from '@/components/gallery/GalleryPannel.vue';
 </script>
 
 <template>
@@ -8,6 +8,6 @@ import GalleryFolderContent from '@/components/gallery/GalleryFolderContent.vue'
         id="gallery"
         title="Gallery"
     >
-        <GalleryFolderContent />
+        <GalleryPannel />
     </ModalTemplate>
 </template>

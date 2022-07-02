@@ -8,7 +8,7 @@
 }
 
 #modals #modal-container:not(:empty) {
-    @apply backdrop-grayscale backdrop-blur;
+    @apply backdrop-grayscale backdrop-blur-xl;
     @apply pointer-events-auto;
 }
 

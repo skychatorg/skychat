@@ -159,7 +159,9 @@ const getFileColor = ({ name, type }) => {
                         </div>
                         <div class="basis-7">
                             <a
+                                @click.stop=""
                                 :href="`/gallery/${getFileNamePath(file.name)}`"
+                                title="Open in new tab"
                                 target="_blank"
                                 class="px-2 py-1"
                             >
@@ -173,15 +175,13 @@ const getFileColor = ({ name, type }) => {
 
         <!-- Selected files -->
         <div v-if="selectedFiles.length > 0" class="grid grid-cols-1 lg:grid-cols-2 gap-2 pt-2">
-            <span class="flex flex-col justify-center text-center text-sm">
-                {{ selectedFiles.length }} file{{ selectedFiles.length > 1 ? 's' : '' }} selected
-            </span>
-            <span class="flex flex-col justify-center text-center text-sm">
+            <span class="col-span-2 flex flex-col justify-center text-center text-sm">
+                {{ selectedFiles.length }} file{{ selectedFiles.length > 1 ? 's' : '' }} / 
                 <template v-if="addableSelectedFiles.length === 0">
                     no playable file selected
                 </template>
                 <template v-else>
-                    {{ addableSelectedFiles.length }} playable file{{ addableSelectedFiles.length > 1 ? 's' : '' }}
+                    {{ addableSelectedFiles.length }} playable file{{ addableSelectedFiles.length > 1 ? 's' : '' }} selected
                 </template>
             </span>
             <button

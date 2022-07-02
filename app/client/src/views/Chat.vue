@@ -72,6 +72,15 @@ const client = useClientStore();
             }"
         >
             <ConnectedList class="pl-2 pr-4 mt-6 grow h-0 overflow-y-auto scrollbar" />
+            <div v-if="client.state.gallery" class="pl-4 pr-6 mt-3 mb-2 flex">
+                <button
+                    v-show="client.state.gallery"
+                    class="form-control grow"
+                    @click="app.toggleModal('gallery')"
+                >
+                    Gallery
+                </button>
+            </div>
             <div class="p-2 lg:hidden">
                 <button
                     class="form-control mr-2"
