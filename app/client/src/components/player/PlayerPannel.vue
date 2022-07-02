@@ -66,14 +66,16 @@ const playerHeightCss = computed(() => {
                 <!-- Player type (big to disabled) -->
                 <div class="col-span-4 btn-group">
                     <button
+                        @click="toast.error('The cinema mode is not yet implemented.')"
+                        title="Toggle cinema mode"
                         class="hidden btn text-sm"
                         :class="{ 'active': app.playerMode.cinemaMode, 'disabled': ! showPlayer }"
-                        @click="toast.error('The cinema mode is not yet implemented.')"
                     >
                         <fa icon="tv" />
                     </button>
                     <button
                         @click="app.shrinkPlayer"
+                        title="Shrink player"
                         class="btn text-sm"
                         :class="{ 'disabled': app.playerMode.size === 'xs' || ! showPlayer }"
                     >
@@ -81,15 +83,17 @@ const playerHeightCss = computed(() => {
                     </button>
                     <button
                         @click="app.expandPlayer"
+                        title="Expand player"
                         class="btn text-sm"
                         :class="{ 'disabled': app.playerMode.size === 'lg' || ! showPlayer }"
                     >
                         <fa icon="chevron-down" />
                     </button>
                     <button
+                        @click="app.setPlayerEnabled(! app.playerMode.enabled)"
+                        title="Enable/disable player"
                         class="btn text-sm"
                         :class="{ 'active': app.playerMode.enabled }"
-                        @click="app.setPlayerEnabled(! app.playerMode.enabled)"
                     >
                         <fa :icon="'toggle-' + (app.playerMode.enabled ? 'on' : 'off')" />
                     </button>
@@ -97,7 +101,14 @@ const playerHeightCss = computed(() => {
             
                 <!-- Player controls -->
                 <div class="col-start-5 col-span-4 btn-group">
-                    <button @click="client.sendMessage(`/player replay30`)" title="Replay 30 seconds" class="btn text-sm">
+                    <button
+                        @click="client.sendMessage(`/player replay30`)"
+                        title="Replay 30 seconds"
+                        class="btn text-sm"
+                        :class="{
+                            'disabled': ! showPlayer,
+                        }"
+                    >
                         <fa icon="caret-left" />
                         <fa icon="caret-left" />
                     </button>
@@ -110,7 +121,14 @@ const playerHeightCss = computed(() => {
                     <button class="btn text-sm">
                         <fa icon="caret-right" />
                     </button> -->
-                    <button @click="client.sendMessage(`/player skip30`)" title="Skip 30 seconds" class="btn text-sm">
+                    <button
+                        @click="client.sendMessage(`/player skip30`)"
+                        title="Skip 30 seconds"
+                        class="btn text-sm"
+                        :class="{
+                            'disabled': ! showPlayer,
+                        }"
+                    >
                         <fa icon="caret-right" />
                         <fa icon="caret-right" />
                     </button>
@@ -136,11 +154,14 @@ const playerHeightCss = computed(() => {
                         <fa icon="plus" />
                     </button>
                     <button
-                        v-if="client.state.gallery"
-                        @click="app.toggleModal('gallery')"
+                        @click="app.toggleModal('playerQueue')"
+                        title="Open player queue"
+                        :class="{
+                            'disabled': ! client.state.player.queue.length,
+                        }"
                         class="btn text-sm"
                     >
-                        <fa icon="folder-tree" />
+                        <fa icon="list" />
                     </button>
                 </div>
             </div>

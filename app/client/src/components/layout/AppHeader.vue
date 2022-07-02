@@ -49,13 +49,10 @@ const connectionStatus = computed(() => {
 
                         <div class="grow flex flex-col mr-4">
                             <span class="text-right whitespace-nowrap">
-                                <button @click="app.toggleModal('profile')" class="mr-2">
-                                    <fa icon="pen-to-square" />
-                                </button>
                                 {{ client.state.user.username }}
                             </span>
                             <div class="flex justify-end">
-                                <button @click="logout">
+                                <button @click="logout" title="Logout">
                                     <fa icon="arrow-right-from-bracket" />
                                 </button>
                             </div>

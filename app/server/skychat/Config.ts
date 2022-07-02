@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as Mail from "nodemailer/lib/mailer";
+import { GalleryPluginGroup } from '../plugins';
 
 
 export type Preferences = {
@@ -20,6 +21,7 @@ export type Preferences = {
 
 export type PublicConfig = {
     
+    galleryEnabled: boolean;
 }
 
 export class Config {
@@ -70,8 +72,8 @@ export class Config {
      */
     public static toClient(): PublicConfig {
         return {
-
-        }
+            galleryEnabled: Config.PLUGIN_GROUP_NAMES.includes('GalleryPluginGroup'),
+        };
     }
 
     public static initialize() {
