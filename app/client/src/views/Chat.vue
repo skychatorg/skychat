@@ -8,7 +8,6 @@ import MessagePannel from '@/components/message/MessagePannel.vue';
 import NewMessageForm from '@/components/message/NewMessageForm.vue';
 import ConnectedList from '@/components/user/ConnectedList.vue';
 import PollList from '@/components/poll/PollList.vue';
-import ProfileModal from '@/components/modal/ProfileModal.vue';
 
 const app = useAppStore();
 const client = useClientStore();
@@ -90,8 +89,6 @@ const client = useClientStore();
                 </button>
             </div>
         </div>
-        
-        <ProfileModal />
     </div>
 </template>
 

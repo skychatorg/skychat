@@ -25,7 +25,7 @@ defineProps({
             >
                 <div>
                     <button
-                        @click="app.toggleModal(id)"
+                        @click="app.closeModal(id)"
                         class="absolute top-3 left-6"
                     >
                         <fa icon="times" />

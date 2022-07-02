@@ -2,6 +2,9 @@
 import AppHeader from '@/components/layout/AppHeader.vue';
 import { ModalsContainer } from 'vue-final-modal';
 import CursorOverlay from '@/components/cursor/CursorOverlay.vue';
+import YoutubeVideoSearcherModal from '@/components/modal/YoutubeVideoSearcherModal.vue';
+import GalleryModal from '@/components/modal/GalleryModal.vue';
+import ProfileModal from '@/components/modal/ProfileModal.vue';
 </script>
 
 <template>
@@ -9,6 +12,9 @@ import CursorOverlay from '@/components/cursor/CursorOverlay.vue';
         <CursorOverlay />
         <ModalsContainer />
         <AppHeader />
+        <ProfileModal />
+        <YoutubeVideoSearcherModal />
+        <GalleryModal />
         <router-view class="grow"></router-view>
     </div>
 </template>

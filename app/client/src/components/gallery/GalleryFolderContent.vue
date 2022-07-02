@@ -65,7 +65,7 @@ const addSelectedFiles = () => {
     for (const selectedFile of addableSelectedFiles.value) {
         client.sendMessage(`/galleryadd ${selectedFile.filePath}`);
     }
-    app.toggleModal('gallery');
+    app.closeModal('gallery');
 };
 
 const getFileIcon = ({ name, type }) => {

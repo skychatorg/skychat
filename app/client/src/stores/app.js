@@ -91,6 +91,11 @@ export const useAppStore = defineStore('app', {
              * Modal to navigate in the gallery
              */
             gallery: false,
+
+            /**
+             * Modal to add videos from youtube
+             */
+            youtubeVideoSearcher: false,
         },
     }),
 
@@ -339,5 +344,17 @@ export const useAppStore = defineStore('app', {
             }
             this.modals[name] = ! this.modals[name];
         },
+
+        /**
+         * Close one or multiple given modals
+         */
+        closeModal: function(...name) {
+            for (const modalName of name) {
+                if (typeof this.modals[modalName] === 'undefined') {
+                    throw new Error('Unknown modal: ' + modalName);
+                }
+                this.modals[modalName] = false;
+            }
+        }
     },
 });

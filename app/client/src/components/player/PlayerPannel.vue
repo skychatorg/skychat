@@ -3,12 +3,9 @@ import { computed } from 'vue';
 import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
 import { useToast } from "vue-toastification";
-import { $vfm } from 'vue-final-modal';
 import HoverCard from '@/components/util/HoverCard.vue';
 import MediaPlayer from '@/components/player/MediaPlayer.vue';
 import MediaQueue from '@/components/player/MediaQueue.vue';
-import YoutubeVideoSearcherModal from '@/components/modal-legacy/YoutubeVideoSearcherModal.vue';
-import GalleryModal from '@/components/modal/GalleryModal.vue';
 
 
 const app = useAppStore();
@@ -35,10 +32,6 @@ const showQueue = computed(() => {
 const showPannel = computed(() => {
     return showPlayer.value || showQueue.value;
 });
-
-const openYoutubeModal = () => {
-   $vfm.show({ component: YoutubeVideoSearcherModal });
-};
 
 </script>
 
@@ -128,7 +121,7 @@ const openYoutubeModal = () => {
                         <fa icon="forward-step" />
                     </button>
                     <button
-                        @click="openYoutubeModal"
+                        @click="app.toggleModal('youtubeVideoSearcher')"
                         class="btn text-sm"
                     >
                         <fa icon="plus" />
@@ -157,8 +150,6 @@ const openYoutubeModal = () => {
                 </div>
             </div>
         </div>
-
-        <GalleryModal />
     </div>
 </template>
 
