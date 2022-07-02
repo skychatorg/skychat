@@ -175,7 +175,7 @@ const getFileColor = ({ name, type }) => {
 
         <!-- Selected files -->
         <div v-if="selectedFiles.length > 0" class="grid grid-cols-1 lg:grid-cols-2 gap-2 pt-2">
-            <span class="col-span-2 flex flex-col justify-center text-center text-sm">
+            <span class="lg:col-span-2 flex flex-col justify-center text-center text-sm">
                 {{ selectedFiles.length }} file{{ selectedFiles.length > 1 ? 's' : '' }} / 
                 <template v-if="addableSelectedFiles.length === 0">
                     no playable file selected
