@@ -1,6 +1,7 @@
 {
     "minRightForMessageHistory": -1,
     "minRightForPrivateMessages": -1,
+    "minRightForUserModeration": "op",
     "minRightForAudioRecording": -1,
     "minRightForConnectedList": -1,
     "minRightForPolls": -1,

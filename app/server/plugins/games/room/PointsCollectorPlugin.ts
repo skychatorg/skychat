@@ -36,7 +36,7 @@ export class PointsCollectorPlugin extends RoomPlugin {
 
     static readonly commandName = 'pointscollector';
 
-    readonly minRight = 20;
+    readonly minRight = 0;
 
     readonly rules = {
         pointscollector: {

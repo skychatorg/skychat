@@ -58,7 +58,7 @@ export class RacingPlugin extends RoomPlugin {
 
     static readonly commandName = 'racing';
 
-    readonly minRight = 20;
+    readonly minRight = 0;
 
     readonly rules = {
         racing: {

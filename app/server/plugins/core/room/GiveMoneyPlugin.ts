@@ -8,8 +8,6 @@ import {UserController} from "../../../skychat/UserController";
 
 export class GiveMoneyPlugin extends RoomPlugin {
 
-    public static readonly MIN_RIGHT_COMMISSION_FREE: number = 20;
-
     public static readonly COMMISSION_PERCENTAGE: number = 0.2;
 
     public static readonly COMMISSION_MIN: number = 1;
@@ -39,10 +37,7 @@ export class GiveMoneyPlugin extends RoomPlugin {
         const senderSession = connection.session;
 
         // Compute commission amount
-        let commission = GiveMoneyPlugin.COMMISSION_MIN;
-        if (Math.min(receiverSession.user.right, senderSession.user.right) < GiveMoneyPlugin.MIN_RIGHT_COMMISSION_FREE) {
-            commission = Math.floor(Math.max(GiveMoneyPlugin.COMMISSION_MIN, GiveMoneyPlugin.COMMISSION_PERCENTAGE * totalAmount));
-        }
+        const commission = Math.floor(Math.max(GiveMoneyPlugin.COMMISSION_MIN, GiveMoneyPlugin.COMMISSION_PERCENTAGE * totalAmount));
         const givenAmount = totalAmount - commission;
 
         // If amount is zero substracting the commission

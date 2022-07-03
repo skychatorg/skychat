@@ -36,7 +36,9 @@ export class TrackerPlugin extends GlobalPlugin {
 
     static readonly commandAliases = ['autotrack', 'trackdelete'];
 
-    readonly minRight = 40;
+    readonly minRight = Config.PREFERENCES.minRightForUserModeration === 'op' ? Infinity : Config.PREFERENCES.minRightForUserModeration;
+
+    readonly opOnly = Config.PREFERENCES.minRightForUserModeration === 'op';
 
     readonly rules = {
         track: {

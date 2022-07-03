@@ -484,7 +484,11 @@ export class PlayerPlugin extends GlobalPlugin {
                     channel.skip();
                     return;
                 }
-                // If user has no permission, poll to skip
+                // Has user permission to voteskip?
+                if (! this.canAddMedia(connection.session)) {
+                    throw new Error('You are not authorized to perform this action');
+                }
+                // Vote skip
                 const pollPlugin = this.manager.getPlugin('poll') as PollPlugin;
                 const playerData = channel.getPlayerData();
                 if (pollPlugin && playerData.current) {

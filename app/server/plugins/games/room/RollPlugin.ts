@@ -65,7 +65,7 @@ export class RollPlugin extends RoomPlugin {
 
     static readonly commandName = 'roll';
 
-    readonly minRight = 20;
+    readonly minRight = 0;
 
     readonly rules = {
         roll: {

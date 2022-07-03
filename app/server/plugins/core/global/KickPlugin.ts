@@ -1,7 +1,8 @@
-import {Connection} from "../../../skychat/Connection";
-import {User} from "../../../skychat/User";
-import {Session} from "../../../skychat/Session";
+import { Connection } from "../../../skychat/Connection";
+import { User } from "../../../skychat/User";
+import { Session } from "../../../skychat/Session";
 import { GlobalPlugin } from "../../GlobalPlugin";
+import { Config } from "../../../skychat/Config";
 
 
 /**
@@ -11,7 +12,9 @@ export class KickPlugin extends GlobalPlugin {
 
     static readonly commandName = 'kick';
 
-    readonly minRight = 40;
+    readonly minRight = Config.PREFERENCES.minRightForUserModeration === 'op' ? Infinity : Config.PREFERENCES.minRightForUserModeration;
+
+    readonly opOnly = Config.PREFERENCES.minRightForUserModeration === 'op';
 
     readonly rules = {
         kick: {

@@ -1,11 +1,11 @@
 import * as fs from 'fs';
 import * as Mail from "nodemailer/lib/mailer";
-import { GalleryPluginGroup } from '../plugins';
 
 
 export type Preferences = {
     minRightForMessageHistory: number;
     minRightForPrivateMessages: number;
+    minRightForUserModeration: number | 'op';
     minRightForAudioRecording: number;
     minRightForConnectedList: number;
     minRightForPolls: number;
@@ -132,6 +132,7 @@ export class Config {
         const keys: string[] = [
             'minRightForMessageHistory',
             'minRightForPrivateMessages',
+            'minRightForUserModeration',
             'minRightForAudioRecording',
             'minRightForConnectedList',
             'minRightForPolls',

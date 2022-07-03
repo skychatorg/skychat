@@ -32,7 +32,7 @@ export class GuessTheNumberPlugin extends RoomPlugin {
 
     static readonly commandName = 'guess';
 
-    readonly minRight = 20;
+    readonly minRight = 0;
 
     readonly rules = {
         guess: {

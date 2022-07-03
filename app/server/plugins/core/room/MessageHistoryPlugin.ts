@@ -35,6 +35,10 @@ export class MessageHistoryPlugin extends RoomPlugin {
          * Send the history of last messages to a specific connection
          * @param connection
          */
+        // If a param is specified, we ignore the request, as the user tries to get previous messages but we won't bother faking them
+        if (param) {
+            return;
+        }
         // Send message history to the connection that just joined this room
         const fakeMessages = [];
         const stickers = Object.keys(StickerManager.stickers);

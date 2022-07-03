@@ -1,14 +1,15 @@
 import * as striptags from "striptags";
-import {Connection} from "../../../skychat/Connection";
-import {User} from "../../../skychat/User";
-import {Session} from "../../../skychat/Session";
-import {UserController} from "../../../skychat/UserController";
-import {MessageFormatter} from "../../../skychat/MessageFormatter";
+import { Connection } from "../../../skychat/Connection";
+import { User } from "../../../skychat/User";
+import { Session } from "../../../skychat/Session";
+import { UserController } from "../../../skychat/UserController";
+import { MessageFormatter } from "../../../skychat/MessageFormatter";
 import { Timing } from "../../../skychat/Timing";
 import { Message } from "../../../skychat/Message";
 import { GlobalPlugin } from "../../GlobalPlugin";
 import { RoomManager } from "../../../skychat/RoomManager";
 import { MessageHistoryPlugin } from "../../core/room/MessageHistoryPlugin";
+import { Config } from "../../../skychat/Config";
 
 
 enum BAN_TYPES {
@@ -29,13 +30,13 @@ export class BanPlugin extends GlobalPlugin {
 
     static readonly BANLIST_COMMAND: string = 'banlist';
 
-    static readonly BAN_MIN_RIGHT = 40;
-
     static readonly commandName = BanPlugin.BAN_COMMAND;
 
     static readonly commandAliases = [BanPlugin.UNBAN_COMMAND, BanPlugin.BANLIST_COMMAND];
 
-    readonly minRight = BanPlugin.BAN_MIN_RIGHT;
+    readonly minRight = Config.PREFERENCES.minRightForUserModeration === 'op' ? Infinity : Config.PREFERENCES.minRightForUserModeration;
+
+    readonly opOnly = Config.PREFERENCES.minRightForUserModeration === 'op';
 
     readonly rules = {
         [BanPlugin.BAN_COMMAND]: {
