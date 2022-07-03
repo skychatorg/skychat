@@ -34,7 +34,7 @@ export class BanPlugin extends GlobalPlugin {
 
     static readonly commandAliases = [BanPlugin.UNBAN_COMMAND, BanPlugin.BANLIST_COMMAND];
 
-    readonly minRight = Config.PREFERENCES.minRightForUserModeration === 'op' ? Infinity : Config.PREFERENCES.minRightForUserModeration;
+    readonly minRight = Config.PREFERENCES.minRightForUserModeration === 'op' ? 0 : Config.PREFERENCES.minRightForUserModeration;
 
     readonly opOnly = Config.PREFERENCES.minRightForUserModeration === 'op';
 

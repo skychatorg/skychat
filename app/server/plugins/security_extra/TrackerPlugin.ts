@@ -36,7 +36,7 @@ export class TrackerPlugin extends GlobalPlugin {
 
     static readonly commandAliases = ['autotrack', 'trackdelete'];
 
-    readonly minRight = Config.PREFERENCES.minRightForUserModeration === 'op' ? Infinity : Config.PREFERENCES.minRightForUserModeration;
+    readonly minRight = Config.PREFERENCES.minRightForUserModeration === 'op' ? 0 : Config.PREFERENCES.minRightForUserModeration;
 
     readonly opOnly = Config.PREFERENCES.minRightForUserModeration === 'op';
 

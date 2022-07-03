@@ -12,7 +12,7 @@ export class KickPlugin extends GlobalPlugin {
 
     static readonly commandName = 'kick';
 
-    readonly minRight = Config.PREFERENCES.minRightForUserModeration === 'op' ? Infinity : Config.PREFERENCES.minRightForUserModeration;
+    readonly minRight = Config.PREFERENCES.minRightForUserModeration === 'op' ? 0 : Config.PREFERENCES.minRightForUserModeration;
 
     readonly opOnly = Config.PREFERENCES.minRightForUserModeration === 'op';
 

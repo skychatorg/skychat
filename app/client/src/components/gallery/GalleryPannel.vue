@@ -133,7 +133,7 @@ const getFileColor = ({ name, type }) => {
                         <div class="basis-7">
                             <fa icon="folder" class="mr-2" />
                         </div>
-                        <div :title="folderName" class="w-0 grow overflow-x-hidden text-ellipsis">
+                        <div :title="folderName" class="w-0 grow overflow-x-hidden text-ellipsis whitespace-nowrap">
                             {{ folderName }}
                         </div>
                     </div>
