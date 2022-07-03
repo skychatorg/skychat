@@ -18,9 +18,9 @@ export class GalleryPlugin extends GlobalPlugin {
 
     public readonly gallery: Gallery = new Gallery();
 
-    public readonly minRight = typeof Config.PREFERENCES.minRightForGalleryRead === 'number' ? Config.PREFERENCES.minRightForGalleryRead : 0;
+    readonly minRight = typeof Config.PREFERENCES.minRightForGalleryRead === 'number' ? Config.PREFERENCES.minRightForGalleryRead : 0;
 
-    public readonly opOnly = Config.PREFERENCES.minRightForGalleryRead === 'op';
+    readonly opOnly = Config.PREFERENCES.minRightForGalleryRead === 'op';
 
     readonly rules = {
         gallery: { },

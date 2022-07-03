@@ -112,15 +112,26 @@ const playerHeightCss = computed(() => {
                         <fa icon="caret-left" />
                         <fa icon="caret-left" />
                     </button>
-                    <!-- <button class="btn text-sm">
+                    <!--
+                    <button class="btn text-sm">
                         <fa icon="caret-left" />
                     </button>
-                    <button class="hidden btn text-sm">
-                        <fa icon="pause" />
+                    -->
+                    <button 
+                        @click="client.sendMessage(`/playersync`)"
+                        title="Synchronize local player with server"
+                        class="btn text-sm"
+                        :class="{
+                            'disabled': ! showPlayer,
+                        }"
+                    >
+                        <fa icon="rotate" />
                     </button>
+                    <!--
                     <button class="btn text-sm">
                         <fa icon="caret-right" />
-                    </button> -->
+                    </button>
+                    -->
                     <button
                         @click="client.sendMessage(`/player skip30`)"
                         title="Skip 30 seconds"

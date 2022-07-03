@@ -323,7 +323,7 @@ export class PlayerPlugin extends GlobalPlugin {
      */
     private async handlePlayerSearch(param: string, connection: Connection) {
         if (! this.canAddMedia(connection.session)) {
-            throw new Error('Unable to perform this action');
+            throw new Error('You do not have the permission to add media');
         }
         const fetcherName = param.split(' ')[0];
         if (typeof PlayerPlugin.FETCHERS[fetcherName] === 'undefined') {

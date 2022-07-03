@@ -1,7 +1,7 @@
-import {Connection} from "../../../skychat/Connection";
-import {GlobalPlugin} from "../../GlobalPlugin";
-import {User} from "../../../skychat/User";
-import {ConnectedListPlugin} from "./ConnectedListPlugin";
+import { Connection } from "../../../skychat/Connection";
+import { GlobalPlugin } from "../../GlobalPlugin";
+import { User } from "../../../skychat/User";
+import { ConnectedListPlugin } from "./ConnectedListPlugin";
 import { Room } from "../../../skychat/Room";
 import { Session } from "../../../skychat/Session";
 
@@ -70,6 +70,8 @@ export class CustomizationPlugin extends GlobalPlugin {
     };
 
     static readonly commandName = 'custom';
+
+    readonly minRight = 0;
 
     readonly rules = {
         custom: {
