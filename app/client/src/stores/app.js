@@ -146,12 +146,16 @@ export const useAppStore = defineStore('app', {
 
             // Listen for own state change
             watch(() => this.newMessage, (newMessage, oldMessage) => {
+
+                const isNewMessageTyping = newMessage.length > 0 && ! newMessage.startsWith('/');
+                const isOldMessageTyping = oldMessage.length > 0 && ! oldMessage.startsWith('/');
+
                 // Now typing
-                if (newMessage.length > 0 && oldMessage.length === 0) {
+                if (isNewMessageTyping && ! isOldMessageTyping) {
                     clientStore.sendMessage(`/t on`);
                 }
                 // Stop typing
-                if (newMessage.length === 0 && oldMessage.length > 0) {
+                if (! isNewMessageTyping && isOldMessageTyping) {
                     clientStore.sendMessage(`/t off`);
                 }
             });
