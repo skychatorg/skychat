@@ -19,14 +19,7 @@ The SkyChat lets you:
 - 🔒 Feel safe. OP double auth, log fuzzing, shadow ban, TOR network detection/ban, etc..
 - 💻 Install and set it up in 2 minutes.
 
-
-Main desktop UI:
-
-![screenshot-desktop](./app/doc/screenshot-desktop.png)
-
-Main mobile UI:
-
-![screenshot-mobile](./app/doc/screenshot-mobile.png)
+![screenshot-desktop](./app/doc/screenshot-ui.png)
 
 ## How to install
 

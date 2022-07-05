@@ -36,9 +36,9 @@ const login = function() {
 
 <template>
 
-    <div class="w-full h-full backdrop-blur-2xl backdrop-brightness-150">
+    <div class="home-view h-full backdrop-blur-2xl backdrop-brightness-150">
 
-        <div class="home-view">
+        <div class="login-block">
 
             <div class="auth bg-skygray-darker/50 p-4 rounded w-full text-center">
 
@@ -60,6 +60,11 @@ const login = function() {
 
 <style scoped>
 .home-view {
+    width: 100%;
+    max-width: var(--page-max-width);
+    margin: 0 auto;
+}
+.login-block {
     width: 100%;
     max-width: 500px;
     margin: 0 auto;

@@ -1,19 +1,22 @@
 <script setup>
-import { onMounted, nextTick, watch, ref, reactive } from 'vue';
+import { watch, ref } from 'vue';
 import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
 import ModalTemplate from '@/components/modal/ModalTemplate.vue';
-import SectionTitle from '@/components/util/SectionTitle.vue';
 import SectionSubTitle from '@/components/util/SectionSubTitle.vue';
 
 const app = useAppStore();
 const client = useClientStore();
 
-const newMotto = ref(client.state.user.data.plugins.motto);
+let newMotto = ref(client.state.user.data.plugins.motto);
 const saveNewMotto = () => {
     client.sendMessage(`/motto ${newMotto.value}`);
 };
-onMounted(() => newMotto = ref(client.state.user.data.plugins.motto));
+watch(() => app.modals.profile, () => {
+    if (app.modals.profile) {
+        newMotto.value = client.state.user.data.plugins.motto;
+    }
+});
 
 </script>
 
