@@ -1,5 +1,4 @@
 <script setup>
-import { ModalsContainer } from 'vue-final-modal';
 import AppHeader from '@/components/layout/AppHeader.vue';
 import CursorOverlay from '@/components/cursor/CursorOverlay.vue';
 import YoutubeVideoSearcherModal from '@/components/modal/YoutubeVideoSearcherModal.vue';
@@ -11,7 +10,6 @@ import PlayerQueueModal from '@/components/modal/PlayerQueueModal.vue';
 <template>
     <div class="flex flex-col h-full">
         <CursorOverlay />
-        <ModalsContainer />
         <AppHeader />
         <ProfileModal />
         <YoutubeVideoSearcherModal />

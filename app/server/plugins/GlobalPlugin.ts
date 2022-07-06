@@ -4,17 +4,6 @@ import { RoomManager } from "../skychat/RoomManager";
 
 
 /**
- * These types exist and are defined in each plugin instance, but TypeScript has to know it to access them
- */
-export interface GlobalPluginConstructor {
-    new (manager: RoomManager): GlobalPlugin;
-    commandName: string;
-    commandAliases: string[]
-    defaultDataStorageValue?: any;
-}
-
-
-/**
  * A global plugin is a plugin which instantied once at the level of the room manager
  */
 export abstract class GlobalPlugin extends Plugin {
@@ -78,4 +67,15 @@ export abstract class GlobalPlugin extends Plugin {
     public async onConnectionClosed(connection: Connection): Promise<void> {
 
     }
+}
+
+
+/**
+ * Defines default constructor for a global plugin (required for TypeScript)
+ */
+ export interface GlobalPluginConstructor {
+    new (manager: RoomManager): GlobalPlugin;
+    commandName: string;
+    commandAliases: string[]
+    defaultDataStorageValue?: any;
 }
