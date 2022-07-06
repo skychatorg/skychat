@@ -30,13 +30,13 @@ const connectionStatus = computed(() => {
 </script>
 
 <template>
-    <header class="header h-16 backdrop-brightness-150 w-full flex">
+    <header class="header h-16 w-full flex bg-skygray-white/10 backdrop-brightness-150 backdrop-blur">
 
             <!-- Left col (empty for now) -->
             <div class="w-0 lg:w-[var(--page-col-left-width)]"></div>
 
             <!-- Logo -->
-            <div class="pl-6 lg:pl-0 grow text-center flex lg:justify-center" href="/">
+            <div class="pl-6 lg:pl-0 lg:grow text-center flex lg:justify-center" href="/">
                 <div class="flex flex-col justify-center">
                     <a href="/"><img src="/assets/logo.png" width="60" height="40.5" ></a>
                 </div>
@@ -48,14 +48,11 @@ const connectionStatus = computed(() => {
                     <div class="flex items-center mr-2">
 
                         <div class="grow flex flex-col mr-4">
-                            <span class="text-right">
+                            <span class="text-right whitespace-nowrap">
                                 {{ client.state.user.username }}
-                                <button @click="app.toggleModal('profile')" class="ml-2">
-                                    <fa icon="pen-to-square" />
-                                </button>
                             </span>
                             <div class="flex justify-end">
-                                <button @click="logout">
+                                <button @click="logout" title="Logout">
                                     <fa icon="arrow-right-from-bracket" />
                                 </button>
                             </div>

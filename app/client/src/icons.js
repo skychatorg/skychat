@@ -46,6 +46,15 @@ import {
     faCopy,
     faPlay,
     faPenToSquare,
+    faFolder,
+    faFile,
+    faArrowLeft,
+    faVideo,
+    faImage,
+    faMusic,
+    faClosedCaptioning,
+    faArrowUpRightFromSquare,
+    faRotate,
 } from '@fortawesome/free-solid-svg-icons';
 
 library.add(
@@ -94,6 +103,15 @@ library.add(
     faCopy,
     faPlay,
     faPenToSquare,
+    faFolder,
+    faFile,
+    faArrowLeft,
+    faVideo,
+    faImage,
+    faMusic,
+    faClosedCaptioning,
+    faArrowUpRightFromSquare,
+    faRotate,
 );
 
 export default library;

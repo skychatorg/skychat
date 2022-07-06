@@ -49,12 +49,6 @@ export const useAppStore = defineStore('app', {
             size: 'md',
 
             /**
-             * Whether the queue should be shown
-             * @type {Boolean}
-             */
-            queueEnabled: false,
-
-            /**
              * Whether currently in cinema mode
              * @type {Boolean}
              */
@@ -86,6 +80,21 @@ export const useAppStore = defineStore('app', {
              * Whether the profile modal is currently opened
              */
             profile: false,
+
+            /**
+             * Modal to navigate in the gallery
+             */
+            gallery: false,
+
+            /**
+             * Modal to add videos from youtube
+             */
+            youtubeVideoSearcher: false,
+
+            /**
+             * List of next videos to play
+             */
+            playerQueue: false,
         },
     }),
 
@@ -137,12 +146,16 @@ export const useAppStore = defineStore('app', {
 
             // Listen for own state change
             watch(() => this.newMessage, (newMessage, oldMessage) => {
+
+                const isNewMessageTyping = newMessage.length > 0 && ! newMessage.startsWith('/');
+                const isOldMessageTyping = oldMessage.length > 0 && ! oldMessage.startsWith('/');
+
                 // Now typing
-                if (newMessage.length > 0 && oldMessage.length === 0) {
+                if (isNewMessageTyping && ! isOldMessageTyping) {
                     clientStore.sendMessage(`/t on`);
                 }
                 // Stop typing
-                if (newMessage.length === 0 && oldMessage.length > 0) {
+                if (! isNewMessageTyping && isOldMessageTyping) {
                     clientStore.sendMessage(`/t off`);
                 }
             });
@@ -287,11 +300,6 @@ export const useAppStore = defineStore('app', {
             this.savePreferences();
         },
 
-        toggleShowPlayerQueue: function() {
-            this.playerMode.queueEnabled = ! this.playerMode.queueEnabled;
-            this.savePreferences();
-        },
-
         /**
          * Upload a given file
          */
@@ -334,5 +342,17 @@ export const useAppStore = defineStore('app', {
             }
             this.modals[name] = ! this.modals[name];
         },
+
+        /**
+         * Close one or multiple given modals
+         */
+        closeModal: function(...name) {
+            for (const modalName of name) {
+                if (typeof this.modals[modalName] === 'undefined') {
+                    throw new Error('Unknown modal: ' + modalName);
+                }
+                this.modals[modalName] = false;
+            }
+        }
     },
 });

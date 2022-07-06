@@ -4,7 +4,6 @@ import { RoomManager } from "../../skychat/RoomManager";
 import { PlayerChannelManager } from "./PlayerChannelManager";
 import { YoutubeFetcher } from "./fetcher/YoutubeFetcher";
 import { PluginCommandRules } from "../Plugin";
-import { LinkFetcher } from "./fetcher/LinkFetcher";
 import { IFrameFetcher } from "./fetcher/IFrameFetcher";
 import { VideoFetcher } from "./fetcher/VideoFetcher";
 import { TwitchFetcher } from "./fetcher/TwitchFetcher";
@@ -12,6 +11,7 @@ import { PollPlugin } from "../core/global/PollPlugin";
 import { SanitizedPlayerChannel } from "./PlayerChannel";
 import { Session } from "../../skychat/Session";
 import { Config } from "../../skychat/Config";
+import { GalleryFetcher } from "./fetcher/GalleryFetcher";
 
 
 
@@ -23,8 +23,8 @@ export class PlayerPlugin extends GlobalPlugin {
     static readonly FETCHERS: {[fetcherName: string]: VideoFetcher} = {
         'yt': new YoutubeFetcher(),
         'twitch': new TwitchFetcher(),
-        'embed': new LinkFetcher(),
         'iframe': new IFrameFetcher(),
+        'galleryadd': new GalleryFetcher(),
     };
 
     static readonly commandName = 'player';
@@ -323,7 +323,7 @@ export class PlayerPlugin extends GlobalPlugin {
      */
     private async handlePlayerSearch(param: string, connection: Connection) {
         if (! this.canAddMedia(connection.session)) {
-            throw new Error('Unable to perform this action');
+            throw new Error('You do not have the permission to add media');
         }
         const fetcherName = param.split(' ')[0];
         if (typeof PlayerPlugin.FETCHERS[fetcherName] === 'undefined') {
@@ -484,7 +484,11 @@ export class PlayerPlugin extends GlobalPlugin {
                     channel.skip();
                     return;
                 }
-                // If user has no permission, poll to skip
+                // Has user permission to voteskip?
+                if (! this.canAddMedia(connection.session)) {
+                    throw new Error('You are not authorized to perform this action');
+                }
+                // Vote skip
                 const pollPlugin = this.manager.getPlugin('poll') as PollPlugin;
                 const playerData = channel.getPlayerData();
                 if (pollPlugin && playerData.current) {

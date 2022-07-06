@@ -59,6 +59,7 @@ export class Server {
         this.app = express();
         this.app.use(express.static('dist'));
         this.app.use('/uploads', express.static('uploads'));
+        this.app.use('/gallery', express.static('gallery'));
         this.app.use(fileUpload({
             limits: { fileSize: 10 * 1024 * 1024 },
             createParentPath: true,

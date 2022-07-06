@@ -16,7 +16,7 @@ export type VideoInfo = {
     /**
      * Video type (currently only youtube supported)
      */
-    type: 'youtube' | 'twitch' | 'embed' | 'iframe';
+    type: 'youtube' | 'twitch' | 'gallery' | 'iframe';
 
     /**
      * Video data (for youtube, video id)

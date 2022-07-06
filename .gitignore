@@ -5,10 +5,10 @@
 
 backups
 build
+config
 dist
 node_modules
 storage
 uploads
 
-config/*.txt
-config/*.json
+/gallery

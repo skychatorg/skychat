@@ -8,7 +8,6 @@ import MessagePannel from '@/components/message/MessagePannel.vue';
 import NewMessageForm from '@/components/message/NewMessageForm.vue';
 import ConnectedList from '@/components/user/ConnectedList.vue';
 import PollList from '@/components/poll/PollList.vue';
-import ProfileModal from '@/components/modal/ProfileModal.vue';
 
 const app = useAppStore();
 const client = useClientStore();
@@ -20,7 +19,7 @@ const client = useClientStore();
         
         <div
             class="
-                h-full flex flex-col bg-skygray-lighter/5 backdrop-brightness-125
+                h-full flex flex-col bg-skygray-lighter/5 backdrop-blur-2xl backdrop-brightness-125
                 w-full lg:w-[var(--page-col-left-width)] lg:flex
             "
             :class="{
@@ -56,15 +55,15 @@ const client = useClientStore();
                 'hidden': app.mobileView !== 'middle',
             }"
         >
-            <PlayerPannel v-if="client.state.currentPlayerChannel" class="bg-skygray-lighter/5 backdrop-brightness-125" />
-            <PollList class="bg-skygray-lighter/5 backdrop-brightness-125" />
-            <MessagePannel class="grow bg-skygray-white/5 backdrop-brightness-150" />
-            <NewMessageForm class="basis-12 bg-skygray-lighter/5 backdrop-brightness-125" />
+            <PlayerPannel v-if="client.state.currentPlayerChannel" class="bg-skygray-lighter/5 backdrop-blur-2xl backdrop-brightness-125" />
+            <PollList class="bg-skygray-lighter/5 backdrop-blur-2xl backdrop-brightness-125" />
+            <MessagePannel class="grow bg-skygray-white/10 backdrop-brightness-125 backdrop-blur-2xl" />
+            <NewMessageForm class="basis-12 bg-skygray-lighter/5 backdrop-blur-2xl backdrop-brightness-125" />
         </div>
 
         <div
             class="
-                h-full flex flex-col bg-skygray-lighter/5 backdrop-brightness-125
+                h-full flex flex-col bg-skygray-lighter/5 backdrop-blur-2xl backdrop-brightness-125
                 lg:flex
                 w-full lg:w-[var(--page-col-right-width)] lg:flex
             "
@@ -73,6 +72,24 @@ const client = useClientStore();
             }"
         >
             <ConnectedList class="pl-2 pr-4 mt-6 grow h-0 overflow-y-auto scrollbar" />
+            <div class="pl-4 pr-6 mt-3 mb-2 grid grid-cols-2 gap-4">
+                <button
+                    v-if="client.state.config.galleryEnabled"
+                    @click="app.toggleModal('gallery')"
+                    title="Open gallery"
+                    class="form-control col-start-1 col-span-1"
+                >
+                    <fa icon="folder-tree" />
+                </button>
+                <button
+                    v-show="true"
+                    @click="app.toggleModal('profile')"
+                    title="Open user settings"
+                    class="form-control col-start-2 col-span-1"
+                >
+                    <fa icon="gears" />
+                </button>
+            </div>
             <div class="p-2 lg:hidden">
                 <button
                     class="form-control mr-2"
@@ -90,8 +107,6 @@ const client = useClientStore();
                 </button>
             </div>
         </div>
-        
-        <ProfileModal />
     </div>
 </template>
 

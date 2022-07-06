@@ -1,18 +1,21 @@
 import * as geoip from "geoip-lite";
 import * as striptags from "striptags";
-import {Connection} from "../../../skychat/Connection";
-import {User} from "../../../skychat/User";
-import {Session} from "../../../skychat/Session";
-import {UserController} from "../../../skychat/UserController";
-import {MessageFormatter} from "../../../skychat/MessageFormatter";
+import { Connection } from "../../../skychat/Connection";
+import { User } from "../../../skychat/User";
+import { Session } from "../../../skychat/Session";
+import { UserController } from "../../../skychat/UserController";
+import { MessageFormatter } from "../../../skychat/MessageFormatter";
 import { GlobalPlugin } from "../../GlobalPlugin";
+import { Config } from "../../../skychat/Config";
 
 
 export class IpPlugin extends GlobalPlugin {
 
     static readonly commandName = 'ip';
 
-    readonly minRight = 40;
+    readonly minRight = Config.PREFERENCES.minRightForUserModeration === 'op' ? 0 : Config.PREFERENCES.minRightForUserModeration;
+
+    readonly opOnly = Config.PREFERENCES.minRightForUserModeration === 'op';
 
     readonly rules = {
         ip: {

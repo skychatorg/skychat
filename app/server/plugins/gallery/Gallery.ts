@@ -1,142 +1,147 @@
-import { FileManager } from "../../skychat/FileManager";
-import { RandomGenerator } from "../../skychat/RandomGenerator";
-import { GalleryFolder, SanitizedGalleryFolder } from "./GalleryFolder";
-import { GalleryMedia, SanitizedGalleryMedia } from "./GalleryMedia";
-import * as fs from 'fs';
-import { Config } from "../../skychat/Config";
-import { User } from "../../skychat/User";
+import { promises as fs } from 'fs';
+import { Config } from '../../skychat/Config';
+import { FileManager } from '../../skychat/FileManager';
 
 
-export type SanitizedGallery = {
-    folders: SanitizedGalleryFolder[];
-}
+export type FileType = 'video' | 'audio' | 'image' | 'subtitle' | 'unknown';
+
+
+export type FolderContent = {
+    exists: boolean;
+    thumb?: string;
+    folders: String[];
+    files: { name: String, type: FileType }[];
+};
+
+export type PlayableFileInfo = {
+    url: string;
+    title: string;
+    duration: number;
+};
 
 
 export class Gallery {
 
-    static readonly ALLOWED_EXTENSIONS: string[] = ['png', 'jpg', 'jpeg', 'gif', 'mkv', 'mp4', 'webm'];
+    static readonly FOLDER_PATH_REGEX = /^[^/][a-zA-Z0-9-_/]+$/;
 
-    private folders: GalleryFolder[] = [];
+    static readonly FILE_PATH_REGEX = /^[^/][a-zA-Z0-9-_/]+\/[a-zA-Z0-9-_]+\.[a-z0-9]+$/;
 
-    getFolderById(folderId: number): GalleryFolder | undefined {
-        return this.folders.find(f => f.id === folderId);
-    }
+    static readonly THUMB_FILE_NAMES = ['thumb.png', 'thumb.jpg', 'thumb.jpeg'];
 
-    createFolder(name: string): GalleryFolder {
-        const folder = new GalleryFolder({
-            id: GalleryFolder.getNextId(),
-            name: name,
-        });
-        this.folders.push(folder);
-        return folder;
-    }
+    static readonly EXTENSION_FILE_TYPES: {[key: string]: FileType} = {
+        'mp4': 'video',
+        'webm': 'video',
+        'vtt': 'subtitle',
+        'mp3': 'audio',
+        'ogg': 'audio',
+        'jpg': 'image',
+        'jpeg': 'image',
+        'png': 'image',
+    };
 
-    deleteFolder(folderId: number): boolean {
-        const index = this.folders.findIndex(folder => folder.id === folderId);
-        if (index === -1) {
-            return false;
+    static readonly DEFAULT_FILE_TYPE = 'unknown';
+
+    static readonly BASE_PATH = 'gallery/';
+
+    checkFolderPath(folderPath: string) {
+        if (folderPath !== '' && ! Gallery.FOLDER_PATH_REGEX.test(folderPath)) {
+            throw new Error('Invalid folder path');
         }
-        this.folders.splice(index, 1);
-        return true;
+    }
+    
+    checkFilePath(filePath: string) {
+        if (! Gallery.FILE_PATH_REGEX.test(filePath)) {
+            throw new Error('Invalid file path ' + filePath);
+        }
+    }
+
+    async ls(folderPath: string): Promise<FolderContent> {
+        this.checkFolderPath(folderPath);
+
+        // Default response structure
+        const folderContent: FolderContent = {
+            exists: true,
+            folders: [],
+            files: [],
+        };
+        try {
+            const fileNames = await fs.readdir(Gallery.BASE_PATH + folderPath);
+            for (const fileName of fileNames) {
+                const stats = await fs.stat(Gallery.BASE_PATH + folderPath + '/' + fileName);
+                if (! folderContent.thumb && Gallery.THUMB_FILE_NAMES.includes(fileName)) {
+                    folderContent.thumb = Config.LOCATION + '/' + Gallery.BASE_PATH + folderPath + '/' + fileName;
+                }
+                if (stats.isFile()) {
+                    const ext = fileName.split('.').pop() as string;
+                    folderContent.files.push({
+                        name: fileName,
+                        type: Gallery.EXTENSION_FILE_TYPES[ext] || Gallery.DEFAULT_FILE_TYPE,
+                    });
+                } else if (stats.isDirectory()) {
+                    folderContent.folders.push(fileName);
+                } else {
+                    console.warn('Unknown file type', fileName);
+                }
+            }
+        } catch (err) {
+            folderContent.exists = false;
+        } finally {
+            return folderContent;
+        }
     }
 
     /**
-     * @TODO optimize
-     * @param mediaUrl 
-     * @returns 
+     * Tells whether a file exists in the gallery
      */
-    getMediaFromUrl(mediaUrl: string): GalleryMedia | null {
-        for (const folder of this.folders) {
-            for (const media of folder.medias) {
-                if (media.location === mediaUrl) {
-                    return media;
-                }
+    async fileExists(filePath: string): Promise<boolean> {
+        this.checkFilePath(filePath);
+
+        try {
+            const stats = await fs.stat(Gallery.BASE_PATH + filePath);
+            return stats.isFile();
+        } catch (err) {
+            return false;
+        }
+    }
+
+    /**
+     * Ensure a file type exists and get its type
+     */
+    async getFileType(filePath: string): Promise<string> {
+        this.checkFilePath(filePath);
+
+        try {
+            const stats = await fs.stat(Gallery.BASE_PATH + filePath);
+            if (stats.isFile()) {
+                const ext = filePath.split('.').pop() as string;
+                return Gallery.EXTENSION_FILE_TYPES[ext] || Gallery.DEFAULT_FILE_TYPE;
+            } else {
+                return Gallery.DEFAULT_FILE_TYPE;
             }
+        } catch (err) {
+            return Gallery.DEFAULT_FILE_TYPE;
         }
-        return null;
     }
 
-    getMediaPath(mediaId: number): string {
-        return `uploads/gallery/${Math.floor(mediaId / 1e6)}/${Math.floor(mediaId / 1e3)}/${mediaId}/`;
-    }
+    /**
+     * Tells whether a file exists in the gallery
+     */
+    async getPlayableFileInfo(filePath: string): Promise<PlayableFileInfo> {
+        this.checkFilePath(filePath);
 
-    buildMediaThumb(mediaUrl: string): string {
-        const extension = FileManager.getFileExtension(mediaUrl);
-
-        if (['mp4', 'webm', 'mkv'].indexOf(extension) !== -1) {
-            return 'assets/images/icons/video.png';
+        if (! await this.fileExists(filePath)) {
+            throw new Error('File does not exist');
         }
 
-        if (['png', 'jpg', 'jpeg', 'gif'].indexOf(extension) !== -1) {
-            return mediaUrl;
+        const fileType = await this.getFileType(filePath);
+        if (fileType !== 'video') {
+            throw new Error('File is not a video');
         }
 
-        throw new Error('Unable to build media thumbnail');
-    }
-
-    getRandomName(): string {
-        return Math.floor(RandomGenerator.random(8) * 1e16) + '-' + new Date().toISOString().substr(0, 19).replace(/[-T:]/g, '-');
-    }
-
-    addMedia(user: User, folderId: number, link: string, tags: string[]) {
-        const folder = this.getFolderById(folderId);
-        if (! folder) {
-            throw new Error(`Folder ${folderId} does not exist`);
-        }
-        if (! FileManager.isFileUrlUploaded(link)) {
-            throw new Error(`File ${link} not found`);
-        }
-        const uploadedFilePath = FileManager.getLocalPathFromFileUrl(link);
-        const extension = FileManager.getFileExtension(uploadedFilePath);
-        if (Gallery.ALLOWED_EXTENSIONS.indexOf(extension) === -1) {
-            throw new Error(`Extension ${extension} not supported`)
-        }
-        const mediaId = GalleryMedia.getNextId();
-        const newMediaDirPath = this.getMediaPath(mediaId);
-        const newMediaFilename = this.getRandomName() + '.' + extension;
-        const newMediaPath = newMediaDirPath + newMediaFilename;
-        fs.mkdirSync(newMediaDirPath, { recursive: true });
-        fs.renameSync(uploadedFilePath, newMediaPath);
-        const mediaUrl = Config.LOCATION + '/' + newMediaDirPath + newMediaFilename;
-        const media = new GalleryMedia({
-            id: mediaId,
-            folderId: folderId,
-            location: mediaUrl,
-            tags: tags,
-            thumb: this.buildMediaThumb(mediaUrl),
-            username: user.username,
-        });
-        folder.addMedia(media);
-    }
-
-    deleteMedia(folderId: number, mediaId: number) {
-        const folder = this.getFolderById(folderId);
-        if (! folder) {
-            throw new Error(`Folder ${folderId} does not exist`);
-        }
-        folder.deleteMedia(mediaId);
-    }
-
-    search(query: string): SanitizedGalleryMedia[] {
-        const matches = [];
-        for (const folder of this.folders) {
-            matches.push(...folder.search(query));
-        }
-        return matches;
-    }
-
-    sanitized(limit?: number): SanitizedGallery {
         return {
-            folders: this.folders.map(folder => folder.sanitized(limit)),
-        }
-    }
-
-    setData(data: SanitizedGallery) {
-        this.folders = [];
-        for (const folderData of data.folders) {
-            const folder = new GalleryFolder({id: folderData.id, name: folderData.name});
-            folder.setMedias(folderData.medias);
-            this.folders.push(folder);
-        }
+            url: Config.LOCATION + '/' + Gallery.BASE_PATH + filePath,
+            title: filePath.split('/').pop() || filePath,
+            duration: await FileManager.getVideoDuration(Gallery.BASE_PATH + filePath),
+        };
     }
 }

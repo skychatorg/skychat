@@ -1,11 +1,13 @@
 {
     "minRightForMessageHistory": -1,
     "minRightForPrivateMessages": -1,
+    "minRightForUserModeration": "op",
     "minRightForAudioRecording": -1,
     "minRightForConnectedList": -1,
     "minRightForPolls": -1,
     "minRightForGalleryRead": 0,
     "minRightForGalleryWrite": "op",
+    "minRightForGalleryDelete": "op",
     "minRightForPlayerAddMedia": 0,
     "minRightForPlayerManageSchedule": "op",
     "maxReplacedImagesPerMessage": 50,

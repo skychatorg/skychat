@@ -4,18 +4,6 @@ import { Plugin } from "./Plugin";
 import { Room } from "../skychat/Room";
 
 
-/**
- * These types exist and are defined in each plugin instance, but TypeScript has to know it to access them
- */
-export interface RoomPluginConstructor {
-    new (room: Room): RoomPlugin;
-    // These types exist and are defined in each plugin instance, but TypeScript has to know it to access them
-    commandName: string;
-    commandAliases: string[];
-    defaultDataStorageValue?: any;
-}
-
-
 export abstract class RoomPlugin extends Plugin {
 
     /**
@@ -83,4 +71,15 @@ export abstract class RoomPlugin extends Plugin {
     public async onConnectionLeftRoom(connection: Connection): Promise<void> {
 
     }
+}
+
+
+/**
+ * Defines default constructor for a room plugin (required for TypeScript)
+ */
+ export interface RoomPluginConstructor {
+    new (room: Room): RoomPlugin;
+    commandName: string;
+    commandAliases: string[];
+    defaultDataStorageValue?: any;
 }

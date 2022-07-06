@@ -2,7 +2,7 @@
 </script>
 
 <template>
-    <div class="pl-6 mb-1 text-xs text-skygray-lighter tracking-widest uppercase text-center select-none">
+    <div class="mb-1 text-xs text-skygray-lighter tracking-widest uppercase text-center select-none">
         <slot></slot>
     </div>
 </template>

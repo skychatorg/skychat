@@ -1,8 +1,9 @@
 <script setup>
-import { onMounted, ref, watch } from 'vue';
+import { onMounted, nextTick, ref, watch } from 'vue';
 import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
 import HoverCard from '@/components/util/HoverCard.vue';
+import ModalTemplate from '@/components/modal/ModalTemplate.vue';
 
 const app = useAppStore();
 const client = useClientStore();
@@ -15,8 +16,10 @@ const searchTypes = ref([
 ]);
 
 const searchInputEl = ref(null);
-onMounted(() => {
-    searchInputEl.value.focus();
+watch(() => searchInputEl.value, () => {
+    if (searchInputEl.value) {
+        searchInputEl.value.focus();
+    }
 });
 
 watch(() => searchType, () => {
@@ -40,13 +43,11 @@ const addToQueue = item => {
 </script>
 
 <template>
-    <vue-final-modal
-        classes="modal-container"
-        content-class="modal-content"
-        :esc-to-close="true"
-        v-slot="{ close }"
+    <ModalTemplate
+        id="youtubeVideoSearcher"
+        title="Add from Youtube"
     >
-        <div class="h-full w-full">
+        <div class="h-full w-full py-2">
 
             <!-- Search input -->
             <input
@@ -80,7 +81,7 @@ const addToQueue = item => {
                     v-for="item in client.state.playerApiSearchResult.items"
                     :key="item.id"
                     :selectable="true"
-                    @click="addToQueue(item), close()"
+                    @click="addToQueue(item), app.closeModal('youtubeVideoSearcher')"
                     class="cursor-pointer m-2"
                 >
                     <div class="flex p-2">
@@ -98,12 +99,30 @@ const addToQueue = item => {
                 </HoverCard>
             </div>
         </div>
-    </vue-final-modal>
+    </ModalTemplate>
 </template>
 
 <style scoped>
-
-@import url('./modal.css');
-
-
+::v-deep(.modal-container) {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+::v-deep(.modal-content) {
+    display: flex;
+    flex-direction: column;
+    margin: 0 1rem;
+    padding: 1rem;
+    border-radius: 0.25rem;
+    width: 100%;
+    max-width: 700px;
+    height: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
+    background: black;
+}
+.modal__title {
+    font-size: 1.5rem;
+    font-weight: 700;
+}
 </style>

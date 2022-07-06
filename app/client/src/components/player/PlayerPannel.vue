@@ -3,19 +3,22 @@ import { computed } from 'vue';
 import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
 import { useToast } from "vue-toastification";
-import { $vfm } from 'vue-final-modal';
 import HoverCard from '@/components/util/HoverCard.vue';
 import MediaPlayer from '@/components/player/MediaPlayer.vue';
-import MediaQueue from '@/components/player/MediaQueue.vue';
-import YoutubeVideoSearcherModal from '@/components/modal-legacy/YoutubeVideoSearcherModal.vue';
-import GalleryModal from '@/components/modal-legacy/GalleryModal.vue';
 
 
 const app = useAppStore();
 const client = useClientStore();
 const toast = useToast();
 
+const showPlayer = computed(() => {
+    return client.state.player.current && app.playerMode.enabled;
+});
+
 const playerHeightCss = computed(() => {
+    if (! showPlayer.value) {
+        return 'auto';
+    }
     return {
         xs: '100px',
         sm: '20vh',
@@ -24,26 +27,6 @@ const playerHeightCss = computed(() => {
     }[app.playerMode.size];
 });
 
-const showPlayer = computed(() => {
-    return client.state.player.current && app.playerMode.enabled;
-});
-
-const showQueue = computed(() => {
-    return client.state.player.queue.length && app.playerMode.queueEnabled;
-});
-
-const showPannel = computed(() => {
-    return showPlayer.value || showQueue.value;
-});
-
-const openYoutubeModal = () => {
-   $vfm.show({ component: YoutubeVideoSearcherModal });
-};
-
-const openGalleryModal = () => {
-   $vfm.show({ component: GalleryModal });
-};
-
 </script>
 
 <template>
@@ -51,15 +34,28 @@ const openGalleryModal = () => {
         
         <!-- Pannel content -->
         <div
-            v-if="showPannel"
             class="pannel-content grow flex transition"
         >
 
             <!-- Actual player implementation -->
             <MediaPlayer v-if="showPlayer" class="player overflow-hidden grow" />
 
-            <!-- Queue if shown -->
-            <MediaQueue v-if="showQueue" class="overflow-y-auto h-0 min-h-full scrollbar queue" />
+            <!-- If player hidden but something is playing -->
+            <div
+                class="w-full py-1 flex justify-center"
+                v-if="! showPlayer && client.state.player.current"
+            >
+                <div
+                    v-if="client.state.player.current.video.thumb"
+                    class="mr-2 w-8 h-8 rounded-xl border border-2 overflow-hidden bg-black flex justify-center"
+                    :title="client.state.player.current.video.title"
+                >
+                    <img :src="client.state.player.current.video.thumb" class="h-full object-cover" />
+                </div>
+                <div class="flex flex-col justify-center">
+                    {{ client.state.player.current.video.title }}
+                </div>
+            </div>
         </div>
 
         <!-- Pannel control bar -->
@@ -70,60 +66,90 @@ const openGalleryModal = () => {
                 <!-- Player type (big to disabled) -->
                 <div class="col-span-4 btn-group">
                     <button
-                        class="hidden btn text-sm"
-                        :class="{ 'active': app.playerMode.cinemaMode, 'disabled': ! showPannel }"
                         @click="toast.error('The cinema mode is not yet implemented.')"
+                        title="Toggle cinema mode"
+                        class="hidden btn text-sm"
+                        :class="{ 'active': app.playerMode.cinemaMode, 'disabled': ! showPlayer }"
                     >
                         <fa icon="tv" />
                     </button>
                     <button
                         @click="app.shrinkPlayer"
+                        title="Shrink player"
                         class="btn text-sm"
-                        :class="{ 'disabled': app.playerMode.size === 'xs' || ! showPannel }"
+                        :class="{ 'disabled': app.playerMode.size === 'xs' || ! showPlayer }"
                     >
                         <fa icon="chevron-up" />
                     </button>
                     <button
                         @click="app.expandPlayer"
+                        title="Expand player"
                         class="btn text-sm"
-                        :class="{ 'disabled': app.playerMode.size === 'lg' || ! showPannel }"
+                        :class="{ 'disabled': app.playerMode.size === 'lg' || ! showPlayer }"
                     >
                         <fa icon="chevron-down" />
                     </button>
                     <button
+                        @click="app.setPlayerEnabled(! app.playerMode.enabled)"
+                        title="Enable/disable player"
                         class="btn text-sm"
                         :class="{ 'active': app.playerMode.enabled }"
-                        @click="app.setPlayerEnabled(! app.playerMode.enabled)"
                     >
                         <fa :icon="'toggle-' + (app.playerMode.enabled ? 'on' : 'off')" />
                     </button>
                 </div>
             
                 <!-- Player controls -->
-                <div v-if="false" class="col-start-5 col-span-4 btn-group">
+                <div class="col-start-5 col-span-4 btn-group">
+                    <button
+                        @click="client.sendMessage(`/player replay30`)"
+                        title="Replay 30 seconds"
+                        class="btn text-sm"
+                        :class="{
+                            'disabled': ! showPlayer,
+                        }"
+                    >
+                        <fa icon="caret-left" />
+                        <fa icon="caret-left" />
+                    </button>
+                    <!--
                     <button class="btn text-sm">
                         <fa icon="caret-left" />
-                        <fa icon="caret-left" />
                     </button>
-                    <button class="btn text-sm">
-                        <fa icon="caret-left" />
+                    -->
+                    <button 
+                        @click="client.sendMessage(`/playersync`)"
+                        title="Synchronize local player with server"
+                        class="btn text-sm"
+                        :class="{
+                            'disabled': ! showPlayer,
+                        }"
+                    >
+                        <fa icon="rotate" />
                     </button>
-                    <button class="hidden btn text-sm">
-                        <fa icon="pause" />
-                    </button>
+                    <!--
                     <button class="btn text-sm">
                         <fa icon="caret-right" />
                     </button>
-                    <button class="btn text-sm">
+                    -->
+                    <button
+                        @click="client.sendMessage(`/player skip30`)"
+                        title="Skip 30 seconds"
+                        class="btn text-sm"
+                        :class="{
+                            'disabled': ! showPlayer,
+                        }"
+                    >
                         <fa icon="caret-right" />
                         <fa icon="caret-right" />
                     </button>
                 </div>
             
                 <!-- Player actions -->
-                <div class="col-start-7 col-span-4 btn-group">
+                <div class="col-start-9 col-span-4 btn-group">
                     <button
                         @click="client.sendMessage('/player skip')"
+                        title="Skip current video"
                         class="btn text-sm"
                         :class="{
                             'disabled': ! showPlayer,
@@ -132,29 +158,19 @@ const openGalleryModal = () => {
                         <fa icon="forward-step" />
                     </button>
                     <button
-                        @click="openYoutubeModal"
+                        @click="app.toggleModal('youtubeVideoSearcher')"
+                        title="Add a media from Youtube"
                         class="btn text-sm"
                     >
                         <fa icon="plus" />
                     </button>
                     <button
-                        v-if="client.state.gallery"
-                        @click="openGalleryModal"
-                        class="btn text-sm"
-                    >
-                        <fa icon="folder-tree" />
-                    </button>
-                </div>
-            
-                <!-- Queue -->
-                <div class="col-start-11 col-span-2 btn-group">
-                    <button
-                        class="btn text-sm"
+                        @click="app.toggleModal('playerQueue')"
+                        title="Open player queue"
                         :class="{
                             'disabled': ! client.state.player.queue.length,
-                            'active': showQueue,
                         }"
-                        @click="app.toggleShowPlayerQueue"
+                        class="btn text-sm"
                     >
                         <fa icon="list" />
                     </button>

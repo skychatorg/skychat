@@ -1,17 +1,6 @@
-import {Connection} from "../skychat/Connection";
-import {Plugin} from "./Plugin";
+import { Connection } from "../skychat/Connection";
+import { Plugin } from "./Plugin";
 import { RoomManager } from "../skychat/RoomManager";
-
-
-/**
- * These types exist and are defined in each plugin instance, but TypeScript has to know it to access them
- */
-export interface GlobalPluginConstructor {
-    new (manager: RoomManager): GlobalPlugin;
-    commandName: string;
-    commandAliases: string[]
-    defaultDataStorageValue?: any;
-}
 
 
 /**
@@ -78,4 +67,15 @@ export abstract class GlobalPlugin extends Plugin {
     public async onConnectionClosed(connection: Connection): Promise<void> {
 
     }
+}
+
+
+/**
+ * Defines default constructor for a global plugin (required for TypeScript)
+ */
+ export interface GlobalPluginConstructor {
+    new (manager: RoomManager): GlobalPlugin;
+    commandName: string;
+    commandAliases: string[]
+    defaultDataStorageValue?: any;
 }

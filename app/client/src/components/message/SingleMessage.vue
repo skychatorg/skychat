@@ -21,6 +21,10 @@ const props = defineProps({
         type: Boolean,
         default: true,
     },
+    compact: {
+        type: Boolean,
+        default: false,
+    },
 });
 
 const content = ref(null);
@@ -32,6 +36,15 @@ const formattedDate = computed(() => {
     const minutes = date.getMinutes().toString().padStart(2, '0');
     const seconds = date.getSeconds().toString().padStart(2, '0');
     return `${hours}:${minutes}:${seconds}`;
+});
+
+// Room name
+const room = computed(() => {
+    const room = client.state.rooms.find(room => room.id === props.message.room);
+    if (! room) {
+        return null;
+    }
+    return room;
 });
 
 // Users whose last seen message is this message
@@ -94,6 +107,7 @@ const messageInteract = () => {
         <div class="py-1 px-3 flex flex-row">
 
             <UserBigAvatar
+                v-if="! compact"
                 class="mt-1"
                 :user="message.user"
             />
@@ -102,7 +116,7 @@ const messageInteract = () => {
                 <!-- First row -->
                 <div class="flex">
                     <div
-                        class="grow font-bold"
+                        class="font-bold"
                         :style="{
                             color: message.user.data.plugins.custom.color,
                         }"
@@ -112,13 +126,20 @@ const messageInteract = () => {
                             <fa icon="mobile-screen" class="ml-1" />
                         </sup>
                     </div>
+                    <div v-if="compact" class="text-skygray-lightest text-xs pt-1 ml-2">
+                        {{ formattedDate }}
+                        <template v-if="room">
+                            @ {{ room.name }}
+                        </template>
+                    </div>
                 </div>
                 <!-- Quoted message -->
                 <SingleMessage
                     v-if="message.quoted"
                     :message="message.quoted"
                     :selectable="false"
-                    class="mt-2 mb-4 opacity-50"
+                    :compact="true"
+                    class="mt-2 mb-4 opacity-75"
                 />
                 <!-- Message content -->
                 <div
@@ -128,8 +149,8 @@ const messageInteract = () => {
                 ></div>
             </div>
 
-            <div class="basis-16 w-16 flex flex-col text-center">
-                <span class="grow text-xs text-skygray-lighter">
+            <div v-if="! compact" class="basis-16 w-16 flex flex-col text-center">
+                <span class="grow text-xs text-skygray-lightest">
                     {{ formattedDate }}
                 </span>
                 <UserMiniAvatarCollection

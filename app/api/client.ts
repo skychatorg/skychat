@@ -1,6 +1,6 @@
 import { EventEmitter } from "events";
 import { BinaryMessageTypes } from "./BinaryMessageTypes";
-import { PublicConfig, CustomizationElements, SanitizedMessage, SanitizedUser, AuthToken, SanitizedSession, SanitizedRoom, SanitizedPoll, SanitizedGallery, SanitizedGalleryMedia, SanitizedPlayerChannel, VideoInfo, QueuedVideoInfo } from "../server";
+import { PublicConfig, CustomizationElements, SanitizedMessage, SanitizedUser, AuthToken, SanitizedSession, SanitizedRoom, SanitizedPoll, SanitizedPlayerChannel, VideoInfo, QueuedVideoInfo, FolderContent } from "../server";
 
 
 const defaultUser: SanitizedUser = {
@@ -13,9 +13,7 @@ const defaultUser: SanitizedUser = {
         plugins: {
             custom: { },
             avatar: '',
-            cursor: true,
             motto: '',
-            yt: null,
         }
     }
 };
@@ -46,8 +44,7 @@ export declare interface SkyChatClient {
     on(event: 'file-list',          listener: (files: Array<string>) => any): this;
     on(event: 'file-content',       listener: (data: { filePath: string, content: string }) => any): this;
 
-    on(event: 'gallery',            listener: (gallery: { data: SanitizedGallery, canWrite: boolean }) => any): this;
-    on(event: 'gallery-search',     listener: (medias: SanitizedGalleryMedia[]) => any): this;
+    on(event: 'gallery',            listener: (data: FolderContent) => any): this;
 
     on(event: 'player-channels',    listener: (playerChannels: Array<SanitizedPlayerChannel>) => any): this;
     on(event: 'player-channel',     listener: (channelId: number | null) => any): this;
@@ -81,8 +78,7 @@ export class SkyChatClient extends EventEmitter {
     private _op: Boolean = false;
     private _files: Array<string> = [];
     private _file: { filePath: string, content: string } | null = null;
-    private _gallery: SanitizedGallery | null = null;
-    private _gallerySearchResults: SanitizedGalleryMedia[] = [];
+    private _gallery: FolderContent | null = null;
     private _playerChannels: Array<SanitizedPlayerChannel> = [];
     private _currentPlayerChannelId: number | null = null;
     private _currentPlayerChannel: SanitizedPlayerChannel | null = null;
@@ -123,7 +119,6 @@ export class SkyChatClient extends EventEmitter {
 
         // Gallery
         this.on('gallery', this._onGallery.bind(this));
-        this.on('gallery-search', this._onGallerySearchResults.bind(this));
 
         // Player
         this.on('player-channels', this._onPlayerChannels.bind(this));
@@ -290,13 +285,8 @@ export class SkyChatClient extends EventEmitter {
         this.emit('update', this.state);
     }
 
-    private _onGallery(gallery: any) {
+    private _onGallery(gallery: FolderContent) {
         this._gallery = gallery;
-        this.emit('update', this.state);
-    }
-
-    private _onGallerySearchResults(gallerySearchResults: any) {
-        this._gallerySearchResults = gallerySearchResults;
         this.emit('update', this.state);
     }
 
@@ -360,13 +350,12 @@ export class SkyChatClient extends EventEmitter {
             currentRoom: this._rooms.find(room => room.id === this._currentRoomId) || null,
             typingList: this._typingList,
             polls: this._polls,
-            cursors: this._cursors, // TODO: Move cursors to separate object to save performances?
+            cursors: this._cursors,
             roll: this._roll,
             op: this._op,
             files: this._files,
             file: this._file,
             gallery: this._gallery,
-            gallerySearchResults: this._gallerySearchResults,
             playerChannels: this._playerChannels,
             currentPlayerChannelId: this._currentPlayerChannelId,
             currentPlayerChannel: this._currentPlayerChannel,

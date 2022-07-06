@@ -5,11 +5,13 @@ import * as Mail from "nodemailer/lib/mailer";
 export type Preferences = {
     minRightForMessageHistory: number;
     minRightForPrivateMessages: number;
+    minRightForUserModeration: number | 'op';
     minRightForAudioRecording: number;
     minRightForConnectedList: number;
     minRightForPolls: number;
     minRightForGalleryRead: number | 'op';
     minRightForGalleryWrite: number | 'op';
+    minRightForGalleryDelete: number | 'op';
     minRightForPlayerAddMedia: number | 'op';
     minRightForPlayerManageSchedule: number | 'op';
     maxReplacedImagesPerMessage: number;
@@ -19,6 +21,7 @@ export type Preferences = {
 
 export type PublicConfig = {
     
+    galleryEnabled: boolean;
 }
 
 export class Config {
@@ -69,8 +72,8 @@ export class Config {
      */
     public static toClient(): PublicConfig {
         return {
-
-        }
+            galleryEnabled: Config.PLUGIN_GROUP_NAMES.includes('GalleryPluginGroup'),
+        };
     }
 
     public static initialize() {
@@ -129,6 +132,7 @@ export class Config {
         const keys: string[] = [
             'minRightForMessageHistory',
             'minRightForPrivateMessages',
+            'minRightForUserModeration',
             'minRightForAudioRecording',
             'minRightForConnectedList',
             'minRightForPolls',

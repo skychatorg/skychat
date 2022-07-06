@@ -20,21 +20,24 @@ defineProps({
     <Teleport to="#modal-container">
         <Transition name="slide-fade">
             <div
-                class="modal relative" 
+                class="modal relative flex flex-col" 
                 v-if="app.modals[id]"
             >
+                <div>
+                    <button
+                        @click="app.closeModal(id)"
+                        class="absolute top-3 left-6"
+                    >
+                        <fa icon="times" />
+                    </button>
 
-                <button
-                    @click="app.toggleModal(id)"
-                    class="absolute top-3 left-6"
-                >
-                    <fa icon="times" />
-                </button>
+                    <SectionTitle>{{ title }}</SectionTitle>
+                    <hr class="my-4 border-skygray-light">
+                </div>
 
-                <SectionTitle>{{ title }}</SectionTitle>
-                <hr class="my-4 border-skygray-light">
-
-                <slot />
+                <div class="h-0 grow overflow-y-scroll scrollbar px-4">
+                    <slot />
+                </div>
             </div>
         </Transition>
     </Teleport>

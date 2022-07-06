@@ -1,13 +1,22 @@
 <script setup>
-import { onMounted, nextTick, watch, ref, reactive } from 'vue';
+import { watch, ref } from 'vue';
 import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
 import ModalTemplate from '@/components/modal/ModalTemplate.vue';
-import SectionTitle from '@/components/util/SectionTitle.vue';
 import SectionSubTitle from '@/components/util/SectionSubTitle.vue';
 
 const app = useAppStore();
 const client = useClientStore();
+
+let newMotto = ref(client.state.user.data.plugins.motto);
+const saveNewMotto = () => {
+    client.sendMessage(`/motto ${newMotto.value}`);
+};
+watch(() => app.modals.profile, () => {
+    if (app.modals.profile) {
+        newMotto.value = client.state.user.data.plugins.motto;
+    }
+});
 
 </script>
 
@@ -17,10 +26,15 @@ const client = useClientStore();
         title="Preferences"
     >
 
+        <!-- Motto -->
+        <SectionSubTitle>Motto</SectionSubTitle>
+        <div class="flex justify-center gap-4">
+            <input v-model="newMotto" class="grow form-control" placeholder="What drives you?" />
+            <button @click="saveNewMotto" class="form-control">Save</button>
+        </div>
+
         <!-- Color -->
-        <SectionSubTitle>
-            Custom color
-        </SectionSubTitle>
+        <SectionSubTitle class="mt-6">Custom color</SectionSubTitle>
         <div class="mt-2 w-full md:w-2/3 lg:w-[120px] mx-auto flex flex-wrap gap-2 justify-center">
             <div
                 v-for="color, index in client.state.custom.color"
@@ -33,5 +47,6 @@ const client = useClientStore();
                 @click="client.sendMessage(`/custom use color:${color.id}`)"
             ></div>
         </div>
+
     </ModalTemplate>
 </template>
