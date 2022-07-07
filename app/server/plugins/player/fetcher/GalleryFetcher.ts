@@ -1,4 +1,5 @@
 import { GalleryPlugin } from "../../gallery/GalleryPlugin";
+import { Gallery } from "../../gallery/Gallery";
 import { VideoInfo } from "../PlayerChannel";
 import { PlayerPlugin } from "../PlayerPlugin";
 import { VideoFetcher } from "./VideoFetcher";
@@ -19,10 +20,9 @@ export class GalleryFetcher implements VideoFetcher {
         if (! galleryPlugin) {
             throw new Error('Gallery plugin not found');
         }
-        const gallery = galleryPlugin.gallery;
 
         // Get file info
-        const playableFileInfo = await gallery.getPlayableFileInfo(filePath);
+        const playableFileInfo = await Gallery.getPlayableFileInfo(filePath);
 
         return {
             type: 'gallery',

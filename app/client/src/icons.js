@@ -55,6 +55,9 @@ import {
     faClosedCaptioning,
     faArrowUpRightFromSquare,
     faRotate,
+    faEllipsisVertical,
+    faFileVideo,
+    faInfo,
 } from '@fortawesome/free-solid-svg-icons';
 
 library.add(
@@ -112,6 +115,9 @@ library.add(
     faClosedCaptioning,
     faArrowUpRightFromSquare,
     faRotate,
+    faEllipsisVertical,
+    faFileVideo,
+    faInfo,
 );
 
 export default library;

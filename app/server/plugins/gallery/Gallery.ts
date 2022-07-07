@@ -43,19 +43,19 @@ export class Gallery {
 
     static readonly BASE_PATH = 'gallery/';
 
-    checkFolderPath(folderPath: string) {
+    static checkFolderPath(folderPath: string) {
         if (folderPath !== '' && ! Gallery.FOLDER_PATH_REGEX.test(folderPath)) {
             throw new Error('Invalid folder path');
         }
     }
     
-    checkFilePath(filePath: string) {
+    static checkFilePath(filePath: string) {
         if (! Gallery.FILE_PATH_REGEX.test(filePath)) {
             throw new Error('Invalid file path ' + filePath);
         }
     }
 
-    async ls(folderPath: string): Promise<FolderContent> {
+    static async ls(folderPath: string): Promise<FolderContent> {
         this.checkFolderPath(folderPath);
 
         // Default response structure
@@ -93,7 +93,7 @@ export class Gallery {
     /**
      * Tells whether a file exists in the gallery
      */
-    async fileExists(filePath: string): Promise<boolean> {
+    static async fileExists(filePath: string): Promise<boolean> {
         this.checkFilePath(filePath);
 
         try {
@@ -107,7 +107,7 @@ export class Gallery {
     /**
      * Ensure a file type exists and get its type
      */
-    async getFileType(filePath: string): Promise<string> {
+    static async getFileType(filePath: string): Promise<string> {
         this.checkFilePath(filePath);
 
         try {
@@ -126,7 +126,7 @@ export class Gallery {
     /**
      * Tells whether a file exists in the gallery
      */
-    async getPlayableFileInfo(filePath: string): Promise<PlayableFileInfo> {
+    static async getPlayableFileInfo(filePath: string): Promise<PlayableFileInfo> {
         this.checkFilePath(filePath);
 
         if (! await this.fileExists(filePath)) {

@@ -16,8 +16,6 @@ export class GalleryPlugin extends GlobalPlugin {
         'galleryls',
     ];
 
-    public readonly gallery: Gallery = new Gallery();
-
     readonly minRight = typeof Config.PREFERENCES.minRightForGalleryRead === 'number' ? Config.PREFERENCES.minRightForGalleryRead : 0;
 
     readonly opOnly = Config.PREFERENCES.minRightForGalleryRead === 'op';
@@ -55,7 +53,7 @@ export class GalleryPlugin extends GlobalPlugin {
         
         switch (alias) {
             case 'galleryls':
-                connection.send('gallery', await this.gallery.ls(param));
+                connection.send('gallery', await Gallery.ls(param));
                 break;
 
             default:
@@ -66,7 +64,7 @@ export class GalleryPlugin extends GlobalPlugin {
     async onNewConnection(connection: Connection): Promise<void> {
         // If gallery is available for everyone, send it
         if (Config.PREFERENCES.minRightForGalleryRead === -1) {
-            connection.send('gallery', await this.gallery.ls(''));
+            connection.send('gallery', await Gallery.ls(''));
         }
     }
     
@@ -77,7 +75,7 @@ export class GalleryPlugin extends GlobalPlugin {
         }
         // If user can access the gallery
         if (this.canRead(connection.session)) {
-            connection.send('gallery', await this.gallery.ls(''));
+            connection.send('gallery', await Gallery.ls(''));
         }
     }
 }

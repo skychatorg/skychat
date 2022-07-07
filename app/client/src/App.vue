@@ -5,6 +5,7 @@ import YoutubeVideoSearcherModal from '@/components/modal/YoutubeVideoSearcherMo
 import GalleryModal from '@/components/modal/GalleryModal.vue';
 import ProfileModal from '@/components/modal/ProfileModal.vue';
 import PlayerQueueModal from '@/components/modal/PlayerQueueModal.vue';
+import VideoConverterModal from '@/components/modal/VideoConverterModal.vue';
 </script>
 
 <template>
@@ -13,6 +14,7 @@ import PlayerQueueModal from '@/components/modal/PlayerQueueModal.vue';
         <AppHeader />
         <ProfileModal />
         <YoutubeVideoSearcherModal />
+        <VideoConverterModal />
         <GalleryModal />
         <PlayerQueueModal />
         <router-view class="grow"></router-view>

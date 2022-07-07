@@ -2,10 +2,13 @@
 import { computed, ref, onMounted } from 'vue';
 import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
+import { useGallery } from '@/lib/Gallery';
 import HoverCard from '@/components/util/HoverCard.vue';
+import GalleryFileDotMenu from '@/components/gallery/GalleryFileDotMenu.vue';
 
 const app = useAppStore();
 const client = useClientStore();
+const gallery = useGallery();
 
 // When mounted, reset folder
 onMounted(() => {
@@ -29,19 +32,11 @@ const leaveFolder = () => {
     refresh();
 };
 
-// File info
-const getFileNamePath = fileName => {
-    return folderList.value.length === 0 ? fileName : `${folderList.value.join('/')}/${fileName}`;
-};
-const isFileTypeAddable = fileType => {
-    return fileType === 'video';
-};
-
 // Selected files
 const selectedFiles = ref([]);
-const addableSelectedFiles = computed(() => selectedFiles.value.filter(file => isFileTypeAddable(file.type)));
+const addableSelectedFiles = computed(() => selectedFiles.value.filter(file => gallery.isFileTypeAddable(file.type)));
 const toggleSelectFile = file => {
-    const filePath = getFileNamePath(file.name);
+    const filePath = gallery.getFileNamePath(folderList.value, file.name);
     if (isFileSelected(file)) {
         selectedFiles.value = selectedFiles.value.filter(file => file.filePath !== filePath);
     } else {
@@ -52,7 +47,7 @@ const toggleSelectFile = file => {
     }
 };
 const isFileSelected = file => {
-    const filePath = getFileNamePath(file.name);
+    const filePath = gallery.getFileNamePath(folderList.value, file.name);
     return selectedFiles.value.find(selectedFile => selectedFile.filePath === filePath);
 };
 const clearSelectedFiles = () => {
@@ -68,24 +63,6 @@ const addSelectedFiles = () => {
     app.closeModal('gallery');
 };
 
-const getFileIcon = ({ name, type }) => {
-    return {
-        video: 'video',
-        subtitle: 'closed-captioning',
-        audio: 'music',
-        image: 'image',
-        unknown: 'file',
-    }[type] || 'file';
-};
-const getFileColor = ({ name, type }) => {
-    return {
-        video: 'rgb(var(--color-tertiary))',
-        subtitle: 'rgb(var(--color-tertiary-light))',
-        audio: 'rgb(var(--color-secondary))',
-        image: 'rgb(var(--color-primary))',
-    }[type] || 'rgb(var(--color-skygray-lightest))';
-};
-
 </script>
 
 <template>
@@ -96,7 +73,7 @@ const getFileColor = ({ name, type }) => {
             <input
                 class="h-10 grow mousetrap form-control"
                 type="text"
-                :value="`gallery/${folderList.join('/')}`"
+                :value="`/${folderList.join('/')}`"
                 disabled
             />
             <div class="h-10" v-if="client.state.gallery.thumb">
@@ -145,28 +122,23 @@ const getFileColor = ({ name, type }) => {
                     :key="file"
                     :selectable="true"
                     :selected="isFileSelected(file)"
-                    :borderColor="getFileColor(file)"
+                    :borderColor="gallery.getFileColor(file)"
                 >
                     <div
                         @click="toggleSelectFile(file)"
-                        class="cursor-pointer select-none px-4 py-2 flex flex-nowrap"
+                        class="group cursor-pointer select-none px-4 py-2 flex flex-nowrap"
                     >
                         <div class="basis-7">
-                            <fa :icon="getFileIcon(file)" class="mr-2" />
+                            <fa :icon="gallery.getFileIcon(file)" class="mr-2" />
                         </div>
                         <div :title="file.name" class="w-0 grow overflow-x-hidden whitespace-nowrap text-ellipsis">
                             {{ file.name }}
                         </div>
-                        <div class="basis-7">
-                            <a
-                                @click.stop=""
-                                :href="`/gallery/${getFileNamePath(file.name)}`"
-                                title="Open in new tab"
-                                target="_blank"
-                                class="px-2 py-1"
-                            >
-                                <fa icon="arrow-up-right-from-square" />
-                            </a>
+                        <div class="basis-7 transition-all opacity-0 group-hover:opacity-100">
+                            <GalleryFileDotMenu
+                                :folderList="folderList"
+                                :file="file"
+                            />
                         </div>
                     </div>
                 </HoverCard>

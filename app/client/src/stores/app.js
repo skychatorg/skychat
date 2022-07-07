@@ -87,6 +87,11 @@ export const useAppStore = defineStore('app', {
             gallery: false,
 
             /**
+             * Utility to convert videos
+             */
+            videoConverter: false,
+
+            /**
              * Modal to add videos from youtube
              */
             youtubeVideoSearcher: false,
@@ -336,11 +341,15 @@ export const useAppStore = defineStore('app', {
         /**
          * Open a modal by its name
          */
-        toggleModal: function(name) {
+        toggleModal: function(name, data) {
             if (typeof this.modals[name] === 'undefined') {
                 throw new Error('Unknown modal: ' + name);
             }
-            this.modals[name] = ! this.modals[name];
+            if (this.modals[name]) {
+                this.modals[name] = false;
+            } else {
+                this.modals[name] = data || true;
+            }
         },
 
         /**

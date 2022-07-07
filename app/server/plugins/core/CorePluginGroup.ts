@@ -1,12 +1,9 @@
 import { RoomPlugin, GlobalPlugin } from "..";
-import { Room } from "../../skychat/Room";
-import { RoomManager } from "../../skychat/RoomManager";
 import { PluginGroup } from "../PluginGroup";
 import { AccountPlugin } from "./global/AccountPlugin";
 import { AudioRecorderPlugin } from "./global/AudioRecorderPlugin";
 import { BackupPlugin } from "./global/BackupPlugin";
 import { ConnectedListPlugin } from "./global/ConnectedListPlugin";
-import { FileEditorPlugin } from "./global/FileEditorPlugin";
 import { GiveMoneyPlugin } from "./room/GiveMoneyPlugin";
 import { HelpPlugin } from "./room/HelpPlugin";
 import { MailPlugin } from "./global/MailPlugin";
@@ -52,7 +49,6 @@ export class CorePluginGroup extends PluginGroup {
         BanPlugin,
         ConnectedListPlugin,
         CustomizationPlugin,
-        FileEditorPlugin,
         IpPlugin,
         KickPlugin,
         MailPlugin,

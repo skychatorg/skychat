@@ -1,5 +1,6 @@
 import { PluginGroup } from "../PluginGroup";
 import { GalleryPlugin } from "./GalleryPlugin";
+import { VideoConverterPlugin } from "./VideoConverterPlugin";
 
 
 export class GalleryPluginGroup extends PluginGroup {
@@ -8,5 +9,6 @@ export class GalleryPluginGroup extends PluginGroup {
 
     globalPluginClasses = [
         GalleryPlugin,
+        VideoConverterPlugin,
     ];
 }

@@ -1,6 +1,6 @@
 import { EventEmitter } from "events";
 import { BinaryMessageTypes } from "./BinaryMessageTypes";
-import { PublicConfig, CustomizationElements, SanitizedMessage, SanitizedUser, AuthToken, SanitizedSession, SanitizedRoom, SanitizedPoll, SanitizedPlayerChannel, VideoInfo, QueuedVideoInfo, FolderContent } from "../server";
+import { PublicConfig, CustomizationElements, SanitizedMessage, SanitizedUser, AuthToken, SanitizedSession, SanitizedRoom, SanitizedPoll, SanitizedPlayerChannel, VideoInfo, QueuedVideoInfo, FolderContent, VideoStreamInfo } from "../server";
 
 
 const defaultUser: SanitizedUser = {
@@ -41,10 +41,9 @@ export declare interface SkyChatClient {
     on(event: 'info',               listener: (message: string) => any): this;
     
     on(event: 'set-op',             listener: (op: boolean) => any): this;
-    on(event: 'file-list',          listener: (files: Array<string>) => any): this;
-    on(event: 'file-content',       listener: (data: { filePath: string, content: string }) => any): this;
 
     on(event: 'gallery',            listener: (data: FolderContent) => any): this;
+    on(event: 'convert-info',       listener: (data: VideoStreamInfo) => any): this;
 
     on(event: 'player-channels',    listener: (playerChannels: Array<SanitizedPlayerChannel>) => any): this;
     on(event: 'player-channel',     listener: (channelId: number | null) => any): this;
@@ -79,6 +78,7 @@ export class SkyChatClient extends EventEmitter {
     private _files: Array<string> = [];
     private _file: { filePath: string, content: string } | null = null;
     private _gallery: FolderContent | null = null;
+    private _videoStreamInfo: VideoStreamInfo | null = null;
     private _playerChannels: Array<SanitizedPlayerChannel> = [];
     private _currentPlayerChannelId: number | null = null;
     private _currentPlayerChannel: SanitizedPlayerChannel | null = null;
@@ -114,11 +114,10 @@ export class SkyChatClient extends EventEmitter {
 
         // Admin
         this.on('set-op', this._onSetOP.bind(this));
-        this.on('file-list', this._onFileList.bind(this));
-        this.on('file-content', this._onFileContent.bind(this));
 
         // Gallery
         this.on('gallery', this._onGallery.bind(this));
+        this.on('convert-info', this._onConvertInfo.bind(this));
 
         // Player
         this.on('player-channels', this._onPlayerChannels.bind(this));
@@ -275,18 +274,13 @@ export class SkyChatClient extends EventEmitter {
         this.emit('update', this.state);
     }
 
-    private _onFileList(files: Array<string>) {
-        this._files = files;
-        this.emit('update', this.state);
-    }
-
-    private _onFileContent(file: { filePath: string, content: string }) {
-        this._file = file;
-        this.emit('update', this.state);
-    }
-
     private _onGallery(gallery: FolderContent) {
         this._gallery = gallery;
+        this.emit('update', this.state);
+    }
+
+    private _onConvertInfo(data: VideoStreamInfo) {
+        this._videoStreamInfo = data;
         this.emit('update', this.state);
     }
 
@@ -356,6 +350,7 @@ export class SkyChatClient extends EventEmitter {
             files: this._files,
             file: this._file,
             gallery: this._gallery,
+            videoStreamInfo: this._videoStreamInfo,
             playerChannels: this._playerChannels,
             currentPlayerChannelId: this._currentPlayerChannelId,
             currentPlayerChannel: this._currentPlayerChannel,

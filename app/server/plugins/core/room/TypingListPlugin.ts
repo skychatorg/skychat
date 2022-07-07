@@ -8,8 +8,6 @@ import {User} from "../../../skychat/User";
  */
 export class TypingListPlugin extends RoomPlugin {
 
-    public static readonly CLEAR_MIN_RIGHT: number = 20;
-
     static readonly commandName = 't';
 
     readonly minRight = -1;
@@ -33,7 +31,7 @@ export class TypingListPlugin extends RoomPlugin {
 
         if (param === 'clear') {
             // Check rights
-            if (connection.session.user.right < TypingListPlugin.CLEAR_MIN_RIGHT) {
+            if (! connection.session.isOP()) {
                 throw new Error('You do not have the right to clear the typing list');
             }
             this.typingList = {};
