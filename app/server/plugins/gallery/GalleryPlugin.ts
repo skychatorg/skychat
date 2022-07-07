@@ -31,24 +31,6 @@ export class GalleryPlugin extends GlobalPlugin {
         },
     }
 
-    public canRead(session: Session): boolean {
-        const expectedRight = Config.PREFERENCES.minRightForGalleryRead === 'op' ? Infinity : Config.PREFERENCES.minRightForGalleryRead;
-        const actualRight = session.isOP() ? Infinity : session.user.right;
-        return actualRight >= expectedRight;
-    }
-
-    public canWrite(session: Session): boolean {
-        const expectedRight = Config.PREFERENCES.minRightForGalleryWrite === 'op' ? Infinity : Config.PREFERENCES.minRightForGalleryWrite;
-        const actualRight = session.isOP() ? Infinity : session.user.right;
-        return actualRight >= expectedRight;
-    }
-
-    public canDelete(session: Session): boolean {
-        const expectedRight = Config.PREFERENCES.minRightForGalleryDelete === 'op' ? Infinity : Config.PREFERENCES.minRightForGalleryDelete;
-        const actualRight = session.isOP() ? Infinity : session.user.right;
-        return actualRight >= expectedRight;
-    }
-
     async run(alias: string, param: string, connection: Connection): Promise<void> {
         
         switch (alias) {
@@ -74,7 +56,7 @@ export class GalleryPlugin extends GlobalPlugin {
             return;
         }
         // If user can access the gallery
-        if (this.canRead(connection.session)) {
+        if (Gallery.canRead(connection.session)) {
             connection.send('gallery', await Gallery.ls(''));
         }
     }

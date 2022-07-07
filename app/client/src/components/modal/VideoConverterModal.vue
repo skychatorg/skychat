@@ -48,6 +48,7 @@ const convert = () => {
         return;
     }
     client.sendMessage(`/convert ${app.modals.videoConverter.filePath} ${selectedStreamIndexes.value.join(',')}`);
+    app.toggleModal('ongoingConverts');
 };
 
 </script>

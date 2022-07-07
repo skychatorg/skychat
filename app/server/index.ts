@@ -9,4 +9,4 @@ export { SanitizedRoom } from "./skychat/Room";
 export { SanitizedPlayerChannel, VideoInfo, QueuedVideoInfo } from "./plugins/player/PlayerChannel";
 export { CustomizationElements } from "./plugins/core/global/CustomizationPlugin";
 export { FolderContent } from "./plugins/gallery/Gallery";
-export { VideoStreamInfo } from "./plugins/gallery/VideoConverterPlugin";
+export { VideoStreamInfo, OngoingConvert } from "./plugins/gallery/VideoConverterPlugin";

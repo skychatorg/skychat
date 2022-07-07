@@ -87,6 +87,11 @@ export const useAppStore = defineStore('app', {
             gallery: false,
 
             /**
+             * List on currently converting videos
+             */
+            ongoingConverts: false,
+
+            /**
              * Utility to convert videos
              */
             videoConverter: false,

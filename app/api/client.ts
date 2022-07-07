@@ -1,6 +1,6 @@
 import { EventEmitter } from "events";
 import { BinaryMessageTypes } from "./BinaryMessageTypes";
-import { PublicConfig, CustomizationElements, SanitizedMessage, SanitizedUser, AuthToken, SanitizedSession, SanitizedRoom, SanitizedPoll, SanitizedPlayerChannel, VideoInfo, QueuedVideoInfo, FolderContent, VideoStreamInfo } from "../server";
+import { PublicConfig, CustomizationElements, SanitizedMessage, SanitizedUser, AuthToken, SanitizedSession, SanitizedRoom, SanitizedPoll, SanitizedPlayerChannel, VideoInfo, QueuedVideoInfo, FolderContent, VideoStreamInfo, OngoingConvert } from "../server";
 
 
 const defaultUser: SanitizedUser = {
@@ -44,6 +44,7 @@ export declare interface SkyChatClient {
 
     on(event: 'gallery',            listener: (data: FolderContent) => any): this;
     on(event: 'convert-info',       listener: (data: VideoStreamInfo) => any): this;
+    on(event: 'convert-list',       listener: (data: Array<OngoingConvert>) => any): this;
 
     on(event: 'player-channels',    listener: (playerChannels: Array<SanitizedPlayerChannel>) => any): this;
     on(event: 'player-channel',     listener: (channelId: number | null) => any): this;
@@ -79,6 +80,7 @@ export class SkyChatClient extends EventEmitter {
     private _file: { filePath: string, content: string } | null = null;
     private _gallery: FolderContent | null = null;
     private _videoStreamInfo: VideoStreamInfo | null = null;
+    private _ongoingConverts: Array<OngoingConvert> = [];
     private _playerChannels: Array<SanitizedPlayerChannel> = [];
     private _currentPlayerChannelId: number | null = null;
     private _currentPlayerChannel: SanitizedPlayerChannel | null = null;
@@ -118,6 +120,7 @@ export class SkyChatClient extends EventEmitter {
         // Gallery
         this.on('gallery', this._onGallery.bind(this));
         this.on('convert-info', this._onConvertInfo.bind(this));
+        this.on('convert-list', this._onConvertList.bind(this));
 
         // Player
         this.on('player-channels', this._onPlayerChannels.bind(this));
@@ -284,6 +287,11 @@ export class SkyChatClient extends EventEmitter {
         this.emit('update', this.state);
     }
 
+    private _onConvertList(data: Array<OngoingConvert>) {
+        this._ongoingConverts = data;
+        this.emit('update', this.state);
+    }
+
     private _onPlayerChannels(playerChannels: Array<SanitizedPlayerChannel>) {
         this._playerChannels = playerChannels;
         this.emit('update', this.state);
@@ -351,6 +359,7 @@ export class SkyChatClient extends EventEmitter {
             file: this._file,
             gallery: this._gallery,
             videoStreamInfo: this._videoStreamInfo,
+            ongoingConverts: this._ongoingConverts,
             playerChannels: this._playerChannels,
             currentPlayerChannelId: this._currentPlayerChannelId,
             currentPlayerChannel: this._currentPlayerChannel,

@@ -78,6 +78,9 @@ const client = useClientStore();
                     @click="app.toggleModal('gallery')"
                     title="Open gallery"
                     class="form-control col-start-1 col-span-1"
+                    :class="{
+                        'text-tertiary': client.state.ongoingConverts.length > 0,
+                    }"
                 >
                     <fa icon="folder-tree" />
                 </button>

@@ -1,6 +1,7 @@
 import { promises as fs } from 'fs';
 import { Config } from '../../skychat/Config';
 import { FileManager } from '../../skychat/FileManager';
+import { Session } from '../../skychat/Session';
 
 
 export type FileType = 'video' | 'audio' | 'image' | 'subtitle' | 'unknown';
@@ -42,6 +43,24 @@ export class Gallery {
     static readonly DEFAULT_FILE_TYPE = 'unknown';
 
     static readonly BASE_PATH = 'gallery/';
+
+    static canRead(session: Session): boolean {
+        const expectedRight = Config.PREFERENCES.minRightForGalleryRead === 'op' ? Infinity : Config.PREFERENCES.minRightForGalleryRead;
+        const actualRight = session.isOP() ? Infinity : session.user.right;
+        return actualRight >= expectedRight;
+    }
+
+    static canWrite(session: Session): boolean {
+        const expectedRight = Config.PREFERENCES.minRightForGalleryWrite === 'op' ? Infinity : Config.PREFERENCES.minRightForGalleryWrite;
+        const actualRight = session.isOP() ? Infinity : session.user.right;
+        return actualRight >= expectedRight;
+    }
+
+    static canDelete(session: Session): boolean {
+        const expectedRight = Config.PREFERENCES.minRightForGalleryDelete === 'op' ? Infinity : Config.PREFERENCES.minRightForGalleryDelete;
+        const actualRight = session.isOP() ? Infinity : session.user.right;
+        return actualRight >= expectedRight;
+    }
 
     static checkFolderPath(folderPath: string) {
         if (folderPath !== '' && ! Gallery.FOLDER_PATH_REGEX.test(folderPath)) {

@@ -70,6 +70,14 @@ const addSelectedFiles = () => {
 
         <!-- Current location -->
         <div class="flex gap-4 mb-2">
+            <button
+                v-if="client.state.ongoingConverts.length"
+                @click="app.toggleModal('ongoingConverts')"
+                class="form-control text-tertiary"
+            >
+                <fa icon="file-video" class="mr-2"></fa>
+                {{ client.state.ongoingConverts.length }}
+            </button>
             <input
                 class="h-10 grow mousetrap form-control"
                 type="text"

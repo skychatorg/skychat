@@ -58,6 +58,7 @@ import {
     faEllipsisVertical,
     faFileVideo,
     faInfo,
+    faSpinner,
 } from '@fortawesome/free-solid-svg-icons';
 
 library.add(
@@ -118,6 +119,7 @@ library.add(
     faEllipsisVertical,
     faFileVideo,
     faInfo,
+    faSpinner,
 );
 
 export default library;

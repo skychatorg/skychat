@@ -4,6 +4,7 @@ import { spawn } from 'child_process';
 import { Config } from "../../skychat/Config";
 import { Connection } from "../../skychat/Connection";
 import { FileManager } from "../../skychat/FileManager";
+import { Session } from '../../skychat/Session';
 import { GlobalPlugin } from "../GlobalPlugin";
 import { Gallery } from "./Gallery";
 
@@ -21,8 +22,7 @@ export type OngoingConvert = {
     target: string,
     info: VideoStreamInfo,
     selectedStreams: Array<number>,
-    stdout: string,
-    stderr: string,
+    lastUpdate: string | null,
 };
 
 
@@ -35,13 +35,14 @@ export class VideoConverterPlugin extends GlobalPlugin {
 
     static readonly commandAliases = [
         'convertinfo',
+        'convertlist',
     ];
 
     public readonly gallery: Gallery = new Gallery();
 
-    readonly minRight = typeof Config.PREFERENCES.minRightForGalleryWrite === 'number' ? Config.PREFERENCES.minRightForGalleryWrite : 0;
+    readonly minRight = typeof Config.PREFERENCES.minRightForGalleryRead === 'number' ? Config.PREFERENCES.minRightForGalleryRead : 0;
 
-    readonly opOnly = Config.PREFERENCES.minRightForGalleryWrite === 'op';
+    readonly opOnly = Config.PREFERENCES.minRightForGalleryRead === 'op';
 
     readonly rules = {
         convertinfo: {
@@ -58,6 +59,10 @@ export class VideoConverterPlugin extends GlobalPlugin {
                 { name: "file path", pattern: Gallery.FILE_PATH_REGEX },
                 { name: "streams", pattern: /^\d+(,\d+)*$/ },
             ]
+        },
+        convertlist: {
+            minCount: 0,
+            maxCount: 0,
         },
     }
 
@@ -78,6 +83,10 @@ export class VideoConverterPlugin extends GlobalPlugin {
                 const streamIndexes = param.split(' ')[1].split(',').map((index: string) => parseInt(index));
                 await this.runConvert(filePath, streamIndexes, connection);
                 break;
+            
+            case 'convertlist':
+                await this.runConvertList(connection);
+                break;
 
             default:
                 throw new Error(`Unknown alias ${alias}`);
@@ -85,6 +94,9 @@ export class VideoConverterPlugin extends GlobalPlugin {
     }
 
     async runConvertInfo(filePath: string, connection: Connection): Promise<void> {
+        if (! Gallery.canWrite(connection.session)) {
+            throw new Error('You do not have the permission to convert files');
+        }
         if (FileManager.getFileExtension(filePath) !== 'mkv') {
             throw new Error('Can not convert this file');
         }
@@ -100,6 +112,9 @@ export class VideoConverterPlugin extends GlobalPlugin {
     }
 
     async runConvert(filePath: string, streamIndexes: number[], connection: Connection): Promise<void> {
+        if (! Gallery.canWrite(connection.session)) {
+            throw new Error('You do not have the permission to convert files');
+        }
         if (FileManager.getFileExtension(filePath) !== 'mkv') {
             throw new Error('Can not convert this file');
         }
@@ -107,7 +122,7 @@ export class VideoConverterPlugin extends GlobalPlugin {
             throw new Error(`File ${filePath} does not exist`);
         }
         const streams = await this.getVideoStreamInfo(filePath);
-        let command = `ffmpeg -i ${Gallery.BASE_PATH + filePath}`;
+        let command = `ffmpeg -i ${Gallery.BASE_PATH + filePath} -y`;
         for (const index of streamIndexes) {
             // Get corresponding stream
             const stream = streams.find(stream => stream.index === index);
@@ -121,26 +136,30 @@ export class VideoConverterPlugin extends GlobalPlugin {
             }
         }
         // -pix_fmt yuv420p
-        const target = `${Gallery.BASE_PATH + filePath}-$${streamIndexes.join('-')}.mp4`;
+        const target = `${Gallery.BASE_PATH + filePath}-${streamIndexes.join('-')}.mp4`;
         command += ` ${target}.mp4`;
-        // TODO: Run command & show output 
-        // TODO: There should be:
-        // TODO: - A list of pending converts (storred here, sent to everyone who has permission to write to the gallery on update)
-        // TODO: - A way for the client to ask for real time update of a convert (on-demand)
         const convert: OngoingConvert = {
             status: 'converting',
             source: filePath,
             target: `${Gallery.BASE_PATH + filePath}-${streamIndexes.join('-')}.mp4`,
             info: streams,
             selectedStreams: streamIndexes,
-            stdout: '',
-            stderr: '',
+            lastUpdate: null,
         };
         this.converts.push(convert);
         const process = spawn(command.split(' ')[0], command.split(' ').slice(1));
-        process.stdout.on('data', data => convert.stdout += data.toString());
-        process.stderr.on('data', data => convert.stdout += data.toString());
-        process.on('error', error => convert.status = 'error');
+        // ffmpeg sends data on stderr
+        process.stderr.on('data', data => {
+            const line = data.toString().trim();
+            if (! line.startsWith('frame=')) {
+                return;
+            }
+            convert.lastUpdate = line;
+        });
+        process.on('error', error => {
+            convert.status = 'error';
+            this.syncConvertList();
+        });
         process.on('close', async code => {
             if (! (await Gallery.fileExists(target))) {
                 convert.status = 'error';
@@ -148,6 +167,11 @@ export class VideoConverterPlugin extends GlobalPlugin {
             }
             convert.status = 'converted';
         });
+        this.syncConvertList();
+    }
+
+    async runConvertList(connection: Connection) {
+        connection.send('convert-list', this.converts);
     }
 
     async getVideoStreamInfo(filePath: string): Promise<VideoStreamInfo> {
@@ -165,5 +189,32 @@ export class VideoConverterPlugin extends GlobalPlugin {
                     info,
                 };
             });
+    }
+
+    async onNewConnection(connection: Connection): Promise<void> {
+        // If list of converting files is available for everyone, send it
+        if (Config.PREFERENCES.minRightForGalleryRead === -1) {
+            connection.send('convert-list', this.converts);
+        }
+    }
+    
+    async onConnectionAuthenticated(connection: Connection): Promise<void> {
+        // If list of converting files was already sent
+        if (Config.PREFERENCES.minRightForGalleryRead === -1) {
+            return;
+        }
+        if (Gallery.canRead(connection.session)) {
+            connection.send('convert-list', this.converts);
+        }
+    }
+
+    async syncConvertList(): Promise<void> {
+        
+        for (const connection of Session.connections) {
+            if (! Gallery.canRead(connection.session)) {
+                continue;
+            }
+            connection.send('convert-list', this.converts);
+        }
     }
 }
