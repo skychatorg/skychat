@@ -27,6 +27,9 @@ const open = () => {
 const convert = () => {
     app.toggleModal('videoConverter', { filePath: gallery.getFileNamePath(props.folderList, props.file.name) });
 };
+const rm = () => {
+    client.sendMessage(`/galleryrm ${gallery.getFileNamePath(props.folderList, props.file.name)}`);
+};
 
 
 </script>
@@ -64,6 +67,15 @@ const convert = () => {
                     title="Convert file"
                 >
                     <fa icon="file-video" class="mr-1" /> Convert
+                </li>
+
+                <!-- Delete -->
+                <li
+                    class="rounded cursor-pointer py-2 px-4 hover:bg-skygray-dark"
+                    @click.stop="rm"
+                    title="Delete file"
+                >
+                    <fa icon="xmark" class="mr-1" /> Delete
                 </li>
             </ul>
         </div>

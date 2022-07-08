@@ -14,6 +14,7 @@ export class GalleryPlugin extends GlobalPlugin {
 
     static readonly commandAliases = [
         'galleryls',
+        'galleryrm',
     ];
 
     readonly minRight = typeof Config.PREFERENCES.minRightForGalleryRead === 'number' ? Config.PREFERENCES.minRightForGalleryRead : 0;
@@ -29,6 +30,13 @@ export class GalleryPlugin extends GlobalPlugin {
                 { name: "path", pattern: Gallery.FOLDER_PATH_REGEX },
             ]
         },
+        galleryrm: {
+            minCount: 1,
+            maxCount: 1,
+            params: [
+                { name: "path", pattern: Gallery.FILE_PATH_REGEX },
+            ]
+        },
     }
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
@@ -36,6 +44,13 @@ export class GalleryPlugin extends GlobalPlugin {
         switch (alias) {
             case 'galleryls':
                 connection.send('gallery', await Gallery.ls(param));
+                break;
+
+            case 'galleryrm':
+                if (! Gallery.canDelete(connection.session)) {
+                    throw new Error('You do not have the permission to delete files');
+                }
+                connection.send('gallery', await Gallery.rm(param));
                 break;
 
             default:

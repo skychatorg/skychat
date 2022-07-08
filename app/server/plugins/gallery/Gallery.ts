@@ -25,7 +25,7 @@ export class Gallery {
 
     static readonly FOLDER_PATH_REGEX = /^[^/][a-zA-Z0-9-_/]+$/;
 
-    static readonly FILE_PATH_REGEX = /^[^/][a-zA-Z0-9-_/]+\/[a-zA-Z0-9-_]+\.[a-z0-9]+$/;
+    static readonly FILE_PATH_REGEX = /^([^/][a-zA-Z0-9-_/]+\/)?[a-zA-Z0-9-_]+\.[a-z0-9]+$/;
 
     static readonly THUMB_FILE_NAMES = ['thumb.png', 'thumb.jpg', 'thumb.jpeg'];
 
@@ -106,6 +106,16 @@ export class Gallery {
             folderContent.exists = false;
         } finally {
             return folderContent;
+        }
+    }
+
+    static async rm(filePath: string): Promise<FolderContent> {
+        this.checkFilePath(filePath);
+        try {
+            await fs.unlink(Gallery.BASE_PATH + filePath);
+            return await this.ls(filePath.split('/').slice(0, -1).join('/'));
+        } catch (err) {
+            throw new Error('Unable to remove file');
         }
     }
 
