@@ -141,7 +141,7 @@ export class VideoConverterPlugin extends GlobalPlugin {
         const convert: OngoingConvert = {
             status: 'converting',
             source: filePath,
-            target: `${Gallery.BASE_PATH + filePath}-${streamIndexes.join('-')}.mp4`,
+            target: `${Gallery.BASE_PATH + filePath.replace(/\.[a-z0-9]$/, '')}-${streamIndexes.join('-')}.mp4`,
             info: streams,
             selectedStreams: streamIndexes,
             lastUpdate: null,
@@ -160,7 +160,7 @@ export class VideoConverterPlugin extends GlobalPlugin {
             convert.status = 'error';
             this.syncConvertList();
         });
-        process.on('close', async code => {
+        process.on('exit', async (code, signal) => {
             if (! (await Gallery.fileExists(target))) {
                 convert.status = 'error';
                 return;
