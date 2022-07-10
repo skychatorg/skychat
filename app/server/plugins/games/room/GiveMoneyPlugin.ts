@@ -1,9 +1,9 @@
-import {Connection} from "../../../skychat/Connection";
-import {RoomPlugin} from "../../RoomPlugin";
-import {Session} from "../../../skychat/Session";
-import {User} from "../../../skychat/User";
-import {ConnectedListPlugin} from "../global/ConnectedListPlugin";
-import {UserController} from "../../../skychat/UserController";
+import { Connection } from "../../../skychat/Connection";
+import { RoomPlugin } from "../../RoomPlugin";
+import { Session } from "../../../skychat/Session";
+import { User } from "../../../skychat/User";
+import { ConnectedListPlugin } from "../../core/global/ConnectedListPlugin";
+import { UserController } from "../../../skychat/UserController";
 
 
 export class GiveMoneyPlugin extends RoomPlugin {
@@ -50,7 +50,15 @@ export class GiveMoneyPlugin extends RoomPlugin {
         await UserController.giveMoney(receiverSession.user, givenAmount);
 
         // Notify the receiver & sender
-        this.room.send('give', {sender: senderSession.user.sanitized(), receiver: receiverSession.user.sanitized(), givenAmount: givenAmount, commission: commission});
+        this.room.send(
+            'give',
+            {
+                sender: senderSession.user.sanitized(),
+                receiver: receiverSession.user.sanitized(),
+                givenAmount,
+                commission,
+            }
+        );
         let message = senderSession.user.username + ' sent $' + givenAmount / 100 + ' to ' + receiverSession.user.username;
         if (commission > 0) {
             message += ' (- $' + (commission / 100) + ' commission)';
