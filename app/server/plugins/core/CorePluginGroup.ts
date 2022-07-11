@@ -4,7 +4,6 @@ import { AccountPlugin } from "./global/AccountPlugin";
 import { AudioRecorderPlugin } from "./global/AudioRecorderPlugin";
 import { BackupPlugin } from "./global/BackupPlugin";
 import { ConnectedListPlugin } from "./global/ConnectedListPlugin";
-import { GiveMoneyPlugin } from "./room/GiveMoneyPlugin";
 import { HelpPlugin } from "./room/HelpPlugin";
 import { MailPlugin } from "./global/MailPlugin";
 import { MessageEditPlugin } from "./room/MessageEditPlugin";
@@ -32,7 +31,6 @@ export class CorePluginGroup extends PluginGroup {
 
     roomPluginClasses = [
         HelpPlugin,
-        GiveMoneyPlugin,
         MessageEditPlugin,
         MessageHistoryPlugin,
         MessagePlugin,

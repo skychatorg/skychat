@@ -6,6 +6,7 @@ import { OfferMoneyPlugin } from "./global/OfferMoneyPlugin";
 import { DailyRollPlugin } from "./room/DailyRollPlugin";
 import { GuessTheNumberPlugin } from "./room/GuessTheNumberPlugin";
 import { PointsCollectorPlugin } from "./room/PointsCollectorPlugin";
+import { GiveMoneyPlugin } from "./room/GiveMoneyPlugin";
 import { RacingPlugin } from "./room/RacingPlugin";
 import { RandomGeneratorPlugin } from "./room/RandomGeneratorPlugin";
 import { RollPlugin } from "./room/RollPlugin";
@@ -17,6 +18,7 @@ export class GamesPluginGroup extends PluginGroup {
     roomPluginClasses = [
         DailyRollPlugin,
         GuessTheNumberPlugin,
+        GiveMoneyPlugin,
         PointsCollectorPlugin,
         RacingPlugin,
         RandomGeneratorPlugin,

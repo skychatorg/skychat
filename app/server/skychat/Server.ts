@@ -107,7 +107,7 @@ export class Server {
             }
             res.send(JSON.stringify({"status": 200, "path": FileManager.saveFile(file)}));
         } catch (error) {
-            res.send(JSON.stringify({"status": 500, "message": error.toString()}));
+            res.send(JSON.stringify({"status": 500, "message": (error as any).toString()}));
         } finally {
             res.end();
         }
@@ -199,7 +199,7 @@ export class Server {
 
         } catch (error) {
 
-            connection.sendError(error);
+            connection.sendError((error as Error));
         }
     }
 
