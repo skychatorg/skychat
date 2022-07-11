@@ -1,8 +1,23 @@
+const fs = require('fs');
 import { RoomPlugin, GlobalPlugin } from "..";
 import { PluginGroup } from "../PluginGroup";
 
-// All plugins in this group will be loaded for all rooms.
-const pluginClasses = Object.values(require('./index.js')) as any[];
+
+// Find all plugins in this directory
+const pluginClasses: any[] = fs.readdirSync(__dirname)
+    .map((fileName: string) => {
+        // Require filename
+        const loadedFile = require(`./${fileName}`);
+        const defaultExport = loadedFile.default || null;
+        if (! defaultExport) {
+            return null;
+        }
+        if (! defaultExport.commandName) {
+            return null;
+        }
+        return defaultExport;
+    })
+    .filter((PluginConstr: any) => !! PluginConstr);
 
 export class UserDefinedPluginGroup extends PluginGroup {
 

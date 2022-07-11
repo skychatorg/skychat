@@ -81,6 +81,22 @@ Using the Youtube API is free but there is a daily quota, which when exceeded bl
 ## Customize
 
 
+### Disabling features
+
+Plugins are grouped in so-called `PluginGroup` instances. It is possible to disable specific features of the application by removing the plugin group name from the `env.json` file. By default, these plugin groups are included:
+
+| name | removable | description |
+|---------------------------|-----------|------------------------------------------------|
+| CorePluginGroup           | ❌         | Basic features for the SkyChat to run properly |
+| PlayerPluginGroup         | ✅         | Shared player functionnality |
+| GamesPluginGroup          | ✅         | All the fun features, live cursor visualization and mini games |
+| ExtraSecurityPluginGroup  | ✅         | Log fuzzer, TOR auto-ban, IP history tracker, user usurp command |
+| GalleryPluginGroup        | ✅         | Gallery for self-hosted medias |
+| UserDefinedPluginGroup    | ✅         | Custom plugins. By default, this plugin group contains no plugin, but any user-created plugin will be held by this instance |
+
+In private rooms, only core plugins are loaded.
+
+
 ### Customize preferences
 
 The `config/preferences.json` file specifies application preferences. The available fields are detailed below.
@@ -101,26 +117,6 @@ The `config/preferences.json` file specifies application preferences. The availa
 | maxReplacedStickersPerMessage   | number |  50 | Max. number of replaced stickers per message |
 | maxNewlinesPerMessage           | number |  20 | Max. number of newlines per message |
 
-
-### Disabling features
-
-Plugins are grouped in so-called `PluginGroup` instances. It is possible to disable specific features of the application by removing the plugin group name from the `env.json` file. By default, these plugin groups are included:
-
-| name | removable | description |
-|---------------------------|-----------|------------------------------------------------|
-| CorePluginGroup           | ❌         | Basic features for the SkyChat to run properly |
-| PlayerPluginGroup         | ✅         | Shared player functionnality |
-| GamesPluginGroup          | ✅         | All the fun features, live cursor visualization and mini games |
-| ExtraSecurityPluginGroup  | ✅         | Log fuzzer, TOR auto-ban, IP history tracker, user usurp command |
-| GalleryPluginGroup        | ✅         | Gallery for self-hosted medias |
-| UserDefinedPluginGroup    | ✅         | Custom plugins. By default, this plugin group contains no plugin, but any user-created plugin will be held by this instance |
-
-In private rooms, only core plugins are loaded.
-
-### Adding features
-
-The SkyChat is easily extensible through plugins. You can define custom plugins in `app/server/skychat/plugins/user_defined/`. It will be automatically loaded during the next application startup.
-
 ### Customize the fake message history
 
 `config/fakemessages.txt` contains the fake messages shown to users whose right level is less than `minRightForMessageHistory` defined in `preferences.json`. If `minRightForMessageHistory` is set to -1, you do not need to modify the fake messages since not one will see them.
@@ -131,6 +127,9 @@ The SkyChat is easily extensible through plugins. You can define custom plugins 
 `config/guestnames.txt` is the pool of non-logged usernames.
 When a guest logs in, a random name is associated to its session. These names are randomly used from this file. If you want to change these names, keep in mind that they should not contain whitespace characters (anything matched by \s so newline, tab, space, ..). Default random names are animal names.
 
+### Adding features
+
+The SkyChat is easily extensible through plugins. You can define custom plugins in `app/server/skychat/plugins/user_defined/`. It will be automatically loaded during the next application startup.
 
 
 ## Contribute

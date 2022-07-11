@@ -1,4 +1,4 @@
-FROM node:10
+FROM node:16
 
 # Arguments
 ARG UNAME=skychat
@@ -29,10 +29,7 @@ RUN ln -s /var/skychat/gallery  ./gallery
 RUN ln -s /var/skychat/uploads  ./uploads
 
 # Copy build configuration
-COPY package*.json gulpfile.js tsconfig.json webpack.config.js ./
-
-# Copy application .env file
-COPY .env.json ./
+COPY .env.json package*.json *config.* ./
 
 # Copy source files
 COPY ./app ./app
@@ -54,4 +51,4 @@ ENV GENERATE_SOURCEMAP false
 RUN NODE_OPTIONS="--max-old-space-size=8192" npm run build
 
 # Run app
-CMD [ "node", "build/server.js" ]
+CMD [ "node", "build/server/server.js" ]
