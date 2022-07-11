@@ -1,5 +1,5 @@
-import * as escapeHtml from "escape-html";
-import {Config} from "./Config";
+const escapeHtml = require('escape-html');
+import { Config } from "./Config";
 import { StickerManager } from './StickerManager';
 
 

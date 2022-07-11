@@ -1,9 +1,10 @@
-import {Connection} from "../../skychat/Connection";
-import {User} from "../../skychat/User";
-import {Session} from "../../skychat/Session";
+
+import fetch from 'node-fetch';
+import { Connection } from "../../skychat/Connection";
+import { User } from "../../skychat/User";
+import { Session } from "../../skychat/Session";
 import { Room } from "../../skychat/Room";
 import { GlobalPlugin } from "../GlobalPlugin";
-import fetch from "node-fetch";
 import { RoomManager } from "../../skychat/RoomManager";
 
 

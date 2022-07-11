@@ -7,7 +7,6 @@ import { EventEmitter } from "events";
 import { Room } from "./Room";
 import { Session } from "./Session";
 import { IBroadcaster } from "./IBroadcaster";
-import { BinaryMessageTypes } from "../../api/BinaryMessageTypes";
 
 
 
@@ -64,8 +63,8 @@ export class Connection extends EventEmitter implements IBroadcaster {
         this.lastPingDate = new Date();
 
         session.attachConnection(this);
-        this.webSocket.on('message', message => this.onMessage(message));
-        this.webSocket.on('close', (code, message) => this.onClose(code, message));
+        this.webSocket.on('message', (message) => this.onMessage(message));
+        this.webSocket.on('close', (code, message) => this.onClose(code, message.toString()));
         this.webSocket.on('error', (error) => this.onError(error));
 
         setTimeout(this.sendPing.bind(this), Connection.PING_INTERVAL_MS);
@@ -127,21 +126,30 @@ export class Connection extends EventEmitter implements IBroadcaster {
 
         try {
 
+            // Data is always buffer
+            if (! (data instanceof Buffer)) {
+                throw new Error('Invalid data type');
+            }
+
+            /**
+             * TODO:
+             *  Always converting to string is not the cleanest solution we can find
+             *      to discriminate between binary and non-binary messages, but it eases debugging messages
+             *      from Chrome devtools as we can see the content of json messages.
+            */
+
+            const dataAsString = data.toString();
+
             // If data is not of type string, fail with error
-            if (data instanceof Buffer) {
+            if (! dataAsString.startsWith('{')) {
                 const messageType = data.readUInt16LE(0);
                 const messageData = data.slice(2);
                 this.emit('binary-message', { type: messageType, data: messageData });
                 return;
             }
 
-            // Otherwise, if type is not string, reject the message
-            if (typeof data !== 'string') {
-                throw new Error('Unsupported data type');
-            }
-
             // Decode & unpack message
-            const decodedMessage = JSON.parse(data);
+            const decodedMessage = JSON.parse(dataAsString);
             const eventName = decodedMessage.event;
             const payload = decodedMessage.data;
 

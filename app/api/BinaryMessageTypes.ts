@@ -1,5 +1,4 @@
 
-
 export class BinaryMessageTypes {
 
     public static readonly AUDIO    = 0x0002;
