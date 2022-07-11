@@ -64,7 +64,7 @@ export class MessageController {
         const users: any = {}; // User cache object to avoid non-necessary db queries
         for (const messageRow of messageRows) {
             try {
-                if (! users[messageRow.user_id]) {
+                if (! messageRow.user_id) {
                     throw new Error('User not found');
                 }
                 users[messageRow.user_id] = users[messageRow.user_id] || await UserController.getUserById(messageRow.user_id);

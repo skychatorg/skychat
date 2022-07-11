@@ -1,4 +1,6 @@
+import SQL from "sql-template-strings";
 import {Connection} from "../../../skychat/Connection";
+import { DatabaseHelper } from "../../../skychat/DatabaseHelper";
 import { RoomPlugin } from "../../RoomPlugin";
 
 
@@ -13,7 +15,7 @@ export class MessageEditPlugin extends RoomPlugin {
     readonly rules = {
         edit: {
             minCount: 2,
-            coolDown: 100,
+            coolDown: 2000,
             params: [
                 {pattern: /^([0-9]+)$/, name: 'id'},
                 {pattern: /.?/, name: 'message'},
@@ -22,7 +24,7 @@ export class MessageEditPlugin extends RoomPlugin {
         delete: {
             minCount: 1,
             maxCount: 1,
-            coolDown: 100,
+            coolDown: 2000,
             params: [
                 {pattern: /^([0-9]+)$/, name: 'id'},
             ]
@@ -51,6 +53,11 @@ export class MessageEditPlugin extends RoomPlugin {
         } else {
             message.edit('deleted', `<s>deleted</s>`);
         }
+        
+        // Store it into the database
+        await DatabaseHelper.db.run(SQL`update messages set content = ${message.content} where id = ${message.id}`);
+
+        // Notify room
         this.room.send('message-edit', message.sanitized());
     }
 }
