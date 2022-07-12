@@ -161,13 +161,6 @@ export abstract class Plugin {
     public abstract getStoragePath(): string;
 
     /**
-     * Get a summary of this plugin state to include in the room list
-     */
-    public getRoomSummary(): any {
-        return null;
-    }
-
-    /**
      * Load user data for this plugin
      * @param user 
      * @returns 
