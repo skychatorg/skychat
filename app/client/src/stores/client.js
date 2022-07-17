@@ -53,7 +53,10 @@ export const useClientStore = defineStore('client', {
                 // Try and find the message that corresponds to the audio
                 const message = this.messages.find(message => message.id === id);
                 if (! message) {
-                    console.warn(`Could not find message with id ${id}`);
+                    console.warn(`Could not find message with id ${id}, audio will be played directly.`);
+                    // Play audio blob directly
+                    const audio = new Audio(URL.createObjectURL(blob));
+                    audio.play();
                     return;
                 }
                 // Update the message with the audio blob
