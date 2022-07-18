@@ -4,7 +4,7 @@ import { SkyChatClient } from '../../../api/client.ts';
 
 // Connect to SkyChatClient
 const protocol = document.location.protocol === 'http:' ? 'ws' : 'wss';
-const url = protocol + '://' + document.location.host;
+const url = protocol + '://' + document.location.host + '/ws';
 const client = new SkyChatClient(url);
 
 

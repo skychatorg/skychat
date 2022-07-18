@@ -12,7 +12,7 @@
         "build:client": "vite build --emptyOutDir",
         "build:server": "PRODUCTION=true tsc",
         "build": "npm run build:client && npm run build:server",
-        "dev:client": "vite build --emptyOutDir --watch",
+        "dev:client": "vite",
         "dev:server": "PRODUCTION=false tsc-watch --onSuccess \"node build/server/server.js\"",
         "kill": "ps aux | grep 'node build/server/server.js' | awk '{print $2}' | xargs kill -9",
         "start": "npm run build && node build/server/server.js",

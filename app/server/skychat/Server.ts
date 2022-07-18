@@ -79,7 +79,7 @@ export class Server {
         } else {
             server = http.createServer(this.app);
         }
-        this.wss = new WebSocket.Server({noServer: true});
+        this.wss = new WebSocket.Server({ noServer: true });
         this.wss.on('connection', this.onConnection.bind(this));
         server.on('upgrade', (request, socket, head) => {
             this.wss.handleUpgrade(request, socket, head, (ws) => {
