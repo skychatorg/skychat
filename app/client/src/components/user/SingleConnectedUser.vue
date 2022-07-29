@@ -33,10 +33,13 @@ const formattedDurationSinceDead = computed(() => {
         return '';
     }
     const duration = new Date().getTime() * 0.001 - props.entry.deadSinceTime;
-    if (duration > 60) {
-        return Math.floor(duration / 60) + 'm';
+    if (duration > 60 * 60) {
+        return Math.round(duration / 60 / 60) + 'hr';
     }
-    return Math.floor(duration) + 's';
+    if (duration > 60) {
+        return Math.round(duration / 60) + 'm';
+    }
+    return Math.round(duration) + 's';
 });
 
 </script>
