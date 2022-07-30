@@ -11,6 +11,8 @@ export class IFrameFetcher implements VideoFetcher {
         "https://airmash.online",
         "https://scdn.nrjaudio.fm",
         "https://bruh.io",
+        "https://stream-49.zeno.fm",
+        "https://digdig.io"
     ];
 
     /**
