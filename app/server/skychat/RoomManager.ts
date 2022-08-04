@@ -421,6 +421,14 @@ export class RoomManager {
         if (room) {
             await room.attachConnection(connection);
             await this.executeConnectionAuthenticatedHook(connection);
+            // When session can not be recycled, this means the user was not logged in for a while
+            // When this is the case, we will send a message to the room to notify others that the user has logged in
+            if (! recycledSession) {
+                await room.sendMessage({
+                    content: `${user.username} is back online 🙋‍♂️`,
+                    user: UserController.getNeutralUser(),
+                });
+            }
         }
     }
 
