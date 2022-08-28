@@ -8,6 +8,16 @@ import SectionSubTitle from '@/components/util/SectionSubTitle.vue';
 const app = useAppStore();
 const client = useClientStore();
 
+// Avatar
+const uploadAvatar = async event => {
+    for (const file of event.target.files) {
+        const fullUrl = await app.upload(file);
+        client.sendMessage(`/avatar ${fullUrl}`);
+    }
+    event.target.value = '';
+};
+
+// Motto
 let newMotto = ref(client.state.user.data.plugins.motto);
 const saveNewMotto = () => {
     client.sendMessage(`/motto ${newMotto.value}`);
@@ -25,9 +35,20 @@ watch(() => app.modals.profile, () => {
         id="profile"
         title="Preferences"
     >
+        <!-- Avatar -->
+        <SectionSubTitle class="mt-2">Avatar</SectionSubTitle>
+        <div class="flex justify-center gap-4">
+            <input
+                @change="uploadAvatar"
+                type="file"
+                class="grow form-control"
+                placeholder="Avatar"
+                accept="image/png, image/jpeg"
+            />
+        </div>
 
         <!-- Motto -->
-        <SectionSubTitle>Motto</SectionSubTitle>
+        <SectionSubTitle class="mt-6">Motto</SectionSubTitle>
         <div class="flex justify-center gap-4">
             <input v-model="newMotto" class="grow form-control" placeholder="What drives you?" />
             <button @click="saveNewMotto" class="form-control">Save</button>

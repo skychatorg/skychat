@@ -151,7 +151,7 @@ const onKeyUpTab = function() {
  */
 const onFileInputChange = async () => {
     for (const file of fileUploadInput.value.files) {
-        await app.upload(file);
+        app.setMessage(app.newMessage + ' ' + (await app.upload(file)));
     }
 };
 

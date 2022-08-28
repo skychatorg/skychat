@@ -128,7 +128,7 @@ export const useAppStore = defineStore('app', {
             const fileUpload = async event => {
                 const files = event.clipboardData.files;
                 for (const file of files) {
-                    await this.upload(file);
+                    this.setMessage(this.newMessage + ' ' + (await this.upload(file)));
                 }
             };
             window.addEventListener('paste', fileUpload);
@@ -312,8 +312,9 @@ export const useAppStore = defineStore('app', {
 
         /**
          * Upload a given file
+         * @param {?Function} callback If given, will be called with the full url to the uploaded file. If not, will append the full url to the message.
          */
-        upload: async function(file) {
+        upload: async function(file, callback) {
             try {
 
                 toast.info('File uploading...');
@@ -327,9 +328,9 @@ export const useAppStore = defineStore('app', {
                 }
 
                 // Set message to uploaded file
-                this.newMessage += ' ' + document.location.origin + '/' + result.path;
-
                 toast.success('File uploaded');
+
+                return document.location.origin + '/' + result.path;
 
             } catch (e) {
                 toast.error(e.message || 'Unable to upload file');

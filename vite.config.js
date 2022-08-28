@@ -23,6 +23,10 @@ export default defineConfig({
                 changeOrigin: true,
                 ws: true,
             },
+            '/upload': {
+                target: realAppLocation,
+                changeOrigin: true,
+            },
         },
     },
 });
