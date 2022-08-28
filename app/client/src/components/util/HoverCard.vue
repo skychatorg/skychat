@@ -62,7 +62,7 @@ defineProps({
     transition: all .2s ease-out;
 }
 .hover-card.selected {
-    transform: translateX(6px);
+    transform: translate3d(6px, 0, 0);
 }
 .hover-card > .colored-border {
     min-width: 6px;
@@ -71,7 +71,7 @@ defineProps({
     background-color: v-bind(borderColor);
 }
 .hover-card:hover:not(.selected) > .colored-border {
-    transform: translateX(-3px);
+    transform: translate3d(-3px, 0, 0);
     filter: brightness(1.25);
 }
 .hover-card:nth-child(1) .colored-border {

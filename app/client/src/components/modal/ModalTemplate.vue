@@ -52,7 +52,7 @@ defineProps({
 }
 .slide-fade-enter-from,
 .slide-fade-leave-to {
-    transform: translateX(20px);
+    transform: translate3d(20px, 0, 0);
     opacity: 0;
 }
 </style>
