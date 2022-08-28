@@ -36,7 +36,7 @@ const login = function() {
 
 <template>
 
-    <div class="home-view h-full backdrop-blur-2xl backdrop-brightness-150">
+    <div class="home-view h-full backdrop-brightness-150">
 
         <div class="login-block">
 
