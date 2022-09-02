@@ -70,8 +70,8 @@ export class MessageFormatter {
      */
     public replaceGreenTexts(message: string): string {
         return message.replace(
-            /&gt;(.+)/g,
-            '<b style="color: #69d569">&gt;$1</b>',
+            /(^|\n)&gt;(.+)/g,
+            '$1<b style="color: #69d569">&gt;$2</b>',
         );
     }
 
