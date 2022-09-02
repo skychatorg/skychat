@@ -45,6 +45,7 @@ export class MessageFormatter {
      */
     public format(message: string, remove?: boolean, trusted?: boolean): string {
         message = this.replaceHtml(message);
+        message = this.replaceGreenTexts(message);
         message = this.replaceNewlines(message, remove, trusted);
         message = this.replaceButtons(message, remove, trusted);
         message = this.replaceImages(message, remove, trusted);
@@ -60,6 +61,18 @@ export class MessageFormatter {
      */
     public replaceHtml(message: string): string {
         return escapeHtml(message);
+    }
+
+    /**
+     * Replace green text-style messages
+     * @see https://knowyourmeme.com/memes/greentext-stories
+     * @param message
+     */
+    public replaceGreenTexts(message: string): string {
+        return message.replace(
+            /&gt;(.+)/g,
+            '<b style="color: #69d569">&gt;$1</b>',
+        );
     }
 
     /**
