@@ -100,12 +100,13 @@ In private rooms, only core plugins are loaded.
 ### Customize preferences
 
 The `config/preferences.json` file specifies application preferences. The available fields are detailed below.
-
+minRightForUserModeration
 
 | field | type | default | description |
 |-------|------|---------|-------------|
 | minRightForPrivateMessages      | number |  -1 | Min. right to send private messages |
 | minRightForMessageHistory       | number |  -1 | Min. right to access room message history |
+| minRightForUserModeration       | number | 'op' | Min. right to ban, kick and access user ips |
 | minRightForAudioRecording       | number |  -1 | Min. right to share and play audio recordings |
 | minRightForConnectedList        | number |  -1 | Min. right to access the list of currently active users |
 | minRightForPolls                | number |  -1 | Min. right to create polls |
