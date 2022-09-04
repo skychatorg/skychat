@@ -100,7 +100,6 @@ In private rooms, only core plugins are loaded.
 ### Customize preferences
 
 The `config/preferences.json` file specifies application preferences. The available fields are detailed below.
-minRightForUserModeration
 
 | field | type | default | description |
 |-------|------|---------|-------------|
