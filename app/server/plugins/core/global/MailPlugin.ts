@@ -1,10 +1,10 @@
-import {Connection} from "../../../skychat/Connection";
-import {Config} from "../../../skychat/Config";
+import { Connection } from "../../../skychat/Connection";
+import { Config } from "../../../skychat/Config";
 import * as nodemailer from "nodemailer";
 import * as Mail from "nodemailer/lib/mailer";
-import {SentMessageInfo} from "nodemailer";
-import {UserController} from "../../../skychat/UserController";
-import {User} from "../../../skychat/User";
+import { SentMessageInfo } from "nodemailer";
+import { UserController } from "../../../skychat/UserController";
+import { User } from "../../../skychat/User";
 import { GlobalPlugin } from "../../GlobalPlugin";
 import { RoomManager } from "../../../skychat/RoomManager";
 
@@ -16,7 +16,7 @@ export class MailPlugin extends GlobalPlugin {
     readonly opOnly = true;
 
     readonly rules = {
-        give: {
+        mail: {
             minCount: 2,
             maxCount: 2,
             coolDown: 1000,
@@ -59,7 +59,7 @@ export class MailPlugin extends GlobalPlugin {
             throw new Error('Email transport not registered');
         }
 
-        return await this.transporter.sendMail({
+        return this.transporter.sendMail({
             to: to,
             subject: subject,
             text: content
@@ -76,7 +76,7 @@ export class MailPlugin extends GlobalPlugin {
         if (! user.email) {
             throw new Error(`This user does not accepts emails`);
         }
-        return await this.sendMail(user.email, subject, content);
+        return this.sendMail(user.email, subject, content);
     }
 
     /**
@@ -90,6 +90,6 @@ export class MailPlugin extends GlobalPlugin {
         if (! user) {
             throw new Error(`User ${username} not found`);
         }
-        return await this.sendMailToUser(user, subject, content);
+        return this.sendMailToUser(user, subject, content);
     }
 }
