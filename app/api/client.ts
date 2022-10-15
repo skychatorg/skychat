@@ -75,7 +75,7 @@ export class SkyChatClient extends EventEmitter {
     private _polls: { [id: number]: SanitizedPoll } = {};
     private _cursors: { [identifier: string]: { date: Date, cursor: { x: number, y: number, user: SanitizedUser } } } = {};
     private _roll: { state: boolean } = { state: false };
-    private _op: Boolean = false;
+    private _op: boolean = false;
     private _files: Array<string> = [];
     private _file: { filePath: string, content: string } | null = null;
     private _gallery: FolderContent | null = null;
@@ -104,9 +104,6 @@ export class SkyChatClient extends EventEmitter {
         this.on('typing-list', this._onTypingList.bind(this));
 
         // Messages
-        // this.on('message', this._onMessage.bind(this));
-        // this.on('messages', this._onMessages.bind(this));
-        // this.on('message-edit', this._onMessageEdit.bind(this));
         this.on('message-seen', this._onMessageSeen.bind(this));
 
         // Games & Features
@@ -165,17 +162,14 @@ export class SkyChatClient extends EventEmitter {
 
     private _onConnectedList(connectedList: Array<SanitizedSession>) {
         this._connectedList = connectedList;
-        this._generateConnectedListMeta();
+        this._updateConnectedListMeta();
         this.emit('update', this.state);
     }
 
-    private _generateConnectedListMeta() {
-        // Update self entry
-        const ownUser = this._connectedList.find(entry => entry.user.username === this._user.username);
-        if (ownUser) {
-            this._user = ownUser.user;
-        }
-        // Update link from message ids to users whose last seen message is this message
+    /**
+     * Update link from message ids to users whose last seen message is this message
+     */
+    private _generateMessageIdToLastSeenUsers() {
         const messageIdToLastSeenUsers: {[id: number]: Array<SanitizedUser>} = {};
         const roomId = this._currentRoomId;
         for (const entry of this._connectedList) {
@@ -189,8 +183,13 @@ export class SkyChatClient extends EventEmitter {
             }
             messageIdToLastSeenUsers[lastSeenId].push(entry.user);
         }
-        this._messageIdToLastSeenUsers = messageIdToLastSeenUsers;
-        // Update list of connected users / rooms and player channels
+        return { messageIdToLastSeenUsers };
+    }
+
+    /**
+     * Update list of connected users / rooms and player channels
+     */
+    private _generateRoomConnectedUsersAndPlayerChannelUsers() {
         const roomConnectedUsers: {[id: number]: Array<SanitizedUser>} = {};
         const playerChannelUsers: {[id: number]: Array<SanitizedUser>} = {};
         for (const entry of this._connectedList) {
@@ -210,8 +209,17 @@ export class SkyChatClient extends EventEmitter {
                 playerChannelUsers[playerChannelId].push(entry.user);
             }
         }
-        this._roomConnectedUsers = roomConnectedUsers;
-        this._playerChannelUsers = playerChannelUsers;
+        return { roomConnectedUsers, playerChannelUsers };
+    }
+
+    private _updateConnectedListMeta() {
+        // Update self entry
+        const ownUser = this._connectedList.find(entry => entry.user.username === this._user.username);
+        if (ownUser) {
+            this._user = ownUser.user;
+        }
+        ({ messageIdToLastSeenUsers: this._messageIdToLastSeenUsers } = this._generateMessageIdToLastSeenUsers());
+        ({ roomConnectedUsers: this._roomConnectedUsers, playerChannelUsers: this._playerChannelUsers } = this._generateRoomConnectedUsersAndPlayerChannelUsers());
     }
 
     private _onRoomList(rooms: Array<SanitizedRoom>) {
@@ -237,7 +245,7 @@ export class SkyChatClient extends EventEmitter {
             return;
         }
         entry.user.data.plugins.lastseen = messageSeen.data;
-        this._generateConnectedListMeta();
+        this._updateConnectedListMeta();
         this.emit('update', this.state);
     }
 
@@ -509,7 +517,6 @@ export class SkyChatClient extends EventEmitter {
             const buffer = await message.data.arrayBuffer();
             const view = new DataView(buffer);
             const messageType = view.getUint16(0, true);
-            const messageData = message.data.slice(2);
 
             switch (messageType) {
 
