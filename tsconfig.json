@@ -4,7 +4,7 @@
         "strict": true,
         "declaration": false,
         "removeComments": true,
-        "target": "ES5",
+        "target": "ES6",
         "lib": ["ES2019", "DOM"],
         "moduleResolution": "node",
         "rootDir": "./app/",

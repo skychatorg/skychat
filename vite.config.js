@@ -1,9 +1,10 @@
-var fs = require('fs');
-var path = require('path');
+import fs from 'fs';
+import path from 'path';
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 
-var realAppLocation = JSON.parse(fs.readFileSync('.env.json').toString()).location;
+
+const envLocation = JSON.parse(fs.readFileSync('.env.json').toString()).location;
 
 export default defineConfig({
     root: 'app/client/',
@@ -19,12 +20,12 @@ export default defineConfig({
     server: {
         proxy: {
             '/ws': {
-                target: realAppLocation,
+                target: envLocation,
                 changeOrigin: true,
                 ws: true,
             },
             '/upload': {
-                target: realAppLocation,
+                target: envLocation,
                 changeOrigin: true,
             },
         },
