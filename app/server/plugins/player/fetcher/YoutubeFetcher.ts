@@ -1,4 +1,4 @@
-import {google, youtube_v3} from "googleapis";
+import { google, youtube_v3 } from "googleapis";
 import { Config } from "../../../skychat/Config";
 import { VideoInfo } from "../PlayerChannel";
 import { PlayerPlugin } from "../PlayerPlugin";

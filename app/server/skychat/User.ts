@@ -1,6 +1,4 @@
-import * as _ from "lodash"
 import { UserController } from "./UserController";
-import { Config } from "./Config";
 
 
 export type UserData = {

@@ -35,10 +35,9 @@
         "geoip-lite": "^1.4.6",
         "googleapis": "^48.0.0",
         "io-filter": "^2.1.2",
-        "jsonwebtoken": "^8.5.1",
         "lodash": "^4.17.21",
         "mousetrap": "^1.6.5",
-        "node-fetch": "^2.6.7",
+        "node-fetch": "^3.3.0",
         "nodemailer": "^6.8.0",
         "pinia": "^2.0.23",
         "risibank-web-api": "^0.0.2",
@@ -48,7 +47,6 @@
         "sqlite3": "^5.1.2",
         "striptags": "^3.2.0",
         "ua-parser-js": "^1.0.32",
-        "uuid": "^8.3.2",
         "vue": "^3.2.44",
         "vue-router": "^4.1.6",
         "vue-toastification": "^2.0.0-rc.5",
@@ -67,12 +65,12 @@
         "@types/striptags": "^3.1.1",
         "@types/ua-parser-js": "^0.7.36",
         "@types/ws": "^8.5.3",
-        "@vitejs/plugin-vue": "^2.3.4",
+        "@vitejs/plugin-vue": "^3.2.0",
         "autoprefixer": "^10.4.13",
         "postcss": "^8.4.18",
         "tailwindcss": "^3.2.3",
         "tsc-watch": "^5.0.3",
         "typescript": "^4.8.4",
-        "vite": "^2.9.15"
+        "vite": "^3.2.3"
     }
 }
