@@ -77,7 +77,10 @@ export class YoutubeFetcher implements VideoFetcher {
     constructor() {
 
         // Youtube API object
-        this.youtube = google.youtube({version: 'v3', auth: Config.YOUTUBE_API_KEY});
+        this.youtube = google.youtube({
+            version: 'v3',
+            auth: Config.YOUTUBE_API_KEY,
+        });
     }
 
     async get(playerPlugin: PlayerPlugin, param: string): Promise<VideoInfo[]> {
@@ -109,10 +112,10 @@ export class YoutubeFetcher implements VideoFetcher {
      */
     async search(playerPlugin: PlayerPlugin, type: string, search: string, limit: number): Promise<VideoInfo[]> {
         const result = await this.youtube.search.list({
-            part: 'snippet',
             q: search,
-            type: type,
-            maxResults: limit
+            type: [type],
+            maxResults: limit,
+            part: ['snippet'],
         });
         const items = result?.data?.items;
         if (! items || items.length === 0) {
@@ -140,8 +143,8 @@ export class YoutubeFetcher implements VideoFetcher {
     public async getVideoInfo(id: string): Promise<VideoInfo> {
         // Fetch youtube api
         const result = await this.youtube.videos.list({
-            id: encodeURIComponent(id),
-            part: 'snippet,contentDetails',
+            id: [encodeURIComponent(id)],
+            part: ['snippet,contentDetails'],
             fields: 'items(snippet(title,thumbnails),contentDetails,id),pageInfo',
             maxResults: 1,
         });
@@ -168,7 +171,11 @@ export class YoutubeFetcher implements VideoFetcher {
      * @param id
      */
     public async getYoutubePlaylistMeta(id: string): Promise<VideoInfo[]> {
-        const result = await this.youtube.playlistItems.list({part: 'contentDetails', playlistId: id, maxResults: 50});
+        const result = await this.youtube.playlistItems.list({
+            part: ['contentDetails'],
+            playlistId: id,
+            maxResults: 50
+        });
         if (! result?.data?.items?.length) {
             throw new Error('No result found for ' + id);
         }

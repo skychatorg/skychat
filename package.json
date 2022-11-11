@@ -33,7 +33,7 @@
         "express": "^4.18.2",
         "express-fileupload": "^1.4.0",
         "geoip-lite": "^1.4.6",
-        "googleapis": "^48.0.0",
+        "googleapis": "^109.0.1",
         "io-filter": "^2.1.2",
         "lodash": "^4.17.21",
         "mousetrap": "^1.6.5",
