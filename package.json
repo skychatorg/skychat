@@ -12,7 +12,7 @@
         "build": "PRODUCTION=true concurrently \"tsc\" \"vite build\"",
         "dev": "PRODUCTION=false tsc && concurrently \"node build/server/server.js\" \"vite\"",
         "start": "npm run build && node build/server/server.js",
-        "start:docker": "bash app/script/docker-start.sh",
+        "docker": "bash app/script/docker.sh",
         "backup": "bash app/script/backup.sh",
         "test": "echo \"⚠ No test ⚠\""
     },

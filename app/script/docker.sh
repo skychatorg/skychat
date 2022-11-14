@@ -7,4 +7,4 @@ DOCKER_PORT=$(cat .env.json | grep --color "\"port\"" | awk -F "\"port\"" '{prin
 DOCKER_TZ=$(cat /etc/timezone)
 
 # Start container
-DOCKER_TZ="$DOCKER_TZ" DOCKER_PORT="$DOCKER_PORT" DOCKER_UNAME="$(id -u -n)" DOCKER_UID="$(id -u)" DOCKER_GID="$(id -g)" docker-compose up
+DOCKER_TZ="$DOCKER_TZ" DOCKER_PORT="$DOCKER_PORT" DOCKER_UNAME="$(id -u -n)" DOCKER_UID="$(id -u)" DOCKER_GID="$(id -g)" docker-compose "$@"
