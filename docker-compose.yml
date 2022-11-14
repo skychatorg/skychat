@@ -7,14 +7,15 @@ services:
     build:
       context: .
       args:
-        UNAME: ${DOCKER_UNAME}
-        UID: ${DOCKER_UID}
-        GID: ${DOCKER_GID}
+        DOCKER_UNAME: ${DOCKER_UNAME}
+        DOCKER_UID: ${DOCKER_UID}
+        DOCKER_GID: ${DOCKER_GID}
         DOCKER_TZ: "${DOCKER_TZ}"
     volumes:
       - ./config:/var/skychat/config
       - ./backups:/var/skychat/backups
       - ./storage:/var/skychat/storage
+      - ./gallery:/var/skychat/gallery
       - ./uploads:/var/skychat/uploads
     ports:
         - "${DOCKER_PORT}:${DOCKER_PORT}"
