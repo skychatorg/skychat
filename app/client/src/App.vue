@@ -19,6 +19,6 @@ import VideoConverterModal from '@/components/modal/VideoConverterModal.vue';
         <VideoConverterModal />
         <GalleryModal />
         <PlayerQueueModal />
-        <router-view class="grow"></router-view>
+        <RouterView class="grow" />
     </div>
 </template>

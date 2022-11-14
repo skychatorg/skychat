@@ -11,7 +11,9 @@ export default defineConfig({
     build: {
         outDir: '../../dist',
     },
-    plugins: [vue()],
+    plugins: [
+        vue()
+    ],
     resolve: {
         alias: {
             '@': path.resolve(__dirname, './app/client/src'),

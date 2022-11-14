@@ -1,11 +1,10 @@
-
-import fetch from 'node-fetch';
 import { Connection } from "../../skychat/Connection";
 import { User } from "../../skychat/User";
 import { Session } from "../../skychat/Session";
 import { Room } from "../../skychat/Room";
 import { GlobalPlugin } from "../GlobalPlugin";
 import { RoomManager } from "../../skychat/RoomManager";
+const axios = require('axios');
 
 
 export class TorBanPlugin extends GlobalPlugin {
@@ -37,8 +36,11 @@ export class TorBanPlugin extends GlobalPlugin {
 
     private async updateTorExitNodesList(): Promise<void> {
         try {
-            const response = await fetch(TorBanPlugin.CHECK_TOR_URL);
-            const text = await response.text();
+            const { data: text } = await axios.request({
+                method: 'GET',
+                url: TorBanPlugin.CHECK_TOR_URL,
+                responseType: 'text',
+            });
             const ips = text.trim().split("\n");
             this.torExitNodes = ips;
         } catch(error) {
