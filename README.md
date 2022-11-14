@@ -30,7 +30,7 @@ If using docker you need:
 - docker-compose
 
 If not using docker, ensure you have the following installed on your system:
-- nodejs >= 10
+- nodejs >= 14
 - sqlite3, zip, ffmpeg (e.g. `apt install -y sqlite3 zip ffmpeg`)
 
 Then, follow these 2 steps:
@@ -39,12 +39,11 @@ Then, follow these 2 steps:
 # 1. Use the autoinstall script (Clones the repository then executes app/script/setup.sh)
 bash <(wget -q https://raw.githubusercontent.com/skychatorg/skychat/master/app/script/autoinstall.sh -O -) && cd skychat
 
-# 2.A. Run the app in docker
-bash app/script/docker-start.sh
+# 2.A. Run the app in docker (UNIX only 🤷‍♀️)
+npm run docker -- up
 # 2.B. Run the app on your local host
 npm i && npm start
 ```
-
 
 ### Application setup
 
