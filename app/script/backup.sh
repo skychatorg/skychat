@@ -1,10 +1,8 @@
 #!/usr/bin/env bash
 
-
 # Constants
 BACKUP_DIRS="config storage uploads/avatars uploads/stickers"
 BACKUP_LOCATION="backups"
-
 
 # Do backup
 BACKUP_FILENAME=$(date +%F-%H-%M-%S-%N)

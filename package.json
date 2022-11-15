@@ -10,7 +10,7 @@
         "destroy": "bash app/script/destroy.sh",
         "setup": "bash app/script/setup.sh",
         "build": "concurrently \"tsc\" \"vite build\"",
-        "dev": "concurrently \"npx babel-node -x .ts -- app/server/server.ts\" \"vite\"",
+        "dev": "bash app/script/dev.sh",
         "start": "npm run build && node build/server/server.js",
         "docker": "bash app/script/docker.sh",
         "backup": "bash app/script/backup.sh",
@@ -51,6 +51,7 @@
         "ws": "^8.11.0"
     },
     "devDependencies": {
+        "@babel/cli": "^7.19.3",
         "@babel/core": "^7.20.2",
         "@babel/node": "^7.20.2",
         "@babel/preset-env": "^7.20.2",

@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-
 # Create empty directories if they do not exist
 if [[ ! -e backups ]]; then
     mkdir backups;
