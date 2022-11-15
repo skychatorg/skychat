@@ -3,7 +3,7 @@ import { RoomPlugin } from '../../RoomPlugin';
 import { Message } from '../../../skychat/Message';
 import { UserController } from '../../../skychat/UserController';
 import { Session } from '../../../skychat/Session';
-import * as striptags from 'striptags';
+import striptags from 'striptags';
 import { MessageFormatter } from '../../../skychat/MessageFormatter';
 import { Room } from '../../../skychat/Room';
 import { RandomGenerator } from '../../../skychat/RandomGenerator';

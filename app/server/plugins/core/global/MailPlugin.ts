@@ -1,8 +1,6 @@
 import { Connection } from '../../../skychat/Connection';
 import { Config } from '../../../skychat/Config';
-import * as nodemailer from 'nodemailer';
-import * as Mail from 'nodemailer/lib/mailer';
-import { SentMessageInfo } from 'nodemailer';
+import { createTransport, SentMessageInfo, Transporter } from 'nodemailer';
 import { UserController } from '../../../skychat/UserController';
 import { User } from '../../../skychat/User';
 import { GlobalPlugin } from '../../GlobalPlugin';
@@ -24,13 +22,13 @@ export class MailPlugin extends GlobalPlugin {
         }
     };
 
-    private readonly transporter?: Mail;
+    private readonly transporter?: Transporter<any>;
 
     constructor(manager: RoomManager) {
         super(manager);
 
         if (Config.EMAIL_TRANSPORT) {
-            this.transporter = nodemailer.createTransport(Config.EMAIL_TRANSPORT);
+            this.transporter = createTransport(Config.EMAIL_TRANSPORT);
         }
     }
 

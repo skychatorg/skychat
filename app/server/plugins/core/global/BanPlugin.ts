@@ -1,4 +1,4 @@
-import * as striptags from 'striptags';
+import striptags from 'striptags';
 import { Connection } from '../../../skychat/Connection';
 import { User } from '../../../skychat/User';
 import { Session } from '../../../skychat/Session';

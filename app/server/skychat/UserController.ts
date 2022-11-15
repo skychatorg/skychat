@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import * as sha256 from 'sha256';
+import sha256 from 'sha256';
 import { Config } from './Config';
 import { DatabaseHelper } from './DatabaseHelper';
 import { AuthToken, User } from './User';

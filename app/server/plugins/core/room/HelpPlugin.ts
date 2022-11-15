@@ -1,7 +1,7 @@
 import { PluginCommandRules } from '../../Plugin';
 import { RoomPlugin } from '../../RoomPlugin';
 import { Connection } from '../../../skychat/Connection';
-import * as striptags from 'striptags';
+import striptags from 'striptags';
 import { UserController } from '../../../skychat/UserController';
 
 

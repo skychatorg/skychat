@@ -1,7 +1,7 @@
 import { Connection } from '../../../skychat/Connection';
 import { RoomPlugin } from '../../RoomPlugin';
 import { UserController } from '../../../skychat/UserController';
-import * as striptags from 'striptags';
+import striptags from 'striptags';
 import { MessageFormatter } from '../../../skychat/MessageFormatter';
 import { RandomGenerator } from '../../../skychat/RandomGenerator';
 import { Session } from '../../../skychat/Session';

@@ -10,6 +10,7 @@ export default defineConfig({
     root: 'app/client/',
     build: {
         outDir: '../../dist',
+        emptyOutDir: true,
     },
     plugins: [
         vue()

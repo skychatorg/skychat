@@ -3,7 +3,7 @@ import { Connection } from '../../skychat/Connection';
 import { Room } from '../../skychat/Room';
 import { Message } from '../../skychat/Message';
 import { UserController } from '../../skychat/UserController';
-import * as striptags from 'striptags';
+import striptags from 'striptags';
 import { MessageFormatter } from '../../skychat/MessageFormatter';
 import { Config } from '../../skychat/Config';
 import { RoomManager } from '../../skychat/RoomManager';

@@ -5,7 +5,7 @@ import { Room } from '../../../skychat/Room';
 import { Message } from '../../../skychat/Message';
 import { Session } from '../../../skychat/Session';
 import { MessageFormatter } from '../../../skychat/MessageFormatter';
-import * as striptags from 'striptags';
+import striptags from 'striptags';
 import { RandomGenerator } from '../../../skychat/RandomGenerator';
 import { Timing } from '../../../skychat/Timing';
 
