@@ -1,8 +1,8 @@
-import { EventEmitter } from "events";
-import { Connection } from "../../skychat/Connection";
-import { Session } from "../../skychat/Session";
-import { PlayerChannel, SanitizedPlayerChannel } from "./PlayerChannel";
-import { PlayerPlugin } from "./PlayerPlugin";
+import { EventEmitter } from 'events';
+import { Connection } from '../../skychat/Connection';
+import { Session } from '../../skychat/Session';
+import { PlayerChannel, SanitizedPlayerChannel } from './PlayerChannel';
+import { PlayerPlugin } from './PlayerPlugin';
 
 
 
@@ -151,7 +151,7 @@ export class PlayerChannelManager extends EventEmitter {
         if (channel) { // If channel is not deleted
             channel.sessions.splice(channel.sessions.indexOf(session), 1);
         }
-        session.send('player-sync', {current: null, queue: [], cursor: 0});
+        session.send('player-sync', { current: null, queue: [], cursor: 0 });
 
         // Notify all connections of this session that the channel changed
         session.send('player-channel', null);
@@ -187,8 +187,8 @@ export class PlayerChannelManager extends EventEmitter {
     }
 
     public toString(): string {
-        return PlayerChannelManager.name + " (\n" + this.channels.map(channel =>
+        return PlayerChannelManager.name + ' (\n' + this.channels.map(channel =>
             `  #${channel.id}: [${channel.sessions.map(session => session.identifier + '(' + session.connections.length + ')').join(', ')}] [${channel.currentVideoInfo ? channel.currentVideoInfo.video.id : ''}] [${channel.queue.length}]`
-        ).join("\n") + "\n)";
+        ).join('\n') + '\n)';
     }
 }

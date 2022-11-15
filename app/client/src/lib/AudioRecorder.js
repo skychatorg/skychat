@@ -6,7 +6,7 @@ export class AudioRecorder {
         const chunks = [];
 
         // Start recording
-        const mediaStream = await navigator.mediaDevices.getUserMedia({audio: true});
+        const mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
         const mediaRecorder = new MediaRecorder(mediaStream);
         mediaRecorder.addEventListener('dataavailable', event => chunks.push(event.data));
         mediaRecorder.start();
@@ -21,7 +21,7 @@ export class AudioRecorder {
                     const uri = URL.createObjectURL(blob);
                     const audio = new Audio(uri);
                     mediaStream.getTracks().forEach(t => t.stop());
-                    resolve({blob, uri, audio});
+                    resolve({ blob, uri, audio });
                 });
 
                 // Stop the recording

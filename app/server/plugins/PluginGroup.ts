@@ -1,7 +1,7 @@
-import { Room } from "../skychat/Room";
-import { RoomManager } from "../skychat/RoomManager";
-import { GlobalPlugin, GlobalPluginConstructor } from "./GlobalPlugin";
-import { RoomPlugin, RoomPluginConstructor } from "./RoomPlugin";
+import { Room } from '../skychat/Room';
+import { RoomManager } from '../skychat/RoomManager';
+import { GlobalPlugin, GlobalPluginConstructor } from './GlobalPlugin';
+import { RoomPlugin, RoomPluginConstructor } from './RoomPlugin';
 
 
 

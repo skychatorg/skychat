@@ -1,12 +1,12 @@
-import { Connection } from "../../../skychat/Connection";
-import { Config } from "../../../skychat/Config";
-import * as nodemailer from "nodemailer";
-import * as Mail from "nodemailer/lib/mailer";
-import { SentMessageInfo } from "nodemailer";
-import { UserController } from "../../../skychat/UserController";
-import { User } from "../../../skychat/User";
-import { GlobalPlugin } from "../../GlobalPlugin";
-import { RoomManager } from "../../../skychat/RoomManager";
+import { Connection } from '../../../skychat/Connection';
+import { Config } from '../../../skychat/Config';
+import * as nodemailer from 'nodemailer';
+import * as Mail from 'nodemailer/lib/mailer';
+import { SentMessageInfo } from 'nodemailer';
+import { UserController } from '../../../skychat/UserController';
+import { User } from '../../../skychat/User';
+import { GlobalPlugin } from '../../GlobalPlugin';
+import { RoomManager } from '../../../skychat/RoomManager';
 
 
 export class MailPlugin extends GlobalPlugin {
@@ -20,7 +20,7 @@ export class MailPlugin extends GlobalPlugin {
             minCount: 2,
             maxCount: 2,
             coolDown: 1000,
-            params: [{name: 'username', pattern: User.USERNAME_REGEXP}, {name: 'message', pattern: /./}]
+            params: [{ name: 'username', pattern: User.USERNAME_REGEXP }, { name: 'message', pattern: /./ }]
         }
     };
 
@@ -44,7 +44,7 @@ export class MailPlugin extends GlobalPlugin {
         const result = await this.sendMailToUsername(username, 'New mail from ' + Config.LOCATION, message);
 
         // Send back notification
-        connection.send('message', UserController.createNeutralMessage({content: result.response, room: connection.roomId, id: 0}).sanitized());
+        connection.send('message', UserController.createNeutralMessage({ content: result.response, room: connection.roomId, id: 0 }).sanitized());
     }
 
     /**
@@ -74,7 +74,7 @@ export class MailPlugin extends GlobalPlugin {
      */
     public async sendMailToUser(user: User, subject: string, content: string): Promise<SentMessageInfo> {
         if (! user.email) {
-            throw new Error(`This user does not accepts emails`);
+            throw new Error('This user does not accepts emails');
         }
         return this.sendMail(user.email, subject, content);
     }

@@ -1,12 +1,12 @@
-import {GlobalPlugin} from "../GlobalPlugin";
-import {Connection} from "../../skychat/Connection";
-import {Room} from "../../skychat/Room";
-import {Message} from "../../skychat/Message";
-import {UserController} from "../../skychat/UserController";
-import * as striptags from "striptags";
-import {MessageFormatter} from "../../skychat/MessageFormatter";
-import {Config} from "../../skychat/Config";
-import { RoomManager } from "../../skychat/RoomManager";
+import { GlobalPlugin } from '../GlobalPlugin';
+import { Connection } from '../../skychat/Connection';
+import { Room } from '../../skychat/Room';
+import { Message } from '../../skychat/Message';
+import { UserController } from '../../skychat/UserController';
+import * as striptags from 'striptags';
+import { MessageFormatter } from '../../skychat/MessageFormatter';
+import { Config } from '../../skychat/Config';
+import { RoomManager } from '../../skychat/RoomManager';
 
 
 type NodeType = 'username' | 'ip';
@@ -45,25 +45,25 @@ export class TrackerPlugin extends GlobalPlugin {
             minCount: 2,
             maxCount: 2,
             params: [
-                {name: 'type', pattern: new RegExp('^' + TrackerPlugin.SOURCE_TYPES.join('|') + '$')},
-                {name: 'value', pattern: /./},
+                { name: 'type', pattern: new RegExp('^' + TrackerPlugin.SOURCE_TYPES.join('|') + '$') },
+                { name: 'value', pattern: /./ },
             ]
         },
         trackdelete: {
             minCount: 4,
             maxCount: 4,
             params: [
-                {name: 'type1', pattern: new RegExp('^' + TrackerPlugin.SOURCE_TYPES.join('|') + '$')},
-                {name: 'value1', pattern: /./},
-                {name: 'type2', pattern: new RegExp('^' + TrackerPlugin.SOURCE_TYPES.join('|') + '$')},
-                {name: 'value2', pattern: /./},
+                { name: 'type1', pattern: new RegExp('^' + TrackerPlugin.SOURCE_TYPES.join('|') + '$') },
+                { name: 'value1', pattern: /./ },
+                { name: 'type2', pattern: new RegExp('^' + TrackerPlugin.SOURCE_TYPES.join('|') + '$') },
+                { name: 'value2', pattern: /./ },
             ]
         },
         autotrack: {
             minCount: 1,
             maxCount: 1,
             params: [
-                {name: 'value', pattern: /./},
+                { name: 'value', pattern: /./ },
             ]
         },
     };
@@ -94,7 +94,7 @@ export class TrackerPlugin extends GlobalPlugin {
             let allNodes: {node: Node, path: Node[]}[] = [];
             
             // On first call, path is empty
-            visited = visited || {[TrackerPlugin.nodeToKey(type, value)]: true};
+            visited = visited || { [TrackerPlugin.nodeToKey(type, value)]: true };
             path = path || [];
 
             // Find all its children
@@ -120,14 +120,14 @@ export class TrackerPlugin extends GlobalPlugin {
                 const newPath = path.slice(0).concat([relatedNode]);
 
                 // Register this node
-                allNodes.push({node: relatedNode, path: newPath});
+                allNodes.push({ node: relatedNode, path: newPath });
 
                 // Recursive lookup on the child
                 allNodes = allNodes.concat(...lookup(relatedNode.type, relatedNode.value, visited, newPath));
             }
 
             return allNodes;
-        }
+        };
 
         return lookup(type, value);
     }
@@ -173,7 +173,7 @@ export class TrackerPlugin extends GlobalPlugin {
             </tr>
         `;
         const sumOfCounts = sortedNodes.reduce((total: number, node: Node) => total + node.count, 0);
-        for (let node of sortedNodes) {
+        for (const node of sortedNodes) {
             html += `
                 <tr>
                     <td>${type}</td>
@@ -250,7 +250,7 @@ export class TrackerPlugin extends GlobalPlugin {
         let html = `<div>Associations for ${value} (${type}):</div><br>`;
         html += '<table class="skychat-table">';
         for (const entry of entries) {
-            let arrowSpan = `<span style="color: #888;"> → </span>`;
+            const arrowSpan = '<span style="color: #888;"> → </span>';
             let pathStr;
             let path;
             if (entry.path.length % 2 === 0) {
@@ -259,11 +259,11 @@ export class TrackerPlugin extends GlobalPlugin {
             } else {
                 pathStr = '';
                 path = entry.path.slice(0);
-                path.unshift({type, value, count: NaN, lastRegistered: 0} as Node);
+                path.unshift({ type, value, count: NaN, lastRegistered: 0 } as Node);
             }
             let i = 0;
             while (i < path.length) {
-                pathStr += `<div style="padding-left: 8px">`;
+                pathStr += '<div style="padding-left: 8px">';
                 const node1 = path[i];
                 pathStr += arrowSpan;
                 pathStr += node1.value;
@@ -272,7 +272,7 @@ export class TrackerPlugin extends GlobalPlugin {
                 pathStr += arrowSpan;
                 pathStr += node2.value;
                 pathStr += node2.count ? ` <sup style="color: #ff809d;">x${node2.count}</sup>` : '';
-                pathStr += `</div>`;
+                pathStr += '</div>';
                 i += 2;
             }
             html += `
@@ -295,7 +295,7 @@ export class TrackerPlugin extends GlobalPlugin {
 
     public inferTypeFromValue(value: string): NodeType | undefined {
         return TrackerPlugin.SOURCE_TYPES.find((type: NodeType) => {
-            return typeof this.storage[TrackerPlugin.nodeToKey(type, value)] !== 'undefined'
+            return typeof this.storage[TrackerPlugin.nodeToKey(type, value)] !== 'undefined';
         });
     }
 

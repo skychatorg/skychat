@@ -1,6 +1,6 @@
-import { PluginGroup } from "../PluginGroup";
-import { PlayerPlugin } from "./PlayerPlugin";
-import { YoutubeSearchAndPlayPlugin } from "./YoutubeSearchAndPlayPlugin";
+import { PluginGroup } from '../PluginGroup';
+import { PlayerPlugin } from './PlayerPlugin';
+import { YoutubeSearchAndPlayPlugin } from './YoutubeSearchAndPlayPlugin';
 
 export class PlayerPluginGroup extends PluginGroup {
 

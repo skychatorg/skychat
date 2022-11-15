@@ -1,4 +1,4 @@
-import { PlayerChannel, VideoInfo } from "./PlayerChannel";
+import { PlayerChannel, VideoInfo } from './PlayerChannel';
 
 
 export type SchedulerEvent = {
@@ -174,6 +174,6 @@ export class PlayerChannelScheduler {
     sanitized(): SanitizedScheduler {
         return {
             events: this.events,
-        }
+        };
     }
 }

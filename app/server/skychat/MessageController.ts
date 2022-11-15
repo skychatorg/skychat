@@ -1,7 +1,7 @@
-import SQL from "sql-template-strings";
-import { DatabaseHelper } from "./DatabaseHelper";
-import { Message } from "./Message";
-import { UserController } from "./UserController";
+import SQL from 'sql-template-strings';
+import { DatabaseHelper } from './DatabaseHelper';
+import { Message } from './Message';
+import { UserController } from './UserController';
 
 
 export type MessageDBRow = {
@@ -69,7 +69,7 @@ export class MessageController {
                 }
                 users[messageRow.user_id] = users[messageRow.user_id] || await UserController.getUserById(messageRow.user_id);
             } catch (error) {
-                users[messageRow.user_id] = UserController.getNeutralUser(`Guest`);
+                users[messageRow.user_id] = UserController.getNeutralUser('Guest');
             }
             messages.push(new Message({
                 id: messageRow.id,

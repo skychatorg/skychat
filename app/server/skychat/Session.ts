@@ -1,7 +1,7 @@
-import {SanitizedUser, User} from "./User";
-import {Connection} from "./Connection";
-import {IBroadcaster} from "./IBroadcaster";
-import {SanitizedRoom} from "./Room";
+import { SanitizedUser, User } from './User';
+import { Connection } from './Connection';
+import { IBroadcaster } from './IBroadcaster';
+import { SanitizedRoom } from './Room';
 
 
 export const BinaryMessageTypes = 123;
@@ -137,7 +137,7 @@ export class Session implements IBroadcaster {
     /**
      * Whether this session is OP
      */
-    private op: boolean = false;
+    private op = false;
 
     /**
      * Date since the last active connection has disconnected. 
@@ -280,6 +280,6 @@ export class Session implements IBroadcaster {
             deadSinceTime: this.deadSince ? this.deadSince.getTime() * 0.001 : undefined,
             lastInteractionTime: this.lastInteractionDate.getTime() * 0.001,
             user: this.user.sanitized()
-        }
+        };
     }
 }

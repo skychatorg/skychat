@@ -1,8 +1,8 @@
-import { Connection } from "../../../skychat/Connection";
-import { User } from "../../../skychat/User";
-import { Session } from "../../../skychat/Session";
-import { GlobalPlugin } from "../../GlobalPlugin";
-import { Config } from "../../../skychat/Config";
+import { Connection } from '../../../skychat/Connection';
+import { User } from '../../../skychat/User';
+import { Session } from '../../../skychat/Session';
+import { GlobalPlugin } from '../../GlobalPlugin';
+import { Config } from '../../../skychat/Config';
 
 
 /**
@@ -20,7 +20,7 @@ export class KickPlugin extends GlobalPlugin {
         kick: {
             minCount: 1,
             maxCount: 1,
-            params: [{name: "username", pattern: User.USERNAME_REGEXP}]
+            params: [{ name: 'username', pattern: User.USERNAME_REGEXP }]
         },
     };
 
@@ -32,7 +32,7 @@ export class KickPlugin extends GlobalPlugin {
             throw new Error('Username not found');
         }
         for (const connection of session.connections) {
-            connection.close(Connection.CLOSE_KICKED, "You have been kicked");
+            connection.close(Connection.CLOSE_KICKED, 'You have been kicked');
         }
     }
 }

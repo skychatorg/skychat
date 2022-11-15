@@ -1,6 +1,6 @@
-import { Connection } from "../../skychat/Connection";
-import { UserController } from "../../skychat/UserController";
-import { RoomPlugin } from "../RoomPlugin";
+import { Connection } from '../../skychat/Connection';
+import { UserController } from '../../skychat/UserController';
+import { RoomPlugin } from '../RoomPlugin';
 
 
 export class HistoryClearPlugin extends RoomPlugin {
@@ -12,8 +12,8 @@ export class HistoryClearPlugin extends RoomPlugin {
     readonly opOnly = true;
 
     readonly rules = {
-        historyclear: {coolDown: 10000,},
-        hc: {coolDown: 10000,},
+        historyclear: { coolDown: 10000, },
+        hc: { coolDown: 10000, },
     };
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {

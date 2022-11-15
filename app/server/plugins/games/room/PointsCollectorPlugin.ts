@@ -1,13 +1,13 @@
-import {Connection} from "../../../skychat/Connection";
-import {RoomPlugin} from "../../RoomPlugin";
-import {UserController} from "../../../skychat/UserController";
-import * as striptags from "striptags";
-import {MessageFormatter} from "../../../skychat/MessageFormatter";
-import {RandomGenerator} from "../../../skychat/RandomGenerator";
-import { Session } from "../../../skychat/Session";
-import { Message } from "../../../skychat/Message";
-import { Timing } from "../../../skychat/Timing";
-import { CursorPlugin } from "../global/CursorPlugin";
+import { Connection } from '../../../skychat/Connection';
+import { RoomPlugin } from '../../RoomPlugin';
+import { UserController } from '../../../skychat/UserController';
+import * as striptags from 'striptags';
+import { MessageFormatter } from '../../../skychat/MessageFormatter';
+import { RandomGenerator } from '../../../skychat/RandomGenerator';
+import { Session } from '../../../skychat/Session';
+import { Message } from '../../../skychat/Message';
+import { Timing } from '../../../skychat/Timing';
+import { CursorPlugin } from '../global/CursorPlugin';
 
 
 type GameObject = {
@@ -71,16 +71,16 @@ export class PointsCollectorPlugin extends RoomPlugin {
             gameMessage: null,
             participants: [],
             ball: {
-                pos: {x: .5, y: .5},
-                vel: {x: .0, y: .0},
+                pos: { x: .5, y: .5 },
+                vel: { x: .0, y: .0 },
             },
-            point: {x: 0, y: 0},
+            point: { x: 0, y: 0 },
             collectedPoints: 0,
         };
         this.movePoint();
 
         // Start message
-        this.currentGame.gameMessage = await this.room.sendMessage({content: `...`, user: UserController.getNeutralUser()});
+        this.currentGame.gameMessage = await this.room.sendMessage({ content: '...', user: UserController.getNeutralUser() });
         this.updateGameMessage();
 
         // Start game

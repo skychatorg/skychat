@@ -1,9 +1,9 @@
-import { Connection } from "../../../skychat/Connection";
-import { GlobalPlugin } from "../../GlobalPlugin";
-import { ConnectedListPlugin } from "./ConnectedListPlugin";
-import { UserController } from "../../../skychat/UserController";
-import { Session } from "../../../skychat/Session";
-import { RoomManager } from "../../../skychat/RoomManager";
+import { Connection } from '../../../skychat/Connection';
+import { GlobalPlugin } from '../../GlobalPlugin';
+import { ConnectedListPlugin } from './ConnectedListPlugin';
+import { UserController } from '../../../skychat/UserController';
+import { Session } from '../../../skychat/Session';
+import { RoomManager } from '../../../skychat/RoomManager';
 
 
 export class XpTickerPlugin extends GlobalPlugin {

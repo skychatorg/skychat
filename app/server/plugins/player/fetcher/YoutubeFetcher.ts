@@ -1,8 +1,8 @@
-import { google, youtube_v3 } from "googleapis";
-import { Config } from "../../../skychat/Config";
-import { VideoInfo } from "../PlayerChannel";
-import { PlayerPlugin } from "../PlayerPlugin";
-import { VideoFetcher } from "./VideoFetcher";
+import { google, youtube_v3 } from 'googleapis';
+import { Config } from '../../../skychat/Config';
+import { VideoInfo } from '../PlayerChannel';
+import { PlayerPlugin } from '../PlayerPlugin';
+import { VideoFetcher } from './VideoFetcher';
 
 
 
@@ -13,18 +13,18 @@ export class YoutubeFetcher implements VideoFetcher {
      * @param durationStr
      */
     public static youtubeDurationToSeconds(durationStr: string): number {
-        if (durationStr.substr(0, 2) !== "PT") {
+        if (durationStr.substr(0, 2) !== 'PT') {
             return 0;
         }
         durationStr = durationStr.substr(2);
         const all_titles: {[key: string]: number} = {
-            "h": 3600,
-            "m": 60,
-            "s": 1
+            'h': 3600,
+            'm': 60,
+            's': 1
         };
         let duration = 0;
         for (const i in all_titles) {
-            const match = durationStr.match(new RegExp(`([0-9]+)${i}`, "i"))
+            const match = durationStr.match(new RegExp(`([0-9]+)${i}`, 'i'));
             if (match) {
                 duration += all_titles[i] * parseInt(match[1]);
             }
@@ -66,7 +66,7 @@ export class YoutubeFetcher implements VideoFetcher {
             start = 0;
         }
 
-        return {videoId, playlistId, start};
+        return { videoId, playlistId, start };
     }
 
     /**
@@ -88,14 +88,14 @@ export class YoutubeFetcher implements VideoFetcher {
         const [link, type] = param.split(' ');
 
         if (typeof type === 'undefined' || type === 'video') {
-            const {videoId, start} = YoutubeFetcher.parseYoutubeLink(link);
+            const { videoId, start } = YoutubeFetcher.parseYoutubeLink(link);
             // Get information about the yt link
             const video = await this.getVideoInfo(videoId);
             video.startCursor = start * 1000;
             return [video];
 
         } else if (type === 'playlist') {
-            let {playlistId} = YoutubeFetcher.parseYoutubeLink(link);
+            let { playlistId } = YoutubeFetcher.parseYoutubeLink(link);
             if (! playlistId) {
                 playlistId = link;
             }
@@ -162,7 +162,7 @@ export class YoutubeFetcher implements VideoFetcher {
         const duration = YoutubeFetcher.youtubeDurationToSeconds(item.contentDetails.duration) * 1000;
         const title = item.snippet.title;
         const thumb = item.snippet.thumbnails.medium.url;
-        return {type: 'youtube', id, duration, title, thumb, startCursor: 0};
+        return { type: 'youtube', id, duration, title, thumb, startCursor: 0 };
     }
 
     /**
@@ -185,7 +185,7 @@ export class YoutubeFetcher implements VideoFetcher {
             .map(item => item.contentDetails!.videoId as string);
         const videos = [];
         for (const videoId of videoIds) {
-            videos.push(await this.getVideoInfo(videoId))
+            videos.push(await this.getVideoInfo(videoId));
         }
         return videos;
     }

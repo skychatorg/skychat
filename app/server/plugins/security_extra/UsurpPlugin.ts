@@ -1,7 +1,7 @@
-import {Connection} from "../../skychat/Connection";
-import {User} from "../../skychat/User";
-import {Session} from "../../skychat/Session";
-import { RoomPlugin } from "../RoomPlugin";
+import { Connection } from '../../skychat/Connection';
+import { User } from '../../skychat/User';
+import { Session } from '../../skychat/Session';
+import { RoomPlugin } from '../RoomPlugin';
 
 
 /**
@@ -16,7 +16,7 @@ export class UsurpPlugin extends RoomPlugin {
     readonly rules = {
         usurp: {
             minCount: 2,
-            params: [{name: 'username', pattern: User.USERNAME_REGEXP}, {name: 'command', pattern: /./}]
+            params: [{ name: 'username', pattern: User.USERNAME_REGEXP }, { name: 'command', pattern: /./ }]
         },
     };
 

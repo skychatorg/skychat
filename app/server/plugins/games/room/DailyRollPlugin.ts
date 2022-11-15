@@ -1,13 +1,13 @@
-import {Connection} from "../../../skychat/Connection";
-import {RoomPlugin} from "../../RoomPlugin";
-import { UserController } from "../../../skychat/UserController";
-import { Room } from "../../../skychat/Room";
-import { Message } from "../../../skychat/Message";
-import { Session } from "../../../skychat/Session";
-import { MessageFormatter } from "../../../skychat/MessageFormatter";
-import * as striptags from "striptags";
-import { RandomGenerator } from "../../../skychat/RandomGenerator";
-import { Timing } from "../../../skychat/Timing";
+import { Connection } from '../../../skychat/Connection';
+import { RoomPlugin } from '../../RoomPlugin';
+import { UserController } from '../../../skychat/UserController';
+import { Room } from '../../../skychat/Room';
+import { Message } from '../../../skychat/Message';
+import { Session } from '../../../skychat/Session';
+import { MessageFormatter } from '../../../skychat/MessageFormatter';
+import * as striptags from 'striptags';
+import { RandomGenerator } from '../../../skychat/RandomGenerator';
+import { Timing } from '../../../skychat/Timing';
 
 
 type GameObject = {
@@ -53,7 +53,7 @@ export class DailyRollPlugin extends RoomPlugin {
             minCount: 1,
             maxCount: 1,
             coolDown: 1000,
-            params: [{name: 'bet', pattern: /^([0-9]+)$/}]
+            params: [{ name: 'bet', pattern: /^([0-9]+)$/ }]
         }
     };
 
@@ -72,7 +72,7 @@ export class DailyRollPlugin extends RoomPlugin {
         return {
             x: cardId % DailyRollPlugin.BOARD_WIDTH,
             y: Math.floor(cardId / DailyRollPlugin.BOARD_WIDTH),
-        }
+        };
     }
 
     getCardId(x: number, y: number): number {
@@ -125,7 +125,7 @@ export class DailyRollPlugin extends RoomPlugin {
         // Decide card content
         for (let cardId = 0; cardId < DailyRollPlugin.CARDS_COUNT; ++ cardId) {
             this.currentGame.cards[cardId] = {
-                state: "pending",
+                state: 'pending',
                 content: Math.floor(RandomGenerator.random(8) * 6) * 100,
             };
         }
@@ -135,7 +135,7 @@ export class DailyRollPlugin extends RoomPlugin {
         this.currentGame.cards[jackpotCardId].content = DailyRollPlugin.JACKPOT_AMOUNT;
 
         // Send base message
-        this.currentGame.gameMessage = await this.room.sendMessage({content: '...', user: UserController.getNeutralUser()});
+        this.currentGame.gameMessage = await this.room.sendMessage({ content: '...', user: UserController.getNeutralUser() });
         this.updateGameMessage();
 
         // Wait for 30 seconds
@@ -145,7 +145,7 @@ export class DailyRollPlugin extends RoomPlugin {
                 break;
             }
         }
-        const lastMessage = await this.room.sendMessage({content: 'Hurry up, only 5 more seconds to chose your daily card', user: UserController.getNeutralUser()});
+        const lastMessage = await this.room.sendMessage({ content: 'Hurry up, only 5 more seconds to chose your daily card', user: UserController.getNeutralUser() });
         await Timing.sleep(5 * 1000);
 
         // End chosing state
@@ -178,7 +178,7 @@ export class DailyRollPlugin extends RoomPlugin {
         // Re-create game message
         this.currentGame.gameMessage.edit('deleted', '<s>deleted</s>');
         this.room.send('message-edit', this.currentGame.gameMessage.sanitized());
-        this.currentGame.gameMessage = await this.room.sendMessage({content: '...', user: UserController.getNeutralUser()});
+        this.currentGame.gameMessage = await this.room.sendMessage({ content: '...', user: UserController.getNeutralUser() });
         this.updateGameMessage();
 
         // Reveal cards which were not chosen

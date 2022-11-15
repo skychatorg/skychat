@@ -1,5 +1,5 @@
-import { VideoInfo } from "../PlayerChannel";
-import { PlayerPlugin } from "../PlayerPlugin";
+import { VideoInfo } from '../PlayerChannel';
+import { PlayerPlugin } from '../PlayerPlugin';
 
 export interface VideoFetcher {
 

@@ -1,7 +1,7 @@
-import SQL from "sql-template-strings";
-import {Connection} from "../../../skychat/Connection";
-import { DatabaseHelper } from "../../../skychat/DatabaseHelper";
-import { RoomPlugin } from "../../RoomPlugin";
+import SQL from 'sql-template-strings';
+import { Connection } from '../../../skychat/Connection';
+import { DatabaseHelper } from '../../../skychat/DatabaseHelper';
+import { RoomPlugin } from '../../RoomPlugin';
 
 
 export class MessageEditPlugin extends RoomPlugin {
@@ -17,8 +17,8 @@ export class MessageEditPlugin extends RoomPlugin {
             minCount: 2,
             coolDown: 2000,
             params: [
-                {pattern: /^([0-9]+)$/, name: 'id'},
-                {pattern: /.?/, name: 'message'},
+                { pattern: /^([0-9]+)$/, name: 'id' },
+                { pattern: /.?/, name: 'message' },
             ]
         },
         delete: {
@@ -26,7 +26,7 @@ export class MessageEditPlugin extends RoomPlugin {
             maxCount: 1,
             coolDown: 2000,
             params: [
-                {pattern: /^([0-9]+)$/, name: 'id'},
+                { pattern: /^([0-9]+)$/, name: 'id' },
             ]
         }
     };
@@ -51,7 +51,7 @@ export class MessageEditPlugin extends RoomPlugin {
             const content = param.split(' ').slice(1).join(' ');
             message.edit(content);
         } else {
-            message.edit('deleted', `<s>deleted</s>`);
+            message.edit('deleted', '<s>deleted</s>');
         }
         
         // Store it into the database

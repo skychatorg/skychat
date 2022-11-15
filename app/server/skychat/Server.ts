@@ -1,14 +1,14 @@
-import * as WebSocket from "ws";
-import * as http from "http";
-import * as https from "https";
-import {Connection} from "./Connection";
-import * as iof from "io-filter";
-import {Session} from "./Session";
-import {Config} from "./Config";
-import * as fs from "fs";
-import { FileManager } from "./FileManager";
+import * as WebSocket from 'ws';
+import * as http from 'http';
+import * as https from 'https';
+import { Connection } from './Connection';
+import * as iof from 'io-filter';
+import { Session } from './Session';
+import { Config } from './Config';
+import * as fs from 'fs';
+import { FileManager } from './FileManager';
 import express from 'express';
-import fileUpload from "express-fileupload";
+import fileUpload from 'express-fileupload';
 
 
 
@@ -105,9 +105,9 @@ export class Server {
             if (Array.isArray(file)) {
                 throw new Error('Please upload one file at the time');
             }
-            res.send(JSON.stringify({"status": 200, "path": FileManager.saveFile(file)}));
+            res.send(JSON.stringify({ 'status': 200, 'path': FileManager.saveFile(file) }));
         } catch (error) {
-            res.send(JSON.stringify({"status": 500, "message": (error as any).toString()}));
+            res.send(JSON.stringify({ 'status': 500, 'message': (error as any).toString() }));
         } finally {
             res.end();
         }
@@ -174,7 +174,7 @@ export class Server {
 
             // If a cooldown is defined for this event
             if (event.coolDownMs) {
-                let key = `${eventName}/${connection.ip}`;
+                const key = `${eventName}/${connection.ip}`;
                 if (this.coolDownEntries[key] && event.coolDownMs && new Date() < new Date(this.coolDownEntries[key].last.getTime() + event.coolDownMs)) {
                     throw new Error('Please wait before performing this action again');
                 }

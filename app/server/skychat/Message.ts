@@ -1,5 +1,5 @@
-import {SanitizedUser, User} from "./User";
-import {MessageFormatter} from "./MessageFormatter";
+import { SanitizedUser, User } from './User';
+import { MessageFormatter } from './MessageFormatter';
 
 export interface SanitizedMessage {
 
@@ -65,7 +65,7 @@ export type MessageConstructorOptions = {
 
 export class Message {
 
-    public static ID: number = 1;
+    public static ID = 1;
 
     public readonly id: number;
 
@@ -113,21 +113,21 @@ export class Message {
      * @param formatted If set, will not be built from the content
      */
     public append(content: string, formatted?: string) {
-        this.content += "\n" + content;
-        this.formatted += formatted ? formatted : ("<br>\n" + MessageFormatter.getInstance().format(content));
+        this.content += '\n' + content;
+        this.formatted += formatted ? formatted : ('<br>\n' + MessageFormatter.getInstance().format(content));
     }
 
     /**
      * Get the number of lines of the message
      */
     public getLineCount(): number {
-        return this.content.split("\n").length;
+        return this.content.split('\n').length;
     }
 
     /**
      *
      */
-    public sanitized(quoteDepth: number = 2): SanitizedMessage {
+    public sanitized(quoteDepth = 2): SanitizedMessage {
         return {
             id: this.id,
             room: this.room,

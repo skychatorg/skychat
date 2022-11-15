@@ -1,8 +1,8 @@
-import { Connection } from "../../../skychat/Connection";
-import { Plugin } from "../../Plugin";
-import { Poll, PollOptions } from "./Poll";
-import { Config } from "../../../skychat/Config";
-import { GlobalPlugin } from "../../GlobalPlugin";
+import { Connection } from '../../../skychat/Connection';
+import { Plugin } from '../../Plugin';
+import { Poll, PollOptions } from './Poll';
+import { Config } from '../../../skychat/Config';
+import { GlobalPlugin } from '../../GlobalPlugin';
 
 
 
@@ -24,13 +24,13 @@ export class PollPlugin extends GlobalPlugin {
         poll: {
             minCount: 1,
             coolDown: PollPlugin.POLL_CREATION_COOL_DOWN,
-            params: [{name: 'content', pattern: /./}]
+            params: [{ name: 'content', pattern: /./ }]
         },
         vote: {
             minCount: 2,
             maxCount: 2,
             maxCallsPer10Seconds: 4,
-            params: [{name: 'poll id', pattern: Plugin.POSITIVE_INTEGER_REGEXP}, {name: 'answer', pattern: /^([yn])$/}]
+            params: [{ name: 'poll id', pattern: Plugin.POSITIVE_INTEGER_REGEXP }, { name: 'answer', pattern: /^([yn])$/ }]
         }
     };
 

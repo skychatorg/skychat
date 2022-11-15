@@ -1,18 +1,18 @@
-import { GlobalPlugin } from "../../GlobalPlugin";
-import { Connection } from "../../../skychat/Connection";
-import { User } from "../../../skychat/User";
-import { MessageFormatter } from "../../../skychat/MessageFormatter";
-import { Config } from "../../../skychat/Config";
-import { BinaryMessageTypes } from "../../../../api/BinaryMessageTypes";
+import { GlobalPlugin } from '../../GlobalPlugin';
+import { Connection } from '../../../skychat/Connection';
+import { User } from '../../../skychat/User';
+import { MessageFormatter } from '../../../skychat/MessageFormatter';
+import { Config } from '../../../skychat/Config';
+import { BinaryMessageTypes } from '../../../../api/BinaryMessageTypes';
 
 
 export class AudioRecorderPlugin extends GlobalPlugin {
 
     // Maximum number of recordings to keep in memory
-    public static MAX_RECORDING_CACHED: number = 32;
+    public static MAX_RECORDING_CACHED = 32;
 
     // Max recording length
-    public static MAX_BUFFER_LENGTH: number = 1048576;
+    public static MAX_BUFFER_LENGTH = 1048576;
 
     static readonly commandName = 'audio';
 
@@ -22,11 +22,11 @@ export class AudioRecorderPlugin extends GlobalPlugin {
         audio: {
             minCount: 1,
             maxCount: 1,
-            params: [{name: 'audio id', pattern: /^[0-9]+$/, info: 'Id of the audio to play'}]
+            params: [{ name: 'audio id', pattern: /^[0-9]+$/, info: 'Id of the audio to play' }]
         },
     };
 
-    private currentEntryId: number = 0;
+    private currentEntryId = 0;
 
     public entries: { [id: number]: { buffer: Buffer, user: User } } = {};
 
@@ -47,7 +47,7 @@ export class AudioRecorderPlugin extends GlobalPlugin {
     /**
      * Cursors are sent in binary format to save bandwidth.
      */
-    async onBinaryDataReceived(connection: Connection, messageType: number, data: Buffer): Promise<Boolean> {
+    async onBinaryDataReceived(connection: Connection, messageType: number, data: Buffer): Promise<boolean> {
 
         if (messageType !== BinaryMessageTypes.AUDIO) {
             return false;

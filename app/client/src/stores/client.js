@@ -1,5 +1,5 @@
-import { useToast } from "vue-toastification";
-import { defineStore } from 'pinia'
+import { useToast } from 'vue-toastification';
+import { defineStore } from 'pinia';
 import { SkyChatClient } from '../../../api/client.ts';
 
 // Connect to SkyChatClient

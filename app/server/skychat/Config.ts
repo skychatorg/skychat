@@ -1,5 +1,5 @@
 import * as fs from 'fs';
-import * as Mail from "nodemailer/lib/mailer";
+import * as Mail from 'nodemailer/lib/mailer';
 
 
 export type Preferences = {
@@ -26,23 +26,23 @@ export type PublicConfig = {
 
 export class Config {
 
-    public static LOCATION: string = '';
+    public static LOCATION = '';
 
-    public static HOSTNAME: string = '';
+    public static HOSTNAME = '';
 
-    public static PORT: number = 8080;
+    public static PORT = 8080;
 
-    public static USE_SSL: boolean = false;
+    public static USE_SSL = false;
 
-    public static SSL_CERTIFICATE: string = '';
+    public static SSL_CERTIFICATE = '';
 
-    public static SSL_CERTIFICATE_KEY: string = '';
+    public static SSL_CERTIFICATE_KEY = '';
 
-    public static USERS_PASSWORD_SALT: string = '';
+    public static USERS_PASSWORD_SALT = '';
 
-    public static USERS_TOKEN_SALT: string = '';
+    public static USERS_TOKEN_SALT = '';
 
-    public static YOUTUBE_API_KEY: string = '';
+    public static YOUTUBE_API_KEY = '';
 
     public static OP: string[] = [];
 
@@ -116,13 +116,13 @@ export class Config {
             Config.EMAIL_TRANSPORT = env.email_transport;
         }
         // Load guest names
-        Config.GUEST_NAMES = fs.readFileSync('config/guestnames.txt').toString().trim().split("\n").map(l => l.trim()).filter(l => l.length > 0);
+        Config.GUEST_NAMES = fs.readFileSync('config/guestnames.txt').toString().trim().split('\n').map(l => l.trim()).filter(l => l.length > 0);
         if (Config.GUEST_NAMES.length === 0) {
             console.warn('No guest name found (guestnames.txt file is empty). Using default "Guest" username for all guests.');
             Config.GUEST_NAMES.push('Guest');
         }
         // Load fake messages
-        Config.FAKE_MESSAGES = fs.readFileSync('config/fakemessages.txt').toString().trim().split("\n").map(l => l.trim()).filter(l => l.length > 0);
+        Config.FAKE_MESSAGES = fs.readFileSync('config/fakemessages.txt').toString().trim().split('\n').map(l => l.trim()).filter(l => l.length > 0);
         if (Config.FAKE_MESSAGES.length === 0) {
             console.warn('No fake messages found (fakemessages.txt file is empty). Using a single empty fake message.');
             Config.GUEST_NAMES.push('');

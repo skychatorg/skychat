@@ -1,6 +1,6 @@
 const fs = require('fs');
-import { RoomPlugin, GlobalPlugin } from "..";
-import { PluginGroup } from "../PluginGroup";
+import { RoomPlugin, GlobalPlugin } from '..';
+import { PluginGroup } from '../PluginGroup';
 
 
 // Find all plugins in this directory

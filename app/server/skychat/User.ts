@@ -1,4 +1,4 @@
-import { UserController } from "./UserController";
+import { UserController } from './UserController';
 
 
 export type UserData = {
@@ -36,17 +36,17 @@ export class User {
     /**
      * Username regexp (including guests)
      */
-    public static USERNAME_REGEXP: RegExp = /^\*?[^\s]{2,}$/;
+    public static USERNAME_REGEXP = /^\*?[^\s]{2,}$/;
 
     /**
      * Valid username regexp
      */
-    public static USERNAME_LOGGED_REGEXP: RegExp = /^[a-zA-Z0-9-_]{3,16}$/;
+    public static USERNAME_LOGGED_REGEXP = /^[a-zA-Z0-9-_]{3,16}$/;
 
     /**
      * Valid email regexp
      */
-    public static EMAIL_REGEXP: RegExp = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+    public static EMAIL_REGEXP = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
 
     public readonly id: number;
 
@@ -106,7 +106,7 @@ export class User {
             right: this.right,
             xp: this.xp,
             data: this.data,
-        }
+        };
     }
 }
 

@@ -1,6 +1,6 @@
-import {RoomPlugin} from "../../RoomPlugin";
-import {Connection} from "../../../skychat/Connection";
-import {UserController} from "../../../skychat/UserController";
+import { RoomPlugin } from '../../RoomPlugin';
+import { Connection } from '../../../skychat/Connection';
+import { UserController } from '../../../skychat/UserController';
 
 
 export type MessageSeenEventData = {

@@ -1,10 +1,10 @@
-import {Connection} from "../skychat/Connection";
-import * as fs from "fs";
-import { Session } from "../skychat/Session";
-import { User } from "../skychat/User";
-import { Room } from "../skychat/Room";
-import { Config } from "../skychat/Config";
-import { UserController } from "../skychat/UserController";
+import { Connection } from '../skychat/Connection';
+import * as fs from 'fs';
+import { Session } from '../skychat/Session';
+import { User } from '../skychat/User';
+import { Room } from '../skychat/Room';
+import { Config } from '../skychat/Config';
+import { UserController } from '../skychat/UserController';
 
 
 /**
@@ -71,7 +71,7 @@ export abstract class Plugin {
     /**
      * Plugin command name
      */
-    public static readonly commandName: string = "plugin";
+    public static readonly commandName: string = 'plugin';
 
     /**
      * Plugin command aliases
@@ -236,7 +236,7 @@ export abstract class Plugin {
                 }
             }
             if (typeof this.coolDownEntries[identifier] === 'undefined') {
-                this.coolDownEntries[identifier] = {first: new Date(), last: new Date(), count: 1};
+                this.coolDownEntries[identifier] = { first: new Date(), last: new Date(), count: 1 };
             } else {
                 this.coolDownEntries[identifier].last = new Date();
                 this.coolDownEntries[identifier].count ++;
@@ -289,7 +289,7 @@ export abstract class Plugin {
      * @param data
      * @returns Whether the data was handled. If returning true, no other plugin will be able to handle binary data.
      */
-    public async onBinaryDataReceived(connection: Connection, messageType: number, data: Buffer): Promise<Boolean> {
-        return false
+    public async onBinaryDataReceived(connection: Connection, messageType: number, data: Buffer): Promise<boolean> {
+        return false;
     }
 }

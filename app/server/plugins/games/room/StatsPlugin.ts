@@ -1,9 +1,9 @@
-import {Connection} from "../../../skychat/Connection";
-import {RoomPlugin} from "../../RoomPlugin";
-import {UserController} from "../../../skychat/UserController";
-import {User} from "../../../skychat/User";
-import {Session} from "../../../skychat/Session";
-import {Config} from "../../../skychat/Config";
+import { Connection } from '../../../skychat/Connection';
+import { RoomPlugin } from '../../RoomPlugin';
+import { UserController } from '../../../skychat/UserController';
+import { User } from '../../../skychat/User';
+import { Session } from '../../../skychat/Session';
+import { Config } from '../../../skychat/Config';
 
 
 export class StatsPlugin extends RoomPlugin {
@@ -23,7 +23,7 @@ export class StatsPlugin extends RoomPlugin {
             minCount: 1,
             maxCount: 2,
             coolDown: 1000,
-            params: [{name: 'username', pattern: User.USERNAME_REGEXP}]
+            params: [{ name: 'username', pattern: User.USERNAME_REGEXP }]
         },
     };
 
@@ -50,11 +50,11 @@ export class StatsPlugin extends RoomPlugin {
         const movieCount = Math.floor(xp / StatsPlugin.AVERAGE_MOVIE_WATCH_TIME);
         const marathonCount = Math.floor(xp / StatsPlugin.AVERAGE_MARATHON_RUN_TIME);
 
-        let messageContent = `${session.user.username} spent ${minCount} ${minCount > 1 ? 'minutes' : 'minute'} here, that's ${hourCount} ${hourCount > 1 ? 'hours' : 'hour'}, ${dayCount} ${dayCount > 1 ? 'days' : 'day'} or ${weekCount} ${weekCount > 1 ? 'weeks' : 'week'}! During this time, he could have:
+        const messageContent = `${session.user.username} spent ${minCount} ${minCount > 1 ? 'minutes' : 'minute'} here, that's ${hourCount} ${hourCount > 1 ? 'hours' : 'hour'}, ${dayCount} ${dayCount > 1 ? 'days' : 'day'} or ${weekCount} ${weekCount > 1 ? 'weeks' : 'week'}! During this time, he could have:
             - read ${bookCount} ${bookCount > 1 ? 'books' : 'book'} 📖
             - watched ${movieCount} ${movieCount > 1 ? 'movies' : 'movie'} 🎥
             - run ${marathonCount} ${marathonCount > 1 ? 'marathons' : 'marathon'} 🏃        
-        `
+        `;
 
         await this.room.sendMessage({
             content: `${messageContent}`,

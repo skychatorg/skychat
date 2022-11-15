@@ -1,5 +1,5 @@
 const escapeHtml = require('escape-html');
-import { Config } from "./Config";
+import { Config } from './Config';
 import { StickerManager } from './StickerManager';
 
 
@@ -29,7 +29,7 @@ export class MessageFormatter {
         message = message.trim();
         const commandName = message.split(' ')[0].substr(1).toLowerCase();
         const param = message.substr(commandName.length + 2);
-        return {param, commandName};
+        return { param, commandName };
     }
 
     public static getInstance(): MessageFormatter {
@@ -94,11 +94,11 @@ export class MessageFormatter {
         return message.replace(/\n/g, () => {
             // If limit reached
             if (++ count > Config.PREFERENCES.maxNewlinesPerMessage) {
-                return "\n";
+                return '\n';
             }
             // Otherwise, replace with br
             return '<br>';
-        })
+        });
     }
 
     /**

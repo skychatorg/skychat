@@ -1,9 +1,9 @@
-import {Connection} from "../../../skychat/Connection";
-import {GlobalPlugin} from "../../GlobalPlugin";
-import {UserController} from "../../../skychat/UserController";
-import {User} from "../../../skychat/User";
-import { Config } from "../../../skychat/Config";
-import { Session } from "../../../skychat/Session";
+import { Connection } from '../../../skychat/Connection';
+import { GlobalPlugin } from '../../GlobalPlugin';
+import { UserController } from '../../../skychat/UserController';
+import { User } from '../../../skychat/User';
+import { Config } from '../../../skychat/Config';
+import { Session } from '../../../skychat/Session';
 
 
 export class AccountPlugin extends GlobalPlugin {
@@ -21,16 +21,16 @@ export class AccountPlugin extends GlobalPlugin {
             minCount: 2,
             coolDown: 100,
             params: [
-                {name: 'field', pattern: /^(email|password)$/},
-                {name: 'value', pattern: /./}
+                { name: 'field', pattern: /^(email|password)$/ },
+                { name: 'value', pattern: /./ }
             ]
         },
         changeusername: {
             minCount: 2,
             coolDown: 100,
             params: [
-                {name: 'new username', pattern: User.USERNAME_LOGGED_REGEXP},
-                {name: 'password', pattern: /./},
+                { name: 'new username', pattern: User.USERNAME_LOGGED_REGEXP },
+                { name: 'password', pattern: /./ },
             ]
         }
     };
@@ -63,33 +63,33 @@ export class AccountPlugin extends GlobalPlugin {
         // Handle field set
         switch (field) {
 
-            // Email
-            case 'email':
-                if (! value.match(User.EMAIL_REGEXP)) {
-                    throw new Error(`${value} is not a valid email`);
-                }
-                connection.session.user.email = value;
-                await UserController.sync(connection.session.user);
-                break;
+        // Email
+        case 'email':
+            if (! value.match(User.EMAIL_REGEXP)) {
+                throw new Error(`${value} is not a valid email`);
+            }
+            connection.session.user.email = value;
+            await UserController.sync(connection.session.user);
+            break;
 
             // Password
-            case 'password':
-                let oldPassword = value.split(' ')[0];
-                let oldHashedPassword = UserController.hashPassword(connection.session.user.id, connection.session.user.username.toLowerCase(), oldPassword);
-                let newPassword = value.split(' ')[1];
-                if (! connection.session.user.testHashedPassword(oldHashedPassword)) {
-                    throw new Error(`Invalid current password`);
-                }
-                UserController.changePassword(connection.session.user, newPassword);
-                messageContent = `Your password has been changed to ${newPassword}`;
-                break;
+        case 'password':
+            const oldPassword = value.split(' ')[0];
+            const oldHashedPassword = UserController.hashPassword(connection.session.user.id, connection.session.user.username.toLowerCase(), oldPassword);
+            const newPassword = value.split(' ')[1];
+            if (! connection.session.user.testHashedPassword(oldHashedPassword)) {
+                throw new Error('Invalid current password');
+            }
+            UserController.changePassword(connection.session.user, newPassword);
+            messageContent = `Your password has been changed to ${newPassword}`;
+            break;
 
-            default:
-                throw new Error(`Unable to set field ${field}`);
+        default:
+            throw new Error(`Unable to set field ${field}`);
         }
 
         // Send confirmation back to the user
-        const message = UserController.createNeutralMessage({content: messageContent, room: connection.roomId, id: 0});
+        const message = UserController.createNeutralMessage({ content: messageContent, room: connection.roomId, id: 0 });
         connection.send('message', message.sanitized());
     }
 
@@ -112,12 +112,12 @@ export class AccountPlugin extends GlobalPlugin {
         }
 
         if (user.money < AccountPlugin.CHANGE_USERNAME_PRICE) {
-            throw new Error(`You need at least ${AccountPlugin.CHANGE_USERNAME_PRICE} to change username`)
+            throw new Error(`You need at least ${AccountPlugin.CHANGE_USERNAME_PRICE} to change username`);
         }
 
         await UserController.buy(user, AccountPlugin.CHANGE_USERNAME_PRICE);
 
-        const message = UserController.createNeutralMessage({content: `Your username has been changed to ${username}`, room: connection.roomId, id: 0});
+        const message = UserController.createNeutralMessage({ content: `Your username has been changed to ${username}`, room: connection.roomId, id: 0 });
         connection.send('message', message.sanitized());
 
         await UserController.changeUsername(user, username, password);
@@ -147,7 +147,7 @@ export class AccountPlugin extends GlobalPlugin {
         await UserController.changePassword(userObject, password);
 
         // Notify OP
-        const message = UserController.createNeutralMessage({content: `${username} password has been changed to: ${password}`, room: connection.roomId, id: 0});
+        const message = UserController.createNeutralMessage({ content: `${username} password has been changed to: ${password}`, room: connection.roomId, id: 0 });
         connection.send('message', message.sanitized());
     }
 

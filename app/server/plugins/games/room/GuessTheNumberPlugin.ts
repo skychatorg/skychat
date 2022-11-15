@@ -1,9 +1,9 @@
-import {Connection} from "../../../skychat/Connection";
-import {RoomPlugin} from "../../RoomPlugin";
-import {UserController} from "../../../skychat/UserController";
-import {Message} from "../../../skychat/Message";
-import {Session} from "../../../skychat/Session";
-import {RandomGenerator} from "../../../skychat/RandomGenerator";
+import { Connection } from '../../../skychat/Connection';
+import { RoomPlugin } from '../../RoomPlugin';
+import { UserController } from '../../../skychat/UserController';
+import { Message } from '../../../skychat/Message';
+import { Session } from '../../../skychat/Session';
+import { RandomGenerator } from '../../../skychat/RandomGenerator';
 
 
 type GameObject = {
@@ -39,7 +39,7 @@ export class GuessTheNumberPlugin extends RoomPlugin {
             minCount: 1,
             maxCount: 1,
             coolDown: 1000,
-            params: [{name: 'action', pattern: /^(start|join|([0-9]+))$/}]
+            params: [{ name: 'action', pattern: /^(start|join|([0-9]+))$/ }]
         }
     };
 
@@ -84,7 +84,7 @@ export class GuessTheNumberPlugin extends RoomPlugin {
             user: UserController.getNeutralUser()
         });
         this.currentGame.participantListMessage = await this.room.sendMessage({
-            content: `Participants:`,
+            content: 'Participants:',
             user: UserController.getNeutralUser()
         });
         await waitTimeout(30 * 1000);
@@ -92,7 +92,7 @@ export class GuessTheNumberPlugin extends RoomPlugin {
         // If not enough participants
         if (this.currentGame.participants.length <= 1) {
             await this.room.sendMessage({
-                content: `Not enough participants. Aborting.`,
+                content: 'Not enough participants. Aborting.',
                 user: UserController.getNeutralUser()
             });
             // Refund users
@@ -106,7 +106,7 @@ export class GuessTheNumberPlugin extends RoomPlugin {
         // Start actual round
         this.currentGame.state = 'running';
         await this.room.sendMessage({
-            content: `:alerte: Round started :alerte:\nGuess the number between 0 and 1000 by sending ./guess {nb}\nExample:\n/guess 423`,
+            content: ':alerte: Round started :alerte:\nGuess the number between 0 and 1000 by sending ./guess {nb}\nExample:\n/guess 423',
             user: UserController.getNeutralUser(),
             quoted: this.currentGame.participantListMessage
         });
@@ -114,22 +114,22 @@ export class GuessTheNumberPlugin extends RoomPlugin {
         // Wait for people to guess the number
         await waitTimeout(15 * 1000);
         await this.room.sendMessage({
-            content: `10 more seconds to guess`,
+            content: '10 more seconds to guess',
             user: UserController.getNeutralUser()
         });
         await waitTimeout(10 * 1000);
 
         // Revelate guesses
-        let content = `Guesses:\n`;
+        let content = 'Guesses:\n';
         for (const identifier of Object.keys(this.currentGame.guesses)) {
             content += `- ${identifier}: ${this.currentGame.guesses[identifier]}\n`;
         }
         content += `Number was ${this.currentGame.secretNumber} :zoomix:`;
-        await this.room.sendMessage({content, user: UserController.getNeutralUser()});
+        await this.room.sendMessage({ content, user: UserController.getNeutralUser() });
 
         // Find winner
         let currentWinners: string[] = [];
-        let currentWinnerDistance: number = Infinity;
+        let currentWinnerDistance = Infinity;
         for (const identifier of Object.keys(this.currentGame.guesses)) {
             const guess = this.currentGame.guesses[identifier];
             const distance = Math.abs(this.currentGame.secretNumber - guess);
@@ -143,7 +143,7 @@ export class GuessTheNumberPlugin extends RoomPlugin {
 
         if (currentWinners.length === 0) {
             // If no winner
-            await this.room.sendMessage({content: `No winner this time :)`, user: UserController.getNeutralUser()});
+            await this.room.sendMessage({ content: 'No winner this time :)', user: UserController.getNeutralUser() });
 
         } else {
             const jackpot = Math.floor(this.currentGame.participants.length * GuessTheNumberPlugin.ENTRY_COST / currentWinners.length);
@@ -161,7 +161,7 @@ export class GuessTheNumberPlugin extends RoomPlugin {
             });
         }
 
-        await this.room.sendMessage({content: `Round ended`, user: UserController.getNeutralUser()});
+        await this.room.sendMessage({ content: 'Round ended', user: UserController.getNeutralUser() });
         this.currentGame = null;
     }
 
@@ -206,6 +206,6 @@ export class GuessTheNumberPlugin extends RoomPlugin {
             throw new Error('Number should be between 0 and 1000');
         }
         this.currentGame.guesses[connection.session.identifier] = guess;
-        connection.send('message', UserController.createNeutralMessage({content: 'Guess: ' + guess, room: this.room.id, id: 0}).sanitized());
+        connection.send('message', UserController.createNeutralMessage({ content: 'Guess: ' + guess, room: this.room.id, id: 0 }).sanitized());
     }
 }

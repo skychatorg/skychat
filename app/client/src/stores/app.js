@@ -1,11 +1,11 @@
 import { watch } from 'vue';
-import { defineStore } from 'pinia'
+import { defineStore } from 'pinia';
 import { useClientStore } from './client';
 import { useToast } from 'vue-toastification';
 import mousetrap from 'mousetrap';
 
 
-const DEFAULT_DOCUMENT_TITLE = "~ SkyChat";
+const DEFAULT_DOCUMENT_TITLE = '~ SkyChat';
 
 const CURRENT_VERSION = 5;
 const STORE_SAVED_KEYS = [
@@ -148,7 +148,7 @@ export const useAppStore = defineStore('app', {
                     return;
                 }
             
-                const chars = "┤┘┴└├┌┬┐";
+                const chars = '┤┘┴└├┌┬┐';
                 const indexOf = chars.indexOf(document.title[0]);
                 const newPosition = (indexOf + 1) % chars.length;
                 document.title = chars[newPosition] + ' 🔔 ' + this.documentTitle.value;
@@ -162,11 +162,11 @@ export const useAppStore = defineStore('app', {
 
                 // Now typing
                 if (isNewMessageTyping && ! isOldMessageTyping) {
-                    clientStore.sendMessage(`/t on`);
+                    clientStore.sendMessage('/t on');
                 }
                 // Stop typing
                 if (! isNewMessageTyping && isOldMessageTyping) {
-                    clientStore.sendMessage(`/t off`);
+                    clientStore.sendMessage('/t off');
                 }
             });
 
@@ -322,7 +322,7 @@ export const useAppStore = defineStore('app', {
                 // Create form and send request to backend
                 const data = new FormData();
                 data.append('file', file);
-                const result = await (await fetch("/upload", {method: 'POST', body: data})).json();
+                const result = await (await fetch('/upload', { method: 'POST', body: data })).json();
                 if (result.status === 500) {
                     throw new Error('Unable to upload: ' + result.message);
                 }

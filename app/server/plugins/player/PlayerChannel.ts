@@ -1,9 +1,9 @@
-import { Connection } from "../../skychat/Connection";
-import { Session } from "../../skychat/Session";
-import { SanitizedUser, User } from "../../skychat/User";
-import { UserController } from "../../skychat/UserController";
-import { PlayerChannelManager } from "./PlayerChannelManager";
-import { PlayerChannelScheduler, SanitizedScheduler, SchedulerEvent } from "./PlayerChannelScheduler";
+import { Connection } from '../../skychat/Connection';
+import { Session } from '../../skychat/Session';
+import { SanitizedUser, User } from '../../skychat/User';
+import { UserController } from '../../skychat/UserController';
+import { PlayerChannelManager } from './PlayerChannelManager';
+import { PlayerChannelScheduler, SanitizedScheduler, SchedulerEvent } from './PlayerChannelScheduler';
 
 
 export type QueuedVideoInfo = {
@@ -83,7 +83,7 @@ export class PlayerChannel {
     /**
      * Whether this channel is locked (= only OP can interact with it)
      */
-    public locked: boolean = false;
+    public locked = false;
 
     /**
      * Keeps track of the dates when user last played a media
@@ -271,7 +271,7 @@ export class PlayerChannel {
     /**
      * Retrieve an entry in the queue if it exists. If not, returns null.
      */
-    public getQueueEntry(type: string, id: VideoInfo["id"]): QueuedVideoInfo | null {
+    public getQueueEntry(type: string, id: VideoInfo['id']): QueuedVideoInfo | null {
         return this.queue.find(q => q.video.type === type && q.video.id === id) || null;
     }
     
@@ -351,7 +351,7 @@ export class PlayerChannel {
         // Sort users fairly
         const userIds: number[] = Object.keys(users).map(k => parseInt(k));
         userIds.sort((id1, id2) => {
-            let getDate = (id: number) => this.lastPlayedDates[id] ? this.lastPlayedDates[id].getTime() : 0;
+            const getDate = (id: number) => this.lastPlayedDates[id] ? this.lastPlayedDates[id].getTime() : 0;
             return getDate(id1) - getDate(id2);
         });
         // Re-build the new queue

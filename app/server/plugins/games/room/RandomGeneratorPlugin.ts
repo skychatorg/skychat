@@ -1,7 +1,7 @@
-import {Connection} from "../../../skychat/Connection";
-import {RoomPlugin} from "../../RoomPlugin";
-import {UserController} from "../../../skychat/UserController";
-import { RandomGenerator } from "../../../skychat/RandomGenerator";
+import { Connection } from '../../../skychat/Connection';
+import { RoomPlugin } from '../../RoomPlugin';
+import { UserController } from '../../../skychat/UserController';
+import { RandomGenerator } from '../../../skychat/RandomGenerator';
 
 
 export class RandomGeneratorPlugin extends RoomPlugin {
@@ -15,7 +15,7 @@ export class RandomGeneratorPlugin extends RoomPlugin {
             minCount: 2,
             maxCount: 2,
             coolDown: 100,
-            params: [{name: 'min', pattern: /^([0-9]+)$/}, {name: 'max', pattern: /^([0-9]+)$/}]
+            params: [{ name: 'min', pattern: /^([0-9]+)$/ }, { name: 'max', pattern: /^([0-9]+)$/ }]
         },
     };
 

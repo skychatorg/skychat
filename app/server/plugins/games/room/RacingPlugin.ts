@@ -1,12 +1,12 @@
-import {Connection} from "../../../skychat/Connection";
-import {RoomPlugin} from "../../RoomPlugin";
-import {UserController} from "../../../skychat/UserController";
-import * as striptags from "striptags";
-import {MessageFormatter} from "../../../skychat/MessageFormatter";
-import {RandomGenerator} from "../../../skychat/RandomGenerator";
-import { Session } from "../../../skychat/Session";
-import { Message } from "../../../skychat/Message";
-import { Timing } from "../../../skychat/Timing";
+import { Connection } from '../../../skychat/Connection';
+import { RoomPlugin } from '../../RoomPlugin';
+import { UserController } from '../../../skychat/UserController';
+import * as striptags from 'striptags';
+import { MessageFormatter } from '../../../skychat/MessageFormatter';
+import { RandomGenerator } from '../../../skychat/RandomGenerator';
+import { Session } from '../../../skychat/Session';
+import { Message } from '../../../skychat/Message';
+import { Timing } from '../../../skychat/Timing';
 
 
 type GameObject = {
@@ -65,7 +65,7 @@ export class RacingPlugin extends RoomPlugin {
             minCount: 1,
             maxCount: 1,
             coolDown: 500,
-            params: [{name: 'action', pattern: /^(start|([0-9]+))$/}]
+            params: [{ name: 'action', pattern: /^(start|([0-9]+))$/ }]
         }
     };
 
@@ -117,7 +117,7 @@ export class RacingPlugin extends RoomPlugin {
         };
 
         // Wait for participants
-        this.currentGame.gameMessage = await this.room.sendMessage({content: `...`, user: UserController.getNeutralUser()});
+        this.currentGame.gameMessage = await this.room.sendMessage({ content: '...', user: UserController.getNeutralUser() });
         this.updateGameMessage();
 
         // Let users the time to participate
@@ -168,16 +168,16 @@ export class RacingPlugin extends RoomPlugin {
         // Get winner list
         const winners = this.currentGame.participants
             .filter(session => this.currentGame && this.currentGame.bets[session.identifier] === this.currentGame.winnerId);
-        let content = ``;
+        let content = '';
         if (winners.length > 0) {
-            content += `Winners:<br>`;
+            content += 'Winners:<br>';
             const amount = RacingPlugin.ENTRY_COST * this.currentGame.cars.length;
             for (const winner of winners) {
                 content += `- ${winner.identifier} (+ $${amount / 100})<br>`;
                 UserController.giveMoney(winner.user, amount);
             }
         } else {
-            content += `Nobody won :)`;
+            content += 'Nobody won :)';
         }
         this.currentGame.gameMessage.append(striptags(content), content);
         this.room.send('message-edit', this.currentGame.gameMessage.sanitized());
@@ -206,8 +206,8 @@ export class RacingPlugin extends RoomPlugin {
             content += '· '.repeat(dashCount) + carEmoji;
             // find participants that bet on this car
             const identifiers = Object.entries(this.currentGame.bets)
-            .filter(entry => entry[1] === carId)
-            .map(entry => entry[0]);
+                .filter(entry => entry[1] === carId)
+                .map(entry => entry[0]);
             if (identifiers.length > 0) {
                 content += ` (${identifiers.join(', ')})`;
             }

@@ -1,8 +1,8 @@
-import { Connection } from "../../skychat/Connection";
-import { DatabaseHelper } from "../../skychat/DatabaseHelper";
-import SQL from "sql-template-strings";
-import { GlobalPlugin } from "../GlobalPlugin";
-import { RoomManager } from "../../skychat/RoomManager";
+import { Connection } from '../../skychat/Connection';
+import { DatabaseHelper } from '../../skychat/DatabaseHelper';
+import SQL from 'sql-template-strings';
+import { GlobalPlugin } from '../GlobalPlugin';
+import { RoomManager } from '../../skychat/RoomManager';
 
 
 export class LogFuzzerPlugin extends GlobalPlugin {
@@ -20,7 +20,7 @@ export class LogFuzzerPlugin extends GlobalPlugin {
     /**
      * Last fuzzed message id in history
      */
-    protected storage: {lastId: number} = {lastId: 0};
+    protected storage: {lastId: number} = { lastId: 0 };
 
     private tickTimeout?: any;
 
@@ -56,7 +56,7 @@ export class LogFuzzerPlugin extends GlobalPlugin {
         const limitTimestamp = Math.floor(new Date().getTime() - LogFuzzerPlugin.DURATION_BEFORE_FUZZ);
         const sqlQuery = SQL`select id, content from messages where id > ${this.storage.lastId} and date <= ${limitTimestamp} limit 5000`;
         const messages: {content: string, id: number}[] = await DatabaseHelper.db.all(sqlQuery);
-        for (const {id, content} of messages) {
+        for (const { id, content } of messages) {
             const sqlQuery = SQL`update messages set content=${this.fuzzContent(content)} where id=${id}`;
             await DatabaseHelper.db.run(sqlQuery);
         }

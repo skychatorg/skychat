@@ -1,10 +1,10 @@
-import {Connection} from "../../../skychat/Connection";
-import {GlobalPlugin} from "../../GlobalPlugin";
-import {User} from "../../../skychat/User";
-import {UserController} from "../../../skychat/UserController";
-import { Session } from "../../../skychat/Session";
-import { RoomManager } from "../../../skychat/RoomManager";
-import { BinaryMessageTypes } from "../../../../api/BinaryMessageTypes";
+import { Connection } from '../../../skychat/Connection';
+import { GlobalPlugin } from '../../GlobalPlugin';
+import { User } from '../../../skychat/User';
+import { UserController } from '../../../skychat/UserController';
+import { Session } from '../../../skychat/Session';
+import { RoomManager } from '../../../skychat/RoomManager';
+import { BinaryMessageTypes } from '../../../../api/BinaryMessageTypes';
 
 
 /**
@@ -33,7 +33,7 @@ export class CursorPlugin extends GlobalPlugin {
             maxCount: 2,
             maxCallsPer10Seconds: 100,
             params: [
-                { name: "x", pattern: /^\d+(\.\d+)?$/}, {name: "y", pattern: /^\d+(\.\d+)?$/ }
+                { name: 'x', pattern: /^\d+(\.\d+)?$/ }, { name: 'y', pattern: /^\d+(\.\d+)?$/ }
             ]
         }
     };
@@ -100,7 +100,7 @@ export class CursorPlugin extends GlobalPlugin {
     /**
      * Cursors are sent in binary format to save bandwidth.
      */
-    async onBinaryDataReceived(connection: Connection, messageType: number, data: Buffer): Promise<Boolean> {
+    async onBinaryDataReceived(connection: Connection, messageType: number, data: Buffer): Promise<boolean> {
         if (messageType !== BinaryMessageTypes.CURSOR) {
             return false;
         }

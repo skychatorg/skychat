@@ -1,7 +1,7 @@
-import { Connection } from "../skychat/Connection";
-import { Message } from "../skychat/Message";
-import { Plugin } from "./Plugin";
-import { Room } from "../skychat/Room";
+import { Connection } from '../skychat/Connection';
+import { Message } from '../skychat/Message';
+import { Plugin } from './Plugin';
+import { Room } from '../skychat/Room';
 
 
 export abstract class RoomPlugin extends Plugin {
@@ -84,7 +84,7 @@ export abstract class RoomPlugin extends Plugin {
 /**
  * Defines default constructor for a room plugin (required for TypeScript)
  */
- export interface RoomPluginConstructor {
+export interface RoomPluginConstructor {
     new (room: Room): RoomPlugin;
     commandName: string;
     commandAliases: string[];

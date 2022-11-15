@@ -1,9 +1,9 @@
-import {Connection} from "../../../skychat/Connection";
-import {RoomPlugin} from "../../RoomPlugin";
-import { UserController } from "../../../skychat/UserController";
-import { Config } from "../../../skychat/Config";
-import { Room } from "../../../skychat/Room";
-import { Session } from "../../../skychat/Session";
+import { Connection } from '../../../skychat/Connection';
+import { RoomPlugin } from '../../RoomPlugin';
+import { UserController } from '../../../skychat/UserController';
+import { Config } from '../../../skychat/Config';
+import { Room } from '../../../skychat/Room';
+import { Session } from '../../../skychat/Session';
 
 
 export class RoomManagerPlugin extends RoomPlugin {
@@ -17,14 +17,14 @@ export class RoomManagerPlugin extends RoomPlugin {
         roomcreate: {
             minCount: 0,
             params: [
-                {name: 'name', pattern: /.+/},
+                { name: 'name', pattern: /.+/ },
             ]
         },
         roomset: {
             minCount: 2,
             params: [
-                {name: 'property', pattern: /^(name)$/},
-                {name: 'value', pattern: /.?/},
+                { name: 'property', pattern: /^(name)$/ },
+                { name: 'value', pattern: /.?/ },
             ]
         },
         roomleave: { minCount: 0, },
@@ -35,21 +35,21 @@ export class RoomManagerPlugin extends RoomPlugin {
 
         switch (alias) {
 
-            case 'roomset':
-                await this.handleRoomSet(param, connection);
-                break;
+        case 'roomset':
+            await this.handleRoomSet(param, connection);
+            break;
 
-            case 'roomcreate':
-                await this.handleRoomCreate(param, connection);
-                break;
+        case 'roomcreate':
+            await this.handleRoomCreate(param, connection);
+            break;
 
-            case 'roomleave':
-                await this.handleRoomLeave(param, connection);
-                break;
+        case 'roomleave':
+            await this.handleRoomLeave(param, connection);
+            break;
 
-            case 'roomdelete':
-                await this.handleRoomDelete(param, connection);
-                break;
+        case 'roomdelete':
+            await this.handleRoomDelete(param, connection);
+            break;
         }
     }
 
@@ -80,12 +80,12 @@ export class RoomManagerPlugin extends RoomPlugin {
         
         switch (property) {
 
-            case 'name':
-                this.room.name = value;
-                break;
+        case 'name':
+            this.room.name = value;
+            break;
             
-            default:
-                throw new Error(`Invalid property ${property}`);
+        default:
+            throw new Error(`Invalid property ${property}`);
         }
         Object.values(Session.sessions).forEach(session => this.room.manager.sendRoomList(session));
         const message = UserController.createNeutralMessage({ id: 0, content: `Room property ${property} set to ${value}` });

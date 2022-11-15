@@ -1,9 +1,9 @@
-import { Connection } from "../../skychat/Connection";
-import { User } from "../../skychat/User";
-import { Session } from "../../skychat/Session";
-import { Room } from "../../skychat/Room";
-import { GlobalPlugin } from "../GlobalPlugin";
-import { RoomManager } from "../../skychat/RoomManager";
+import { Connection } from '../../skychat/Connection';
+import { User } from '../../skychat/User';
+import { Session } from '../../skychat/Session';
+import { Room } from '../../skychat/Room';
+import { GlobalPlugin } from '../GlobalPlugin';
+import { RoomManager } from '../../skychat/RoomManager';
 const axios = require('axios');
 
 
@@ -31,7 +31,7 @@ export class TorBanPlugin extends GlobalPlugin {
     }
 
     public run(alias: string, param: string, connection: Connection, session: Session, user: User, room: Room): Promise<void> {
-        throw new Error("Method not implemented.");
+        throw new Error('Method not implemented.');
     }
 
     private async updateTorExitNodesList(): Promise<void> {
@@ -41,7 +41,7 @@ export class TorBanPlugin extends GlobalPlugin {
                 url: TorBanPlugin.CHECK_TOR_URL,
                 responseType: 'text',
             });
-            const ips = text.trim().split("\n");
+            const ips = text.trim().split('\n');
             this.torExitNodes = ips;
         } catch(error) {
             console.warn(error);

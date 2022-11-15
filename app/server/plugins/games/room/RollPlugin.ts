@@ -1,13 +1,13 @@
-import {Connection} from "../../../skychat/Connection";
-import {RoomPlugin} from "../../RoomPlugin";
-import {Message} from "../../../skychat/Message";
-import {UserController} from "../../../skychat/UserController";
-import {Session} from "../../../skychat/Session";
-import * as striptags from "striptags";
-import {MessageFormatter} from "../../../skychat/MessageFormatter";
-import {Room} from "../../../skychat/Room";
-import {RandomGenerator} from "../../../skychat/RandomGenerator";
-import { Timing } from "../../../skychat/Timing";
+import { Connection } from '../../../skychat/Connection';
+import { RoomPlugin } from '../../RoomPlugin';
+import { Message } from '../../../skychat/Message';
+import { UserController } from '../../../skychat/UserController';
+import { Session } from '../../../skychat/Session';
+import * as striptags from 'striptags';
+import { MessageFormatter } from '../../../skychat/MessageFormatter';
+import { Room } from '../../../skychat/Room';
+import { RandomGenerator } from '../../../skychat/RandomGenerator';
+import { Timing } from '../../../skychat/Timing';
 
 
 
@@ -41,7 +41,7 @@ export class RollPlugin extends RoomPlugin {
 
     public static readonly GLOBAL_COOL_DOWN: number = 4 * 60 * 1000;
 
-    public static readonly TICK_MS: number[] = Array.from({length: 3000 / 150})
+    public static readonly TICK_MS: number[] = Array.from({ length: 3000 / 150 })
         .map((_, i) => (1 + i) * 150)
         .concat([
             3048,
@@ -72,7 +72,7 @@ export class RollPlugin extends RoomPlugin {
             minCount: 1,
             maxCount: 1,
             coolDown: 500,
-            params: [{name: 'action', pattern: /^(start|([0-9]+))$/}]
+            params: [{ name: 'action', pattern: /^(start|([0-9]+))$/ }]
         }
     };
 
@@ -81,7 +81,7 @@ export class RollPlugin extends RoomPlugin {
     private lastGameFinishedDate: Date = new Date(0);
 
     protected storage = {
-        lastGameResults: Array.from({length: 10}).map(() => 0),
+        lastGameResults: Array.from({ length: 10 }).map(() => 0),
         currentJackpot: RollPlugin.BASE_JACKPOT,
         totalGameCount: 0
     };
@@ -131,12 +131,12 @@ export class RollPlugin extends RoomPlugin {
         };
 
         // Build and send the intro message
-        let introMessageContent = ``;
+        let introMessageContent = '';
         introMessageContent += `
         -> New round (roll). To bet on a specific slot, click on one of the button below:<br>
         <table class="skychat-table">
             <tr>
-                ${Array.from({length:10}).map((_: any, i: number) => `<td>[[slot ${i}//${this.commandName} ${i}]]</td>`).join(' ')}
+                ${Array.from({ length:10 }).map((_: any, i: number) => `<td>[[slot ${i}//${this.commandName} ${i}]]</td>`).join(' ')}
             </tr>
         </table>`;
         const formatter = MessageFormatter.getInstance();
@@ -149,7 +149,7 @@ export class RollPlugin extends RoomPlugin {
 
         // Wait for participants
         this.currentGame.rollMessage = await this.room.sendMessage({
-            content: `...`,
+            content: '...',
             user: UserController.getNeutralUser()
         });
         this.updateGameMessage();
@@ -158,7 +158,7 @@ export class RollPlugin extends RoomPlugin {
         // If not enough participants
         if (this.currentGame.participants.length === 0) {
             await this.room.sendMessage({
-                content: `Not enough participants. Aborting.`,
+                content: 'Not enough participants. Aborting.',
                 user: UserController.getNeutralUser()
             });
             this.currentGame = null;
@@ -166,7 +166,7 @@ export class RollPlugin extends RoomPlugin {
         }
 
         // Start actual round
-        introMessage.edit('deleted', `<s>deleted</s>`);
+        introMessage.edit('deleted', '<s>deleted</s>');
         this.room.send('message-edit', introMessage.sanitized());
         this.currentGame.state = 'running';
         this.currentGame.ballPosition = Math.floor(RandomGenerator.random(8) * 10);
@@ -193,7 +193,7 @@ export class RollPlugin extends RoomPlugin {
 
         // Get winner list
         this.currentGame.rollMessage.append(`\nRound ended. Ball position: ${this.currentGame.ballPosition}`);
-        let content = `Results:\n`;
+        let content = 'Results:\n';
         let winnerCount = 0;
         for (const identifier of Object.keys(this.currentGame.bets)) {
             const session = this.currentGame.participants.find(session => session.identifier === identifier);
@@ -238,7 +238,7 @@ export class RollPlugin extends RoomPlugin {
         }
         // Display information about current round
         let content = `Current jackpot: $${this.storage.currentJackpot / 100}<br>`;
-        content += `Participants:<br>`;
+        content += 'Participants:<br>';
         for (const session of this.currentGame.participants) {
             content += `- ${session.user.username} (${this.currentGame.bets[session.identifier]})<br>`;
         }
@@ -248,16 +248,16 @@ export class RollPlugin extends RoomPlugin {
         <br>
         <table class="skychat-table">
             <tr>
-                ${Array.from({length:10}).map((_: any, i: number) => `<td>${i === ballPosition ? '&nbsp;&nbsp;&nbsp;↓' : ''}</td>`).join(' ')}
+                ${Array.from({ length:10 }).map((_: any, i: number) => `<td>${i === ballPosition ? '&nbsp;&nbsp;&nbsp;↓' : ''}</td>`).join(' ')}
             </tr>
             <tr>
-                ${Array.from({length:10}).map((_: any, i: number) => `<td>slot ${i}</td>`).join(' ')}
+                ${Array.from({ length:10 }).map((_: any, i: number) => `<td>slot ${i}</td>`).join(' ')}
             </tr>
             <tr>
-                ${Array.from({length:10}).map((_: any, i: number) => `<td>${bets.filter(bet => bet === i).length === 0 ? '' : ('&nbsp;&nbsp;&nbsp;' + bets.filter(bet => bet === i).length)}</td>`).join(' ')}
+                ${Array.from({ length:10 }).map((_: any, i: number) => `<td>${bets.filter(bet => bet === i).length === 0 ? '' : ('&nbsp;&nbsp;&nbsp;' + bets.filter(bet => bet === i).length)}</td>`).join(' ')}
             </tr>
             <tr>
-                ${Array.from({length:10}).map((_: any, i: number) => `<td>${Math.floor(100 * (this.storage.lastGameResults[i] / (this.storage.totalGameCount || 1)))}%</td>`).join(' ')}
+                ${Array.from({ length:10 }).map((_: any, i: number) => `<td>${Math.floor(100 * (this.storage.lastGameResults[i] / (this.storage.totalGameCount || 1)))}%</td>`).join(' ')}
             </tr>
         </table>`;
         // Update message

@@ -1,10 +1,10 @@
-import {Connection} from "../../../skychat/Connection";
-import {User} from "../../../skychat/User";
-import {ConnectedListPlugin} from "../../core/global/ConnectedListPlugin";
-import {UserController} from "../../../skychat/UserController";
-import { GlobalPlugin } from "../../GlobalPlugin";
-import { Session } from "../../../skychat/Session";
-import { RoomManager } from "../../../skychat/RoomManager";
+import { Connection } from '../../../skychat/Connection';
+import { User } from '../../../skychat/User';
+import { ConnectedListPlugin } from '../../core/global/ConnectedListPlugin';
+import { UserController } from '../../../skychat/UserController';
+import { GlobalPlugin } from '../../GlobalPlugin';
+import { Session } from '../../../skychat/Session';
+import { RoomManager } from '../../../skychat/RoomManager';
 
 
 export class MoneyFarmerPlugin extends GlobalPlugin {
@@ -12,9 +12,9 @@ export class MoneyFarmerPlugin extends GlobalPlugin {
     public static readonly MAX_INACTIVITY_DURATION_MS: number = 5 * 60 * 1000;
 
     public static readonly TICK_AMOUNTS_LIMITS: {limit: number, amount: number}[] = [
-        {limit: 15 * 100, amount: 3},
-        {limit: 30 * 100, amount: 2},
-        {limit: 100 * 100, amount: 1},
+        { limit: 15 * 100, amount: 3 },
+        { limit: 30 * 100, amount: 2 },
+        { limit: 100 * 100, amount: 1 },
     ];
 
     static readonly commandName = 'moneyfarmer';
@@ -58,7 +58,7 @@ export class MoneyFarmerPlugin extends GlobalPlugin {
 
             const amount = this.getTickAmount(session.user);
             if (amount === 0) {
-                continue
+                continue;
             }
             session.user.money += amount;
             await UserController.sync(session.user);

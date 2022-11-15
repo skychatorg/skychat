@@ -1,15 +1,15 @@
-import * as striptags from "striptags";
-import { Connection } from "../../../skychat/Connection";
-import { User } from "../../../skychat/User";
-import { Session } from "../../../skychat/Session";
-import { UserController } from "../../../skychat/UserController";
-import { MessageFormatter } from "../../../skychat/MessageFormatter";
-import { Timing } from "../../../skychat/Timing";
-import { Message } from "../../../skychat/Message";
-import { GlobalPlugin } from "../../GlobalPlugin";
-import { RoomManager } from "../../../skychat/RoomManager";
-import { MessageHistoryPlugin } from "../../core/room/MessageHistoryPlugin";
-import { Config } from "../../../skychat/Config";
+import * as striptags from 'striptags';
+import { Connection } from '../../../skychat/Connection';
+import { User } from '../../../skychat/User';
+import { Session } from '../../../skychat/Session';
+import { UserController } from '../../../skychat/UserController';
+import { MessageFormatter } from '../../../skychat/MessageFormatter';
+import { Timing } from '../../../skychat/Timing';
+import { Message } from '../../../skychat/Message';
+import { GlobalPlugin } from '../../GlobalPlugin';
+import { RoomManager } from '../../../skychat/RoomManager';
+import { MessageHistoryPlugin } from '../../core/room/MessageHistoryPlugin';
+import { Config } from '../../../skychat/Config';
 
 
 enum BAN_TYPES {
@@ -17,7 +17,7 @@ enum BAN_TYPES {
     SHADOW = 1,
     LAG = 2,
     SPAM = 3,
-};
+}
 
 
 export class BanPlugin extends GlobalPlugin {
@@ -43,15 +43,15 @@ export class BanPlugin extends GlobalPlugin {
             minCount: 1,
             maxCount: 3,
             params: [
-                {name: "username", pattern: User.USERNAME_REGEXP},
-                {name: "type", pattern: new RegExp('^(' + Object.keys(BAN_TYPES).filter(t => isNaN(parseInt(t))).join('|') + ')$')},
-                {name: "duration (s)", pattern: /^\d+$/},
+                { name: 'username', pattern: User.USERNAME_REGEXP },
+                { name: 'type', pattern: new RegExp('^(' + Object.keys(BAN_TYPES).filter(t => isNaN(parseInt(t))).join('|') + ')$') },
+                { name: 'duration (s)', pattern: /^\d+$/ },
             ]
         },
         [BanPlugin.UNBAN_COMMAND]: {
             minCount: 1,
             maxCount: 1,
-            params: [{name: "username", pattern: User.USERNAME_REGEXP}]
+            params: [{ name: 'username', pattern: User.USERNAME_REGEXP }]
         },
         [BanPlugin.BANLIST_COMMAND]: {
             minCount: 0,
@@ -78,17 +78,17 @@ export class BanPlugin extends GlobalPlugin {
 
         switch (alias) {
 
-            case BanPlugin.BAN_COMMAND:
-                await this.handleBan(param, connection);
-                break;
+        case BanPlugin.BAN_COMMAND:
+            await this.handleBan(param, connection);
+            break;
 
-            case BanPlugin.UNBAN_COMMAND:
-                await this.handleUnban(param, connection);
-                break;
+        case BanPlugin.UNBAN_COMMAND:
+            await this.handleUnban(param, connection);
+            break;
 
-            case BanPlugin.BANLIST_COMMAND:
-                await this.handleBanList(param, connection);
-                break;
+        case BanPlugin.BANLIST_COMMAND:
+            await this.handleBanList(param, connection);
+            break;
         }
     }
 
@@ -121,7 +121,7 @@ export class BanPlugin extends GlobalPlugin {
                 this.storage.banned['ip:' + connection.ip] = banEntry;
                 // Close connection if access ban
                 if (this.isBanned(connection, BAN_TYPES.ACCESS)) {
-                    connection.close(Connection.CLOSE_KICKED, "You have been disconnected");
+                    connection.close(Connection.CLOSE_KICKED, 'You have been disconnected');
                 }
             }
         }
@@ -143,8 +143,8 @@ export class BanPlugin extends GlobalPlugin {
 
     async handleBanList(param: string, connection: Connection) {
         const formatter = MessageFormatter.getInstance();
-        let content = `<p>Banned:</p>`;
-        content += `<table class="skychat-table">`;
+        let content = '<p>Banned:</p>';
+        content += '<table class="skychat-table">';
         content += `
             <tr>
                 <th>source</th>
@@ -166,8 +166,8 @@ export class BanPlugin extends GlobalPlugin {
                     <td>${formatter.getButtonHtml('unban', '/' + BanPlugin.UNBAN_COMMAND + ' ' + banEntry.source, true)}</td>
                 </tr>`;
         }
-        content += `</table>`;
-        const message = UserController.createNeutralMessage({content: '', room: connection.roomId, id: 0});
+        content += '</table>';
+        const message = UserController.createNeutralMessage({ content: '', room: connection.roomId, id: 0 });
         message.edit(striptags(content), content);
         connection.send('message', message.sanitized());
     }
@@ -183,7 +183,7 @@ export class BanPlugin extends GlobalPlugin {
 
             // Do not send cursor to others
             if (message.startsWith('/c ')) {
-                return `/void`;
+                return '/void';
             }
 
             // Only send new messages to himself
@@ -193,7 +193,7 @@ export class BanPlugin extends GlobalPlugin {
                     content: message.substr('/message'.length),
                     user: connection.session.user
                 }).sanitized());
-                return `/void`;
+                return '/void';
             }
         }
         // If bug banned, make user lag

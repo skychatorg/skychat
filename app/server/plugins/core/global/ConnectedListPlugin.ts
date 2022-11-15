@@ -1,8 +1,8 @@
-import { Connection } from "../../../skychat/Connection";
-import { Session } from "../../../skychat/Session";
-import { Config } from "../../../skychat/Config";
-import { GlobalPlugin } from "../../GlobalPlugin";
-import { RoomManager } from "../../../skychat/RoomManager";
+import { Connection } from '../../../skychat/Connection';
+import { Session } from '../../../skychat/Session';
+import { Config } from '../../../skychat/Config';
+import { GlobalPlugin } from '../../GlobalPlugin';
+import { RoomManager } from '../../../skychat/RoomManager';
 
 
 /**
@@ -32,9 +32,9 @@ export class ConnectedListPlugin extends GlobalPlugin {
     readonly rules = {
         connectedlist: {
             minCount: 1,
-            params: [{name: 'mode', pattern: /^(show-all|hide-details-by-right)$/}, {name: 'argument', pattern: /^([0-9]+)$/}]
+            params: [{ name: 'mode', pattern: /^(show-all|hide-details-by-right)$/ }, { name: 'argument', pattern: /^([0-9]+)$/ }]
         }
-    }
+    };
 
     /**
      * Debounced timeout to send a sync command to clients
@@ -109,9 +109,9 @@ export class ConnectedListPlugin extends GlobalPlugin {
         this.syncLastDate = new Date();
 
         // Build a list of anon sessions to send to guests
-        let anonSessions =  Object.values(Session.sessions)
+        const anonSessions =  Object.values(Session.sessions)
             .map(sess => sess.sanitized())
-            .map(sess => ({...sess, user: { ...sess.user, money: 0, right: -1, xp: 0 }}))
+            .map(sess => ({ ...sess, user: { ...sess.user, money: 0, right: -1, xp: 0 } }))
             .sort((a, b) => {
                 if (a.connectionCount === 0 || b.connectionCount === 0) {
                     return b.connectionCount - a.connectionCount;
@@ -120,7 +120,7 @@ export class ConnectedListPlugin extends GlobalPlugin {
             });
 
         // Real session list
-        let realSessions = Object.values(Session.sessions)
+        const realSessions = Object.values(Session.sessions)
             .map(sess => sess.sanitized())
             .sort((a, b) => {
                 if (a.connectionCount === 0 || b.connectionCount === 0) {

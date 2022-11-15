@@ -1,9 +1,9 @@
-import {Connection} from "../../../skychat/Connection";
-import {User} from "../../../skychat/User";
-import {Session} from "../../../skychat/Session";
-import {ConnectedListPlugin} from "./ConnectedListPlugin";
-import {UserController} from "../../../skychat/UserController";
-import {GlobalPlugin} from "../../GlobalPlugin";
+import { Connection } from '../../../skychat/Connection';
+import { User } from '../../../skychat/User';
+import { Session } from '../../../skychat/Session';
+import { ConnectedListPlugin } from './ConnectedListPlugin';
+import { UserController } from '../../../skychat/UserController';
+import { GlobalPlugin } from '../../GlobalPlugin';
 
 
 export class SetRightPlugin extends GlobalPlugin {
@@ -17,8 +17,8 @@ export class SetRightPlugin extends GlobalPlugin {
             minCount: 2,
             maxCount: 2,
             params: [
-                {name: "username", pattern: User.USERNAME_LOGGED_REGEXP},
-                {name: "right", pattern: /^([0-9]+)$/},
+                { name: 'username', pattern: User.USERNAME_LOGGED_REGEXP },
+                { name: 'right', pattern: /^([0-9]+)$/ },
             ]
         }
     };
@@ -26,7 +26,7 @@ export class SetRightPlugin extends GlobalPlugin {
     readonly opOnly = true;
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
-        let [usernameRaw, rightRaw] = param.split(' ');
+        const [usernameRaw, rightRaw] = param.split(' ');
         const identifier = usernameRaw.toLowerCase();
         const right = parseInt(rightRaw);
 

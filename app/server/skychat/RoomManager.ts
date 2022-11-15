@@ -1,18 +1,18 @@
-import * as fs from "fs";
-import * as http from "http";
-import * as iof from "io-filter";
-import { Server } from "./Server";
-import { Connection } from "./Connection";
-import { Session } from "./Session";
-import { DatabaseHelper } from "./DatabaseHelper";
-import { User } from "./User";
-import { Room } from "./Room";
-import { UserController } from "./UserController";
-import { Config } from "./Config";
-import { Message } from "./Message";
-import { GlobalPlugin } from "../plugins/GlobalPlugin";
-import { globalPluginGroup } from "../plugins/GlobalPluginGroup";
-import { MessageFormatter } from "./MessageFormatter";
+import * as fs from 'fs';
+import * as http from 'http';
+import * as iof from 'io-filter';
+import { Server } from './Server';
+import { Connection } from './Connection';
+import { Session } from './Session';
+import { DatabaseHelper } from './DatabaseHelper';
+import { User } from './User';
+import { Room } from './Room';
+import { UserController } from './UserController';
+import { Config } from './Config';
+import { Message } from './Message';
+import { GlobalPlugin } from '../plugins/GlobalPlugin';
+import { globalPluginGroup } from '../plugins/GlobalPluginGroup';
+import { MessageFormatter } from './MessageFormatter';
 
 
 export type StoredSkyChat = {
@@ -31,7 +31,7 @@ export class RoomManager {
 
     private static TICK_INTERVAL: number = 5 * 1000;
 
-    private static CURRENT_GUEST_ID: number = 0;
+    private static CURRENT_GUEST_ID = 0;
 
     private readonly server: Server;
 

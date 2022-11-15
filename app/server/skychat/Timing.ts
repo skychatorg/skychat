@@ -20,11 +20,11 @@ export class Timing {
         const seconds = Math.floor(durationSeconds);
     
         const longNames: any = {
-            'd': {singular: ' day', plural: ' days'},
-            'h': {singular: ' hour', plural: ' hours'},
-            'm': {singular: ' minute', plural: ' minutes'},
-            's': {singular: ' day', plural: ' day'},
-        }
+            'd': { singular: ' day', plural: ' days' },
+            'h': { singular: ' hour', plural: ' hours' },
+            'm': { singular: ' minute', plural: ' minutes' },
+            's': { singular: ' day', plural: ' day' },
+        };
     
         const durations = [
             ['d', days],
@@ -55,5 +55,5 @@ export class Timing {
         return new Promise((resolve) => {
             setTimeout(resolve, delay);
         });
-    };
+    }
 }

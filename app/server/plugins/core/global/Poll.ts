@@ -1,5 +1,5 @@
-import { Room } from "../../../skychat/Room";
-import { Session } from "../../../skychat/Session";
+import { Room } from '../../../skychat/Room';
+import { Session } from '../../../skychat/Session';
 
 
 export type PollState =  'pending' | 'started' | 'finished';
@@ -40,7 +40,7 @@ export type SanitizedPoll = {
 
 export class Poll {
 
-    private static CURRENT_POLL_ID: number = 0;
+    private static CURRENT_POLL_ID = 0;
 
     public readonly id: number;
 
@@ -150,7 +150,7 @@ export class Poll {
             yesCount: yesCount,
             noCount: noCount,
             opVote: this.opVote
-        }
+        };
     }
 
     public sync(): void {

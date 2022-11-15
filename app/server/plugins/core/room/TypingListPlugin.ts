@@ -1,6 +1,6 @@
-import {Connection} from "../../../skychat/Connection";
-import {RoomPlugin} from "../../RoomPlugin";
-import {User} from "../../../skychat/User";
+import { Connection } from '../../../skychat/Connection';
+import { RoomPlugin } from '../../RoomPlugin';
+import { User } from '../../../skychat/User';
 
 
 /**
@@ -16,7 +16,7 @@ export class TypingListPlugin extends RoomPlugin {
         t: {
             minCount: 1,
             maxCount: 1,
-            params: [{name: "action", pattern: /^(on|off|clear)$/}]
+            params: [{ name: 'action', pattern: /^(on|off|clear)$/ }]
         }
     };
 

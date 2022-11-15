@@ -1,17 +1,17 @@
-import { Connection } from "../../skychat/Connection";
-import { GlobalPlugin } from "../GlobalPlugin";
-import { RoomManager } from "../../skychat/RoomManager";
-import { PlayerChannelManager } from "./PlayerChannelManager";
-import { YoutubeFetcher } from "./fetcher/YoutubeFetcher";
-import { PluginCommandRules } from "../Plugin";
-import { IFrameFetcher } from "./fetcher/IFrameFetcher";
-import { VideoFetcher } from "./fetcher/VideoFetcher";
-import { TwitchFetcher } from "./fetcher/TwitchFetcher";
-import { PollPlugin } from "../core/global/PollPlugin";
-import { SanitizedPlayerChannel } from "./PlayerChannel";
-import { Session } from "../../skychat/Session";
-import { Config } from "../../skychat/Config";
-import { GalleryFetcher } from "./fetcher/GalleryFetcher";
+import { Connection } from '../../skychat/Connection';
+import { GlobalPlugin } from '../GlobalPlugin';
+import { RoomManager } from '../../skychat/RoomManager';
+import { PlayerChannelManager } from './PlayerChannelManager';
+import { YoutubeFetcher } from './fetcher/YoutubeFetcher';
+import { PluginCommandRules } from '../Plugin';
+import { IFrameFetcher } from './fetcher/IFrameFetcher';
+import { VideoFetcher } from './fetcher/VideoFetcher';
+import { TwitchFetcher } from './fetcher/TwitchFetcher';
+import { PollPlugin } from '../core/global/PollPlugin';
+import { SanitizedPlayerChannel } from './PlayerChannel';
+import { Session } from '../../skychat/Session';
+import { Config } from '../../skychat/Config';
+import { GalleryFetcher } from './fetcher/GalleryFetcher';
 
 
 
@@ -46,14 +46,14 @@ export class PlayerPlugin extends GlobalPlugin {
             minCount: 1,
             maxCount: 1,
             maxCallsPer10Seconds: 10,
-            params: [{name: 'action', pattern: /^(replay30|skip30|list|skip|flush)$/}]
+            params: [{ name: 'action', pattern: /^(replay30|skip30|list|skip|flush)$/ }]
         },
         playerchannelmanage: {
             minCount: 1,
             maxCallsPer10Seconds: 14,
             params: [
-                {name: 'action', pattern: /^(create|delete|rename)$/},
-                {name: 'param', pattern: /./},
+                { name: 'action', pattern: /^(create|delete|rename)$/ },
+                { name: 'param', pattern: /./ },
             ]
         },
         playerchannel: {
@@ -61,8 +61,8 @@ export class PlayerPlugin extends GlobalPlugin {
             maxCount: 2,
             maxCallsPer10Seconds: 14,
             params: [
-                {name: 'action', pattern: /^(join|leave)$/},
-                {name: 'id', pattern: /^([0-9]+)$/},
+                { name: 'action', pattern: /^(join|leave)$/ },
+                { name: 'id', pattern: /^([0-9]+)$/ },
             ]
         },
         playersync: {
@@ -75,9 +75,9 @@ export class PlayerPlugin extends GlobalPlugin {
             coolDown: 500,
             maxCallsPer10Seconds: 5,
             params: [
-                {name: 'param', pattern: new RegExp(`^${Object.keys(PlayerPlugin.FETCHERS).join('|')}$`)},
-                {name: 'type', pattern: /./},
-                {name: 'search', pattern: /./},
+                { name: 'param', pattern: new RegExp(`^${Object.keys(PlayerPlugin.FETCHERS).join('|')}$`) },
+                { name: 'type', pattern: /./ },
+                { name: 'search', pattern: /./ },
             ]
         },
         playerremovevideo: {
@@ -127,7 +127,7 @@ export class PlayerPlugin extends GlobalPlugin {
                 minCount: 1,
                 maxCallsPer10Seconds: 10,
                 params: [
-                    {name: 'action', pattern: /./},
+                    { name: 'action', pattern: /./ },
                 ]
             };
         }
@@ -163,40 +163,40 @@ export class PlayerPlugin extends GlobalPlugin {
 
         switch (alias) {
 
-            case 'player':
-                await this.handlePlayer(param, connection);
-                break;
+        case 'player':
+            await this.handlePlayer(param, connection);
+            break;
 
-            case 'playerchannel':
-                await this.handlePlayerChannel(param, connection);
-                break;
+        case 'playerchannel':
+            await this.handlePlayerChannel(param, connection);
+            break;
 
-            case 'playerchannelmanage':
-                await this.handlePlayerChannelManage(param, connection);
-                break;
+        case 'playerchannelmanage':
+            await this.handlePlayerChannelManage(param, connection);
+            break;
 
-            case 'playersync':
-                await this.handlePlayerSync(param, connection);
-                break;
+        case 'playersync':
+            await this.handlePlayerSync(param, connection);
+            break;
 
-            case 'playersearch':
-                await this.handlePlayerSearch(param, connection);
-                break;
+        case 'playersearch':
+            await this.handlePlayerSearch(param, connection);
+            break;
 
-            case 'playerremovevideo':
-                await this.handlePlayerRemoveVideo(param, connection);
-                break;
+        case 'playerremovevideo':
+            await this.handlePlayerRemoveVideo(param, connection);
+            break;
 
-            case 'schedule':
-                await this.handlePlayerSchedule(param, connection);
-                break;
+        case 'schedule':
+            await this.handlePlayerSchedule(param, connection);
+            break;
 
-            case 'unschedule':
-                await this.handlePlayerUnschedule(param, connection);
-                break;
+        case 'unschedule':
+            await this.handlePlayerUnschedule(param, connection);
+            break;
             
-            default:
-                throw new Error('Unsupported action');
+        default:
+            throw new Error('Unsupported action');
         }
     }
 
@@ -464,57 +464,57 @@ export class PlayerPlugin extends GlobalPlugin {
 
         switch (param) {
 
-            case 'replay30':
-                if (! channel.hasPlayerPermission(connection.session)) {
-                    throw new Error('You are not authorized to modify the player right now');
-                }
-                channel.moveCursor(- 30 * 1000);
-                break;
-            
-            case 'skip30':
-                if (! channel.hasPlayerPermission(connection.session)) {
-                    throw new Error('You are not authorized to modify the player right now');
-                }
-                channel.moveCursor(+ 30 * 1000);
-                break;
-
-            case 'skip':
-                // If user has player permission, skip directly
-                if (channel.hasPlayerPermission(connection.session)) {
-                    channel.skip();
-                    return;
-                }
-                // Has user permission to voteskip?
-                if (! this.canAddMedia(connection.session)) {
-                    throw new Error('You are not authorized to perform this action');
-                }
-                // Vote skip
-                const pollPlugin = this.manager.getPlugin('poll') as PollPlugin;
-                const playerData = channel.getPlayerData();
-                if (pollPlugin && playerData.current) {
-                    const poll = await pollPlugin.poll(
-                        `${channel.name}: Skip media?`,
-                        `${connection.session.identifier} wants to skip ${playerData.current.video.title}. Skip media?`,
-                        {
-                            audience: channel.sessions,
-                            defaultValue: false,
-                            timeout: 10 * 1000,
-                            minVotes: 2,
-                        }
-                    );
-                    if (poll.getResult()) {
-                        channel.skip();
-                    }
-                    return;
-                }
+        case 'replay30':
+            if (! channel.hasPlayerPermission(connection.session)) {
                 throw new Error('You are not authorized to modify the player right now');
+            }
+            channel.moveCursor(- 30 * 1000);
+            break;
+            
+        case 'skip30':
+            if (! channel.hasPlayerPermission(connection.session)) {
+                throw new Error('You are not authorized to modify the player right now');
+            }
+            channel.moveCursor(+ 30 * 1000);
+            break;
 
-            case 'flush':
-                if (! connection.session.isOP()) {
-                    throw new Error('Only OP can flush the queue');
+        case 'skip':
+            // If user has player permission, skip directly
+            if (channel.hasPlayerPermission(connection.session)) {
+                channel.skip();
+                return;
+            }
+            // Has user permission to voteskip?
+            if (! this.canAddMedia(connection.session)) {
+                throw new Error('You are not authorized to perform this action');
+            }
+            // Vote skip
+            const pollPlugin = this.manager.getPlugin('poll') as PollPlugin;
+            const playerData = channel.getPlayerData();
+            if (pollPlugin && playerData.current) {
+                const poll = await pollPlugin.poll(
+                    `${channel.name}: Skip media?`,
+                    `${connection.session.identifier} wants to skip ${playerData.current.video.title}. Skip media?`,
+                    {
+                        audience: channel.sessions,
+                        defaultValue: false,
+                        timeout: 10 * 1000,
+                        minVotes: 2,
+                    }
+                );
+                if (poll.getResult()) {
+                    channel.skip();
                 }
-                channel.flushQueue();
-                break;
+                return;
+            }
+            throw new Error('You are not authorized to modify the player right now');
+
+        case 'flush':
+            if (! connection.session.isOP()) {
+                throw new Error('Only OP can flush the queue');
+            }
+            channel.flushQueue();
+            break;
         }
     }
 

@@ -1,12 +1,12 @@
-import * as geoip from "geoip-lite";
-import * as striptags from "striptags";
-import { Connection } from "../../../skychat/Connection";
-import { User } from "../../../skychat/User";
-import { Session } from "../../../skychat/Session";
-import { UserController } from "../../../skychat/UserController";
-import { MessageFormatter } from "../../../skychat/MessageFormatter";
-import { GlobalPlugin } from "../../GlobalPlugin";
-import { Config } from "../../../skychat/Config";
+import * as geoip from 'geoip-lite';
+import * as striptags from 'striptags';
+import { Connection } from '../../../skychat/Connection';
+import { User } from '../../../skychat/User';
+import { Session } from '../../../skychat/Session';
+import { UserController } from '../../../skychat/UserController';
+import { MessageFormatter } from '../../../skychat/MessageFormatter';
+import { GlobalPlugin } from '../../GlobalPlugin';
+import { Config } from '../../../skychat/Config';
 
 
 export class IpPlugin extends GlobalPlugin {
@@ -22,7 +22,7 @@ export class IpPlugin extends GlobalPlugin {
             coolDown: 1000,
             minCount: 0,
             maxCount: 1,
-            params: [{name: 'username', pattern: User.USERNAME_REGEXP}]
+            params: [{ name: 'username', pattern: User.USERNAME_REGEXP }]
         },
     };
 
@@ -46,7 +46,7 @@ export class IpPlugin extends GlobalPlugin {
         }
 
         // Build table containing the ips
-        let content = `<table class="skychat-table">`;
+        let content = '<table class="skychat-table">';
         content += `
             <tr>
                 <th>room</th>
@@ -60,7 +60,7 @@ export class IpPlugin extends GlobalPlugin {
         for (const connection of connections) {
             const roomId = connection.room ? connection.room.id : 'none';
             const geoIp: geoip.Lookup | null = geoip.lookup(connection.ip);
-            const geoIpLink = geoIp ? `https://www.google.com/maps/place/${geoIp.ll[0]},%20${geoIp.ll[1]}` : ``;
+            const geoIpLink = geoIp ? `https://www.google.com/maps/place/${geoIp.ll[0]},%20${geoIp.ll[1]}` : '';
             content += `
                 <tr>
                     <td>${roomId}</td>
@@ -77,10 +77,10 @@ export class IpPlugin extends GlobalPlugin {
                     <td>${geoIp ? `<a class="skychat-link" href="${geoIpLink}" rel="nofollow" target="_blank">${geoIp.country + ' / ' + geoIp.city}</a>` : ''}</td>
                 </tr>`;
         }
-        content += `</table>`;
+        content += '</table>';
 
         // Send the message
-        const message = UserController.createNeutralMessage({content: '', room: connection.roomId, id: 0});
+        const message = UserController.createNeutralMessage({ content: '', room: connection.roomId, id: 0 });
         message.edit(striptags(content), content);
         connection.send('message', message.sanitized());
     }

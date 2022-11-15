@@ -1,8 +1,8 @@
-import { GalleryPlugin } from "../../gallery/GalleryPlugin";
-import { Gallery } from "../../gallery/Gallery";
-import { VideoInfo } from "../PlayerChannel";
-import { PlayerPlugin } from "../PlayerPlugin";
-import { VideoFetcher } from "./VideoFetcher";
+import { GalleryPlugin } from '../../gallery/GalleryPlugin';
+import { Gallery } from '../../gallery/Gallery';
+import { VideoInfo } from '../PlayerChannel';
+import { PlayerPlugin } from '../PlayerPlugin';
+import { VideoFetcher } from './VideoFetcher';
 
 
 
@@ -44,6 +44,6 @@ export class GalleryFetcher implements VideoFetcher {
      * @override
      */
     search(playerPlugin: PlayerPlugin, type: string, search: string, limit: number): Promise<VideoInfo[]> {
-        throw new Error("Method not implemented.");
+        throw new Error('Method not implemented.');
     }
 }

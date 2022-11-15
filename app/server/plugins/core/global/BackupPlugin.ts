@@ -1,7 +1,7 @@
-import {Connection} from "../../../skychat/Connection";
-import {GlobalPlugin} from "../../GlobalPlugin";
-import { UserController } from "../../../skychat/UserController";
-import {exec} from 'child_process';
+import { Connection } from '../../../skychat/Connection';
+import { GlobalPlugin } from '../../GlobalPlugin';
+import { UserController } from '../../../skychat/UserController';
+import { exec } from 'child_process';
 
 
 export class BackupPlugin extends GlobalPlugin {
@@ -20,7 +20,7 @@ export class BackupPlugin extends GlobalPlugin {
 
         const filePath = await this.makeBackup();
         const content = `Backup created: ${filePath}`;
-        const message = UserController.createNeutralMessage({content, id: 0,});
+        const message = UserController.createNeutralMessage({ content, id: 0, });
         connection.send('message', message.sanitized());
     }
 

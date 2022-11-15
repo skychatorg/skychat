@@ -1,5 +1,5 @@
-import * as sqlite from "sqlite";
-import * as sqlite3 from "sqlite3";
+import * as sqlite from 'sqlite';
+import * as sqlite3 from 'sqlite3';
 
 
 const INSTALL_QUERY = `

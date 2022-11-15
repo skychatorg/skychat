@@ -1,5 +1,5 @@
-import * as crypto from "crypto";
-const biguint = require("biguint-format");
+import * as crypto from 'crypto';
+const biguint = require('biguint-format');
 
 
 export class RandomGenerator {

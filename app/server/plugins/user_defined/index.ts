@@ -1,1 +1,1 @@
-export { UserDefinedPluginGroup } from "./UserDefinedPluginGroup";
+export { UserDefinedPluginGroup } from './UserDefinedPluginGroup';

@@ -4,8 +4,8 @@ import { createRouter, createWebHashHistory } from 'vue-router';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import mousetrap from 'mousetrap';
 
-import Toast from "vue-toastification";
-import "vue-toastification/dist/index.css";
+import Toast from 'vue-toastification';
+import 'vue-toastification/dist/index.css';
 
 import App from './App.vue';
 import Home from '@/views/Home.vue';
@@ -35,7 +35,7 @@ import './css/index.css';
     appStore.init();
 
     // Font Awesome
-    app.component('fa', FontAwesomeIcon)
+    app.component('fa', FontAwesomeIcon);
     
     // Use router
     app.use(router);

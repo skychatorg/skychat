@@ -1,16 +1,16 @@
-import * as fs from "fs";
-import SQL from "sql-template-strings";
-import { Connection } from "./Connection";
-import { IBroadcaster } from "./IBroadcaster";
-import { Message, MessageConstructorOptions } from "./Message";
-import { Plugin } from "../plugins/Plugin";
-import { DatabaseHelper } from "./DatabaseHelper";
-import { MessageController } from "./MessageController";
-import { RoomManager } from "./RoomManager";
-import { RoomPlugin } from "../plugins/RoomPlugin";
-import { Session } from "./Session";
-import { CorePluginGroup } from "../plugins";
-import { globalPluginGroup } from "../plugins/GlobalPluginGroup";
+import * as fs from 'fs';
+import SQL from 'sql-template-strings';
+import { Connection } from './Connection';
+import { IBroadcaster } from './IBroadcaster';
+import { Message, MessageConstructorOptions } from './Message';
+import { Plugin } from '../plugins/Plugin';
+import { DatabaseHelper } from './DatabaseHelper';
+import { MessageController } from './MessageController';
+import { RoomManager } from './RoomManager';
+import { RoomPlugin } from '../plugins/RoomPlugin';
+import { Session } from './Session';
+import { CorePluginGroup } from '../plugins';
+import { globalPluginGroup } from '../plugins/GlobalPluginGroup';
 
 
 export type StoredRoom = {
@@ -46,7 +46,7 @@ export class Room implements IBroadcaster {
     /**
      * Current global room id
      */
-    static CURRENT_ID: number = 1;
+    static CURRENT_ID = 1;
 
     /**
      * Number of messages kept in memory
@@ -230,10 +230,10 @@ export class Room implements IBroadcaster {
      */
     public async loadLastMessagesFromDB(): Promise<void> {
         this.messages = (await MessageController.getMessages(
-                ['room_id', '=', this.id],
-                'id DESC',
-                Room.MESSAGE_HISTORY_LENGTH
-            )).sort((m1, m2) => m1.id - m2.id);
+            ['room_id', '=', this.id],
+            'id DESC',
+            Room.MESSAGE_HISTORY_LENGTH
+        )).sort((m1, m2) => m1.id - m2.id);
     }
 
     /**
@@ -316,7 +316,7 @@ export class Room implements IBroadcaster {
      * Execute before room join hook
      * @param connection
      */
-     public async executeBeforeConnectionJoinedRoom(connection: Connection): Promise<void> {
+    public async executeBeforeConnectionJoinedRoom(connection: Connection): Promise<void> {
         for (const plugin of this.plugins) {
             await plugin.onBeforeConnectionJoinedRoom(connection);
         }
@@ -389,7 +389,7 @@ export class Room implements IBroadcaster {
         if (options.connection) {
             options.meta.device = options.connection.device;
         }
-        if (typeof options.room === "undefined") {
+        if (typeof options.room === 'undefined') {
             options.room = this.id;
         }
         if (options.room !== this.id) {
@@ -416,7 +416,7 @@ export class Room implements IBroadcaster {
      */
     public clearHistory(): void {
         this.messages.forEach(message => {
-            message.edit('deleted', `<s>deleted</s>`);
+            message.edit('deleted', '<s>deleted</s>');
             this.send('message-edit', message.sanitized());
         });
     }

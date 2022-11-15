@@ -1,5 +1,5 @@
-import {Connection} from "../../../skychat/Connection";
-import {GlobalPlugin} from "../../GlobalPlugin";
+import { Connection } from '../../../skychat/Connection';
+import { GlobalPlugin } from '../../GlobalPlugin';
 
 
 export class VoidPlugin extends GlobalPlugin {

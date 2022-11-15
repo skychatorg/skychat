@@ -1,8 +1,8 @@
-import { Connection } from "../../skychat/Connection";
-import { GlobalPlugin } from "../GlobalPlugin";
-import { PlayerPlugin } from "./PlayerPlugin";
-import { PluginCommandRules } from "../Plugin";
-import { YoutubeFetcher } from "./fetcher/YoutubeFetcher";
+import { Connection } from '../../skychat/Connection';
+import { GlobalPlugin } from '../GlobalPlugin';
+import { PlayerPlugin } from './PlayerPlugin';
+import { PluginCommandRules } from '../Plugin';
+import { YoutubeFetcher } from './fetcher/YoutubeFetcher';
 
 
 
@@ -17,7 +17,7 @@ export class YoutubeSearchAndPlayPlugin extends GlobalPlugin {
         '#': {
             minCount: 1,
             maxCallsPer10Seconds: 2,
-            params: [{name: 'search', pattern: /./}]
+            params: [{ name: 'search', pattern: /./ }]
         },
     };
     

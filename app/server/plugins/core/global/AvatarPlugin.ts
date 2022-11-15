@@ -1,11 +1,11 @@
-import {Connection} from "../../../skychat/Connection";
-import {ConnectedListPlugin} from "./ConnectedListPlugin";
-import {Config} from "../../../skychat/Config";
-import {UserController} from "../../../skychat/UserController";
+import { Connection } from '../../../skychat/Connection';
+import { ConnectedListPlugin } from './ConnectedListPlugin';
+import { Config } from '../../../skychat/Config';
+import { UserController } from '../../../skychat/UserController';
 import * as fs from 'fs';
-import { FileManager } from "../../../skychat/FileManager";
-import { Server } from "../../../skychat/Server";
-import { GlobalPlugin } from "../../GlobalPlugin";
+import { FileManager } from '../../../skychat/FileManager';
+import { Server } from '../../../skychat/Server';
+import { GlobalPlugin } from '../../GlobalPlugin';
 
 
 export class AvatarPlugin extends GlobalPlugin {

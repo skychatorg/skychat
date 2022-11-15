@@ -1,8 +1,8 @@
-import {Connection} from "../../../skychat/Connection";
-import {GlobalPlugin} from "../../GlobalPlugin";
-import {Session} from "../../../skychat/Session";
-import {User} from "../../../skychat/User";
-import { Config } from "../../../skychat/Config";
+import { Connection } from '../../../skychat/Connection';
+import { GlobalPlugin } from '../../GlobalPlugin';
+import { Session } from '../../../skychat/Session';
+import { User } from '../../../skychat/User';
+import { Config } from '../../../skychat/Config';
 
 
 export class PrivateMessagePlugin extends GlobalPlugin {
@@ -16,7 +16,7 @@ export class PrivateMessagePlugin extends GlobalPlugin {
             minCount: 1,
             maxCount: 1,
             maxCallsPer10Seconds: 1,
-            params: [{name: 'username', pattern: User.USERNAME_REGEXP}]
+            params: [{ name: 'username', pattern: User.USERNAME_REGEXP }]
         }
     };
 

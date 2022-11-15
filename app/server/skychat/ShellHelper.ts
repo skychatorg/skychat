@@ -9,7 +9,7 @@ export class ShellHelper {
                 if (err) {
                     reject(new Error(stdout));
                 } else {
-                    resolve({stdout, stderr});
+                    resolve({ stdout, stderr });
                 }
             });
         });

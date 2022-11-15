@@ -1,10 +1,10 @@
-import * as fileUpload from "express-fileupload";
+import * as fileUpload from 'express-fileupload';
 import * as fs from 'fs';
 const { exec } = require('child_process');
-import {RandomGenerator} from "./RandomGenerator";
-import {MessageFormatter} from "./MessageFormatter";
-import {Config} from "./Config";
-import { ShellHelper } from "./ShellHelper";
+import { RandomGenerator } from './RandomGenerator';
+import { MessageFormatter } from './MessageFormatter';
+import { Config } from './Config';
+import { ShellHelper } from './ShellHelper';
 
 
 export class FileManager {
@@ -74,7 +74,7 @@ export class FileManager {
      */
     static async getVideoDuration(path: string): Promise<number> {
         const cmd = `ffprobe -v error -show_format -show_streams ${path} | grep 'duration=' | grep -v 'N/A' | head -n 1 | cut -d'=' -f2`;
-        const {stdout, stderr} = await ShellHelper.exec(cmd);
+        const { stdout, stderr } = await ShellHelper.exec(cmd);
         return parseFloat(stdout.trim()) * 1000;
     }
 

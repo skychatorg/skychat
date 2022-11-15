@@ -1,12 +1,12 @@
-import {Connection} from "../../../skychat/Connection";
-import {GlobalPlugin} from "../../GlobalPlugin";
-import {ConnectedListPlugin} from "../../core/global/ConnectedListPlugin";
-import {UserController} from "../../../skychat/UserController";
+import { Connection } from '../../../skychat/Connection';
+import { GlobalPlugin } from '../../GlobalPlugin';
+import { ConnectedListPlugin } from '../../core/global/ConnectedListPlugin';
+import { UserController } from '../../../skychat/UserController';
 
 
 export class MottoPlugin extends GlobalPlugin {
 
-    private static MOTTO_MAX_LENGTH: number = 64;
+    private static MOTTO_MAX_LENGTH = 64;
 
     static readonly commandName = 'motto';
 

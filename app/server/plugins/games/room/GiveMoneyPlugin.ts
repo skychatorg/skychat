@@ -1,9 +1,9 @@
-import { Connection } from "../../../skychat/Connection";
-import { RoomPlugin } from "../../RoomPlugin";
-import { Session } from "../../../skychat/Session";
-import { User } from "../../../skychat/User";
-import { ConnectedListPlugin } from "../../core/global/ConnectedListPlugin";
-import { UserController } from "../../../skychat/UserController";
+import { Connection } from '../../../skychat/Connection';
+import { RoomPlugin } from '../../RoomPlugin';
+import { Session } from '../../../skychat/Session';
+import { User } from '../../../skychat/User';
+import { ConnectedListPlugin } from '../../core/global/ConnectedListPlugin';
+import { UserController } from '../../../skychat/UserController';
 
 
 export class GiveMoneyPlugin extends RoomPlugin {
@@ -21,7 +21,7 @@ export class GiveMoneyPlugin extends RoomPlugin {
             minCount: 2,
             maxCount: 2,
             coolDown: 100,
-            params: [{name: 'username', pattern: User.USERNAME_REGEXP}, {name: 'amount', pattern: /^([0-9]+)$/}]
+            params: [{ name: 'username', pattern: User.USERNAME_REGEXP }, { name: 'amount', pattern: /^([0-9]+)$/ }]
         }
     };
 

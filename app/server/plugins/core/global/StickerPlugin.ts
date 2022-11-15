@@ -1,10 +1,10 @@
-import {Connection} from "../../../skychat/Connection";
-import {GlobalPlugin} from "../../GlobalPlugin";
-import {Server} from "../../../skychat/Server";
-import { FileManager } from "../../../skychat/FileManager";
-import * as fs from "fs";
-import { Config } from "../../../skychat/Config";
-import { StickerManager } from "../../../skychat/StickerManager";
+import { Connection } from '../../../skychat/Connection';
+import { GlobalPlugin } from '../../GlobalPlugin';
+import { Server } from '../../../skychat/Server';
+import { FileManager } from '../../../skychat/FileManager';
+import * as fs from 'fs';
+import { Config } from '../../../skychat/Config';
+import { StickerManager } from '../../../skychat/StickerManager';
 
 
 export class StickerPlugin extends GlobalPlugin {
@@ -21,15 +21,15 @@ export class StickerPlugin extends GlobalPlugin {
             minCount: 2,
             maxCount: 2,
             params: [
-                {name: 'code', pattern: StickerManager.STICKER_CODE_REGEXP},
-                {name: 'url', pattern: Server.UPLOADED_FILE_REGEXP}
+                { name: 'code', pattern: StickerManager.STICKER_CODE_REGEXP },
+                { name: 'url', pattern: Server.UPLOADED_FILE_REGEXP }
             ]
         },
         stickerdel: {
             minCount: 1,
             maxCount: 1,
             params: [
-                {name: 'code', pattern: StickerManager.STICKER_CODE_REGEXP},
+                { name: 'code', pattern: StickerManager.STICKER_CODE_REGEXP },
             ]
         }
     };
@@ -59,7 +59,7 @@ export class StickerPlugin extends GlobalPlugin {
      * @param connection
      */
     private async handleStickerAdd(param: string, connection: Connection): Promise<void> {
-        let [code, url] = param.split(' ');
+        const [code, url] = param.split(' ');
         if (! FileManager.isFileUrlUploaded(url)) {
             throw new Error('Given sticker is not an uploaded image');
         }

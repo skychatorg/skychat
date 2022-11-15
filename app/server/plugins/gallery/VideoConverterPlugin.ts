@@ -1,12 +1,12 @@
 const util = require('util');
 const exec = util.promisify(require('node:child_process').exec);
 import { spawn } from 'child_process';
-import { Config } from "../../skychat/Config";
-import { Connection } from "../../skychat/Connection";
-import { FileManager } from "../../skychat/FileManager";
+import { Config } from '../../skychat/Config';
+import { Connection } from '../../skychat/Connection';
+import { FileManager } from '../../skychat/FileManager';
 import { Session } from '../../skychat/Session';
-import { GlobalPlugin } from "../GlobalPlugin";
-import { Gallery } from "./Gallery";
+import { GlobalPlugin } from '../GlobalPlugin';
+import { Gallery } from './Gallery';
 
 
 export type VideoStreamInfo = Array<{
@@ -49,22 +49,22 @@ export class VideoConverterPlugin extends GlobalPlugin {
             minCount: 1,
             maxCount: 1,
             params: [
-                { name: "file path", pattern: Gallery.FILE_PATH_REGEX },
+                { name: 'file path', pattern: Gallery.FILE_PATH_REGEX },
             ]
         },
         convert: {
             minCount: 2,
             maxCount: 2,
             params: [
-                { name: "file path", pattern: Gallery.FILE_PATH_REGEX },
-                { name: "streams", pattern: /^\d+(,\d+)*$/ },
+                { name: 'file path', pattern: Gallery.FILE_PATH_REGEX },
+                { name: 'streams', pattern: /^\d+(,\d+)*$/ },
             ]
         },
         convertlist: {
             minCount: 0,
             maxCount: 0,
         },
-    }
+    };
 
     /**
      * Converts in progress
@@ -74,22 +74,22 @@ export class VideoConverterPlugin extends GlobalPlugin {
     async run(alias: string, param: string, connection: Connection): Promise<void> {
         
         switch (alias) {
-            case 'convertinfo':
-                await this.runConvertInfo(param, connection);
-                break;
+        case 'convertinfo':
+            await this.runConvertInfo(param, connection);
+            break;
             
-            case 'convert':
-                const filePath = param.split(' ')[0];
-                const streamIndexes = param.split(' ')[1].split(',').map((index: string) => parseInt(index));
-                await this.runConvert(filePath, streamIndexes, connection);
-                break;
+        case 'convert':
+            const filePath = param.split(' ')[0];
+            const streamIndexes = param.split(' ')[1].split(',').map((index: string) => parseInt(index));
+            await this.runConvert(filePath, streamIndexes, connection);
+            break;
             
-            case 'convertlist':
-                await this.runConvertList(connection);
-                break;
+        case 'convertlist':
+            await this.runConvertList(connection);
+            break;
 
-            default:
-                throw new Error(`Unknown alias ${alias}`);
+        default:
+            throw new Error(`Unknown alias ${alias}`);
         }
     }
 

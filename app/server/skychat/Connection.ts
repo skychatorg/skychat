@@ -1,12 +1,12 @@
 
-import * as WebSocket from "ws";
-import * as http from "http";
-import { UAParser } from "ua-parser-js";
-import { Data } from "ws";
-import { EventEmitter } from "events";
-import { Room } from "./Room";
-import { Session } from "./Session";
-import { IBroadcaster } from "./IBroadcaster";
+import * as WebSocket from 'ws';
+import * as http from 'http';
+import { UAParser } from 'ua-parser-js';
+import { Data } from 'ws';
+import { EventEmitter } from 'events';
+import { Room } from './Room';
+import { Session } from './Session';
+import { IBroadcaster } from './IBroadcaster';
 
 
 
@@ -55,7 +55,7 @@ export class Connection extends EventEmitter implements IBroadcaster {
         this.webSocket = webSocket;
         this.request = request;
 
-        const ua = new UAParser(request.headers["user-agent"]);
+        const ua = new UAParser(request.headers['user-agent']);
         this.origin = typeof request.headers['origin'] === 'string' ? request.headers['origin'] : '';
         this.userAgent = ua.getBrowser().name || '';
         this.device = ua.getDevice().type || '';
@@ -183,7 +183,7 @@ export class Connection extends EventEmitter implements IBroadcaster {
      * @param error 
      */
     private async onError(error: Error): Promise<void> {
-        console.error(`WebSocket error`, this, error);
+        console.error('WebSocket error', this, error);
     }
 
     /**

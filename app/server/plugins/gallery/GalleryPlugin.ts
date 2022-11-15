@@ -1,8 +1,8 @@
-import { Config } from "../../skychat/Config";
-import { Connection } from "../../skychat/Connection";
-import { GlobalPlugin } from "../GlobalPlugin";
-import { Session } from "../../skychat/Session";
-import { Gallery } from "./Gallery";
+import { Config } from '../../skychat/Config';
+import { Connection } from '../../skychat/Connection';
+import { GlobalPlugin } from '../GlobalPlugin';
+import { Session } from '../../skychat/Session';
+import { Gallery } from './Gallery';
 
 
 /**
@@ -27,34 +27,34 @@ export class GalleryPlugin extends GlobalPlugin {
             minCount: 0,
             maxCount: 1,
             params: [
-                { name: "path", pattern: Gallery.FOLDER_PATH_REGEX },
+                { name: 'path', pattern: Gallery.FOLDER_PATH_REGEX },
             ]
         },
         galleryrm: {
             minCount: 1,
             maxCount: 1,
             params: [
-                { name: "path", pattern: Gallery.FILE_PATH_REGEX },
+                { name: 'path', pattern: Gallery.FILE_PATH_REGEX },
             ]
         },
-    }
+    };
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
         
         switch (alias) {
-            case 'galleryls':
-                connection.send('gallery', await Gallery.ls(param));
-                break;
+        case 'galleryls':
+            connection.send('gallery', await Gallery.ls(param));
+            break;
 
-            case 'galleryrm':
-                if (! Gallery.canDelete(connection.session)) {
-                    throw new Error('You do not have the permission to delete files');
-                }
-                connection.send('gallery', await Gallery.rm(param));
-                break;
+        case 'galleryrm':
+            if (! Gallery.canDelete(connection.session)) {
+                throw new Error('You do not have the permission to delete files');
+            }
+            connection.send('gallery', await Gallery.rm(param));
+            break;
 
-            default:
-                throw new Error(`Unknown alias ${alias}`);
+        default:
+            throw new Error(`Unknown alias ${alias}`);
         }
     }
 

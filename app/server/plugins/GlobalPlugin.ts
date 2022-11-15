@@ -1,6 +1,6 @@
-import { Connection } from "../skychat/Connection";
-import { Plugin } from "./Plugin";
-import { RoomManager } from "../skychat/RoomManager";
+import { Connection } from '../skychat/Connection';
+import { Plugin } from './Plugin';
+import { RoomManager } from '../skychat/RoomManager';
 
 
 /**
@@ -73,7 +73,7 @@ export abstract class GlobalPlugin extends Plugin {
 /**
  * Defines default constructor for a global plugin (required for TypeScript)
  */
- export interface GlobalPluginConstructor {
+export interface GlobalPluginConstructor {
     new (manager: RoomManager): GlobalPlugin;
     commandName: string;
     commandAliases: string[]

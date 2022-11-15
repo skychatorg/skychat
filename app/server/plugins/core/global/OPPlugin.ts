@@ -1,7 +1,7 @@
-import { Config } from "../../../skychat/Config";
-import { Connection } from "../../../skychat/Connection";
-import { GlobalPlugin } from "../../GlobalPlugin";
-import { UserController } from "../../../skychat/UserController";
+import { Config } from '../../../skychat/Config';
+import { Connection } from '../../../skychat/Connection';
+import { GlobalPlugin } from '../../GlobalPlugin';
+import { UserController } from '../../../skychat/UserController';
 
 
 export class OPPlugin extends GlobalPlugin {

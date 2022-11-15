@@ -1,10 +1,10 @@
-import { RoomPlugin } from "../../RoomPlugin";
-import { Connection } from "../../../skychat/Connection";
-import { Message } from "../../../skychat/Message";
-import { Room } from "../../../skychat/Room";
-import { Config } from "../../../skychat/Config";
-import { StickerManager } from "../../../skychat/StickerManager";
-import { User } from "../../../skychat/User";
+import { RoomPlugin } from '../../RoomPlugin';
+import { Connection } from '../../../skychat/Connection';
+import { Message } from '../../../skychat/Message';
+import { Room } from '../../../skychat/Room';
+import { Config } from '../../../skychat/Config';
+import { StickerManager } from '../../../skychat/StickerManager';
+import { User } from '../../../skychat/User';
 
 
 export class MessageHistoryPlugin extends RoomPlugin {

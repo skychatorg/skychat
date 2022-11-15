@@ -1,6 +1,6 @@
-import { EventEmitter } from "events";
-import { BinaryMessageTypes } from "./BinaryMessageTypes";
-import { PublicConfig, CustomizationElements, SanitizedMessage, SanitizedUser, AuthToken, SanitizedSession, SanitizedRoom, SanitizedPoll, SanitizedPlayerChannel, VideoInfo, QueuedVideoInfo, FolderContent, VideoStreamInfo, OngoingConvert } from "../server";
+import { EventEmitter } from 'events';
+import { BinaryMessageTypes } from './BinaryMessageTypes';
+import { PublicConfig, CustomizationElements, SanitizedMessage, SanitizedUser, AuthToken, SanitizedSession, SanitizedRoom, SanitizedPoll, SanitizedPlayerChannel, VideoInfo, QueuedVideoInfo, FolderContent, VideoStreamInfo, OngoingConvert } from '../server';
 
 
 const defaultUser: SanitizedUser = {
@@ -75,7 +75,7 @@ export class SkyChatClient extends EventEmitter {
     private _polls: { [id: number]: SanitizedPoll } = {};
     private _cursors: { [identifier: string]: { date: Date, cursor: { x: number, y: number, user: SanitizedUser } } } = {};
     private _roll: { state: boolean } = { state: false };
-    private _op: boolean = false;
+    private _op = false;
     private _files: Array<string> = [];
     private _file: { filePath: string, content: string } | null = null;
     private _gallery: FolderContent | null = null;
@@ -520,30 +520,30 @@ export class SkyChatClient extends EventEmitter {
 
             switch (messageType) {
 
-                // Audio
-                case BinaryMessageTypes.AUDIO:
-                    const messageId = view.getUint32(2, true);
-                    const audioBlob = message.data.slice(6);
-                    this.emit('audio', { id: messageId, blob: audioBlob });
-                    break;
+            // Audio
+            case BinaryMessageTypes.AUDIO:
+                const messageId = view.getUint32(2, true);
+                const audioBlob = message.data.slice(6);
+                this.emit('audio', { id: messageId, blob: audioBlob });
+                break;
                 
                 // Cursor
-                case BinaryMessageTypes.CURSOR:
-                    const id = view.getUint32(2, true);
-                    const x = view.getFloat32(6, true);
-                    const y = view.getFloat32(10, true);
-                    const entry = this._connectedList.find(entry => entry.user.id === id);
-                    this.emit('cursor', {
-                        user: entry ? entry.user : defaultUser,
-                        x,
-                        y,
-                    });
-                    break;
+            case BinaryMessageTypes.CURSOR:
+                const id = view.getUint32(2, true);
+                const x = view.getFloat32(6, true);
+                const y = view.getFloat32(10, true);
+                const entry = this._connectedList.find(entry => entry.user.id === id);
+                this.emit('cursor', {
+                    user: entry ? entry.user : defaultUser,
+                    x,
+                    y,
+                });
+                break;
                 
                 // Unknown
-                default:
-                    console.warn(`Unknown message type: ${messageType}`);
-                    break;
+            default:
+                console.warn(`Unknown message type: ${messageType}`);
+                break;
             }
             return;
         }

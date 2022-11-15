@@ -10,8 +10,8 @@ export type FileType = 'video' | 'audio' | 'image' | 'subtitle' | 'unknown';
 export type FolderContent = {
     exists: boolean;
     thumb?: string;
-    folders: String[];
-    files: { name: String, type: FileType }[];
+    folders: string[];
+    files: { name: string, type: FileType }[];
 };
 
 export type PlayableFileInfo = {

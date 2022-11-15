@@ -1,8 +1,8 @@
-import {PluginCommandRules} from "../../Plugin";
-import {RoomPlugin} from "../../RoomPlugin";
-import {Connection} from "../../../skychat/Connection";
-import * as striptags from "striptags";
-import {UserController} from "../../../skychat/UserController";
+import { PluginCommandRules } from '../../Plugin';
+import { RoomPlugin } from '../../RoomPlugin';
+import { Connection } from '../../../skychat/Connection';
+import * as striptags from 'striptags';
+import { UserController } from '../../../skychat/UserController';
 
 
 export class HelpPlugin extends RoomPlugin {
@@ -15,7 +15,7 @@ export class HelpPlugin extends RoomPlugin {
 
         // Group commands by main name
         const commandAliases = Object.keys(this.room.commands);
-        let content = `<table class="skychat-table">`;
+        let content = '<table class="skychat-table">';
         content += `
             <tr>
                 <th>name</th>
@@ -24,7 +24,7 @@ export class HelpPlugin extends RoomPlugin {
                 <th>params</th>
             </tr>    
         `;
-        for (let alias of commandAliases) {
+        for (const alias of commandAliases) {
             const command = this.room.commands[alias];
 
             // If user has not the right to access the command, hide it
@@ -52,8 +52,8 @@ export class HelpPlugin extends RoomPlugin {
             </tr>            
             `;
         }
-        content += `</table>`;
-        const message = UserController.createNeutralMessage({content, room: this.room.id, id: 0});
+        content += '</table>';
+        const message = UserController.createNeutralMessage({ content, room: this.room.id, id: 0 });
         message.edit(striptags(content), content);
         connection.send('message', message.sanitized());
     }

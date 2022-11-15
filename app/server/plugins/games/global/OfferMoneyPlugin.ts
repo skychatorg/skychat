@@ -1,9 +1,9 @@
-import {Connection} from "../../../skychat/Connection";
-import {GlobalPlugin} from "../../GlobalPlugin";
-import {Session} from "../../../skychat/Session";
-import {User} from "../../../skychat/User";
-import {ConnectedListPlugin} from "../../core/global/ConnectedListPlugin";
-import {UserController} from "../../../skychat/UserController";
+import { Connection } from '../../../skychat/Connection';
+import { GlobalPlugin } from '../../GlobalPlugin';
+import { Session } from '../../../skychat/Session';
+import { User } from '../../../skychat/User';
+import { ConnectedListPlugin } from '../../core/global/ConnectedListPlugin';
+import { UserController } from '../../../skychat/UserController';
 
 
 export class OfferMoneyPlugin extends GlobalPlugin {
@@ -19,7 +19,7 @@ export class OfferMoneyPlugin extends GlobalPlugin {
             minCount: 2,
             maxCount: 2,
             coolDown: 50,
-            params: [{name: 'username', pattern: User.USERNAME_LOGGED_REGEXP}, {name: 'amount', pattern: /^([0-9]+)$/}]
+            params: [{ name: 'username', pattern: User.USERNAME_LOGGED_REGEXP }, { name: 'amount', pattern: /^([0-9]+)$/ }]
         }
     };
 

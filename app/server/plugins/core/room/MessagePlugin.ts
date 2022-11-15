@@ -1,7 +1,7 @@
-import { Connection } from "../../../skychat/Connection";
-import { Config } from "../../../skychat/Config";
-import { MessageController } from "../../../skychat/MessageController";
-import { RoomPlugin } from "../../RoomPlugin";
+import { Connection } from '../../../skychat/Connection';
+import { Config } from '../../../skychat/Config';
+import { MessageController } from '../../../skychat/MessageController';
+import { RoomPlugin } from '../../RoomPlugin';
 
 
 export class MessagePlugin extends RoomPlugin {
@@ -13,7 +13,7 @@ export class MessagePlugin extends RoomPlugin {
     readonly hidden = true;
 
     readonly rules = {
-        message: {minCount: 1}
+        message: { minCount: 1 }
     };
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
