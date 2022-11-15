@@ -7,7 +7,6 @@ import { UserController } from '../../../skychat/UserController';
 
 
 export class GiveMoneyPlugin extends RoomPlugin {
-
     public static readonly COMMISSION_PERCENTAGE: number = 0.2;
 
     public static readonly COMMISSION_MIN: number = 1;
@@ -26,7 +25,6 @@ export class GiveMoneyPlugin extends RoomPlugin {
     };
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
-
         // Get information about receiver, sender and amount
         const receiverUsername = param.split(' ')[0];
         const receiverSession = Session.getSessionByIdentifier(receiverUsername);

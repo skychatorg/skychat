@@ -6,7 +6,6 @@ import { Config } from '../../../skychat/Config';
 
 
 export class PrivateMessagePlugin extends GlobalPlugin {
-
     static readonly commandName = 'pm';
 
     readonly minRight = Config.PREFERENCES.minRightForPrivateMessages;
@@ -21,7 +20,6 @@ export class PrivateMessagePlugin extends GlobalPlugin {
     };
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
-
         const username = param.split(' ')[0];
         const session = Session.getSessionByIdentifier(username);
         if (! session) {

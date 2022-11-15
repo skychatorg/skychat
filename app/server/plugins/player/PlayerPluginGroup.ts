@@ -3,7 +3,6 @@ import { PlayerPlugin } from './PlayerPlugin';
 import { YoutubeSearchAndPlayPlugin } from './YoutubeSearchAndPlayPlugin';
 
 export class PlayerPluginGroup extends PluginGroup {
-
     roomPluginClasses = [];
 
     globalPluginClasses = [

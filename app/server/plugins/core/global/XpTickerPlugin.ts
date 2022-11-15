@@ -1,4 +1,3 @@
-import { Connection } from '../../../skychat/Connection';
 import { GlobalPlugin } from '../../GlobalPlugin';
 import { ConnectedListPlugin } from './ConnectedListPlugin';
 import { UserController } from '../../../skychat/UserController';
@@ -7,7 +6,6 @@ import { RoomManager } from '../../../skychat/RoomManager';
 
 
 export class XpTickerPlugin extends GlobalPlugin {
-
     public static readonly MAX_INACTIVITY_DURATION_MS: number = 5 * 60 * 1000;
 
     static readonly commandName = 'xp';
@@ -20,7 +18,7 @@ export class XpTickerPlugin extends GlobalPlugin {
         setInterval(this.tick.bind(this), 60 * 1000);
     }
 
-    async run(alias: string, param: string, connection: Connection): Promise<void> {
+    async run(): Promise<void> {
         throw new Error('Not implemented');
     }
 

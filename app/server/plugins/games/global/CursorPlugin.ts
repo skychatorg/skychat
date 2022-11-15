@@ -11,7 +11,6 @@ import { BinaryMessageTypes } from '../../../../api/BinaryMessageTypes';
  * Handle cursor events
  */
 export class CursorPlugin extends GlobalPlugin {
-
     static readonly CURSOR_DECAY_DELAY = 5 * 1000;
 
     static readonly defaultDataStorageValue = true;
@@ -58,12 +57,11 @@ export class CursorPlugin extends GlobalPlugin {
 
     /**
      * Send a cursor position to all users
-     * @param user 
-     * @param x 
-     * @param y 
+     * @param user
+     * @param x
+     * @param y
      */
     async sendCursorPosition(user: User, x: number, y: number, identifierIgnoreList?: string[]): Promise<void> {
-
         // For every connection in the room
         for (const conn of Session.connections) {
             // If the user has cursors disabled, don't send

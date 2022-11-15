@@ -7,7 +7,6 @@ import { GlobalPlugin } from '../../GlobalPlugin';
 
 
 export class PollPlugin extends GlobalPlugin {
-
     public static readonly POLL_CREATION_COOL_DOWN: number = 60 * 1000;
 
     public static readonly POLL_TIMEOUT: number = 30 * 1000;
@@ -35,7 +34,6 @@ export class PollPlugin extends GlobalPlugin {
     };
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
-
         if (alias === 'poll') {
             await this.handlePoll(param, connection);
             return;
@@ -91,7 +89,6 @@ export class PollPlugin extends GlobalPlugin {
      * @param options
      */
     public async poll(title: string, content: string, options: PollOptions): Promise<Poll> {
-
         // Create new poll
         const poll: Poll = new Poll(title, content, options);
         this.polls[poll.id] = poll;

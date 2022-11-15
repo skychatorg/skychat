@@ -5,7 +5,6 @@ import { UserController } from '../../../skychat/UserController';
 
 
 export class MottoPlugin extends GlobalPlugin {
-
     private static MOTTO_MAX_LENGTH = 64;
 
     static readonly commandName = 'motto';

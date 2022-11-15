@@ -7,7 +7,6 @@ import { PlayerPlugin } from './PlayerPlugin';
 
 
 export class PlayerChannelManager extends EventEmitter {
-
     public readonly channels: PlayerChannel[] = [];
 
     public readonly plugin: PlayerPlugin;
@@ -26,7 +25,7 @@ export class PlayerChannelManager extends EventEmitter {
 
     /**
      * Get the next available channel id
-     * @returns 
+     * @returns
      */
     public getNextChannelId(): number {
         return this.channels.length === 0 ? 1 : Math.max(...this.channels.map(channel => channel.id)) + 1;
@@ -35,10 +34,9 @@ export class PlayerChannelManager extends EventEmitter {
     /**
      * Create a new channel with the given name
      * @param id
-     * @param name 
+     * @param name
      */
     public createChannel(id: number, name: string): PlayerChannel {
-
         if (this.getChannelById(id)) {
             throw new Error(`Unable to create existing channel ${id}`);
         }
@@ -52,10 +50,9 @@ export class PlayerChannelManager extends EventEmitter {
     /**
      * Rename a given channel
      * @param id
-     * @param name 
+     * @param name
      */
     public renameChannel(id: number, name: string) {
-        
         const channel = this.getChannelById(id);
         if (! channel) {
             throw new Error(`Unable to rename non-existant channel ${id}`);
@@ -70,7 +67,6 @@ export class PlayerChannelManager extends EventEmitter {
      * @param id
      */
     public deleteChannel(id: number) {
-
         const channel = this.getChannelById(id);
         if (! channel) {
             throw new Error(`Unable to delete non-existant channel ${id}`);
@@ -80,15 +76,15 @@ export class PlayerChannelManager extends EventEmitter {
         for (const session of channel.sessions) {
             this.leaveChannel(session);
         }
-        
+
         this.channels.splice(this.channels.indexOf(channel), 1);
         this.emit('channels-changed', this.channels);
     }
 
     /**
      * Get the channel where the session is, if any
-     * @param session 
-     * @returns 
+     * @param session
+     * @returns
      */
     public getSessionChannel(session: Session): PlayerChannel | null {
         const channelId = this.sessionChannels.get(session);
@@ -99,12 +95,11 @@ export class PlayerChannelManager extends EventEmitter {
     }
 
     /**
-     * 
-     * @param session 
-     * @param id 
+     *
+     * @param session
+     * @param id
      */
     public joinChannel(session: Session, id: number) {
-
         // Get current/previous channel
         const previousChannel = this.getSessionChannel(session);
 
@@ -134,11 +129,10 @@ export class PlayerChannelManager extends EventEmitter {
     }
 
     /**
-     * 
-     * @param session 
+     *
+     * @param session
      */
     public leaveChannel(session: Session) {
-
         // If the session is already within a channel, leave it first
         const channelId = this.sessionChannels.get(session);
         if (typeof channelId !== 'number') {
@@ -173,7 +167,7 @@ export class PlayerChannelManager extends EventEmitter {
 
     /**
      * Find an existing channel by its id
-     * @param id 
+     * @param id
      */
     public getChannelById(id: number): PlayerChannel | null {
         return this.channels.find(channel => channel.id === id) || null;

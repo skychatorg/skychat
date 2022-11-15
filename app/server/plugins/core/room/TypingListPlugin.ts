@@ -7,7 +7,6 @@ import { User } from '../../../skychat/User';
  * Handle cursor events
  */
 export class TypingListPlugin extends RoomPlugin {
-
     static readonly commandName = 't';
 
     readonly minRight = -1;
@@ -28,24 +27,19 @@ export class TypingListPlugin extends RoomPlugin {
     private typingList: {[identifier: string]: {startedDate: Date, user: User}} = {};
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
-
         if (param === 'clear') {
             // Check rights
             if (! connection.session.isOP()) {
                 throw new Error('You do not have the right to clear the typing list');
             }
             this.typingList = {};
-
         } else if (param === 'on') {
-
             // Register typer
             this.typingList[connection.session.identifier] = {
                 startedDate: new Date(),
                 user: connection.session.user
             };
-
         } else {
-
             // Remove typer
             delete this.typingList[connection.session.identifier];
         }
@@ -53,7 +47,7 @@ export class TypingListPlugin extends RoomPlugin {
         this.sync();
     }
 
-    async onConnectionJoinedRoom(connection: Connection): Promise<void> {
+    async onConnectionJoinedRoom(): Promise<void> {
         this.sync();
     }
 

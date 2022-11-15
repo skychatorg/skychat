@@ -1,4 +1,3 @@
-import { Connection } from '../../../skychat/Connection';
 import { User } from '../../../skychat/User';
 import { Session } from '../../../skychat/Session';
 import { ConnectedListPlugin } from './ConnectedListPlugin';
@@ -7,7 +6,6 @@ import { GlobalPlugin } from '../../GlobalPlugin';
 
 
 export class SetRightPlugin extends GlobalPlugin {
-
     static readonly commandName = 'setright';
 
     readonly minRight = 0;
@@ -25,7 +23,7 @@ export class SetRightPlugin extends GlobalPlugin {
 
     readonly opOnly = true;
 
-    async run(alias: string, param: string, connection: Connection): Promise<void> {
+    async run(alias: string, param: string): Promise<void> {
         const [usernameRaw, rightRaw] = param.split(' ');
         const identifier = usernameRaw.toLowerCase();
         const right = parseInt(rightRaw);

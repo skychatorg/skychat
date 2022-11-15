@@ -37,7 +37,6 @@ export const useClientStore = defineStore('client', {
          * Initialize client (subscribe to relevant events) & make initial socket connection
          */
         init: function() {
-
             // On global client state changed
             client.on('update', () => {
                 // Room id changed
@@ -103,7 +102,7 @@ export const useClientStore = defineStore('client', {
 
         /**
          * Join a given room
-         * @param {number} roomId 
+         * @param {number} roomId
          */
         join: function(roomId) {
             this.messages = [];
@@ -125,8 +124,8 @@ export const useClientStore = defineStore('client', {
 
         /**
          * Login
-         * @param {string} username 
-         * @param {string} password 
+         * @param {string} username
+         * @param {string} password
          */
         login: ({ username, password }) => {
             client.login(username, password);
@@ -156,7 +155,7 @@ export const useClientStore = defineStore('client', {
 
         /**
          * Send an audio message to the server
-         * @param {Blob} blob 
+         * @param {Blob} blob
          */
         sendAudio: blob => {
             client.sendAudio(blob);

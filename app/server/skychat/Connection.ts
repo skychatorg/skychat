@@ -14,7 +14,6 @@ import { IBroadcaster } from './IBroadcaster';
  * A client represents an open connection to the server
  */
 export class Connection extends EventEmitter implements IBroadcaster {
-
     public static readonly PING_INTERVAL_MS: number = 10 * 1000;
 
     public static readonly MAXIMUM_MISSED_PING: number = 1;
@@ -64,7 +63,7 @@ export class Connection extends EventEmitter implements IBroadcaster {
 
         session.attachConnection(this);
         this.webSocket.on('message', (message) => this.onMessage(message));
-        this.webSocket.on('close', (code, message) => this.onClose(code, message.toString()));
+        this.webSocket.on('close', () => this.onClose());
         this.webSocket.on('error', (error) => this.onError(error));
 
         setTimeout(this.sendPing.bind(this), Connection.PING_INTERVAL_MS);
@@ -78,7 +77,6 @@ export class Connection extends EventEmitter implements IBroadcaster {
      * Send a ping to the client
      */
     private async sendPing(): Promise<void> {
-
         return;
 
         // If websocket is not open, ignore
@@ -123,9 +121,7 @@ export class Connection extends EventEmitter implements IBroadcaster {
      * @param data
      */
     private async onMessage(data: Data): Promise<void> {
-
         try {
-
             // Data is always buffer
             if (! (data instanceof Buffer)) {
                 throw new Error('Invalid data type');
@@ -160,9 +156,7 @@ export class Connection extends EventEmitter implements IBroadcaster {
 
             // Call handler
             this.emit(eventName, payload);
-
         } catch (error) {
-
             this.sendError(error as Error);
         }
     }
@@ -170,8 +164,7 @@ export class Connection extends EventEmitter implements IBroadcaster {
     /**
      * When the connection is closed
      */
-    private async onClose(code?: number, reason?: string): Promise<void> {
-
+    private async onClose(): Promise<void> {
         this.session.detachConnection(this);
         if (this.room) {
             this.room.detachConnection(this);
@@ -180,7 +173,7 @@ export class Connection extends EventEmitter implements IBroadcaster {
 
     /**
      * Error on the websocket
-     * @param error 
+     * @param error
      */
     private async onError(error: Error): Promise<void> {
         console.error('WebSocket error', this, error);

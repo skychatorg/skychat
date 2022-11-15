@@ -1,7 +1,5 @@
 export class AudioRecorder {
-    
     static async start() {
-
         // Keeps track of all the audio chunks
         const chunks = [];
 
@@ -14,7 +12,6 @@ export class AudioRecorder {
         // Stop callback
         const stop = () => {
             return new Promise(resolve => {
-
                 // Create the blob/uri/audio once the recording actually stops
                 mediaRecorder.addEventListener('stop', () => {
                     const blob = new Blob(chunks);

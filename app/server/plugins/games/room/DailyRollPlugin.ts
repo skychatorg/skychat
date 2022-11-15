@@ -30,7 +30,6 @@ type GameObject = {
 
 
 export class DailyRollPlugin extends RoomPlugin {
-
     /**
      * Scheduled time in hours. E.g. 2.5 means 2h30
      */
@@ -61,7 +60,7 @@ export class DailyRollPlugin extends RoomPlugin {
 
     constructor(room: Room) {
         super(room);
-        
+
         // @TODO implement plugins / room
         if (this.room.id === 0) {
             this.armTimer();
@@ -82,7 +81,7 @@ export class DailyRollPlugin extends RoomPlugin {
     async run(alias: string, param: string, connection: Connection): Promise<void> {
         await this.handleBet(param, connection);
     }
-    
+
     private armTimer(): void {
         const now = new Date().getHours() + new Date().getMinutes() / 60;
         let duration = DailyRollPlugin.SCHEDULED_TIME - now;
@@ -93,15 +92,8 @@ export class DailyRollPlugin extends RoomPlugin {
     }
 
     async start(): Promise<void> {
-
         // Wait for at least 1 user to be there
-        while(true) {
-            const connectionCount = this.room.connections
-                .filter(connection => connection.session.isAlive())
-                .length;
-            if (connectionCount > 0) {
-                break;
-            }
+        while (this.room.connections.filter(connection => connection.session.isAlive()).length === 0) {
             await Timing.sleep(15 * 1000);
         }
 
@@ -139,11 +131,8 @@ export class DailyRollPlugin extends RoomPlugin {
         this.updateGameMessage();
 
         // Wait for 30 seconds
-        while (true) {
+        while (this.currentGame.participants.length === 0) {
             await Timing.sleep(30 * 1000);
-            if (this.currentGame.participants.length > 0) {
-                break;
-            }
         }
         const lastMessage = await this.room.sendMessage({ content: 'Hurry up, only 5 more seconds to chose your daily card', user: UserController.getNeutralUser() });
         await Timing.sleep(5 * 1000);

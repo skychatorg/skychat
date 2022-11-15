@@ -16,11 +16,10 @@ export type MessageDBRow = {
 
 
 export class MessageController {
-
     /**
      * Load a message instance from the database
-     * @param id 
-     * @returns 
+     * @param id
+     * @returns
      */
     static async getMessageById(id: number): Promise<Message> {
         const message = (await MessageController.getMessages(['id', '=', id]))[0];
@@ -31,10 +30,10 @@ export class MessageController {
     }
 
     /**
-     * 
-     * @param conditions 
-     * @param order 
-     * @param limit 
+     *
+     * @param conditions
+     * @param order
+     * @param limit
      * @returns {Message[]}
      */
     static async getMessages(conditions: any[][] | any[], order?: string, limit?: number): Promise<Message[]> {

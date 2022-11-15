@@ -4,9 +4,8 @@ import { DatabaseHelper } from './skychat/DatabaseHelper';
 /**
  * Import a file in the gallery
  */
-export async function importFileToGallery(filePath: string) {
-    
-    
+export async function importFileToGallery() {
+    throw new Error('Not implemented');
 }
 
 /**
@@ -22,10 +21,9 @@ const ACTIONS: {[action: string]: { argCount: number, handler: (...args: string[
 
 /**
  * Main entry point
- * @returns 
+ * @returns
  */
 export async function main() {
-
     await DatabaseHelper.load();
 
     const [action, ...args] = process.argv.slice(2);

@@ -22,7 +22,7 @@ export const useAppStore = defineStore('app', {
          * Whether the window is currently focused
          */
         focused: true,
-    
+
         /**
          * Current document title & whether it's blinking
          */
@@ -35,7 +35,7 @@ export const useAppStore = defineStore('app', {
          * Player mode
          */
         playerMode: {
-    
+
             /**
              * Whether the player is on/off
              * @type {Boolean}
@@ -54,7 +54,7 @@ export const useAppStore = defineStore('app', {
              */
             cinemaMode: false,
         },
-    
+
         /**
          * List of missed messages, that were missed because the window was not focused
          */
@@ -111,12 +111,11 @@ export const useAppStore = defineStore('app', {
     actions: {
 
         init: function() {
-
             this.loadPreferences();
-            
+
             const clientStore = useClientStore();
             clientStore.init();
-            
+
             // Handle height on mobile phones
             const resize = () => {
                 document.body.style.height = window.innerHeight + 'px';
@@ -132,14 +131,13 @@ export const useAppStore = defineStore('app', {
                 }
             };
             window.addEventListener('paste', fileUpload);
-            
+
             // Handle document title update when new messages arrive
             window.addEventListener('blur', () => this.blur());
             window.addEventListener('focus', () => this.focus());
 
             // Auto-check document title every second
             setInterval(() => {
-
                 // In case the title is not currently blinking, just update it
                 if (! this.documentTitle.blinking) {
                     if (document.title !== this.documentTitle.value) {
@@ -147,7 +145,7 @@ export const useAppStore = defineStore('app', {
                     }
                     return;
                 }
-            
+
                 const chars = '┤┘┴└├┌┬┐';
                 const indexOf = chars.indexOf(document.title[0]);
                 const newPosition = (indexOf + 1) % chars.length;
@@ -156,7 +154,6 @@ export const useAppStore = defineStore('app', {
 
             // Listen for own state change
             watch(() => this.newMessage, (newMessage, oldMessage) => {
-
                 const isNewMessageTyping = newMessage.length > 0 && ! newMessage.startsWith('/');
                 const isOldMessageTyping = oldMessage.length > 0 && ! oldMessage.startsWith('/');
 
@@ -172,7 +169,6 @@ export const useAppStore = defineStore('app', {
 
             // Listen for when the last received message changed
             watch(() => clientStore.lastMessage, message => {
-
                 // If no message
                 if (! message) {
                     return;
@@ -207,7 +203,7 @@ export const useAppStore = defineStore('app', {
             // ARROW + SHIFT + UP/DOWN: Switch player sizes
             mousetrap.bind('shift+down', () => this.expandPlayer());
             mousetrap.bind('shift+up', () => this.shrinkPlayer());
-            
+
             // ARROW + ALT + UP/DOWN: Switch rooms
             mousetrap.bind('alt+down', () => {
                 const newRoomIndex = (clientStore.state.rooms.indexOf(clientStore.state.currentRoom) + 1) % clientStore.state.rooms.length;
@@ -221,7 +217,7 @@ export const useAppStore = defineStore('app', {
                 clientStore.join(clientStore.state.rooms[newRoomIndex].id);
             });
         },
-        
+
         loadPreferences: function() {
             // If local storage not available
             if (typeof localStorage === 'undefined') {
@@ -240,7 +236,7 @@ export const useAppStore = defineStore('app', {
                 }
             }
         },
-        
+
         savePreferences: function() {
             // If local storage not available
             if (typeof localStorage === 'undefined') {
@@ -265,7 +261,7 @@ export const useAppStore = defineStore('app', {
             clientStore.sendMessage(this.newMessage);
             this.newMessage = '';
         },
-    
+
         focus: function() {
             const clientStore = useClientStore();
             if (this.missedMessages.length > 0) {
@@ -280,11 +276,11 @@ export const useAppStore = defineStore('app', {
             this.documentTitle.blinking = false;
             this.missedMessages = [];
         },
-    
+
         blur: function() {
             this.focused = false;
         },
-    
+
         setPlayerEnabled: function(playerEnabled) {
             this.playerMode.enabled = playerEnabled;
             this.savePreferences();
@@ -312,11 +308,9 @@ export const useAppStore = defineStore('app', {
 
         /**
          * Upload a given file
-         * @param {?Function} callback If given, will be called with the full url to the uploaded file. If not, will append the full url to the message.
          */
-        upload: async function(file, callback) {
+        upload: async function(file) {
             try {
-
                 toast.info('File uploading...');
 
                 // Create form and send request to backend
@@ -331,7 +325,6 @@ export const useAppStore = defineStore('app', {
                 toast.success('File uploaded');
 
                 return document.location.origin + '/' + result.path;
-
             } catch (e) {
                 toast.error(e.message || 'Unable to upload file');
             }

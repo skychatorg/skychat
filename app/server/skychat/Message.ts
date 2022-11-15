@@ -64,7 +64,6 @@ export type MessageConstructorOptions = {
 }
 
 export class Message {
-
     public static ID = 1;
 
     public readonly id: number;

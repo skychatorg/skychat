@@ -7,10 +7,9 @@ import { YoutubeFetcher } from './fetcher/YoutubeFetcher';
 
 
 /**
- * 
+ *
  */
 export class YoutubeSearchAndPlayPlugin extends GlobalPlugin {
-
     static readonly commandName = '#';
 
     readonly rules: {[alias: string]: PluginCommandRules} = {
@@ -20,9 +19,8 @@ export class YoutubeSearchAndPlayPlugin extends GlobalPlugin {
             params: [{ name: 'search', pattern: /./ }]
         },
     };
-    
+
     public async run(alias: string, param: string, connection: Connection) {
-        
         const plugin = this.manager.getPlugin('player') as PlayerPlugin;
         if (! plugin.canAddMedia(connection.session)) {
             throw new Error('Unable to perform this action');
@@ -42,7 +40,7 @@ export class YoutubeSearchAndPlayPlugin extends GlobalPlugin {
             throw new Error('No result found');
         }
         const videos = await youtubeFetcher.get(playerPlugin, items[0].id);
-        
+
         // Play video
         channel.add(videos, connection.session.user, { allowFailure: false });
     }

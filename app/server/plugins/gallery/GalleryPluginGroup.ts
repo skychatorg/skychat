@@ -4,7 +4,6 @@ import { VideoConverterPlugin } from './VideoConverterPlugin';
 
 
 export class GalleryPluginGroup extends PluginGroup {
-
     roomPluginClasses = [];
 
     globalPluginClasses = [

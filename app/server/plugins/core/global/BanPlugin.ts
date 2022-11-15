@@ -21,7 +21,6 @@ enum BAN_TYPES {
 
 
 export class BanPlugin extends GlobalPlugin {
-
     static readonly TICK_INTERVAL = 1000;
 
     static readonly BAN_COMMAND: string = 'ban';
@@ -75,9 +74,7 @@ export class BanPlugin extends GlobalPlugin {
     }
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
-
         switch (alias) {
-
         case BanPlugin.BAN_COMMAND:
             await this.handleBan(param, connection);
             break;
@@ -180,7 +177,6 @@ export class BanPlugin extends GlobalPlugin {
         }
         // If shadow banned
         if (this.isBanned(connection, BAN_TYPES.SHADOW)) {
-
             // Do not send cursor to others
             if (message.startsWith('/c ')) {
                 return '/void';
@@ -221,7 +217,6 @@ export class BanPlugin extends GlobalPlugin {
     }
 
     private async tick(): Promise<void> {
-
         const getRandomUser = (sessions: Session[]): User => {
             return sessions[Math.floor(Math.random() * sessions.length)].user;
         };
@@ -240,7 +235,6 @@ export class BanPlugin extends GlobalPlugin {
 
         // If there is at least one connection which needs to be spammed
         if (connectionsToSpam.length > 0) {
-
             // Get the function that returns a fake message
             const messageHistory = this.manager.rooms[0].getPlugin('messagehistory') as MessageHistoryPlugin | null;
             let getFakeMessage: (user: User) => Message;

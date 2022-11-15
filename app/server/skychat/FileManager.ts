@@ -1,6 +1,5 @@
 import * as fileUpload from 'express-fileupload';
-import * as fs from 'fs';
-const { exec } = require('child_process');
+import fs from 'fs';
 import { RandomGenerator } from './RandomGenerator';
 import { MessageFormatter } from './MessageFormatter';
 import { Config } from './Config';
@@ -8,7 +7,6 @@ import { ShellHelper } from './ShellHelper';
 
 
 export class FileManager {
-
     static getNewFileLocation(extension: string): string {
         const date = new Date();
         return 'uploads/all/' + date.toISOString().substr(0, 19).replace(/(-|T)/g, '/').replace(/:/g, '-') + '-' + Math.floor(1000000000 * RandomGenerator.random(8)) + '.' + extension;
@@ -39,7 +37,7 @@ export class FileManager {
     }
 
     static isFileUrlInGallery(fileUrl: string): boolean {
-        return !! fileUrl.match(new RegExp('^' + MessageFormatter.escapeRegExp(Config.LOCATION + '/gallery/') + '([a-zA-Z0-9-_\/]+)\.[a-z0-9]+$'));
+        return !! fileUrl.match(new RegExp('^' + MessageFormatter.escapeRegExp(Config.LOCATION + '/gallery/') + '([a-zA-Z0-9-_/]+).[a-z0-9]+$'));
     }
 
     static uploadedFileExists(fileUrl: string): boolean {
@@ -69,12 +67,12 @@ export class FileManager {
 
     /**
      * Get a locally stored video duration in ms
-     * @param path 
-     * @returns 
+     * @param path
+     * @returns
      */
     static async getVideoDuration(path: string): Promise<number> {
         const cmd = `ffprobe -v error -show_format -show_streams ${path} | grep 'duration=' | grep -v 'N/A' | head -n 1 | cut -d'=' -f2`;
-        const { stdout, stderr } = await ShellHelper.exec(cmd);
+        const { stdout } = await ShellHelper.exec(cmd);
         return parseFloat(stdout.trim()) * 1000;
     }
 

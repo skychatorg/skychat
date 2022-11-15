@@ -10,7 +10,6 @@ import { RoomPlugin, RoomPluginConstructor } from './RoomPlugin';
  * Used to make configuration easier.
  */
 export abstract class PluginGroup {
-
     /**
      * List of room plugin classes in this plugin group
      */

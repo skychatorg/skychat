@@ -7,7 +7,6 @@ import { UserController } from '../../../skychat/UserController';
 
 
 export class OfferMoneyPlugin extends GlobalPlugin {
-
     static readonly commandName = 'offermoney';
 
     readonly minRight = 0;
@@ -24,7 +23,6 @@ export class OfferMoneyPlugin extends GlobalPlugin {
     };
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
-
         const identifier = param.split(' ')[0].toLowerCase();
         const session = Session.getSessionByIdentifier(identifier);
         if (! session) {

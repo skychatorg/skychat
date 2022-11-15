@@ -1,4 +1,3 @@
-import { Connection } from '../../../skychat/Connection';
 import { RoomPlugin } from '../../RoomPlugin';
 import { UserController } from '../../../skychat/UserController';
 import striptags from 'striptags';
@@ -23,7 +22,6 @@ type GameObject = {
 
 
 export class PointsCollectorPlugin extends RoomPlugin {
-
     static readonly GAME_DURATION: number = 30 * 1000;
 
     static readonly ENTRY_COST: number = 1 * 100;
@@ -49,15 +47,14 @@ export class PointsCollectorPlugin extends RoomPlugin {
 
     private currentGame: GameObject | null = null;
 
-    async run(alias: string, param: string, connection: Connection): Promise<void> {
-        await this.handleStart(param, connection);
+    async run(): Promise<void> {
+        await this.handleStart();
     }
 
     /**
      * Start a new game
      */
-    private async handleStart(param: string, connection: Connection): Promise<void> {
-
+    private async handleStart(): Promise<void> {
         // If a game is already in progress
         if (this.currentGame) {
             throw new Error('A round is already in progress');
@@ -119,7 +116,6 @@ export class PointsCollectorPlugin extends RoomPlugin {
     }
 
     private async tick(delta: number, cursorPlugin: CursorPlugin): Promise<void> {
-
         if (! this.currentGame) {
             return;
         }
@@ -187,7 +183,6 @@ export class PointsCollectorPlugin extends RoomPlugin {
     }
 
     private updatePositions(cursorPlugin: CursorPlugin): void {
-
         if (! this.currentGame) {
             return;
         }

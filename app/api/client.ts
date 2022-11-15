@@ -36,10 +36,10 @@ export declare interface SkyChatClient {
     on(event: 'poll',               listener: (poll: SanitizedPoll) => any): this;
     on(event: 'cursor',             listener: (cursor: { x: number, y: number, user: SanitizedUser }) => any): this;
     on(event: 'roll',               listener: (roll: { state: boolean }) => any): this;
-    
+
     on(event: 'error',              listener: (message: string) => any): this;
     on(event: 'info',               listener: (message: string) => any): this;
-    
+
     on(event: 'set-op',             listener: (op: boolean) => any): this;
 
     on(event: 'gallery',            listener: (data: FolderContent) => any): this;
@@ -54,7 +54,6 @@ export declare interface SkyChatClient {
 
 
 export class SkyChatClient extends EventEmitter {
-
     static readonly CURSOR_DECAY_DELAY = 10 * 1e3;
 
     static readonly LOCAL_STORAGE_TOKEN_KEY = 'skychat-token';
@@ -124,7 +123,7 @@ export class SkyChatClient extends EventEmitter {
         this.on('player-channel', this._onPlayerChannel.bind(this));
         this.on('player-search', this._onPlayerApiSearchResults.bind(this));
         this.on('player-sync', this._onPlayerSync.bind(this));
-        
+
         // Meta
         this.on('info', this._onInfo.bind(this));
         this.on('error', this._onError.bind(this));
@@ -238,7 +237,7 @@ export class SkyChatClient extends EventEmitter {
         this._typingList = typingList;
         this.emit('update', this.state);
     }
-    
+
     private _onMessageSeen(messageSeen: { user: number, data: any }) {
         const entry = this._connectedList.find(e => e.user.id === messageSeen.user);
         if (! entry) {
@@ -413,10 +412,10 @@ export class SkyChatClient extends EventEmitter {
         }
         this._websocket.send(data);
     }
-    
+
     /**
      * Send an audio file
-     * @param blob 
+     * @param blob
      */
     sendAudio(blob: Blob) {
         this._sendRaw(new Blob([
@@ -424,11 +423,11 @@ export class SkyChatClient extends EventEmitter {
             blob
         ]));
     }
-    
+
     /**
      * Send current cursor position
-     * @param x 
-     * @param y 
+     * @param x
+     * @param y
      */
     sendCursorPosition(x: number, y: number) {
         if (! this._user || ! this._user.id) {
@@ -518,17 +517,11 @@ export class SkyChatClient extends EventEmitter {
             const view = new DataView(buffer);
             const messageType = view.getUint16(0, true);
 
-            switch (messageType) {
-
-            // Audio
-            case BinaryMessageTypes.AUDIO:
+            if (messageType === BinaryMessageTypes.AUDIO) {
                 const messageId = view.getUint32(2, true);
                 const audioBlob = message.data.slice(6);
                 this.emit('audio', { id: messageId, blob: audioBlob });
-                break;
-                
-                // Cursor
-            case BinaryMessageTypes.CURSOR:
+            } else if (messageType === BinaryMessageTypes.CURSOR) {
                 const id = view.getUint32(2, true);
                 const x = view.getFloat32(6, true);
                 const y = view.getFloat32(10, true);
@@ -538,12 +531,8 @@ export class SkyChatClient extends EventEmitter {
                     x,
                     y,
                 });
-                break;
-                
-                // Unknown
-            default:
+            } else {
                 console.warn(`Unknown message type: ${messageType}`);
-                break;
             }
             return;
         }

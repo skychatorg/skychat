@@ -25,7 +25,6 @@ export type SanitizedUser = {
  * A SkyChatUser is an user stored in the database
  */
 export class User {
-
     /**
      * Default user data object.
      */

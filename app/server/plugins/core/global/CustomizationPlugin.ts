@@ -1,9 +1,6 @@
 import { Connection } from '../../../skychat/Connection';
 import { GlobalPlugin } from '../../GlobalPlugin';
-import { User } from '../../../skychat/User';
 import { ConnectedListPlugin } from './ConnectedListPlugin';
-import { Room } from '../../../skychat/Room';
-import { Session } from '../../../skychat/Session';
 
 
 /**
@@ -18,7 +15,6 @@ export type CustomizationElementValue = {
 export type CustomizationElements = {[key: string]: CustomizationElementValue[]};
 
 export class CustomizationPlugin extends GlobalPlugin {
-
     /**
      * Key used to store the color
      */
@@ -99,8 +95,8 @@ export class CustomizationPlugin extends GlobalPlugin {
         [CustomizationPlugin.KEY_COLOR]: '#aaaaaa',
     };
 
-    public async run(alias: string, param: string, connection: Connection, session: Session, user: User, room: Room | null): Promise<void> {
-        const [action, choice] = param.split(' ');
+    public async run(alias: string, param: string, connection: Connection): Promise<void> {
+        const [, choice] = param.split(' ');
         const [type, rawId] = choice.split(':');
         const id = parseInt(rawId);
 
@@ -116,7 +112,7 @@ export class CustomizationPlugin extends GlobalPlugin {
         }
 
         // Set item
-        const data = this.getUserData(connection.session.user);
+        const data = this.getUserData<{[key: string]: unknown}>(connection.session.user);
         data[type] = item.value;
         this.saveUserData(connection.session.user, data);
         (this.manager.getPlugin('connectedlist') as ConnectedListPlugin).sync();

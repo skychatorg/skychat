@@ -7,7 +7,6 @@ import { BinaryMessageTypes } from '../../../../api/BinaryMessageTypes';
 
 
 export class AudioRecorderPlugin extends GlobalPlugin {
-
     // Maximum number of recordings to keep in memory
     public static MAX_RECORDING_CACHED = 32;
 
@@ -33,8 +32,8 @@ export class AudioRecorderPlugin extends GlobalPlugin {
     /**
      * Send an audio recording to the client
      * @param alias
-     * @param param 
-     * @param connection 
+     * @param param
+     * @param connection
      */
     async run(alias: string, param: string, connection: Connection): Promise<void> {
         const entry = this.entries[parseInt(param)];
@@ -48,7 +47,6 @@ export class AudioRecorderPlugin extends GlobalPlugin {
      * Cursors are sent in binary format to save bandwidth.
      */
     async onBinaryDataReceived(connection: Connection, messageType: number, data: Buffer): Promise<boolean> {
-
         if (messageType !== BinaryMessageTypes.AUDIO) {
             return false;
         }
@@ -72,7 +70,7 @@ export class AudioRecorderPlugin extends GlobalPlugin {
         }
 
         ++ this.currentEntryId;
-        
+
         // Send the message to the room
         const content = `[[play audio//audio ${this.currentEntryId}]]`;
         const message = await room.sendMessage({

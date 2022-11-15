@@ -5,7 +5,6 @@ import { Room } from '../skychat/Room';
 
 
 export abstract class RoomPlugin extends Plugin {
-
     /**
      * Some plugins (i.e. plugin to ban users) are globally available.
      * They have a single storage file, and they are instantiated only once at the root-level instead of once per room.
@@ -20,7 +19,7 @@ export abstract class RoomPlugin extends Plugin {
 
     /**
      * A plugin is attached to a given room
-     * @param room 
+     * @param room
      */
     constructor(room: Room) {
         super();
@@ -46,37 +45,41 @@ export abstract class RoomPlugin extends Plugin {
      * Executed before broadcasting a message to the room
      * @abstract
      * @param message
-     * @param connection
+     * @param _connection
      */
-    public async onBeforeMessageBroadcastHook(message: Message, connection?: Connection): Promise<Message> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    public async onBeforeMessageBroadcastHook(message: Message, _connection?: Connection): Promise<Message> {
         return message;
     }
 
     /**
      * Executed before a connection joins a room
      * @abstract
-     * @param connection
+     * @param _connection
      */
-    public async onBeforeConnectionJoinedRoom(connection: Connection): Promise<void> {
-
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    public async onBeforeConnectionJoinedRoom(_connection: Connection): Promise<void> {
+        void 0;
     }
 
     /**
      * Executed when a connection joins a room
      * @abstract
-     * @param connection
+     * @param _connection
      */
-    public async onConnectionJoinedRoom(connection: Connection): Promise<void> {
-
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    public async onConnectionJoinedRoom(_connection: Connection): Promise<void> {
+        void 0;
     }
 
     /**
      * Executed when a connection is closed
      * @abstract
-     * @param connection
+     * @param _connection
      */
-    public async onConnectionLeftRoom(connection: Connection): Promise<void> {
-
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    public async onConnectionLeftRoom(_connection: Connection): Promise<void> {
+        void 0;
     }
 }
 

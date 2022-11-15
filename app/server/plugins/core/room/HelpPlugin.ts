@@ -6,13 +6,11 @@ import { UserController } from '../../../skychat/UserController';
 
 
 export class HelpPlugin extends RoomPlugin {
-
     static readonly commandName = 'help';
 
     readonly minRight = -1;
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
-
         // Group commands by main name
         const commandAliases = Object.keys(this.room.commands);
         let content = '<table class="skychat-table">';

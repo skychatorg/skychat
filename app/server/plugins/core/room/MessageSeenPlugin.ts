@@ -9,7 +9,6 @@ export type MessageSeenEventData = {
 };
 
 export class MessageSeenPlugin extends RoomPlugin {
-
     static readonly commandName = 'lastseen';
 
     static readonly defaultDataStorageValue = {};
@@ -19,7 +18,7 @@ export class MessageSeenPlugin extends RoomPlugin {
      *  the client does not know it own right level, therefore it would always send /lastseen
      */
     readonly minRight = -1;
-    
+
     readonly hidden = true;
 
     readonly rules = {
@@ -48,7 +47,7 @@ export class MessageSeenPlugin extends RoomPlugin {
             return;
         }
         // Load previous data from the plugin storage. An object mapping room ids to last message seen.
-        let pluginData = UserController.getUserPluginData(connection.session.user, this.commandName);
+        let pluginData = UserController.getUserPluginData<{[roomId: number]: number}>(connection.session.user, this.commandName);
         if (typeof pluginData !== 'object') {
             pluginData = {};
         }

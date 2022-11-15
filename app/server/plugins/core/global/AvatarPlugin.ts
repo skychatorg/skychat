@@ -2,14 +2,13 @@ import { Connection } from '../../../skychat/Connection';
 import { ConnectedListPlugin } from './ConnectedListPlugin';
 import { Config } from '../../../skychat/Config';
 import { UserController } from '../../../skychat/UserController';
-import * as fs from 'fs';
+import fs from 'fs';
 import { FileManager } from '../../../skychat/FileManager';
 import { Server } from '../../../skychat/Server';
 import { GlobalPlugin } from '../../GlobalPlugin';
 
 
 export class AvatarPlugin extends GlobalPlugin {
-
     static readonly DEFAULT_AVATAR: string = Config.LOCATION + '/assets/images/avatars/default.png';
 
     static readonly defaultDataStorageValue = AvatarPlugin.DEFAULT_AVATAR;
@@ -36,7 +35,6 @@ export class AvatarPlugin extends GlobalPlugin {
     };
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
-
         // Check that the given image exists
         if (! FileManager.uploadedFileExists(param)) {
             throw new Error('Given image does not exist');
@@ -51,12 +49,14 @@ export class AvatarPlugin extends GlobalPlugin {
         const newAvatarPath = 'uploads/avatars/' + connection.session.identifier + '.' + extension;
 
         // Remove previous avatar
-        const previousAvatarUrl = UserController.getUserPluginData(connection.session.user, this.commandName);
+        const previousAvatarUrl = UserController.getUserPluginData<string>(connection.session.user, this.commandName);
         const previousAvatarLocalPath = '.' + previousAvatarUrl.substr(Config.LOCATION.length).split('?')[0];
-        if (previousAvatarUrl.match('^uploads\/avatars\/')) {
+        if (previousAvatarUrl.match('^uploads/avatars/')) {
             try {
                 fs.unlinkSync(previousAvatarLocalPath);
-            } catch (error) { }
+            } catch (error) {
+                console.warn('Unable to rm avatar local path');
+            }
         }
 
         // Copy avatar

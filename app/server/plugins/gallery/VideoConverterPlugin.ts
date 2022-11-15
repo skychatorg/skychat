@@ -1,5 +1,5 @@
-const util = require('util');
-const exec = util.promisify(require('node:child_process').exec);
+import util from 'util';
+import { exec as oldExec } from 'node:child_process';
 import { spawn } from 'child_process';
 import { Config } from '../../skychat/Config';
 import { Connection } from '../../skychat/Connection';
@@ -7,6 +7,8 @@ import { FileManager } from '../../skychat/FileManager';
 import { Session } from '../../skychat/Session';
 import { GlobalPlugin } from '../GlobalPlugin';
 import { Gallery } from './Gallery';
+
+const exec = util.promisify(oldExec);
 
 
 export type VideoStreamInfo = Array<{
@@ -27,10 +29,9 @@ export type OngoingConvert = {
 
 
 /**
- * 
+ *
  */
 export class VideoConverterPlugin extends GlobalPlugin {
-
     static readonly commandName = 'convert';
 
     static readonly commandAliases = [
@@ -72,18 +73,19 @@ export class VideoConverterPlugin extends GlobalPlugin {
     readonly converts: Array<OngoingConvert> = [];
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
-        
         switch (alias) {
         case 'convertinfo':
             await this.runConvertInfo(param, connection);
             break;
-            
+
         case 'convert':
+            // eslint-disable-next-line no-case-declarations
             const filePath = param.split(' ')[0];
+            // eslint-disable-next-line no-case-declarations
             const streamIndexes = param.split(' ')[1].split(',').map((index: string) => parseInt(index));
             await this.runConvert(filePath, streamIndexes, connection);
             break;
-            
+
         case 'convertlist':
             await this.runConvertList(connection);
             break;
@@ -105,7 +107,6 @@ export class VideoConverterPlugin extends GlobalPlugin {
         }
         try {
             connection.send('convert-info', await this.getVideoStreamInfo(filePath));
-
         } catch (error) {
             throw new Error(`Unable to convert ${filePath}`);
         }
@@ -156,11 +157,11 @@ export class VideoConverterPlugin extends GlobalPlugin {
             }
             convert.lastUpdate = line;
         });
-        process.on('error', error => {
+        process.on('error', () => {
             convert.status = 'error';
             this.syncConvertList();
         });
-        process.on('exit', async (code, signal) => {
+        process.on('exit', async () => {
             if (! (await Gallery.fileExists(target))) {
                 convert.status = 'error';
                 return;
@@ -175,7 +176,7 @@ export class VideoConverterPlugin extends GlobalPlugin {
     }
 
     async getVideoStreamInfo(filePath: string): Promise<VideoStreamInfo> {
-        const { stdout, stderr } = await exec(`ffmpeg -i ${Gallery.BASE_PATH + filePath} 2>&1 | grep "Stream #"`);
+        const { stdout } = await exec(`ffmpeg -i ${Gallery.BASE_PATH + filePath} 2>&1 | grep "Stream #"`);
         return stdout
             .split('\n')
             .map((line: string) => line.trim())
@@ -185,7 +186,7 @@ export class VideoConverterPlugin extends GlobalPlugin {
                 return {
                     index: parseInt(index),
                     lang: lang ? lang.replace(/[^a-zA-Z]/g, '') : null,
-                    type,
+                    type: type as 'Video' | 'Audio' | 'Subtitle',
                     info,
                 };
             });
@@ -197,7 +198,7 @@ export class VideoConverterPlugin extends GlobalPlugin {
             connection.send('convert-list', this.converts);
         }
     }
-    
+
     async onConnectionAuthenticated(connection: Connection): Promise<void> {
         // If list of converting files was already sent
         if (Config.PREFERENCES.minRightForGalleryRead === -1) {
@@ -209,7 +210,6 @@ export class VideoConverterPlugin extends GlobalPlugin {
     }
 
     async syncConvertList(): Promise<void> {
-        
         for (const connection of Session.connections) {
             if (! Gallery.canRead(connection.session)) {
                 continue;

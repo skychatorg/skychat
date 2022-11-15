@@ -5,7 +5,7 @@ import { Connection } from './Connection';
 import * as iof from 'io-filter';
 import { Session } from './Session';
 import { Config } from './Config';
-import * as fs from 'fs';
+import fs from 'fs';
 import { FileManager } from './FileManager';
 import express from 'express';
 import fileUpload from 'express-fileupload';
@@ -30,7 +30,6 @@ type EventsDescription = {
  * Generic server object. Handle typed event communication.
  */
 export class Server {
-
     public static readonly UPLOADED_FILE_REGEXP: RegExp = new RegExp('^' + Config.LOCATION + '/uploads/all/([-\\/._a-zA-Z0-9]+)$');
 
     /**
@@ -67,7 +66,7 @@ export class Server {
             tempFileDir: '/tmp/'
         }));
         this.app.post('/upload', this.onFileUpload.bind(this));
-        this.app.get('*', function(req: express.Request, res: express.Response){
+        this.app.get('*', function(req: express.Request, res: express.Response) {
             res.status(404).send('404');
         });
         let server;
@@ -137,7 +136,6 @@ export class Server {
      * @param request
      */
     private async onConnection(webSocket: WebSocket, request: http.IncomingMessage): Promise<void> {
-
         // Create a session based on the just-computed identifier
         const session = await this.sessionBuilder(request);
 
@@ -163,7 +161,6 @@ export class Server {
      */
     private async onConnectionEvent(eventName: keyof EventsDescription, payload: any, connection: Connection): Promise<void> {
         try {
-
             const event = this.events[eventName];
 
             // If payload filter is defined
@@ -196,9 +193,7 @@ export class Server {
 
             // Call handler
             await event.handler(payload, connection);
-
         } catch (error) {
-
             connection.sendError((error as Error));
         }
     }

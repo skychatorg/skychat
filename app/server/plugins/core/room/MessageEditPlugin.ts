@@ -5,7 +5,6 @@ import { RoomPlugin } from '../../RoomPlugin';
 
 
 export class MessageEditPlugin extends RoomPlugin {
-
     static readonly commandName = 'edit';
 
     static readonly commandAliases = ['delete'];
@@ -53,7 +52,7 @@ export class MessageEditPlugin extends RoomPlugin {
         } else {
             message.edit('deleted', '<s>deleted</s>');
         }
-        
+
         // Store it into the database
         await DatabaseHelper.db.run(SQL`update messages set content = ${message.content} where id = ${message.id}`);
 

@@ -8,7 +8,6 @@ import { User } from '../../../skychat/User';
 
 
 export class MessageHistoryPlugin extends RoomPlugin {
-
     static readonly commandName = 'messagehistory';
 
     readonly hidden = true;
@@ -24,7 +23,6 @@ export class MessageHistoryPlugin extends RoomPlugin {
     };
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
-
         // If user has the right to access the full history
         if (connection.session.user.right >= Config.PREFERENCES.minRightForMessageHistory) {
             this.room.sendHistory(connection, parseInt(param) || 0);
@@ -41,9 +39,7 @@ export class MessageHistoryPlugin extends RoomPlugin {
         }
         // Send message history to the connection that just joined this room
         const fakeMessages = [];
-        const stickers = Object.keys(StickerManager.stickers);
         for (let i = Math.max(0, this.room.messages.length - Room.MESSAGE_HISTORY_VISIBLE_LENGTH); i < this.room.messages.length; ++ i) {
-
             // Each fake message correspond to a real message
             const realMessage = this.room.messages[i];
             const hash = realMessage.createdTime.getTime() + realMessage.id;
@@ -56,14 +52,13 @@ export class MessageHistoryPlugin extends RoomPlugin {
     /**
      * Build a fake message
      * @param hash Hash to randomize the message content and stickers
-     * @param id 
-     * @param user 
-     * @param room 
-     * @param createdTime 
-     * @returns 
+     * @param id
+     * @param user
+     * @param room
+     * @param createdTime
+     * @returns
      */
     getFakeMessage(hash: number, id: number, user: User, room?: number | null, createdTime?: Date): Message {
-
         hash = Math.floor(hash);
         const stickers = Object.keys(StickerManager.stickers);
         const fakeTextIndex = hash % Config.FAKE_MESSAGES.length;

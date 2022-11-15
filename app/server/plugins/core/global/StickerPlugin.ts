@@ -1,14 +1,12 @@
-import { Connection } from '../../../skychat/Connection';
 import { GlobalPlugin } from '../../GlobalPlugin';
 import { Server } from '../../../skychat/Server';
 import { FileManager } from '../../../skychat/FileManager';
-import * as fs from 'fs';
+import fs from 'fs';
 import { Config } from '../../../skychat/Config';
 import { StickerManager } from '../../../skychat/StickerManager';
 
 
 export class StickerPlugin extends GlobalPlugin {
-
     static readonly commandName = 'sticker';
 
     static readonly commandAliases = ['stickeradd', 'stickerdel'];
@@ -40,15 +38,14 @@ export class StickerPlugin extends GlobalPlugin {
      * @param param
      * @param connection
      */
-    async run(alias: string, param: string, connection: Connection): Promise<void> {
-
+    async run(alias: string, param: string): Promise<void> {
         if (alias === 'stickeradd') {
-            await this.handleStickerAdd(param, connection);
+            await this.handleStickerAdd(param);
             return;
         }
 
         if (alias === 'stickerdel') {
-            await this.handleStickerDelete(param, connection);
+            await this.handleStickerDelete(param);
             return;
         }
     }
@@ -58,7 +55,7 @@ export class StickerPlugin extends GlobalPlugin {
      * @param param
      * @param connection
      */
-    private async handleStickerAdd(param: string, connection: Connection): Promise<void> {
+    private async handleStickerAdd(param: string): Promise<void> {
         const [code, url] = param.split(' ');
         if (! FileManager.isFileUrlUploaded(url)) {
             throw new Error('Given sticker is not an uploaded image');
@@ -82,7 +79,7 @@ export class StickerPlugin extends GlobalPlugin {
      * @param code
      * @param connection
      */
-    private async handleStickerDelete(code: string, connection: Connection): Promise<void> {
+    private async handleStickerDelete(code: string): Promise<void> {
         if (! StickerManager.stickerExists(code)) {
             throw new Error('Given sticker does not exist');
         }
@@ -90,7 +87,9 @@ export class StickerPlugin extends GlobalPlugin {
         const stickerLocalPath = FileManager.getLocalPathFromFileUrl(stickerUrl);
         try {
             fs.unlinkSync(stickerLocalPath);
-        } catch (error) { }
+        } catch (error) {
+            void 0;
+        }
         StickerManager.unregisterSticker(code);
     }
 }
