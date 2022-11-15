@@ -12,3 +12,5 @@ storage
 uploads
 
 /gallery
+
+tsconfig.tsbuildinfo

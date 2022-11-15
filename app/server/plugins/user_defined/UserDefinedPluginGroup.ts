@@ -6,6 +6,9 @@ import { PluginGroup } from "../PluginGroup";
 // Find all plugins in this directory
 const pluginClasses: any[] = fs.readdirSync(__dirname)
     .map((fileName: string) => {
+        if (! fileName.match(/\.(ts|js)$/)) {
+            return null;
+        }
         // Require filename
         const loadedFile = require(`./${fileName}`);
         const defaultExport = loadedFile.default || null;

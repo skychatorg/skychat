@@ -4,11 +4,11 @@ import * as https from "https";
 import {Connection} from "./Connection";
 import * as iof from "io-filter";
 import {Session} from "./Session";
-import * as express from "express";
 import {Config} from "./Config";
 import * as fs from "fs";
-import * as fileUpload from "express-fileupload";
 import { FileManager } from "./FileManager";
+import express from 'express';
+import fileUpload from "express-fileupload";
 
 
 

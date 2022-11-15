@@ -1,12 +1,11 @@
-
-export { SanitizedMessage } from "./skychat/Message";
-export { MessageSeenEventData } from "./plugins/core/room/MessageSeenPlugin";
-export { SanitizedUser, UserData, AuthToken } from "./skychat/User";
-export { SanitizedSession } from "./skychat/Session";
-export { SanitizedPoll, PollState } from "./plugins/core/global/Poll";
-export { PublicConfig } from "./skychat/Config";
-export { SanitizedRoom } from "./skychat/Room";
-export { SanitizedPlayerChannel, VideoInfo, QueuedVideoInfo } from "./plugins/player/PlayerChannel";
-export { CustomizationElements } from "./plugins/core/global/CustomizationPlugin";
-export { FolderContent } from "./plugins/gallery/Gallery";
-export { VideoStreamInfo, OngoingConvert } from "./plugins/gallery/VideoConverterPlugin";
+export type { SanitizedMessage } from "./skychat/Message";
+export type { MessageSeenEventData } from "./plugins/core/room/MessageSeenPlugin";
+export type { SanitizedUser, UserData, AuthToken } from "./skychat/User";
+export type { SanitizedSession } from "./skychat/Session";
+export type { SanitizedPoll, PollState } from "./plugins/core/global/Poll";
+export type { PublicConfig } from "./skychat/Config";
+export type { SanitizedRoom } from "./skychat/Room";
+export type { SanitizedPlayerChannel, VideoInfo, QueuedVideoInfo } from "./plugins/player/PlayerChannel";
+export type { CustomizationElements } from "./plugins/core/global/CustomizationPlugin";
+export type { FolderContent } from "./plugins/gallery/Gallery";
+export type { VideoStreamInfo, OngoingConvert } from "./plugins/gallery/VideoConverterPlugin";

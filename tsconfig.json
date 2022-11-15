@@ -1,22 +1,15 @@
 {
     "compilerOptions": {
-        "module": "CommonJS",
-        "strict": true,
-        "declaration": false,
-        "removeComments": true,
         "target": "ES6",
-        "lib": ["ES2019", "DOM"],
-        "moduleResolution": "node",
-        "rootDir": "./app/",
-        "outDir": "build/",
-        "sourceMap": false
+        "module": "commonjs",
+        "strict": true,
+        "skipLibCheck": true,
+        "rootDir": "app",
+        "outDir": "build",
+        "esModuleInterop": true
     },
     "include": [
-        "app/api/**/*",
-        "app/server/**/*",
-    ],
-    "exclude": [
-        "node_modules",
-        "dist"
+        "app/server/**/*.ts",
+        "app/api/**/*.ts"
     ]
 }
