@@ -7,7 +7,6 @@ import { UsurpPlugin } from './UsurpPlugin';
 
 
 export class ExtraSecurityPluginGroup extends PluginGroup {
-
     roomPluginClasses = [
         HistoryClearPlugin,
         UsurpPlugin,

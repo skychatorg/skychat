@@ -14,7 +14,6 @@ import { StatsPlugin } from './room/StatsPlugin';
 
 
 export class GamesPluginGroup extends PluginGroup {
-
     roomPluginClasses = [
         DailyRollPlugin,
         GuessTheNumberPlugin,

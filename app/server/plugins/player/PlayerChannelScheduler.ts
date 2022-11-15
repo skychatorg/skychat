@@ -14,7 +14,6 @@ export type SanitizedScheduler = {
 
 
 export class PlayerChannelScheduler {
-
     /**
      * Default added media duration when none is provided (i.e. for twitch streams)
      */
@@ -54,7 +53,7 @@ export class PlayerChannelScheduler {
     }
 
     /**
-     * 
+     *
      * @param start Start timestamp in ms
      * @param media Media information
      * @param duration Duration in ms
@@ -69,7 +68,7 @@ export class PlayerChannelScheduler {
 
     /**
      * Insert an event. Internally put it in the correct list, and already sorted
-     * @param newEvent 
+     * @param newEvent
      */
     insertEvent(newEvent: SchedulerEvent) {
         // Check that the time slot is available
@@ -88,7 +87,7 @@ export class PlayerChannelScheduler {
 
     /**
      * Remove a scheduled event
-     * @param start 
+     * @param start
      */
     remove(start: number) {
         this.pastEvents = this.pastEvents.filter(event => event.start !== start);
@@ -143,11 +142,9 @@ export class PlayerChannelScheduler {
         } else if (nextEvent.start + nextEvent.duration < new Date().getTime()) {
             // If current event has just finished, move the finished event in the list of past events
             this.pastEvents.push(this.futureEvents.shift() as SchedulerEvent);
-        
         } else {
             // An event is currently in progress
             currentEvent = nextEvent;
-
         }
 
         // If there is an event in progress, but the channel is not playing it
@@ -169,7 +166,7 @@ export class PlayerChannelScheduler {
 
     /**
      * Returns all the past and future events, sorted by date
-     * @returns 
+     * @returns
      */
     sanitized(): SanitizedScheduler {
         return {

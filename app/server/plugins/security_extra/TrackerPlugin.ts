@@ -1,6 +1,5 @@
 import { GlobalPlugin } from '../GlobalPlugin';
 import { Connection } from '../../skychat/Connection';
-import { Room } from '../../skychat/Room';
 import { Message } from '../../skychat/Message';
 import { UserController } from '../../skychat/UserController';
 import striptags from 'striptags';
@@ -23,7 +22,6 @@ type StorageObject = {
 }
 
 export class TrackerPlugin extends GlobalPlugin {
-
     public static readonly SOURCE_TYPES: NodeType[] = ['username', 'ip'];
 
     public static readonly COUNT_INCREMENT_COOLDOWN_MS: number = 24 * 60 * 60 * 1000;
@@ -80,19 +78,17 @@ export class TrackerPlugin extends GlobalPlugin {
     }
 
     public getAllRelatedNodesRecursive(type: NodeType, value: string, predicate?: (node: Node, path: Node[]) => boolean): {node: Node, path: Node[]}[] {
-
         /**
          * Recursive lookup function
-         * @param type 
-         * @param value 
+         * @param type
+         * @param value
          * @param visited Hashmap of visited node keys
          * @param path Path to the current node
          */
         const lookup = (type: NodeType, value: string, visited?: {[nodeKey: string]: boolean}, path?: Node[]) => {
-
             // Aggregated nodes
             let allNodes: {node: Node, path: Node[]}[] = [];
-            
+
             // On first call, path is empty
             visited = visited || { [TrackerPlugin.nodeToKey(type, value)]: true };
             path = path || [];
@@ -100,10 +96,9 @@ export class TrackerPlugin extends GlobalPlugin {
             // Find all its children
             const relatedNodes = this.getAllRelatedNodes(type, value);
             for (const relatedNode of relatedNodes) {
-
                 // The node key
                 const nodeKey = TrackerPlugin.nodeToKey(relatedNode.type, relatedNode.value);
-                
+
                 // If node already visited
                 if (typeof visited[nodeKey] !== 'undefined') {
                     continue;
@@ -133,7 +128,6 @@ export class TrackerPlugin extends GlobalPlugin {
     }
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
-
         if (alias === 'track') {
             await this.handleTrack(param, connection);
             return;
@@ -300,7 +294,6 @@ export class TrackerPlugin extends GlobalPlugin {
     }
 
     public deleteAssociation(type1: NodeType, value1: string, type2: NodeType, value2: string): void {
-
         // Build keys
         const key1 = TrackerPlugin.nodeToKey(type1, value1);
         const key2 = TrackerPlugin.nodeToKey(type2, value2);
@@ -314,7 +307,6 @@ export class TrackerPlugin extends GlobalPlugin {
     }
 
     public registerAssociation(type1: NodeType, value1: string, type2: NodeType, value2: string): void {
-
         // Build keys
         const key1 = TrackerPlugin.nodeToKey(type1, value1);
         const key2 = TrackerPlugin.nodeToKey(type2, value2);

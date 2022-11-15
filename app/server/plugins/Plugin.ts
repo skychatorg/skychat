@@ -1,9 +1,8 @@
+import fs from 'fs';
 import { Connection } from '../skychat/Connection';
-import * as fs from 'fs';
 import { Session } from '../skychat/Session';
 import { User } from '../skychat/User';
 import { Room } from '../skychat/Room';
-import { Config } from '../skychat/Config';
 import { UserController } from '../skychat/UserController';
 
 
@@ -49,7 +48,6 @@ export type PluginCommandRules = {
  *  of hooks. Every room has its own instance of plugin. A plugin can also save data to persistent storage.
  */
 export abstract class Plugin {
-
     /**
      * Base path for plugin persistent storage
      */
@@ -162,27 +160,26 @@ export abstract class Plugin {
 
     /**
      * Load user data for this plugin
-     * @param user 
-     * @returns 
+     * @param user
+     * @returns
      */
-    public getUserData(user: User): any {
-        return UserController.getUserPluginData(user, this.commandName);
+    public getUserData<T>(user: User): T {
+        return UserController.getUserPluginData<T>(user, this.commandName);
     }
 
     /**
      * Save user data for this plugin
-     * @param user 
-     * @returns 
+     * @param user
+     * @returns
      */
     public async saveUserData(user: User, data: any) {
         await UserController.savePluginData(user, this.commandName, data);
     }
-    
+
     /**
      * Check command rights and arguments
      */
     public check(alias: string, param: string, connection: Connection) {
-
         // Check room
         if (! connection.room) {
             throw new Error('This command needs to be executed in a room');
@@ -203,7 +200,6 @@ export abstract class Plugin {
 
         // Check parameters
         if (this.rules && typeof this.rules[alias] === 'object') {
-
             // Get rule object
             const entryPointRule = this.rules[alias];
             const minParamCount = entryPointRule.minCount || 0;
@@ -284,12 +280,13 @@ export abstract class Plugin {
     /**
      * When binary data is received
      * @abstract
-     * @param connection
-     * @param messageType
-     * @param data
+     * @param _connection
+     * @param _messageType
+     * @param _data
      * @returns Whether the data was handled. If returning true, no other plugin will be able to handle binary data.
      */
-    public async onBinaryDataReceived(connection: Connection, messageType: number, data: Buffer): Promise<boolean> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    public async onBinaryDataReceived(_connection: Connection, _messageType: number, _data: Buffer): Promise<boolean> {
         return false;
     }
 }

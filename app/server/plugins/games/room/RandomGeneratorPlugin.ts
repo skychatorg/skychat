@@ -5,7 +5,6 @@ import { RandomGenerator } from '../../../skychat/RandomGenerator';
 
 
 export class RandomGeneratorPlugin extends RoomPlugin {
-
     static readonly commandName = 'rand';
 
     readonly minRight = 0;

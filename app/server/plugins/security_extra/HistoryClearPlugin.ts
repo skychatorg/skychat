@@ -4,7 +4,6 @@ import { RoomPlugin } from '../RoomPlugin';
 
 
 export class HistoryClearPlugin extends RoomPlugin {
-
     static readonly commandName = 'historyclear';
 
     static readonly commandAliases = ['hc'];

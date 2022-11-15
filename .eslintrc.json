@@ -29,6 +29,9 @@
             "error",
             "unix"
         ],
+        "no-trailing-spaces": [
+            "error"
+        ],
         "quotes": [
             "error",
             "single"
@@ -41,7 +44,18 @@
             "warn",
             "always"
         ],
+        "space-before-blocks": [
+            "warn",
+            "always"
+        ],
+        "padded-blocks": [
+            "error",
+            { "blocks": "never", "switches": "never", "classes": "never" }
+        ],
         "@typescript-eslint/no-explicit-any": [
+            "off"
+        ],
+        "@typescript-eslint/no-non-null-assertion": [
             "off"
         ]
     }

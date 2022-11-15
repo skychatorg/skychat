@@ -6,14 +6,14 @@ import { RoomManager } from '../skychat/RoomManager';
 import { Config } from '../skychat/Config';
 
 // Load all plugin implementations
-const impl = require('./index');
+import * as impl from './index';
+const AllPlugins: {[pluginGroupName: string]: any} = impl;
 
 
 /**
  * Utility class that handles the list of commands and plugins
  */
 class GlobalPluginGroup {
-
     /**
      * List of plugin groups.
      */
@@ -28,17 +28,16 @@ class GlobalPluginGroup {
     /**
      * Create this instance, whose role is to manage the list of plugin groups enabled for the app.
      * If a given name does not exist, an error will be thrown.
-     * @param pluginGroupNames 
+     * @param pluginGroupNames
      */
     constructor(pluginGroupNames: string[]) {
-
         // Verify for each plugin group that it exists
         for (const pluginGroupName of pluginGroupNames) {
-            if (typeof impl[pluginGroupName] !== 'function') {
+            if (typeof AllPlugins[pluginGroupName] !== 'function') {
                 throw new Error(`Unable to load command/plugin ${pluginGroupName}. Ensure the corresponding file is there and the plugin class exported.`);
             }
 
-            this.pluginGroups.push(new impl[pluginGroupName]());
+            this.pluginGroups.push(new AllPlugins[pluginGroupName]());
         }
 
         // For each plugin group, get the default data storage object to build the default data storage for each user

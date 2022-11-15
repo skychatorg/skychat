@@ -40,7 +40,6 @@ CREATE TABLE \`messages\` (
  * Helper class to interact with the database
  */
 export class DatabaseHelper {
-
     /**
      * Db instance
      */

@@ -12,7 +12,7 @@ import Home from '@/views/Home.vue';
 import Chat from '@/views/Chat.vue';
 import { useAppStore } from '@/stores/app';
 
-import library from './icons';
+import './icons';
 import './css/index.css';
 
 
@@ -35,8 +35,9 @@ import './css/index.css';
     appStore.init();
 
     // Font Awesome
+    // eslint-disable-next-line vue/multi-word-component-names
     app.component('fa', FontAwesomeIcon);
-    
+
     // Use router
     app.use(router);
 

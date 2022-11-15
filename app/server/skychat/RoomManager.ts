@@ -1,10 +1,8 @@
-import * as fs from 'fs';
-import * as http from 'http';
+import fs from 'fs';
 import * as iof from 'io-filter';
 import { Server } from './Server';
 import { Connection } from './Connection';
 import { Session } from './Session';
-import { DatabaseHelper } from './DatabaseHelper';
 import { User } from './User';
 import { Room } from './Room';
 import { UserController } from './UserController';
@@ -26,7 +24,6 @@ export type StoredSkyChat = {
  * The room manager
  */
 export class RoomManager {
-
     static readonly STORAGE_MAIN_FILE: string = 'storage/main.json';
 
     private static TICK_INTERVAL: number = 5 * 1000;
@@ -48,7 +45,6 @@ export class RoomManager {
     plugins: GlobalPlugin[] = [];
 
     constructor() {
-
         // Create server instance
         this.server = new Server(this.getNewSession.bind(this));
 
@@ -170,8 +166,8 @@ export class RoomManager {
 
     /**
      * Returns whether a room id exists
-     * @param id 
-     * @returns 
+     * @param id
+     * @returns
      */
     public hasRoomId(id: number): boolean {
         return !! this.rooms.find(room => room.id === id);
@@ -179,8 +175,8 @@ export class RoomManager {
 
     /**
      * Get a room by id
-     * @param id 
-     * @returns 
+     * @param id
+     * @returns
      */
     public getRoomById(id: number): Room | null {
         return this.rooms.find(room => room.id === id) || null;
@@ -189,7 +185,7 @@ export class RoomManager {
     /**
      * Create a new room
      * @param name
-     * @returns 
+     * @returns
      */
     public createRoom(name?: string) {
         const room = new Room(this);
@@ -203,8 +199,8 @@ export class RoomManager {
 
     /**
      * Try to find a private room with the exact give whitelist
-     * @param whitelist 
-     * @returns 
+     * @param whitelist
+     * @returns
      */
     public findPrivateRoom(whitelist: string[]): Room | null {
         return this.rooms.find(room => {
@@ -225,7 +221,7 @@ export class RoomManager {
 
     /**
      * Create a new private room
-     * @param whitelist 
+     * @param whitelist
      */
     public createPrivateRoom(whitelist: string[]) {
         const room = new Room(this, true);
@@ -241,14 +237,14 @@ export class RoomManager {
 
     /**
      * Delete a room
-     * @param id 
+     * @param id
      */
     public async deleteRoom(id: number) {
         if (this.rooms.length === 1) {
             throw new Error('Impossible to remote the last remaining room');
         }
         const room = this.getRoomById(id);
-        if (! room){
+        if (! room) {
             throw new Error(`Room ${id} not found`);
         }
         // Move all connections to another room
@@ -264,7 +260,7 @@ export class RoomManager {
     /**
      * Build a new session object when there is a new connection
      */
-    private async getNewSession(request: http.IncomingMessage): Promise<Session> {
+    private async getNewSession(): Promise<Session> {
         if (RoomManager.CURRENT_GUEST_ID >= Math.pow(10, 10)) {
             RoomManager.CURRENT_GUEST_ID = 0;
         }
@@ -278,8 +274,8 @@ export class RoomManager {
 
     /**
      * Get a plugin by its command name
-     * @param commandName 
-     * @returns 
+     * @param commandName
+     * @returns
      */
     public getPlugin(commandName: string): GlobalPlugin {
         return this.commands[commandName];
@@ -287,7 +283,7 @@ export class RoomManager {
 
     /**
      * Send the list of rooms for a specific connection
-     * @param connection 
+     * @param connection
      */
     public sendRoomList(connectionOrSession: Connection | Session) {
         // Get the session object
@@ -342,7 +338,7 @@ export class RoomManager {
             await plugin.onConnectionClosed(connection);
         }
     }
-    
+
 
     /**
      * Called each time a new connection is created
@@ -363,7 +359,7 @@ export class RoomManager {
     }
 
     private async onLogin(payload: any, connection: Connection): Promise<void> {
-        const user = await UserController.login(payload.username, payload.password);
+        await UserController.login(payload.username, payload.password);
         await this.onAuthSuccessful(payload.username, connection);
     }
 
@@ -438,7 +434,6 @@ export class RoomManager {
      * @param connection
      */
     private async onMessage(payload: string, connection: Connection): Promise<void> {
-
         // Handle default command (/message)
         if (payload[0] !== '/') {
             payload = '/message ' + payload;
@@ -475,7 +470,6 @@ export class RoomManager {
     }
 
     private async onBinaryMessage({ type, data }: { type: number, data: Buffer }, connection: Connection): Promise<void> {
-
         // Try to find a global plugin that wants to handle the binary message
         for (const plugin of this.plugins) {
             if (await plugin.onBinaryDataReceived(connection, type, data)) {

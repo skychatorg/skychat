@@ -1,4 +1,4 @@
-import * as fs from 'fs';
+import fs from 'fs';
 import * as Mail from 'nodemailer/lib/mailer';
 
 
@@ -20,12 +20,11 @@ export type Preferences = {
 }
 
 export type PublicConfig = {
-    
+
     galleryEnabled: boolean;
 }
 
 export class Config {
-
     public static LOCATION = '';
 
     public static HOSTNAME = '';
@@ -51,7 +50,7 @@ export class Config {
     public static EMAIL_TRANSPORT: Mail | null = null;
 
     public static PREFERENCES: Preferences;
-    
+
     public static GUEST_NAMES: string[] = [];
 
     public static FAKE_MESSAGES: string[] = [];

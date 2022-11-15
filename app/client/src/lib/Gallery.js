@@ -1,10 +1,10 @@
 
 
 /**
- * 
+ *
  * @param {string[]} folderList List of folders to go to the file
  * @param {*} fileName File name
- * @returns 
+ * @returns
  */
 const getFileNamePath = (folderList, fileName) => {
     return folderList.length === 0 ? fileName : `${folderList.join('/')}/${fileName}`;
@@ -18,22 +18,22 @@ const getFileExtension = fileName => {
     return fileName.split('.').pop();
 };
 
-const getFileIcon = ({ name, type }) => {
+const getFileIcon = file => {
     return {
         video: 'video',
         subtitle: 'closed-captioning',
         audio: 'music',
         image: 'image',
         unknown: 'file',
-    }[type] || 'file';
+    }[file.type] || 'file';
 };
-const getFileColor = ({ name, type }) => {
+const getFileColor = file => {
     return {
         video: 'rgb(var(--color-tertiary))',
         subtitle: 'rgb(var(--color-tertiary-light))',
         audio: 'rgb(var(--color-secondary))',
         image: 'rgb(var(--color-primary))',
-    }[type] || 'rgb(var(--color-skygray-lightest))';
+    }[file.type] || 'rgb(var(--color-skygray-lightest))';
 };
 
 

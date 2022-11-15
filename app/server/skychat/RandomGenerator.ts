@@ -1,9 +1,8 @@
 import * as crypto from 'crypto';
-const biguint = require('biguint-format');
+import biguint from 'biguint-format';
 
 
 export class RandomGenerator {
-
     /**
      *
      * @param bytes Number of bytes to use to generate the number between 0 and 1. The number of distinct values

@@ -7,7 +7,6 @@ import { VideoFetcher } from './VideoFetcher';
 
 
 export class YoutubeFetcher implements VideoFetcher {
-
     /**
      * Get the duration in seconds from the youtube duration
      * @param durationStr
@@ -34,15 +33,16 @@ export class YoutubeFetcher implements VideoFetcher {
 
     /**
      * Parse a youtube link
-     * @param link 
-     * @returns 
+     * @param link
+     * @returns
      */
     public static parseYoutubeLink(link: string): {videoId: string, playlistId: string | null, start: number} {
         let match: RegExpMatchArray | null;
 
         // If the link contains a playlist
         let playlistId: string | null;
-        if (match = link.match(/list=([a-zA-Z0-9-_]+)/)) {
+        match = link.match(/list=([a-zA-Z0-9-_]+)/);
+        if (match) {
             playlistId = match[1];
         } else {
             playlistId = null;
@@ -50,17 +50,22 @@ export class YoutubeFetcher implements VideoFetcher {
 
         // If the link contains a video
         let videoId: string;
-        if (match = link.match(/youtu\.be\/([a-zA-Z0-9-_]+)/)) {
-            videoId = match[1];
-        } else if (match = link.match(/v=([a-zA-Z0-9-_]+)/)) {
+        match = link.match(/youtu\.be\/([a-zA-Z0-9-_]+)/);
+        if (match) {
             videoId = match[1];
         } else {
-            videoId = link;
+            match = link.match(/v=([a-zA-Z0-9-_]+)/);
+            if (match) {
+                videoId = match[1];
+            } else {
+                videoId = link;
+            }
         }
 
         // If the link contains a time code
         let start: number;
-        if (match = link.match(/(t|time_continue|start)=([0-9hms]+)/)) {
+        match = link.match(/(t|time_continue|start)=([0-9hms]+)/);
+        if (match) {
             start = parseInt(match[2]) || 0;
         } else {
             start = 0;
@@ -75,7 +80,6 @@ export class YoutubeFetcher implements VideoFetcher {
     private readonly youtube: youtube_v3.Youtube;
 
     constructor() {
-
         // Youtube API object
         this.youtube = google.youtube({
             version: 'v3',
@@ -84,7 +88,6 @@ export class YoutubeFetcher implements VideoFetcher {
     }
 
     async get(playerPlugin: PlayerPlugin, param: string): Promise<VideoInfo[]> {
-
         const [link, type] = param.split(' ');
 
         if (typeof type === 'undefined' || type === 'video') {
@@ -93,7 +96,6 @@ export class YoutubeFetcher implements VideoFetcher {
             const video = await this.getVideoInfo(videoId);
             video.startCursor = start * 1000;
             return [video];
-
         } else if (type === 'playlist') {
             let { playlistId } = YoutubeFetcher.parseYoutubeLink(link);
             if (! playlistId) {
@@ -106,9 +108,9 @@ export class YoutubeFetcher implements VideoFetcher {
     }
 
     /**
-     * 
-     * @param param 
-     * @returns 
+     *
+     * @param param
+     * @returns
      */
     async search(playerPlugin: PlayerPlugin, type: string, search: string, limit: number): Promise<VideoInfo[]> {
         const result = await this.youtube.search.list({
@@ -122,7 +124,14 @@ export class YoutubeFetcher implements VideoFetcher {
             throw new Error('No result found');
         }
         return items
-            .filter(item => (item.id!.videoId || item.id!.playlistId) && item.snippet!.title && item.snippet!.thumbnails!.default!.url)
+            .filter(item => item.id
+                && (item.id.videoId || item.id.playlistId)
+                && item.snippet
+                && item.snippet.title
+                && item.snippet.thumbnails
+                && item.snippet.thumbnails.default
+                && item.snippet.thumbnails.default.url
+            )
             .map(item => {
                 return {
                     type: 'youtube',

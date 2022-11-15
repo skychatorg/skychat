@@ -1,4 +1,4 @@
-import * as fs from 'fs';
+import fs from 'fs';
 import SQL from 'sql-template-strings';
 import { Connection } from './Connection';
 import { IBroadcaster } from './IBroadcaster';
@@ -32,7 +32,6 @@ export type SanitizedRoom = {
 
 
 export class Room implements IBroadcaster {
-
     /**
      * Base path for rooms persistent storage
      */
@@ -122,7 +121,7 @@ export class Room implements IBroadcaster {
             this.id = Room.CURRENT_ID;
             ++ Room.CURRENT_ID;
         }
-        
+
         // Set default value for stored values then load storage file if it exists (will override default values)
         this.name = `Room ${this.id}`;
         this.pluginGroupNames = [CorePluginGroup.name];
@@ -142,7 +141,7 @@ export class Room implements IBroadcaster {
 
     /**
      * Allow an identifier to access this room (only for private rooms)
-     * @param identifier 
+     * @param identifier
      */
     public allow(identifier: string): boolean {
         if (! this.isPrivate) {
@@ -158,7 +157,7 @@ export class Room implements IBroadcaster {
 
     /**
      * Unallow an identifier to access this room (only for private rooms)
-     * @param identifier 
+     * @param identifier
      */
     public unallow(identifier: string): boolean {
         if (! this.isPrivate) {
@@ -270,7 +269,6 @@ export class Room implements IBroadcaster {
      * @param connection
      */
     public sendHistory(connection: Connection, lastId?: number, count?: number): void {
-
         // Default number of messages to send
         count = count || Room.MESSAGE_HISTORY_VISIBLE_LENGTH;
 
@@ -311,7 +309,7 @@ export class Room implements IBroadcaster {
     public getPlugin(name: string): Plugin | undefined {
         return this.commands[name];
     }
-    
+
     /**
      * Execute before room join hook
      * @param connection

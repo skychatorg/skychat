@@ -1,6 +1,6 @@
-const escapeHtml = require('escape-html');
 import { Config } from './Config';
 import { StickerManager } from './StickerManager';
+import escapeHTML from 'escape-html';
 
 
 
@@ -8,8 +8,7 @@ import { StickerManager } from './StickerManager';
  * Singleton helper to format messages
  */
 export class MessageFormatter {
-
-    public static readonly LINK_REGEXP: RegExp = /(^|[ \n]|<br>)((http|https):\/\/[\w?=&.\/-;#~%+@,\[\]:!-]+(?![\w\s?&.\/;#~%"=+@,\[\]:!-]*>))/ig;
+    public static readonly LINK_REGEXP: RegExp = /(^|[ \n]|<br>)((http|https):\/\/[\w?=&./-;#~%+@,[\]:!-]+(?![\w\s?&./;#~%"=+@,[\]:!-]*>))/ig;
 
     private static instance?: MessageFormatter;
 
@@ -60,7 +59,7 @@ export class MessageFormatter {
      * @param message
      */
     public replaceHtml(message: string): string {
-        return escapeHtml(message);
+        return escapeHTML(message);
     }
 
     /**
@@ -107,7 +106,7 @@ export class MessageFormatter {
      * @param trusted
      */
     public replaceButtons(message: string, remove?: boolean, trusted?: boolean): string {
-        const regexStr = '\\[\\[(.+?)\/(.+?)\\]\\]';
+        const regexStr = '\\[\\[(.+?)/(.+?)\\]\\]';
         const matches = message.match(new RegExp(regexStr, 'g'));
         if (! matches) {
             return message;
@@ -143,7 +142,7 @@ export class MessageFormatter {
         action = this.format(action, true);
         // Preview command if action is one
         if (action[0] === '/' && ! trusted) {
-            title += ' <span class="skychat-button-info">(' + escapeHtml(action.split(' ')[0]) + ')</span>';
+            title += ' <span class="skychat-button-info">(' + escapeHTML(action.split(' ')[0]) + ')</span>';
         }
         return `<button class="skychat-button" title="${action}" data-action="${action}" data-trusted="${trusted}">${title}</button>`;
     }
@@ -190,7 +189,7 @@ export class MessageFormatter {
      * @param message
      */
     public replaceRisiBankStickers(message: string, remove?: boolean): string {
-        const risibankImageRegExp = /https:\/\/risibank.fr\/cache\/medias\/([0-9]+)\/([0-9]+)\/([0-9]+)\/([0-9]+)\/([\w]+)\.(jpg|jpeg|gif|png)/g;
+        const risibankImageRegExp = /https:\/\/risibank.fr\/cache\/medias\/(\d+)\/(\d+)\/(\d+)\/(\d+)\/(\w+)\.(jpg|jpeg|gif|png)/g;
         const replaceStr = '<a class="skychat-risibank-sticker" href="//risibank.fr/media/$4-media" target="_blank"><img src="//risibank.fr/cache/medias/$1/$2/$3/$4/$5.$6"></a>';
         if (remove) {
             return message.replace(risibankImageRegExp, '');
@@ -209,7 +208,6 @@ export class MessageFormatter {
             if (remove) {
                 message = message.replace(new RegExp(MessageFormatter.escapeRegExp(code), 'g'), '');
             } else {
-
                 message = message.replace(new RegExp(MessageFormatter.escapeRegExp(code), 'g'), () => {
                     ++ replacedCount;
                     if (replacedCount > Config.PREFERENCES.maxReplacedStickersPerMessage) {

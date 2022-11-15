@@ -1,4 +1,3 @@
-import { Connection } from '../../../skychat/Connection';
 import { Session } from '../../../skychat/Session';
 import { Config } from '../../../skychat/Config';
 import { GlobalPlugin } from '../../GlobalPlugin';
@@ -9,7 +8,6 @@ import { RoomManager } from '../../../skychat/RoomManager';
  * Handle the list of currently active connections
  */
 export class ConnectedListPlugin extends GlobalPlugin {
-
     /**
      * Maximum interval between two syncs, to ensure data is consistent on the client-side
      */
@@ -53,8 +51,7 @@ export class ConnectedListPlugin extends GlobalPlugin {
         setInterval(this.tick.bind(this), ConnectedListPlugin.MAX_SYNC_DELAY);
     }
 
-    async run(alias: string, param: string, connection: Connection): Promise<void> {
-
+    async run(_alias: string, param: string): Promise<void> {
         // Update storage value
         const [mode, arg]: string[] = param.split(' ');
         this.storage = {
@@ -66,20 +63,19 @@ export class ConnectedListPlugin extends GlobalPlugin {
         this.sync();
     }
 
-    async onConnectionAuthenticated(connection: Connection): Promise<void> {
+    async onConnectionAuthenticated(): Promise<void> {
         this.sync();
     }
 
-    async onConnectionJoinedRoom(connection: Connection): Promise<void> {
+    async onConnectionJoinedRoom(): Promise<void> {
         this.sync();
     }
 
-    async onConnectionLeftRoom(connection: Connection): Promise<void> {
+    async onConnectionLeftRoom(): Promise<void> {
         this.sync();
     }
 
     private tick(): void {
-
         // If last sync was long ago, we make a sync request
         if (this.syncLastDate.getTime() + ConnectedListPlugin.MIN_SYNC_DELAY < new Date().getTime()) {
             this._syncNow();
@@ -88,7 +84,6 @@ export class ConnectedListPlugin extends GlobalPlugin {
     }
 
     public sync(): void {
-
         // If last sync was long ago, we can sync directly
         if (this.syncLastDate.getTime() + ConnectedListPlugin.MIN_SYNC_DELAY < new Date().getTime()) {
             this._syncNow();
@@ -105,7 +100,6 @@ export class ConnectedListPlugin extends GlobalPlugin {
     }
 
     private _syncNow() {
-
         this.syncLastDate = new Date();
 
         // Build a list of anon sessions to send to guests
@@ -131,14 +125,13 @@ export class ConnectedListPlugin extends GlobalPlugin {
                 }
                 return b.user.xp - a.user.xp;
             });
-            
+
         Object.values(Session.sessions).forEach(session => {
             session.connections.forEach(connection => {
-
                 if (connection.session.user.right < Config.PREFERENCES.minRightForConnectedList) {
                     return;
                 }
-                
+
                 if (this.storage.mode === 'hide-details-by-right' && connection.session.user.right < this.storage.argument) {
                     connection.send('connected-list', anonSessions);
                 } else {

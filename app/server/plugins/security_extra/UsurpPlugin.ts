@@ -1,14 +1,12 @@
-import { Connection } from '../../skychat/Connection';
 import { User } from '../../skychat/User';
 import { Session } from '../../skychat/Session';
 import { RoomPlugin } from '../RoomPlugin';
 
 
 /**
- * 
+ *
  */
 export class UsurpPlugin extends RoomPlugin {
-
     static readonly commandName = 'usurp';
 
     readonly opOnly = true;
@@ -20,7 +18,7 @@ export class UsurpPlugin extends RoomPlugin {
         },
     };
 
-    async run(alias: string, param: string, connection: Connection): Promise<void> {
+    async run(alias: string, param: string): Promise<void> {
         const identifier = param.split(' ')[0].toLowerCase();
         const commandName = param.split(' ')[1];
         const session = Session.getSessionByIdentifier(identifier);

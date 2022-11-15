@@ -3,7 +3,7 @@ import { Session } from '../../skychat/Session';
 import { SanitizedUser, User } from '../../skychat/User';
 import { UserController } from '../../skychat/UserController';
 import { PlayerChannelManager } from './PlayerChannelManager';
-import { PlayerChannelScheduler, SanitizedScheduler, SchedulerEvent } from './PlayerChannelScheduler';
+import { PlayerChannelScheduler, SanitizedScheduler } from './PlayerChannelScheduler';
 
 
 export type QueuedVideoInfo = {
@@ -63,7 +63,6 @@ export type SanitizedPlayerChannel = {
 
 
 export class PlayerChannel {
-
     public static readonly HISTORY_LENGTH = 200;
 
     public readonly id: number;
@@ -103,9 +102,9 @@ export class PlayerChannel {
 
     /**
      * Schedule a media
-     * @param media 
-     * @param start 
-     * @param duration 
+     * @param media
+     * @param start
+     * @param duration
      */
     public schedule(media: VideoInfo, start: number, duration?: number) {
         this.scheduler.add(media, start, duration);
@@ -114,7 +113,7 @@ export class PlayerChannel {
 
     /**
      * Unschedule a media
-     * @param start 
+     * @param start
      */
     public unschedule(start: number) {
         this.scheduler.remove(start);
@@ -222,8 +221,8 @@ export class PlayerChannel {
 
     /**
      * Whether the given video is already in the list or currently playing
-     * @param video 
-     * @returns 
+     * @param video
+     * @returns
      */
     public isVideoPlayingOrInQueue(video: VideoInfo): boolean {
         if (this.queue.find(q => q.video.type === video.type && q.video.id === video.id)) {
@@ -237,8 +236,8 @@ export class PlayerChannel {
 
     /**
      * Add one or multiple videos to the queue
-     * @param video 
-     * @param user 
+     * @param video
+     * @param user
      * @param options
      */
     public add(videoOrVideos: VideoInfo | VideoInfo[], user?: User, options?: { allowFailure: boolean }): number {
@@ -274,10 +273,10 @@ export class PlayerChannel {
     public getQueueEntry(type: string, id: VideoInfo['id']): QueuedVideoInfo | null {
         return this.queue.find(q => q.video.type === type && q.video.id === id) || null;
     }
-    
+
     /**
      * Remove a specific video from the queue
-     * @param video 
+     * @param video
      */
     public remove(video: VideoInfo) {
         this.queue = this.queue.filter(q => q.video.type !== video.type || q.video.id !== video.id);
@@ -286,7 +285,7 @@ export class PlayerChannel {
 
     /**
      * Return whether a identifier is authorized to manage the player right now
-     * @param identifier 
+     * @param identifier
      */
     public hasPlayerPermission(session: Session) {
         // If session is OP
@@ -315,7 +314,7 @@ export class PlayerChannel {
     }
 
     /**
-     * 
+     *
      */
     public getPlayerData() {
         return {
@@ -356,8 +355,8 @@ export class PlayerChannel {
         });
         // Re-build the new queue
         const queue: QueuedVideoInfo[] = [];
-        while (true) {
-            let addedCount = 0;
+        let addedCount = Infinity;
+        while (addedCount !== 0) {
             for (const userId of userIds) {
                 const queuedVideo = users[userId].shift();
                 if (! queuedVideo) {

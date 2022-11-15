@@ -4,19 +4,18 @@ import { Config } from './Config';
 import { DatabaseHelper } from './DatabaseHelper';
 import { AuthToken, User } from './User';
 import SQL from 'sql-template-strings';
-import { Message, MessageConstructorOptions, MessageMeta } from './Message';
+import { Message, MessageConstructorOptions } from './Message';
 import { globalPluginGroup } from '../plugins/GlobalPluginGroup';
 
 
 export class UserController {
-
     /**
      * Validity of the auth token in seconds
      */
     public static AUTH_TOKEN_VALIDITY: number = 1000 * 60 * 60 * 24 * 7;
 
     /**
-     * 
+     *
      */
     public static getPluginDefaultData(pluginName: string): any {
         return _.cloneDeep(globalPluginGroup.defaultDataStorageValues[pluginName]);
@@ -177,7 +176,7 @@ export class UserController {
      * @param user
      * @param pluginName
      */
-    public static getUserPluginData<T>(user: User, pluginName: string): any {
+    public static getUserPluginData<T>(user: User, pluginName: string): T {
         return typeof user.data.plugins[pluginName] === 'undefined' ? this.getPluginDefaultData(pluginName) : user.data.plugins[pluginName];
     }
 

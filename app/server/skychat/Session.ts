@@ -1,7 +1,6 @@
 import { SanitizedUser, User } from './User';
 import { Connection } from './Connection';
 import { IBroadcaster } from './IBroadcaster';
-import { SanitizedRoom } from './Room';
 
 
 export const BinaryMessageTypes = 123;
@@ -25,7 +24,6 @@ export type SanitizedSession = {
  * A SkyChatSession represents a connected user, who has an account or not
  */
 export class Session implements IBroadcaster {
-
     static readonly DEAD_GUEST_SESSION_CLEANUP_DELAY_MS = 30 * 1000;
 
     static readonly DEAD_USER_SESSION_CLEANUP_DELAY_MS = 24 * 60 * 60 * 1000;
@@ -140,7 +138,7 @@ export class Session implements IBroadcaster {
     private op = false;
 
     /**
-     * Date since the last active connection has disconnected. 
+     * Date since the last active connection has disconnected.
      */
     public deadSince: Date | null;
 
@@ -276,7 +274,7 @@ export class Session implements IBroadcaster {
         return {
             identifier: this.identifier,
             connectionCount: this.connections.length,
-            rooms: Array.from(new Set(this.connections.filter(c => c.room).map(c => c.room!.id))),
+            rooms: Array.from(new Set(this.connections.map(c => c.room ? c.room.id : null).filter(roomId => typeof roomId === 'number'))) as number[],
             deadSinceTime: this.deadSince ? this.deadSince.getTime() * 0.001 : undefined,
             lastInteractionTime: this.lastInteractionDate.getTime() * 0.001,
             user: this.user.sanitized()

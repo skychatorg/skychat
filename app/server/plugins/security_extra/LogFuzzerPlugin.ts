@@ -1,12 +1,10 @@
-import { Connection } from '../../skychat/Connection';
-import { DatabaseHelper } from '../../skychat/DatabaseHelper';
 import SQL from 'sql-template-strings';
+import { DatabaseHelper } from '../../skychat/DatabaseHelper';
 import { GlobalPlugin } from '../GlobalPlugin';
 import { RoomManager } from '../../skychat/RoomManager';
 
 
 export class LogFuzzerPlugin extends GlobalPlugin {
-
     static readonly DURATION_BEFORE_FUZZ =  24 * 60 * 60 * 1000;
 
     static readonly FUZZ_COOLDOWN =  LogFuzzerPlugin.DURATION_BEFORE_FUZZ;
@@ -31,7 +29,9 @@ export class LogFuzzerPlugin extends GlobalPlugin {
         this.armTick(LogFuzzerPlugin.FUZZ_COOLDOWN);
     }
 
-    async run(alias: string, param: string, connection: Connection): Promise<void> { }
+    async run(): Promise<void> {
+        throw new Error('Not implemented');
+    }
 
     private fuzzContent(content: string) {
         return content.replace(/(^| |,|\/|.)([a-z0-9àâçéèêëîïôûùüÿñæœ-]+)/gi, (m0, m1, m2) => {

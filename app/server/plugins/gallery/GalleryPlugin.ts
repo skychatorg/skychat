@@ -1,15 +1,13 @@
 import { Config } from '../../skychat/Config';
 import { Connection } from '../../skychat/Connection';
 import { GlobalPlugin } from '../GlobalPlugin';
-import { Session } from '../../skychat/Session';
 import { Gallery } from './Gallery';
 
 
 /**
- * 
+ *
  */
 export class GalleryPlugin extends GlobalPlugin {
-
     static readonly commandName = 'gallery';
 
     static readonly commandAliases = [
@@ -40,7 +38,6 @@ export class GalleryPlugin extends GlobalPlugin {
     };
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
-        
         switch (alias) {
         case 'galleryls':
             connection.send('gallery', await Gallery.ls(param));
@@ -64,7 +61,7 @@ export class GalleryPlugin extends GlobalPlugin {
             connection.send('gallery', await Gallery.ls(''));
         }
     }
-    
+
     public async onConnectionAuthenticated(connection: Connection): Promise<void> {
         // If gallery was already sent
         if (Config.PREFERENCES.minRightForGalleryRead === -1) {

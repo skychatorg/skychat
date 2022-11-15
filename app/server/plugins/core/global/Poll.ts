@@ -39,7 +39,6 @@ export type SanitizedPoll = {
 }
 
 export class Poll {
-
     private static CURRENT_POLL_ID = 0;
 
     public readonly id: number;
@@ -80,7 +79,7 @@ export class Poll {
 
     /**
      * Force the result of this poll
-     * @param vote 
+     * @param vote
      */
     public forceResult(vote: boolean) {
         this.opVote = vote;
@@ -118,7 +117,6 @@ export class Poll {
      * Await for this poll to complete
      */
     public async complete(): Promise<boolean | undefined> {
-
         if (this.state !== 'pending') {
             throw new Error('Poll already started');
         }
@@ -126,10 +124,8 @@ export class Poll {
         this.state = 'started';
 
         return new Promise(resolve => {
-
             // Wait for the poll to end
             setTimeout(() => {
-
                 this.state = 'finished';
                 this.sync();
                 resolve(this.getResult());
@@ -154,7 +150,6 @@ export class Poll {
     }
 
     public sync(): void {
-
         // If polling all
         if (this.options.audience === '*') {
             for (const session of Object.values(Session.sessions)) {

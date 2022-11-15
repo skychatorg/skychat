@@ -7,7 +7,6 @@ import { RoomManager } from '../skychat/RoomManager';
  * A global plugin is a plugin which instantied once at the level of the room manager
  */
 export abstract class GlobalPlugin extends Plugin {
-    
     public static readonly isGlobal: boolean = true;
 
     /**
@@ -17,7 +16,7 @@ export abstract class GlobalPlugin extends Plugin {
 
     /**
      * A globally instantiated plugin
-     * @param manager 
+     * @param manager
      */
     constructor(manager: RoomManager) {
         super();
@@ -35,37 +34,41 @@ export abstract class GlobalPlugin extends Plugin {
      * Executed when a new messages comes in
      * @abstract
      * @param message
-     * @param connection
+     * @param _connection
      */
-    public async onNewMessageHook(message: string, connection: Connection): Promise<string> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    public async onNewMessageHook(message: string, _connection: Connection): Promise<string> {
         return message;
     }
 
     /**
      * When a connection is created
      * @abstract
-     * @param connection
+     * @param _connection
      */
-    public async onNewConnection(connection: Connection): Promise<void> {
-
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    public async onNewConnection(_connection: Connection): Promise<void> {
+        void 0;
     }
 
     /**
      * When a connection successfully authenticated
      * @abstract
-     * @param connection
+     * @param _connection
      */
-    public async onConnectionAuthenticated(connection: Connection): Promise<void> {
-
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    public async onConnectionAuthenticated(_connection: Connection): Promise<void> {
+        void 0;
     }
 
     /**
      * When a connection was closed
      * @abstract
-     * @param connection
+     * @param _connection
      */
-    public async onConnectionClosed(connection: Connection): Promise<void> {
-
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    public async onConnectionClosed(_connection: Connection): Promise<void> {
+        void 0;
     }
 }
 

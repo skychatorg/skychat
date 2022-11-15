@@ -27,7 +27,6 @@ const waitTimeout = (delay: number) => {
 
 
 export class GuessTheNumberPlugin extends RoomPlugin {
-
     public static readonly ENTRY_COST: number = 100;
 
     static readonly commandName = 'guess';
@@ -46,9 +45,8 @@ export class GuessTheNumberPlugin extends RoomPlugin {
     private currentGame: GameObject | null = null;
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
-
         if (param === 'start') {
-            await this.handleStart(param, connection);
+            await this.handleStart();
             return;
         }
 
@@ -63,7 +61,7 @@ export class GuessTheNumberPlugin extends RoomPlugin {
     /**
      * Start a new game
      */
-    private async handleStart(param: string, connection: Connection): Promise<void> {
+    private async handleStart(): Promise<void> {
         if (this.currentGame) {
             throw new Error('A round is already in progress');
         }
@@ -144,7 +142,6 @@ export class GuessTheNumberPlugin extends RoomPlugin {
         if (currentWinners.length === 0) {
             // If no winner
             await this.room.sendMessage({ content: 'No winner this time :)', user: UserController.getNeutralUser() });
-
         } else {
             const jackpot = Math.floor(this.currentGame.participants.length * GuessTheNumberPlugin.ENTRY_COST / currentWinners.length);
             // If winner
@@ -156,7 +153,7 @@ export class GuessTheNumberPlugin extends RoomPlugin {
                 await UserController.giveMoney(session.user, jackpot);
             }
             await this.room.sendMessage({
-                content: `${currentWinners.join(', ')} won this round :) ${currentWinners.length > 1 ? 'They' : 'He'} earned \$${jackpot / 100}`,
+                content: `${currentWinners.join(', ')} won this round :) ${currentWinners.length > 1 ? 'They' : 'He'} earned $${jackpot / 100}`,
                 user: UserController.getNeutralUser()
             });
         }

@@ -1,4 +1,4 @@
-const fs = require('fs');
+import fs from 'fs';
 import { RoomPlugin, GlobalPlugin } from '..';
 import { PluginGroup } from '../PluginGroup';
 
@@ -10,6 +10,7 @@ const pluginClasses: any[] = fs.readdirSync(__dirname)
             return null;
         }
         // Require filename
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
         const loadedFile = require(`./${fileName}`);
         const defaultExport = loadedFile.default || null;
         if (! defaultExport) {
@@ -23,7 +24,6 @@ const pluginClasses: any[] = fs.readdirSync(__dirname)
     .filter((PluginConstr: any) => !! PluginConstr);
 
 export class UserDefinedPluginGroup extends PluginGroup {
-
     roomPluginClasses = pluginClasses.filter((c: any) => c.prototype instanceof RoomPlugin);
     globalPluginClasses = pluginClasses.filter((c: any) => c.prototype instanceof GlobalPlugin);
 }

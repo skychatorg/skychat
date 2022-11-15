@@ -1,4 +1,3 @@
-import { Connection } from '../../../skychat/Connection';
 import { RoomPlugin } from '../../RoomPlugin';
 import { UserController } from '../../../skychat/UserController';
 import { User } from '../../../skychat/User';
@@ -7,10 +6,9 @@ import { Config } from '../../../skychat/Config';
 
 
 export class StatsPlugin extends RoomPlugin {
+    static readonly AVERAGE_BOOK_READ_TIME: number = 60 * 5;
 
-    static readonly AVERAGE_BOOK_READ_TIME: number = 60 * 5; 
-
-    static readonly AVERAGE_MOVIE_WATCH_TIME: number = 60 * 2; 
+    static readonly AVERAGE_MOVIE_WATCH_TIME: number = 60 * 2;
 
     static readonly AVERAGE_MARATHON_RUN_TIME: number = 60 * 4;
 
@@ -33,8 +31,7 @@ export class StatsPlugin extends RoomPlugin {
      * @param username
      * @param connection
      */
-    async run(alias: string, username: string, connection: Connection): Promise<void> {
-        
+    async run(alias: string, username: string): Promise<void> {
         const session = Session.getSessionByIdentifier(username);
         if (! session) {
             // If user doesn't exist

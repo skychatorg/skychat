@@ -32,7 +32,6 @@ const waitTimeout = (delay: number) => {
 
 
 export class RacingPlugin extends RoomPlugin {
-
     static readonly CARS: string[] = [
         '🚚',
         '🚗',
@@ -74,9 +73,8 @@ export class RacingPlugin extends RoomPlugin {
     private lastGameFinishedDate: Date = new Date(0);
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
-
         if (param === 'start') {
-            await this.handleStart(param, connection);
+            await this.handleStart();
             return;
         }
 
@@ -86,8 +84,7 @@ export class RacingPlugin extends RoomPlugin {
     /**
      * Start a new game
      */
-    private async handleStart(param: string, connection: Connection): Promise<void> {
-
+    private async handleStart(): Promise<void> {
         // If a game is already in progress
         if (this.currentGame) {
             throw new Error('A round is already in progress');
@@ -142,7 +139,7 @@ export class RacingPlugin extends RoomPlugin {
             this.updateGameMessage();
             await waitTimeout(1000);
         }
-        
+
         // Run actual race car
         this.currentGame.titleMessage = '🚩 Goooo 🚩';
         this.currentGame.state = 'started';
@@ -150,7 +147,8 @@ export class RacingPlugin extends RoomPlugin {
         await waitTimeout(1000);
         const tickDuration = 1000 / 4;
         const percentPerTick = tickDuration / RacingPlugin.AVERAGE_RACE_DURATION * this.currentGame.cars.length;
-        while (true) {
+        let gameOn = true;
+        while (gameOn) {
             // Decide which car will move this tick
             const chosenCarId = Math.floor(RandomGenerator.random(8) * this.currentGame.cars.length);
             // Move the car
@@ -160,7 +158,7 @@ export class RacingPlugin extends RoomPlugin {
             if (this.currentGame.positions[chosenCarId] >= 1) {
                 this.currentGame.positions[chosenCarId] = 1;
                 this.currentGame.winnerId = chosenCarId;
-                break;
+                gameOn = false;
             }
             await waitTimeout(500);
         }

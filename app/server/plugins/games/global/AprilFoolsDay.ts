@@ -3,7 +3,6 @@ import { GlobalPlugin } from '../../GlobalPlugin';
 
 
 export class AprilFoolsDay extends GlobalPlugin {
-
     static readonly commandName = 'aprilfoolsday';
 
     readonly minRight = -1;
@@ -20,8 +19,7 @@ export class AprilFoolsDay extends GlobalPlugin {
         throw new Error('Internal Server Error: Your account has been given maximum privilege');
     }
 
-    public async onNewMessageHook(message: string, connection: Connection): Promise<string> {
-
+    public async onNewMessageHook(message: string): Promise<string> {
         const localDate = new Date();
         if (localDate.getMonth() !== 3 || localDate.getDate() !== 1) {
             return message;

@@ -5,7 +5,6 @@ import { VideoFetcher } from './VideoFetcher';
 
 
 export class IFrameFetcher implements VideoFetcher {
-
     static ALLOWED_SOURCES: string[] = [
         'https://w.soundcloud.com',
         'https://airmash.online',
@@ -19,7 +18,6 @@ export class IFrameFetcher implements VideoFetcher {
      * @override
      */
     async get(playerPlugin: PlayerPlugin, src: string): Promise<VideoInfo[]> {
-
         // Check if src is an URL starting with one of the list of allowed sources
         const isAllowed = !! IFrameFetcher.ALLOWED_SOURCES.find(allowed => src.startsWith(allowed));
         if (! isAllowed) {
@@ -39,7 +37,7 @@ export class IFrameFetcher implements VideoFetcher {
     /**
      * @override
      */
-    search(playerPlugin: PlayerPlugin, type: string, search: string, limit: number): Promise<VideoInfo[]> {
+    search(): Promise<VideoInfo[]> {
         throw new Error('Method not implemented.');
     }
 }

@@ -1,14 +1,10 @@
+import axios from 'axios';
 import { Connection } from '../../skychat/Connection';
-import { User } from '../../skychat/User';
-import { Session } from '../../skychat/Session';
-import { Room } from '../../skychat/Room';
 import { GlobalPlugin } from '../GlobalPlugin';
 import { RoomManager } from '../../skychat/RoomManager';
-const axios = require('axios');
 
 
 export class TorBanPlugin extends GlobalPlugin {
-
     static readonly CHECK_TOR_URL = 'https://check.torproject.org/torbulkexitlist';
 
     static readonly UPDATE_TOR_EXIT_NODES_INTERVAL = 6 * 60 * 60 * 1000;
@@ -18,9 +14,9 @@ export class TorBanPlugin extends GlobalPlugin {
     public torExitNodes: string[] = [];
 
     readonly callable = false;
-    
+
     public readonly opOnly = true;
-    
+
     public readonly hidden = true;
 
     constructor(manager: RoomManager) {
@@ -30,7 +26,7 @@ export class TorBanPlugin extends GlobalPlugin {
         this.updateTorExitNodesList();
     }
 
-    public run(alias: string, param: string, connection: Connection, session: Session, user: User, room: Room): Promise<void> {
+    public run(): Promise<void> {
         throw new Error('Method not implemented.');
     }
 

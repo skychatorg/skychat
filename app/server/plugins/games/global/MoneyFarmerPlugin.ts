@@ -1,4 +1,3 @@
-import { Connection } from '../../../skychat/Connection';
 import { User } from '../../../skychat/User';
 import { ConnectedListPlugin } from '../../core/global/ConnectedListPlugin';
 import { UserController } from '../../../skychat/UserController';
@@ -8,7 +7,6 @@ import { RoomManager } from '../../../skychat/RoomManager';
 
 
 export class MoneyFarmerPlugin extends GlobalPlugin {
-
     public static readonly MAX_INACTIVITY_DURATION_MS: number = 5 * 60 * 1000;
 
     public static readonly TICK_AMOUNTS_LIMITS: {limit: number, amount: number}[] = [
@@ -29,7 +27,9 @@ export class MoneyFarmerPlugin extends GlobalPlugin {
         setInterval(this.tick.bind(this), 60 * 1000);
     }
 
-    async run(alias: string, param: string, connection: Connection): Promise<void> { }
+    async run(): Promise<void> {
+        void 0;
+    }
 
     /**
      * Get the amount to give to a specific user for this tick

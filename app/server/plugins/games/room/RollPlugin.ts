@@ -32,7 +32,6 @@ const waitTimeout = (delay: number) => {
 
 
 export class RollPlugin extends RoomPlugin {
-
     public static readonly ENTRY_COST: number = 100;
 
     public static readonly BASE_JACKPOT: number = 1000;
@@ -95,9 +94,8 @@ export class RollPlugin extends RoomPlugin {
     }
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
-
         if (param === 'start') {
-            await this.handleStart(param, connection);
+            await this.handleStart();
             return;
         }
 
@@ -107,8 +105,7 @@ export class RollPlugin extends RoomPlugin {
     /**
      * Start a new game
      */
-    private async handleStart(param: string, connection: Connection): Promise<void> {
-
+    private async handleStart(): Promise<void> {
         // If a game is already in progress
         if (this.currentGame) {
             throw new Error('A round is already in progress');
@@ -179,7 +176,6 @@ export class RollPlugin extends RoomPlugin {
         // The timeout will increase randomly until reaching maxTimeout
         for (const tickMs of RollPlugin.TICK_MS) {
             setTimeout(() => {
-
                 // Move ball to next slot
                 this.currentGame!.ballPosition = (++this.currentGame!.ballPosition) % 10;
 

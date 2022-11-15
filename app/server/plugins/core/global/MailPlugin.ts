@@ -8,7 +8,6 @@ import { RoomManager } from '../../../skychat/RoomManager';
 
 
 export class MailPlugin extends GlobalPlugin {
-
     static readonly commandName = 'mail';
 
     readonly opOnly = true;
@@ -33,7 +32,6 @@ export class MailPlugin extends GlobalPlugin {
     }
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
-
         // Parse parameters
         const username = param.split(' ')[0];
         const message = param.split(' ').slice(1).join(' ');
@@ -52,7 +50,6 @@ export class MailPlugin extends GlobalPlugin {
      * @param content
      */
     public async sendMail(to: string, subject: string, content: string): Promise<SentMessageInfo> {
-
         if (! this.transporter) {
             throw new Error('Email transport not registered');
         }

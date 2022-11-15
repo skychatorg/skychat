@@ -1,13 +1,11 @@
 import { Connection } from '../../../skychat/Connection';
 import { RoomPlugin } from '../../RoomPlugin';
 import { UserController } from '../../../skychat/UserController';
-import { Config } from '../../../skychat/Config';
 import { Room } from '../../../skychat/Room';
 import { Session } from '../../../skychat/Session';
 
 
 export class RoomManagerPlugin extends RoomPlugin {
-
     static readonly commandName = 'room';
 
     static readonly commandAliases = ['roomset', 'roomcreate', 'roomleave', 'roomdelete'];
@@ -32,9 +30,7 @@ export class RoomManagerPlugin extends RoomPlugin {
     };
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
-
         switch (alias) {
-
         case 'roomset':
             await this.handleRoomSet(param, connection);
             break;
@@ -77,13 +73,12 @@ export class RoomManagerPlugin extends RoomPlugin {
         }
         const property = param.substr(0, param.indexOf(' '));
         const value = param.substr(param.indexOf(' ') + 1).trim();
-        
-        switch (property) {
 
+        switch (property) {
         case 'name':
             this.room.name = value;
             break;
-            
+
         default:
             throw new Error(`Invalid property ${property}`);
         }

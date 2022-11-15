@@ -1,5 +1,4 @@
-import * as fs from 'fs';
-import { MessageFormatter } from './MessageFormatter';
+import fs from 'fs';
 
 
 
@@ -7,7 +6,6 @@ import { MessageFormatter } from './MessageFormatter';
  * Manages stickers
  */
 export class StickerManager {
-
     public static readonly STICKERS_JSON: string = 'config/stickers.json';
 
     public static readonly STICKER_CODE_REGEXP: RegExp = /^:([a-z0-9-_)(]+):?$/;
@@ -47,8 +45,8 @@ export class StickerManager {
 
     /**
      * Whether a sticker code is defined
-     * @param code 
-     * @returns 
+     * @param code
+     * @returns
      */
     public static stickerExists(code: string): boolean {
         return typeof this.stickers[code.toLowerCase()] !== 'undefined';
@@ -69,8 +67,8 @@ export class StickerManager {
 
     /**
      * Get a sticker URL
-     * @param code 
-     * @returns 
+     * @param code
+     * @returns
      */
     public static getStickerUrl(code: string): string {
         return this.stickers[code];

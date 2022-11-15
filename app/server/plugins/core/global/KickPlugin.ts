@@ -9,7 +9,6 @@ import { Config } from '../../../skychat/Config';
  * The kick plugin allows to force the disconnection of all the connections belonging to a session
  */
 export class KickPlugin extends GlobalPlugin {
-
     static readonly commandName = 'kick';
 
     readonly minRight = Config.PREFERENCES.minRightForUserModeration === 'op' ? 0 : Config.PREFERENCES.minRightForUserModeration;
@@ -24,8 +23,7 @@ export class KickPlugin extends GlobalPlugin {
         },
     };
 
-    async run(alias: string, param: string, connection: Connection): Promise<void> {
-
+    async run(alias: string, param: string): Promise<void> {
         const identifier = param.toLowerCase();
         const session = Session.getSessionByIdentifier(identifier);
         if (! session) {

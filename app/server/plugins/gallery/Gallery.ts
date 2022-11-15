@@ -22,7 +22,6 @@ export type PlayableFileInfo = {
 
 
 export class Gallery {
-
     static readonly FOLDER_PATH_REGEX = /^[^/][a-zA-Z0-9-_/]+$/;
 
     static readonly FILE_PATH_REGEX = /^([^/][a-zA-Z0-9-_/]+\/)?[a-zA-Z0-9-_]+\.[a-z0-9]+$/;
@@ -67,7 +66,7 @@ export class Gallery {
             throw new Error('Invalid folder path');
         }
     }
-    
+
     static checkFilePath(filePath: string) {
         if (! Gallery.FILE_PATH_REGEX.test(filePath)) {
             throw new Error('Invalid file path ' + filePath);
@@ -102,9 +101,9 @@ export class Gallery {
                     console.warn('Unknown file type', fileName);
                 }
             }
+            return folderContent;
         } catch (err) {
             folderContent.exists = false;
-        } finally {
             return folderContent;
         }
     }

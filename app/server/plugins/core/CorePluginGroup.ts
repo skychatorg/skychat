@@ -1,4 +1,3 @@
-import { RoomPlugin, GlobalPlugin } from '..';
 import { PluginGroup } from '../PluginGroup';
 import { AccountPlugin } from './global/AccountPlugin';
 import { AudioRecorderPlugin } from './global/AudioRecorderPlugin';
@@ -28,7 +27,6 @@ import { XpTickerPlugin } from './global/XpTickerPlugin';
 
 
 export class CorePluginGroup extends PluginGroup {
-
     roomPluginClasses = [
         HelpPlugin,
         MessageEditPlugin,

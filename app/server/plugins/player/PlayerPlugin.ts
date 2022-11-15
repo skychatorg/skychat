@@ -16,10 +16,9 @@ import { GalleryFetcher } from './fetcher/GalleryFetcher';
 
 
 /**
- * 
+ *
  */
 export class PlayerPlugin extends GlobalPlugin {
-
     static readonly FETCHERS: {[fetcherName: string]: VideoFetcher} = {
         'yt': new YoutubeFetcher(),
         'twitch': new TwitchFetcher(),
@@ -142,7 +141,7 @@ export class PlayerPlugin extends GlobalPlugin {
                 channel.schedule(event.media, event.start, event.duration);
             }
         }
-        
+
         // Bind events
         this.channelManager.on('channels-changed', () => {
             this.storage.channels = this.channelManager.sanitized();
@@ -154,7 +153,6 @@ export class PlayerPlugin extends GlobalPlugin {
      * Plugin entry point
      */
     public async run(alias: string, param: string, connection: Connection) {
-
         // If using a fetcher alias to play a video
         if (typeof PlayerPlugin.FETCHERS[alias] !== 'undefined') {
             await this.handlePlayerFetch(alias, param, connection);
@@ -162,7 +160,6 @@ export class PlayerPlugin extends GlobalPlugin {
         }
 
         switch (alias) {
-
         case 'player':
             await this.handlePlayer(param, connection);
             break;
@@ -194,7 +191,7 @@ export class PlayerPlugin extends GlobalPlugin {
         case 'unschedule':
             await this.handlePlayerUnschedule(param, connection);
             break;
-            
+
         default:
             throw new Error('Unsupported action');
         }
@@ -202,8 +199,8 @@ export class PlayerPlugin extends GlobalPlugin {
 
     /**
      * Return whether a session has the right to play a media
-     * @param session 
-     * @returns 
+     * @param session
+     * @returns
      */
     public canAddMedia(session: Session) {
         const expectedRight = Config.PREFERENCES.minRightForPlayerAddMedia === 'op' ? Infinity : Config.PREFERENCES.minRightForPlayerAddMedia;
@@ -213,8 +210,8 @@ export class PlayerPlugin extends GlobalPlugin {
 
     /**
      * Return whether a session has the right to manage the schedule
-     * @param session 
-     * @returns 
+     * @param session
+     * @returns
      */
     public canSchedule(session: Session) {
         const expectedRight = Config.PREFERENCES.minRightForPlayerManageSchedule === 'op' ? Infinity : Config.PREFERENCES.minRightForPlayerManageSchedule;
@@ -224,12 +221,11 @@ export class PlayerPlugin extends GlobalPlugin {
 
     /**
      * Manage channels (Only for OP)
-     * @param param 
-     * @param connection 
-     * @returns 
+     * @param param
+     * @param connection
+     * @returns
      */
     private async handlePlayerChannelManage(param: string, connection: Connection) {
-
         if (! connection.session.isOP()) {
             throw new Error('Command only for OP');
         }
@@ -263,18 +259,17 @@ export class PlayerPlugin extends GlobalPlugin {
             this.channelManager.renameChannel(channel.id, value);
             return;
         }
-        
+
         throw new Error('Unsupported action');
     }
 
     /**
      * Join or leave channels (For anyone)
-     * @param param 
-     * @param connection 
-     * @returns 
+     * @param param
+     * @param connection
+     * @returns
      */
     private async handlePlayerChannel(param: string, connection: Connection) {
-
         const action = param.split(' ')[0];
         const value = param.substr(action.length + 1);
 
@@ -297,15 +292,15 @@ export class PlayerPlugin extends GlobalPlugin {
             }
             return;
         }
-        
+
         throw new Error('Unsupported action');
     }
 
     /**
      * Synchronize this connection
-     * @param param 
-     * @param connection 
-     * @returns 
+     * @param param
+     * @param connection
+     * @returns
      */
     private async handlePlayerSync(param: string, connection: Connection) {
         const channel = this.channelManager.getSessionChannel(connection.session);
@@ -317,9 +312,9 @@ export class PlayerPlugin extends GlobalPlugin {
 
     /**
      * Search video/playlists from YT
-     * @param param 
-     * @param connection 
-     * @returns 
+     * @param param
+     * @param connection
+     * @returns
      */
     private async handlePlayerSearch(param: string, connection: Connection) {
         if (! this.canAddMedia(connection.session)) {
@@ -338,8 +333,8 @@ export class PlayerPlugin extends GlobalPlugin {
 
     /**
      * Remove a given media from the list
-     * @param param 
-     * @param connection 
+     * @param param
+     * @param connection
      */
     private async handlePlayerRemoveVideo(param: string, connection: Connection) {
         if (! this.canAddMedia(connection.session)) {
@@ -361,12 +356,12 @@ export class PlayerPlugin extends GlobalPlugin {
         }
         channel.remove(queueEntry.video);
     }
-    
+
     /**
      * Schedule a video to play
-     * @param param 
-     * @param connection 
-     * @returns 
+     * @param param
+     * @param connection
+     * @returns
      */
     private async handlePlayerSchedule(param: string, connection: Connection) {
         if (! this.canSchedule(connection.session)) {
@@ -395,12 +390,12 @@ export class PlayerPlugin extends GlobalPlugin {
         const media = medias[0];
         channel.schedule(media, start.getTime(), duration || media.duration);
     }
-    
+
     /**
      * Unschedule a media
-     * @param param 
-     * @param connection 
-     * @returns 
+     * @param param
+     * @param connection
+     * @returns
      */
     private async handlePlayerUnschedule(param: string, connection: Connection) {
         if (! this.canSchedule(connection.session)) {
@@ -420,9 +415,9 @@ export class PlayerPlugin extends GlobalPlugin {
 
     /**
      * Add a video to the queue
-     * @param param 
-     * @param connection 
-     * @returns 
+     * @param param
+     * @param connection
+     * @returns
      */
     private async handlePlayerFetch(fetcherName: string, param: string, connection: Connection) {
         if (! this.canAddMedia(connection.session)) {
@@ -448,12 +443,11 @@ export class PlayerPlugin extends GlobalPlugin {
 
     /**
      * Forward requests to the player
-     * @param param 
-     * @param connection 
-     * @returns 
+     * @param param
+     * @param connection
+     * @returns
      */
     private async handlePlayer(param: string, connection: Connection) {
-
         const channel = this.channelManager.getSessionChannel(connection.session);
         if (! channel) {
             throw new Error('Channel does not exist');
@@ -463,14 +457,13 @@ export class PlayerPlugin extends GlobalPlugin {
         }
 
         switch (param) {
-
         case 'replay30':
             if (! channel.hasPlayerPermission(connection.session)) {
                 throw new Error('You are not authorized to modify the player right now');
             }
             channel.moveCursor(- 30 * 1000);
             break;
-            
+
         case 'skip30':
             if (! channel.hasPlayerPermission(connection.session)) {
                 throw new Error('You are not authorized to modify the player right now');
@@ -489,10 +482,10 @@ export class PlayerPlugin extends GlobalPlugin {
                 throw new Error('You are not authorized to perform this action');
             }
             // Vote skip
-            const pollPlugin = this.manager.getPlugin('poll') as PollPlugin;
+            // eslint-disable-next-line no-case-declarations
             const playerData = channel.getPlayerData();
-            if (pollPlugin && playerData.current) {
-                const poll = await pollPlugin.poll(
+            if (this.manager.getPlugin('poll') && playerData.current) {
+                const poll = await (this.manager.getPlugin('poll') as PollPlugin).poll(
                     `${channel.name}: Skip media?`,
                     `${connection.session.identifier} wants to skip ${playerData.current.video.title}. Skip media?`,
                     {
@@ -543,13 +536,12 @@ export class PlayerPlugin extends GlobalPlugin {
     public async onConnectionAuthenticated(connection: Connection): Promise<void> {
         // Compare the saved channel id to this session
         const currentChannel = this.channelManager.getSessionChannel(connection.session);
-        const savedChannelId = this.getUserData(connection.session.user);
+        const savedChannelId = this.getUserData<unknown>(connection.session.user);
 
         if (typeof savedChannelId === 'number' && (! currentChannel || savedChannelId !== currentChannel.id)) {
             // If the user is supposed to be in a channel, but this session aint
             // Make this session join the saved channel
             this.channelManager.joinChannel(connection.session, savedChannelId);
-
         } else if (currentChannel) {
             // If this session is in a yt channel, synchronize this connection
             connection.send('player-channel', currentChannel.id);

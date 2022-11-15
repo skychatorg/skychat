@@ -10,7 +10,6 @@ import { Config } from '../../../skychat/Config';
 
 
 export class IpPlugin extends GlobalPlugin {
-
     static readonly commandName = 'ip';
 
     readonly minRight = Config.PREFERENCES.minRightForUserModeration === 'op' ? 0 : Config.PREFERENCES.minRightForUserModeration;
@@ -27,7 +26,6 @@ export class IpPlugin extends GlobalPlugin {
     };
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
-
         const formatter = MessageFormatter.getInstance();
 
         // List of connections to be included
@@ -36,7 +34,6 @@ export class IpPlugin extends GlobalPlugin {
         // If using wildcard
         if (param === '') {
             connections = Session.connections;
-
         } else {
             const session = Session.getSessionByIdentifier(param);
             if (! session) {

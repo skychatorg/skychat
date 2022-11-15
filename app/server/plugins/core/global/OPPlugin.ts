@@ -5,7 +5,6 @@ import { UserController } from '../../../skychat/UserController';
 
 
 export class OPPlugin extends GlobalPlugin {
-
     static readonly commandName = 'op';
 
     static readonly commandAliases = ['opexit'];
@@ -25,7 +24,6 @@ export class OPPlugin extends GlobalPlugin {
     };
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
-
         // Check that the user identifier is in the list of OP usernames
         if (! Config.isInOPList(connection.session.identifier)) {
             throw new Error('Not in OP list');
@@ -39,10 +37,9 @@ export class OPPlugin extends GlobalPlugin {
             return this.handleOpExit(param, connection);
         }
     }
-    
+
 
     async handleOP(param: string, connection: Connection): Promise<void> {
-
         if (Config.OP_PASSCODE !== null && param !== Config.OP_PASSCODE) {
             throw new Error('Invalid passcode');
         }
@@ -51,7 +48,7 @@ export class OPPlugin extends GlobalPlugin {
             id: 0, content: 'OP mode enabled 😲'
         }).sanitized());
     }
-    
+
 
     async handleOpExit(param: string, connection: Connection): Promise<void> {
         if (! connection.session.isOP()) {

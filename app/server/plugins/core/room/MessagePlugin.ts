@@ -5,7 +5,6 @@ import { RoomPlugin } from '../../RoomPlugin';
 
 
 export class MessagePlugin extends RoomPlugin {
-
     static readonly commandName = 'message';
 
     readonly minRight = -1;
@@ -17,7 +16,6 @@ export class MessagePlugin extends RoomPlugin {
     };
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
-
         let content = param;
         let quoted = null;
 
@@ -25,7 +23,6 @@ export class MessagePlugin extends RoomPlugin {
         const quoteMatch = content.match(/^@([0-9]+)/);
         // we also check that user has right to access message history
         if (quoteMatch && quoteMatch[1] && connection.session.user.right >= Config.PREFERENCES.minRightForMessageHistory) {
-
             const quoteId = parseInt(quoteMatch[1]);
             // Try to find message in room message cache
             quoted = await this.room.getMessageById(quoteId);

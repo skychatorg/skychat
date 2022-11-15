@@ -5,7 +5,6 @@ import { exec } from 'child_process';
 
 
 export class BackupPlugin extends GlobalPlugin {
-
     static readonly commandName = 'backup';
 
     readonly opOnly = true;
@@ -17,7 +16,6 @@ export class BackupPlugin extends GlobalPlugin {
     };
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
-
         const filePath = await this.makeBackup();
         const content = `Backup created: ${filePath}`;
         const message = UserController.createNeutralMessage({ content, id: 0, });
