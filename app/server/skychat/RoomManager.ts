@@ -40,7 +40,7 @@ export class RoomManager {
     commands: {[commandName: string]: GlobalPlugin} = {};
 
     /**
-     * Plugins sorted by descending priority
+     * Plugins
      */
     plugins: GlobalPlugin[] = [];
 

@@ -103,7 +103,7 @@ export class Room implements IBroadcaster {
     public readonly commands: {[commandName: string]: RoomPlugin};
 
     /**
-     * Plugins sorted by descending priority
+     * Plugins
      */
     public readonly plugins: RoomPlugin[];
 
@@ -118,18 +118,15 @@ export class Room implements IBroadcaster {
                 Room.CURRENT_ID = this.id + 1;
             }
         } else {
-            this.id = Room.CURRENT_ID;
-            ++ Room.CURRENT_ID;
+            this.id = Room.CURRENT_ID ++;
         }
 
         // Set default value for stored values then load storage file if it exists (will override default values)
         this.name = `Room ${this.id}`;
         this.pluginGroupNames = [CorePluginGroup.name];
-        this.load();
-
-        // If in a private room, we always only load core plugins
-        if (this.isPrivate) {
-            this.pluginGroupNames = [CorePluginGroup.name];
+        // We only load non-core plugin groups if not a private room
+        if (! this.isPrivate) {
+            this.load();
         }
 
         // Load all plugins

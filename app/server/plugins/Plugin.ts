@@ -113,11 +113,6 @@ export abstract class Plugin {
     private readonly coolDownEntries: {[identifier: string]: {first: Date, last: Date, count: number}} = {};
 
     /**
-     * Plugins can modify application values on-the-fly. Therefore it is important to know in advance
-     */
-    public readonly priority: number = 0;
-
-    /**
      * This plugin's persistent storage
      */
     protected storage: any = null;
