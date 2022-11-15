@@ -21,6 +21,7 @@ export default defineConfig({
         },
     },
     server: {
+        open: true,
         proxy: {
             '/ws': {
                 target: envLocation,

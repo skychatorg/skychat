@@ -52,6 +52,12 @@
             "error",
             { "blocks": "never", "switches": "never", "classes": "never" }
         ],
+        "space-infix-ops": [
+            "error"
+        ],
+        "no-multi-spaces": [
+            "error"
+        ],
         "@typescript-eslint/no-explicit-any": [
             "off"
         ],

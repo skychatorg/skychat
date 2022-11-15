@@ -2,7 +2,7 @@ import { Room } from '../../../skychat/Room';
 import { Session } from '../../../skychat/Session';
 
 
-export type PollState =  'pending' | 'started' | 'finished';
+export type PollState = 'pending' | 'started' | 'finished';
 
 export type PollOptions = {
 

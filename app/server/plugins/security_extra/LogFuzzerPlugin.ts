@@ -5,9 +5,9 @@ import { RoomManager } from '../../skychat/RoomManager';
 
 
 export class LogFuzzerPlugin extends GlobalPlugin {
-    static readonly DURATION_BEFORE_FUZZ =  24 * 60 * 60 * 1000;
+    static readonly DURATION_BEFORE_FUZZ = 24 * 60 * 60 * 1000;
 
-    static readonly FUZZ_COOLDOWN =  LogFuzzerPlugin.DURATION_BEFORE_FUZZ;
+    static readonly FUZZ_COOLDOWN = LogFuzzerPlugin.DURATION_BEFORE_FUZZ;
 
     static readonly commandName = 'logfuzzer';
 

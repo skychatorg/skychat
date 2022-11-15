@@ -21,35 +21,35 @@ const defaultUser: SanitizedUser = {
 
 export declare interface SkyChatClient {
 
-    on(event: 'config',             listener: (config: PublicConfig) => any): this;
-    on(event: 'custom',             listener: (custom: CustomizationElements) => any): this;
-    on(event: 'set-user',           listener: (user: SanitizedUser) => any): this;
-    on(event: 'auth-token',         listener: (token: AuthToken | null) => any): this;
-    on(event: 'connected-list',     listener: (sessions: Array<SanitizedSession>) => any): this;
-    on(event: 'room-list',          listener: (rooms: Array<SanitizedRoom>) => any): this;
-    on(event: 'join-room',          listener: (roomId: number) => any): this;
-    on(event: 'typing-list',        listener: (users: Array<SanitizedUser>) => any): this;
-    on(event: 'message',            listener: (message: SanitizedMessage) => any): this;
-    on(event: 'messages',           listener: (messages: Array<SanitizedMessage>) => any): this;
-    on(event: 'message-edit',       listener: (message: SanitizedMessage) => any): this;
-    on(event: 'message-seen',       listener: (data: { user: number, data: any }) => any): this;
-    on(event: 'poll',               listener: (poll: SanitizedPoll) => any): this;
-    on(event: 'cursor',             listener: (cursor: { x: number, y: number, user: SanitizedUser }) => any): this;
-    on(event: 'roll',               listener: (roll: { state: boolean }) => any): this;
+    on(event: 'config', listener: (config: PublicConfig) => any): this;
+    on(event: 'custom', listener: (custom: CustomizationElements) => any): this;
+    on(event: 'set-user', listener: (user: SanitizedUser) => any): this;
+    on(event: 'auth-token', listener: (token: AuthToken | null) => any): this;
+    on(event: 'connected-list', listener: (sessions: Array<SanitizedSession>) => any): this;
+    on(event: 'room-list', listener: (rooms: Array<SanitizedRoom>) => any): this;
+    on(event: 'join-room', listener: (roomId: number) => any): this;
+    on(event: 'typing-list', listener: (users: Array<SanitizedUser>) => any): this;
+    on(event: 'message', listener: (message: SanitizedMessage) => any): this;
+    on(event: 'messages', listener: (messages: Array<SanitizedMessage>) => any): this;
+    on(event: 'message-edit', listener: (message: SanitizedMessage) => any): this;
+    on(event: 'message-seen', listener: (data: { user: number, data: any }) => any): this;
+    on(event: 'poll', listener: (poll: SanitizedPoll) => any): this;
+    on(event: 'cursor', listener: (cursor: { x: number, y: number, user: SanitizedUser }) => any): this;
+    on(event: 'roll', listener: (roll: { state: boolean }) => any): this;
 
-    on(event: 'error',              listener: (message: string) => any): this;
-    on(event: 'info',               listener: (message: string) => any): this;
+    on(event: 'error', listener: (message: string) => any): this;
+    on(event: 'info', listener: (message: string) => any): this;
 
-    on(event: 'set-op',             listener: (op: boolean) => any): this;
+    on(event: 'set-op', listener: (op: boolean) => any): this;
 
-    on(event: 'gallery',            listener: (data: FolderContent) => any): this;
-    on(event: 'convert-info',       listener: (data: VideoStreamInfo) => any): this;
-    on(event: 'convert-list',       listener: (data: Array<OngoingConvert>) => any): this;
+    on(event: 'gallery', listener: (data: FolderContent) => any): this;
+    on(event: 'convert-info', listener: (data: VideoStreamInfo) => any): this;
+    on(event: 'convert-list', listener: (data: Array<OngoingConvert>) => any): this;
 
-    on(event: 'player-channels',    listener: (playerChannels: Array<SanitizedPlayerChannel>) => any): this;
-    on(event: 'player-channel',     listener: (channelId: number | null) => any): this;
-    on(event: 'player-search',      listener: (data: { type: string, items: Array<VideoInfo> }) => any): this;
-    on(event: 'player-sync',        listener: (data: { current: QueuedVideoInfo | null, queue: QueuedVideoInfo[], cursor: number }) => any): this;
+    on(event: 'player-channels', listener: (playerChannels: Array<SanitizedPlayerChannel>) => any): this;
+    on(event: 'player-channel', listener: (channelId: number | null) => any): this;
+    on(event: 'player-search', listener: (data: { type: string, items: Array<VideoInfo> }) => any): this;
+    on(event: 'player-sync', listener: (data: { current: QueuedVideoInfo | null, queue: QueuedVideoInfo[], cursor: number }) => any): this;
 }
 
 

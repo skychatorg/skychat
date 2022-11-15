@@ -103,7 +103,7 @@ export class ConnectedListPlugin extends GlobalPlugin {
         this.syncLastDate = new Date();
 
         // Build a list of anon sessions to send to guests
-        const anonSessions =  Object.values(Session.sessions)
+        const anonSessions = Object.values(Session.sessions)
             .map(sess => sess.sanitized())
             .map(sess => ({ ...sess, user: { ...sess.user, money: 0, right: -1, xp: 0 } }))
             .sort((a, b) => {
