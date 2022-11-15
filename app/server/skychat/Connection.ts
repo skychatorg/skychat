@@ -63,7 +63,7 @@ export class Connection extends EventEmitter implements IBroadcaster {
 
         session.attachConnection(this);
         this.webSocket.on('message', (message) => this.onMessage(message));
-        this.webSocket.on('close', (code, message) => this.onClose(code, message.toString()));
+        this.webSocket.on('close', () => this.onClose());
         this.webSocket.on('error', (error) => this.onError(error));
 
         setTimeout(this.sendPing.bind(this), Connection.PING_INTERVAL_MS);
