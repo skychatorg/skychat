@@ -21,4 +21,4 @@ jobs:
         cache: 'npm'
     - run: npm ci
     - run: npm run setup
-    - run: bash app/script/docker.sh up -d
+    - run: docker-compose up -d

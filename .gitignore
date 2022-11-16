@@ -1,6 +1,7 @@
 .idea
 .vscode
 
+.env
 .env.json
 
 backups

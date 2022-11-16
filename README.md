@@ -40,7 +40,7 @@ Then, follow these 2 steps:
 bash <(wget -q https://raw.githubusercontent.com/skychatorg/skychat/master/app/script/autoinstall.sh -O -) && cd skychat
 
 # 2.A. Run the app in docker (UNIX only 🤷‍♀️)
-npm run docker -- up
+docker-compose up
 # 2.B. Run the app on your local host
 npm i && npm start
 ```
