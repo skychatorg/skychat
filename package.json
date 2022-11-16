@@ -6,13 +6,11 @@
     "types": "build/index.d.ts",
     "main": "build/index.js",
     "scripts": {
-        "clean": "rm -rf dist build",
-        "destroy": "bash app/script/destroy.sh",
+        "reset": "bash app/script/reset.sh",
         "setup": "bash app/script/setup.sh",
         "build": "concurrently \"tsc\" \"vite build\"",
         "dev": "bash app/script/dev.sh",
         "start": "npm run build && node build/server/server.js",
-        "docker": "bash app/script/docker.sh",
         "backup": "bash app/script/backup.sh",
         "lint": "eslint app",
         "test": "echo \"⚠ No test ⚠\""

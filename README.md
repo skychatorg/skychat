@@ -39,8 +39,8 @@ Then, follow these 2 steps:
 # 1. Use the autoinstall script (Clones the repository then executes app/script/setup.sh)
 bash <(wget -q https://raw.githubusercontent.com/skychatorg/skychat/master/app/script/autoinstall.sh -O -) && cd skychat
 
-# 2.A. Run the app in docker (UNIX only 🤷‍♀️)
-npm run docker -- up
+# 2.A. Run the app in docker
+docker-compose up
 # 2.B. Run the app on your local host
 npm i && npm start
 ```
@@ -54,7 +54,7 @@ By default, the application will be listening to `localhost:8080` and assume it 
 |-------|------|---------|----------|
 | location                 | string | "http://localhost:8080" | Server location, i.e. what user need to put in their browser to access your app |
 | hostname                 | string | "localhost" | Hostname the server will listen to |
-| port                     | number | 8080 | Server port |
+| port                     | number | 8080 | Server port. If you are using docker only, modify DOCKER_PORT to match this value. |
 | ssl                      | false or {certificate:string,key:string}  | false | SSL configuration (paths to certificate and key files). Use false if SSL is disabled. |
 | plugins              | string[] | [] | List of enabled plugin groups. It is possible to disable the player, games, the gallery or other features by removing a plugin group from this list |
 | users_passwords_salt | string | "$RANDOM_SALT" | Password salt. |

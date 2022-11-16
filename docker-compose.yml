@@ -1,4 +1,4 @@
-version: '3.5'
+version: '3.8'
 
 services:
   app:
@@ -7,15 +7,16 @@ services:
     build:
       context: .
       args:
-        DOCKER_UNAME: ${DOCKER_UNAME}
-        DOCKER_UID: ${DOCKER_UID}
-        DOCKER_GID: ${DOCKER_GID}
+        DOCKER_USER: "${DOCKER_USER}"
+        DOCKER_UID: "${DOCKER_UID}"
+        DOCKER_GID: "${DOCKER_GID}"
         DOCKER_TZ: "${DOCKER_TZ}"
+        DOCKER_PORT: "${DOCKER_PORT}"
     volumes:
-      - ./config:/var/skychat/config
-      - ./backups:/var/skychat/backups
-      - ./storage:/var/skychat/storage
-      - ./gallery:/var/skychat/gallery
-      - ./uploads:/var/skychat/uploads
+      - ./config:/mnt/skychat/config
+      - ./backups:/mnt/skychat/backups
+      - ./storage:/mnt/skychat/storage
+      - ./gallery:/mnt/skychat/gallery
+      - ./uploads:/mnt/skychat/uploads
     ports:
         - "${DOCKER_PORT}:${DOCKER_PORT}"

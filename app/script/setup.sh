@@ -38,6 +38,20 @@ if [[ ! -e .env.json ]]; then
     generate_passcode
 fi
 
+# Initialize .env
+if [[ ! -e .env ]]; then
+    cp app/template/.env.template .env;
+
+    DOCKER_USER="$USER"
+    sed -i "0,/\$DOCKER_USER/{s/\$DOCKER_USER/$DOCKER_USER/}" .env
+
+    DOCKER_UID="$(id -u)"
+    sed -i "0,/\$DOCKER_UID/{s/\$DOCKER_UID/$DOCKER_UID/}" .env
+
+    DOCKER_GID="$(id -g)"
+    sed -i "0,/\$DOCKER_GID/{s/\$DOCKER_GID/$DOCKER_GID/}" .env
+fi
+
 # Create config directory if it does not exist
 if [[ ! -e config ]]; then
     mkdir config;
