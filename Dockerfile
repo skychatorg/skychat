@@ -22,11 +22,11 @@ RUN ln -snf /usr/share/zoneinfo/$DOCKER_TZ /etc/localtime && \
     echo $DOCKER_TZ > /etc/timezone && \
     addgroup -g $DOCKER_GID $DOCKER_USER && \
     adduser -u $DOCKER_UID -G $DOCKER_USER -D $DOCKER_USER && \
-    ln -s /var/skychat/config ./config && \
-    ln -s /var/skychat/backups ./backups && \
-    ln -s /var/skychat/storage ./storage && \
-    ln -s /var/skychat/gallery ./gallery && \
-    ln -s /var/skychat/uploads ./uploads && \
+    ln -s /mnt/skychat/config ./config && \
+    ln -s /mnt/skychat/backups ./backups && \
+    ln -s /mnt/skychat/storage ./storage && \
+    ln -s /mnt/skychat/gallery ./gallery && \
+    ln -s /mnt/skychat/uploads ./uploads && \
     apk add --update nodejs npm zip ffmpeg sqlite
 
 # Copy build configuration
