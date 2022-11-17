@@ -105,12 +105,7 @@ export class RoomManager {
         this.server.registerEvent('binary-message', this.onBinaryMessage.bind(this), 0, 180, new iof.ObjectFilter({ type: new iof.NumberFilter(0, Infinity, false), data: new iof.ValueTypeFilter('object') }));
 
         // Periodically send the room list to users
-        setInterval(() => {
-            Object
-                .values(Session.sessions)
-                .map(session => this.sendRoomList(session));
-        }, 20 * 1000);
-
+        setInterval(this.broadcastRoomList.bind(this), 20 * 1e3);
         setInterval(this.tick.bind(this), RoomManager.TICK_INTERVAL);
     }
 
@@ -193,7 +188,7 @@ export class RoomManager {
             room.name = name;
         }
         this.rooms.push(room);
-        Object.values(Session.sessions).forEach(session => this.sendRoomList(session));
+        this.broadcastRoomList();
         return room;
     }
 
@@ -254,7 +249,7 @@ export class RoomManager {
         }
         // Remove old room
         this.rooms = this.rooms.filter(room => room.id !== id);
-        Object.values(Session.sessions).forEach(session => this.sendRoomList(session));
+        this.broadcastRoomList();
     }
 
     /**
@@ -279,6 +274,15 @@ export class RoomManager {
      */
     public getPlugin(commandName: string): GlobalPlugin {
         return this.commands[commandName];
+    }
+
+    /**
+     * Send room list to all
+     */
+    public broadcastRoomList(): void {
+        Object
+            .values(Session.sessions)
+            .map(session => this.sendRoomList(session));
     }
 
     /**

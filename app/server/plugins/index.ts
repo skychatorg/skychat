@@ -1,4 +1,5 @@
 export * from './core';
+export * from './crypto';
 export * from './games';
 export * from './gallery';
 export * from './security_extra';

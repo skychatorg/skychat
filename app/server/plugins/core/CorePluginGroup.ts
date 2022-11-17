@@ -1,4 +1,5 @@
 import { PluginGroup } from '../PluginGroup';
+import { EncryptPlugin } from '../crypto/room/EncryptPlugin';
 import { AccountPlugin } from './global/AccountPlugin';
 import { AudioRecorderPlugin } from './global/AudioRecorderPlugin';
 import { BackupPlugin } from './global/BackupPlugin';
@@ -28,6 +29,7 @@ import { XpTickerPlugin } from './global/XpTickerPlugin';
 
 export class CorePluginGroup extends PluginGroup {
     roomPluginClasses = [
+        EncryptPlugin,
         HelpPlugin,
         MessageEditPlugin,
         MessageHistoryPlugin,

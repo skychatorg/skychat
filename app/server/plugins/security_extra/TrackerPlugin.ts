@@ -70,7 +70,7 @@ export class TrackerPlugin extends GlobalPlugin {
 
     constructor(manager: RoomManager) {
         super(manager);
-        this.loadStorage();
+        this.hydrateStorage();
     }
 
     public getAllRelatedNodes(type: NodeType, value: string): Node[] {
@@ -210,7 +210,7 @@ export class TrackerPlugin extends GlobalPlugin {
 
         // Actually delete the association
         this.deleteAssociation(type1, value1, type2, value2);
-        this.syncStorage();
+        this.writeStorageToDisk();
 
         // Send confirmation
         connection.send('message', new Message({
@@ -363,7 +363,7 @@ export class TrackerPlugin extends GlobalPlugin {
             'ip',
             connection.ip
         );
-        this.syncStorage();
+        this.writeStorageToDisk();
     }
 
     public async onConnectionAuthenticated(connection: Connection): Promise<void> {
@@ -373,6 +373,6 @@ export class TrackerPlugin extends GlobalPlugin {
             'ip',
             connection.ip
         );
-        this.syncStorage();
+        this.writeStorageToDisk();
     }
 }

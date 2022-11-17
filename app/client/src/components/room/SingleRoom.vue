@@ -2,7 +2,9 @@
 import { computed } from 'vue';
 import { useClientStore } from '@/stores/client';
 import HoverCard from '@/components/util/HoverCard.vue';
+import { useAppStore } from '../../stores/app';
 
+const app = useAppStore();
 const client = useClientStore();
 
 const props = defineProps({
@@ -14,7 +16,6 @@ const props = defineProps({
 
 // Whether has unread
 const hasUnread = computed(() => {
-
     if (client.state.user.id === 0) {
         return false;
     }
@@ -64,7 +65,6 @@ const icon = computed(() => {
     }
     return null;
 });
-
 </script>
 
 <template>
@@ -76,10 +76,9 @@ const icon = computed(() => {
         class="cursor-pointer"
     >
         <div
-            @click="client.state.currentRoomId !== room.id && client.join(room.id)"
+            @click="client.state.currentRoomId !== room.id && app.join(room.id)"
             class="py-2 px-3 flex flex-row select-none"
         >
-
             <!-- Room name -->
             <div
                 :title="formattedName"
@@ -90,12 +89,11 @@ const icon = computed(() => {
             </div>
 
             <!-- Icons -->
-            <div class="flex">
-
+            <div class="flex gap-2">
                 <!-- Unread -->
                 <p
                     v-if="hasUnread"
-                    class="text-danger font-bold mr-2"
+                    class="text-danger font-bold"
                     title="This room has unread messages"
                 >
                     <fa icon="bell" size="xs" />
@@ -108,6 +106,15 @@ const icon = computed(() => {
                     :title="((client.state.roomConnectedUsers[room.id] || []).length) + ' users in this room'"
                 >
                     <fa icon="users" size="xs" /> {{ (client.state.roomConnectedUsers[room.id] || []).length }}
+                </p>
+
+                <!-- Encrypted -->
+                <p
+                    v-if="room.plugins.encrypt"
+                    class="text-wite font-bold"
+                    title="This room is encrypted"
+                >
+                    <fa icon="key" size="xs" />
                 </p>
             </div>
         </div>

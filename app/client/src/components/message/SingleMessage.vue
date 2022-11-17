@@ -4,8 +4,8 @@ import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
 import HoverCard from '@/components/util/HoverCard.vue';
 import UserBigAvatar from '@/components/user/UserBigAvatar.vue';
-import UserMiniAvatar from '@/components/user/UserMiniAvatar.vue';
 import UserMiniAvatarCollection from '@/components/user/UserMiniAvatarCollection.vue';
+import { decrypt } from '../../lib/crypto';
 
 const app = useAppStore();
 const client = useClientStore();
@@ -38,7 +38,7 @@ const formattedDate = computed(() => {
     return `${hours}:${minutes}:${seconds}`;
 });
 
-// Room name
+// Room this message was posted in
 const room = computed(() => {
     const room = client.state.rooms.find(room => room.id === props.message.room);
     if (! room) {
@@ -52,10 +52,21 @@ const lastSeenUsers = computed(() => {
     return (client.state.messageIdToLastSeenUsers[props.message.id] || []).slice(0, 6);
 });
 
+// In encrypted rooms, take care of showing the raw message
+const decryptedMessage = ref(props.message.formatted);
+onMounted(async () => {
+    if (! room.value || ! room.value.plugins.encrypt) {
+        return;
+    }
+    if (! app.cryptoKey) {
+        decryptedMessage.value = '* encrypted message';
+        return;
+    }
+    decryptedMessage.value = await decrypt(app.cryptoKey, JSON.parse(props.message.content));
+});
+
 // listen for events for buttons
 const bindMessageContentEvents = () => {
-
-
     // Images
     const images = Array.from(content.value.getElementsByTagName('img'));
     for (const image of images) {
@@ -76,11 +87,10 @@ const bindMessageContentEvents = () => {
     }
 };
 onMounted(bindMessageContentEvents);
-watch(() => props.message.formatted, () => nextTick(bindMessageContentEvents));
+watch(() => decryptedMessage, () => nextTick(bindMessageContentEvents));
 
 // When interacting with a message
 const messageInteract = () => {
-
     // Cycle between these texts
     const editText = '/edit ' + props.message.id + ' ' + props.message.content;
     const deleteText = '/delete ' + props.message.id;
@@ -125,6 +135,13 @@ const messageInteract = () => {
                         <sup v-if="message.meta.device === 'mobile'">
                             <fa icon="mobile-screen" class="ml-1" />
                         </sup>
+                        <sup
+                            v-if="message.meta.encrypted"
+                            class="text-white ml-2"
+                            title="Encrypted message"
+                        >
+                            <fa icon="key" />
+                        </sup>
                     </div>
                     <div v-if="compact" class="text-skygray-lightest text-xs pt-1 ml-2">
                         {{ formattedDate }}
@@ -144,7 +161,7 @@ const messageInteract = () => {
                 <!-- Message content -->
                 <div
                     class="text-skygray-white w-0 min-w-full whitespace-pre-wrap overflow-hidden break-words"
-                    v-html="message.formatted"
+                    v-html="decryptedMessage"
                     ref="content"
                 ></div>
             </div>

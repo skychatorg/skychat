@@ -26,7 +26,7 @@ export abstract class GlobalPlugin extends Plugin {
     /**
      * Storage path for global plugins
      */
-    public getStoragePath(): string {
+    public getStorageFilePath(): string {
         return `${Plugin.STORAGE_BASE_PATH}/plugins/global`;
     }
 

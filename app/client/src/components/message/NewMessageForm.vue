@@ -3,11 +3,12 @@ import { onMounted, computed, ref, watch } from 'vue';
 import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
 import { AudioRecorder } from '@/lib/AudioRecorder';
+import { getPasswordKey } from '@/lib/crypto';
 import { RisiBank } from 'risibank-web-api';
-import HoverCard from '@/components/util/HoverCard.vue';
+import { encrypt } from '../../lib/crypto';
 
-const MESSAGE_HISTORY_LENGTH = 500;
 
+const MESSAGE_HISTORY_MAX_LENGTH = 500;
 
 const app = useAppStore();
 const client = useClientStore();
@@ -24,7 +25,6 @@ onMounted(() => {
 });
 
 let typingListStr = computed(() => {
-
     let typingUsers = client.state.typingList;
 
     typingUsers = typingUsers.filter(user => user.username.toLowerCase() !== client.state.user.username.toLowerCase());
@@ -42,12 +42,12 @@ let typingListStr = computed(() => {
         return `${usernames.join(', ')} are typing..`;
     }
 
-    return `multiple users are currently typing..`;
+    return 'multiple users are currently typing..';
 });
 
 
 // Watch when the new message input changes. The change does not necessarily come from this component, as the message input can be prepared elsewhere.
-watch(() => app.newMessage, (newValue, oldValue) => {
+watch(() => app.newMessage, newValue => {
     // Auto-set the message value
     if (newValue !== message.value.value) {
         message.value.value = newValue;
@@ -68,7 +68,6 @@ watch(() => client.state.currentRoomId, currentRoomId => currentRoomId && messag
  * When the message changes
  */
 const onMessageInput = event => {
-
     let newMessage = event.target.value;
 
     // Catches when pressing enter while the message input is empty.
@@ -88,6 +87,25 @@ const onMessageInput = event => {
 };
 
 /**
+ * Toggle room encryption status
+ */
+async function toggleRoomEncryption() {
+    // Know if room is currently encrypted
+    const isEncrypted = !! client.state.currentRoom.plugins.encrypt;
+    // if on: disable encryption
+    if (isEncrypted) {
+        client.sendMessage('/encrypt-off');
+        return;
+    }
+    // if off: add encryption
+    const password = prompt('Enter room password');
+    const passwordKey = await getPasswordKey(password);
+    const encrypted = await encrypt(passwordKey, 'Hello world');
+    client.sendMessage(`/encrypt-on ${encrypted.iv} ${encrypted.cipher}`);
+    app.cryptoKey = passwordKey;
+}
+
+/**
  * Navigate into message history
  */
 const onNavigateIntoHistory = function(event, offset) {
@@ -103,19 +121,20 @@ const onNavigateIntoHistory = function(event, offset) {
 /**
  * Send the new message
  */
-const sendMessage = function() {
+const sendMessage = async function() {
+    // Upate message history for arrow key navigation
     sentMessageHistory.value.push(app.newMessage);
-    sentMessageHistory.value.splice(0, sentMessageHistory.value.length - MESSAGE_HISTORY_LENGTH);
+    sentMessageHistory.value.splice(0, sentMessageHistory.value.length - MESSAGE_HISTORY_MAX_LENGTH);
     historyIndex.value = null;
     messageTextAreaRows.value = 1;
-    app.sendMessage();
+    // Actually send the message
+    await app.sendMessage();
 };
 
 /**
  * Add a RisiBank media
  */
 const openRisiBank = function() {
-
     risibank.activate({
 
         // Use default options for Overlay + Dark
@@ -178,7 +197,7 @@ const recordingAudioStopCb = ref(null);
 const uploadAudio = async function() {
     if (recordingAudio.value) {
         // Stop recording
-        const {blob, uri, audio} = await recordingAudioStopCb.value();
+        const { blob } = await recordingAudioStopCb.value();
         client.sendAudio(blob);
     } else {
         // Start recording
@@ -199,9 +218,8 @@ const cancelAudio = function() {
     <div class="p-2">
         <!-- New message form -->
         <div class="flex flex-col-reverse lg:flex-row flex-nowrap">
-
             <!-- Add elements to message -->
-            <div class="flex justify-center">
+            <div class="flex justify-center gap-1">
 
                 <!-- Go to room list -->
                 <div class="lg:hidden grow">
@@ -210,7 +228,7 @@ const cancelAudio = function() {
                         @click="app.mobileSetView('left')"
                     >
                         <fa
-                            icon="chevron-left" 
+                            icon="chevron-left"
                             :class="{
                                 'text-danger': hasUnreadMessagesInOtherRooms,
                             }"
@@ -225,6 +243,20 @@ const cancelAudio = function() {
                             icon="gears"
                             class="ml-2"
                         />
+                    </button>
+                </div>
+
+                <!-- Encrypt/Decrypt room -->
+                <div
+                    v-if="client.state.op"
+                    title="Toggle room encryption"
+                    class="flex flex-col justify-end"
+                    @click="toggleRoomEncryption"
+                >
+                    <button
+                        class="form-control cursor-pointer w-12"
+                    >
+                        <fa icon="key" />
                     </button>
                 </div>
 
@@ -246,7 +278,7 @@ const cancelAudio = function() {
                 </div>
 
                 <!-- Send audio -->
-                <div title="Send an audio" class="ml-2 flex flex-col justify-end">
+                <div title="Send an audio" class="flex flex-col justify-end">
                     <div class="flex">
                         <button
                             class="w-12 form-control"
@@ -256,7 +288,7 @@ const cancelAudio = function() {
                         </button>
                         <button
                             v-show="recordingAudio"
-                            class="ml-2 w-12 form-control"
+                            class="w-12 form-control"
                             @click="cancelAudio"
                         >
                             <fa icon="ban" class="text-danger" />
@@ -266,7 +298,7 @@ const cancelAudio = function() {
 
                 <!-- RisiBank -->
                 <div title="Add a media from RisiBank" class="flex flex-col justify-end">
-                    <button @click="openRisiBank" class="form-control ml-2 w-12 h-10 align-bottom">
+                    <button @click="openRisiBank" class="form-control w-12 h-10 align-bottom">
                         <img src="/assets/images/icons/risibank.png" class="w-4 h-4">
                     </button>
                 </div>

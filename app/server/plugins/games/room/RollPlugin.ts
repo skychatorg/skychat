@@ -89,7 +89,7 @@ export class RollPlugin extends RoomPlugin {
         super(room);
 
         if (this.room) {
-            this.loadStorage();
+            this.hydrateStorage();
         }
     }
 
@@ -222,7 +222,7 @@ export class RollPlugin extends RoomPlugin {
         this.lastGameFinishedDate = new Date();
         this.storage.totalGameCount ++;
         this.currentGame = null;
-        this.syncStorage();
+        this.writeStorageToDisk();
     }
 
     /**

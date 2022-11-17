@@ -132,7 +132,7 @@ export class PlayerPlugin extends GlobalPlugin {
         }
 
         // Rebuild channels from storage
-        this.loadStorage();
+        this.hydrateStorage();
 
         this.channelManager = new PlayerChannelManager(this);
         for (const channelData of this.storage.channels) {
@@ -145,7 +145,7 @@ export class PlayerPlugin extends GlobalPlugin {
         // Bind events
         this.channelManager.on('channels-changed', () => {
             this.storage.channels = this.channelManager.sanitized();
-            this.syncStorage();
+            this.writeStorageToDisk();
         });
     }
 

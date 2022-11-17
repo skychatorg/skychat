@@ -82,7 +82,7 @@ export class RoomManagerPlugin extends RoomPlugin {
         default:
             throw new Error(`Invalid property ${property}`);
         }
-        Object.values(Session.sessions).forEach(session => this.room.manager.sendRoomList(session));
+        this.room.manager.broadcastRoomList();
         const message = UserController.createNeutralMessage({ id: 0, content: `Room property ${property} set to ${value}` });
         connection.send('message', message.sanitized());
     }

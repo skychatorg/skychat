@@ -23,6 +23,7 @@ export abstract class RoomPlugin extends Plugin {
      */
     constructor(room: Room) {
         super();
+
         this.room = room;
     }
 
@@ -30,15 +31,15 @@ export abstract class RoomPlugin extends Plugin {
      * Get this plugin's storage path
      * @override
      */
-    public getStoragePath(): string {
+    public getStorageFilePath(): string {
         return `${Plugin.STORAGE_BASE_PATH}/plugins/${this.room.id}`;
     }
 
     /**
      * Get a summary of this plugin state to include in the room list
      */
-    public getRoomSummary(): any {
-        return null;
+    public getRoomSummary(): undefined | any {
+        return undefined;
     }
 
     /**
