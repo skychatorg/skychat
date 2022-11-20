@@ -357,6 +357,9 @@ export class PlayerChannel {
         const queue: QueuedVideoInfo[] = [];
         let addedCount = Infinity;
         while (addedCount !== 0) {
+            // For each user, add at most one media in the queue
+            // If there is no media left to add, addedCount will be 0 at the end of the for
+            addedCount = 0;
             for (const userId of userIds) {
                 const queuedVideo = users[userId].shift();
                 if (! queuedVideo) {
@@ -364,9 +367,6 @@ export class PlayerChannel {
                 }
                 queue.push(queuedVideo);
                 ++ addedCount;
-            }
-            if (addedCount === 0) {
-                break;
             }
         }
         this.queue = queue;
