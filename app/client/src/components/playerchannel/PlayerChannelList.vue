@@ -8,7 +8,11 @@ const client = useClientStore();
 
 <template>
     <div>
-        <SectionTitle>Media channels</SectionTitle>
+        <SectionTitle
+            v-if="client.state.playerChannels.length"
+        >
+            Media channels
+        </SectionTitle>
         <div class="px-2">
             <SinglePlayerChannel
                 v-for="playerChannel in client.state.playerChannels"
