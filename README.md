@@ -25,11 +25,7 @@ The SkyChat lets you:
 
 ### Install in 30 seconds
 
-If using docker you need:
-- docker
-- docker-compose
-
-If not using docker, ensure you have the following installed on your system:
+If using docker you need only docker. Otherwise, ensure you have the following installed on your system:
 - nodejs >= 14
 - sqlite3, zip, ffmpeg (e.g. `apt install -y sqlite3 zip ffmpeg`)
 
@@ -40,7 +36,7 @@ Then, follow these 2 steps:
 bash <(wget -q https://raw.githubusercontent.com/skychatorg/skychat/master/app/script/autoinstall.sh -O -) && cd skychat
 
 # 2.A. Run the app in docker
-docker-compose up
+docker compose up
 # 2.B. Run the app on your local host
 npm i && npm start
 ```
