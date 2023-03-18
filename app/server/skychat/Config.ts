@@ -15,6 +15,7 @@ export type Preferences = {
     minRightForPlayerAddMedia: number | 'op';
     minRightForPlayerManageSchedule: number | 'op';
     maxReplacedImagesPerMessage: number;
+    maxReplacedRisiBankStickersPerMessage: number;
     maxReplacedStickersPerMessage: number;
     maxNewlinesPerMessage: number;
 }
