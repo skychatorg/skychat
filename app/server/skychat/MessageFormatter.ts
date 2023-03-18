@@ -169,15 +169,15 @@ export class MessageFormatter {
             } else {
                 // If replacing images by html, replace within limit
                 message = message.replace(new RegExp(imageUrl, 'g'), () => {
-                    ++ replacedCount;
-                    if (! trusted && replacedCount > Config.PREFERENCES.maxReplacedImagesPerMessage) {
+                    if (! trusted && replacedCount >= Config.PREFERENCES.maxReplacedImagesPerMessage) {
                         return imageUrl;
                     }
+                    ++ replacedCount;
                     return html;
                 });
             }
             // If limit was reached when replacing this image, do not replace the next ones
-            if (! trusted && replacedCount > Config.PREFERENCES.maxReplacedImagesPerMessage) {
+            if (! trusted && replacedCount >= Config.PREFERENCES.maxReplacedImagesPerMessage) {
                 break;
             }
         }
@@ -190,11 +190,17 @@ export class MessageFormatter {
      */
     public replaceRisiBankStickers(message: string, remove?: boolean): string {
         const risibankImageRegExp = /https:\/\/risibank.fr\/cache\/medias\/(\d+)\/(\d+)\/(\d+)\/(\d+)\/(\w+)\.(jpg|jpeg|gif|png)/g;
-        const replaceStr = '<a class="skychat-risibank-sticker" href="//risibank.fr/media/$4-media" target="_blank"><img src="//risibank.fr/cache/medias/$1/$2/$3/$4/$5.$6"></a>';
         if (remove) {
             return message.replace(risibankImageRegExp, '');
         }
-        return message.replace(risibankImageRegExp, replaceStr);
+        let replacedCount = 0;
+        return message.replace(risibankImageRegExp, (match, p1, p2, p3, p4, p5, p6) => {
+            if (replacedCount >= Config.PREFERENCES.maxReplacedRisiBankStickersPerMessage) {
+                return match;
+            }
+            ++ replacedCount;
+            return `<a class="skychat-risibank-sticker" href="//risibank.fr/media/${p4}-media" target="_blank"><img src="//risibank.fr/cache/medias/${p1}/${p2}/${p3}/${p4}/${p5}.${p6}"></a>`;
+        });
     }
 
     /**
@@ -202,17 +208,17 @@ export class MessageFormatter {
      * @param message
      */
     public replaceStickers(message: string, remove?: boolean): string {
-        let replacedCount = 0;
         for (const code in StickerManager.stickers) {
             const sticker = StickerManager.stickers[code];
             if (remove) {
                 message = message.replace(new RegExp(MessageFormatter.escapeRegExp(code), 'g'), '');
             } else {
+                let replacedCount = 0;
                 message = message.replace(new RegExp(MessageFormatter.escapeRegExp(code), 'g'), () => {
-                    ++ replacedCount;
-                    if (replacedCount > Config.PREFERENCES.maxReplacedStickersPerMessage) {
+                    if (replacedCount >= Config.PREFERENCES.maxReplacedStickersPerMessage) {
                         return code;
                     }
+                    ++ replacedCount;
                     return `<img class="skychat-sticker" title="${code}" alt="${code}" src="${sticker}">`;
                 });
                 if (replacedCount > Config.PREFERENCES.maxReplacedStickersPerMessage) {

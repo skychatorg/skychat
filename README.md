@@ -98,19 +98,20 @@ The `config/preferences.json` file specifies application preferences. The availa
 
 | field | type | default | description |
 |-------|------|---------|-------------|
-| minRightForPrivateMessages      | number |  -1 | Min. right to send private messages |
-| minRightForMessageHistory       | number |  -1 | Min. right to access room message history |
-| minRightForUserModeration       | number | 'op' | Min. right to ban, kick and access user ips |
-| minRightForAudioRecording       | number |  -1 | Min. right to share and play audio recordings |
-| minRightForConnectedList        | number |  -1 | Min. right to access the list of currently active users |
-| minRightForPolls                | number |  -1 | Min. right to create polls |
-| minRightForGalleryRead          | number \| 'op' |  0 | Min. right to access the gallery |
-| minRightForGalleryWrite         | number \| 'op' |  'op' | Min. right to add and remove gallery documents |
-| minRightForPlayerAddMedia       | number \| 'op' |  0 | Min. right to add medias to the player |
-| minRightForPlayerManageSchedule | number \| 'op' |  'op' | Min. right to manage the player schedules |
-| maxReplacedImagesPerMessage     | number |  50 | Max. number of replaced images per message |
-| maxReplacedStickersPerMessage   | number |  50 | Max. number of replaced stickers per message |
-| maxNewlinesPerMessage           | number |  20 | Max. number of newlines per message |
+| minRightForPrivateMessages            | number |  -1 | Min. right to send private messages |
+| minRightForMessageHistory             | number |  -1 | Min. right to access room message history |
+| minRightForUserModeration             | number | 'op' | Min. right to ban, kick and access user ips |
+| minRightForAudioRecording             | number |  -1 | Min. right to share and play audio recordings |
+| minRightForConnectedList              | number |  -1 | Min. right to access the list of currently active users |
+| minRightForPolls                      | number |  -1 | Min. right to create polls |
+| minRightForGalleryRead                | number \| 'op' |  0 | Min. right to access the gallery |
+| minRightForGalleryWrite               | number \| 'op' |  'op' | Min. right to add and remove gallery documents |
+| minRightForPlayerAddMedia             | number \| 'op' |  0 | Min. right to add medias to the player |
+| minRightForPlayerManageSchedule       | number \| 'op' |  'op' | Min. right to manage the player schedules |
+| maxReplacedImagesPerMessage           | number |  50 | Max. number of replaced images per message |
+| maxReplacedStickersPerMessage         | number |  50 | Max. number of replaced stickers per message |
+| maxReplacedRisiBankStickersPerMessage | number |  50 | Max. number of replaced RisiBank stickers per message |
+| maxNewlinesPerMessage                 | number |  20 | Max. number of newlines per message |
 
 ### Customize the fake message history
 
