@@ -29,18 +29,11 @@ export class AprilFoolsDay extends GlobalPlugin {
             return message;
         }
 
-        if (Math.random() < 1 / 15) {
-            const words = message.split(' ').slice(1);
-            if (words.length >= 2) {
-                const firstSwappedWordIndex = Math.floor(Math.random() * (words.length - 1));
-                const secondSwappedWordIndex = firstSwappedWordIndex + 1 + Math.floor(Math.random() * (words.length - firstSwappedWordIndex - 1));
-                const tmp = words[firstSwappedWordIndex];
-                words[firstSwappedWordIndex] = words[secondSwappedWordIndex];
-                words[secondSwappedWordIndex] = tmp;
-                return '/message ' + words.join(' ');
-            }
+        if (Math.random() > 1 / 10) {
+            return message;
         }
 
-        return message;
+        const words = message.split(' ').slice(1).sort(() => Math.random() - 0.5);
+        return '/message ' + words.join(' ');
     }
 }
