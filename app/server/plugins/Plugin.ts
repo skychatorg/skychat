@@ -115,27 +115,27 @@ export abstract class Plugin {
     /**
      * This plugin's persistent storage
      */
-    protected storage: any = null;
+    protected storage?: undefined | any;
 
     /**
      * Save this plugin's data to the disk
      */
-    protected syncStorage(): void {
-        if (! this.storage) {
+    protected writeStorageToDisk(): void {
+        if (typeof this.storage === 'undefined') {
             return;
         }
-        fs.mkdirSync(this.getStoragePath(), { recursive: true });
-        fs.writeFileSync(this.getStoragePath() + `/${this.commandName}.json`, JSON.stringify(this.storage));
+        fs.mkdirSync(this.getStorageFilePath(), { recursive: true });
+        fs.writeFileSync(this.getStorageFilePath() + `/${this.commandName}.json`, JSON.stringify(this.storage));
     }
 
     /**
      * Save this plugin's data to the disk
      */
-    protected loadStorage(): void {
+    protected hydrateStorage(): void {
         try {
-            this.storage = JSON.parse(fs.readFileSync(this.getStoragePath() + `/${this.commandName}.json`).toString());
+            this.storage = JSON.parse(fs.readFileSync(this.getStorageFilePath() + `/${this.commandName}.json`).toString());
         } catch (e) {
-            this.syncStorage();
+            this.writeStorageToDisk();
         }
     }
 
@@ -151,7 +151,7 @@ export abstract class Plugin {
      * Path differ depending on whether the plugin is global or per-room.
      * @abstract
      */
-    public abstract getStoragePath(): string;
+    public abstract getStorageFilePath(): string;
 
     /**
      * Load user data for this plugin

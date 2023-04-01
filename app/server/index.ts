@@ -5,6 +5,7 @@ export type { SanitizedSession } from './skychat/Session';
 export type { SanitizedPoll, PollState } from './plugins/core/global/Poll';
 export type { PublicConfig } from './skychat/Config';
 export type { SanitizedRoom } from './skychat/Room';
+export type { EncryptedData } from './plugins/crypto/room/EncryptPlugin';
 export type { SanitizedPlayerChannel, VideoInfo, QueuedVideoInfo } from './plugins/player/PlayerChannel';
 export type { CustomizationElements } from './plugins/core/global/CustomizationPlugin';
 export type { FolderContent } from './plugins/gallery/Gallery';

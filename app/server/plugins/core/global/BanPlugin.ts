@@ -68,7 +68,7 @@ export class BanPlugin extends GlobalPlugin {
     constructor(manager: RoomManager) {
         super(manager);
 
-        this.loadStorage();
+        this.hydrateStorage();
 
         setInterval(() => this.tick(), BanPlugin.TICK_INTERVAL);
     }
@@ -122,7 +122,7 @@ export class BanPlugin extends GlobalPlugin {
                 }
             }
         }
-        this.syncStorage();
+        this.writeStorageToDisk();
         await this.handleBanList('', connection);
     }
 
@@ -134,7 +134,7 @@ export class BanPlugin extends GlobalPlugin {
                 delete this.storage.banned[matchString];
             }
         }
-        this.syncStorage();
+        this.writeStorageToDisk();
         await this.handleBanList('', connection);
     }
 

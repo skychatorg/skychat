@@ -1,6 +1,5 @@
 import util from 'util';
-import { exec as oldExec } from 'node:child_process';
-import { spawn } from 'child_process';
+import { exec as oldExec, spawn } from 'child_process';
 import { Config } from '../../skychat/Config';
 import { Connection } from '../../skychat/Connection';
 import { FileManager } from '../../skychat/FileManager';

@@ -2,7 +2,9 @@
 import { reactive, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useClientStore } from '@/stores/client';
+import { useAppStore } from '../stores/app';
 
+const app = useAppStore();
 const client = useClientStore();
 const router = useRouter();
 
@@ -22,7 +24,7 @@ watch(() => client.state.currentRoomId, function(newRoomId, oldRoomId) {
 });
 
 const joinAsGuest = function() {
-    client.join(client.state.rooms[0].id);
+    app.join(client.state.rooms[0].id);
     if (client.state.playerChannels.length > 0) {
         client.sendMessage('/playerchannel join ' + client.state.playerChannels[0].id);
     }

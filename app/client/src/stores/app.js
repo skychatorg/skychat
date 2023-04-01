@@ -2,6 +2,7 @@ import { watch } from 'vue';
 import { defineStore } from 'pinia';
 import { useClientStore } from './client';
 import { useToast } from 'vue-toastification';
+import { getPasswordKey, verify, encrypt } from '../lib/crypto';
 import mousetrap from 'mousetrap';
 
 
@@ -30,6 +31,11 @@ export const useAppStore = defineStore('app', {
             value: DEFAULT_DOCUMENT_TITLE,
             blinking: false,
         },
+
+        /**
+         * If in an encrypted room, CryptoKey to use to decrypt/encrypt messages
+         */
+        cryptoKey: null,
 
         /**
          * Player mode
@@ -249,17 +255,50 @@ export const useAppStore = defineStore('app', {
             }));
         },
 
+        join: async function(roomId) {
+            const clientStore = useClientStore();
+
+            // Handle encrypted rooms
+            const room = clientStore.state.rooms.find(r => r.id === roomId);
+            if (room.plugins.encrypt) {
+                // Get password from user
+                const password = prompt('Enter room password');
+                // Convert password into encryption key
+                const passwordKey = await getPasswordKey(password);
+                // Verify key with encrypted data from server
+                if (! await verify(passwordKey, room.plugins.encrypt)) {
+                    toast.error('Invalid room password');
+                    return;
+                }
+                // Key is OK, store it
+                this.cryptoKey = passwordKey;
+            } else {
+                // Clear key if we are coming from an encrypted room
+                this.cryptoKey = null;
+            }
+
+            clientStore.join(roomId);
+        },
+
         setMessage: function(message) {
             this.newMessage = message;
         },
 
-        sendMessage: function() {
+        sendMessage: async function() {
             if (this.newMessage.trim().length === 0) {
                 return;
             }
-            const clientStore = useClientStore();
-            clientStore.sendMessage(this.newMessage);
+            // Clear message
+            const message = this.newMessage;
             this.newMessage = '';
+            // Send message
+            const clientStore = useClientStore();
+            if (this.cryptoKey && ! message.startsWith('/')) {
+                const encryptedMessage = JSON.stringify(await encrypt(this.cryptoKey, message));
+                clientStore.sendMessage(encryptedMessage);
+            } else {
+                clientStore.sendMessage(message);
+            }
         },
 
         focus: function() {

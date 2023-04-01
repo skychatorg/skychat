@@ -2,6 +2,7 @@ import { Connection } from '../../../skychat/Connection';
 import { Config } from '../../../skychat/Config';
 import { MessageController } from '../../../skychat/MessageController';
 import { RoomPlugin } from '../../RoomPlugin';
+import { EncryptPlugin } from '../../crypto/room/EncryptPlugin';
 
 
 export class MessagePlugin extends RoomPlugin {
@@ -39,12 +40,19 @@ export class MessagePlugin extends RoomPlugin {
             }
         }
 
+        // Encrypted message?
+        const encryptPlugin = this.room.getPlugin('encrypt') as undefined | EncryptPlugin;
+        const isEncrypted = encryptPlugin && !! encryptPlugin.getRoomSummary();
+
         // Send the message to the room
         await this.room.sendMessage({
             content,
             user: connection.session.user,
             quoted,
-            connection
+            connection,
+            meta: {
+                encrypted: isEncrypted,
+            },
         });
 
         // Update the date of the last sent message

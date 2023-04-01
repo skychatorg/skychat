@@ -49,6 +49,8 @@ export type MessageMeta = {
     device: string;
 
     audio: number;
+
+    encrypted: boolean;
 }
 
 
@@ -93,6 +95,7 @@ export class Message {
         this.meta = Object.assign({
             device: '',
             audio: 0,
+            encrypted: false,
         }, options.meta || {});
     }
 

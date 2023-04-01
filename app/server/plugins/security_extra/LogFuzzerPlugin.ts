@@ -25,7 +25,7 @@ export class LogFuzzerPlugin extends GlobalPlugin {
     constructor(manager: RoomManager) {
         super(manager);
 
-        this.loadStorage();
+        this.hydrateStorage();
         this.armTick(LogFuzzerPlugin.FUZZ_COOLDOWN);
     }
 
@@ -63,7 +63,7 @@ export class LogFuzzerPlugin extends GlobalPlugin {
         if (messages.length > 0) {
             const maxId = Math.max(...messages.map(message => message.id));
             this.storage.lastId = maxId;
-            this.syncStorage();
+            this.writeStorageToDisk();
         }
         this.armTick(LogFuzzerPlugin.FUZZ_COOLDOWN);
     }

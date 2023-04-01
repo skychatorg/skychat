@@ -47,7 +47,7 @@ export class ConnectedListPlugin extends GlobalPlugin {
     constructor(manager: RoomManager) {
         super(manager);
 
-        this.loadStorage();
+        this.hydrateStorage();
         setInterval(this.tick.bind(this), ConnectedListPlugin.MAX_SYNC_DELAY);
     }
 
@@ -58,7 +58,7 @@ export class ConnectedListPlugin extends GlobalPlugin {
             mode: mode as 'show-all'|'hide-details-by-right',
             argument: parseInt(arg)
         };
-        this.syncStorage();
+        this.writeStorageToDisk();
 
         this.sync();
     }
