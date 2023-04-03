@@ -11,6 +11,7 @@ import { RacingPlugin } from './room/RacingPlugin';
 import { RandomGeneratorPlugin } from './room/RandomGeneratorPlugin';
 import { RollPlugin } from './room/RollPlugin';
 import { StatsPlugin } from './room/StatsPlugin';
+import { ConfusePlugin } from './global/ConfusePlugin';
 
 
 export class GamesPluginGroup extends PluginGroup {
@@ -27,6 +28,7 @@ export class GamesPluginGroup extends PluginGroup {
 
     globalPluginClasses = [
         AprilFoolsDay,
+        ConfusePlugin,
         CursorPlugin,
         MoneyFarmerPlugin,
         OfferMoneyPlugin,
