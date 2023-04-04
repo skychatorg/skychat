@@ -19,7 +19,7 @@ export class ConfusePlugin extends GlobalPlugin {
         confuse: {
             minCount: 1,
             maxCount: 1,
-            coolDown: 10 * 1e3,
+            coolDown: 60 * 1e3,
             params: [
                 {
                     name: 'username',
