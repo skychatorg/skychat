@@ -54,8 +54,6 @@ const lastSeenUsers = computed(() => {
 
 // listen for events for buttons
 const bindMessageContentEvents = () => {
-
-
     // Images
     const images = Array.from(content.value.getElementsByTagName('img'));
     for (const image of images) {
@@ -68,7 +66,7 @@ const bindMessageContentEvents = () => {
     const buttons = Array.from(content.value.getElementsByClassName('skychat-button'));
     for (const button of buttons) {
         button.addEventListener('click', () => {
-            if (button.dataset.action[0] === '/' && button.dataset.trusted === 'false' && ! confirm('Send "' + button.dataset.action + '"?')) {
+            if (button.dataset.action[0] === '/' && button.dataset.trusted !== 'true' && ! confirm('Send "' + button.dataset.action + '"?')) {
                 return;
             }
             client.sendMessage(button.dataset.action);
@@ -80,7 +78,6 @@ watch(() => props.message.formatted, () => nextTick(bindMessageContentEvents));
 
 // When interacting with a message
 const messageInteract = () => {
-
     // Cycle between these texts
     const editText = '/edit ' + props.message.id + ' ' + props.message.content;
     const deleteText = '/delete ' + props.message.id;
