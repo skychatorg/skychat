@@ -24,6 +24,7 @@ import { BanPlugin } from './global/BanPlugin';
 import { IpPlugin } from './global/IpPlugin';
 import { KickPlugin } from './global/KickPlugin';
 import { XpTickerPlugin } from './global/XpTickerPlugin';
+import { BlacklistPlugin } from './global/BlacklistPlugin';
 
 
 export class CorePluginGroup extends PluginGroup {
@@ -43,6 +44,7 @@ export class CorePluginGroup extends PluginGroup {
         AvatarPlugin,
         BackupPlugin,
         BanPlugin,
+        BlacklistPlugin,
         ConnectedListPlugin,
         CustomizationPlugin,
         IpPlugin,

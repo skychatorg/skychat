@@ -29,6 +29,14 @@ const props = defineProps({
 
 const content = ref(null);
 
+const isBlacklisted = computed(() => {
+    if (! client.state.user) {
+        return false;
+    }
+    const blacklist = client.state.user.data.plugins.blacklist || [];
+    return blacklist.includes(props.message.user.username.toLowerCase());
+});
+
 // Shown date
 const formattedDate = computed(() => {
     const date = new Date(props.message.createdTimestamp * 1000);
@@ -119,6 +127,13 @@ const messageInteract = () => {
                         }"
                     >
                         {{ message.user.username }}
+                        <sup
+                            v-if="isBlacklisted"
+                            title="This user is blacklisted. Click to remove from blacklist."
+                            @click.stop="client.sendMessage('/unblacklist ' + entry.user.username)"
+                        >
+                            <fa icon="ban" class="text-danger" />
+                        </sup>
                         <sup v-if="message.meta.device === 'mobile'">
                             <fa icon="mobile-screen" class="ml-1" />
                         </sup>
@@ -140,10 +155,17 @@ const messageInteract = () => {
                 />
                 <!-- Message content -->
                 <div
+                    v-if="! isBlacklisted"
                     class="text-skygray-white w-0 min-w-full whitespace-pre-wrap overflow-hidden break-words"
                     v-html="message.formatted"
                     ref="content"
-                ></div>
+                />
+                <div
+                    v-else 
+                    class="text-skygray-white w-0 min-w-full whitespace-pre-wrap overflow-hidden break-words italic"
+                >
+                    User is blacklisted
+                </div>
             </div>
 
             <div v-if="! compact" class="basis-16 w-16 flex flex-col text-center">

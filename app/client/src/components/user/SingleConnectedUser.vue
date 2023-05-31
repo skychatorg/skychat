@@ -16,6 +16,14 @@ const props = defineProps({
     },
 });
 
+const isBlacklisted = computed(() => {
+    if (! client.state.user) {
+        return false;
+    }
+    const blacklist = client.state.user.data.plugins.blacklist || [];
+    return blacklist.includes(props.entry.user.username);
+});
+
 // Formatted money
 const formattedMoney = computed(() => {
     return '$' + Math.floor(props.entry.user.money / 1e2);
@@ -41,7 +49,6 @@ const formattedDurationSinceDead = computed(() => {
     }
     return Math.round(duration) + 's';
 });
-
 </script>
 
 <template>
@@ -59,12 +66,10 @@ const formattedDurationSinceDead = computed(() => {
                 'opacity-50': entry.connectionCount === 0,
             }"
         >
-
             <UserBigAvatar class="mt-1" :user="entry.user" />
 
             <!-- Right col -->
             <div class="grow pl-4 pr-1">
-
                 <!-- First row -->
                 <div class="flex">
                     <div
@@ -75,6 +80,13 @@ const formattedDurationSinceDead = computed(() => {
                         }"
                     >
                         {{ entry.user.username }}
+                        <sup
+                            v-if="isBlacklisted"
+                            title="This user is blacklisted. Click to remove from blacklist."
+                            @click.stop="client.sendMessage('/unblacklist ' + entry.user.username)"
+                        >
+                            <fa icon="ban" class="text-danger" />
+                        </sup>
                         <sup v-if="entry.connectionCount > 1">{{ entry.connectionCount }}</sup>
                     </div>
                     <div class="text-xs text-right text-skygray-lighter flex justify-end space-x-4 pt-1">
