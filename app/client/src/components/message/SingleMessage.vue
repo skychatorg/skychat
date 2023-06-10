@@ -62,6 +62,10 @@ const lastSeenUsers = computed(() => {
 
 // listen for events for buttons
 const bindMessageContentEvents = () => {
+    if (! content.value) {
+        return;
+    }
+
     // Images
     const images = Array.from(content.value.getElementsByTagName('img'));
     for (const image of images) {
@@ -109,8 +113,10 @@ const messageInteract = () => {
         :selected="false"
         @contextmenu.prevent="messageInteract"
     >
-        <div class="py-1 px-3 flex flex-row">
-
+        <div
+            v-if="! isBlacklisted"
+            class="py-1 px-3 flex flex-row"
+        >
             <UserBigAvatar
                 v-if="! compact"
                 class="mt-1"
@@ -155,17 +161,10 @@ const messageInteract = () => {
                 />
                 <!-- Message content -->
                 <div
-                    v-if="! isBlacklisted"
                     class="text-skygray-white w-0 min-w-full whitespace-pre-wrap overflow-hidden break-words"
                     v-html="message.formatted"
                     ref="content"
                 />
-                <div
-                    v-else 
-                    class="text-skygray-white w-0 min-w-full whitespace-pre-wrap overflow-hidden break-words italic"
-                >
-                    User is blacklisted
-                </div>
             </div>
 
             <div v-if="! compact" class="basis-16 w-16 flex flex-col text-center">
@@ -176,6 +175,20 @@ const messageInteract = () => {
                     :users="lastSeenUsers"
                     class="my-2"
                 />
+            </div>
+        </div>
+        <div v-else class="flex pl-6 items-center">
+            <UserMiniAvatar
+                :user="message.user"
+                class="mr-2"
+            />
+            <div class="text-skygray-lighter">
+                <a
+                    class="cursor-pointer hover:underline"
+                    @click.stop="client.sendMessage('/unblacklist ' + message.user.username)"
+                >
+                    Unblacklist {{ message.user.username }} to see his messages
+                </a>
             </div>
         </div>
     </HoverCard>
