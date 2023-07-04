@@ -29,6 +29,14 @@ const props = defineProps({
 
 const content = ref(null);
 
+const isBlacklisted = computed(() => {
+    if (! client.state.user) {
+        return false;
+    }
+    const blacklist = client.state.user.data.plugins.blacklist || [];
+    return blacklist.includes(props.message.user.username.toLowerCase());
+});
+
 // Shown date
 const formattedDate = computed(() => {
     const date = new Date(props.message.createdTimestamp * 1000);
@@ -54,6 +62,10 @@ const lastSeenUsers = computed(() => {
 
 // listen for events for buttons
 const bindMessageContentEvents = () => {
+    if (! content.value) {
+        return;
+    }
+
     // Images
     const images = Array.from(content.value.getElementsByTagName('img'));
     for (const image of images) {
@@ -101,8 +113,10 @@ const messageInteract = () => {
         :selected="false"
         @contextmenu.prevent="messageInteract"
     >
-        <div class="py-1 px-3 flex flex-row">
-
+        <div
+            v-if="! isBlacklisted"
+            class="py-1 px-3 flex flex-row"
+        >
             <UserBigAvatar
                 v-if="! compact"
                 class="mt-1"
@@ -119,6 +133,13 @@ const messageInteract = () => {
                         }"
                     >
                         {{ message.user.username }}
+                        <sup
+                            v-if="isBlacklisted"
+                            title="This user is blacklisted. Click to remove from blacklist."
+                            @click.stop="client.sendMessage('/unblacklist ' + entry.user.username)"
+                        >
+                            <fa icon="ban" class="text-danger" />
+                        </sup>
                         <sup v-if="message.meta.device === 'mobile'">
                             <fa icon="mobile-screen" class="ml-1" />
                         </sup>
@@ -143,7 +164,7 @@ const messageInteract = () => {
                     class="text-skygray-white w-0 min-w-full whitespace-pre-wrap overflow-hidden break-words"
                     v-html="message.formatted"
                     ref="content"
-                ></div>
+                />
             </div>
 
             <div v-if="! compact" class="basis-16 w-16 flex flex-col text-center">
@@ -154,6 +175,20 @@ const messageInteract = () => {
                     :users="lastSeenUsers"
                     class="my-2"
                 />
+            </div>
+        </div>
+        <div v-else class="flex pl-6 items-center">
+            <UserMiniAvatar
+                :user="message.user"
+                class="mr-2"
+            />
+            <div class="text-skygray-lighter">
+                <a
+                    class="cursor-pointer hover:underline"
+                    @click.stop="client.sendMessage('/unblacklist ' + message.user.username)"
+                >
+                    Unblacklist {{ message.user.username }} to see his messages
+                </a>
             </div>
         </div>
     </HoverCard>

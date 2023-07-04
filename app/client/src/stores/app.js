@@ -7,6 +7,8 @@ import mousetrap from 'mousetrap';
 
 const DEFAULT_DOCUMENT_TITLE = '~ SkyChat';
 
+const NOTIFICATION_SOUND_MP3_PATH = '/assets/sound/notification.mp3';
+
 const CURRENT_VERSION = 5;
 const STORE_SAVED_KEYS = [
     'playerMode',
@@ -174,9 +176,13 @@ export const useAppStore = defineStore('app', {
                     return;
                 }
 
-                // Quoted?
-                if (message.content.match(new RegExp('@' + clientStore.state.user.username.toLowerCase(), 'i'))) {
-                    new Audio('/assets/sound/notification.mp3').play();
+                // Notify user if quoted, user is not blacklisted and app is not focused
+                if (
+                    message.content.match(new RegExp('@' + clientStore.state.user.username.toLowerCase(), 'i'))
+                    && ! (clientStore.state.user.data.plugins.blacklist || []).includes(message.user.username.toLowerCase())
+                    && (! this.focused || this.mobileView !== 'middle')
+                ) {
+                    new Audio(NOTIFICATION_SOUND_MP3_PATH).play();
                 }
 
                 // If app is not focused, create notification
