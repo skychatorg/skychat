@@ -112,6 +112,7 @@ The `config/preferences.json` file specifies application preferences. The availa
 | maxReplacedStickersPerMessage         | number |  50 | Max. number of replaced stickers per message |
 | maxReplacedRisiBankStickersPerMessage | number |  50 | Max. number of replaced RisiBank stickers per message |
 | maxNewlinesPerMessage                 | number |  20 | Max. number of newlines per message |
+| maxConsecutiveMessages                | number |  3  | Max. number of consecutive messages in a room |
 
 ### Customize the fake message history
 
