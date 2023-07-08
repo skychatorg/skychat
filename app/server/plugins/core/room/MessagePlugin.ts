@@ -21,22 +21,41 @@ export class MessagePlugin extends RoomPlugin {
 
         // Parse quote
         const quoteMatch = content.match(/^@([0-9]+)/);
-        // we also check that user has right to access message history
+
+        // We also check that user has right to access message history
         if (quoteMatch && quoteMatch[1] && connection.session.user.right >= Config.PREFERENCES.minRightForMessageHistory) {
             const quoteId = parseInt(quoteMatch[1]);
+
             // Try to find message in room message cache
             quoted = await this.room.getMessageById(quoteId);
+
             // Otherwise, try to find the quoted message in the database
             quoted = quoted || await MessageController.getMessageById(quoteId);
+
             // If quote found, remote the quote string from the message
             if (quoted) {
                 content = content.slice(quoteMatch[0].length);
             }
+
             // If message is private
             const room = quoted.room !== null ? this.room.manager.getRoomById(quoted.room) : null;
             if (! room || (room.isPrivate && this.room.id !== room.id)) {
                 quoted = null;
             }
+        }
+
+        // If the last N messages in this room are from the same user, we merge the messages
+        const lastMessages = this.room.messages.slice(-Config.PREFERENCES.maxConsecutiveMessages);
+        const matchingMessages = lastMessages.filter(m => m.user.username.toLowerCase() === connection.session.user.username.toLowerCase());
+        if (matchingMessages.length === lastMessages.length) {
+            const lastMessage = lastMessages[lastMessages.length - 1];
+            lastMessage.edit(
+                lastMessage.content + '\n' + content,
+                undefined,
+                quoted,
+            );
+            this.room.send('message-edit', lastMessage.sanitized());
+            return;
         }
 
         // Send the message to the room

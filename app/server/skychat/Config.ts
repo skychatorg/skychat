@@ -18,6 +18,7 @@ export type Preferences = {
     maxReplacedRisiBankStickersPerMessage: number;
     maxReplacedStickersPerMessage: number;
     maxNewlinesPerMessage: number;
+    maxConsecutiveMessages: number;
 }
 
 export type PublicConfig = {
@@ -142,7 +143,8 @@ export class Config {
             'minRightForPlayerManageSchedule',
             'maxReplacedImagesPerMessage',
             'maxReplacedStickersPerMessage',
-            'maxNewlinesPerMessage'
+            'maxNewlinesPerMessage',
+            'maxConsecutiveMessages',
         ];
         for (const key of keys) {
             if (typeof (Config.PREFERENCES as any)[key] === 'undefined') {

@@ -13,5 +13,6 @@
     "maxReplacedImagesPerMessage": 50,
     "maxReplacedStickersPerMessage": 50,
     "maxReplacedRisiBankStickersPerMessage": 4,
-    "maxNewlinesPerMessage": 20
+    "maxNewlinesPerMessage": 20,
+    "maxConsecutiveMessages": 3
 }

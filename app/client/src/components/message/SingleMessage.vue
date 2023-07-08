@@ -65,6 +65,8 @@ const bindMessageContentEvents = () => {
     if (! content.value) {
         return;
     }
+    
+    emit('content-size-changed');
 
     // Images
     const images = Array.from(content.value.getElementsByTagName('img'));

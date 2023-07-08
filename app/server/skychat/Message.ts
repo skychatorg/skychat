@@ -74,7 +74,7 @@ export class Message {
 
     public formatted: string;
 
-    public readonly quoted: Message | null;
+    public quoted: Message | null;
 
     public readonly user: User;
 
@@ -101,9 +101,10 @@ export class Message {
      * @param content
      * @param formatted
      */
-    public edit(content: string, formatted?: string) {
+    public edit(content: string, formatted?: string, quoted?: Message | null) {
         this.content = content;
         this.formatted = formatted ? formatted : (MessageFormatter.getInstance().format(content));
+        this.quoted = quoted || null;
     }
 
     /**
