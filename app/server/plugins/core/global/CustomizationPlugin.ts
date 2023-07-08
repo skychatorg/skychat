@@ -62,6 +62,18 @@ export class CustomizationPlugin extends GlobalPlugin {
             { id: 27, name: 'United Nations Blue', value: '#4788FF' },
             { id: 28, name: 'Cornflower Blue', value: '#5C9AFF' },
             { id: 29, name: 'French Sky Blue', value: '#70B5FF' },
+
+            // https://coolors.co/70b5ff-6cbff1-67c8e3-62d1d5-5ddac6-58e4b8-53eda9-4ef69b-4cfb94-49ff8c
+            { id: 30, name: 'Argentinian Blue', value: '#70B5FF' },
+            { id: 31, name: 'Maya blue', value: '#6CBFF1' },
+            { id: 32, name: 'Sky blue', value: '#67C8E3' },
+            { id: 33, name: 'Robin egg blue', value: '#62D1D5' },
+            { id: 34, name: 'Turquoise', value: '#5DDAC6' },
+            { id: 35, name: 'Aquamarine', value: '#58E4B8' },
+            { id: 36, name: 'Aquamarine 2', value: '#53EDA9' },
+            { id: 37, name: 'Spring green', value: '#4EF69B' },
+            { id: 38, name: 'Sprint green 2', value: '#4CFB94' },
+            { id: 39, name: 'Spring green 3', value: '#49FF8C' },
         ],
     };
 
