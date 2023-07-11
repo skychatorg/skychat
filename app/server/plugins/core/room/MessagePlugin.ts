@@ -2,6 +2,8 @@ import { Connection } from '../../../skychat/Connection';
 import { Config } from '../../../skychat/Config';
 import { MessageController } from '../../../skychat/MessageController';
 import { RoomPlugin } from '../../RoomPlugin';
+import { DatabaseHelper } from '../../../skychat/DatabaseHelper';
+import SQL from 'sql-template-strings';
 
 
 export class MessagePlugin extends RoomPlugin {
@@ -55,6 +57,7 @@ export class MessagePlugin extends RoomPlugin {
                 quoted,
             );
             this.room.send('message-edit', lastMessage.sanitized());
+            await DatabaseHelper.db.run(SQL`update messages set content = ${lastMessage.content} where id = ${lastMessage.id}`);
             return;
         }
 
