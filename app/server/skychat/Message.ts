@@ -104,7 +104,9 @@ export class Message {
     public edit(content: string, formatted?: string, quoted?: Message | null) {
         this.content = content;
         this.formatted = formatted ? formatted : (MessageFormatter.getInstance().format(content));
-        this.quoted = quoted || null;
+        if (typeof quoted !== 'undefined') {
+            this.quoted = quoted || null;
+        }
     }
 
     /**
