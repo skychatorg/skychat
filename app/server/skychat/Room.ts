@@ -193,11 +193,16 @@ export class Room implements IBroadcaster {
         }
 
         // Otherwise, load data from this file
-        const data = JSON.parse(fs.readFileSync(this.getStoragePath()).toString()) as StoredRoom;
-        this.name = data.name || this.name;
-        this.pluginGroupNames = data.pluginGroupNames || this.pluginGroupNames;
-        this.isPrivate = !! data.isPrivate;
-        this.whitelist = data.whitelist;
+        try {
+            const data = JSON.parse(fs.readFileSync(this.getStoragePath()).toString()) as StoredRoom;
+            this.name = data.name || this.name;
+            this.pluginGroupNames = data.pluginGroupNames || this.pluginGroupNames;
+            this.isPrivate = !! data.isPrivate;
+            this.whitelist = data.whitelist;
+        } catch (error) {
+            console.error(`Could not load room ${this.id} data from disk: ${error}`);
+            this.name = `Room ${this.id} (corrupted)`;
+        }
     }
 
     /**
