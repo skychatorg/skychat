@@ -19,6 +19,7 @@ export type Preferences = {
     maxReplacedStickersPerMessage: number;
     maxNewlinesPerMessage: number;
     maxConsecutiveMessages: number;
+    invertedBlacklist: boolean;
 }
 
 export type PublicConfig = {
@@ -145,6 +146,7 @@ export class Config {
             'maxReplacedStickersPerMessage',
             'maxNewlinesPerMessage',
             'maxConsecutiveMessages',
+            'invertedBlacklist',
         ];
         for (const key of keys) {
             if (typeof (Config.PREFERENCES as any)[key] === 'undefined') {

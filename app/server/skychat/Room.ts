@@ -11,6 +11,8 @@ import { RoomPlugin } from '../plugins/RoomPlugin';
 import { Session } from './Session';
 import { CorePluginGroup } from '../plugins';
 import { globalPluginGroup } from '../plugins/GlobalPluginGroup';
+import { BlacklistPlugin } from '../plugins/core/global/BlacklistPlugin';
+import { Config } from './Config';
 
 
 export type StoredRoom = {
@@ -289,6 +291,13 @@ export class Room implements IBroadcaster {
         // Send messages
         const messages = this.messages
             .slice(startFromIndex, startFromIndex + count)
+            .filter(message => {
+                // Do not send messages from blacklisted users
+                if (Config.PREFERENCES.invertedBlacklist && BlacklistPlugin.hasBlacklisted(message.user, connection.session.user.username)) {
+                    return false;
+                }
+                return true;
+            })
             .map(message => message.sanitized());
 
         if (messages.length > 0) {
@@ -398,7 +407,13 @@ export class Room implements IBroadcaster {
         let message = new Message(options);
         message = await this.executeOnBeforeMessageBroadcastHook(message, options.connection);
         // Send it to clients
-        this.send('message', message.sanitized());
+        for (const receiver of this.connections) {
+            // If receiver was blacklisted by sender, do not send the message
+            if (Config.PREFERENCES.invertedBlacklist && options.connection && BlacklistPlugin.hasBlacklisted(options.connection.session.user, receiver.session.user.username)) {
+                continue;
+            }
+            receiver.send('message', message.sanitized());
+        }
         // Add it to history
         this.messages.push(message);
         this.messages.splice(0, this.messages.length - Room.MESSAGE_HISTORY_LENGTH);

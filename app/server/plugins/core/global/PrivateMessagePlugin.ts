@@ -3,6 +3,7 @@ import { GlobalPlugin } from '../../GlobalPlugin';
 import { Session } from '../../../skychat/Session';
 import { User } from '../../../skychat/User';
 import { Config } from '../../../skychat/Config';
+import { BlacklistPlugin } from './BlacklistPlugin';
 
 
 export class PrivateMessagePlugin extends GlobalPlugin {
@@ -24,6 +25,10 @@ export class PrivateMessagePlugin extends GlobalPlugin {
         const session = Session.getSessionByIdentifier(username);
         if (! session) {
             throw new Error('User not found');
+        }
+
+        if (BlacklistPlugin.hasBlacklisted(session.user, connection.session.user.username)) {
+            throw new Error('You are blacklisted by this user');
         }
 
         if (session.identifier === connection.session.identifier) {

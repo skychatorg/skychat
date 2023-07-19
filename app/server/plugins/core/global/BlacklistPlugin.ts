@@ -16,6 +16,11 @@ export class BlacklistPlugin extends GlobalPlugin {
 
     static readonly commandAliases = ['unblacklist'];
 
+    static hasBlacklisted(user: User, username: string) {
+        const blacklist = UserController.getUserPluginData<string[]>(user, this.commandName);
+        return blacklist.includes(username.toLowerCase());
+    }
+
     readonly minRight = 0;
 
     readonly rules = {
