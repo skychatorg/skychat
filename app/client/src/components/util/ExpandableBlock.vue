@@ -10,7 +10,7 @@ const props = defineProps({
 
 const emit = defineEmits(['content-size-changed']);
 
-const EXPANDABLE_HEIGHT = 200;
+const EXPANDABLE_HEIGHT = 300;
 
 const observer: Ref<null | ResizeObserver> = ref(null);
 const container: Ref<null | HTMLDivElement> = ref(null);
@@ -65,7 +65,7 @@ function expand() {
 
 <style scoped>
 .expandable {
-    height: 201px; /* 1px more than EXPANDABLE_HEIGHT */
+    height: 301px; /* 1px more than EXPANDABLE_HEIGHT */
     overflow: hidden;
     position: relative;
 }

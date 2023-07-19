@@ -49,7 +49,7 @@ export class MessagePlugin extends RoomPlugin {
         // If the last N messages in this room are from the same user, we merge the messages
         const lastMessages = this.room.messages.slice(-Config.PREFERENCES.maxConsecutiveMessages);
         const matchingMessages = lastMessages.filter(m => m.user.username.toLowerCase() === connection.session.user.username.toLowerCase());
-        if (matchingMessages.length === Config.PREFERENCES.maxConsecutiveMessages && matchingMessages.length === lastMessages.length) {
+        if (! quoted && matchingMessages.length === Config.PREFERENCES.maxConsecutiveMessages && matchingMessages.length === lastMessages.length) {
             const lastMessage = lastMessages[lastMessages.length - 1];
             lastMessage.edit(
                 lastMessage.content + '\n' + content,
