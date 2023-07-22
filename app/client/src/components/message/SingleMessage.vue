@@ -91,6 +91,14 @@ const bindMessageContentEvents = () => {
             client.sendMessage(button.dataset.action);
         });
     }
+
+    // Quotes
+    const quotes = Array.from(content.value.getElementsByClassName('skychat-quote'));
+    for (const quote of quotes) {
+        quote.addEventListener('click', () => {
+            app.setMessage('@' + quote.dataset.username + ' ');
+        });
+    }
 };
 onMounted(bindMessageContentEvents);
 watch(() => props.message.formatted, () => nextTick(bindMessageContentEvents));

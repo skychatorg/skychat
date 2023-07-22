@@ -8,6 +8,8 @@ import escapeHTML from 'escape-html';
  * Singleton helper to format messages
  */
 export class MessageFormatter {
+    public static readonly QUOTE_REGEXP: RegExp = /(^|[ \n]|<br>)@(\*?[a-zA-Z0-9-_]{2,30})/ig;
+
     public static readonly LINK_REGEXP: RegExp = /(^|[ \n]|<br>)((http|https):\/\/[\w?=&./-;#~%+@,[\]:!-]+(?![\w\s?&./;#~%"=+@,[\]:!-]*>))/ig;
 
     private static instance?: MessageFormatter;
@@ -51,6 +53,7 @@ export class MessageFormatter {
         message = this.replaceRisiBankStickers(message, remove);
         message = this.replaceStickers(message, remove);
         message = this.replaceLinks(message, remove);
+        message = this.replaceQuotes(message);
         return message;
     }
 
@@ -154,7 +157,7 @@ export class MessageFormatter {
      * @param trusted Whether to limit the number of replacements
      */
     public replaceImages(message: string, remove?: boolean, trusted?: boolean): string {
-        let matches = message.match(new RegExp(Config.LOCATION + '/uploads/all/([-\\/._a-zA-Z0-9]+)\\.(png|jpg|jpeg|gif)', 'g'));
+        let matches: RegExpMatchArray | string[] | null = message.match(new RegExp(Config.LOCATION + '/uploads/all/([-\\/._a-zA-Z0-9]+)\\.(png|jpg|jpeg|gif)', 'g'));
         if (! matches) {
             return message;
         }
@@ -231,7 +234,6 @@ export class MessageFormatter {
 
     /**
      * Replace links in the message
-     * @param text
      */
     public replaceLinks(text: string, remove?: boolean): string {
         if (remove) {
@@ -240,5 +242,12 @@ export class MessageFormatter {
             text = text.replace(MessageFormatter.LINK_REGEXP, '$1<a class="skychat-link" target="_blank" rel="nofollow noopener noreferrer" href="$2">$2</a>');
         }
         return text;
+    }
+
+    /**
+     * Replace quotes in the message
+     */
+    public replaceQuotes(text: string): string {
+        return text.replace(MessageFormatter.QUOTE_REGEXP, '<span class="skychat-quote" data-username="$2">@$2</span>');
     }
 }

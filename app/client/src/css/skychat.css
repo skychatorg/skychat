@@ -66,3 +66,14 @@
 .skychat-table tr th {
     padding: 2px;
 }
+
+.skychat-quote {
+    cursor: pointer;
+    background-color: #303782;
+    padding: 5px 6px;
+    border-radius: 10px;
+    margin: 0 4px;
+}
+.skychat-quote:hover {
+    background-color: #5865f2;
+}
