@@ -99,7 +99,8 @@ The `config/preferences.json` file specifies application preferences. The availa
 | field | type | default | description |
 |-------|------|---------|-------------|
 | minRightForPrivateMessages            | number |  -1 | Min. right to send private messages |
-| minRightForMessageHistory             | number |  -1 | Min. right to access room message history |
+| minRightForShortTermMessageHistory    | number |  -1 | Min. right to access short term room message history |
+| minRightForMessageHistory             | number |  -1 | Min. right to access full room message history |
 | minRightForUserModeration             | number | 'op' | Min. right to ban, kick and access user ips |
 | minRightForSetRight                   | number | 'op' | Min. right to set user right |
 | minRightForAudioRecording             | number |  -1 | Min. right to share and play audio recordings |
@@ -118,7 +119,9 @@ The `config/preferences.json` file specifies application preferences. The availa
 
 ### Customize the fake message history
 
-`config/fakemessages.txt` contains the fake messages shown to users whose right level is less than `minRightForMessageHistory` defined in `preferences.json`. If `minRightForMessageHistory` is set to -1, you do not need to modify the fake messages since not one will see them.
+`config/fakemessages.txt` contains the fake messages shown to users whose right level is less than `minRightForShortTermMessageHistory` defined in `preferences.json`. If `minRightForShortTermMessageHistory` is set to -1, you do not need to modify the fake messages since not one will see them.
+
+`minRightForMessageHistory` defines who can quote old messages and navigate room old history.
 
 
 ### Customize guest names
