@@ -6,6 +6,7 @@ export type Preferences = {
     minRightForMessageHistory: number;
     minRightForPrivateMessages: number;
     minRightForUserModeration: number | 'op';
+    minRightForSetRight: number | 'op';
     minRightForAudioRecording: number;
     minRightForConnectedList: number;
     minRightForPolls: number;
@@ -135,6 +136,7 @@ export class Config {
             'minRightForMessageHistory',
             'minRightForPrivateMessages',
             'minRightForUserModeration',
+            'minRightForSetRight',
             'minRightForAudioRecording',
             'minRightForConnectedList',
             'minRightForPolls',
