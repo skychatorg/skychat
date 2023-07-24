@@ -229,7 +229,7 @@ export class RoomManager {
         const identifiers = usernames.map(username => username.toLowerCase());
         const room = new Room(this, true);
         identifiers.forEach(identifier => room.allow(identifier));
-        room.name = usernames.join(', ');
+        room.name = '';
         this.rooms.push(room);
         identifiers
             .map(identifier => Session.getSessionByIdentifier(identifier))
