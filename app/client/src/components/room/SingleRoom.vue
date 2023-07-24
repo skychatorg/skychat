@@ -48,6 +48,9 @@ const borderColor = computed(() => {
 const formattedName = computed(() => {
     if (props.room.isPrivate) {
         const otherUsernames = props.room.whitelist.filter(identifier => client.state.user.username.toLowerCase() !== identifier);
+        if (otherUsernames.length === 0) {
+            return `Archive: ${props.room.name}`;
+        }
         return `@${otherUsernames.join(', @')}`;
     } else {
         return props.room.name;
@@ -82,7 +85,6 @@ const icon = computed(() => {
 
             <!-- Room name -->
             <div
-                :title="formattedName"
                 class="grow whitespace-nowrap w-0 overflow-hidden text-ellipsis pr-2"
             >
                 <fa v-if="icon" class="mr-1" :class="icon.classes" :icon="icon.name" />

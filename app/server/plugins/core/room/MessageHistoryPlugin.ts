@@ -15,7 +15,7 @@ export class MessageHistoryPlugin extends RoomPlugin {
     readonly rules = {
         messagehistory: {
             minCount: 0,
-            coolDown: 100,
+            maxCallsPer10Seconds: 3,
             params: [
                 { pattern: /^([0-9]+)$/, name: 'lastId' },
             ]
