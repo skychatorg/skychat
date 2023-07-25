@@ -1,6 +1,6 @@
 import { useToast } from 'vue-toastification';
 import { defineStore } from 'pinia';
-import { SkyChatClient } from '../../../api/client.ts';
+import { SkyChatClient } from '../../../api/index.ts';
 
 // Connect to SkyChatClient
 const protocol = document.location.protocol === 'http:' ? 'ws' : 'wss';

@@ -1,10 +1,14 @@
 {
     "name": "skychat",
     "private": false,
-    "version": "0.0.1",
-    "description": "",
-    "types": "build/index.d.ts",
-    "main": "build/index.js",
+    "version": "1.0.0",
+    "description": "Future-proof virtual cinema platform",
+    "types": "build/api/index.d.ts",
+    "main": "build/api/index.js",
+    "files": [
+        "/build/api",
+        "/build/server"
+    ],
     "scripts": {
         "reset": "bash app/script/reset.sh",
         "setup": "bash app/script/setup.sh",
@@ -16,7 +20,7 @@
         "test": "echo \"⚠ No test ⚠\""
     },
     "keywords": [],
-    "author": "",
+    "author": "7PH <b.raymond@protonmail.com>",
     "license": "ISC",
     "dependencies": {
         "@fortawesome/fontawesome-svg-core": "^6.2.0",
