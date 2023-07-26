@@ -6,7 +6,8 @@
         "skipLibCheck": true,
         "rootDir": "app",
         "outDir": "build",
-        "esModuleInterop": true
+        "esModuleInterop": true,
+        "declaration": true
     },
     "include": [
         "app/server/**/*.ts",

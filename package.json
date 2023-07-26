@@ -1,7 +1,7 @@
 {
     "name": "skychat",
     "private": false,
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "Future-proof virtual cinema platform",
     "types": "build/api/index.d.ts",
     "main": "build/api/index.js",
