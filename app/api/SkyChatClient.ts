@@ -1,3 +1,4 @@
+import WebSocket from 'isomorphic-ws';
 import { EventEmitter } from 'events';
 import { BinaryMessageTypes } from './BinaryMessageTypes';
 import { PublicConfig, CustomizationElements, SanitizedMessage, SanitizedUser, AuthToken, SanitizedSession, SanitizedRoom, SanitizedPoll, SanitizedPlayerChannel, VideoInfo, QueuedVideoInfo, FolderContent, VideoStreamInfo, OngoingConvert } from '../server';
@@ -51,7 +52,6 @@ export declare interface SkyChatClient {
     on(event: 'player-search', listener: (data: { type: string, items: Array<VideoInfo> }) => any): this;
     on(event: 'player-sync', listener: (data: { current: QueuedVideoInfo | null, queue: QueuedVideoInfo[], cursor: number }) => any): this;
 }
-
 
 export class SkyChatClient extends EventEmitter {
     static readonly CURSOR_DECAY_DELAY = 10 * 1e3;
@@ -510,16 +510,20 @@ export class SkyChatClient extends EventEmitter {
      * @param message
      */
     private async _onWebSocketMessage(message: any) {
+        let messageData = message.data;
+        if (message.data.constructor === Buffer) {
+            messageData = new Blob([message.data]);
+        }
         // If raw audio received
-        if (message.data && message.data.constructor === Blob) {
+        if (messageData && messageData.constructor === Blob || messageData.constructor === Buffer) {
             // Read message type, which is the first 2 bytes (UInt16)
-            const buffer = await message.data.arrayBuffer();
+            const buffer = await messageData.arrayBuffer();
             const view = new DataView(buffer);
             const messageType = view.getUint16(0, true);
 
             if (messageType === BinaryMessageTypes.AUDIO) {
                 const messageId = view.getUint32(2, true);
-                const audioBlob = message.data.slice(6);
+                const audioBlob = messageData.slice(6);
                 this.emit('audio', { id: messageId, blob: audioBlob });
             } else if (messageType === BinaryMessageTypes.CURSOR) {
                 const id = view.getUint32(2, true);
@@ -537,7 +541,7 @@ export class SkyChatClient extends EventEmitter {
             return;
         }
         // Otherwise, if normal json message received
-        const data = JSON.parse(message.data);
+        const data = JSON.parse(messageData);
         const eventName = data.event;
         const eventPayload = data.data;
         this.emit(eventName, eventPayload);
