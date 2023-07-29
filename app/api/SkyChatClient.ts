@@ -511,11 +511,11 @@ export class SkyChatClient extends EventEmitter {
      */
     private async _onWebSocketMessage(message: any) {
         let messageData = message.data;
-        if (message.data.constructor === Buffer) {
+        if (typeof Buffer !== 'undefined' && message.data.constructor === Buffer) {
             messageData = new Blob([message.data]);
         }
         // If raw audio received
-        if (messageData && messageData.constructor === Blob || messageData.constructor === Buffer) {
+        if (messageData && messageData.constructor === Blob || (typeof Buffer !== 'undefined' && messageData.constructor === Buffer)) {
             // Read message type, which is the first 2 bytes (UInt16)
             const buffer = await messageData.arrayBuffer();
             const view = new DataView(buffer);
