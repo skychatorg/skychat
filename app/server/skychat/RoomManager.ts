@@ -299,7 +299,7 @@ export class RoomManager {
                     const getWeight = (room: Room): number => {
                         const privateValue = room.isPrivate ? 0 : 1;
                         const participantCountValue = room.isPrivate ? room.whitelist.length : 1;
-                        const score = [privateValue, participantCountValue, room.id];
+                        const score = [privateValue, participantCountValue, Room.CURRENT_ID - room.id];
                         return score.reduce((a, b) => a * 1000 + b, 0);
                     };
                     return getWeight(b) - getWeight(a);
