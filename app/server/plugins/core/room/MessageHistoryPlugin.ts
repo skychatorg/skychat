@@ -15,17 +15,23 @@ export class MessageHistoryPlugin extends RoomPlugin {
     readonly rules = {
         messagehistory: {
             minCount: 0,
-            coolDown: 100,
+            maxCallsPer10Seconds: 3,
             params: [
                 { pattern: /^([0-9]+)$/, name: 'lastId' },
             ]
         },
     };
 
-    async run(alias: string, param: string, connection: Connection): Promise<void> {
-        // If user has the right to access the full history
+    async run(_alias: string, param: string, connection: Connection): Promise<void> {
+        // Asking for short term history
+        if (! parseInt(param) && connection.session.user.right >= Config.PREFERENCES.minRightForShortTermMessageHistory) {
+            this.room.sendHistory(connection, 0);
+            return;
+        }
+
+        // Asking for long term history
         if (connection.session.user.right >= Config.PREFERENCES.minRightForMessageHistory) {
-            this.room.sendHistory(connection, parseInt(param) || 0);
+            this.room.sendHistory(connection, parseInt(param));
             return;
         }
 

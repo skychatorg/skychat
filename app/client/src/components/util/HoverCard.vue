@@ -1,8 +1,5 @@
 <script setup>
-
-
 defineProps({
-
     /**
      * Whether this hover card is selectable
      */
@@ -74,11 +71,11 @@ defineProps({
     transform: translate3d(-3px, 0, 0);
     filter: brightness(1.25);
 }
-.hover-card:nth-child(1) .colored-border {
+.hover-card:nth-child(1) .colored-border.rounded {
     border-top-left-radius: v-bind("useBorderRadius ? '4px' : '0'");
     border-top-right-radius: v-bind("useBorderRadius ? '4px' : '0'");
 }
-.hover-card:nth-last-child(1) .colored-border {
+.hover-card:nth-last-child(1) .colored-border.rounded {
     border-bottom-left-radius: v-bind("useBorderRadius ? '4px' : '0'");
     border-bottom-right-radius: v-bind("useBorderRadius ? '4px' : '0'");
 }

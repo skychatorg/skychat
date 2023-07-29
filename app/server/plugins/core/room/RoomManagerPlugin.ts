@@ -8,7 +8,7 @@ import { Session } from '../../../skychat/Session';
 export class RoomManagerPlugin extends RoomPlugin {
     static readonly commandName = 'room';
 
-    static readonly commandAliases = ['roomset', 'roomcreate', 'roomleave', 'roomdelete'];
+    static readonly commandAliases = ['roomset', 'roomcreate', 'roomdelete'];
 
     readonly rules = {
         room: { },
@@ -25,7 +25,6 @@ export class RoomManagerPlugin extends RoomPlugin {
                 { name: 'value', pattern: /.?/ },
             ]
         },
-        roomleave: { minCount: 0, },
         roomdelete: { maxCount: 0, },
     };
 
@@ -37,10 +36,6 @@ export class RoomManagerPlugin extends RoomPlugin {
 
         case 'roomcreate':
             await this.handleRoomCreate(param, connection);
-            break;
-
-        case 'roomleave':
-            await this.handleRoomLeave(param, connection);
             break;
 
         case 'roomdelete':
@@ -87,24 +82,9 @@ export class RoomManagerPlugin extends RoomPlugin {
         connection.send('message', message.sanitized());
     }
 
-    async handleRoomLeave(param: string, connection: Connection): Promise<void> {
-        if (! this.room.isPrivate) {
-            throw new Error('You can not leave a public room');
-        }
-        if (this.room.whitelist.length === 1) {
-            throw new Error('You can not leave this room, you are the last user in it');
-        }
-        this.room.unallow(connection.session.identifier);
-        this.room.manager.sendRoomList(connection);
-        this.room.whitelist
-            .map(ident => Session.getSessionByIdentifier(ident))
-            .filter(session => !! session)
-            .forEach(session => this.room.manager.sendRoomList(session as Session));
-    }
-
     async handleRoomDelete(param: string, connection: Connection): Promise<void> {
-        if (this.room.isPrivate && this.room.whitelist.length > 1) {
-            throw new Error('You can not delete this room, others are still in it');
+        if (this.room.isPrivate) {
+            throw new Error('Use pmleave instead');
         }
         if (! this.canManageRoom(connection.session, this.room)) {
             throw new Error('You do not have the permission to delete this room');

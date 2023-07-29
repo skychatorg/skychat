@@ -198,20 +198,21 @@ export class RoomManager {
     }
 
     /**
-     * Try to find a private room with the exact give whitelist
-     * @param whitelist
+     * Try to find a private room with the exact give participant usernames
+     * @param usernames
      * @returns
      */
-    public findPrivateRoom(whitelist: string[]): Room | null {
+    public findPrivateRoom(usernames: string[]): Room | null {
+        usernames = usernames.sort().map(username => username.toLowerCase());
         return this.rooms.find(room => {
             if (! room.isPrivate) {
                 return false;
             }
-            if (room.whitelist.length !== whitelist.length) {
+            if (room.whitelist.length !== usernames.length) {
                 return false;
             }
-            for (let i = 0; i < whitelist.length; ++ i) {
-                if (room.whitelist.indexOf(whitelist[i]) === -1) {
+            for (let i = 0; i < usernames.length; ++ i) {
+                if (usernames[i] !== room.whitelist[i]) {
                     return false;
                 }
             }
@@ -221,14 +222,16 @@ export class RoomManager {
 
     /**
      * Create a new private room
-     * @param whitelist
+     * @param usernames
      */
-    public createPrivateRoom(whitelist: string[]) {
+    public createPrivateRoom(usernames: string[]) {
+        usernames = usernames.sort();
+        const identifiers = usernames.map(username => username.toLowerCase());
         const room = new Room(this, true);
-        whitelist.forEach(identifier => room.allow(identifier));
-        room.name = whitelist.join(', ');
+        identifiers.forEach(identifier => room.allow(identifier));
+        room.name = '';
         this.rooms.push(room);
-        whitelist
+        identifiers
             .map(identifier => Session.getSessionByIdentifier(identifier))
             .filter(session => session instanceof Session)
             .forEach(session => this.sendRoomList(session as Session));
@@ -292,8 +295,16 @@ export class RoomManager {
             'room-list',
             this.rooms
                 .filter(room => ! room.isPrivate || room.whitelist.indexOf(session.identifier) !== -1)
+                .sort((a, b) => {
+                    const getWeight = (room: Room): number => {
+                        const privateValue = room.isPrivate ? 0 : 1;
+                        const participantCountValue = room.isPrivate ? room.whitelist.length : 1;
+                        const score = [privateValue, participantCountValue, room.id];
+                        return score.reduce((a, b) => a * 1000 + b, 0);
+                    };
+                    return getWeight(b) - getWeight(a);
+                })
                 .map(room => room.sanitized())
-                .sort((a, b) => (a.isPrivate ? 1 : 0) * (Room.CURRENT_ID + 1) + a.id - ((b.isPrivate ? 1 : 0) * (Room.CURRENT_ID + 1) + b.id))
         );
     }
 

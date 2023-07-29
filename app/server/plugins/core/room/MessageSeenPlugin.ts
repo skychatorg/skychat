@@ -36,7 +36,7 @@ export class MessageSeenPlugin extends RoomPlugin {
         }
     };
 
-    async run(alias: string, param: string, connection: Connection): Promise<void> {
+    async run(_alias: string, param: string, connection: Connection): Promise<void> {
         if (connection.session.isGuest()) {
             return;
         }

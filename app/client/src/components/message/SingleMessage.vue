@@ -2,6 +2,7 @@
 import { nextTick, computed, onMounted, ref, watch } from 'vue';
 import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
+import ExpandableBlock from '@/components/util/ExpandableBlock.vue';
 import HoverCard from '@/components/util/HoverCard.vue';
 import UserBigAvatar from '@/components/user/UserBigAvatar.vue';
 import UserMiniAvatar from '@/components/user/UserMiniAvatar.vue';
@@ -22,6 +23,10 @@ const props = defineProps({
         default: true,
     },
     compact: {
+        type: Boolean,
+        default: false,
+    },
+    forceExpand: {
         type: Boolean,
         default: false,
     },
@@ -86,6 +91,14 @@ const bindMessageContentEvents = () => {
             client.sendMessage(button.dataset.action);
         });
     }
+
+    // Quotes
+    const quotes = Array.from(content.value.getElementsByClassName('skychat-quote'));
+    for (const quote of quotes) {
+        quote.addEventListener('click', () => {
+            app.setMessage('@' + quote.dataset.username + ' ');
+        });
+    }
 };
 onMounted(bindMessageContentEvents);
 watch(() => props.message.formatted, () => nextTick(bindMessageContentEvents));
@@ -105,95 +118,104 @@ const messageInteract = () => {
     // Set new text & Focus on input
     app.setMessage(rotation[newPosition]);
 };
-
 </script>
 
 <template>
-    <HoverCard
-        :borderColor="message.user.data.plugins.custom.color"
-        :selectable="selectable"
-        :selected="false"
-        @contextmenu.prevent="messageInteract"
+    <ExpandableBlock
+        :force-expand="forceExpand || message.user.username.toLowerCase() === client.state.user?.username.toLowerCase()"
+        @content-size-changed="() => emit('content-size-changed')"
     >
-        <div
-            v-if="! isBlacklisted"
-            class="py-1 px-3 flex flex-row"
+        <HoverCard
+            :borderColor="message.user.data.plugins.custom.color"
+            :selectable="selectable"
+            :selected="false"
+            :use-border-radius="false"
+            :class="{
+                'blacklisted': isBlacklisted,
+            }"
+            @contextmenu.prevent="messageInteract"
         >
-            <UserBigAvatar
-                v-if="! compact"
-                class="mt-1"
-                :user="message.user"
-            />
+            <div
+                v-if="! isBlacklisted"
+                class="py-1 px-3 flex flex-row"
+            >
+                <UserBigAvatar
+                    v-if="! compact"
+                    class="mt-1"
+                    :user="message.user"
+                />
 
-            <div class="grow pl-4">
-                <!-- First row -->
-                <div class="flex">
-                    <div
-                        class="font-bold"
-                        :style="{
-                            color: message.user.data.plugins.custom.color,
-                        }"
-                    >
-                        {{ message.user.username }}
-                        <sup
-                            v-if="isBlacklisted"
-                            title="This user is blacklisted. Click to remove from blacklist."
-                            @click.stop="client.sendMessage('/unblacklist ' + entry.user.username)"
+                <div class="grow pl-4">
+                    <!-- First row -->
+                    <div class="flex">
+                        <div
+                            class="font-bold"
+                            :style="{
+                                color: message.user.data.plugins.custom.color,
+                            }"
                         >
-                            <fa icon="ban" class="text-danger" />
-                        </sup>
-                        <sup v-if="message.meta.device === 'mobile'">
-                            <fa icon="mobile-screen" class="ml-1" />
-                        </sup>
+                            {{ message.user.username }}
+                            <sup
+                                v-if="isBlacklisted"
+                                title="This user is blacklisted. Click to remove from blacklist."
+                                @click.stop="client.sendMessage('/unblacklist ' + entry.user.username)"
+                            >
+                                <fa icon="ban" class="text-danger" />
+                            </sup>
+                            <sup v-if="message.meta.device === 'mobile'">
+                                <fa icon="mobile-screen" class="ml-1" />
+                            </sup>
+                        </div>
+                        <div v-if="compact" class="text-skygray-lightest text-xs pt-1 ml-2">
+                            {{ formattedDate }}
+                            <template v-if="room">
+                                @ {{ room.name }}
+                            </template>
+                        </div>
                     </div>
-                    <div v-if="compact" class="text-skygray-lightest text-xs pt-1 ml-2">
-                        {{ formattedDate }}
-                        <template v-if="room">
-                            @ {{ room.name }}
-                        </template>
-                    </div>
+                    <!-- Quoted message -->
+                    <SingleMessage
+                        v-if="message.quoted"
+                        :message="message.quoted"
+                        :selectable="false"
+                        :compact="true"
+                        :force-expand="true"
+                        class="mt-2 mb-4 opacity-75"
+                    />
+                    <!-- Message content -->
+                    <div
+                        class="text-skygray-white w-0 min-w-full whitespace-pre-wrap overflow-hidden break-words"
+                        v-html="message.formatted"
+                        ref="content"
+                    />
                 </div>
-                <!-- Quoted message -->
-                <SingleMessage
-                    v-if="message.quoted"
-                    :message="message.quoted"
-                    :selectable="false"
-                    :compact="true"
-                    class="mt-2 mb-4 opacity-75"
-                />
-                <!-- Message content -->
-                <div
-                    class="text-skygray-white w-0 min-w-full whitespace-pre-wrap overflow-hidden break-words"
-                    v-html="message.formatted"
-                    ref="content"
-                />
-            </div>
 
-            <div v-if="! compact" class="basis-16 w-16 flex flex-col text-center">
-                <span class="grow text-xs text-skygray-lightest">
-                    {{ formattedDate }}
-                </span>
-                <UserMiniAvatarCollection
-                    :users="lastSeenUsers"
-                    class="my-2"
+                <div v-if="! compact" class="basis-16 w-16 flex flex-col text-center">
+                    <span class="grow text-xs text-skygray-lightest">
+                        {{ formattedDate }}
+                    </span>
+                    <UserMiniAvatarCollection
+                        :users="lastSeenUsers"
+                        class="my-2"
+                    />
+                </div>
+            </div>
+            <div v-else class="flex pl-6 items-center">
+                <UserMiniAvatar
+                    :user="message.user"
+                    class="mr-2"
                 />
+                <div class="text-skygray-lighter">
+                    <a
+                        class="cursor-pointer hover:underline"
+                        @click.stop="client.sendMessage('/unblacklist ' + message.user.username)"
+                    >
+                        Unblacklist {{ message.user.username }} to see his messages
+                    </a>
+                </div>
             </div>
-        </div>
-        <div v-else class="flex pl-6 items-center">
-            <UserMiniAvatar
-                :user="message.user"
-                class="mr-2"
-            />
-            <div class="text-skygray-lighter">
-                <a
-                    class="cursor-pointer hover:underline"
-                    @click.stop="client.sendMessage('/unblacklist ' + message.user.username)"
-                >
-                    Unblacklist {{ message.user.username }} to see his messages
-                </a>
-            </div>
-        </div>
-    </HoverCard>
+        </HoverCard>
+    </ExpandableBlock>
 </template>
 
 <style scoped>

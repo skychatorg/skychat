@@ -47,7 +47,15 @@ const borderColor = computed(() => {
 // Formatted room name
 const formattedName = computed(() => {
     if (props.room.isPrivate) {
+        // If a room name is set explicitly, use that
+        if (props.room.name) {
+            return props.room.name;
+        }
+        // Otherwise, find a relevant name (exclude current user and show other participants)
         const otherUsernames = props.room.whitelist.filter(identifier => client.state.user.username.toLowerCase() !== identifier);
+        if (otherUsernames.length === 0) {
+            return `Archive: ${props.room.name}`;
+        }
         return `@${otherUsernames.join(', @')}`;
     } else {
         return props.room.name;
@@ -82,7 +90,6 @@ const icon = computed(() => {
 
             <!-- Room name -->
             <div
-                :title="formattedName"
                 class="grow whitespace-nowrap w-0 overflow-hidden text-ellipsis pr-2"
             >
                 <fa v-if="icon" class="mr-1" :class="icon.classes" :icon="icon.name" />

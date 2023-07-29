@@ -99,8 +99,10 @@ The `config/preferences.json` file specifies application preferences. The availa
 | field | type | default | description |
 |-------|------|---------|-------------|
 | minRightForPrivateMessages            | number |  -1 | Min. right to send private messages |
-| minRightForMessageHistory             | number |  -1 | Min. right to access room message history |
+| minRightForShortTermMessageHistory    | number |  -1 | Min. right to access short term room message history |
+| minRightForMessageHistory             | number |  -1 | Min. right to access full room message history |
 | minRightForUserModeration             | number | 'op' | Min. right to ban, kick and access user ips |
+| minRightForSetRight                   | number | 'op' | Min. right to set user right |
 | minRightForAudioRecording             | number |  -1 | Min. right to share and play audio recordings |
 | minRightForConnectedList              | number |  -1 | Min. right to access the list of currently active users |
 | minRightForPolls                      | number |  -1 | Min. right to create polls |
@@ -112,11 +114,15 @@ The `config/preferences.json` file specifies application preferences. The availa
 | maxReplacedStickersPerMessage         | number |  50 | Max. number of replaced stickers per message |
 | maxReplacedRisiBankStickersPerMessage | number |  50 | Max. number of replaced RisiBank stickers per message |
 | maxNewlinesPerMessage                 | number |  20 | Max. number of newlines per message |
-| maxConsecutiveMessages                | number |  3  | Max. number of consecutive messages in a room |
+| maxConsecutiveMessages                | number |  1  | Max. number of consecutive messages in a room |
+| maxMessageMergeDelayMin               | number |  10 | Max. minutes before not merging consecutive messages |
+| invertedBlacklist                     | boolean |  false  | Whether blacklisted users can not see messages from users who blacklisted them |
 
 ### Customize the fake message history
 
-`config/fakemessages.txt` contains the fake messages shown to users whose right level is less than `minRightForMessageHistory` defined in `preferences.json`. If `minRightForMessageHistory` is set to -1, you do not need to modify the fake messages since not one will see them.
+`config/fakemessages.txt` contains the fake messages shown to users whose right level is less than `minRightForShortTermMessageHistory` defined in `preferences.json`. If `minRightForShortTermMessageHistory` is set to -1, you do not need to modify the fake messages since not one will see them.
+
+`minRightForMessageHistory` defines who can quote old messages and navigate room old history.
 
 
 ### Customize guest names

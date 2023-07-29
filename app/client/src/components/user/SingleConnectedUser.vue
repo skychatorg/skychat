@@ -41,6 +41,9 @@ const formattedDurationSinceDead = computed(() => {
         return '';
     }
     const duration = new Date().getTime() * 0.001 - props.entry.deadSinceTime;
+    if (duration > 60 * 60 * 24) {
+        return Math.round(duration / 60 / 60 / 24) + 'd';
+    }
     if (duration > 60 * 60) {
         return Math.round(duration / 60 / 60) + 'hr';
     }
@@ -53,6 +56,7 @@ const formattedDurationSinceDead = computed(() => {
 
 <template>
     <HoverCard
+        v-show="! isBlacklisted"
         :borderColor="props.entry.deadSinceTime ? 'transparent' : 'rgb(var(--color-skygray-lightest))'"
         :useBorderRadius="true"
         :selectable="true"
@@ -80,13 +84,6 @@ const formattedDurationSinceDead = computed(() => {
                         }"
                     >
                         {{ entry.user.username }}
-                        <sup
-                            v-if="isBlacklisted"
-                            title="This user is blacklisted. Click to remove from blacklist."
-                            @click.stop="client.sendMessage('/unblacklist ' + entry.user.username)"
-                        >
-                            <fa icon="ban" class="text-danger" />
-                        </sup>
                         <sup v-if="entry.connectionCount > 1">{{ entry.connectionCount }}</sup>
                     </div>
                     <div class="text-xs text-right text-skygray-lighter flex justify-end space-x-4 pt-1">

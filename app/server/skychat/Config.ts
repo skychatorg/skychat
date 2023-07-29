@@ -3,9 +3,11 @@ import * as Mail from 'nodemailer/lib/mailer';
 
 
 export type Preferences = {
-    minRightForMessageHistory: number;
     minRightForPrivateMessages: number;
+    minRightForShortTermMessageHistory: number;
+    minRightForMessageHistory: number;
     minRightForUserModeration: number | 'op';
+    minRightForSetRight: number | 'op';
     minRightForAudioRecording: number;
     minRightForConnectedList: number;
     minRightForPolls: number;
@@ -19,6 +21,8 @@ export type Preferences = {
     maxReplacedStickersPerMessage: number;
     maxNewlinesPerMessage: number;
     maxConsecutiveMessages: number;
+    maxMessageMergeDelayMin: number;
+    invertedBlacklist: boolean;
 }
 
 export type PublicConfig = {
@@ -131,9 +135,11 @@ export class Config {
         // Load preferences.json
         Config.PREFERENCES = JSON.parse(fs.readFileSync('config/preferences.json').toString());
         const keys: string[] = [
-            'minRightForMessageHistory',
             'minRightForPrivateMessages',
+            'minRightForShortTermMessageHistory',
+            'minRightForMessageHistory',
             'minRightForUserModeration',
+            'minRightForSetRight',
             'minRightForAudioRecording',
             'minRightForConnectedList',
             'minRightForPolls',
@@ -145,6 +151,8 @@ export class Config {
             'maxReplacedStickersPerMessage',
             'maxNewlinesPerMessage',
             'maxConsecutiveMessages',
+            'maxMessageMergeDelayMin',
+            'invertedBlacklist',
         ];
         for (const key of keys) {
             if (typeof (Config.PREFERENCES as any)[key] === 'undefined') {
