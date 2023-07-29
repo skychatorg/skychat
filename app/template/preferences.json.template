@@ -15,6 +15,7 @@
     "maxReplacedStickersPerMessage": 50,
     "maxReplacedRisiBankStickersPerMessage": 4,
     "maxNewlinesPerMessage": 20,
-    "maxConsecutiveMessages": 3,
+    "maxConsecutiveMessages": 1,
+    "maxMessageMergeDelayMin": 10,
     "invertedBlacklist": false
 }

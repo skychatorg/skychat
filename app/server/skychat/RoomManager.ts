@@ -295,8 +295,16 @@ export class RoomManager {
             'room-list',
             this.rooms
                 .filter(room => ! room.isPrivate || room.whitelist.indexOf(session.identifier) !== -1)
+                .sort((a, b) => {
+                    const getWeight = (room: Room): number => {
+                        const privateValue = room.isPrivate ? 0 : 1;
+                        const participantCountValue = room.isPrivate ? room.whitelist.length : 1;
+                        const score = [privateValue, participantCountValue, room.id];
+                        return score.reduce((a, b) => a * 1000 + b, 0);
+                    };
+                    return getWeight(b) - getWeight(a);
+                })
                 .map(room => room.sanitized())
-                .sort((a, b) => (a.isPrivate ? 1 : 0) * (Room.CURRENT_ID + 1) + a.id - ((b.isPrivate ? 1 : 0) * (Room.CURRENT_ID + 1) + b.id))
         );
     }
 

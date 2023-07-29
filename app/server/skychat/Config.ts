@@ -21,6 +21,7 @@ export type Preferences = {
     maxReplacedStickersPerMessage: number;
     maxNewlinesPerMessage: number;
     maxConsecutiveMessages: number;
+    maxMessageMergeDelayMin: number;
     invertedBlacklist: boolean;
 }
 
@@ -150,6 +151,7 @@ export class Config {
             'maxReplacedStickersPerMessage',
             'maxNewlinesPerMessage',
             'maxConsecutiveMessages',
+            'maxMessageMergeDelayMin',
             'invertedBlacklist',
         ];
         for (const key of keys) {
