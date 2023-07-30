@@ -23,9 +23,10 @@ export class MessagePlugin extends RoomPlugin {
 
         // Parse quote
         const quoteMatch = content.match(/^@([0-9]+)/);
+        const canQuote = connection.session.user.right >= Config.PREFERENCES.minRightForMessageHistory;
 
         // We also check that user has right to access message history
-        if (quoteMatch && quoteMatch[1] && connection.session.user.right >= Config.PREFERENCES.minRightForMessageHistory) {
+        if (quoteMatch && quoteMatch[1] && canQuote) {
             const quoteId = parseInt(quoteMatch[1]);
 
             // Try to find message in room message cache
@@ -53,11 +54,7 @@ export class MessagePlugin extends RoomPlugin {
         const lastMessageTooRecent = lastMessages.length > 0 && (new Date().getTime() - lastMessages[lastMessages.length - 1].createdTime.getTime()) < Config.PREFERENCES.maxMessageMergeDelayMin * 60 * 1000;
         if (! quoted && tooManyMessages && lastMessageTooRecent) {
             const lastMessage = lastMessages[lastMessages.length - 1];
-            lastMessage.edit(
-                lastMessage.content + '\n' + content,
-                undefined,
-                quoted,
-            );
+            lastMessage.edit(lastMessage.content + '\n' + content);
             this.room.send('message-edit', lastMessage.sanitized());
             await DatabaseHelper.db.run(SQL`update messages set content = ${lastMessage.content} where id = ${lastMessage.id}`);
             return;

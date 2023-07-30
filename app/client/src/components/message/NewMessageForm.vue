@@ -68,7 +68,6 @@ watch(() => client.state.currentRoomId, currentRoomId => currentRoomId && messag
  * When the message changes
  */
 const onMessageInput = event => {
-
     let newMessage = event.target.value;
 
     // Catches when pressing enter while the message input is empty.
@@ -80,17 +79,26 @@ const onMessageInput = event => {
 
     // Otherwise, set the message
     app.setMessage(newMessage);
+    updateTextAreaSize();
+};
 
+const updateTextAreaSize = () => {
     // Infer number of lines of the text area and make it scale accordingly
-    let lineCount = newMessage.split('\n').length;
-    lineCount = Math.min(lineCount, 5);
-    messageTextAreaRows.value = lineCount;
+    let lineCount = app.newMessage.split('\n').length;
+    lineCount = lineCount + app.newMessage.split('\n').filter(line => line.length > 80).length;
+    messageTextAreaRows.value = Math.min(lineCount, 8);
 };
 
 /**
  * Navigate into message history
  */
 const onNavigateIntoHistory = function(event, offset) {
+    if (offset < 0 && event.target.selectionStart > 1) {
+        return;
+    }
+    if (offset > 0 && event.target.selectionStart < event.target.value.length - 1) {
+        return;
+    }
     let index = historyIndex.value === null ? sentMessageHistory.value.length - 1 : historyIndex.value + offset;
     if (typeof sentMessageHistory.value[index] === 'undefined') {
         return;
@@ -98,6 +106,7 @@ const onNavigateIntoHistory = function(event, offset) {
     // Set message
     historyIndex.value = index;
     app.setMessage(sentMessageHistory.value[index]);
+    updateTextAreaSize();
 };
 
 /**
