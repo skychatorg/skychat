@@ -40,6 +40,7 @@ export class GalleryPlugin extends GlobalPlugin {
     async run(alias: string, param: string, connection: Connection): Promise<void> {
         switch (alias) {
         case 'galleryls':
+            Gallery.ensureNoParentDirectoryAccess(param);
             connection.send('gallery', await Gallery.ls(param));
             break;
 
@@ -47,6 +48,7 @@ export class GalleryPlugin extends GlobalPlugin {
             if (! Gallery.canDelete(connection.session)) {
                 throw new Error('You do not have the permission to delete files');
             }
+            Gallery.ensureNoParentDirectoryAccess(param);
             connection.send('gallery', await Gallery.rm(param));
             break;
 

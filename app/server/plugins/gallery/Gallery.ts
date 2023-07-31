@@ -22,9 +22,9 @@ export type PlayableFileInfo = {
 
 
 export class Gallery {
-    static readonly FOLDER_PATH_REGEX = /^[^/][a-zA-Z0-9-_/]+$/;
+    static readonly FOLDER_PATH_REGEX = /^[^/][a-zA-Z0-9-_/.]+$/;
 
-    static readonly FILE_PATH_REGEX = /^([^/][a-zA-Z0-9-_/]+\/)?[a-zA-Z0-9-_]+\.[a-z0-9]+$/;
+    static readonly FILE_PATH_REGEX = /^([^/][a-zA-Z0-9-_/.]+\/)?[a-zA-Z0-9-_.]+\.[a-z0-9]+$/;
 
     static readonly THUMB_FILE_NAMES = ['thumb.png', 'thumb.jpg', 'thumb.jpeg'];
 
@@ -42,6 +42,12 @@ export class Gallery {
     static readonly DEFAULT_FILE_TYPE = 'unknown';
 
     static readonly BASE_PATH = 'gallery/';
+
+    static ensureNoParentDirectoryAccess(path: string) {
+        if (path.includes('../') || path.includes('..\\')) {
+            throw new Error('Invalid path');
+        }
+    }
 
     static canRead(session: Session): boolean {
         const expectedRight = Config.PREFERENCES.minRightForGalleryRead === 'op' ? Infinity : Config.PREFERENCES.minRightForGalleryRead;

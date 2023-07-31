@@ -137,12 +137,12 @@ export class VideoConverterPlugin extends GlobalPlugin {
             }
         }
         // -pix_fmt yuv420p
-        const target = `${Gallery.BASE_PATH + filePath}-${streamIndexes.join('-')}.mp4`;
-        command += ` ${target}.mp4`;
+        const target = `${Gallery.BASE_PATH + filePath.replace(/\.[a-z0-9]$/, '')}-${streamIndexes.join('-')}.mp4`;
+        command += target;
         const convert: OngoingConvert = {
             status: 'converting',
             source: filePath,
-            target: `${Gallery.BASE_PATH + filePath.replace(/\.[a-z0-9]$/, '')}-${streamIndexes.join('-')}.mp4`,
+            target,
             info: streams,
             selectedStreams: streamIndexes,
             lastUpdate: null,
