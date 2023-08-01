@@ -14,7 +14,6 @@ const props = defineProps({
 
 // Whether has unread
 const hasUnread = computed(() => {
-
     if (client.state.user.id === 0) {
         return false;
     }
@@ -52,7 +51,7 @@ const formattedName = computed(() => {
             return props.room.name;
         }
         // Otherwise, find a relevant name (exclude current user and show other participants)
-        const otherUsernames = props.room.whitelist.filter(identifier => client.state.user.username.toLowerCase() !== identifier);
+        const otherUsernames = props.room.whitelist.filter((identifier) => client.state.user.username.toLowerCase() !== identifier);
         if (otherUsernames.length === 0) {
             return `Archive: ${props.room.name}`;
         }
@@ -65,6 +64,13 @@ const formattedName = computed(() => {
 // Choose icon to show and icon color
 const icon = computed(() => {
     if (props.room.isPrivate) {
+        // If group conv
+        if (props.room.whitelist.length > 2) {
+            return {
+                name: 'users',
+                classes: selected.value ? 'text-skygray-white' : 'text-skygray-lightest',
+            };
+        }
         return {
             name: 'lock',
             classes: selected.value ? 'text-skygray-white' : 'text-skygray-lightest',
@@ -72,39 +78,21 @@ const icon = computed(() => {
     }
     return null;
 });
-
 </script>
 
 <template>
-    <HoverCard
-        :useBorderRadius="true"
-        :borderColor="'rgb(var(' + borderColor + '))'"
-        :selectable="true"
-        :selected="selected"
-        class="cursor-pointer"
-    >
-        <div
-            @click="client.state.currentRoomId !== room.id && client.join(room.id)"
-            class="py-2 px-3 flex flex-row select-none"
-        >
-
+    <HoverCard :use-border-radius="true" :border-color="'rgb(var(' + borderColor + '))'" :selectable="true" :selected="selected" class="cursor-pointer">
+        <div @click="client.state.currentRoomId !== room.id && client.join(room.id)" class="py-2 px-3 flex flex-row select-none">
             <!-- Room name -->
-            <div
-                class="grow whitespace-nowrap w-0 overflow-hidden text-ellipsis pr-2"
-            >
+            <div class="grow whitespace-nowrap w-0 overflow-hidden text-ellipsis pr-2">
                 <fa v-if="icon" class="mr-1" :class="icon.classes" :icon="icon.name" />
                 {{ formattedName }}
             </div>
 
             <!-- Icons -->
             <div class="flex">
-
                 <!-- Unread -->
-                <p
-                    v-if="hasUnread"
-                    class="text-danger font-bold mr-2"
-                    title="This room has unread messages"
-                >
+                <p v-if="hasUnread" class="text-danger font-bold mr-2" title="This room has unread messages">
                     <fa icon="bell" size="xs" />
                 </p>
 
@@ -112,7 +100,7 @@ const icon = computed(() => {
                 <p
                     v-show="(client.state.roomConnectedUsers[room.id] || []).length > 0"
                     class="text-primary font-bold"
-                    :title="((client.state.roomConnectedUsers[room.id] || []).length) + ' users in this room'"
+                    :title="(client.state.roomConnectedUsers[room.id] || []).length + ' users in this room'"
                 >
                     <fa icon="users" size="xs" /> {{ (client.state.roomConnectedUsers[room.id] || []).length }}
                 </p>
@@ -121,6 +109,4 @@ const icon = computed(() => {
     </HoverCard>
 </template>
 
-<style scoped>
-
-</style>
+<style scoped></style>
