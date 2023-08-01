@@ -7,7 +7,6 @@ import { Config } from '../../../skychat/Config';
 import { isInteger } from 'lodash';
 import { Connection } from '../../../skychat/Connection';
 
-
 export class SetRightPlugin extends GlobalPlugin {
     static readonly commandName = 'setright';
 
@@ -18,8 +17,8 @@ export class SetRightPlugin extends GlobalPlugin {
             params: [
                 { name: 'username', pattern: User.USERNAME_LOGGED_REGEXP },
                 { name: 'right', pattern: /^([0-9]+)$/ },
-            ]
-        }
+            ],
+        },
     };
 
     readonly minRight = Config.PREFERENCES.minRightForSetRight === 'op' ? 0 : Config.PREFERENCES.minRightForSetRight;
@@ -31,24 +30,20 @@ export class SetRightPlugin extends GlobalPlugin {
         const identifier = usernameRaw.toLowerCase();
         const right = parseInt(rightRaw);
 
-        if (! isInteger(right)) {
+        if (!isInteger(right)) {
             throw new Error('Invalid right');
         }
 
         const session = Session.getSessionByIdentifier(identifier);
-        if (! session) {
+        if (!session) {
             throw new Error('User not found');
         }
 
-        if (connection.session.user.right <= session.user.right) {
+        if (connection.session.user.right <= session.user.right && !connection.session.isOP()) {
             throw new Error('You cannot change the right of a user with a higher or equal right than yours');
         }
 
-        if (this.opOnly && connection.session.user.right < this.minRight) {
-            throw new Error('You are not allowed to use this command');
-        }
-
-        if (right >= connection.session.user.right) {
+        if (right >= connection.session.user.right && !connection.session.isOP()) {
             throw new Error('You cannot set a right higher or equal to yours');
         }
 
