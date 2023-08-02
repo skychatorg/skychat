@@ -11,7 +11,7 @@ const src = ref('');
 const previousVideoHash = ref(null);
 
 const updateSrc = () => {
-    if (! client.state.player.current) {
+    if (!client.state.player.current) {
         return;
     }
 
@@ -22,28 +22,21 @@ const updateSrc = () => {
     }
 
     // Build new URL/src
-    let newSrc = `https://player.twitch.tv/`;
+    let newSrc = 'https://player.twitch.tv/';
     newSrc += `?channel=${client.state.player.current.video.id}`;
     newSrc += `&parent=${document.location.hostname}`;
     src.value = newSrc + '&random=' + Math.random();
 
     // Save new hash
     previousVideoHash.value = videoHash;
-}
+};
 
 watch(() => client.state.player.current && client.state.player.current.video, updateSrc);
 onMounted(updateSrc);
-
 </script>
 
 <template>
-    <iframe
-        :src="src"
-        class="w-full h-full"
-        frameborder="0"
-        allowfullscreen="true"
-        scrolling="no"></iframe>
+    <iframe :src="src" class="w-full h-full" frameborder="0" allowfullscreen="true" scrolling="no"></iframe>
 </template>
 
-<style scoped>
-</style>
+<style scoped></style>

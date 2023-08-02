@@ -8,15 +8,14 @@ import { Session } from '../../../skychat/Session';
 import { Message } from '../../../skychat/Message';
 import { Timing } from '../../../skychat/Timing';
 
-
 type GameObject = {
     state: 'pending' | 'starting' | 'started';
     cars: string[];
     titleMessage: string;
     gameMessage: Message | null;
-    participants: Session[],
-    bets: {[identifier: string]: number};
-    positions: {[carId: number]: number};
+    participants: Session[];
+    bets: { [identifier: string]: number };
+    positions: { [carId: number]: number };
     winnerId: number | null;
 };
 
@@ -30,24 +29,8 @@ const waitTimeout = (delay: number) => {
     });
 };
 
-
 export class RacingPlugin extends RoomPlugin {
-    static readonly CARS: string[] = [
-        '🚚',
-        '🚗',
-        '🚴',
-        '🚁',
-        '🛸',
-        '🐒',
-        '🐄',
-        '🐘',
-        '🦏',
-        '🐇',
-        '🦕',
-        '🐢',
-        '⛷️',
-        '🤸‍♂️'
-    ];
+    static readonly CARS: string[] = ['🚚', '🚗', '🚴', '🚁', '🛸', '🐒', '🐄', '🐘', '🦏', '🐇', '🦕', '🐢', '⛷️', '🤸‍♂️'];
 
     static readonly AVERAGE_RACE_DURATION: number = 10 * 1000;
 
@@ -64,8 +47,8 @@ export class RacingPlugin extends RoomPlugin {
             minCount: 1,
             maxCount: 1,
             coolDown: 500,
-            params: [{ name: 'action', pattern: /^(start|([0-9]+))$/ }]
-        }
+            params: [{ name: 'action', pattern: /^(start|([0-9]+))$/ }],
+        },
     };
 
     private currentGame: GameObject | null = null;
@@ -97,9 +80,13 @@ export class RacingPlugin extends RoomPlugin {
         }
 
         // Choose a subset of cars and initialize car positions
-        const chosenCars = RacingPlugin.CARS.slice(0).sort(() => Math.random() - .5).slice(0, 4);
-        const carPositions: {[carId: number]: number} = {};
-        for (let i = 0; i < chosenCars.length; ++ i) { carPositions[i] = 0; }
+        const chosenCars = RacingPlugin.CARS.slice(0)
+            .sort(() => Math.random() - 0.5)
+            .slice(0, 4);
+        const carPositions: { [carId: number]: number } = {};
+        for (let i = 0; i < chosenCars.length; ++i) {
+            carPositions[i] = 0;
+        }
 
         // Initialize game object
         this.currentGame = {
@@ -118,7 +105,7 @@ export class RacingPlugin extends RoomPlugin {
         this.updateGameMessage();
 
         // Let users the time to participate
-        for (let i = 0; i < 15 + 1; ++ i) {
+        for (let i = 0; i < 15 + 1; ++i) {
             this.currentGame.titleMessage = `Choose your car (${15 - i}s left) - Entry cost: $${RacingPlugin.ENTRY_COST / 100}`;
             this.updateGameMessage();
             await waitTimeout(1000);
@@ -134,7 +121,7 @@ export class RacingPlugin extends RoomPlugin {
 
         // Display list of participants and prepare cars
         this.currentGame.state = 'starting';
-        for (let i = 0; i < 3 + 1; ++ i) {
+        for (let i = 0; i < 3 + 1; ++i) {
             this.currentGame.titleMessage = `Starting in ${3 - i}s`;
             this.updateGameMessage();
             await waitTimeout(1000);
@@ -146,7 +133,7 @@ export class RacingPlugin extends RoomPlugin {
         this.updateGameMessage();
         await waitTimeout(1000);
         const tickDuration = 1000 / 4;
-        const percentPerTick = tickDuration / RacingPlugin.AVERAGE_RACE_DURATION * this.currentGame.cars.length;
+        const percentPerTick = (tickDuration / RacingPlugin.AVERAGE_RACE_DURATION) * this.currentGame.cars.length;
         let gameOn = true;
         while (gameOn) {
             // Decide which car will move this tick
@@ -164,8 +151,7 @@ export class RacingPlugin extends RoomPlugin {
         }
 
         // Get winner list
-        const winners = this.currentGame.participants
-            .filter(session => this.currentGame && this.currentGame.bets[session.identifier] === this.currentGame.winnerId);
+        const winners = this.currentGame.participants.filter((session) => this.currentGame && this.currentGame.bets[session.identifier] === this.currentGame.winnerId);
         let content = '';
         if (winners.length > 0) {
             content += 'Winners:<br>';
@@ -189,23 +175,23 @@ export class RacingPlugin extends RoomPlugin {
      *
      */
     private updateGameMessage(): void {
-        if (! this.currentGame || ! this.currentGame.gameMessage) {
+        if (!this.currentGame || !this.currentGame.gameMessage) {
             return;
         }
         const roadWidth = 50;
         // Display game board
         let content = this.currentGame.titleMessage + '<br>';
         content += '- '.repeat(roadWidth / 2 + 3) + '🚩<br>';
-        for (let carId = 0; carId < this.currentGame.cars.length; ++ carId) {
+        for (let carId = 0; carId < this.currentGame.cars.length; ++carId) {
             const carEmoji = `<div style="display:inline-block;-webkit-transform:rotateY(180deg);-moz-transform:rotateY(180deg);-o-transform:rotateY(180deg);-ms-transform:rotateY(180deg);">${this.currentGame.cars[carId]}</div>`;
-            const dashCount = Math.floor(this.currentGame.positions[carId] * roadWidth / 2);
+            const dashCount = Math.floor((this.currentGame.positions[carId] * roadWidth) / 2);
             // add button so that users can bet on this car
             content += `[[→//${this.commandName} ${carId}]] `;
             content += '· '.repeat(dashCount) + carEmoji;
             // find participants that bet on this car
             const identifiers = Object.entries(this.currentGame.bets)
-                .filter(entry => entry[1] === carId)
-                .map(entry => entry[0]);
+                .filter((entry) => entry[1] === carId)
+                .map((entry) => entry[0]);
             if (identifiers.length > 0) {
                 content += ` (${identifiers.join(', ')})`;
             }
@@ -224,7 +210,7 @@ export class RacingPlugin extends RoomPlugin {
      * @param connection
      */
     private async handleBet(param: string, connection: Connection): Promise<void> {
-        if (! this.currentGame) {
+        if (!this.currentGame) {
             throw new Error('Round is already finished');
         }
         if (this.currentGame.state !== 'pending') {

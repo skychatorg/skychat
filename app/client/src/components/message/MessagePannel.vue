@@ -15,13 +15,12 @@ const scrollState = reactive({
     scrolling: false,
 });
 
-
-const distanceToBottom = function() {
+const distanceToBottom = function () {
     return messagePannel.value.scrollHeight - messagePannel.value.offsetHeight - messagePannel.value.scrollTop;
 };
 
-const scrollToBottomIfAutoScroll = function() {
-    if (! scrollState.auto) {
+const scrollToBottomIfAutoScroll = function () {
+    if (!scrollState.auto) {
         return;
     }
     // We need to wait 1 tick for the message to be rendered
@@ -75,20 +74,23 @@ const scrollToBottom = (immediate) => {
 };
 
 // When the list of messages changes, scroll to bottom
-watch(() => client.messages.length, (newMessageCount, oldMessageCount) => {
-    if (newMessageCount < oldMessageCount) {
-        return;
-    }
-    scrollToBottomIfAutoScroll();
-    if (! scrollState.auto && messagePannel.value.scrollTop === 0) {
-        const previousScrollHeight = messagePannel.value.scrollHeight;
-        nextTick(() => {
-            const newElementsHeight = messagePannel.value.scrollHeight - previousScrollHeight;
-            // Set scroll position back to where it was before appending elements
-            messagePannel.value.scrollTop = newElementsHeight;
-        });
-    }
-});
+watch(
+    () => client.messages.length,
+    (newMessageCount, oldMessageCount) => {
+        if (newMessageCount < oldMessageCount) {
+            return;
+        }
+        scrollToBottomIfAutoScroll();
+        if (!scrollState.auto && messagePannel.value.scrollTop === 0) {
+            const previousScrollHeight = messagePannel.value.scrollHeight;
+            nextTick(() => {
+                const newElementsHeight = messagePannel.value.scrollHeight - previousScrollHeight;
+                // Set scroll position back to where it was before appending elements
+                messagePannel.value.scrollTop = newElementsHeight;
+            });
+        }
+    },
+);
 
 // When scrolling in the div either auto or manually
 const onScroll = () => {
@@ -120,14 +122,8 @@ const onScroll = () => {
             'scroll-behavior': scrollState.smooth && scrollState.auto ? 'smooth' : 'auto',
         }"
     >
-        <SingleMessage
-            v-for="message in client.messages"
-            :key="message.id"
-            :message="message"
-            @content-size-changed="scrollToBottomIfAutoScroll"
-        />
+        <SingleMessage v-for="message in client.messages" :key="message.id" :message="message" @content-size-changed="scrollToBottomIfAutoScroll" />
     </div>
 </template>
 
-<style scoped>
-</style>
+<style scoped></style>

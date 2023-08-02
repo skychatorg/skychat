@@ -4,7 +4,6 @@ import { UserController } from '../../../skychat/UserController';
 import { GlobalPlugin } from '../../GlobalPlugin';
 import { User } from '../../../skychat/User';
 
-
 export type BlackList = Array<string>;
 
 export class BlacklistPlugin extends GlobalPlugin {
@@ -32,9 +31,9 @@ export class BlacklistPlugin extends GlobalPlugin {
                 {
                     name: 'username',
                     pattern: User.USERNAME_LOGGED_REGEXP,
-                    info: 'User to blacklist'
-                }
-            ]
+                    info: 'User to blacklist',
+                },
+            ],
         },
         unblacklist: {
             minCount: 1,
@@ -44,10 +43,10 @@ export class BlacklistPlugin extends GlobalPlugin {
                 {
                     name: 'username',
                     pattern: User.USERNAME_LOGGED_REGEXP,
-                    info: 'User to unblacklist'
-                }
-            ]
-        }
+                    info: 'User to unblacklist',
+                },
+            ],
+        },
     };
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
@@ -68,7 +67,7 @@ export class BlacklistPlugin extends GlobalPlugin {
         }
         blacklist.push(param.toLowerCase());
         await UserController.savePluginData(connection.session.user, this.commandName, blacklist);
-        connection.send('message', UserController.createNeutralMessage({ content: 'User added to blacklist', id: 0, }).sanitized());
+        connection.send('message', UserController.createNeutralMessage({ content: 'User added to blacklist', id: 0 }).sanitized());
         (this.manager.getPlugin('connectedlist') as ConnectedListPlugin).sync();
     }
 
@@ -80,7 +79,7 @@ export class BlacklistPlugin extends GlobalPlugin {
         }
         blacklist.splice(index, 1);
         await UserController.savePluginData(connection.session.user, this.commandName, blacklist);
-        connection.send('message', UserController.createNeutralMessage({ content: 'User removed from blacklist', id: 0, }).sanitized());
+        connection.send('message', UserController.createNeutralMessage({ content: 'User removed from blacklist', id: 0 }).sanitized());
         (this.manager.getPlugin('connectedlist') as ConnectedListPlugin).sync();
     }
 }

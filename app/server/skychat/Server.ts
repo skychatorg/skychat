@@ -10,8 +10,6 @@ import { FileManager } from './FileManager';
 import express from 'express';
 import fileUpload from 'express-fileupload';
 
-
-
 type EventHandler<payloadFilter> = (payload: payloadFilter, client: Connection) => Promise<void>;
 
 type EventsDescription = {
@@ -22,9 +20,6 @@ type EventsDescription = {
         payloadFilter?: iof.MaskFilter;
     };
 };
-
-
-
 
 /**
  * Generic server object. Handle typed event communication.
@@ -51,7 +46,7 @@ export class Server {
     /**
      * Cooldown entries
      */
-    private coolDownEntries: {[key: string]: {first: Date, last: Date, count: number}} = {};
+    private coolDownEntries: { [key: string]: { first: Date; last: Date; count: number } } = {};
 
     constructor(sessionBuilder: (request: http.IncomingMessage) => Promise<Session>) {
         this.sessionBuilder = sessionBuilder;
@@ -59,22 +54,27 @@ export class Server {
         this.app.use(express.static('dist'));
         this.app.use('/uploads', express.static('uploads'));
         this.app.use('/gallery', express.static('gallery'));
-        this.app.use(fileUpload({
-            limits: { fileSize: 10 * 1024 * 1024 },
-            createParentPath: true,
-            useTempFiles: true,
-            tempFileDir: '/tmp/'
-        }));
+        this.app.use(
+            fileUpload({
+                limits: { fileSize: 10 * 1024 * 1024 },
+                createParentPath: true,
+                useTempFiles: true,
+                tempFileDir: '/tmp/',
+            }),
+        );
         this.app.post('/upload', this.onFileUpload.bind(this));
-        this.app.get('*', function(req: express.Request, res: express.Response) {
+        this.app.get('*', function (req: express.Request, res: express.Response) {
             res.status(404).send('404');
         });
         let server;
         if (Config.USE_SSL) {
-            server = https.createServer({
-                cert: fs.readFileSync(Config.SSL_CERTIFICATE),
-                key: fs.readFileSync(Config.SSL_CERTIFICATE_KEY)
-            }, this.app);
+            server = https.createServer(
+                {
+                    cert: fs.readFileSync(Config.SSL_CERTIFICATE),
+                    key: fs.readFileSync(Config.SSL_CERTIFICATE_KEY),
+                },
+                this.app,
+            );
         } else {
             server = http.createServer(this.app);
         }
@@ -85,7 +85,7 @@ export class Server {
                 this.wss.emit('connection', ws, request);
             });
         });
-        server.listen(Config.PORT, Config.HOSTNAME, function() {
+        server.listen(Config.PORT, Config.HOSTNAME, function () {
             console.log('Listening on :' + Config.PORT);
         });
     }
@@ -98,15 +98,15 @@ export class Server {
     public onFileUpload(req: express.Request, res: express.Response): void {
         try {
             const file: fileUpload.UploadedFile | fileUpload.UploadedFile[] | undefined = req.files ? req.files.file : undefined;
-            if (! file) {
+            if (!file) {
                 throw new Error('File not found');
             }
             if (Array.isArray(file)) {
                 throw new Error('Please upload one file at the time');
             }
-            res.send(JSON.stringify({ 'status': 200, 'path': FileManager.saveFile(file) }));
+            res.send(JSON.stringify({ status: 200, path: FileManager.saveFile(file) }));
         } catch (error) {
-            res.send(JSON.stringify({ 'status': 500, 'message': (error as any).toString() }));
+            res.send(JSON.stringify({ status: 500, message: (error as any).toString() }));
         } finally {
             res.end();
         }
@@ -147,7 +147,7 @@ export class Server {
         }
 
         // For every registered event
-        Object.keys(this.events).forEach(eventName => {
+        Object.keys(this.events).forEach((eventName) => {
             // Register it on the connection object
             connection.on(eventName, (payload: any) => this.onConnectionEvent(eventName, payload, connection));
         });
@@ -188,13 +188,13 @@ export class Server {
                     count: 0,
                 };
                 this.coolDownEntries[key].last = new Date();
-                this.coolDownEntries[key].count ++;
+                this.coolDownEntries[key].count++;
             }
 
             // Call handler
             await event.handler(payload, connection);
         } catch (error) {
-            connection.sendError((error as Error));
+            connection.sendError(error as Error);
         }
     }
 

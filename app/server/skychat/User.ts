@@ -1,15 +1,14 @@
 import { UserController } from './UserController';
 
-
 export type UserData = {
-    plugins: {[pluginName: string]: any}
+    plugins: { [pluginName: string]: any };
 };
 
 export type AuthToken = {
     userId: number;
     timestamp: number;
     signature: string;
-}
+};
 
 export type SanitizedUser = {
     id: number;
@@ -18,8 +17,7 @@ export type SanitizedUser = {
     xp: number;
     right: number;
     data: UserData;
-}
-
+};
 
 /**
  * A SkyChatUser is an user stored in the database
@@ -29,7 +27,7 @@ export class User {
      * Default user data object.
      */
     static readonly DEFAULT_DATA_OBJECT: UserData = {
-        plugins: {}
+        plugins: {},
     };
 
     /**
@@ -108,4 +106,3 @@ export class User {
         };
     }
 }
-

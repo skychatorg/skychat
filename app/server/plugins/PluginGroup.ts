@@ -3,8 +3,6 @@ import { RoomManager } from '../skychat/RoomManager';
 import { GlobalPlugin, GlobalPluginConstructor } from './GlobalPlugin';
 import { RoomPlugin, RoomPluginConstructor } from './RoomPlugin';
 
-
-
 /**
  * Defines a list of plugins that can be used together.
  * Used to make configuration easier.
@@ -25,7 +23,7 @@ export abstract class PluginGroup {
      * @param room
      */
     instantiateRoomPlugins(room: Room): RoomPlugin[] {
-        return this.roomPluginClasses.map(c => new c(room));
+        return this.roomPluginClasses.map((c) => new c(room));
     }
 
     /**
@@ -33,6 +31,6 @@ export abstract class PluginGroup {
      * @param manager
      */
     instantiateGlobalPlugins(manager: RoomManager): GlobalPlugin[] {
-        return this.globalPluginClasses.map(c => new c(manager));
+        return this.globalPluginClasses.map((c) => new c(manager));
     }
 }

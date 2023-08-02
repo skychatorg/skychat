@@ -13,39 +13,29 @@ import { Session } from '../../skychat/Session';
 import { Config } from '../../skychat/Config';
 import { GalleryFetcher } from './fetcher/GalleryFetcher';
 
-
-
 /**
  *
  */
 export class PlayerPlugin extends GlobalPlugin {
-    static readonly FETCHERS: {[fetcherName: string]: VideoFetcher} = {
-        'yt': new YoutubeFetcher(),
-        'twitch': new TwitchFetcher(),
-        'iframe': new IFrameFetcher(),
-        'galleryadd': new GalleryFetcher(),
+    static readonly FETCHERS: { [fetcherName: string]: VideoFetcher } = {
+        yt: new YoutubeFetcher(),
+        twitch: new TwitchFetcher(),
+        iframe: new IFrameFetcher(),
+        galleryadd: new GalleryFetcher(),
     };
 
     static readonly commandName = 'player';
 
-    static readonly commandAliases = [
-        'playerchannelmanage',
-        'playerchannel',
-        'playersync',
-        'playersearch',
-        'playerremovevideo',
-        'schedule',
-        'unschedule',
-    ].concat(Object.keys(PlayerPlugin.FETCHERS));
+    static readonly commandAliases = ['playerchannelmanage', 'playerchannel', 'playersync', 'playersearch', 'playerremovevideo', 'schedule', 'unschedule'].concat(Object.keys(PlayerPlugin.FETCHERS));
 
-    static readonly defaultDataStorageValue: { channel: null | number; } = { channel: null };
+    static readonly defaultDataStorageValue: { channel: null | number } = { channel: null };
 
-    readonly rules: {[alias: string]: PluginCommandRules} = {
+    readonly rules: { [alias: string]: PluginCommandRules } = {
         player: {
             minCount: 1,
             maxCount: 1,
             maxCallsPer10Seconds: 10,
-            params: [{ name: 'action', pattern: /^(replay30|skip30|list|skip|flush)$/ }]
+            params: [{ name: 'action', pattern: /^(replay30|skip30|list|skip|flush)$/ }],
         },
         playerchannelmanage: {
             minCount: 1,
@@ -53,7 +43,7 @@ export class PlayerPlugin extends GlobalPlugin {
             params: [
                 { name: 'action', pattern: /^(create|delete|rename)$/ },
                 { name: 'param', pattern: /./ },
-            ]
+            ],
         },
         playerchannel: {
             minCount: 1,
@@ -62,7 +52,7 @@ export class PlayerPlugin extends GlobalPlugin {
             params: [
                 { name: 'action', pattern: /^(join|leave)$/ },
                 { name: 'id', pattern: /^([0-9]+)$/ },
-            ]
+            ],
         },
         playersync: {
             minCount: 0,
@@ -77,7 +67,7 @@ export class PlayerPlugin extends GlobalPlugin {
                 { name: 'param', pattern: new RegExp(`^${Object.keys(PlayerPlugin.FETCHERS).join('|')}$`) },
                 { name: 'type', pattern: /./ },
                 { name: 'search', pattern: /./ },
-            ]
+            ],
         },
         playerremovevideo: {
             minCount: 2,
@@ -87,7 +77,7 @@ export class PlayerPlugin extends GlobalPlugin {
             params: [
                 { name: 'type', pattern: /./ },
                 { name: 'id', pattern: /./ },
-            ]
+            ],
         },
         schedule: {
             minCount: 2,
@@ -99,21 +89,19 @@ export class PlayerPlugin extends GlobalPlugin {
                 { name: 'param', pattern: /./ },
                 { name: 'startDate', pattern: /^([0-9]{4})-([0-9]{2})-([0-9]{2})[T ]([0-9]{2}):([0-9]{2})(:[0-9]{2}(\.[0-9]{3}Z)?)?$/ },
                 { name: 'duration', pattern: /^\d+$/ },
-            ]
+            ],
         },
         unschedule: {
             minCount: 1,
             maxCount: 1,
             coolDown: 500,
             maxCallsPer10Seconds: 2,
-            params: [
-                { name: 'start', pattern: /^\d+$/ },
-            ]
+            params: [{ name: 'start', pattern: /^\d+$/ }],
         },
     };
 
     protected storage: { channels: SanitizedPlayerChannel[] } = {
-        channels: []
+        channels: [],
     };
 
     public readonly channelManager: PlayerChannelManager;
@@ -125,9 +113,7 @@ export class PlayerPlugin extends GlobalPlugin {
             this.rules[fetcherName] = {
                 minCount: 1,
                 maxCallsPer10Seconds: 10,
-                params: [
-                    { name: 'action', pattern: /./ },
-                ]
+                params: [{ name: 'action', pattern: /./ }],
             };
         }
 
@@ -226,7 +212,7 @@ export class PlayerPlugin extends GlobalPlugin {
      * @returns
      */
     private async handlePlayerChannelManage(param: string, connection: Connection) {
-        if (! connection.session.isOP()) {
+        if (!connection.session.isOP()) {
             throw new Error('Command only for OP');
         }
 
@@ -243,7 +229,7 @@ export class PlayerPlugin extends GlobalPlugin {
         // Delete a channel
         if (action === 'delete') {
             const channel = this.channelManager.getSessionChannel(connection.session);
-            if (! channel) {
+            if (!channel) {
                 throw new Error('Not in a channel');
             }
             this.channelManager.deleteChannel(channel.id);
@@ -253,7 +239,7 @@ export class PlayerPlugin extends GlobalPlugin {
         // Rename a channel
         if (action === 'rename') {
             const channel = this.channelManager.getSessionChannel(connection.session);
-            if (! channel) {
+            if (!channel) {
                 throw new Error('Not in a channel');
             }
             this.channelManager.renameChannel(channel.id, value);
@@ -304,7 +290,7 @@ export class PlayerPlugin extends GlobalPlugin {
      */
     private async handlePlayerSync(param: string, connection: Connection) {
         const channel = this.channelManager.getSessionChannel(connection.session);
-        if (! channel) {
+        if (!channel) {
             return;
         }
         channel.syncConnections([connection]);
@@ -317,7 +303,7 @@ export class PlayerPlugin extends GlobalPlugin {
      * @returns
      */
     private async handlePlayerSearch(param: string, connection: Connection) {
-        if (! this.canAddMedia(connection.session)) {
+        if (!this.canAddMedia(connection.session)) {
             throw new Error('You do not have the permission to add media');
         }
         const fetcherName = param.split(' ')[0];
@@ -337,21 +323,21 @@ export class PlayerPlugin extends GlobalPlugin {
      * @param connection
      */
     private async handlePlayerRemoveVideo(param: string, connection: Connection) {
-        if (! this.canAddMedia(connection.session)) {
+        if (!this.canAddMedia(connection.session)) {
             throw new Error('Unable to perform this action');
         }
         const channel = this.channelManager.getSessionChannel(connection.session);
-        if (! channel) {
+        if (!channel) {
             throw new Error('Join a channel to manage medias');
         }
         const mediaType = param.split(' ')[0];
         const mediaId = param.split(' ')[1];
         const queueEntry = channel.getQueueEntry(mediaType, mediaId);
-        if (! queueEntry) {
+        if (!queueEntry) {
             throw new Error('No such video in the queue');
         }
         // If user not matching and not OP
-        if (queueEntry.user.id !== connection.session.user.id && ! connection.session.isOP()) {
+        if (queueEntry.user.id !== connection.session.user.id && !connection.session.isOP()) {
             throw new Error('You are not allowed to remove this video');
         }
         channel.remove(queueEntry.video);
@@ -364,11 +350,11 @@ export class PlayerPlugin extends GlobalPlugin {
      * @returns
      */
     private async handlePlayerSchedule(param: string, connection: Connection) {
-        if (! this.canSchedule(connection.session)) {
+        if (!this.canSchedule(connection.session)) {
             throw new Error('You do not have the permission to schedule medias');
         }
         const channel = this.channelManager.getSessionChannel(connection.session);
-        if (! channel) {
+        if (!channel) {
             throw new Error('Join a channel to add videos');
         }
         // Get & verify params
@@ -398,16 +384,16 @@ export class PlayerPlugin extends GlobalPlugin {
      * @returns
      */
     private async handlePlayerUnschedule(param: string, connection: Connection) {
-        if (! this.canSchedule(connection.session)) {
+        if (!this.canSchedule(connection.session)) {
             throw new Error('Unable to perform this action');
         }
         const channel = this.channelManager.getSessionChannel(connection.session);
-        if (! channel) {
+        if (!channel) {
             throw new Error('Join a channel to add videos');
         }
         // Get & verify params
         const start = parseInt(param.split(' ')[0]);
-        if (! start) {
+        if (!start) {
             throw new Error('Invalid date');
         }
         channel.unschedule(start);
@@ -420,14 +406,14 @@ export class PlayerPlugin extends GlobalPlugin {
      * @returns
      */
     private async handlePlayerFetch(fetcherName: string, param: string, connection: Connection) {
-        if (! this.canAddMedia(connection.session)) {
+        if (!this.canAddMedia(connection.session)) {
             throw new Error('Unable to perform this action');
         }
         const channel = this.channelManager.getSessionChannel(connection.session);
-        if (! channel) {
+        if (!channel) {
             throw new Error('Join a channel to add videos');
         }
-        if (channel.locked && ! connection.session.isOP()) {
+        if (channel.locked && !connection.session.isOP()) {
             throw new Error('Channel is locked');
         }
         if (typeof PlayerPlugin.FETCHERS[fetcherName] === 'undefined') {
@@ -449,26 +435,26 @@ export class PlayerPlugin extends GlobalPlugin {
      */
     private async handlePlayer(param: string, connection: Connection) {
         const channel = this.channelManager.getSessionChannel(connection.session);
-        if (! channel) {
+        if (!channel) {
             throw new Error('Channel does not exist');
         }
-        if (channel.locked && ! connection.session.isOP()) {
+        if (channel.locked && !connection.session.isOP()) {
             throw new Error('Channel is locked');
         }
 
         switch (param) {
         case 'replay30':
-            if (! channel.hasPlayerPermission(connection.session)) {
+            if (!channel.hasPlayerPermission(connection.session)) {
                 throw new Error('You are not authorized to modify the player right now');
             }
-            channel.moveCursor(- 30 * 1000);
+            channel.moveCursor(-30 * 1000);
             break;
 
         case 'skip30':
-            if (! channel.hasPlayerPermission(connection.session)) {
+            if (!channel.hasPlayerPermission(connection.session)) {
                 throw new Error('You are not authorized to modify the player right now');
             }
-            channel.moveCursor(+ 30 * 1000);
+            channel.moveCursor(+30 * 1000);
             break;
 
         case 'skip':
@@ -478,7 +464,7 @@ export class PlayerPlugin extends GlobalPlugin {
                 return;
             }
             // Has user permission to voteskip?
-            if (! this.canAddMedia(connection.session)) {
+            if (!this.canAddMedia(connection.session)) {
                 throw new Error('You are not authorized to perform this action');
             }
             // Vote skip
@@ -493,7 +479,7 @@ export class PlayerPlugin extends GlobalPlugin {
                         defaultValue: false,
                         timeout: 10 * 1000,
                         minVotes: 2,
-                    }
+                    },
                 );
                 if (poll.getResult()) {
                     channel.skip();
@@ -503,7 +489,7 @@ export class PlayerPlugin extends GlobalPlugin {
             throw new Error('You are not authorized to modify the player right now');
 
         case 'flush':
-            if (! connection.session.isOP()) {
+            if (!connection.session.isOP()) {
                 throw new Error('Only OP can flush the queue');
             }
             channel.flushQueue();
@@ -538,7 +524,7 @@ export class PlayerPlugin extends GlobalPlugin {
         const currentChannel = this.channelManager.getSessionChannel(connection.session);
         const savedChannelId = this.getUserData<unknown>(connection.session.user);
 
-        if (typeof savedChannelId === 'number' && (! currentChannel || savedChannelId !== currentChannel.id)) {
+        if (typeof savedChannelId === 'number' && (!currentChannel || savedChannelId !== currentChannel.id)) {
             // If the user is supposed to be in a channel, but this session aint
             // Make this session join the saved channel
             this.channelManager.joinChannel(connection.session, savedChannelId);

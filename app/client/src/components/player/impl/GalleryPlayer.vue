@@ -12,10 +12,10 @@ const videoType = ref('');
 const previousVideoHash = ref(null);
 
 const updateSrc = () => {
-    if (! client.state.player.current) {
+    if (!client.state.player.current) {
         return;
     }
-    
+
     // Get current cursor time
     const timeSinceLastUpdate = new Date().getTime() - client.state.playerLastUpdate.getTime();
     const currentTime = parseInt((client.state.player.cursor + timeSinceLastUpdate) / 1000);
@@ -35,25 +35,16 @@ const updateSrc = () => {
 
     // On next tick, update the video stream info
     previousVideoHash.value = videoHash;
-}
+};
 
 watch(() => client.state.player.current && client.state.player.current.video, updateSrc);
 onMounted(updateSrc);
-
 </script>
 
 <template>
-    <video
-        ref="player"
-        class="w-full h-full"
-        controls=""
-        autoplay="1"
-        :src="src"
-        name="media"
-    >
-        <source :src="src" :type="videoType">
+    <video ref="player" class="w-full h-full" controls="" autoplay="1" :src="src" name="media">
+        <source :src="src" :type="videoType" />
     </video>
 </template>
 
-<style scoped>
-</style>
+<style scoped></style>

@@ -4,25 +4,23 @@ import { PlayerPlugin } from './PlayerPlugin';
 import { PluginCommandRules } from '../Plugin';
 import { YoutubeFetcher } from './fetcher/YoutubeFetcher';
 
-
-
 /**
  *
  */
 export class YoutubeSearchAndPlayPlugin extends GlobalPlugin {
     static readonly commandName = '#';
 
-    readonly rules: {[alias: string]: PluginCommandRules} = {
+    readonly rules: { [alias: string]: PluginCommandRules } = {
         '#': {
             minCount: 1,
             maxCallsPer10Seconds: 2,
-            params: [{ name: 'search', pattern: /./ }]
+            params: [{ name: 'search', pattern: /./ }],
         },
     };
 
     public async run(alias: string, param: string, connection: Connection) {
         const plugin = this.manager.getPlugin('player') as PlayerPlugin;
-        if (! plugin.canAddMedia(connection.session)) {
+        if (!plugin.canAddMedia(connection.session)) {
             throw new Error('Unable to perform this action');
         }
 
@@ -30,7 +28,7 @@ export class YoutubeSearchAndPlayPlugin extends GlobalPlugin {
         const channelManager = playerPlugin.channelManager;
         const youtubeFetcher = PlayerPlugin.FETCHERS['yt'] as YoutubeFetcher;
         const channel = channelManager.getSessionChannel(connection.session);
-        if (! channel) {
+        if (!channel) {
             throw new Error('Not in a player channel');
         }
 

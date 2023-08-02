@@ -7,7 +7,6 @@ import SQL from 'sql-template-strings';
 import { Message, MessageConstructorOptions } from './Message';
 import { globalPluginGroup } from '../plugins/GlobalPluginGroup';
 
-
 export class UserController {
     /**
      * Validity of the auth token in seconds
@@ -23,7 +22,7 @@ export class UserController {
 
     /**
      */
-    public static getPluginsDefaultData(): {[pluginName: string]: any} {
+    public static getPluginsDefaultData(): { [pluginName: string]: any } {
         return _.cloneDeep(globalPluginGroup.defaultDataStorageValues);
     }
 
@@ -37,7 +36,7 @@ export class UserController {
                 custom: {
                     color: 'rgb(65, 105, 225)',
                 },
-            }
+            },
         });
     }
 
@@ -86,7 +85,7 @@ export class UserController {
      */
     public static async getUserById(userId: number): Promise<User> {
         const userObject = await DatabaseHelper.db.get(SQL`SELECT * FROM users WHERE id = ${userId}`);
-        if (! userObject) {
+        if (!userObject) {
             throw new Error('User does not exist');
         }
         return this.userRowToObject(userObject);
@@ -97,7 +96,7 @@ export class UserController {
      */
     public static async getAllUsers(): Promise<User[]> {
         const userObjects = await DatabaseHelper.db.all(SQL`SELECT * FROM users`);
-        return userObjects.map(o => this.userRowToObject(o));
+        return userObjects.map((o) => this.userRowToObject(o));
     }
 
     /**
@@ -120,7 +119,7 @@ export class UserController {
             (${username.toLowerCase()}, ${username}, ${''}, ${0}, ${0}, ${0}, ${JSON.stringify(User.DEFAULT_DATA_OBJECT)}, ${'{}'}, ${tms}, ${tms})`;
         const statement = await DatabaseHelper.db.run(sqlQuery);
         const userId = statement.lastID;
-        if (! userId) {
+        if (!userId) {
             throw new Error('Could not register user');
         }
         const hashedPassword = UserController.hashPassword(userId, username.toLowerCase(), password);
@@ -134,10 +133,10 @@ export class UserController {
      */
     public static async login(username: string, password: string): Promise<void> {
         const user = await UserController.getUserByUsername(username);
-        if (! user) {
+        if (!user) {
             throw new Error('User does not exist');
         }
-        if (! user.testHashedPassword(UserController.hashPassword(user.id, user.username, password))) {
+        if (!user.testHashedPassword(UserController.hashPassword(user.id, user.username, password))) {
             throw new Error('Incorrect password');
         }
     }
@@ -152,7 +151,7 @@ export class UserController {
         return {
             userId,
             timestamp,
-            signature: sha256(userId + Config.USERS_TOKEN_SALT + timestamp)
+            signature: sha256(userId + Config.USERS_TOKEN_SALT + timestamp),
         };
     }
 

@@ -10,23 +10,21 @@ import { Gallery } from './Gallery';
 
 const exec = util.promisify(oldExec);
 
-
 export type VideoStreamInfo = Array<{
-    index: number,
-    lang: string | null,
-    type: 'Video' | 'Audio' | 'Subtitle',
-    info: string,
+    index: number;
+    lang: string | null;
+    type: 'Video' | 'Audio' | 'Subtitle';
+    info: string;
 }>;
 
 export type OngoingConvert = {
-    status: 'converting' | 'converted' | 'error',
-    source: string,
-    target: string,
-    info: VideoStreamInfo,
-    selectedStreams: Array<number>,
-    lastUpdate: string | null,
+    status: 'converting' | 'converted' | 'error';
+    source: string;
+    target: string;
+    info: VideoStreamInfo;
+    selectedStreams: Array<number>;
+    lastUpdate: string | null;
 };
-
 
 /**
  *
@@ -34,10 +32,7 @@ export type OngoingConvert = {
 export class VideoConverterPlugin extends GlobalPlugin {
     static readonly commandName = 'convert';
 
-    static readonly commandAliases = [
-        'convertinfo',
-        'convertlist',
-    ];
+    static readonly commandAliases = ['convertinfo', 'convertlist'];
 
     public readonly gallery: Gallery = new Gallery();
 
@@ -49,9 +44,7 @@ export class VideoConverterPlugin extends GlobalPlugin {
         convertinfo: {
             minCount: 1,
             maxCount: 1,
-            params: [
-                { name: 'file path', pattern: Gallery.FILE_PATH_REGEX },
-            ]
+            params: [{ name: 'file path', pattern: Gallery.FILE_PATH_REGEX }],
         },
         convert: {
             minCount: 2,
@@ -59,7 +52,7 @@ export class VideoConverterPlugin extends GlobalPlugin {
             params: [
                 { name: 'file path', pattern: Gallery.FILE_PATH_REGEX },
                 { name: 'streams', pattern: /^\d+(,\d+)*$/ },
-            ]
+            ],
         },
         convertlist: {
             minCount: 0,
@@ -82,7 +75,10 @@ export class VideoConverterPlugin extends GlobalPlugin {
             // eslint-disable-next-line no-case-declarations
             const filePath = param.split(' ')[0];
             // eslint-disable-next-line no-case-declarations
-            const streamIndexes = param.split(' ')[1].split(',').map((index: string) => parseInt(index));
+            const streamIndexes = param
+                .split(' ')[1]
+                .split(',')
+                .map((index: string) => parseInt(index));
             await this.runConvert(filePath, streamIndexes, connection);
             break;
 
@@ -96,13 +92,13 @@ export class VideoConverterPlugin extends GlobalPlugin {
     }
 
     async runConvertInfo(filePath: string, connection: Connection): Promise<void> {
-        if (! Gallery.canWrite(connection.session)) {
+        if (!Gallery.canWrite(connection.session)) {
             throw new Error('You do not have the permission to convert files');
         }
         if (FileManager.getFileExtension(filePath) !== 'mkv') {
             throw new Error('Can not convert this file');
         }
-        if (! (await Gallery.fileExists(filePath))) {
+        if (!(await Gallery.fileExists(filePath))) {
             throw new Error(`File ${filePath} does not exist`);
         }
         try {
@@ -113,21 +109,21 @@ export class VideoConverterPlugin extends GlobalPlugin {
     }
 
     async runConvert(filePath: string, streamIndexes: number[], connection: Connection): Promise<void> {
-        if (! Gallery.canWrite(connection.session)) {
+        if (!Gallery.canWrite(connection.session)) {
             throw new Error('You do not have the permission to convert files');
         }
         if (FileManager.getFileExtension(filePath) !== 'mkv') {
             throw new Error('Can not convert this file');
         }
-        if (! (await Gallery.fileExists(filePath))) {
+        if (!(await Gallery.fileExists(filePath))) {
             throw new Error(`File ${filePath} does not exist`);
         }
         const streams = await this.getVideoStreamInfo(filePath);
         let command = `ffmpeg -i ${Gallery.BASE_PATH + filePath} -y`;
         for (const index of streamIndexes) {
             // Get corresponding stream
-            const stream = streams.find(stream => stream.index === index);
-            if (! stream) {
+            const stream = streams.find((stream) => stream.index === index);
+            if (!stream) {
                 throw new Error(`Stream #${index} does not exist`);
             }
             if (['Video', 'Audio'].includes(stream.type)) {
@@ -150,9 +146,9 @@ export class VideoConverterPlugin extends GlobalPlugin {
         this.converts.push(convert);
         const process = spawn(command.split(' ')[0], command.split(' ').slice(1));
         // ffmpeg sends data on stderr
-        process.stderr.on('data', data => {
+        process.stderr.on('data', (data) => {
             const line = data.toString().trim();
-            if (! line.startsWith('frame=')) {
+            if (!line.startsWith('frame=')) {
                 return;
             }
             convert.lastUpdate = line;
@@ -162,7 +158,7 @@ export class VideoConverterPlugin extends GlobalPlugin {
             this.syncConvertList();
         });
         process.on('exit', async () => {
-            if (! (await Gallery.fileExists(target))) {
+            if (!(await Gallery.fileExists(target))) {
                 convert.status = 'error';
                 return;
             }
@@ -180,7 +176,7 @@ export class VideoConverterPlugin extends GlobalPlugin {
         return stdout
             .split('\n')
             .map((line: string) => line.trim())
-            .filter((line: string) => !! line && line.startsWith('Stream #'))
+            .filter((line: string) => !!line && line.startsWith('Stream #'))
             .map((streamInfo: string) => {
                 const [, index, lang, type, info] = streamInfo.match(/^Stream #0:(\d+)([^:]+)?: ([^:]+): (.*)$/) || [];
                 return {
@@ -211,7 +207,7 @@ export class VideoConverterPlugin extends GlobalPlugin {
 
     async syncConvertList(): Promise<void> {
         for (const connection of Session.connections) {
-            if (! Gallery.canRead(connection.session)) {
+            if (!Gallery.canRead(connection.session)) {
                 continue;
             }
             connection.send('convert-list', this.converts);

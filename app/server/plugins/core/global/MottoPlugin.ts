@@ -3,7 +3,6 @@ import { GlobalPlugin } from '../../GlobalPlugin';
 import { ConnectedListPlugin } from '../../core/global/ConnectedListPlugin';
 import { UserController } from '../../../skychat/UserController';
 
-
 export class MottoPlugin extends GlobalPlugin {
     private static MOTTO_MAX_LENGTH = 64;
 
@@ -20,10 +19,10 @@ export class MottoPlugin extends GlobalPlugin {
                 {
                     name: 'motto',
                     pattern: /./,
-                    info: 'Be inspired'
-                }
-            ]
-        }
+                    info: 'Be inspired',
+                },
+            ],
+        },
     };
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {

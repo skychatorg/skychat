@@ -4,7 +4,6 @@ import { Connection } from '../../../skychat/Connection';
 import striptags from 'striptags';
 import { UserController } from '../../../skychat/UserController';
 
-
 export class HelpPlugin extends RoomPlugin {
     static readonly commandName = 'help';
 
@@ -29,23 +28,23 @@ export class HelpPlugin extends RoomPlugin {
             if (connection.session.user.right < command.minRight) {
                 continue;
             }
-            if (command.opOnly && ! connection.session.isOP()) {
+            if (command.opOnly && !connection.session.isOP()) {
                 continue;
             }
 
             // If command is not callable
-            if (! command.callable || command.hidden) {
+            if (!command.callable || command.hidden) {
                 continue;
             }
 
             // Get rule object
-            const rules: PluginCommandRules = (command.rules && command.rules[alias]) ? command.rules[alias] : {};
+            const rules: PluginCommandRules = command.rules && command.rules[alias] ? command.rules[alias] : {};
 
             content += `
             <tr>
                 <td>${alias}</td>
                 <td>${command.minRight}</td>
-                <td>${((rules.coolDown || 0) / 1000) || 0}s</td>
+                <td>${(rules.coolDown || 0) / 1000 || 0}s</td>
                 <td>${(rules.params || []).map((param: any) => param.name).join(', ')}</td>
             </tr>            
             `;

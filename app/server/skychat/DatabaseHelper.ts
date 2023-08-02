@@ -1,7 +1,6 @@
 import * as sqlite from 'sqlite';
 import * as sqlite3 from 'sqlite3';
 
-
 const INSTALL_QUERY = `
 
 DROP TABLE IF EXISTS \`users\`;
@@ -35,7 +34,6 @@ CREATE TABLE \`messages\` (
 
 `;
 
-
 /**
  * Helper class to interact with the database
  */
@@ -55,7 +53,7 @@ export class DatabaseHelper {
             db = await sqlite.open({
                 filename: 'storage/database.db',
                 mode: sqlite3.OPEN_READWRITE,
-                driver: sqlite3.Database
+                driver: sqlite3.Database,
             });
         } catch (error) {
             console.warn('Database file missing: Creating a new one');
@@ -63,7 +61,7 @@ export class DatabaseHelper {
             db = await sqlite.open({
                 filename: 'storage/database.db',
                 mode: sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE,
-                driver: sqlite3.Database
+                driver: sqlite3.Database,
             });
             // Install tables
             await db.exec(INSTALL_QUERY);

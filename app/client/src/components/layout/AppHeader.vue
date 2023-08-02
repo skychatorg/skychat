@@ -9,12 +9,11 @@ const app = useAppStore();
 const client = useClientStore();
 const router = useRouter();
 
-
 const logout = () => {
     if (client.state.user.id > 0) {
         client.logout();
     }
-    router.push({ name: 'home', params: { } });
+    router.push({ name: 'home', params: {} });
 };
 
 const connectionStatus = computed(() => {
@@ -26,48 +25,45 @@ const connectionStatus = computed(() => {
         return 'disconnected';
     }
 });
-
 </script>
 
 <template>
     <header class="header h-16 w-full flex bg-skygray-white/10 backdrop-brightness-150 backdrop-blur">
+        <!-- Left col (empty for now) -->
+        <div class="w-0 lg:w-[var(--page-col-left-width)]"></div>
 
-            <!-- Left col (empty for now) -->
-            <div class="w-0 lg:w-[var(--page-col-left-width)]"></div>
-
-            <!-- Logo -->
-            <div class="pl-6 lg:pl-0 lg:grow text-center flex lg:justify-center" href="/">
-                <div class="flex flex-col justify-center">
-                    <a href="/"><img src="/assets/logo.png" width="60" height="40.5" ></a>
-                </div>
+        <!-- Logo -->
+        <div class="pl-6 lg:pl-0 lg:grow text-center flex lg:justify-center" href="/">
+            <div class="flex flex-col justify-center">
+                <a href="/"><img src="/assets/logo.png" width="60" height="40.5" /></a>
             </div>
+        </div>
 
-            <!-- User -->
-            <div class="p-2 w-0 w-[var(--page-col-right-width)]">
-                <template v-if="connectionStatus === 'connected'">
-                    <div class="flex items-center mr-2">
-
-                        <div class="grow flex flex-col mr-4">
-                            <span class="text-right whitespace-nowrap">
-                                {{ client.state.user.username }}
-                            </span>
-                            <div class="flex justify-end">
-                                <button @click="logout" title="Logout">
-                                    <fa icon="arrow-right-from-bracket" />
-                                </button>
-                            </div>
+        <!-- User -->
+        <div class="p-2 w-0 w-[var(--page-col-right-width)]">
+            <template v-if="connectionStatus === 'connected'">
+                <div class="flex items-center mr-2">
+                    <div class="grow flex flex-col mr-4">
+                        <span class="text-right whitespace-nowrap">
+                            {{ client.state.user.username }}
+                        </span>
+                        <div class="flex justify-end">
+                            <button @click="logout" title="Logout">
+                                <fa icon="arrow-right-from-bracket" />
+                            </button>
                         </div>
-                        
-                        <UserBigAvatar :user="client.state.user" />
                     </div>
-                </template>
-                <template v-if="connectionStatus === 'connecting'">
-                    <p class="p-4 text-primary font-bold text-center">Connecting..</p>
-                </template>
-                <template v-if="connectionStatus === 'disconnected'">
-                    <p class="p-4 text-danger font-bold text-center">Disconnected</p>
-                </template>
-            </div>
+
+                    <UserBigAvatar :user="client.state.user" />
+                </div>
+            </template>
+            <template v-if="connectionStatus === 'connecting'">
+                <p class="p-4 text-primary font-bold text-center">Connecting..</p>
+            </template>
+            <template v-if="connectionStatus === 'disconnected'">
+                <p class="p-4 text-danger font-bold text-center">Disconnected</p>
+            </template>
+        </div>
     </header>
 </template>
 

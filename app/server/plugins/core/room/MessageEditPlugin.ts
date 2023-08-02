@@ -3,7 +3,6 @@ import { Connection } from '../../../skychat/Connection';
 import { DatabaseHelper } from '../../../skychat/DatabaseHelper';
 import { RoomPlugin } from '../../RoomPlugin';
 
-
 export class MessageEditPlugin extends RoomPlugin {
     static readonly commandName = 'edit';
 
@@ -18,16 +17,14 @@ export class MessageEditPlugin extends RoomPlugin {
             params: [
                 { pattern: /^([0-9]+)$/, name: 'id' },
                 { pattern: /.?/, name: 'message' },
-            ]
+            ],
         },
         delete: {
             minCount: 1,
             maxCount: 1,
             coolDown: 2000,
-            params: [
-                { pattern: /^([0-9]+)$/, name: 'id' },
-            ]
-        }
+            params: [{ pattern: /^([0-9]+)$/, name: 'id' }],
+        },
     };
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
@@ -36,12 +33,12 @@ export class MessageEditPlugin extends RoomPlugin {
         // Find message
         const message = await this.room.getMessageById(id);
 
-        if (! message) {
+        if (!message) {
             throw new Error('Message not found');
         }
 
         // Check rights
-        if (message.user !== connection.session.user && ! connection.session.isOP()) {
+        if (message.user !== connection.session.user && !connection.session.isOP()) {
             throw new Error('You can only edit your own messages');
         }
 

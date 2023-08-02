@@ -7,18 +7,13 @@ import SectionTitle from '@/components/util/SectionTitle.vue';
 
 const app = useAppStore();
 const client = useClientStore();
-
 </script>
 
 <template>
     <div>
         <SectionTitle>Active now</SectionTitle>
         <div>
-            <SingleConnectedUser
-                v-for="entry in client.state.connectedList"
-                :key="entry.identifier"
-                :entry="entry"
-            />
+            <SingleConnectedUser v-for="entry in client.state.connectedList" :key="entry.identifier" :entry="entry" />
         </div>
     </div>
 </template>

@@ -2,15 +2,13 @@ import { Config } from './Config';
 import { StickerManager } from './StickerManager';
 import escapeHTML from 'escape-html';
 
-
-
 /**
  * Singleton helper to format messages
  */
 export class MessageFormatter {
-    public static readonly QUOTE_REGEXP: RegExp = /(^|[ \n]|<br>)@(\*?[a-zA-Z0-9-_]{2,30})/ig;
+    public static readonly QUOTE_REGEXP: RegExp = /(^|[ \n]|<br>)@(\*?[a-zA-Z0-9-_]{2,30})/gi;
 
-    public static readonly LINK_REGEXP: RegExp = /(^|[ \n]|<br>)((http|https):\/\/[\w?=&./-;#~%+@,[\]:!-]+(?![\w\s?&./;#~%"=+@,[\]:!-]*>))/ig;
+    public static readonly LINK_REGEXP: RegExp = /(^|[ \n]|<br>)((http|https):\/\/[\w?=&./-;#~%+@,[\]:!-]+(?![\w\s?&./;#~%"=+@,[\]:!-]*>))/gi;
 
     private static instance?: MessageFormatter;
 
@@ -26,7 +24,7 @@ export class MessageFormatter {
      * Get command name from the message
      * @param message
      */
-    public static parseCommand(message: string): {param: string, commandName: string} {
+    public static parseCommand(message: string): { param: string; commandName: string } {
         message = message.trim();
         const commandName = message.split(' ')[0].substr(1).toLowerCase();
         const param = message.substr(commandName.length + 2);
@@ -34,7 +32,7 @@ export class MessageFormatter {
     }
 
     public static getInstance(): MessageFormatter {
-        if (! MessageFormatter.instance) {
+        if (!MessageFormatter.instance) {
             MessageFormatter.instance = new MessageFormatter();
         }
         return MessageFormatter.instance;
@@ -71,10 +69,7 @@ export class MessageFormatter {
      * @param message
      */
     public replaceGreenTexts(message: string): string {
-        return message.replace(
-            /(^|\n)&gt;(.+)/g,
-            '$1<b style="color: #69d569">&gt;$2</b>',
-        );
+        return message.replace(/(^|\n)&gt;(.+)/g, '$1<b style="color: #69d569">&gt;$2</b>');
     }
 
     /**
@@ -95,7 +90,7 @@ export class MessageFormatter {
         let count = 0;
         return message.replace(/\n/g, () => {
             // If limit reached
-            if (++ count > Config.PREFERENCES.maxNewlinesPerMessage) {
+            if (++count > Config.PREFERENCES.maxNewlinesPerMessage) {
                 return '\n';
             }
             // Otherwise, replace with br
@@ -111,12 +106,12 @@ export class MessageFormatter {
     public replaceButtons(message: string, remove?: boolean, trusted?: boolean): string {
         const regexStr = '\\[\\[(.+?)/(.+?)\\]\\]';
         const matches = message.match(new RegExp(regexStr, 'g'));
-        if (! matches) {
+        if (!matches) {
             return message;
         }
         for (const rawCode of matches) {
             const codeDetail = rawCode.match(new RegExp(regexStr));
-            if (! codeDetail) {
+            if (!codeDetail) {
                 // Weird: not supposed to happen
                 continue;
             }
@@ -144,7 +139,7 @@ export class MessageFormatter {
         title = this.format(title, true);
         action = this.format(action, true);
         // Preview command if action is one
-        if (action[0] === '/' && ! trusted) {
+        if (action[0] === '/' && !trusted) {
             title += ' <span class="skychat-button-info">(' + escapeHTML(action.split(' ')[0]) + ')</span>';
         }
         return `<button class="skychat-button" title="${action}" data-action="${action}" data-trusted="${trusted}">${title}</button>`;
@@ -158,7 +153,7 @@ export class MessageFormatter {
      */
     public replaceImages(message: string, remove?: boolean, trusted?: boolean): string {
         let matches: RegExpMatchArray | string[] | null = message.match(new RegExp(Config.LOCATION + '/uploads/all/([-\\/._a-zA-Z0-9]+)\\.(png|jpg|jpeg|gif)', 'g'));
-        if (! matches) {
+        if (!matches) {
             return message;
         }
         matches = Array.from(new Set(matches));
@@ -172,15 +167,15 @@ export class MessageFormatter {
             } else {
                 // If replacing images by html, replace within limit
                 message = message.replace(new RegExp(imageUrl, 'g'), () => {
-                    if (! trusted && replacedCount >= Config.PREFERENCES.maxReplacedImagesPerMessage) {
+                    if (!trusted && replacedCount >= Config.PREFERENCES.maxReplacedImagesPerMessage) {
                         return imageUrl;
                     }
-                    ++ replacedCount;
+                    ++replacedCount;
                     return html;
                 });
             }
             // If limit was reached when replacing this image, do not replace the next ones
-            if (! trusted && replacedCount >= Config.PREFERENCES.maxReplacedImagesPerMessage) {
+            if (!trusted && replacedCount >= Config.PREFERENCES.maxReplacedImagesPerMessage) {
                 break;
             }
         }
@@ -201,7 +196,7 @@ export class MessageFormatter {
             if (replacedCount >= Config.PREFERENCES.maxReplacedRisiBankStickersPerMessage) {
                 return match;
             }
-            ++ replacedCount;
+            ++replacedCount;
             return `<a class="skychat-risibank-sticker" href="//risibank.fr/media/${p4}-media" target="_blank"><img src="//risibank.fr/cache/medias/${p1}/${p2}/${p3}/${p4}/${p5}.${p6}"></a>`;
         });
     }
@@ -221,7 +216,7 @@ export class MessageFormatter {
                     if (replacedCount >= Config.PREFERENCES.maxReplacedStickersPerMessage) {
                         return code;
                     }
-                    ++ replacedCount;
+                    ++replacedCount;
                     return `<img class="skychat-sticker" title="${code}" alt="${code}" src="${sticker}">`;
                 });
                 if (replacedCount > Config.PREFERENCES.maxReplacedStickersPerMessage) {

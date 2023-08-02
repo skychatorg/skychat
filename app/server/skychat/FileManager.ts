@@ -5,7 +5,6 @@ import { MessageFormatter } from './MessageFormatter';
 import { Config } from './Config';
 import { ShellHelper } from './ShellHelper';
 
-
 export class FileManager {
     static getNewFileLocation(extension: string): string {
         const date = new Date();
@@ -13,7 +12,7 @@ export class FileManager {
     }
 
     static saveFile(file: fileUpload.UploadedFile): string {
-        const mimeTypes: {[mimetype: string]: string} = {
+        const mimeTypes: { [mimetype: string]: string } = {
             'image/jpeg': 'jpg',
             'image/jpg': 'jpg',
             'image/png': 'png',
@@ -33,11 +32,11 @@ export class FileManager {
     }
 
     static isFileUrlUploaded(fileUrl: string): boolean {
-        return !! fileUrl.match(new RegExp('^' + MessageFormatter.escapeRegExp(Config.LOCATION + '/uploads/all/') + '([0-9a-zA-Z/-]+)\\.(jpg|jpeg|png|webp|gif|pdf|mp4|mkv|webm)$'));
+        return !!fileUrl.match(new RegExp('^' + MessageFormatter.escapeRegExp(Config.LOCATION + '/uploads/all/') + '([0-9a-zA-Z/-]+)\\.(jpg|jpeg|png|webp|gif|pdf|mp4|mkv|webm)$'));
     }
 
     static isFileUrlInGallery(fileUrl: string): boolean {
-        return !! fileUrl.match(new RegExp('^' + MessageFormatter.escapeRegExp(Config.LOCATION + '/gallery/') + '([a-zA-Z0-9-_/]+).[a-z0-9]+$'));
+        return !!fileUrl.match(new RegExp('^' + MessageFormatter.escapeRegExp(Config.LOCATION + '/gallery/') + '([a-zA-Z0-9-_/]+).[a-z0-9]+$'));
     }
 
     static uploadedFileExists(fileUrl: string): boolean {

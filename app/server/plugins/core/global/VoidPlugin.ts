@@ -1,6 +1,5 @@
 import { GlobalPlugin } from '../../GlobalPlugin';
 
-
 export class VoidPlugin extends GlobalPlugin {
     static readonly commandName = 'void';
     readonly minRight = -1;

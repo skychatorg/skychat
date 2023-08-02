@@ -11,35 +11,24 @@ import PollList from '@/components/poll/PollList.vue';
 
 const app = useAppStore();
 const client = useClientStore();
-
 </script>
 
 <template>
     <div class="chat-view relative h-0 flex flex-row grow">
-        
         <div
-            class="
-                h-full flex flex-col bg-skygray-lighter/5 backdrop-blur-2xl backdrop-brightness-125
-                w-full lg:w-[var(--page-col-left-width)] lg:flex
-            "
+            class="h-full flex flex-col bg-skygray-lighter/5 backdrop-blur-2xl backdrop-brightness-125 w-full lg:w-[var(--page-col-left-width)] lg:flex"
             :class="{
-                'hidden': app.mobileView !== 'left',
+                hidden: app.mobileView !== 'left',
             }"
         >
             <RoomList class="pl-2 pr-4 my-6 grow overflow-y-auto scrollbar" />
             <PlayerChannelList class="pl-2 pr-4 mt-3 mb-2" />
             <div class="p-2 text-end lg:hidden">
-                <button
-                    class="form-control mr-2"
-                    @click="app.mobileSetView('middle')"
-                >
+                <button class="form-control mr-2" @click="app.mobileSetView('middle')">
                     <fa icon="comments" class="mr-2" />
                     <fa icon="chevron-right" />
                 </button>
-                <button
-                    class="form-control"
-                    @click="app.mobileSetView('right')"
-                >
+                <button class="form-control" @click="app.mobileSetView('right')">
                     <fa icon="users" class="mr-2" />
                     <fa icon="chevron-right" />
                 </button>
@@ -47,12 +36,9 @@ const client = useClientStore();
         </div>
 
         <div
-            class="
-                w-0 grow h-full flex flex-col
-                lg:flex
-            "
+            class="w-0 grow h-full flex flex-col lg:flex"
             :class="{
-                'hidden': app.mobileView !== 'middle',
+                hidden: app.mobileView !== 'middle',
             }"
         >
             <PlayerPannel v-if="client.state.currentPlayerChannel" class="bg-skygray-lighter/5 backdrop-blur-2xl backdrop-brightness-125" />
@@ -62,13 +48,9 @@ const client = useClientStore();
         </div>
 
         <div
-            class="
-                h-full flex flex-col bg-skygray-lighter/5 backdrop-blur-2xl backdrop-brightness-125
-                lg:flex
-                w-full lg:w-[var(--page-col-right-width)] lg:flex
-            "
+            class="h-full flex flex-col bg-skygray-lighter/5 backdrop-blur-2xl backdrop-brightness-125 lg:flex w-full lg:w-[var(--page-col-right-width)] lg:flex"
             :class="{
-                'hidden': app.mobileView !== 'right',
+                hidden: app.mobileView !== 'right',
             }"
         >
             <ConnectedList class="pl-2 pr-4 mt-6 grow h-0 overflow-y-auto scrollbar" />
@@ -84,27 +66,16 @@ const client = useClientStore();
                 >
                     <fa icon="folder-tree" />
                 </button>
-                <button
-                    v-show="true"
-                    @click="app.toggleModal('profile')"
-                    title="Open user settings"
-                    class="form-control col-start-2 col-span-1"
-                >
+                <button v-show="true" @click="app.toggleModal('profile')" title="Open user settings" class="form-control col-start-2 col-span-1">
                     <fa icon="gears" />
                 </button>
             </div>
             <div class="p-2 lg:hidden">
-                <button
-                    class="form-control mr-2"
-                    @click="app.mobileSetView('left')"
-                >
+                <button class="form-control mr-2" @click="app.mobileSetView('left')">
                     <fa icon="chevron-left" class="mr-2" />
                     <fa icon="gears" />
                 </button>
-                <button
-                    class="form-control"
-                    @click="app.mobileSetView('middle')"
-                >
+                <button class="form-control" @click="app.mobileSetView('middle')">
                     <fa icon="chevron-left" class="mr-2" />
                     <fa icon="comments" />
                 </button>

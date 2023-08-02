@@ -15,7 +15,7 @@ const EXPANDABLE_HEIGHT = 300;
 const observer: Ref<null | ResizeObserver> = ref(null);
 const container: Ref<null | HTMLDivElement> = ref(null);
 onMounted(() => {
-    if (! container.value) {
+    if (!container.value) {
         return;
     }
     observer.value = new ResizeObserver(() => {
@@ -42,22 +42,13 @@ function expand() {
     <div
         ref="container"
         :class="{
-            'expandable': expandable && ! expanded && ! props.forceExpand,
+            expandable: expandable && !expanded && !props.forceExpand,
         }"
     >
         <slot />
-        <div
-            v-if="expandable"
-            class="expandable-overlay"
-        >
-            <button
-                @click="expand"
-                class="form-control"
-            >
-                <fa
-                    class="text-sm"
-                    icon="chevron-down"
-                />
+        <div v-if="expandable" class="expandable-overlay">
+            <button @click="expand" class="form-control">
+                <fa class="text-sm" icon="chevron-down" />
             </button>
         </div>
     </div>
@@ -71,7 +62,7 @@ function expand() {
 }
 .expandable-overlay {
     position: absolute;
-    bottom: .2em;
+    bottom: 0.2em;
     left: 1em;
 }
 </style>

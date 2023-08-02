@@ -2,11 +2,9 @@ import { SanitizedUser, User } from './User';
 import { Connection } from './Connection';
 import { IBroadcaster } from './IBroadcaster';
 
-
 export const BinaryMessageTypes = 123;
 
 export type SanitizedSession = {
-
     identifier: string;
 
     connectionCount: number;
@@ -18,7 +16,7 @@ export type SanitizedSession = {
     user: SanitizedUser;
 
     rooms: number[];
-}
+};
 
 /**
  * A SkyChatSession represents a connected user, who has an account or not
@@ -31,7 +29,7 @@ export class Session implements IBroadcaster {
     /**
      * Object mapping all active sessions
      */
-    static sessions: {[identifier: string]: Session} = {};
+    static sessions: { [identifier: string]: Session } = {};
 
     /**
      * Find an existing session using its identifier
@@ -65,16 +63,16 @@ export class Session implements IBroadcaster {
     public static cleanUpSession(identifier: string, immediate?: boolean): boolean {
         const session = Session.getSessionByIdentifier(identifier);
         // If session does not exist
-        if (! session) {
+        if (!session) {
             return false;
         }
         // If session still has active connections
-        if (! session.deadSince) {
+        if (!session.deadSince) {
             return false;
         }
         // If session is dead since less than cleanUpDelayMs millis
         const defaultCleanUpDelay = session.getDefaultCleanUpDelay();
-        if (! immediate && new Date().getTime() - session.deadSince.getTime() < defaultCleanUpDelay) {
+        if (!immediate && new Date().getTime() - session.deadSince.getTime() < defaultCleanUpDelay) {
             return false;
         }
         // Clean the session
@@ -94,7 +92,7 @@ export class Session implements IBroadcaster {
      * @param payload
      */
     public static send(event: string, payload: any): void {
-        Session.connections.forEach(connection => connection.send(event, payload));
+        Session.connections.forEach((connection) => connection.send(event, payload));
     }
 
     /**
@@ -102,7 +100,7 @@ export class Session implements IBroadcaster {
      * @param message
      */
     public sendInfo(message: string): void {
-        this.connections.forEach(c => c.sendInfo(message));
+        this.connections.forEach((c) => c.sendInfo(message));
     }
 
     /**
@@ -110,7 +108,7 @@ export class Session implements IBroadcaster {
      * @param error
      */
     public sendError(error: Error): void {
-        this.connections.forEach(c => c.sendError(error));
+        this.connections.forEach((c) => c.sendError(error));
     }
 
     public static cleanUpInterval = setInterval(Session.cleanUpAllSessions, 5 * 1000);
@@ -147,7 +145,6 @@ export class Session implements IBroadcaster {
      */
     public user: User;
 
-
     constructor(identifier: string) {
         this.connections = [];
         this.identifier = identifier;
@@ -168,7 +165,7 @@ export class Session implements IBroadcaster {
      * @returns Returns whether all connections have disconnected from this session
      */
     public isAlive(): boolean {
-        return ! this.deadSince;
+        return !this.deadSince;
     }
 
     public getDefaultCleanUpDelay(): number {
@@ -180,7 +177,7 @@ export class Session implements IBroadcaster {
      * @param connection
      */
     public detachConnection(connection: Connection): void {
-        this.connections = this.connections.filter(c => c !== connection);
+        this.connections = this.connections.filter((c) => c !== connection);
         // If the last active connection leaves, mark this object as dead
         if (this.connections.length === 0) {
             this.deadSince = new Date();
@@ -252,10 +249,10 @@ export class Session implements IBroadcaster {
      * Sync user data with connections
      */
     public syncUserData(): void {
-        if (! this.user) {
+        if (!this.user) {
             return;
         }
-        this.connections.forEach(connection => connection.send('set-user', this.user.sanitized()));
+        this.connections.forEach((connection) => connection.send('set-user', this.user.sanitized()));
     }
 
     /**
@@ -264,7 +261,7 @@ export class Session implements IBroadcaster {
      * @param payload
      */
     public send(event: string, payload: any): void {
-        this.connections.forEach(connection => connection.send(event, payload));
+        this.connections.forEach((connection) => connection.send(event, payload));
     }
 
     /**
@@ -274,10 +271,10 @@ export class Session implements IBroadcaster {
         return {
             identifier: this.identifier,
             connectionCount: this.connections.length,
-            rooms: Array.from(new Set(this.connections.map(c => c.room ? c.room.id : null).filter(roomId => typeof roomId === 'number'))) as number[],
+            rooms: Array.from(new Set(this.connections.map((c) => (c.room ? c.room.id : null)).filter((roomId) => typeof roomId === 'number'))) as number[],
             deadSinceTime: this.deadSince ? this.deadSince.getTime() * 0.001 : undefined,
             lastInteractionTime: this.lastInteractionDate.getTime() * 0.001,
-            user: this.user.sanitized()
+            user: this.user.sanitized(),
         };
     }
 }

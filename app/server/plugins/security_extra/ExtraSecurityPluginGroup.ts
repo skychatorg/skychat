@@ -5,16 +5,8 @@ import { TorBanPlugin } from './TorBanPlugin';
 import { TrackerPlugin } from './TrackerPlugin';
 import { UsurpPlugin } from './UsurpPlugin';
 
-
 export class ExtraSecurityPluginGroup extends PluginGroup {
-    roomPluginClasses = [
-        HistoryClearPlugin,
-        UsurpPlugin,
-    ];
+    roomPluginClasses = [HistoryClearPlugin, UsurpPlugin];
 
-    globalPluginClasses = [
-        LogFuzzerPlugin,
-        TorBanPlugin,
-        TrackerPlugin,
-    ];
+    globalPluginClasses = [LogFuzzerPlugin, TorBanPlugin, TrackerPlugin];
 }

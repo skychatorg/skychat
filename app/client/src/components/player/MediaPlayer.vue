@@ -11,17 +11,18 @@ const app = useAppStore();
 const client = useClientStore();
 
 const playerImpl = computed(() => {
-    if (! client.state.player.current) {
+    if (!client.state.player.current) {
         return null;
     }
-    return {
-        youtube: YoutubePlayer,
-        twitch: TwitchPlayer,
-        gallery: GalleryPlayer,
-        iframe: IFramePlayer,
-    }[client.state.player.current.video.type] || null;
+    return (
+        {
+            youtube: YoutubePlayer,
+            twitch: TwitchPlayer,
+            gallery: GalleryPlayer,
+            iframe: IFramePlayer,
+        }[client.state.player.current.video.type] || null
+    );
 });
-
 </script>
 
 <template>
@@ -30,5 +31,4 @@ const playerImpl = computed(() => {
     </div>
 </template>
 
-<style scoped>
-</style>
+<style scoped></style>

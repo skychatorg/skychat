@@ -35,7 +35,7 @@ const props = defineProps({
 const content = ref(null);
 
 const isBlacklisted = computed(() => {
-    if (! client.state.user) {
+    if (!client.state.user) {
         return false;
     }
     const blacklist = client.state.user.data.plugins.blacklist || [];
@@ -53,8 +53,8 @@ const formattedDate = computed(() => {
 
 // Room name
 const room = computed(() => {
-    const room = client.state.rooms.find(room => room.id === props.message.room);
-    if (! room) {
+    const room = client.state.rooms.find((room) => room.id === props.message.room);
+    if (!room) {
         return null;
     }
     return room;
@@ -67,10 +67,10 @@ const lastSeenUsers = computed(() => {
 
 // listen for events for buttons
 const bindMessageContentEvents = () => {
-    if (! content.value) {
+    if (!content.value) {
         return;
     }
-    
+
     emit('content-size-changed');
 
     // Images
@@ -85,7 +85,7 @@ const bindMessageContentEvents = () => {
     const buttons = Array.from(content.value.getElementsByClassName('skychat-button'));
     for (const button of buttons) {
         button.addEventListener('click', () => {
-            if (button.dataset.action[0] === '/' && button.dataset.trusted !== 'true' && ! confirm('Send "' + button.dataset.action + '"?')) {
+            if (button.dataset.action[0] === '/' && button.dataset.trusted !== 'true' && !confirm('Send "' + button.dataset.action + '"?')) {
                 return;
             }
             client.sendMessage(button.dataset.action);
@@ -101,7 +101,10 @@ const bindMessageContentEvents = () => {
     }
 };
 onMounted(bindMessageContentEvents);
-watch(() => props.message.formatted, () => nextTick(bindMessageContentEvents));
+watch(
+    () => props.message.formatted,
+    () => nextTick(bindMessageContentEvents),
+);
 
 // When interacting with a message
 const messageInteract = () => {
@@ -121,29 +124,19 @@ const messageInteract = () => {
 </script>
 
 <template>
-    <ExpandableBlock
-        :force-expand="forceExpand || message.user.username.toLowerCase() === client.state.user?.username.toLowerCase()"
-        @content-size-changed="() => emit('content-size-changed')"
-    >
+    <ExpandableBlock :force-expand="forceExpand || message.user.username.toLowerCase() === client.state.user?.username.toLowerCase()" @content-size-changed="() => emit('content-size-changed')">
         <HoverCard
-            :borderColor="message.user.data.plugins.custom.color"
+            :border-color="message.user.data.plugins.custom.color"
             :selectable="selectable"
             :selected="false"
             :use-border-radius="false"
             :class="{
-                'blacklisted': isBlacklisted,
+                blacklisted: isBlacklisted,
             }"
             @contextmenu.prevent="messageInteract"
         >
-            <div
-                v-if="! isBlacklisted"
-                class="py-1 px-3 flex flex-row"
-            >
-                <UserBigAvatar
-                    v-if="! compact"
-                    class="mt-1"
-                    :user="message.user"
-                />
+            <div v-if="!isBlacklisted" class="py-1 px-3 flex flex-row">
+                <UserBigAvatar v-if="!compact" class="mt-1" :user="message.user" />
 
                 <div class="grow pl-4">
                     <!-- First row -->
@@ -155,11 +148,7 @@ const messageInteract = () => {
                             }"
                         >
                             {{ message.user.username }}
-                            <sup
-                                v-if="isBlacklisted"
-                                title="This user is blacklisted. Click to remove from blacklist."
-                                @click.stop="client.sendMessage('/unblacklist ' + entry.user.username)"
-                            >
+                            <sup v-if="isBlacklisted" title="This user is blacklisted. Click to remove from blacklist." @click.stop="client.sendMessage('/unblacklist ' + entry.user.username)">
                                 <fa icon="ban" class="text-danger" />
                             </sup>
                             <sup v-if="message.meta.device === 'mobile'">
@@ -168,48 +157,26 @@ const messageInteract = () => {
                         </div>
                         <div v-if="compact" class="text-skygray-lightest text-xs pt-1 ml-2">
                             {{ formattedDate }}
-                            <template v-if="room">
-                                @ {{ room.name }}
-                            </template>
+                            <template v-if="room"> @ {{ room.name }} </template>
                         </div>
                     </div>
                     <!-- Quoted message -->
-                    <SingleMessage
-                        v-if="message.quoted"
-                        :message="message.quoted"
-                        :selectable="false"
-                        :compact="true"
-                        :force-expand="true"
-                        class="mt-2 mb-4 opacity-75"
-                    />
+                    <SingleMessage v-if="message.quoted" :message="message.quoted" :selectable="false" :compact="true" :force-expand="true" class="mt-2 mb-4 opacity-75" />
                     <!-- Message content -->
-                    <div
-                        class="text-skygray-white w-0 min-w-full whitespace-pre-wrap overflow-hidden break-words"
-                        v-html="message.formatted"
-                        ref="content"
-                    />
+                    <div class="text-skygray-white w-0 min-w-full whitespace-pre-wrap overflow-hidden break-words" v-html="message.formatted" ref="content" />
                 </div>
 
-                <div v-if="! compact" class="basis-16 w-16 flex flex-col text-center">
+                <div v-if="!compact" class="basis-16 w-16 flex flex-col text-center">
                     <span class="grow text-xs text-skygray-lightest">
                         {{ formattedDate }}
                     </span>
-                    <UserMiniAvatarCollection
-                        :users="lastSeenUsers"
-                        class="my-2"
-                    />
+                    <UserMiniAvatarCollection :users="lastSeenUsers" class="my-2" />
                 </div>
             </div>
             <div v-else class="flex pl-6 items-center">
-                <UserMiniAvatar
-                    :user="message.user"
-                    class="mr-2"
-                />
+                <UserMiniAvatar :user="message.user" class="mr-2" />
                 <div class="text-skygray-lighter">
-                    <a
-                        class="cursor-pointer hover:underline"
-                        @click.stop="client.sendMessage('/unblacklist ' + message.user.username)"
-                    >
+                    <a class="cursor-pointer hover:underline" @click.stop="client.sendMessage('/unblacklist ' + message.user.username)">
                         Unblacklist {{ message.user.username }} to see his messages
                     </a>
                 </div>
@@ -218,5 +185,4 @@ const messageInteract = () => {
     </ExpandableBlock>
 </template>
 
-<style scoped>
-</style>
+<style scoped></style>

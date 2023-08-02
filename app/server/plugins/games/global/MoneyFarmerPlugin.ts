@@ -5,11 +5,10 @@ import { GlobalPlugin } from '../../GlobalPlugin';
 import { Session } from '../../../skychat/Session';
 import { RoomManager } from '../../../skychat/RoomManager';
 
-
 export class MoneyFarmerPlugin extends GlobalPlugin {
     public static readonly MAX_INACTIVITY_DURATION_MS: number = 5 * 60 * 1000;
 
-    public static readonly TICK_AMOUNTS_LIMITS: {limit: number, amount: number}[] = [
+    public static readonly TICK_AMOUNTS_LIMITS: { limit: number; amount: number }[] = [
         { limit: 15 * 100, amount: 3 },
         { limit: 30 * 100, amount: 2 },
         { limit: 100 * 100, amount: 1 },
@@ -36,9 +35,7 @@ export class MoneyFarmerPlugin extends GlobalPlugin {
      * @param user
      */
     private getTickAmount(user: User): number {
-        const entry = MoneyFarmerPlugin
-            .TICK_AMOUNTS_LIMITS
-            .filter(entry => entry.limit >= user.money)[0];
+        const entry = MoneyFarmerPlugin.TICK_AMOUNTS_LIMITS.filter((entry) => entry.limit >= user.money)[0];
         return entry ? entry.amount : 0;
     }
 

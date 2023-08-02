@@ -3,7 +3,6 @@ import { RoomPlugin } from '../../RoomPlugin';
 import { UserController } from '../../../skychat/UserController';
 import { RandomGenerator } from '../../../skychat/RandomGenerator';
 
-
 export class RandomGeneratorPlugin extends RoomPlugin {
     static readonly commandName = 'rand';
 
@@ -14,7 +13,10 @@ export class RandomGeneratorPlugin extends RoomPlugin {
             minCount: 2,
             maxCount: 2,
             coolDown: 100,
-            params: [{ name: 'min', pattern: /^([0-9]+)$/ }, { name: 'max', pattern: /^([0-9]+)$/ }]
+            params: [
+                { name: 'min', pattern: /^([0-9]+)$/ },
+                { name: 'max', pattern: /^([0-9]+)$/ },
+            ],
         },
     };
 
@@ -33,7 +35,7 @@ export class RandomGeneratorPlugin extends RoomPlugin {
         const rand = Math.floor(RandomGenerator.random(8) * (1 + max - min) + min);
         await this.room.sendMessage({
             content: `rand(user=${connection.session.identifier}, min=${min}, max=${max}) = ${rand}`,
-            user: UserController.getNeutralUser()
+            user: UserController.getNeutralUser(),
         });
     }
 }

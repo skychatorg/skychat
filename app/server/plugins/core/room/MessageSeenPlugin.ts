@@ -2,10 +2,9 @@ import { RoomPlugin } from '../../RoomPlugin';
 import { Connection } from '../../../skychat/Connection';
 import { UserController } from '../../../skychat/UserController';
 
-
 export type MessageSeenEventData = {
     user: number;
-    data: {[room: number]: number};
+    data: { [room: number]: number };
 };
 
 export class MessageSeenPlugin extends RoomPlugin {
@@ -30,10 +29,10 @@ export class MessageSeenPlugin extends RoomPlugin {
                 {
                     name: 'message id',
                     pattern: /^[0-9]+$/,
-                    info: 'Id of the last seen message'
-                }
-            ]
-        }
+                    info: 'Id of the last seen message',
+                },
+            ],
+        },
     };
 
     async run(_alias: string, param: string, connection: Connection): Promise<void> {
@@ -43,17 +42,17 @@ export class MessageSeenPlugin extends RoomPlugin {
         // Parse new last message seen id
         const newLastMessageSeen = parseInt(param);
         const message = await this.room.getMessageById(newLastMessageSeen);
-        if (! message) {
+        if (!message) {
             return;
         }
         // Load previous data from the plugin storage. An object mapping room ids to last message seen.
-        let pluginData = UserController.getUserPluginData<{[roomId: number]: number}>(connection.session.user, this.commandName);
+        let pluginData = UserController.getUserPluginData<{ [roomId: number]: number }>(connection.session.user, this.commandName);
         if (typeof pluginData !== 'object') {
             pluginData = {};
         }
         // Clean plugin data to only reflect rooms that still exists
         for (const roomId in pluginData) {
-            if (! this.room.manager.getRoomById(parseInt(roomId))) {
+            if (!this.room.manager.getRoomById(parseInt(roomId))) {
                 delete pluginData[roomId];
             }
         }

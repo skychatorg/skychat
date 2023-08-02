@@ -1,7 +1,6 @@
 import * as crypto from 'crypto';
 import biguint from 'biguint-format';
 
-
 export class RandomGenerator {
     /**
      *

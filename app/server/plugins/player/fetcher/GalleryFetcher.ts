@@ -4,8 +4,6 @@ import { VideoInfo } from '../PlayerChannel';
 import { PlayerPlugin } from '../PlayerPlugin';
 import { VideoFetcher } from './VideoFetcher';
 
-
-
 export class GalleryFetcher implements VideoFetcher {
     static readonly ALLOWED_EXTENSIONS: string[] = ['mp4', 'webm'];
 
@@ -14,8 +12,8 @@ export class GalleryFetcher implements VideoFetcher {
      */
     async getInfoFromLink(playerPlugin: PlayerPlugin, filePath: string): Promise<VideoInfo> {
         // Check that the gallery plugin exists
-        const galleryPlugin = (playerPlugin.manager.getPlugin('gallery') as GalleryPlugin);
-        if (! galleryPlugin) {
+        const galleryPlugin = playerPlugin.manager.getPlugin('gallery') as GalleryPlugin;
+        if (!galleryPlugin) {
             throw new Error('Gallery plugin not found');
         }
 

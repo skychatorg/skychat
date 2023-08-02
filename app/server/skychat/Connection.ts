@@ -1,4 +1,3 @@
-
 import * as WebSocket from 'ws';
 import * as http from 'http';
 import { UAParser } from 'ua-parser-js';
@@ -7,8 +6,6 @@ import { EventEmitter } from 'events';
 import { Room } from './Room';
 import { Session } from './Session';
 import { IBroadcaster } from './IBroadcaster';
-
-
 
 /**
  * A client represents an open connection to the server
@@ -58,7 +55,7 @@ export class Connection extends EventEmitter implements IBroadcaster {
         this.origin = typeof request.headers['origin'] === 'string' ? request.headers['origin'] : '';
         this.userAgent = ua.getBrowser().name || '';
         this.device = ua.getDevice().type || '';
-        this.ip = typeof request.headers['x-forwarded-for'] === 'string' ? request.headers['x-forwarded-for'] : (request.connection.remoteAddress || '');
+        this.ip = typeof request.headers['x-forwarded-for'] === 'string' ? request.headers['x-forwarded-for'] : request.connection.remoteAddress || '';
         this.lastPingDate = new Date();
 
         session.attachConnection(this);
@@ -110,7 +107,7 @@ export class Connection extends EventEmitter implements IBroadcaster {
     }
 
     public get closed(): boolean {
-        if (! this.webSocket) {
+        if (!this.webSocket) {
             return true;
         }
         return this.webSocket.readyState === WebSocket.CLOSED || this.webSocket.readyState === WebSocket.CLOSING;
@@ -123,7 +120,7 @@ export class Connection extends EventEmitter implements IBroadcaster {
     private async onMessage(data: Data): Promise<void> {
         try {
             // Data is always buffer
-            if (! (data instanceof Buffer)) {
+            if (!(data instanceof Buffer)) {
                 throw new Error('Invalid data type');
             }
 
@@ -132,12 +129,12 @@ export class Connection extends EventEmitter implements IBroadcaster {
              *  Always converting to string is not the cleanest solution we can find
              *      to discriminate between binary and non-binary messages, but it eases debugging messages
              *      from Chrome devtools as we can see the content of json messages.
-            */
+             */
 
             const dataAsString = data.toString();
 
             // If data is not of type string, fail with error
-            if (! dataAsString.startsWith('{')) {
+            if (!dataAsString.startsWith('{')) {
                 const messageType = data.readUInt16LE(0);
                 const messageData = data.slice(2);
                 this.emit('binary-message', { type: messageType, data: messageData });
@@ -201,10 +198,12 @@ export class Connection extends EventEmitter implements IBroadcaster {
      * @param payload
      */
     public send(event: string, payload: any) {
-        this.webSocket.send(JSON.stringify({
-            event,
-            data: payload
-        }));
+        this.webSocket.send(
+            JSON.stringify({
+                event,
+                data: payload,
+            }),
+        );
     }
 
     /**
@@ -220,10 +219,12 @@ export class Connection extends EventEmitter implements IBroadcaster {
      * @param error
      */
     public sendError(error: Error): void {
-        this.webSocket.send(JSON.stringify({
-            event: 'error',
-            data: error.message
-        }));
+        this.webSocket.send(
+            JSON.stringify({
+                event: 'error',
+                data: error.message,
+            }),
+        );
     }
 
     /**

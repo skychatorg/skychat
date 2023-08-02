@@ -7,8 +7,7 @@ import { Config } from '../skychat/Config';
 
 // Load all plugin implementations
 import * as impl from './index';
-const AllPlugins: {[pluginGroupName: string]: any} = impl;
-
+const AllPlugins: { [pluginGroupName: string]: any } = impl;
 
 /**
  * Utility class that handles the list of commands and plugins
@@ -74,7 +73,7 @@ class GlobalPluginGroup {
     extractCommandObjectFromPlugins(plugins: RoomPlugin[] | GlobalPlugin[]): { [commandName: string]: RoomPlugin | GlobalPlugin } {
         const commands: { [commandName: string]: any } = {};
         for (const plugin of plugins) {
-            const PluginClass = (plugin.constructor as RoomPluginConstructor | GlobalPluginConstructor);
+            const PluginClass = plugin.constructor as RoomPluginConstructor | GlobalPluginConstructor;
             commands[PluginClass.commandName] = plugin;
             for (const alias of PluginClass.commandAliases) {
                 commands[alias] = plugin;

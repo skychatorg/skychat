@@ -7,11 +7,8 @@ const protocol = document.location.protocol === 'http:' ? 'ws' : 'wss';
 const url = protocol + '://' + document.location.host + '/ws';
 const client = new SkyChatClient(url);
 
-
 export const useClientStore = defineStore('client', {
-
     state: () => ({
-
         /**
          * Accumulated client state from SkyChatClient
          */
@@ -24,19 +21,17 @@ export const useClientStore = defineStore('client', {
     }),
 
     getters: {
-
         /**
          * Track only the last received message. Useful to be used in a watcher.
          */
-        lastMessage: state => state.messages[state.messages.length - 1] || null,
+        lastMessage: (state) => state.messages[state.messages.length - 1] || null,
     },
 
     actions: {
-
         /**
          * Initialize client (subscribe to relevant events) & make initial socket connection
          */
-        init: function() {
+        init: function () {
             // On global client state changed
             client.on('update', () => {
                 // Room id changed
@@ -50,8 +45,8 @@ export const useClientStore = defineStore('client', {
             // Audio received
             client.on('audio', ({ id, blob }) => {
                 // Try and find the message that corresponds to the audio
-                const message = this.messages.find(message => message.id === id);
-                if (! message) {
+                const message = this.messages.find((message) => message.id === id);
+                if (!message) {
                     console.warn(`Could not find message with id ${id}, audio will be played directly.`);
                     // Play audio blob directly
                     const audio = new Audio(URL.createObjectURL(blob));
@@ -68,32 +63,32 @@ export const useClientStore = defineStore('client', {
             });
 
             // On new message
-            client.on('message', message => {
+            client.on('message', (message) => {
                 this.messages.push(message);
             });
 
             // On new messages
-            client.on('messages', messages => {
+            client.on('messages', (messages) => {
                 // Filter messages we already have, if any
-                messages = messages.filter(message => message.id === 0 || ! this.messages.find(m => m.id === message.id));
+                messages = messages.filter((message) => message.id === 0 || !this.messages.find((m) => m.id === message.id));
                 // Prepend new messages (we always get previous messages in this event)
                 this.messages = messages.concat(this.messages);
             });
 
             // Message edit
-            client.on('message-edit', message => {
-                const messageIndex = this.messages.findIndex(m => m.id === message.id);
+            client.on('message-edit', (message) => {
+                const messageIndex = this.messages.findIndex((m) => m.id === message.id);
                 if (messageIndex === -1) {
                     return;
                 }
                 this.messages[messageIndex] = message;
             });
 
-            client.on('info', info => {
+            client.on('info', (info) => {
                 const toast = useToast();
                 toast.info(info);
             });
-            client.on('error', error => {
+            client.on('error', (error) => {
                 const toast = useToast();
                 toast.error(error);
             });
@@ -104,7 +99,7 @@ export const useClientStore = defineStore('client', {
          * Join a given room
          * @param {number} roomId
          */
-        join: function(roomId) {
+        join: function (roomId) {
             this.messages = [];
             client.join(roomId);
         },
@@ -112,11 +107,11 @@ export const useClientStore = defineStore('client', {
         /**
          * Load previous messages
          */
-        loadPreviousMessages: function() {
+        loadPreviousMessages: function () {
             // Find first message with non-zero id,
             // Because we need to give this reference to the server to get messages prior to it
-            const realMessage = this.messages.find(m => m.id);
-            if (! realMessage) {
+            const realMessage = this.messages.find((m) => m.id);
+            if (!realMessage) {
                 return false;
             }
             this.sendMessage('/messagehistory ' + realMessage.id);
@@ -157,7 +152,7 @@ export const useClientStore = defineStore('client', {
          * Send an audio message to the server
          * @param {Blob} blob
          */
-        sendAudio: blob => {
+        sendAudio: (blob) => {
             client.sendAudio(blob);
         },
 

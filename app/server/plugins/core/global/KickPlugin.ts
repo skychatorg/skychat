@@ -4,7 +4,6 @@ import { Session } from '../../../skychat/Session';
 import { GlobalPlugin } from '../../GlobalPlugin';
 import { Config } from '../../../skychat/Config';
 
-
 /**
  * The kick plugin allows to force the disconnection of all the connections belonging to a session
  */
@@ -19,14 +18,14 @@ export class KickPlugin extends GlobalPlugin {
         kick: {
             minCount: 1,
             maxCount: 1,
-            params: [{ name: 'username', pattern: User.USERNAME_REGEXP }]
+            params: [{ name: 'username', pattern: User.USERNAME_REGEXP }],
         },
     };
 
     async run(alias: string, param: string): Promise<void> {
         const identifier = param.toLowerCase();
         const session = Session.getSessionByIdentifier(identifier);
-        if (! session) {
+        if (!session) {
             throw new Error('Username not found');
         }
         for (const connection of session.connections) {

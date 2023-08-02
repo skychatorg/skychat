@@ -1,12 +1,10 @@
 <script setup>
-
 const props = defineProps({
     user: {
         type: Object,
         required: true,
     },
 });
-
 </script>
 
 <template>
@@ -21,6 +19,4 @@ const props = defineProps({
     </div>
 </template>
 
-<style scoped>
-
-</style>
+<style scoped></style>

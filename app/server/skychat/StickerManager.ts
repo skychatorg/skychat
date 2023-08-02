@@ -1,7 +1,5 @@
 import fs from 'fs';
 
-
-
 /**
  * Manages stickers
  */
@@ -10,7 +8,7 @@ export class StickerManager {
 
     public static readonly STICKER_CODE_REGEXP: RegExp = /^:([a-z0-9-_)(]+):?$/;
 
-    public static stickers: {[code: string]: string} = {};
+    public static stickers: { [code: string]: string } = {};
 
     constructor() {
         throw new Error('Utility class');

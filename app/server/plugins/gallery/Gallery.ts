@@ -3,15 +3,13 @@ import { Config } from '../../skychat/Config';
 import { FileManager } from '../../skychat/FileManager';
 import { Session } from '../../skychat/Session';
 
-
 export type FileType = 'video' | 'audio' | 'image' | 'subtitle' | 'unknown';
-
 
 export type FolderContent = {
     exists: boolean;
     thumb?: string;
     folders: string[];
-    files: { name: string, type: FileType }[];
+    files: { name: string; type: FileType }[];
 };
 
 export type PlayableFileInfo = {
@@ -20,7 +18,6 @@ export type PlayableFileInfo = {
     duration: number;
 };
 
-
 export class Gallery {
     static readonly FOLDER_PATH_REGEX = /^[^/][a-zA-Z0-9-_/.]+$/;
 
@@ -28,15 +25,15 @@ export class Gallery {
 
     static readonly THUMB_FILE_NAMES = ['thumb.png', 'thumb.jpg', 'thumb.jpeg'];
 
-    static readonly EXTENSION_FILE_TYPES: {[key: string]: FileType} = {
-        'mp4': 'video',
-        'webm': 'video',
-        'vtt': 'subtitle',
-        'mp3': 'audio',
-        'ogg': 'audio',
-        'jpg': 'image',
-        'jpeg': 'image',
-        'png': 'image',
+    static readonly EXTENSION_FILE_TYPES: { [key: string]: FileType } = {
+        mp4: 'video',
+        webm: 'video',
+        vtt: 'subtitle',
+        mp3: 'audio',
+        ogg: 'audio',
+        jpg: 'image',
+        jpeg: 'image',
+        png: 'image',
     };
 
     static readonly DEFAULT_FILE_TYPE = 'unknown';
@@ -68,13 +65,13 @@ export class Gallery {
     }
 
     static checkFolderPath(folderPath: string) {
-        if (folderPath !== '' && ! Gallery.FOLDER_PATH_REGEX.test(folderPath)) {
+        if (folderPath !== '' && !Gallery.FOLDER_PATH_REGEX.test(folderPath)) {
             throw new Error('Invalid folder path');
         }
     }
 
     static checkFilePath(filePath: string) {
-        if (! Gallery.FILE_PATH_REGEX.test(filePath)) {
+        if (!Gallery.FILE_PATH_REGEX.test(filePath)) {
             throw new Error('Invalid file path ' + filePath);
         }
     }
@@ -92,7 +89,7 @@ export class Gallery {
             const fileNames = await fs.readdir(Gallery.BASE_PATH + folderPath);
             for (const fileName of fileNames) {
                 const stats = await fs.stat(Gallery.BASE_PATH + folderPath + '/' + fileName);
-                if (! folderContent.thumb && Gallery.THUMB_FILE_NAMES.includes(fileName)) {
+                if (!folderContent.thumb && Gallery.THUMB_FILE_NAMES.includes(fileName)) {
                     folderContent.thumb = Config.LOCATION + '/' + Gallery.BASE_PATH + folderPath + '/' + fileName;
                 }
                 if (stats.isFile()) {
@@ -163,7 +160,7 @@ export class Gallery {
     static async getPlayableFileInfo(filePath: string): Promise<PlayableFileInfo> {
         this.checkFilePath(filePath);
 
-        if (! await this.fileExists(filePath)) {
+        if (!(await this.fileExists(filePath))) {
             throw new Error('File does not exist');
         }
 

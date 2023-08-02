@@ -11,14 +11,12 @@ import { RoomManager } from '../../../skychat/RoomManager';
 import { MessageHistoryPlugin } from '../../core/room/MessageHistoryPlugin';
 import { Config } from '../../../skychat/Config';
 
-
 enum BAN_TYPES {
     ACCESS = 0,
     SHADOW = 1,
     LAG = 2,
     SPAM = 3,
 }
-
 
 export class BanPlugin extends GlobalPlugin {
     static readonly TICK_INTERVAL = 1000;
@@ -43,14 +41,23 @@ export class BanPlugin extends GlobalPlugin {
             maxCount: 3,
             params: [
                 { name: 'username', pattern: User.USERNAME_REGEXP },
-                { name: 'type', pattern: new RegExp('^(' + Object.keys(BAN_TYPES).filter(t => isNaN(parseInt(t))).join('|') + ')$') },
+                {
+                    name: 'type',
+                    pattern: new RegExp(
+                        '^(' +
+                            Object.keys(BAN_TYPES)
+                                .filter((t) => isNaN(parseInt(t)))
+                                .join('|') +
+                            ')$',
+                    ),
+                },
                 { name: 'duration (s)', pattern: /^\d+$/ },
-            ]
+            ],
         },
         [BanPlugin.UNBAN_COMMAND]: {
             minCount: 1,
             maxCount: 1,
-            params: [{ name: 'username', pattern: User.USERNAME_REGEXP }]
+            params: [{ name: 'username', pattern: User.USERNAME_REGEXP }],
         },
         [BanPlugin.BANLIST_COMMAND]: {
             minCount: 0,
@@ -61,8 +68,8 @@ export class BanPlugin extends GlobalPlugin {
     /**
      * List of banned ips
      */
-    protected storage: {banned: {[matchString: string]: {source: string, type: BAN_TYPES, until: number | null}}} = {
-        banned: {}
+    protected storage: { banned: { [matchString: string]: { source: string; type: BAN_TYPES; until: number | null } } } = {
+        banned: {},
     };
 
     constructor(manager: RoomManager) {
@@ -90,12 +97,13 @@ export class BanPlugin extends GlobalPlugin {
     }
 
     isBanned(connection: Connection, type?: BAN_TYPES): boolean {
-        return Object.keys(this.storage.banned)
-            .filter(s => s === `ip:${connection.ip}` || s === `username:${connection.session.identifier}`) // get entries for this connection
-            .map(matchString => this.storage.banned[matchString]) // transform back keys into values
-            .filter(banEntry => typeof type === 'undefined' ? true : banEntry.type === type) // filter entries that are of the given type
-            .filter(banEntry => banEntry.until === null || new Date().getTime() < banEntry.until) // filter entries that are still valid
-            .length > 0; // is there at least one of them?
+        return (
+            Object.keys(this.storage.banned)
+                .filter((s) => s === `ip:${connection.ip}` || s === `username:${connection.session.identifier}`) // get entries for this connection
+                .map((matchString) => this.storage.banned[matchString]) // transform back keys into values
+                .filter((banEntry) => (typeof type === 'undefined' ? true : banEntry.type === type)) // filter entries that are of the given type
+                .filter((banEntry) => banEntry.until === null || new Date().getTime() < banEntry.until).length > 0 // filter entries that are still valid
+        ); // is there at least one of them?
     }
 
     async handleBan(param: string, connection: Connection) {
@@ -110,7 +118,7 @@ export class BanPlugin extends GlobalPlugin {
         const banEntry = {
             source: identifier,
             type: type,
-            until: duration ? (Date.now() + duration * 1000) : null
+            until: duration ? Date.now() + duration * 1000 : null,
         };
         this.storage.banned['username:' + identifier] = banEntry;
         if (session) {
@@ -184,11 +192,15 @@ export class BanPlugin extends GlobalPlugin {
 
             // Only send new messages to himself
             if (message.startsWith('/message ')) {
-                connection.send('message', new Message({
-                    id: Message.ID + 1, room: connection.roomId,
-                    content: message.substr('/message'.length),
-                    user: connection.session.user
-                }).sanitized());
+                connection.send(
+                    'message',
+                    new Message({
+                        id: Message.ID + 1,
+                        room: connection.roomId,
+                        content: message.substr('/message'.length),
+                        user: connection.session.user,
+                    }).sanitized(),
+                );
                 return '/void';
             }
         }
@@ -240,15 +252,16 @@ export class BanPlugin extends GlobalPlugin {
             let getFakeMessage: (user: User) => Message;
             if (messageHistory) {
                 getFakeMessage = (user: User): Message => {
-                    const hash = new Date().getTime() * 1000 + Math.floor((Math.random() * 900 + 100));
+                    const hash = new Date().getTime() * 1000 + Math.floor(Math.random() * 900 + 100);
                     return messageHistory.getFakeMessage(hash, Message.ID + 1, user);
                 };
             } else {
-                getFakeMessage = (user: User): Message => new Message({
-                    id: Message.ID + 1,
-                    content: 'hello 🥐',
-                    user,
-                });
+                getFakeMessage = (user: User): Message =>
+                    new Message({
+                        id: Message.ID + 1,
+                        content: 'hello 🥐',
+                        user,
+                    });
             }
 
             // Build the list of spam messages

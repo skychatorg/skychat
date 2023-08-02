@@ -1,11 +1,9 @@
 import { Room } from '../../../skychat/Room';
 import { Session } from '../../../skychat/Session';
 
-
 export type PollState = 'pending' | 'started' | 'finished';
 
 export type PollOptions = {
-
     /**
      * Poll audience. Can be a room object, a list of sessions or addressed to everyone
      */
@@ -25,18 +23,18 @@ export type PollOptions = {
      * Minimum required number of votes
      */
     minVotes?: number;
-}
+};
 
 export type SanitizedPoll = {
-    id: number,
-    state: PollState
-    title: string,
-    content: string,
-    result: undefined | boolean,
-    yesCount: number,
-    noCount: number,
-    opVote: undefined | boolean,
-}
+    id: number;
+    state: PollState;
+    title: string;
+    content: string;
+    result: undefined | boolean;
+    yesCount: number;
+    noCount: number;
+    opVote: undefined | boolean;
+};
 
 export class Poll {
     private static CURRENT_POLL_ID = 0;
@@ -53,10 +51,10 @@ export class Poll {
 
     public opVote?: boolean;
 
-    public votes: {[identifier: string]: boolean} = {};
+    public votes: { [identifier: string]: boolean } = {};
 
     constructor(title: string, content: string, options: PollOptions) {
-        this.id = ++ Poll.CURRENT_POLL_ID;
+        this.id = ++Poll.CURRENT_POLL_ID;
         this.title = title;
         this.content = content;
         this.options = options;
@@ -102,11 +100,11 @@ export class Poll {
         }
         // If not enough votes, return the default specified value
         const enoughVotes = typeof this.options.minVotes === 'undefined' || votes.length >= this.options.minVotes;
-        if (! enoughVotes) {
+        if (!enoughVotes) {
             return this.options.defaultValue;
         }
-        const yes = votes.filter(vote => vote).length;
-        const no = votes.filter(vote => ! vote).length;
+        const yes = votes.filter((vote) => vote).length;
+        const no = votes.filter((vote) => !vote).length;
         if (yes === no) {
             return this.options.defaultValue;
         }
@@ -123,7 +121,7 @@ export class Poll {
 
         this.state = 'started';
 
-        return new Promise(resolve => {
+        return new Promise((resolve) => {
             // Wait for the poll to end
             setTimeout(() => {
                 this.state = 'finished';
@@ -135,8 +133,8 @@ export class Poll {
 
     public sanitized(): SanitizedPoll {
         const votes = Object.values(this.votes);
-        const yesCount = votes.filter(vote => vote).length;
-        const noCount = votes.filter(vote => ! vote).length;
+        const yesCount = votes.filter((vote) => vote).length;
+        const noCount = votes.filter((vote) => !vote).length;
         return {
             id: this.id,
             state: this.state,
@@ -145,7 +143,7 @@ export class Poll {
             result: this.getResult(),
             yesCount: yesCount,
             noCount: noCount,
-            opVote: this.opVote
+            opVote: this.opVote,
         };
     }
 
@@ -166,7 +164,7 @@ export class Poll {
 
         // If polling sessions
         if (this.options.audience instanceof Array) {
-            this.options.audience.map(session => session.send('poll', this.sanitized()));
+            this.options.audience.map((session) => session.send('poll', this.sanitized()));
             return;
         }
 

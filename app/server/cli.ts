@@ -1,6 +1,5 @@
 import { DatabaseHelper } from './skychat/DatabaseHelper';
 
-
 /**
  * Import a file in the gallery
  */
@@ -11,12 +10,12 @@ export async function importFileToGallery() {
 /**
  * Possible actions
  */
-const ACTIONS: {[action: string]: { argCount: number, handler: (...args: string[]) => Promise<void>, usage: string }} = {
+const ACTIONS: { [action: string]: { argCount: number; handler: (...args: string[]) => Promise<void>; usage: string } } = {
     'file-import': {
         argCount: 1,
         handler: importFileToGallery,
         usage: '{filePath}',
-    }
+    },
 };
 
 /**

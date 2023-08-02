@@ -6,7 +6,6 @@ import { User } from '../../../skychat/User';
 import { GlobalPlugin } from '../../GlobalPlugin';
 import { RoomManager } from '../../../skychat/RoomManager';
 
-
 export class MailPlugin extends GlobalPlugin {
     static readonly commandName = 'mail';
 
@@ -17,8 +16,11 @@ export class MailPlugin extends GlobalPlugin {
             minCount: 2,
             maxCount: 2,
             coolDown: 1000,
-            params: [{ name: 'username', pattern: User.USERNAME_REGEXP }, { name: 'message', pattern: /./ }]
-        }
+            params: [
+                { name: 'username', pattern: User.USERNAME_REGEXP },
+                { name: 'message', pattern: /./ },
+            ],
+        },
     };
 
     private readonly transporter?: Transporter<any>;
@@ -50,14 +52,14 @@ export class MailPlugin extends GlobalPlugin {
      * @param content
      */
     public async sendMail(to: string, subject: string, content: string): Promise<SentMessageInfo> {
-        if (! this.transporter) {
+        if (!this.transporter) {
             throw new Error('Email transport not registered');
         }
 
         return this.transporter.sendMail({
             to: to,
             subject: subject,
-            text: content
+            text: content,
         });
     }
 
@@ -68,7 +70,7 @@ export class MailPlugin extends GlobalPlugin {
      * @param content
      */
     public async sendMailToUser(user: User, subject: string, content: string): Promise<SentMessageInfo> {
-        if (! user.email) {
+        if (!user.email) {
             throw new Error('This user does not accepts emails');
         }
         return this.sendMail(user.email, subject, content);
@@ -82,7 +84,7 @@ export class MailPlugin extends GlobalPlugin {
      */
     public async sendMailToUsername(username: string, subject: string, content: string): Promise<SentMessageInfo> {
         const user = await UserController.getUserByUsername(username);
-        if (! user) {
+        if (!user) {
             throw new Error(`User ${username} not found`);
         }
         return this.sendMailToUser(user, subject, content);

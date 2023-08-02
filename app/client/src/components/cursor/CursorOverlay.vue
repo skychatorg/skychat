@@ -17,11 +17,10 @@ const lastSentDate = ref(new Date());
 let timeout = null;
 
 onMounted(() => {
-    
     /**
      * Send cursor position
      */
-    document.addEventListener('mousemove', event => {
+    document.addEventListener('mousemove', (event) => {
         if (client.state.currentRoomId === null) {
             return;
         }
@@ -32,7 +31,6 @@ onMounted(() => {
 });
 
 const sendCursorPosition = (x, y) => {
-    
     const delay = new Date().getTime() - lastSentDate.value.getTime();
     if (delay < CURSOR_POSITION_DELAY_MS) {
         clearTimeout(timeout);
@@ -44,26 +42,20 @@ const sendCursorPosition = (x, y) => {
 };
 
 const cursorList = computed(() => Object.values(client.state.cursors));
-
 </script>
 
 <template>
     <div class="pointer-events-none fixed opacity-25 z-10">
-        <div class="w-fit h-fit transition duration-200 relative"
+        <div
+            class="w-fit h-fit transition duration-200 relative"
             v-for="entry in cursorList"
             :key="entry.cursor.user.id"
             :style="{
-                'transform': `translate(${entry.cursor.x * 100}vw, ${entry.cursor.y * 100}vh)`,
+                transform: `translate(${entry.cursor.x * 100}vw, ${entry.cursor.y * 100}vh)`,
             }"
         >
-            <fa
-                icon="arrow-pointer"
-                class="absolute top-0 left-0 text-primary"
-            />
-            <UserMiniAvatar
-                :user="entry.cursor.user"
-                class="absolute top-4 left-3"
-            />
+            <fa icon="arrow-pointer" class="absolute top-0 left-0 text-primary" />
+            <UserMiniAvatar :user="entry.cursor.user" class="absolute top-4 left-3" />
         </div>
     </div>
 </template>

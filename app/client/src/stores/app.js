@@ -4,22 +4,17 @@ import { useClientStore } from './client';
 import { useToast } from 'vue-toastification';
 import mousetrap from 'mousetrap';
 
-
 const DEFAULT_DOCUMENT_TITLE = '~ SkyChat';
 
 const NOTIFICATION_SOUND_MP3_PATH = '/assets/sound/notification.mp3';
 
 const CURRENT_VERSION = 5;
-const STORE_SAVED_KEYS = [
-    'playerMode',
-];
+const STORE_SAVED_KEYS = ['playerMode'];
 
 const toast = useToast();
 
 export const useAppStore = defineStore('app', {
-
     state: () => ({
-
         /**
          * Whether the window is currently focused
          */
@@ -37,7 +32,6 @@ export const useAppStore = defineStore('app', {
          * Player mode
          */
         playerMode: {
-
             /**
              * Whether the player is on/off
              * @type {Boolean}
@@ -77,7 +71,6 @@ export const useAppStore = defineStore('app', {
          * Currently opened modals
          */
         modals: {
-
             /**
              * Whether the profile modal is currently opened
              */
@@ -111,8 +104,7 @@ export const useAppStore = defineStore('app', {
     }),
 
     actions: {
-
-        init: function() {
+        init: function () {
             this.loadPreferences();
 
             const clientStore = useClientStore();
@@ -126,7 +118,7 @@ export const useAppStore = defineStore('app', {
             resize();
 
             // Handle file upload on paste
-            const fileUpload = async event => {
+            const fileUpload = async (event) => {
                 const files = event.clipboardData.files;
                 for (const file of files) {
                     this.setMessage(this.newMessage + ' ' + (await this.upload(file)));
@@ -141,7 +133,7 @@ export const useAppStore = defineStore('app', {
             // Auto-check document title every second
             setInterval(() => {
                 // In case the title is not currently blinking, just update it
-                if (! this.documentTitle.blinking) {
+                if (!this.documentTitle.blinking) {
                     if (document.title !== this.documentTitle.value) {
                         document.title = this.documentTitle.value;
                     }
@@ -155,54 +147,63 @@ export const useAppStore = defineStore('app', {
             }, 1000);
 
             // Listen for own state change
-            watch(() => this.newMessage, (newMessage, oldMessage) => {
-                const isNewMessageTyping = newMessage.length > 0 && ! newMessage.startsWith('/');
-                const isOldMessageTyping = oldMessage.length > 0 && ! oldMessage.startsWith('/');
+            watch(
+                () => this.newMessage,
+                (newMessage, oldMessage) => {
+                    const isNewMessageTyping = newMessage.length > 0 && !newMessage.startsWith('/');
+                    const isOldMessageTyping = oldMessage.length > 0 && !oldMessage.startsWith('/');
 
-                // Now typing
-                if (isNewMessageTyping && ! isOldMessageTyping) {
-                    clientStore.sendMessage('/t on');
-                }
-                // Stop typing
-                if (! isNewMessageTyping && isOldMessageTyping) {
-                    clientStore.sendMessage('/t off');
-                }
-            });
+                    // Now typing
+                    if (isNewMessageTyping && !isOldMessageTyping) {
+                        clientStore.sendMessage('/t on');
+                    }
+                    // Stop typing
+                    if (!isNewMessageTyping && isOldMessageTyping) {
+                        clientStore.sendMessage('/t off');
+                    }
+                },
+            );
 
             // Listen for when the last received message changed
-            watch(() => clientStore.lastMessage, message => {
-                // If no message
-                if (! message) {
-                    return;
-                }
+            watch(
+                () => clientStore.lastMessage,
+                (message) => {
+                    // If no message
+                    if (!message) {
+                        return;
+                    }
 
-                // Notify user if quoted, user is not blacklisted and app is not focused
-                if (
-                    message.content.match(new RegExp('@' + clientStore.state.user.username.toLowerCase(), 'i'))
-                    && ! (clientStore.state.user.data.plugins.blacklist || []).includes(message.user.username.toLowerCase())
-                    && (! this.focused || this.mobileView !== 'middle')
-                ) {
-                    new Audio(NOTIFICATION_SOUND_MP3_PATH).play();
-                }
+                    // Notify user if quoted, user is not blacklisted and app is not focused
+                    if (
+                        message.content.match(new RegExp('@' + clientStore.state.user.username.toLowerCase(), 'i')) &&
+                        !(clientStore.state.user.data.plugins.blacklist || []).includes(message.user.username.toLowerCase()) &&
+                        (!this.focused || this.mobileView !== 'middle')
+                    ) {
+                        new Audio(NOTIFICATION_SOUND_MP3_PATH).play();
+                    }
 
-                // If app is not focused, create notification
-                if (! this.focused) {
-                    this.documentTitle.value = `${message.user.username}: ${message.content.substr(0, 8) + '...'}`;
-                    this.documentTitle.blinking = true;
-                    this.missedMessages.push(message);
-                    return;
-                }
+                    // If app is not focused, create notification
+                    if (!this.focused) {
+                        this.documentTitle.value = `${message.user.username}: ${message.content.substr(0, 8) + '...'}`;
+                        this.documentTitle.blinking = true;
+                        this.missedMessages.push(message);
+                        return;
+                    }
 
-                // Send last seen notification
-                clientStore.notifySeenMessage(message.id);
-            });
+                    // Send last seen notification
+                    clientStore.notifySeenMessage(message.id);
+                },
+            );
 
             // Watch for new polls
-            watch(() => Object.keys(clientStore.state.polls).length, (newLength, oldLength) => {
-                if (newLength > oldLength) {
-                    new Audio('/assets/sound/new-poll.ogg').play();
-                }
-            });
+            watch(
+                () => Object.keys(clientStore.state.polls).length,
+                (newLength, oldLength) => {
+                    if (newLength > oldLength) {
+                        new Audio('/assets/sound/new-poll.ogg').play();
+                    }
+                },
+            );
 
             // Bind keys
 
@@ -216,7 +217,7 @@ export const useAppStore = defineStore('app', {
                 clientStore.join(clientStore.state.rooms[newRoomIndex].id);
             });
             mousetrap.bind('alt+up', () => {
-                let newRoomIndex = (clientStore.state.rooms.indexOf(clientStore.state.currentRoom) - 1);
+                let newRoomIndex = clientStore.state.rooms.indexOf(clientStore.state.currentRoom) - 1;
                 if (newRoomIndex < 0) {
                     newRoomIndex = clientStore.state.rooms.length - 1;
                 }
@@ -224,7 +225,7 @@ export const useAppStore = defineStore('app', {
             });
         },
 
-        loadPreferences: function() {
+        loadPreferences: function () {
             // If local storage not available
             if (typeof localStorage === 'undefined') {
                 return;
@@ -243,23 +244,26 @@ export const useAppStore = defineStore('app', {
             }
         },
 
-        savePreferences: function() {
+        savePreferences: function () {
             // If local storage not available
             if (typeof localStorage === 'undefined') {
                 return;
             }
             // Save preferences
-            localStorage.setItem('preferences', JSON.stringify({
-                version: CURRENT_VERSION,
-                values: Object.fromEntries(STORE_SAVED_KEYS.map(key => [key, this[key]])),
-            }));
+            localStorage.setItem(
+                'preferences',
+                JSON.stringify({
+                    version: CURRENT_VERSION,
+                    values: Object.fromEntries(STORE_SAVED_KEYS.map((key) => [key, this[key]])),
+                }),
+            );
         },
 
-        setMessage: function(message) {
+        setMessage: function (message) {
             this.newMessage = message;
         },
 
-        sendMessage: function() {
+        sendMessage: function () {
             if (this.newMessage.trim().length === 0) {
                 return;
             }
@@ -268,11 +272,11 @@ export const useAppStore = defineStore('app', {
             this.newMessage = '';
         },
 
-        focus: function() {
+        focus: function () {
             const clientStore = useClientStore();
             if (this.missedMessages.length > 0) {
                 // Find last message with non-zero id
-                const realMessages = this.missedMessages.filter(message => message.id !== 0);
+                const realMessages = this.missedMessages.filter((message) => message.id !== 0);
                 if (realMessages.length > 0) {
                     clientStore.notifySeenMessage(realMessages[realMessages.length - 1].id);
                 }
@@ -283,39 +287,41 @@ export const useAppStore = defineStore('app', {
             this.missedMessages = [];
         },
 
-        blur: function() {
+        blur: function () {
             this.focused = false;
         },
 
-        setPlayerEnabled: function(playerEnabled) {
+        setPlayerEnabled: function (playerEnabled) {
             this.playerMode.enabled = playerEnabled;
             this.savePreferences();
         },
 
-        expandPlayer: function() {
-            this.playerMode.size = {
-                xs: 'sm',
-                sm: 'md',
-                md: 'lg',
-                lg: 'lg',
-            }[this.playerMode.size] || 'md';
+        expandPlayer: function () {
+            this.playerMode.size =
+                {
+                    xs: 'sm',
+                    sm: 'md',
+                    md: 'lg',
+                    lg: 'lg',
+                }[this.playerMode.size] || 'md';
             this.savePreferences();
         },
 
-        shrinkPlayer: function() {
-            this.playerMode.size = {
-                lg: 'md',
-                md: 'sm',
-                sm: 'xs',
-                xs: 'xs',
-            }[this.playerMode.size] || 'md';
+        shrinkPlayer: function () {
+            this.playerMode.size =
+                {
+                    lg: 'md',
+                    md: 'sm',
+                    sm: 'xs',
+                    xs: 'xs',
+                }[this.playerMode.size] || 'md';
             this.savePreferences();
         },
 
         /**
          * Upload a given file
          */
-        upload: async function(file) {
+        upload: async function (file) {
             try {
                 toast.info('File uploading...');
 
@@ -339,14 +345,14 @@ export const useAppStore = defineStore('app', {
         /**
          * Change currently shown view on mobile devices
          */
-        mobileSetView: function(view) {
+        mobileSetView: function (view) {
             this.mobileView = view;
         },
 
         /**
          * Open a modal by its name
          */
-        toggleModal: function(name, data) {
+        toggleModal: function (name, data) {
             if (typeof this.modals[name] === 'undefined') {
                 throw new Error('Unknown modal: ' + name);
             }
@@ -360,13 +366,13 @@ export const useAppStore = defineStore('app', {
         /**
          * Close one or multiple given modals
          */
-        closeModal: function(...name) {
+        closeModal: function (...name) {
             for (const modalName of name) {
                 if (typeof this.modals[modalName] === 'undefined') {
                     throw new Error('Unknown modal: ' + modalName);
                 }
                 this.modals[modalName] = false;
             }
-        }
+        },
     },
 });

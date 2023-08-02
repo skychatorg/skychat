@@ -9,9 +9,7 @@ import striptags from 'striptags';
 import { RandomGenerator } from '../../../skychat/RandomGenerator';
 import { Timing } from '../../../skychat/Timing';
 
-
 type GameObject = {
-
     // Current game state
     state: 'pending' | 'started';
 
@@ -19,15 +17,14 @@ type GameObject = {
     gameMessage: Message | null;
 
     // All sessions that have already chosed a card
-    participants: Session[],
+    participants: Session[];
 
     // Card ids goes from 0 to CARDS_COUNT - 1
-    cards: {[cardId: number]: {state: 'pending' | 'chosen' | 'shown', content: number}};
+    cards: { [cardId: number]: { state: 'pending' | 'chosen' | 'shown'; content: number } };
 
     // Bets from users
-    bets: {[identifier: string]: number};
+    bets: { [identifier: string]: number };
 };
-
 
 export class DailyRollPlugin extends RoomPlugin {
     /**
@@ -52,8 +49,8 @@ export class DailyRollPlugin extends RoomPlugin {
             minCount: 1,
             maxCount: 1,
             coolDown: 1000,
-            params: [{ name: 'bet', pattern: /^([0-9]+)$/ }]
-        }
+            params: [{ name: 'bet', pattern: /^([0-9]+)$/ }],
+        },
     };
 
     private currentGame: GameObject | null = null;
@@ -67,7 +64,7 @@ export class DailyRollPlugin extends RoomPlugin {
         }
     }
 
-    getCardCoordinates(cardId: number): {x: number, y: number} {
+    getCardCoordinates(cardId: number): { x: number; y: number } {
         return {
             x: cardId % DailyRollPlugin.BOARD_WIDTH,
             y: Math.floor(cardId / DailyRollPlugin.BOARD_WIDTH),
@@ -93,7 +90,7 @@ export class DailyRollPlugin extends RoomPlugin {
 
     async start(): Promise<void> {
         // Wait for at least 1 user to be there
-        while (this.room.connections.filter(connection => connection.session.isAlive()).length === 0) {
+        while (this.room.connections.filter((connection) => connection.session.isAlive()).length === 0) {
             await Timing.sleep(15 * 1000);
         }
 
@@ -115,7 +112,7 @@ export class DailyRollPlugin extends RoomPlugin {
         };
 
         // Decide card content
-        for (let cardId = 0; cardId < DailyRollPlugin.CARDS_COUNT; ++ cardId) {
+        for (let cardId = 0; cardId < DailyRollPlugin.CARDS_COUNT; ++cardId) {
             this.currentGame.cards[cardId] = {
                 state: 'pending',
                 content: Math.floor(RandomGenerator.random(8) * 6) * 100,
@@ -142,9 +139,9 @@ export class DailyRollPlugin extends RoomPlugin {
 
         // Automatically choose a card for remaining users
         // Find the sessions in this room that did not vote
-        const sessions: Session[] = Array.from(new Set(this.room.connections.map(connection => connection.session)))
-            .filter(session => session.user.right >= 0)
-            .filter(session => typeof this.currentGame!.bets[session.identifier] === 'undefined');
+        const sessions: Session[] = Array.from(new Set(this.room.connections.map((connection) => connection.session)))
+            .filter((session) => session.user.right >= 0)
+            .filter((session) => typeof this.currentGame!.bets[session.identifier] === 'undefined');
         // Automatically vote for these sessions
         for (const session of sessions) {
             // If all cards chosen
@@ -155,7 +152,7 @@ export class DailyRollPlugin extends RoomPlugin {
             let randomCardId = Math.floor(RandomGenerator.random(8) * DailyRollPlugin.CARDS_COUNT);
             while (this.currentGame.cards[randomCardId]!.state !== 'pending') {
                 // Find next card, cycling to 0 if exceeding last card
-                if (++ randomCardId > DailyRollPlugin.CARDS_COUNT - 1) {
+                if (++randomCardId > DailyRollPlugin.CARDS_COUNT - 1) {
                     randomCardId = 0;
                 }
             }
@@ -174,8 +171,8 @@ export class DailyRollPlugin extends RoomPlugin {
         lastMessage.edit('Too late! Now revealing cards..');
         this.room.send('message-edit', lastMessage.sanitized());
         await Timing.sleep(2 * 1000);
-        for (let y = 0; y < DailyRollPlugin.BOARD_HEIGHT; ++ y) {
-            for (let x = 0; x < DailyRollPlugin.BOARD_WIDTH; ++ x) {
+        for (let y = 0; y < DailyRollPlugin.BOARD_HEIGHT; ++y) {
+            for (let x = 0; x < DailyRollPlugin.BOARD_WIDTH; ++x) {
                 const id = this.getCardId(x, y);
                 const card = this.currentGame.cards[id];
                 // Only reveal card if not chosen
@@ -212,7 +209,7 @@ export class DailyRollPlugin extends RoomPlugin {
      *
      */
     private updateGameMessage(): void {
-        if (! this.currentGame || ! this.currentGame.gameMessage) {
+        if (!this.currentGame || !this.currentGame.gameMessage) {
             return;
         }
         // Display game board
@@ -232,9 +229,9 @@ export class DailyRollPlugin extends RoomPlugin {
         // Display board context
         content += '<table style="text-align: center">';
         content += '<tr>' + '<th style="width: 30px"></th>'.repeat(DailyRollPlugin.BOARD_WIDTH) + '</tr>';
-        for (let y = 0; y < DailyRollPlugin.BOARD_HEIGHT; ++ y) {
+        for (let y = 0; y < DailyRollPlugin.BOARD_HEIGHT; ++y) {
             content += '<tr>';
-            for (let x = 0; x < DailyRollPlugin.BOARD_WIDTH; ++ x) {
+            for (let x = 0; x < DailyRollPlugin.BOARD_WIDTH; ++x) {
                 const id = this.getCardId(x, y);
                 const card = this.currentGame.cards[id];
                 content += '<td>';
@@ -265,7 +262,7 @@ export class DailyRollPlugin extends RoomPlugin {
 
     private async handleBet(param: string, connection: Connection): Promise<void> {
         const cardId = parseInt(param);
-        if (! this.currentGame) {
+        if (!this.currentGame) {
             throw new Error('Round is already finished');
         }
         if (this.currentGame.state !== 'pending') {

@@ -2,7 +2,6 @@ import { Connection } from '../../../skychat/Connection';
 import { RoomPlugin } from '../../RoomPlugin';
 import { User } from '../../../skychat/User';
 
-
 /**
  * Handle cursor events
  */
@@ -15,8 +14,8 @@ export class TypingListPlugin extends RoomPlugin {
         t: {
             minCount: 1,
             maxCount: 1,
-            params: [{ name: 'action', pattern: /^(on|off|clear)$/ }]
-        }
+            params: [{ name: 'action', pattern: /^(on|off|clear)$/ }],
+        },
     };
 
     readonly hidden = true;
@@ -24,12 +23,12 @@ export class TypingListPlugin extends RoomPlugin {
     /**
      * Identifiers that are currently typing and the associated date when they started typing
      */
-    private typingList: {[identifier: string]: {startedDate: Date, user: User}} = {};
+    private typingList: { [identifier: string]: { startedDate: Date; user: User } } = {};
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
         if (param === 'clear') {
             // Check rights
-            if (! connection.session.isOP()) {
+            if (!connection.session.isOP()) {
                 throw new Error('You do not have the right to clear the typing list');
             }
             this.typingList = {};
@@ -37,7 +36,7 @@ export class TypingListPlugin extends RoomPlugin {
             // Register typer
             this.typingList[connection.session.identifier] = {
                 startedDate: new Date(),
-                user: connection.session.user
+                user: connection.session.user,
             };
         } else {
             // Remove typer
@@ -56,6 +55,9 @@ export class TypingListPlugin extends RoomPlugin {
     }
 
     private sync(): void {
-        this.room.send('typing-list', Object.values(this.typingList).map(entry => entry.user.sanitized()));
+        this.room.send(
+            'typing-list',
+            Object.values(this.typingList).map((entry) => entry.user.sanitized()),
+        );
     }
 }

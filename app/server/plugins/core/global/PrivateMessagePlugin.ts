@@ -7,7 +7,6 @@ import { BlacklistPlugin } from './BlacklistPlugin';
 import { Room } from '../../../skychat/Room';
 import { UserController } from '../../../skychat/UserController';
 
-
 export class PrivateMessagePlugin extends GlobalPlugin {
     static readonly commandName = 'pm';
 
@@ -20,15 +19,15 @@ export class PrivateMessagePlugin extends GlobalPlugin {
             minCount: 1,
             maxCount: 100,
             maxCallsPer10Seconds: 1,
-            params: [{ name: 'username', pattern: /./ }]
+            params: [{ name: 'username', pattern: /./ }],
         },
         pmadd: {
             minCount: 1,
             maxCount: 1,
             maxCallsPer10Seconds: 10,
-            params: [{ name: 'username', pattern: User.USERNAME_REGEXP }]
+            params: [{ name: 'username', pattern: User.USERNAME_REGEXP }],
         },
-        pmleave: { minCount: 0, },
+        pmleave: { minCount: 0 },
     };
 
     canManageRoom(identifier: string, room: Room): boolean {
@@ -55,11 +54,11 @@ export class PrivateMessagePlugin extends GlobalPlugin {
         const rawUsernames = param.split(' ');
         const sessions: Session[] = [];
         for (const username of rawUsernames) {
-            if (! User.USERNAME_REGEXP.test(username)) {
+            if (!User.USERNAME_REGEXP.test(username)) {
                 throw new Error(`Invalid username ${username}`);
             }
             const session = Session.getSessionByIdentifier(username.toLowerCase());
-            if (! session) {
+            if (!session) {
                 throw new Error(`User ${username} not found`);
             }
             if (session.identifier === connection.session.identifier) {
@@ -75,7 +74,7 @@ export class PrivateMessagePlugin extends GlobalPlugin {
             throw new Error('You can not send multiple private messages to the same user');
         }
 
-        const usernames = [connection.session.user.username, ...sessions.map(s => s.user.username)];
+        const usernames = [connection.session.user.username, ...sessions.map((s) => s.user.username)];
         const privateRoom = this.manager.findPrivateRoom(usernames);
         if (privateRoom) {
             // Make user join this room
@@ -88,17 +87,17 @@ export class PrivateMessagePlugin extends GlobalPlugin {
 
     async handlePMAdd(param: string, connection: Connection): Promise<void> {
         const room = connection.room;
-        if (! room) {
+        if (!room) {
             throw new Error('You are not in a room');
         }
-        if (! room.isPrivate) {
+        if (!room.isPrivate) {
             throw new Error('You can not add users to a public room');
         }
-        if (! this.canManageRoom(connection.session.identifier, room)) {
+        if (!this.canManageRoom(connection.session.identifier, room)) {
             throw new Error('You do not have the permission to add users to this room');
         }
         const session = Session.getSessionByIdentifier(param.toLowerCase());
-        if (! session) {
+        if (!session) {
             throw new Error(`User ${param} not found`);
         }
         if (session.identifier === connection.session.identifier) {
@@ -116,20 +115,20 @@ export class PrivateMessagePlugin extends GlobalPlugin {
             content: `${session.user.username} has joined the room`,
         });
         room.whitelist
-            .map(ident => Session.getSessionByIdentifier(ident))
-            .filter(session => !! session)
-            .forEach(session => room.manager.sendRoomList(session as Session));
+            .map((ident) => Session.getSessionByIdentifier(ident))
+            .filter((session) => !!session)
+            .forEach((session) => room.manager.sendRoomList(session as Session));
     }
 
     async handlePMLeave(_param: string, connection: Connection): Promise<void> {
         const room = connection.room;
-        if (! room) {
+        if (!room) {
             throw new Error('You are not in a room');
         }
-        if (! room.isPrivate) {
+        if (!room.isPrivate) {
             throw new Error('You can not leave a public room');
         }
-        if (! this.canManageRoom(connection.session.identifier, room)) {
+        if (!this.canManageRoom(connection.session.identifier, room)) {
             throw new Error('You do not have the permission to leave this room');
         }
         // Leaving room if there's others in it
@@ -141,9 +140,9 @@ export class PrivateMessagePlugin extends GlobalPlugin {
             });
             room.manager.sendRoomList(connection);
             room.whitelist
-                .map(ident => Session.getSessionByIdentifier(ident))
-                .filter(session => !! session)
-                .forEach(session => room.manager.sendRoomList(session as Session));
+                .map((ident) => Session.getSessionByIdentifier(ident))
+                .filter((session) => !!session)
+                .forEach((session) => room.manager.sendRoomList(session as Session));
             return;
         } else {
             // Delete room

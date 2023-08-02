@@ -6,7 +6,6 @@ import { Session } from '../../../skychat/Session';
 import { RoomManager } from '../../../skychat/RoomManager';
 import { BinaryMessageTypes } from '../../../../api/BinaryMessageTypes';
 
-
 /**
  * Handle cursor events
  */
@@ -24,7 +23,7 @@ export class CursorPlugin extends GlobalPlugin {
     /**
      * Recent received cursor positions. Kept for other plugins.
      */
-    public readonly cursors: { [identifier: string]: { x: number, y: number, lastSent: Date } } = {};
+    public readonly cursors: { [identifier: string]: { x: number; y: number; lastSent: Date } } = {};
 
     readonly rules = {
         c: {
@@ -32,9 +31,10 @@ export class CursorPlugin extends GlobalPlugin {
             maxCount: 2,
             maxCallsPer10Seconds: 100,
             params: [
-                { name: 'x', pattern: /^\d+(\.\d+)?$/ }, { name: 'y', pattern: /^\d+(\.\d+)?$/ }
-            ]
-        }
+                { name: 'x', pattern: /^\d+(\.\d+)?$/ },
+                { name: 'y', pattern: /^\d+(\.\d+)?$/ },
+            ],
+        },
     };
 
     constructor(manager: RoomManager) {
@@ -49,8 +49,9 @@ export class CursorPlugin extends GlobalPlugin {
         const [x, y] = [parseFloat(xRaw), parseFloat(yRaw)];
         // Store entry
         this.cursors[connection.session.identifier] = {
-            x, y,
-            lastSent: new Date()
+            x,
+            y,
+            lastSent: new Date(),
         };
         this.sendCursorPosition(connection.session.user, x, y, [connection.session.identifier]);
     }
@@ -65,7 +66,7 @@ export class CursorPlugin extends GlobalPlugin {
         // For every connection in the room
         for (const conn of Session.connections) {
             // If the user has cursors disabled, don't send
-            if (! UserController.getUserPluginData(conn.session.user, this.commandName)) {
+            if (!UserController.getUserPluginData(conn.session.user, this.commandName)) {
                 continue;
             }
             // If identifier is to be ignored
@@ -103,7 +104,7 @@ export class CursorPlugin extends GlobalPlugin {
             return false;
         }
         // If user not logged in
-        if (! connection.session.user.id) {
+        if (!connection.session.user.id) {
             return true;
         }
         const x = data.readFloatLE(0);

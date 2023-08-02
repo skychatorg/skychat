@@ -8,18 +8,16 @@ import { Message } from '../../../skychat/Message';
 import { Timing } from '../../../skychat/Timing';
 import { CursorPlugin } from '../global/CursorPlugin';
 
-
 type GameObject = {
     gameMessage: Message | null;
     participants: Session[];
     ball: {
-        pos: { x: number, y: number, },
-        vel: { x: number, y: number, },
+        pos: { x: number; y: number };
+        vel: { x: number; y: number };
     };
-    point: { x: number, y: number, };
+    point: { x: number; y: number };
     collectedPoints: number;
 };
-
 
 export class PointsCollectorPlugin extends RoomPlugin {
     static readonly GAME_DURATION: number = 30 * 1000;
@@ -41,8 +39,8 @@ export class PointsCollectorPlugin extends RoomPlugin {
             minCount: 0,
             maxCount: 0,
             coolDown: PointsCollectorPlugin.GAME_DURATION + 4 * 60 * 1000,
-            params: []
-        }
+            params: [],
+        },
     };
 
     private currentGame: GameObject | null = null;
@@ -68,8 +66,8 @@ export class PointsCollectorPlugin extends RoomPlugin {
             gameMessage: null,
             participants: [],
             ball: {
-                pos: { x: .5, y: .5 },
-                vel: { x: .0, y: .0 },
+                pos: { x: 0.5, y: 0.5 },
+                vel: { x: 0.0, y: 0.0 },
             },
             point: { x: 0, y: 0 },
             collectedPoints: 0,
@@ -108,7 +106,7 @@ export class PointsCollectorPlugin extends RoomPlugin {
     }
 
     private movePoint(): void {
-        if (! this.currentGame) {
+        if (!this.currentGame) {
             return;
         }
         this.currentGame.point.x = PointsCollectorPlugin.POINT_COLLISION_RADIUS + RandomGenerator.random(8) * (1 - PointsCollectorPlugin.POINT_COLLISION_RADIUS * 2);
@@ -116,7 +114,7 @@ export class PointsCollectorPlugin extends RoomPlugin {
     }
 
     private async tick(delta: number, cursorPlugin: CursorPlugin): Promise<void> {
-        if (! this.currentGame) {
+        if (!this.currentGame) {
             return;
         }
 
@@ -127,7 +125,7 @@ export class PointsCollectorPlugin extends RoomPlugin {
         const pointDistance = Math.sqrt(Math.pow(ball.pos.x - point.x, 2) + Math.pow(ball.pos.y - point.y, 2));
         if (pointDistance < PointsCollectorPlugin.POINT_COLLISION_RADIUS) {
             this.movePoint();
-            this.currentGame.collectedPoints ++;
+            this.currentGame.collectedPoints++;
             this.updateGameMessage();
         }
 
@@ -135,19 +133,19 @@ export class PointsCollectorPlugin extends RoomPlugin {
         const margin = PointsCollectorPlugin.BOARD_MARGIN;
         if (ball.pos.x < margin) {
             ball.pos.x = margin;
-            ball.vel.x = Math.abs(ball.vel.x) * .2;
+            ball.vel.x = Math.abs(ball.vel.x) * 0.2;
         }
         if (ball.pos.x > 1 - margin) {
             ball.pos.x = 1 - margin;
-            ball.vel.x = - Math.abs(ball.vel.x) * .2;
+            ball.vel.x = -Math.abs(ball.vel.x) * 0.2;
         }
         if (ball.pos.y < margin) {
             ball.pos.y = margin;
-            ball.vel.y = Math.abs(ball.vel.y) * .2;
+            ball.vel.y = Math.abs(ball.vel.y) * 0.2;
         }
         if (ball.pos.y > 1 - margin) {
             ball.pos.y = 1 - margin;
-            ball.vel.y = - Math.abs(ball.vel.y) * .2;
+            ball.vel.y = -Math.abs(ball.vel.y) * 0.2;
         }
 
         // Build acceleration force vector from cursors
@@ -161,17 +159,17 @@ export class PointsCollectorPlugin extends RoomPlugin {
             const distanceX = ball.pos.x - cursorPosition.x;
             const distanceY = ball.pos.y - cursorPosition.y;
             const distance = Math.sqrt(Math.pow(distanceX, 2) + Math.pow(distanceY, 2));
-            if (distance > .1) {
+            if (distance > 0.1) {
                 continue;
             }
             const angle = Math.atan2(distanceY, distanceX);
-            accForce.x += .05 * Math.cos(angle) / distance;
-            accForce.y += .05 * Math.sin(angle) / distance;
+            accForce.x += (0.05 * Math.cos(angle)) / distance;
+            accForce.y += (0.05 * Math.sin(angle)) / distance;
         }
 
         // Add friction
-        accForce.x += - .5 * ball.vel.x;
-        accForce.y += - .5 * ball.vel.y;
+        accForce.x += -0.5 * ball.vel.x;
+        accForce.y += -0.5 * ball.vel.y;
 
         // Update velocity
         ball.vel.x += accForce.x * delta;
@@ -183,30 +181,22 @@ export class PointsCollectorPlugin extends RoomPlugin {
     }
 
     private updatePositions(cursorPlugin: CursorPlugin): void {
-        if (! this.currentGame) {
+        if (!this.currentGame) {
             return;
         }
 
         // Send ball
-        cursorPlugin.sendCursorPosition(
-            UserController.getNeutralUser(`$${this.commandName}_ball`),
-            this.currentGame.ball.pos.x,
-            this.currentGame.ball.pos.y,
-        );
+        cursorPlugin.sendCursorPosition(UserController.getNeutralUser(`$${this.commandName}_ball`), this.currentGame.ball.pos.x, this.currentGame.ball.pos.y);
 
         // Send point
-        cursorPlugin.sendCursorPosition(
-            UserController.getNeutralUser(`$${this.commandName}_point`),
-            this.currentGame.point.x,
-            this.currentGame.point.y,
-        );
+        cursorPlugin.sendCursorPosition(UserController.getNeutralUser(`$${this.commandName}_point`), this.currentGame.point.x, this.currentGame.point.y);
     }
 
     /**
      *
      */
     private updateGameMessage(): void {
-        if (! this.currentGame || ! this.currentGame.gameMessage) {
+        if (!this.currentGame || !this.currentGame.gameMessage) {
             return;
         }
         let content = '';

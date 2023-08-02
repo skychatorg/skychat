@@ -7,15 +7,10 @@ const client = useClientStore();
 </script>
 
 <template>
-    <ModalTemplate
-        id="gallery"
-        title="Gallery"
-    >
+    <ModalTemplate id="gallery" title="Gallery">
         <template v-if="client.state.gallery">
             <GalleryPannel />
         </template>
-        <template v-else>
-            You do not have the permission to view the gallery.
-        </template>
+        <template v-else> You do not have the permission to view the gallery. </template>
     </ModalTemplate>
 </template>

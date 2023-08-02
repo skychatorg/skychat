@@ -2,7 +2,6 @@ import { SanitizedUser, User } from './User';
 import { MessageFormatter } from './MessageFormatter';
 
 export interface SanitizedMessage {
-
     /**
      * Message unique id
      */
@@ -45,12 +44,10 @@ export interface SanitizedMessage {
 }
 
 export type MessageMeta = {
-
     device: string;
 
     audio: number;
-}
-
+};
 
 export type MessageConstructorOptions = {
     id?: number;
@@ -61,7 +58,7 @@ export type MessageConstructorOptions = {
     quoted?: Message | null;
     createdTime?: Date | null;
     meta?: Partial<MessageMeta> | null;
-}
+};
 
 export class Message {
     public static ID = 1;
@@ -83,17 +80,20 @@ export class Message {
     public readonly meta: MessageMeta;
 
     constructor(options: MessageConstructorOptions) {
-        this.id = typeof options.id !== 'undefined' ? options.id : ++ Message.ID;
+        this.id = typeof options.id !== 'undefined' ? options.id : ++Message.ID;
         this.room = typeof options.room === 'number' ? options.room : null;
         this.content = options.content;
         this.formatted = typeof options.formatted === 'string' ? options.formatted : MessageFormatter.getInstance().format(options.content);
         this.quoted = options.quoted || null;
         this.user = options.user;
         this.createdTime = options.createdTime instanceof Date ? options.createdTime : new Date();
-        this.meta = Object.assign({
-            device: '',
-            audio: 0,
-        }, options.meta || {});
+        this.meta = Object.assign(
+            {
+                device: '',
+                audio: 0,
+            },
+            options.meta || {},
+        );
     }
 
     /**
@@ -103,7 +103,7 @@ export class Message {
      */
     public edit(content: string, formatted?: string, quoted?: Message | null) {
         this.content = content;
-        this.formatted = formatted ? formatted : (MessageFormatter.getInstance().format(content));
+        this.formatted = formatted ? formatted : MessageFormatter.getInstance().format(content);
         if (typeof quoted !== 'undefined') {
             this.quoted = quoted || null;
         }
@@ -116,7 +116,7 @@ export class Message {
      */
     public append(content: string, formatted?: string) {
         this.content += '\n' + content;
-        this.formatted += formatted ? formatted : ('<br>\n' + MessageFormatter.getInstance().format(content));
+        this.formatted += formatted ? formatted : '<br>\n' + MessageFormatter.getInstance().format(content);
     }
 
     /**
@@ -138,7 +138,7 @@ export class Message {
             formatted: this.formatted,
             user: this.user.sanitized(),
             createdTimestamp: this.createdTime.getTime() * 0.001,
-            meta: this.meta
+            meta: this.meta,
         };
     }
 }

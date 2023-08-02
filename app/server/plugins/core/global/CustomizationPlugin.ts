@@ -2,7 +2,6 @@ import { Connection } from '../../../skychat/Connection';
 import { GlobalPlugin } from '../../GlobalPlugin';
 import { ConnectedListPlugin } from './ConnectedListPlugin';
 
-
 /**
  * One element that can be customized
  */
@@ -12,7 +11,7 @@ export type CustomizationElementValue = {
     value: any;
 };
 
-export type CustomizationElements = {[key: string]: CustomizationElementValue[]};
+export type CustomizationElements = { [key: string]: CustomizationElementValue[] };
 
 export class CustomizationPlugin extends GlobalPlugin {
     /**
@@ -24,9 +23,7 @@ export class CustomizationPlugin extends GlobalPlugin {
      * All possible customization keys/values
      */
     static readonly ITEMS: CustomizationElements = {
-
         [CustomizationPlugin.KEY_COLOR]: [
-
             // Grays
             { id: 0, name: 'Dark Dark Dark Dark Gray', value: '#656565' },
             { id: 1, name: 'Dark Dark Dark Gray', value: '#757575' },
@@ -89,15 +86,15 @@ export class CustomizationPlugin extends GlobalPlugin {
                 {
                     name: 'action',
                     pattern: /^use$/,
-                    info: 'Action'
+                    info: 'Action',
                 },
                 {
                     name: 'choice',
                     pattern: /^(color):(\d+)$/,
-                    info: 'Chosen color'
-                }
-            ]
-        }
+                    info: 'Chosen color',
+                },
+            ],
+        },
     };
 
     /**
@@ -113,18 +110,18 @@ export class CustomizationPlugin extends GlobalPlugin {
         const id = parseInt(rawId);
 
         // Check that type exists
-        if (! CustomizationPlugin.ITEMS[type]) {
+        if (!CustomizationPlugin.ITEMS[type]) {
             throw new Error('Unable to customize this property');
         }
 
         // Check that item exists
-        const item = CustomizationPlugin.ITEMS[type].find(item => item.id === id);
-        if (! item) {
+        const item = CustomizationPlugin.ITEMS[type].find((item) => item.id === id);
+        if (!item) {
             throw new Error(`Item ${id} does not exist`);
         }
 
         // Set item
-        const data = this.getUserData<{[key: string]: unknown}>(connection.session.user);
+        const data = this.getUserData<{ [key: string]: unknown }>(connection.session.user);
         data[type] = item.value;
         this.saveUserData(connection.session.user, data);
         (this.manager.getPlugin('connectedlist') as ConnectedListPlugin).sync();

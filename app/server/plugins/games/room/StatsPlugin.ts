@@ -4,7 +4,6 @@ import { User } from '../../../skychat/User';
 import { Session } from '../../../skychat/Session';
 import { Config } from '../../../skychat/Config';
 
-
 export class StatsPlugin extends RoomPlugin {
     static readonly AVERAGE_BOOK_READ_TIME: number = 60 * 5;
 
@@ -21,7 +20,7 @@ export class StatsPlugin extends RoomPlugin {
             minCount: 1,
             maxCount: 2,
             coolDown: 1000,
-            params: [{ name: 'username', pattern: User.USERNAME_REGEXP }]
+            params: [{ name: 'username', pattern: User.USERNAME_REGEXP }],
         },
     };
 
@@ -33,7 +32,7 @@ export class StatsPlugin extends RoomPlugin {
      */
     async run(alias: string, username: string): Promise<void> {
         const session = Session.getSessionByIdentifier(username);
-        if (! session) {
+        if (!session) {
             // If user doesn't exist
             throw new Error('Username not found');
         }
@@ -47,7 +46,9 @@ export class StatsPlugin extends RoomPlugin {
         const movieCount = Math.floor(xp / StatsPlugin.AVERAGE_MOVIE_WATCH_TIME);
         const marathonCount = Math.floor(xp / StatsPlugin.AVERAGE_MARATHON_RUN_TIME);
 
-        const messageContent = `${session.user.username} spent ${minCount} ${minCount > 1 ? 'minutes' : 'minute'} here, that's ${hourCount} ${hourCount > 1 ? 'hours' : 'hour'}, ${dayCount} ${dayCount > 1 ? 'days' : 'day'} or ${weekCount} ${weekCount > 1 ? 'weeks' : 'week'}! During this time, he could have:
+        const messageContent = `${session.user.username} spent ${minCount} ${minCount > 1 ? 'minutes' : 'minute'} here, that's ${hourCount} ${hourCount > 1 ? 'hours' : 'hour'}, ${dayCount} ${
+            dayCount > 1 ? 'days' : 'day'
+        } or ${weekCount} ${weekCount > 1 ? 'weeks' : 'week'}! During this time, he could have:
             - read ${bookCount} ${bookCount > 1 ? 'books' : 'book'} 📖
             - watched ${movieCount} ${movieCount > 1 ? 'movies' : 'movie'} 🎥
             - run ${marathonCount} ${marathonCount > 1 ? 'marathons' : 'marathon'} 🏃        
@@ -55,7 +56,7 @@ export class StatsPlugin extends RoomPlugin {
 
         await this.room.sendMessage({
             content: `${messageContent}`,
-            user: UserController.getNeutralUser()
+            user: UserController.getNeutralUser(),
         });
     }
 }

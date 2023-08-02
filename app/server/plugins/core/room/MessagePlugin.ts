@@ -5,7 +5,6 @@ import { RoomPlugin } from '../../RoomPlugin';
 import { DatabaseHelper } from '../../../skychat/DatabaseHelper';
 import SQL from 'sql-template-strings';
 
-
 export class MessagePlugin extends RoomPlugin {
     static readonly commandName = 'message';
 
@@ -14,7 +13,7 @@ export class MessagePlugin extends RoomPlugin {
     readonly hidden = true;
 
     readonly rules = {
-        message: { minCount: 1 }
+        message: { minCount: 1 },
     };
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
@@ -33,7 +32,7 @@ export class MessagePlugin extends RoomPlugin {
             quoted = await this.room.getMessageById(quoteId);
 
             // Otherwise, try to find the quoted message in the database
-            quoted = quoted || await MessageController.getMessageById(quoteId);
+            quoted = quoted || (await MessageController.getMessageById(quoteId));
 
             // If quote found, remote the quote string from the message
             if (quoted) {
@@ -42,17 +41,18 @@ export class MessagePlugin extends RoomPlugin {
 
             // If message is private
             const room = quoted.room !== null ? this.room.manager.getRoomById(quoted.room) : null;
-            if (! room || (room.isPrivate && this.room.id !== room.id)) {
+            if (!room || (room.isPrivate && this.room.id !== room.id)) {
                 quoted = null;
             }
         }
 
         // If the last N messages in this room are from the same user, we merge the messages
         const lastMessages = this.room.messages.slice(-Config.PREFERENCES.maxConsecutiveMessages);
-        const matchingMessages = lastMessages.filter(m => m.user.username.toLowerCase() === connection.session.user.username.toLowerCase());
+        const matchingMessages = lastMessages.filter((m) => m.user.username.toLowerCase() === connection.session.user.username.toLowerCase());
         const tooManyMessages = matchingMessages.length === Config.PREFERENCES.maxConsecutiveMessages && matchingMessages.length === lastMessages.length;
-        const lastMessageTooRecent = lastMessages.length > 0 && (new Date().getTime() - lastMessages[lastMessages.length - 1].createdTime.getTime()) < Config.PREFERENCES.maxMessageMergeDelayMin * 60 * 1000;
-        if (! quoted && tooManyMessages && lastMessageTooRecent) {
+        const lastMessageTooRecent =
+            lastMessages.length > 0 && new Date().getTime() - lastMessages[lastMessages.length - 1].createdTime.getTime() < Config.PREFERENCES.maxMessageMergeDelayMin * 60 * 1000;
+        if (!quoted && tooManyMessages && lastMessageTooRecent) {
             const lastMessage = lastMessages[lastMessages.length - 1];
             lastMessage.edit(lastMessage.content + '\n' + content);
             this.room.send('message-edit', lastMessage.sanitized());
@@ -65,11 +65,11 @@ export class MessagePlugin extends RoomPlugin {
             content,
             user: connection.session.user,
             quoted,
-            connection
+            connection,
         });
 
         // Update the date of the last sent message
-        if (! this.room.isPrivate) {
+        if (!this.room.isPrivate) {
             connection.session.lastPublicMessageSentDate = new Date();
         }
     }

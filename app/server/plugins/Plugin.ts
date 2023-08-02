@@ -5,12 +5,10 @@ import { User } from '../skychat/User';
 import { Room } from '../skychat/Room';
 import { UserController } from '../skychat/UserController';
 
-
 /**
  * Plugin command parameters description object
  */
 export type PluginCommandRules = {
-
     /**
      * Minimum number of expected parameters
      */
@@ -35,13 +33,11 @@ export type PluginCommandRules = {
      * Expected parameters
      */
     params?: {
-        name: string,
-        pattern: RegExp,
-        info?: string
+        name: string;
+        pattern: RegExp;
+        info?: string;
     }[];
 };
-
-
 
 /**
  * Abstract class that represents a plugin. A plugin has access to multiple points of the application through the usage
@@ -84,7 +80,7 @@ export abstract class Plugin {
     /**
      * Define command rules, ie expected parameters and cooldown. Can be defined globally or per command alias.
      */
-    public readonly rules?: {[alias: string]: PluginCommandRules};
+    public readonly rules?: { [alias: string]: PluginCommandRules };
 
     /**
      * Minimum right to execute this function
@@ -110,7 +106,7 @@ export abstract class Plugin {
      *
      * @param room
      */
-    private readonly coolDownEntries: {[identifier: string]: {first: Date, last: Date, count: number}} = {};
+    private readonly coolDownEntries: { [identifier: string]: { first: Date; last: Date; count: number } } = {};
 
     /**
      * This plugin's persistent storage
@@ -121,7 +117,7 @@ export abstract class Plugin {
      * Save this plugin's data to the disk
      */
     protected syncStorage(): void {
-        if (! this.storage) {
+        if (!this.storage) {
             return;
         }
         fs.mkdirSync(this.getStoragePath(), { recursive: true });
@@ -176,7 +172,7 @@ export abstract class Plugin {
      */
     public check(alias: string, param: string, connection: Connection) {
         // Check room
-        if (! connection.room) {
+        if (!connection.room) {
             throw new Error('This command needs to be executed in a room');
         }
 
@@ -189,7 +185,7 @@ export abstract class Plugin {
         }
 
         // Check op
-        if (this.opOnly && ! connection.session.isOP()) {
+        if (this.opOnly && !connection.session.isOP()) {
             throw new Error('Command is only for op');
         }
 
@@ -230,7 +226,7 @@ export abstract class Plugin {
                 this.coolDownEntries[identifier] = { first: new Date(), last: new Date(), count: 1 };
             } else {
                 this.coolDownEntries[identifier].last = new Date();
-                this.coolDownEntries[identifier].count ++;
+                this.coolDownEntries[identifier].count++;
             }
 
             // Check parameter count
@@ -241,8 +237,8 @@ export abstract class Plugin {
             }
 
             // Check parameter format
-            for (let i = 0; i < Math.min(params.length, splitParams.length); ++ i) {
-                if (! params[i].pattern.exec(splitParams[i])) {
+            for (let i = 0; i < Math.min(params.length, splitParams.length); ++i) {
+                if (!params[i].pattern.exec(splitParams[i])) {
                     throw new Error('Invalid format for ' + params[i].name);
                 }
             }
@@ -263,14 +259,7 @@ export abstract class Plugin {
     /**
      * Plugin implementation
      */
-    public abstract run(
-        alias: string,
-        param: string,
-        connection: Connection,
-        session: Session,
-        user: User,
-        room: Room | null
-    ): Promise<void>;
+    public abstract run(alias: string, param: string, connection: Connection, session: Session, user: User, room: Room | null): Promise<void>;
 
     /**
      * When binary data is received

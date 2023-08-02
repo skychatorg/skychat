@@ -5,7 +5,6 @@ import { MessageFormatter } from '../../../skychat/MessageFormatter';
 import { Config } from '../../../skychat/Config';
 import { BinaryMessageTypes } from '../../../../api/BinaryMessageTypes';
 
-
 export class AudioRecorderPlugin extends GlobalPlugin {
     // Maximum number of recordings to keep in memory
     public static MAX_RECORDING_CACHED = 32;
@@ -21,13 +20,13 @@ export class AudioRecorderPlugin extends GlobalPlugin {
         audio: {
             minCount: 1,
             maxCount: 1,
-            params: [{ name: 'audio id', pattern: /^[0-9]+$/, info: 'Id of the audio to play' }]
+            params: [{ name: 'audio id', pattern: /^[0-9]+$/, info: 'Id of the audio to play' }],
         },
     };
 
     private currentEntryId = 0;
 
-    public entries: { [id: number]: { buffer: Buffer, user: User } } = {};
+    public entries: { [id: number]: { buffer: Buffer; user: User } } = {};
 
     /**
      * Send an audio recording to the client
@@ -37,7 +36,7 @@ export class AudioRecorderPlugin extends GlobalPlugin {
      */
     async run(alias: string, param: string, connection: Connection): Promise<void> {
         const entry = this.entries[parseInt(param)];
-        if (! entry) {
+        if (!entry) {
             throw new Error('Audio entry not found');
         }
         connection.webSocket.send(entry.buffer);
@@ -65,11 +64,11 @@ export class AudioRecorderPlugin extends GlobalPlugin {
             throw new Error('You need to be in a room to send audio files');
         }
         const room = this.manager.getRoomById(roomId);
-        if (! room) {
+        if (!room) {
             throw new Error('Room does not exist');
         }
 
-        ++ this.currentEntryId;
+        ++this.currentEntryId;
 
         // Send the message to the room
         const content = `[[play audio//audio ${this.currentEntryId}]]`;
@@ -79,8 +78,8 @@ export class AudioRecorderPlugin extends GlobalPlugin {
             user: connection.session.user,
             connection,
             meta: {
-                audio: this.currentEntryId
-            }
+                audio: this.currentEntryId,
+            },
         });
 
         // Create new buffer entry, which will be sent as-is to the client
@@ -100,7 +99,7 @@ export class AudioRecorderPlugin extends GlobalPlugin {
 
         // Update last interaction dates
         connection.session.lastInteractionDate = new Date();
-        if (! room.isPrivate) {
+        if (!room.isPrivate) {
             connection.session.lastPublicMessageSentDate = new Date();
         }
 

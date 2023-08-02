@@ -4,8 +4,6 @@ import { VideoInfo } from '../PlayerChannel';
 import { PlayerPlugin } from '../PlayerPlugin';
 import { VideoFetcher } from './VideoFetcher';
 
-
-
 export class YoutubeFetcher implements VideoFetcher {
     /**
      * Get the duration in seconds from the youtube duration
@@ -16,10 +14,10 @@ export class YoutubeFetcher implements VideoFetcher {
             return 0;
         }
         durationStr = durationStr.substr(2);
-        const all_titles: {[key: string]: number} = {
-            'h': 3600,
-            'm': 60,
-            's': 1
+        const all_titles: { [key: string]: number } = {
+            h: 3600,
+            m: 60,
+            s: 1,
         };
         let duration = 0;
         for (const i in all_titles) {
@@ -36,7 +34,7 @@ export class YoutubeFetcher implements VideoFetcher {
      * @param link
      * @returns
      */
-    public static parseYoutubeLink(link: string): {videoId: string, playlistId: string | null, start: number} {
+    public static parseYoutubeLink(link: string): { videoId: string; playlistId: string | null; start: number } {
         let match: RegExpMatchArray | null;
 
         // If the link contains a playlist
@@ -98,7 +96,7 @@ export class YoutubeFetcher implements VideoFetcher {
             return [video];
         } else if (type === 'playlist') {
             let { playlistId } = YoutubeFetcher.parseYoutubeLink(link);
-            if (! playlistId) {
+            if (!playlistId) {
                 playlistId = link;
             }
             return this.getYoutubePlaylistMeta(playlistId);
@@ -120,19 +118,21 @@ export class YoutubeFetcher implements VideoFetcher {
             part: ['snippet'],
         });
         const items = result?.data?.items;
-        if (! items || items.length === 0) {
+        if (!items || items.length === 0) {
             throw new Error('No result found');
         }
         return items
-            .filter(item => item.id
-                && (item.id.videoId || item.id.playlistId)
-                && item.snippet
-                && item.snippet.title
-                && item.snippet.thumbnails
-                && item.snippet.thumbnails.default
-                && item.snippet.thumbnails.default.url
+            .filter(
+                (item) =>
+                    item.id &&
+                    (item.id.videoId || item.id.playlistId) &&
+                    item.snippet &&
+                    item.snippet.title &&
+                    item.snippet.thumbnails &&
+                    item.snippet.thumbnails.default &&
+                    item.snippet.thumbnails.default.url,
             )
-            .map(item => {
+            .map((item) => {
                 return {
                     type: 'youtube',
                     id: (item.id!.videoId || item.id!.playlistId) as string,
@@ -158,13 +158,21 @@ export class YoutubeFetcher implements VideoFetcher {
             maxResults: 1,
         });
         // If no result
-        if (! result.data.items || result.data.items.length === 0) {
+        if (!result.data.items || result.data.items.length === 0) {
             throw new Error(`Video ${id} not found`);
         }
         // Get item object
         const item = result.data.items[0];
         // If data is missing
-        if (! item.contentDetails || ! item.contentDetails.duration || ! item.snippet || ! item.snippet.title || ! item.snippet.thumbnails || ! item.snippet.thumbnails.medium || ! item.snippet.thumbnails.medium.url) {
+        if (
+            !item.contentDetails ||
+            !item.contentDetails.duration ||
+            !item.snippet ||
+            !item.snippet.title ||
+            !item.snippet.thumbnails ||
+            !item.snippet.thumbnails.medium ||
+            !item.snippet.thumbnails.medium.url
+        ) {
             throw new Error('Unable to load item info');
         }
         // Get important video data & return it
@@ -183,15 +191,12 @@ export class YoutubeFetcher implements VideoFetcher {
         const result = await this.youtube.playlistItems.list({
             part: ['contentDetails'],
             playlistId: id,
-            maxResults: 50
+            maxResults: 50,
         });
-        if (! result?.data?.items?.length) {
+        if (!result?.data?.items?.length) {
             throw new Error('No result found for ' + id);
         }
-        const videoIds: string[] = result
-            .data.items
-            .filter(item => item.contentDetails && item.contentDetails.videoId)
-            .map(item => item.contentDetails!.videoId as string);
+        const videoIds: string[] = result.data.items.filter((item) => item.contentDetails && item.contentDetails.videoId).map((item) => item.contentDetails!.videoId as string);
         const videos = [];
         for (const videoId of videoIds) {
             videos.push(await this.getVideoInfo(videoId));

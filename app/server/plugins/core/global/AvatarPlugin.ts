@@ -7,7 +7,6 @@ import { FileManager } from '../../../skychat/FileManager';
 import { Server } from '../../../skychat/Server';
 import { GlobalPlugin } from '../../GlobalPlugin';
 
-
 export class AvatarPlugin extends GlobalPlugin {
     static readonly DEFAULT_AVATAR: string = Config.LOCATION + '/assets/images/avatars/default.png';
 
@@ -28,15 +27,15 @@ export class AvatarPlugin extends GlobalPlugin {
                 {
                     name: 'avatar',
                     pattern: Server.UPLOADED_FILE_REGEXP,
-                    info: 'Image link'
-                }
-            ]
-        }
+                    info: 'Image link',
+                },
+            ],
+        },
     };
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
         // Check that the given image exists
-        if (! FileManager.uploadedFileExists(param)) {
+        if (!FileManager.uploadedFileExists(param)) {
             throw new Error('Given image does not exist');
         }
 

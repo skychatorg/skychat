@@ -4,8 +4,6 @@ import { Poll, PollOptions } from './Poll';
 import { Config } from '../../../skychat/Config';
 import { GlobalPlugin } from '../../GlobalPlugin';
 
-
-
 export class PollPlugin extends GlobalPlugin {
     public static readonly POLL_CREATION_COOL_DOWN: number = 60 * 1000;
 
@@ -23,14 +21,17 @@ export class PollPlugin extends GlobalPlugin {
         poll: {
             minCount: 1,
             coolDown: PollPlugin.POLL_CREATION_COOL_DOWN,
-            params: [{ name: 'content', pattern: /./ }]
+            params: [{ name: 'content', pattern: /./ }],
         },
         vote: {
             minCount: 2,
             maxCount: 2,
             maxCallsPer10Seconds: 4,
-            params: [{ name: 'poll id', pattern: Plugin.POSITIVE_INTEGER_REGEXP }, { name: 'answer', pattern: /^([yn])$/ }]
-        }
+            params: [
+                { name: 'poll id', pattern: Plugin.POSITIVE_INTEGER_REGEXP },
+                { name: 'answer', pattern: /^([yn])$/ },
+            ],
+        },
     };
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
@@ -50,14 +51,11 @@ export class PollPlugin extends GlobalPlugin {
      * @param connection
      */
     private async handlePoll(param: string, connection: Connection) {
-        await this.poll(
-            `${connection.session.user.username} asks:`,
-            param,
-            {
-                audience: connection.room ? connection.room : '*',
-                defaultValue: undefined,
-                timeout: PollPlugin.POLL_TIMEOUT
-            });
+        await this.poll(`${connection.session.user.username} asks:`, param, {
+            audience: connection.room ? connection.room : '*',
+            defaultValue: undefined,
+            timeout: PollPlugin.POLL_TIMEOUT,
+        });
     }
 
     /**
@@ -71,7 +69,7 @@ export class PollPlugin extends GlobalPlugin {
         const pollId = parseInt(rawPollId);
         const vote = rawVote[0] === 'y';
         const poll = this.polls[pollId];
-        if (! poll) {
+        if (!poll) {
             throw new Error('Poll does not exist');
         }
         // Vote

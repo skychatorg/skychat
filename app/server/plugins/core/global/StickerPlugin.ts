@@ -5,7 +5,6 @@ import fs from 'fs';
 import { Config } from '../../../skychat/Config';
 import { StickerManager } from '../../../skychat/StickerManager';
 
-
 export class StickerPlugin extends GlobalPlugin {
     static readonly commandName = 'sticker';
 
@@ -20,16 +19,14 @@ export class StickerPlugin extends GlobalPlugin {
             maxCount: 2,
             params: [
                 { name: 'code', pattern: StickerManager.STICKER_CODE_REGEXP },
-                { name: 'url', pattern: Server.UPLOADED_FILE_REGEXP }
-            ]
+                { name: 'url', pattern: Server.UPLOADED_FILE_REGEXP },
+            ],
         },
         stickerdel: {
             minCount: 1,
             maxCount: 1,
-            params: [
-                { name: 'code', pattern: StickerManager.STICKER_CODE_REGEXP },
-            ]
-        }
+            params: [{ name: 'code', pattern: StickerManager.STICKER_CODE_REGEXP }],
+        },
     };
 
     /**
@@ -57,7 +54,7 @@ export class StickerPlugin extends GlobalPlugin {
      */
     private async handleStickerAdd(param: string): Promise<void> {
         const [code, url] = param.split(' ');
-        if (! FileManager.isFileUrlUploaded(url)) {
+        if (!FileManager.isFileUrlUploaded(url)) {
             throw new Error('Given sticker is not an uploaded image');
         }
         if (StickerManager.stickerExists(code)) {
@@ -80,7 +77,7 @@ export class StickerPlugin extends GlobalPlugin {
      * @param connection
      */
     private async handleStickerDelete(code: string): Promise<void> {
-        if (! StickerManager.stickerExists(code)) {
+        if (!StickerManager.stickerExists(code)) {
             throw new Error('Given sticker does not exist');
         }
         const stickerUrl = StickerManager.getStickerUrl(code);

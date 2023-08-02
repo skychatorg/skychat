@@ -1,8 +1,22 @@
 import WebSocket from 'isomorphic-ws';
 import { EventEmitter } from 'events';
 import { BinaryMessageTypes } from './BinaryMessageTypes';
-import { PublicConfig, CustomizationElements, SanitizedMessage, SanitizedUser, AuthToken, SanitizedSession, SanitizedRoom, SanitizedPoll, SanitizedPlayerChannel, VideoInfo, QueuedVideoInfo, FolderContent, VideoStreamInfo, OngoingConvert } from '../server';
-
+import {
+    PublicConfig,
+    CustomizationElements,
+    SanitizedMessage,
+    SanitizedUser,
+    AuthToken,
+    SanitizedSession,
+    SanitizedRoom,
+    SanitizedPoll,
+    SanitizedPlayerChannel,
+    VideoInfo,
+    QueuedVideoInfo,
+    FolderContent,
+    VideoStreamInfo,
+    OngoingConvert,
+} from '../server';
 
 const defaultUser: SanitizedUser = {
     id: 0,
@@ -12,16 +26,14 @@ const defaultUser: SanitizedUser = {
     right: -1,
     data: {
         plugins: {
-            custom: { },
+            custom: {},
             avatar: '',
             motto: '',
-        }
-    }
+        },
+    },
 };
 
-
 export declare interface SkyChatClient {
-
     on(event: 'config', listener: (config: PublicConfig) => any): this;
     on(event: 'custom', listener: (custom: CustomizationElements) => any): this;
     on(event: 'set-user', listener: (user: SanitizedUser) => any): this;
@@ -33,9 +45,9 @@ export declare interface SkyChatClient {
     on(event: 'message', listener: (message: SanitizedMessage) => any): this;
     on(event: 'messages', listener: (messages: Array<SanitizedMessage>) => any): this;
     on(event: 'message-edit', listener: (message: SanitizedMessage) => any): this;
-    on(event: 'message-seen', listener: (data: { user: number, data: any }) => any): this;
+    on(event: 'message-seen', listener: (data: { user: number; data: any }) => any): this;
     on(event: 'poll', listener: (poll: SanitizedPoll) => any): this;
-    on(event: 'cursor', listener: (cursor: { x: number, y: number, user: SanitizedUser }) => any): this;
+    on(event: 'cursor', listener: (cursor: { x: number; y: number; user: SanitizedUser }) => any): this;
     on(event: 'roll', listener: (roll: { state: boolean }) => any): this;
 
     on(event: 'error', listener: (message: string) => any): this;
@@ -49,8 +61,8 @@ export declare interface SkyChatClient {
 
     on(event: 'player-channels', listener: (playerChannels: Array<SanitizedPlayerChannel>) => any): this;
     on(event: 'player-channel', listener: (channelId: number | null) => any): this;
-    on(event: 'player-search', listener: (data: { type: string, items: Array<VideoInfo> }) => any): this;
-    on(event: 'player-sync', listener: (data: { current: QueuedVideoInfo | null, queue: QueuedVideoInfo[], cursor: number }) => any): this;
+    on(event: 'player-search', listener: (data: { type: string; items: Array<VideoInfo> }) => any): this;
+    on(event: 'player-sync', listener: (data: { current: QueuedVideoInfo | null; queue: QueuedVideoInfo[]; cursor: number }) => any): this;
 }
 
 export class SkyChatClient extends EventEmitter {
@@ -62,7 +74,7 @@ export class SkyChatClient extends EventEmitter {
 
     private _user: SanitizedUser = defaultUser;
     private _config: PublicConfig | null = null;
-    private _custom: CustomizationElements = { };
+    private _custom: CustomizationElements = {};
     private _token: AuthToken | null = null;
     private _connectedList: Array<SanitizedSession> = [];
     private _messageIdToLastSeenUsers: { [id: number]: Array<SanitizedUser> } = {};
@@ -72,19 +84,19 @@ export class SkyChatClient extends EventEmitter {
     private _currentRoomId: number | null = null;
     private _typingList: Array<SanitizedUser> = [];
     private _polls: { [id: number]: SanitizedPoll } = {};
-    private _cursors: { [identifier: string]: { date: Date, cursor: { x: number, y: number, user: SanitizedUser } } } = {};
+    private _cursors: { [identifier: string]: { date: Date; cursor: { x: number; y: number; user: SanitizedUser } } } = {};
     private _roll: { state: boolean } = { state: false };
     private _op = false;
     private _files: Array<string> = [];
-    private _file: { filePath: string, content: string } | null = null;
+    private _file: { filePath: string; content: string } | null = null;
     private _gallery: FolderContent | null = null;
     private _videoStreamInfo: VideoStreamInfo | null = null;
     private _ongoingConverts: Array<OngoingConvert> = [];
     private _playerChannels: Array<SanitizedPlayerChannel> = [];
     private _currentPlayerChannelId: number | null = null;
     private _currentPlayerChannel: SanitizedPlayerChannel | null = null;
-    private _playerApiSearchResult: { type: string, items: Array<VideoInfo> } | null = null;
-    private _player: { current: QueuedVideoInfo | null, queue: QueuedVideoInfo[], cursor: number } = { current: null, queue: [], cursor: 0 };
+    private _playerApiSearchResult: { type: string; items: Array<VideoInfo> } | null = null;
+    private _player: { current: QueuedVideoInfo | null; queue: QueuedVideoInfo[]; cursor: number } = { current: null, queue: [], cursor: 0 };
     private _playerLastUpdate: Date | null = null;
 
     constructor(public readonly url: string) {
@@ -169,11 +181,11 @@ export class SkyChatClient extends EventEmitter {
      * Update link from message ids to users whose last seen message is this message
      */
     private _generateMessageIdToLastSeenUsers() {
-        const messageIdToLastSeenUsers: {[id: number]: Array<SanitizedUser>} = {};
+        const messageIdToLastSeenUsers: { [id: number]: Array<SanitizedUser> } = {};
         const roomId = this._currentRoomId;
         for (const entry of this._connectedList) {
             const entries: any = entry.user.data.plugins.lastseen;
-            if (roomId === null || ! entries || ! entries[roomId]) {
+            if (roomId === null || !entries || !entries[roomId]) {
                 continue;
             }
             const lastSeenId = entries[roomId];
@@ -189,8 +201,8 @@ export class SkyChatClient extends EventEmitter {
      * Update list of connected users / rooms and player channels
      */
     private _generateRoomConnectedUsersAndPlayerChannelUsers() {
-        const roomConnectedUsers: {[id: number]: Array<SanitizedUser>} = {};
-        const playerChannelUsers: {[id: number]: Array<SanitizedUser>} = {};
+        const roomConnectedUsers: { [id: number]: Array<SanitizedUser> } = {};
+        const playerChannelUsers: { [id: number]: Array<SanitizedUser> } = {};
         for (const entry of this._connectedList) {
             // Update room entries
             for (const roomId of entry.rooms) {
@@ -213,7 +225,7 @@ export class SkyChatClient extends EventEmitter {
 
     private _updateConnectedListMeta() {
         // Update self entry
-        const ownUser = this._connectedList.find(entry => entry.user.username === this._user.username);
+        const ownUser = this._connectedList.find((entry) => entry.user.username === this._user.username);
         if (ownUser) {
             this._user = ownUser.user;
         }
@@ -238,9 +250,9 @@ export class SkyChatClient extends EventEmitter {
         this.emit('update', this.state);
     }
 
-    private _onMessageSeen(messageSeen: { user: number, data: any }) {
-        const entry = this._connectedList.find(e => e.user.id === messageSeen.user);
-        if (! entry) {
+    private _onMessageSeen(messageSeen: { user: number; data: any }) {
+        const entry = this._connectedList.find((e) => e.user.id === messageSeen.user);
+        if (!entry) {
             return;
         }
         entry.user.data.plugins.lastseen = messageSeen.data;
@@ -259,7 +271,7 @@ export class SkyChatClient extends EventEmitter {
         }
     }
 
-    private _onCursor(cursor: { x: number, y: number, user: SanitizedUser }) {
+    private _onCursor(cursor: { x: number; y: number; user: SanitizedUser }) {
         const identifier = cursor.user.username.toLowerCase();
         this._cursors[identifier] = { date: new Date(), cursor };
         // Clean up the cursors
@@ -311,7 +323,7 @@ export class SkyChatClient extends EventEmitter {
             this.emit('update', this.state);
             return;
         }
-        const playerChannel = this._playerChannels.find(channel => channel.id === currentPlayerChannelId);
+        const playerChannel = this._playerChannels.find((channel) => channel.id === currentPlayerChannelId);
         if (typeof playerChannel === 'undefined') {
             throw new Error('Player channel not found');
         }
@@ -320,12 +332,12 @@ export class SkyChatClient extends EventEmitter {
         this.emit('update', this.state);
     }
 
-    private _onPlayerApiSearchResults(playerApiSearchResult: { type: string, items: Array<VideoInfo> }) {
+    private _onPlayerApiSearchResults(playerApiSearchResult: { type: string; items: Array<VideoInfo> }) {
         this._playerApiSearchResult = playerApiSearchResult;
         this.emit('update', this.state);
     }
 
-    private _onPlayerSync(player: { current: QueuedVideoInfo | null, queue: QueuedVideoInfo[], cursor: number }) {
+    private _onPlayerSync(player: { current: QueuedVideoInfo | null; queue: QueuedVideoInfo[]; cursor: number }) {
         this._player = player;
         this._playerLastUpdate = new Date();
         this.emit('update', this.state);
@@ -356,7 +368,7 @@ export class SkyChatClient extends EventEmitter {
             playerChannelUsers: this._playerChannelUsers,
             rooms: this._rooms,
             currentRoomId: this._currentRoomId,
-            currentRoom: this._rooms.find(room => room.id === this._currentRoomId) || null,
+            currentRoom: this._rooms.find((room) => room.id === this._currentRoomId) || null,
             typingList: this._typingList,
             polls: this._polls,
             cursors: this._cursors,
@@ -407,7 +419,7 @@ export class SkyChatClient extends EventEmitter {
      * Send anything (blob, binary)
      */
     _sendRaw(data: any) {
-        if (! this._websocket) {
+        if (!this._websocket) {
             return;
         }
         this._websocket.send(data);
@@ -418,10 +430,7 @@ export class SkyChatClient extends EventEmitter {
      * @param blob
      */
     sendAudio(blob: Blob) {
-        this._sendRaw(new Blob([
-            new Uint16Array([BinaryMessageTypes.AUDIO]),
-            blob
-        ]));
+        this._sendRaw(new Blob([new Uint16Array([BinaryMessageTypes.AUDIO]), blob]));
     }
 
     /**
@@ -430,13 +439,10 @@ export class SkyChatClient extends EventEmitter {
      * @param y
      */
     sendCursorPosition(x: number, y: number) {
-        if (! this._user || ! this._user.id) {
+        if (!this._user || !this._user.id) {
             return;
         }
-        this._sendRaw(new Blob([
-            new Uint16Array([BinaryMessageTypes.CURSOR]),
-            new Float32Array([x, y]),
-        ]));
+        this._sendRaw(new Blob([new Uint16Array([BinaryMessageTypes.CURSOR]), new Float32Array([x, y])]));
     }
 
     /**
@@ -483,13 +489,15 @@ export class SkyChatClient extends EventEmitter {
      * @param payload
      */
     private _sendEvent(eventName: string, payload: any) {
-        if (! this._websocket) {
+        if (!this._websocket) {
             return;
         }
-        this._websocket.send(JSON.stringify({
-            event: eventName,
-            data: payload
-        }));
+        this._websocket.send(
+            JSON.stringify({
+                event: eventName,
+                data: payload,
+            }),
+        );
     }
 
     /**
@@ -515,7 +523,7 @@ export class SkyChatClient extends EventEmitter {
             messageData = new Blob([message.data]);
         }
         // If raw audio received
-        if (messageData && messageData.constructor === Blob || (typeof Buffer !== 'undefined' && messageData.constructor === Buffer)) {
+        if ((messageData && messageData.constructor === Blob) || (typeof Buffer !== 'undefined' && messageData.constructor === Buffer)) {
             // Read message type, which is the first 2 bytes (UInt16)
             const buffer = await messageData.arrayBuffer();
             const view = new DataView(buffer);
@@ -529,7 +537,7 @@ export class SkyChatClient extends EventEmitter {
                 const id = view.getUint32(2, true);
                 const x = view.getFloat32(6, true);
                 const y = view.getFloat32(10, true);
-                const entry = this._connectedList.find(entry => entry.user.id === id);
+                const entry = this._connectedList.find((entry) => entry.user.id === id);
                 this.emit('cursor', {
                     user: entry ? entry.user : defaultUser,
                     x,

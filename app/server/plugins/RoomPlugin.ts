@@ -3,7 +3,6 @@ import { Message } from '../skychat/Message';
 import { Plugin } from './Plugin';
 import { Room } from '../skychat/Room';
 
-
 export abstract class RoomPlugin extends Plugin {
     /**
      * Some plugins (i.e. plugin to ban users) are globally available.
@@ -82,7 +81,6 @@ export abstract class RoomPlugin extends Plugin {
         void 0;
     }
 }
-
 
 /**
  * Defines default constructor for a room plugin (required for TypeScript)

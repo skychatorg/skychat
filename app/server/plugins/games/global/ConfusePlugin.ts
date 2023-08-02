@@ -5,7 +5,6 @@ import { User } from '../../../skychat/User';
 import { UserController } from '../../../skychat/UserController';
 import { GlobalPlugin } from '../../GlobalPlugin';
 
-
 export class ConfusePlugin extends GlobalPlugin {
     static readonly COST = 2 * 100;
 
@@ -24,15 +23,15 @@ export class ConfusePlugin extends GlobalPlugin {
                 {
                     name: 'username',
                     pattern: User.USERNAME_REGEXP,
-                    info: 'Target username'
-                }
-            ]
-        }
+                    info: 'Target username',
+                },
+            ],
+        },
     };
 
     // We are not using a Set so that it can be serialized
     protected storage: { confused: { [username: string]: boolean } } = {
-        confused: {}
+        confused: {},
     };
 
     constructor(manager: RoomManager) {
@@ -82,9 +81,9 @@ export class ConfusePlugin extends GlobalPlugin {
 
         // Notify everyone but the user who is sandalized
         const messageContent = `${connection.session.identifier} confused ${identifier} 🤯 (cost: $${ConfusePlugin.COST / 100})`;
-        const message = UserController.createNeutralMessage({ id: 0, content: messageContent, });
+        const message = UserController.createNeutralMessage({ id: 0, content: messageContent });
         if (connection.room) {
-            connection.room.connections.forEach(c => {
+            connection.room.connections.forEach((c) => {
                 if (c.session.identifier === identifier) {
                     return;
                 }
@@ -100,11 +99,7 @@ export class ConfusePlugin extends GlobalPlugin {
      * @param connection
      */
     public async onNewMessageHook(message: string, connection: Connection): Promise<string> {
-        if (
-            message.indexOf('/message') === 0
-            && message.split(' ').length > 2
-            && this.isConfused(connection.session.identifier)
-        ) {
+        if (message.indexOf('/message') === 0 && message.split(' ').length > 2 && this.isConfused(connection.session.identifier)) {
             // Re-order all words randomly
             const words = message.split(' ').slice(1);
             words.sort(() => Math.random() - 0.5);

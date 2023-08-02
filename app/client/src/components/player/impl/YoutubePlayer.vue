@@ -11,7 +11,7 @@ const src = ref('');
 const previousVideoHash = ref(null);
 
 const updateSrc = () => {
-    if (! client.state.player.current) {
+    if (!client.state.player.current) {
         return;
     }
 
@@ -34,22 +34,14 @@ const updateSrc = () => {
 
     // Save new hash
     previousVideoHash.value = videoHash;
-}
+};
 
 watch(() => client.state.player.current && client.state.player.current.video, updateSrc);
 onMounted(updateSrc);
-
 </script>
 
 <template>
-    <iframe
-        ref="player"
-        class="h-full w-full"
-        :src="src"
-        frameborder="0"
-        allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
-        allowfullscreen></iframe>
+    <iframe ref="player" class="h-full w-full" :src="src" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </template>
 
-<style scoped>
-</style>
+<style scoped></style>

@@ -12,13 +12,12 @@ import { GlobalPlugin } from '../plugins/GlobalPlugin';
 import { globalPluginGroup } from '../plugins/GlobalPluginGroup';
 import { MessageFormatter } from './MessageFormatter';
 
-
 export type StoredSkyChat = {
     guestId: number;
     messageId: number;
     roomId: number;
     rooms: number[];
-}
+};
 
 /**
  * The room manager
@@ -37,7 +36,7 @@ export class RoomManager {
     /**
      * Plugins. All aliases of a command/plugin points to the same command instance.
      */
-    commands: {[commandName: string]: GlobalPlugin} = {};
+    commands: { [commandName: string]: GlobalPlugin } = {};
 
     /**
      * Plugins
@@ -57,43 +56,51 @@ export class RoomManager {
         }
 
         // Load last messages from all rooms (do not wait on it)
-        Promise.all(this.rooms.map(room => room.loadLastMessagesFromDB()));
+        Promise.all(this.rooms.map((room) => room.loadLastMessagesFromDB()));
 
         // Load global plugins
         this.plugins = globalPluginGroup.instantiateGlobalPlugins(this);
-        this.commands = globalPluginGroup.extractCommandObjectFromPlugins(this.plugins) as {[commandName: string]: GlobalPlugin};
+        this.commands = globalPluginGroup.extractCommandObjectFromPlugins(this.plugins) as { [commandName: string]: GlobalPlugin };
 
         // Register hooks
         this.server.onConnectionCreated = this.onConnectionCreated.bind(this);
 
         // On register
         this.server.registerEvent(
-            'register', this.onRegister.bind(this),
-            500, 2, // 0.5 second cooldown, max 2 attempts / minute
+            'register',
+            this.onRegister.bind(this),
+            500,
+            2, // 0.5 second cooldown, max 2 attempts / minute
             new iof.ObjectFilter({
                 username: new iof.RegExpFilter(User.USERNAME_LOGGED_REGEXP),
                 password: new iof.RegExpFilter(/^.{4,512}$/),
-            }));
+            }),
+        );
 
         // Login by username & password
         this.server.registerEvent(
-            'login', this.onLogin.bind(this),
-            500, 5, // 0.5 second cooldown, max 5 attempts / minute
+            'login',
+            this.onLogin.bind(this),
+            500,
+            5, // 0.5 second cooldown, max 5 attempts / minute
             new iof.ObjectFilter({
                 username: new iof.RegExpFilter(User.USERNAME_LOGGED_REGEXP),
                 password: new iof.RegExpFilter(/^.{4,512}$/),
-            }));
+            }),
+        );
 
         // Login using token
         this.server.registerEvent(
             'set-token',
             this.onSetToken.bind(this),
-            0, 30, // no cooldown, max 30 attemtps / minute
+            0,
+            30, // no cooldown, max 30 attemtps / minute
             new iof.ObjectFilter({
                 userId: new iof.NumberFilter(1, Infinity, false),
-                timestamp: new iof.NumberFilter(- Infinity, Infinity, false),
+                timestamp: new iof.NumberFilter(-Infinity, Infinity, false),
                 signature: new iof.ValueTypeFilter('string'),
-            }));
+            }),
+        );
 
         // Join a room
         this.server.registerEvent('join-room', this.onJoinRoom.bind(this), 0, 120, new iof.ObjectFilter({ roomId: new iof.NumberFilter(0, Infinity, false) }));
@@ -102,13 +109,17 @@ export class RoomManager {
         this.server.registerEvent('message', this.onMessage.bind(this), 0, Infinity, 'string');
 
         // On audio received
-        this.server.registerEvent('binary-message', this.onBinaryMessage.bind(this), 0, 180, new iof.ObjectFilter({ type: new iof.NumberFilter(0, Infinity, false), data: new iof.ValueTypeFilter('object') }));
+        this.server.registerEvent(
+            'binary-message',
+            this.onBinaryMessage.bind(this),
+            0,
+            180,
+            new iof.ObjectFilter({ type: new iof.NumberFilter(0, Infinity, false), data: new iof.ValueTypeFilter('object') }),
+        );
 
         // Periodically send the room list to users
         setInterval(() => {
-            Object
-                .values(Session.sessions)
-                .map(session => this.sendRoomList(session));
+            Object.values(Session.sessions).map((session) => this.sendRoomList(session));
         }, 20 * 1000);
 
         setInterval(this.tick.bind(this), RoomManager.TICK_INTERVAL);
@@ -118,7 +129,7 @@ export class RoomManager {
      * Try to load this room's data from disk
      */
     private load(): void {
-        if (! fs.existsSync(RoomManager.STORAGE_MAIN_FILE)) {
+        if (!fs.existsSync(RoomManager.STORAGE_MAIN_FILE)) {
             this.save();
             return;
         }
@@ -133,7 +144,7 @@ export class RoomManager {
 
         // Create rooms
         const rooms = data.rooms || [1];
-        this.rooms = rooms.map(id => new Room(this, false, id));
+        this.rooms = rooms.map((id) => new Room(this, false, id));
     }
 
     /**
@@ -146,7 +157,7 @@ export class RoomManager {
                 guestId: RoomManager.CURRENT_GUEST_ID,
                 messageId: Message.ID,
                 roomId: Room.CURRENT_ID,
-                rooms: this.rooms.map(room => room.id),
+                rooms: this.rooms.map((room) => room.id),
             };
 
             fs.writeFileSync(RoomManager.STORAGE_MAIN_FILE, JSON.stringify(data));
@@ -170,7 +181,7 @@ export class RoomManager {
      * @returns
      */
     public hasRoomId(id: number): boolean {
-        return !! this.rooms.find(room => room.id === id);
+        return !!this.rooms.find((room) => room.id === id);
     }
 
     /**
@@ -179,7 +190,7 @@ export class RoomManager {
      * @returns
      */
     public getRoomById(id: number): Room | null {
-        return this.rooms.find(room => room.id === id) || null;
+        return this.rooms.find((room) => room.id === id) || null;
     }
 
     /**
@@ -193,7 +204,7 @@ export class RoomManager {
             room.name = name;
         }
         this.rooms.push(room);
-        Object.values(Session.sessions).forEach(session => this.sendRoomList(session));
+        Object.values(Session.sessions).forEach((session) => this.sendRoomList(session));
         return room;
     }
 
@@ -203,21 +214,23 @@ export class RoomManager {
      * @returns
      */
     public findPrivateRoom(usernames: string[]): Room | null {
-        usernames = usernames.sort().map(username => username.toLowerCase());
-        return this.rooms.find(room => {
-            if (! room.isPrivate) {
-                return false;
-            }
-            if (room.whitelist.length !== usernames.length) {
-                return false;
-            }
-            for (let i = 0; i < usernames.length; ++ i) {
-                if (usernames[i] !== room.whitelist[i]) {
+        usernames = usernames.sort().map((username) => username.toLowerCase());
+        return (
+            this.rooms.find((room) => {
+                if (!room.isPrivate) {
                     return false;
                 }
-            }
-            return true;
-        }) || null;
+                if (room.whitelist.length !== usernames.length) {
+                    return false;
+                }
+                for (let i = 0; i < usernames.length; ++i) {
+                    if (usernames[i] !== room.whitelist[i]) {
+                        return false;
+                    }
+                }
+                return true;
+            }) || null
+        );
     }
 
     /**
@@ -226,15 +239,15 @@ export class RoomManager {
      */
     public createPrivateRoom(usernames: string[]) {
         usernames = usernames.sort();
-        const identifiers = usernames.map(username => username.toLowerCase());
+        const identifiers = usernames.map((username) => username.toLowerCase());
         const room = new Room(this, true);
-        identifiers.forEach(identifier => room.allow(identifier));
+        identifiers.forEach((identifier) => room.allow(identifier));
         room.name = '';
         this.rooms.push(room);
         identifiers
-            .map(identifier => Session.getSessionByIdentifier(identifier))
-            .filter(session => session instanceof Session)
-            .forEach(session => this.sendRoomList(session as Session));
+            .map((identifier) => Session.getSessionByIdentifier(identifier))
+            .filter((session) => session instanceof Session)
+            .forEach((session) => this.sendRoomList(session as Session));
         return room;
     }
 
@@ -247,17 +260,17 @@ export class RoomManager {
             throw new Error('Impossible to remote the last remaining room');
         }
         const room = this.getRoomById(id);
-        if (! room) {
+        if (!room) {
             throw new Error(`Room ${id} not found`);
         }
         // Move all connections to another room
-        const anyRoom: Room = this.rooms.find(room => room.id !== id && ! room.isPrivate) as Room;
+        const anyRoom: Room = this.rooms.find((room) => room.id !== id && !room.isPrivate) as Room;
         for (const connection of anyRoom.connections) {
             await anyRoom.attachConnection(connection);
         }
         // Remove old room
-        this.rooms = this.rooms.filter(room => room.id !== id);
-        Object.values(Session.sessions).forEach(session => this.sendRoomList(session));
+        this.rooms = this.rooms.filter((room) => room.id !== id);
+        Object.values(Session.sessions).forEach((session) => this.sendRoomList(session));
     }
 
     /**
@@ -267,7 +280,7 @@ export class RoomManager {
         if (RoomManager.CURRENT_GUEST_ID >= Math.pow(10, 10)) {
             RoomManager.CURRENT_GUEST_ID = 0;
         }
-        const guestId = ++ RoomManager.CURRENT_GUEST_ID;
+        const guestId = ++RoomManager.CURRENT_GUEST_ID;
         const randomName = Config.getRandomGuestName();
         const identifier = '*' + randomName + '#' + guestId;
         const session = new Session(identifier);
@@ -294,7 +307,7 @@ export class RoomManager {
         connectionOrSession.send(
             'room-list',
             this.rooms
-                .filter(room => ! room.isPrivate || room.whitelist.indexOf(session.identifier) !== -1)
+                .filter((room) => !room.isPrivate || room.whitelist.indexOf(session.identifier) !== -1)
                 .sort((a, b) => {
                     const getWeight = (room: Room): number => {
                         const privateValue = room.isPrivate ? 0 : 1;
@@ -304,7 +317,7 @@ export class RoomManager {
                     };
                     return getWeight(b) - getWeight(a);
                 })
-                .map(room => room.sanitized())
+                .map((room) => room.sanitized()),
         );
     }
 
@@ -350,7 +363,6 @@ export class RoomManager {
         }
     }
 
-
     /**
      * Called each time a new connection is created
      * @param connection
@@ -383,12 +395,12 @@ export class RoomManager {
         }
     }
 
-    private async onJoinRoom(payload: {roomId: number}, connection: Connection): Promise<void> {
+    private async onJoinRoom(payload: { roomId: number }, connection: Connection): Promise<void> {
         if (typeof payload.roomId !== 'number') {
             throw new Error('Invalid room specified');
         }
         const room = this.getRoomById(payload.roomId);
-        if (! room) {
+        if (!room) {
             throw new Error('Invalid room specified');
         }
         if (room.isPrivate) {
@@ -416,7 +428,7 @@ export class RoomManager {
         } else {
             // Else, update this session
             user = await UserController.getUserByUsername(username);
-            if (! user) {
+            if (!user) {
                 throw new Error('User does not exist');
             }
             await UserController.changeUsernameCase(user, username);
@@ -424,13 +436,13 @@ export class RoomManager {
         }
         connection.send('auth-token', UserController.getAuthToken(user.id));
         this.sendRoomList(connection);
-        const room = this.rooms.find(room => ! room.isPrivate);
+        const room = this.rooms.find((room) => !room.isPrivate);
         if (room) {
             await room.attachConnection(connection);
             await this.executeConnectionAuthenticatedHook(connection);
             // When session can not be recycled, this means the user was not logged in for a while
             // When this is the case, we will send a message to the room to notify others that the user has logged in
-            if (! recycledSession) {
+            if (!recycledSession) {
                 await room.sendMessage({
                     content: `${user.username} is back online 🙋‍♂️`,
                     user: UserController.getNeutralUser(),
@@ -463,7 +475,7 @@ export class RoomManager {
         }
 
         // If command linked to a room plugin
-        if (! connection.room) {
+        if (!connection.room) {
             throw new Error('Messages event should be sent in rooms');
         }
 
@@ -480,7 +492,7 @@ export class RoomManager {
         await command.execute(commandName, param, connection);
     }
 
-    private async onBinaryMessage({ type, data }: { type: number, data: Buffer }, connection: Connection): Promise<void> {
+    private async onBinaryMessage({ type, data }: { type: number; data: Buffer }, connection: Connection): Promise<void> {
         // Try to find a global plugin that wants to handle the binary message
         for (const plugin of this.plugins) {
             if (await plugin.onBinaryDataReceived(connection, type, data)) {

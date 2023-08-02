@@ -3,7 +3,6 @@ import { Connection } from '../../skychat/Connection';
 import { GlobalPlugin } from '../GlobalPlugin';
 import { RoomManager } from '../../skychat/RoomManager';
 
-
 export class TorBanPlugin extends GlobalPlugin {
     static readonly CHECK_TOR_URL = 'https://check.torproject.org/torbulkexitlist';
 
@@ -39,7 +38,7 @@ export class TorBanPlugin extends GlobalPlugin {
             });
             const ips = text.trim().split('\n');
             this.torExitNodes = ips;
-        } catch(error) {
+        } catch (error) {
             console.warn(error);
         }
     }

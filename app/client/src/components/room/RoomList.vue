@@ -10,14 +10,9 @@ const client = useClientStore();
     <div>
         <SectionTitle>Rooms</SectionTitle>
         <div class="px-2">
-            <SingleRoom
-                v-for="room in client.state.rooms"
-                :key="room.id"
-                :room="room"
-            />
+            <SingleRoom v-for="room in client.state.rooms" :key="room.id" :room="room" />
         </div>
     </div>
 </template>
 
-<style scoped>
-</style>
+<style scoped></style>

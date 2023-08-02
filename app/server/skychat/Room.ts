@@ -14,13 +14,12 @@ import { globalPluginGroup } from '../plugins/GlobalPluginGroup';
 import { BlacklistPlugin } from '../plugins/core/global/BlacklistPlugin';
 import { Config } from './Config';
 
-
 export type StoredRoom = {
     name: string;
     pluginGroupNames: string[];
     isPrivate: boolean;
     whitelist: string[];
-}
+};
 
 export type SanitizedRoom = {
     id: number;
@@ -29,9 +28,8 @@ export type SanitizedRoom = {
     whitelist: string[];
     lastReceivedMessageId: number;
     lastReceivedMessageTimestamp: number;
-    plugins: {[pluginName: string]: any};
-}
-
+    plugins: { [pluginName: string]: any };
+};
 
 export class Room implements IBroadcaster {
     /**
@@ -102,7 +100,7 @@ export class Room implements IBroadcaster {
     /**
      * Plugins. All plugin aliases points to the same command plugin instance.
      */
-    public readonly commands: {[commandName: string]: RoomPlugin};
+    public readonly commands: { [commandName: string]: RoomPlugin };
 
     /**
      * Plugins
@@ -111,7 +109,7 @@ export class Room implements IBroadcaster {
 
     constructor(manager: RoomManager, isPrivate?: boolean, id?: number) {
         this.manager = manager;
-        this.isPrivate = !! isPrivate;
+        this.isPrivate = !!isPrivate;
 
         // Find unique room id
         if (typeof id === 'number') {
@@ -120,20 +118,20 @@ export class Room implements IBroadcaster {
                 Room.CURRENT_ID = this.id + 1;
             }
         } else {
-            this.id = Room.CURRENT_ID ++;
+            this.id = Room.CURRENT_ID++;
         }
 
         // Set default value for stored values then load storage file if it exists (will override default values)
         this.name = `Room ${this.id}`;
         this.pluginGroupNames = [CorePluginGroup.name];
         // We only load non-core plugin groups if not a private room
-        if (! this.isPrivate) {
+        if (!this.isPrivate) {
             this.load();
         }
 
         // Load all plugins
         this.plugins = globalPluginGroup.instantiateRoomPlugins(this);
-        this.commands = globalPluginGroup.extractCommandObjectFromPlugins(this.plugins) as {[commandName: string]: RoomPlugin};
+        this.commands = globalPluginGroup.extractCommandObjectFromPlugins(this.plugins) as { [commandName: string]: RoomPlugin };
 
         setInterval(this.tick.bind(this), Room.TICK_INTERVAL);
     }
@@ -143,7 +141,7 @@ export class Room implements IBroadcaster {
      * @param identifier
      */
     public allow(identifier: string): boolean {
-        if (! this.isPrivate) {
+        if (!this.isPrivate) {
             throw new Error('Can not whitelist identifier is a non-private room');
         }
         if (this.whitelist.indexOf(identifier) === -1) {
@@ -159,7 +157,7 @@ export class Room implements IBroadcaster {
      * @param identifier
      */
     public unallow(identifier: string): boolean {
-        if (! this.isPrivate) {
+        if (!this.isPrivate) {
             throw new Error('Can not whitelist identifier is a non-private room');
         }
         const index = this.whitelist.indexOf(identifier);
@@ -174,7 +172,7 @@ export class Room implements IBroadcaster {
      * Get the sessions that have at least one connection within this room
      */
     public getSessions(): Session[] {
-        return Array.from(new Set(this.connections.map(c => c.session)));
+        return Array.from(new Set(this.connections.map((c) => c.session)));
     }
 
     /**
@@ -189,7 +187,7 @@ export class Room implements IBroadcaster {
      */
     private load(): void {
         // If the storage does not exist, create it
-        if (! fs.existsSync(this.getStoragePath())) {
+        if (!fs.existsSync(this.getStoragePath())) {
             this.save();
             return;
         }
@@ -199,7 +197,7 @@ export class Room implements IBroadcaster {
             const data = JSON.parse(fs.readFileSync(this.getStoragePath()).toString()) as StoredRoom;
             this.name = data.name || this.name;
             this.pluginGroupNames = data.pluginGroupNames || this.pluginGroupNames;
-            this.isPrivate = !! data.isPrivate;
+            this.isPrivate = !!data.isPrivate;
             this.whitelist = data.whitelist;
         } catch (error) {
             console.error(`Could not load room ${this.id} data from disk: ${error}`);
@@ -232,11 +230,7 @@ export class Room implements IBroadcaster {
      * Load last messages from the database
      */
     public async loadLastMessagesFromDB(): Promise<void> {
-        this.messages = (await MessageController.getMessages(
-            ['room_id', '=', this.id],
-            'id DESC',
-            Room.MESSAGE_HISTORY_LENGTH
-        )).sort((m1, m2) => m1.id - m2.id);
+        this.messages = (await MessageController.getMessages(['room_id', '=', this.id], 'id DESC', Room.MESSAGE_HISTORY_LENGTH)).sort((m1, m2) => m1.id - m2.id);
     }
 
     /**
@@ -244,7 +238,7 @@ export class Room implements IBroadcaster {
      * @param connection
      */
     public detachConnection(connection: Connection) {
-        this.connections = this.connections.filter(c => c !== connection);
+        this.connections = this.connections.filter((c) => c !== connection);
         this.executeOnConnectionLeftRoom(connection);
     }
 
@@ -282,7 +276,7 @@ export class Room implements IBroadcaster {
         // If no lastId is provided, send the last messages
         if (lastId) {
             // Find the message in history whose id is greater than lastId
-            const index = this.messages.findIndex(m => m.id > lastId);
+            const index = this.messages.findIndex((m) => m.id > lastId);
             if (index !== -1) {
                 startFromIndex = index - count - 1;
             }
@@ -291,14 +285,14 @@ export class Room implements IBroadcaster {
         // Send messages
         const messages = this.messages
             .slice(startFromIndex, startFromIndex + count)
-            .filter(message => {
+            .filter((message) => {
                 // Do not send messages from blacklisted users
                 if (Config.PREFERENCES.invertedBlacklist && BlacklistPlugin.hasBlacklisted(message.user, connection.session.user.username)) {
                     return false;
                 }
                 return true;
             })
-            .map(message => message.sanitized());
+            .map((message) => message.sanitized());
 
         if (messages.length > 0) {
             connection.send('messages', messages);
@@ -310,7 +304,7 @@ export class Room implements IBroadcaster {
      * @param userId
      */
     public containsUser(userId: number) {
-        return this.connections.findIndex(connection => connection.session.user.id === userId) > -1;
+        return this.connections.findIndex((connection) => connection.session.user.id === userId) > -1;
     }
 
     /**
@@ -369,14 +363,14 @@ export class Room implements IBroadcaster {
      * @param payload
      */
     public send(event: string, payload: any): void {
-        this.connections.forEach(connection => connection.send(event, payload));
+        this.connections.forEach((connection) => connection.send(event, payload));
     }
 
     /**
      * Find a message from history by its unique id. Try to load it from cache, or go find it in database if it does not exist.
      */
     public async getMessageById(id: number): Promise<Message | null> {
-        return this.messages.find(message => message.id === id) || null;
+        return this.messages.find((message) => message.id === id) || null;
     }
 
     /**
@@ -393,7 +387,7 @@ export class Room implements IBroadcaster {
      * Send a new message to the room
      * @param options
      */
-    public async sendMessage(options: MessageConstructorOptions & {connection?: Connection}): Promise<Message> {
+    public async sendMessage(options: MessageConstructorOptions & { connection?: Connection }): Promise<Message> {
         options.meta = options.meta || {};
         if (options.connection) {
             options.meta.device = options.connection.device;
@@ -420,7 +414,9 @@ export class Room implements IBroadcaster {
         // Store it into the database
         const sqlQuery = SQL`insert into messages
             (\`id\`, \`room_id\`, \`user_id\`, \`quoted_message_id\`, \`content\`, \`date\`, \`ip\`) values
-            (${message.id}, ${this.id}, ${options.user.id}, ${options.quoted ? options.quoted.id : null}, ${message.content}, ${message.createdTime}, ${options.connection ? options.connection.ip : null})`;
+            (${message.id}, ${this.id}, ${options.user.id}, ${options.quoted ? options.quoted.id : null}, ${message.content}, ${message.createdTime}, ${
+    options.connection ? options.connection.ip : null
+})`;
         await DatabaseHelper.db.run(sqlQuery);
         // Return created message
         return message;
@@ -430,7 +426,7 @@ export class Room implements IBroadcaster {
      * Clear message history
      */
     public clearHistory(): void {
-        this.messages.forEach(message => {
+        this.messages.forEach((message) => {
             message.edit('deleted', '<s>deleted</s>');
             this.send('message-edit', message.sanitized());
         });
@@ -442,7 +438,7 @@ export class Room implements IBroadcaster {
     public sanitized(): SanitizedRoom {
         const lastMessage: Message | null = this.messages.length === 0 ? null : this.messages[this.messages.length - 1];
         // Merge summary data from every plugin
-        const plugins: {[pluginName: string]: string} = {};
+        const plugins: { [pluginName: string]: string } = {};
         for (const plugin of this.plugins) {
             const summary = plugin.getRoomSummary();
             if (summary === null || typeof summary === 'undefined') {

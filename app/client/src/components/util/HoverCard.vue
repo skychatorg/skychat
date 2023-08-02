@@ -36,15 +36,14 @@ defineProps({
         default: () => true,
     },
 });
-
 </script>
 
 <template>
     <div
         class="hover-card flex flex-row"
         :class="{
-            'selectable': selectable,
-            'selected': selected,
+            selectable: selectable,
+            selected: selected,
         }"
     >
         <div class="colored-border"></div>
@@ -56,7 +55,7 @@ defineProps({
 
 <style scoped>
 .hover-card {
-    transition: all .2s ease-out;
+    transition: all 0.2s ease-out;
 }
 .hover-card.selected {
     transform: translate3d(6px, 0, 0);
@@ -64,7 +63,7 @@ defineProps({
 .hover-card > .colored-border {
     min-width: 6px;
     width: 6px;
-    transition: all .2s ease-out;
+    transition: all 0.2s ease-out;
     background-color: v-bind(borderColor);
 }
 .hover-card:hover:not(.selected) > .colored-border {
@@ -80,7 +79,7 @@ defineProps({
     border-bottom-right-radius: v-bind("useBorderRadius ? '4px' : '0'");
 }
 .hover-card > .content {
-    transition: all .2s ease-out;
+    transition: all 0.2s ease-out;
 }
 .hover-card.selected > .content {
     background-color: rgb(var(--color-skygray-light));

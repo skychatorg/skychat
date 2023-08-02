@@ -3,37 +3,29 @@ import { Connection } from '../../skychat/Connection';
 import { GlobalPlugin } from '../GlobalPlugin';
 import { Gallery } from './Gallery';
 
-
 /**
  *
  */
 export class GalleryPlugin extends GlobalPlugin {
     static readonly commandName = 'gallery';
 
-    static readonly commandAliases = [
-        'galleryls',
-        'galleryrm',
-    ];
+    static readonly commandAliases = ['galleryls', 'galleryrm'];
 
     readonly minRight = typeof Config.PREFERENCES.minRightForGalleryRead === 'number' ? Config.PREFERENCES.minRightForGalleryRead : 0;
 
     readonly opOnly = Config.PREFERENCES.minRightForGalleryRead === 'op';
 
     readonly rules = {
-        gallery: { },
+        gallery: {},
         galleryls: {
             minCount: 0,
             maxCount: 1,
-            params: [
-                { name: 'path', pattern: Gallery.FOLDER_PATH_REGEX },
-            ]
+            params: [{ name: 'path', pattern: Gallery.FOLDER_PATH_REGEX }],
         },
         galleryrm: {
             minCount: 1,
             maxCount: 1,
-            params: [
-                { name: 'path', pattern: Gallery.FILE_PATH_REGEX },
-            ]
+            params: [{ name: 'path', pattern: Gallery.FILE_PATH_REGEX }],
         },
     };
 
@@ -45,7 +37,7 @@ export class GalleryPlugin extends GlobalPlugin {
             break;
 
         case 'galleryrm':
-            if (! Gallery.canDelete(connection.session)) {
+            if (!Gallery.canDelete(connection.session)) {
                 throw new Error('You do not have the permission to delete files');
             }
             Gallery.ensureNoParentDirectoryAccess(param);

@@ -10,7 +10,7 @@ const src = ref('');
 const previousVideoHash = ref(null);
 
 const updateSrc = () => {
-    if (! client.state.player.current) {
+    if (!client.state.player.current) {
         return;
     }
 
@@ -21,27 +21,19 @@ const updateSrc = () => {
     }
 
     // Build new URL/src
-    let newSrc = client.state.player.current.video.id;
+    const newSrc = client.state.player.current.video.id;
     src.value = newSrc + '?random=' + Math.random();
 
     // Save new hash
     previousVideoHash.value = videoHash;
-}
+};
 
 watch(() => client.state.player.current && client.state.player.current.video, updateSrc);
 onMounted(updateSrc);
-
 </script>
 
 <template>
-    <iframe
-        :src="src"
-        class="w-full h-full"
-        frameborder="0"
-        allowfullscreen="true"
-        allow="autoplay"
-        referrerpolicy="no-referrer"></iframe>
+    <iframe :src="src" class="w-full h-full" frameborder="0" allowfullscreen="true" allow="autoplay" referrerpolicy="no-referrer"></iframe>
 </template>
 
-<style scoped>
-</style>
+<style scoped></style>

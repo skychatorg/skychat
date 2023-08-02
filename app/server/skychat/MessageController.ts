@@ -3,7 +3,6 @@ import { DatabaseHelper } from './DatabaseHelper';
 import { Message } from './Message';
 import { UserController } from './UserController';
 
-
 export type MessageDBRow = {
     id: number;
     room_id: number;
@@ -14,7 +13,6 @@ export type MessageDBRow = {
     ip: string;
 };
 
-
 export class MessageController {
     /**
      * Load a message instance from the database
@@ -23,7 +21,7 @@ export class MessageController {
      */
     static async getMessageById(id: number): Promise<Message> {
         const message = (await MessageController.getMessages(['id', '=', id]))[0];
-        if (! message) {
+        if (!message) {
             throw new Error('Message not found');
         }
         return message;
@@ -42,7 +40,7 @@ export class MessageController {
         if (conditions.length > 0 && typeof conditions[0] === 'string') {
             conditions = [conditions];
         }
-        for (let i = 0; i < conditions.length; ++ i) {
+        for (let i = 0; i < conditions.length; ++i) {
             const condition = conditions[i];
             sqlQuery = sqlQuery.append(condition[0] + condition[1]).append(SQL`${condition[2]} `);
             if (i < conditions.length - 1) {
@@ -63,20 +61,22 @@ export class MessageController {
         const users: any = {}; // User cache object to avoid non-necessary db queries
         for (const messageRow of messageRows) {
             try {
-                if (! messageRow.user_id) {
+                if (!messageRow.user_id) {
                     throw new Error('User not found');
                 }
-                users[messageRow.user_id] = users[messageRow.user_id] || await UserController.getUserById(messageRow.user_id);
+                users[messageRow.user_id] = users[messageRow.user_id] || (await UserController.getUserById(messageRow.user_id));
             } catch (error) {
                 users[messageRow.user_id] = UserController.getNeutralUser('Guest');
             }
-            messages.push(new Message({
-                id: messageRow.id,
-                room: messageRow.room_id,
-                content: messageRow.content,
-                createdTime: new Date(messageRow.date),
-                user: users[messageRow.user_id],
-            }));
+            messages.push(
+                new Message({
+                    id: messageRow.id,
+                    room: messageRow.room_id,
+                    content: messageRow.content,
+                    createdTime: new Date(messageRow.date),
+                    user: users[messageRow.user_id],
+                }),
+            );
         }
         return messages;
     }

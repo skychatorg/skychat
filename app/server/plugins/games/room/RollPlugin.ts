@@ -9,14 +9,12 @@ import { Room } from '../../../skychat/Room';
 import { RandomGenerator } from '../../../skychat/RandomGenerator';
 import { Timing } from '../../../skychat/Timing';
 
-
-
 type GameObject = {
     state: 'pending' | 'running';
     ballPosition: number;
     rollMessage: Message | null;
-    participants: Session[],
-    bets: {[identifier: string]: number};
+    participants: Session[];
+    bets: { [identifier: string]: number };
     finalPosition: number | null;
 };
 
@@ -30,7 +28,6 @@ const waitTimeout = (delay: number) => {
     });
 };
 
-
 export class RollPlugin extends RoomPlugin {
     public static readonly ENTRY_COST: number = 100;
 
@@ -42,25 +39,7 @@ export class RollPlugin extends RoomPlugin {
 
     public static readonly TICK_MS: number[] = Array.from({ length: 3000 / 150 })
         .map((_, i) => (1 + i) * 150)
-        .concat([
-            3048,
-            3180,
-            3307,
-            3440,
-            3576,
-            3723,
-            3881,
-            4040,
-            4209,
-            4398,
-            4603,
-            4834,
-            5084,
-            5372,
-            5744,
-            6413,
-            7621
-        ]);
+        .concat([3048, 3180, 3307, 3440, 3576, 3723, 3881, 4040, 4209, 4398, 4603, 4834, 5084, 5372, 5744, 6413, 7621]);
 
     static readonly commandName = 'roll';
 
@@ -71,8 +50,8 @@ export class RollPlugin extends RoomPlugin {
             minCount: 1,
             maxCount: 1,
             coolDown: 500,
-            params: [{ name: 'action', pattern: /^(start|([0-9]+))$/ }]
-        }
+            params: [{ name: 'action', pattern: /^(start|([0-9]+))$/ }],
+        },
     };
 
     private currentGame: GameObject | null = null;
@@ -82,7 +61,7 @@ export class RollPlugin extends RoomPlugin {
     protected storage = {
         lastGameResults: Array.from({ length: 10 }).map(() => 0),
         currentJackpot: RollPlugin.BASE_JACKPOT,
-        totalGameCount: 0
+        totalGameCount: 0,
     };
 
     constructor(room: Room) {
@@ -124,7 +103,7 @@ export class RollPlugin extends RoomPlugin {
             rollMessage: null,
             bets: {},
             participants: [],
-            finalPosition: null
+            finalPosition: null,
         };
 
         // Build and send the intro message
@@ -133,7 +112,9 @@ export class RollPlugin extends RoomPlugin {
         -> New round (roll). To bet on a specific slot, click on one of the button below:<br>
         <table class="skychat-table">
             <tr>
-                ${Array.from({ length:10 }).map((_: any, i: number) => `<td>[[slot ${i}//${this.commandName} ${i}]]</td>`).join(' ')}
+                ${Array.from({ length: 10 })
+        .map((_: any, i: number) => `<td>[[slot ${i}//${this.commandName} ${i}]]</td>`)
+        .join(' ')}
             </tr>
         </table>`;
         const formatter = MessageFormatter.getInstance();
@@ -141,13 +122,13 @@ export class RollPlugin extends RoomPlugin {
         const introMessage = await this.room.sendMessage({
             content: striptags(introMessageContent),
             formatted: introMessageContent,
-            user: UserController.getNeutralUser()
+            user: UserController.getNeutralUser(),
         });
 
         // Wait for participants
         this.currentGame.rollMessage = await this.room.sendMessage({
             content: '...',
-            user: UserController.getNeutralUser()
+            user: UserController.getNeutralUser(),
         });
         this.updateGameMessage();
         await waitTimeout(30 * 1000);
@@ -156,7 +137,7 @@ export class RollPlugin extends RoomPlugin {
         if (this.currentGame.participants.length === 0) {
             await this.room.sendMessage({
                 content: 'Not enough participants. Aborting.',
-                user: UserController.getNeutralUser()
+                user: UserController.getNeutralUser(),
             });
             this.currentGame = null;
             return;
@@ -177,7 +158,7 @@ export class RollPlugin extends RoomPlugin {
         for (const tickMs of RollPlugin.TICK_MS) {
             setTimeout(() => {
                 // Move ball to next slot
-                this.currentGame!.ballPosition = (++this.currentGame!.ballPosition) % 10;
+                this.currentGame!.ballPosition = ++this.currentGame!.ballPosition % 10;
 
                 // Redraw game
                 this.updateGameMessage();
@@ -192,8 +173,8 @@ export class RollPlugin extends RoomPlugin {
         let content = 'Results:\n';
         let winnerCount = 0;
         for (const identifier of Object.keys(this.currentGame.bets)) {
-            const session = this.currentGame.participants.find(session => session.identifier === identifier);
-            if (! session) {
+            const session = this.currentGame.participants.find((session) => session.identifier === identifier);
+            if (!session) {
                 // Not supposed to happen
                 continue;
             }
@@ -202,7 +183,7 @@ export class RollPlugin extends RoomPlugin {
             if (won) {
                 await UserController.giveMoney(session.user, this.storage.currentJackpot);
                 content += `- ${identifier} won $${this.storage.currentJackpot / 100}\n`;
-                winnerCount ++;
+                winnerCount++;
             } else {
                 content += `- ${identifier} lost\n`;
             }
@@ -218,9 +199,9 @@ export class RollPlugin extends RoomPlugin {
         this.currentGame.rollMessage.append(content);
         this.room.send('message-edit', this.currentGame.rollMessage.sanitized());
         this.room.send('roll', { state: false });
-        this.storage.lastGameResults[this.currentGame.ballPosition] ++;
+        this.storage.lastGameResults[this.currentGame.ballPosition]++;
         this.lastGameFinishedDate = new Date();
-        this.storage.totalGameCount ++;
+        this.storage.totalGameCount++;
         this.currentGame = null;
         this.syncStorage();
     }
@@ -229,7 +210,7 @@ export class RollPlugin extends RoomPlugin {
      *
      */
     private updateGameMessage(): void {
-        if (! this.currentGame || ! this.currentGame.rollMessage) {
+        if (!this.currentGame || !this.currentGame.rollMessage) {
             return;
         }
         // Display information about current round
@@ -244,16 +225,24 @@ export class RollPlugin extends RoomPlugin {
         <br>
         <table class="skychat-table">
             <tr>
-                ${Array.from({ length:10 }).map((_: any, i: number) => `<td>${i === ballPosition ? '&nbsp;&nbsp;&nbsp;↓' : ''}</td>`).join(' ')}
+                ${Array.from({ length: 10 })
+        .map((_: any, i: number) => `<td>${i === ballPosition ? '&nbsp;&nbsp;&nbsp;↓' : ''}</td>`)
+        .join(' ')}
             </tr>
             <tr>
-                ${Array.from({ length:10 }).map((_: any, i: number) => `<td>slot ${i}</td>`).join(' ')}
+                ${Array.from({ length: 10 })
+        .map((_: any, i: number) => `<td>slot ${i}</td>`)
+        .join(' ')}
             </tr>
             <tr>
-                ${Array.from({ length:10 }).map((_: any, i: number) => `<td>${bets.filter(bet => bet === i).length === 0 ? '' : ('&nbsp;&nbsp;&nbsp;' + bets.filter(bet => bet === i).length)}</td>`).join(' ')}
+                ${Array.from({ length: 10 })
+        .map((_: any, i: number) => `<td>${bets.filter((bet) => bet === i).length === 0 ? '' : '&nbsp;&nbsp;&nbsp;' + bets.filter((bet) => bet === i).length}</td>`)
+        .join(' ')}
             </tr>
             <tr>
-                ${Array.from({ length:10 }).map((_: any, i: number) => `<td>${Math.floor(100 * (this.storage.lastGameResults[i] / (this.storage.totalGameCount || 1)))}%</td>`).join(' ')}
+                ${Array.from({ length: 10 })
+        .map((_: any, i: number) => `<td>${Math.floor(100 * (this.storage.lastGameResults[i] / (this.storage.totalGameCount || 1)))}%</td>`)
+        .join(' ')}
             </tr>
         </table>`;
         // Update message
@@ -267,7 +256,7 @@ export class RollPlugin extends RoomPlugin {
      * @param connection
      */
     private async handleBet(param: string, connection: Connection): Promise<void> {
-        if (! this.currentGame) {
+        if (!this.currentGame) {
             throw new Error('Round is already finished');
         }
         if (this.currentGame.state !== 'pending') {

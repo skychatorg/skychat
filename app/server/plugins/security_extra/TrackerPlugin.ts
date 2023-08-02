@@ -7,19 +7,18 @@ import { MessageFormatter } from '../../skychat/MessageFormatter';
 import { Config } from '../../skychat/Config';
 import { RoomManager } from '../../skychat/RoomManager';
 
-
 type NodeType = 'username' | 'ip';
 
 type Node = {
-    type: NodeType,
-    value: string,
-    count: number,
-    lastRegistered: number,
-}
+    type: NodeType;
+    value: string;
+    count: number;
+    lastRegistered: number;
+};
 
 type StorageObject = {
-    [stringifiedNode: string]: Array<Node>
-}
+    [stringifiedNode: string]: Array<Node>;
+};
 
 export class TrackerPlugin extends GlobalPlugin {
     public static readonly SOURCE_TYPES: NodeType[] = ['username', 'ip'];
@@ -45,7 +44,7 @@ export class TrackerPlugin extends GlobalPlugin {
             params: [
                 { name: 'type', pattern: new RegExp('^' + TrackerPlugin.SOURCE_TYPES.join('|') + '$') },
                 { name: 'value', pattern: /./ },
-            ]
+            ],
         },
         trackdelete: {
             minCount: 4,
@@ -55,14 +54,12 @@ export class TrackerPlugin extends GlobalPlugin {
                 { name: 'value1', pattern: /./ },
                 { name: 'type2', pattern: new RegExp('^' + TrackerPlugin.SOURCE_TYPES.join('|') + '$') },
                 { name: 'value2', pattern: /./ },
-            ]
+            ],
         },
         autotrack: {
             minCount: 1,
             maxCount: 1,
-            params: [
-                { name: 'value', pattern: /./ },
-            ]
+            params: [{ name: 'value', pattern: /./ }],
         },
     };
 
@@ -77,7 +74,7 @@ export class TrackerPlugin extends GlobalPlugin {
         return this.storage[TrackerPlugin.nodeToKey(type, value)] || [];
     }
 
-    public getAllRelatedNodesRecursive(type: NodeType, value: string, predicate?: (node: Node, path: Node[]) => boolean): {node: Node, path: Node[]}[] {
+    public getAllRelatedNodesRecursive(type: NodeType, value: string, predicate?: (node: Node, path: Node[]) => boolean): { node: Node; path: Node[] }[] {
         /**
          * Recursive lookup function
          * @param type
@@ -85,9 +82,9 @@ export class TrackerPlugin extends GlobalPlugin {
          * @param visited Hashmap of visited node keys
          * @param path Path to the current node
          */
-        const lookup = (type: NodeType, value: string, visited?: {[nodeKey: string]: boolean}, path?: Node[]) => {
+        const lookup = (type: NodeType, value: string, visited?: { [nodeKey: string]: boolean }, path?: Node[]) => {
             // Aggregated nodes
-            let allNodes: {node: Node, path: Node[]}[] = [];
+            let allNodes: { node: Node; path: Node[] }[] = [];
 
             // On first call, path is empty
             visited = visited || { [TrackerPlugin.nodeToKey(type, value)]: true };
@@ -107,7 +104,7 @@ export class TrackerPlugin extends GlobalPlugin {
                 // Mark this node as visited
                 visited[nodeKey] = true;
 
-                if (predicate && ! predicate(relatedNode, path)) {
+                if (predicate && !predicate(relatedNode, path)) {
                     continue;
                 }
 
@@ -177,19 +174,22 @@ export class TrackerPlugin extends GlobalPlugin {
                         ${formatter.getButtonHtml(node.value, '/track ' + node.type + ' ' + node.value, true)}
                         ${formatter.getButtonHtml('A', '/autotrack ' + node.value, true)}
                     </td>
-                    <td>${node.count} (${(100 * node.count / sumOfCounts).toFixed(2)}%)</td>
+                    <td>${node.count} (${((100 * node.count) / sumOfCounts).toFixed(2)}%)</td>
                 </tr>
             `;
         }
         html += '</table>';
 
-        connection.send('message', new Message({
-            id: 0,
-            room: connection.roomId,
-            content: striptags(html),
-            formatted: html,
-            user: UserController.getNeutralUser()
-        }).sanitized());
+        connection.send(
+            'message',
+            new Message({
+                id: 0,
+                room: connection.roomId,
+                content: striptags(html),
+                formatted: html,
+                user: UserController.getNeutralUser(),
+            }).sanitized(),
+        );
     }
 
     /**
@@ -204,7 +204,7 @@ export class TrackerPlugin extends GlobalPlugin {
         const value2 = param.split(' ')[3];
 
         // Right check
-        if (! connection.session.isOP()) {
+        if (!connection.session.isOP()) {
             throw new Error('Only OP can delete track entries');
         }
 
@@ -213,12 +213,15 @@ export class TrackerPlugin extends GlobalPlugin {
         this.syncStorage();
 
         // Send confirmation
-        connection.send('message', new Message({
-            id: 0,
-            room: connection.roomId,
-            content: `Association ${TrackerPlugin.nodeToKey(type1, value1)} to ${TrackerPlugin.nodeToKey(type2, value2)} deleted`,
-            user: UserController.getNeutralUser()
-        }).sanitized());
+        connection.send(
+            'message',
+            new Message({
+                id: 0,
+                room: connection.roomId,
+                content: `Association ${TrackerPlugin.nodeToKey(type1, value1)} to ${TrackerPlugin.nodeToKey(type2, value2)} deleted`,
+                user: UserController.getNeutralUser(),
+            }).sanitized(),
+        );
     }
 
     /**
@@ -229,16 +232,10 @@ export class TrackerPlugin extends GlobalPlugin {
     async handleAutoTrack(param: string, connection: Connection): Promise<void> {
         const value = param.trim();
         const type = this.inferTypeFromValue(value);
-        if (! type) {
+        if (!type) {
             throw new Error('No entry for ' + value);
         }
-        const entries = this
-            .getAllRelatedNodesRecursive(
-                type,
-                value,
-                (node: Node) => node.type !== 'username' || node.value !== '*guest'
-            )
-            .filter(entry => entry.node.type === 'username');
+        const entries = this.getAllRelatedNodesRecursive(type, value, (node: Node) => node.type !== 'username' || node.value !== '*guest').filter((entry) => entry.node.type === 'username');
 
         const formatter = MessageFormatter.getInstance();
         let html = `<div>Associations for ${value} (${type}):</div><br>`;
@@ -278,13 +275,16 @@ export class TrackerPlugin extends GlobalPlugin {
         }
         html += '</table>';
 
-        connection.send('message', new Message({
-            id: 0,
-            room: connection.roomId,
-            content: striptags(html),
-            formatted: html,
-            user: UserController.getNeutralUser()
-        }).sanitized());
+        connection.send(
+            'message',
+            new Message({
+                id: 0,
+                room: connection.roomId,
+                content: striptags(html),
+                formatted: html,
+                user: UserController.getNeutralUser(),
+            }).sanitized(),
+        );
     }
 
     public inferTypeFromValue(value: string): NodeType | undefined {
@@ -299,10 +299,10 @@ export class TrackerPlugin extends GlobalPlugin {
         const key2 = TrackerPlugin.nodeToKey(type2, value2);
 
         if (this.storage[key1]) {
-            this.storage[key1] = this.storage[key1].filter(node => node.type !== type2 || node.value !== value2);
+            this.storage[key1] = this.storage[key1].filter((node) => node.type !== type2 || node.value !== value2);
         }
         if (this.storage[key2]) {
-            this.storage[key2] = this.storage[key2].filter(node => node.type !== type1 || node.value !== value1);
+            this.storage[key2] = this.storage[key2].filter((node) => node.type !== type1 || node.value !== value1);
         }
     }
 
@@ -312,14 +312,14 @@ export class TrackerPlugin extends GlobalPlugin {
         const key2 = TrackerPlugin.nodeToKey(type2, value2);
 
         // If there is no entry for node1 yet, create the array
-        if (! this.storage[key1]) {
+        if (!this.storage[key1]) {
             this.storage[key1] = [];
         }
 
         // Add the entry node1 -> node2 if it does not exist yet
         // Then add 1 to the association counter if the cooldown as passed
-        let match1 = this.storage[key1].find(node => TrackerPlugin.nodeToKey(node.type, node.value) === key2);
-        if (! match1) {
+        let match1 = this.storage[key1].find((node) => TrackerPlugin.nodeToKey(node.type, node.value) === key2);
+        if (!match1) {
             match1 = {
                 type: type2,
                 value: value2,
@@ -329,19 +329,19 @@ export class TrackerPlugin extends GlobalPlugin {
             this.storage[key1].push(match1);
         }
         if (new Date().getTime() > match1.lastRegistered + TrackerPlugin.COUNT_INCREMENT_COOLDOWN_MS) {
-            match1.count ++;
+            match1.count++;
             match1.lastRegistered = new Date().getTime();
         }
 
         // If there is no entry for node2 yet, create the array
-        if (! this.storage[key2]) {
+        if (!this.storage[key2]) {
             this.storage[key2] = [];
         }
 
         // Add the entry node2 -> node1 if it does not exist yet
         // Then add 1 to the association counter if the cooldown as passed
-        let match2 = this.storage[key2].find(node => TrackerPlugin.nodeToKey(node.type, node.value) === key1);
-        if (! match2) {
+        let match2 = this.storage[key2].find((node) => TrackerPlugin.nodeToKey(node.type, node.value) === key1);
+        if (!match2) {
             match2 = {
                 type: type1,
                 value: value1,
@@ -351,28 +351,18 @@ export class TrackerPlugin extends GlobalPlugin {
             this.storage[key2].push(match2);
         }
         if (new Date().getTime() > match2.lastRegistered + TrackerPlugin.COUNT_INCREMENT_COOLDOWN_MS) {
-            match2.count ++;
+            match2.count++;
             match2.lastRegistered = new Date().getTime();
         }
     }
 
     public async onConnectionJoinedRoom(connection: Connection): Promise<void> {
-        this.registerAssociation(
-            'username',
-            connection.session.user.id === 0 ? '*guest' : connection.session.identifier,
-            'ip',
-            connection.ip
-        );
+        this.registerAssociation('username', connection.session.user.id === 0 ? '*guest' : connection.session.identifier, 'ip', connection.ip);
         this.syncStorage();
     }
 
     public async onConnectionAuthenticated(connection: Connection): Promise<void> {
-        this.registerAssociation(
-            'username',
-            connection.session.user.id === 0 ? '*guest' : connection.session.identifier,
-            'ip',
-            connection.ip
-        );
+        this.registerAssociation('username', connection.session.user.id === 0 ? '*guest' : connection.session.identifier, 'ip', connection.ip);
         this.syncStorage();
     }
 }

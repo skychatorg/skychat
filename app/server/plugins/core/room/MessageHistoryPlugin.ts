@@ -6,7 +6,6 @@ import { Config } from '../../../skychat/Config';
 import { StickerManager } from '../../../skychat/StickerManager';
 import { User } from '../../../skychat/User';
 
-
 export class MessageHistoryPlugin extends RoomPlugin {
     static readonly commandName = 'messagehistory';
 
@@ -16,15 +15,13 @@ export class MessageHistoryPlugin extends RoomPlugin {
         messagehistory: {
             minCount: 0,
             maxCallsPer10Seconds: 3,
-            params: [
-                { pattern: /^([0-9]+)$/, name: 'lastId' },
-            ]
+            params: [{ pattern: /^([0-9]+)$/, name: 'lastId' }],
         },
     };
 
     async run(_alias: string, param: string, connection: Connection): Promise<void> {
         // Asking for short term history
-        if (! parseInt(param) && connection.session.user.right >= Config.PREFERENCES.minRightForShortTermMessageHistory) {
+        if (!parseInt(param) && connection.session.user.right >= Config.PREFERENCES.minRightForShortTermMessageHistory) {
             this.room.sendHistory(connection, 0);
             return;
         }
@@ -45,7 +42,7 @@ export class MessageHistoryPlugin extends RoomPlugin {
         }
         // Send message history to the connection that just joined this room
         const fakeMessages = [];
-        for (let i = Math.max(0, this.room.messages.length - Room.MESSAGE_HISTORY_VISIBLE_LENGTH); i < this.room.messages.length; ++ i) {
+        for (let i = Math.max(0, this.room.messages.length - Room.MESSAGE_HISTORY_VISIBLE_LENGTH); i < this.room.messages.length; ++i) {
             // Each fake message correspond to a real message
             const realMessage = this.room.messages[i];
             const hash = realMessage.createdTime.getTime() + realMessage.id;

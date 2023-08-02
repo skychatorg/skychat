@@ -5,7 +5,6 @@ import { User } from '../../../skychat/User';
 import { ConnectedListPlugin } from '../../core/global/ConnectedListPlugin';
 import { UserController } from '../../../skychat/UserController';
 
-
 export class GiveMoneyPlugin extends RoomPlugin {
     public static readonly COMMISSION_PERCENTAGE: number = 0.2;
 
@@ -20,15 +19,18 @@ export class GiveMoneyPlugin extends RoomPlugin {
             minCount: 2,
             maxCount: 2,
             coolDown: 100,
-            params: [{ name: 'username', pattern: User.USERNAME_REGEXP }, { name: 'amount', pattern: /^([0-9]+)$/ }]
-        }
+            params: [
+                { name: 'username', pattern: User.USERNAME_REGEXP },
+                { name: 'amount', pattern: /^([0-9]+)$/ },
+            ],
+        },
     };
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
         // Get information about receiver, sender and amount
         const receiverUsername = param.split(' ')[0];
         const receiverSession = Session.getSessionByIdentifier(receiverUsername);
-        if (! receiverSession) {
+        if (!receiverSession) {
             throw new Error('User not found');
         }
         const totalAmount = parseInt(param.split(' ')[1]);
@@ -48,22 +50,19 @@ export class GiveMoneyPlugin extends RoomPlugin {
         await UserController.giveMoney(receiverSession.user, givenAmount);
 
         // Notify the receiver & sender
-        this.room.send(
-            'give',
-            {
-                sender: senderSession.user.sanitized(),
-                receiver: receiverSession.user.sanitized(),
-                givenAmount,
-                commission,
-            }
-        );
+        this.room.send('give', {
+            sender: senderSession.user.sanitized(),
+            receiver: receiverSession.user.sanitized(),
+            givenAmount,
+            commission,
+        });
         let message = senderSession.user.username + ' sent $' + givenAmount / 100 + ' to ' + receiverSession.user.username;
         if (commission > 0) {
-            message += ' (- $' + (commission / 100) + ' commission)';
+            message += ' (- $' + commission / 100 + ' commission)';
         }
         await this.room.sendMessage({
             content: message,
-            user: UserController.getNeutralUser()
+            user: UserController.getNeutralUser(),
         });
         (this.room.getPlugin('connectedlist') as unknown as ConnectedListPlugin).sync();
     }

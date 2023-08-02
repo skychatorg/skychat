@@ -15,8 +15,6 @@ import { useAppStore } from '@/stores/app';
 import './icons';
 import './css/index.css';
 
-
-
 (async () => {
     const app = createApp(App);
 
@@ -36,7 +34,7 @@ import './css/index.css';
 
     // Font Awesome
     // eslint-disable-next-line vue/multi-word-component-names
-    app.component('fa', FontAwesomeIcon);
+    app.component('Fa', FontAwesomeIcon);
 
     // Use router
     app.use(router);

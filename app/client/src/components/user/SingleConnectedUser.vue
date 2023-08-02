@@ -5,7 +5,6 @@ import { useClientStore } from '@/stores/client';
 import HoverCard from '@/components/util/HoverCard.vue';
 import UserBigAvatar from '@/components/user/UserBigAvatar.vue';
 
-
 const app = useAppStore();
 const client = useClientStore();
 
@@ -17,7 +16,7 @@ const props = defineProps({
 });
 
 const isBlacklisted = computed(() => {
-    if (! client.state.user) {
+    if (!client.state.user) {
         return false;
     }
     const blacklist = client.state.user.data.plugins.blacklist || [];
@@ -37,7 +36,7 @@ const minutesSinceLastMessage = computed(() => {
 
 // Formatted duration since the session is dead
 const formattedDurationSinceDead = computed(() => {
-    if (! props.entry.deadSinceTime) {
+    if (!props.entry.deadSinceTime) {
         return '';
     }
     const duration = new Date().getTime() * 0.001 - props.entry.deadSinceTime;
@@ -56,9 +55,9 @@ const formattedDurationSinceDead = computed(() => {
 
 <template>
     <HoverCard
-        v-show="! isBlacklisted"
-        :borderColor="props.entry.deadSinceTime ? 'transparent' : 'rgb(var(--color-skygray-lightest))'"
-        :useBorderRadius="true"
+        v-show="!isBlacklisted"
+        :border-color="props.entry.deadSinceTime ? 'transparent' : 'rgb(var(--color-skygray-lightest))'"
+        :use-border-radius="true"
         :selectable="true"
         :selected="false"
         class="cursor-pointer"
@@ -94,10 +93,8 @@ const formattedDurationSinceDead = computed(() => {
 
                 <!-- Second row -->
                 <div class="flex">
-
                     <!-- Status icons -->
                     <div class="flex flex-row w-16 basis-16">
-
                         <!-- Last activity -->
                         <span
                             v-if="entry.connectionCount > 0 && minutesSinceLastMessage > 0"
@@ -105,21 +102,16 @@ const formattedDurationSinceDead = computed(() => {
                             class="text-primary whitespace-nowrap"
                         >
                             <fa icon="clock" />
-                            {{ minutesSinceLastMessage > 30 ? 'afk' : (minutesSinceLastMessage + 'm') }}
+                            {{ minutesSinceLastMessage > 30 ? 'afk' : minutesSinceLastMessage + 'm' }}
                         </span>
 
                         <!-- Disconnected -->
-                        <span
-                            v-if="entry.connectionCount === 0"
-                            :title="'User has disconnected ' + formattedDurationSinceDead + ' ago'"
-                            class="text-danger whitespace-nowrap"
-                        >
+                        <span v-if="entry.connectionCount === 0" :title="'User has disconnected ' + formattedDurationSinceDead + ' ago'" class="text-danger whitespace-nowrap">
                             <fa icon="link-slash" />
                             {{ formattedDurationSinceDead }}
                         </span>
-
                     </div>
-                    
+
                     <!-- Motto -->
                     <div class="w-0 grow text-right text-skygray-lighter whitespace-nowrap text-ellipsis overflow-hidden" :title="entry.user.data.plugins.motto">
                         {{ entry.user.data.plugins.motto }}

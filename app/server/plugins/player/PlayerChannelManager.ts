@@ -4,8 +4,6 @@ import { Session } from '../../skychat/Session';
 import { PlayerChannel, SanitizedPlayerChannel } from './PlayerChannel';
 import { PlayerPlugin } from './PlayerPlugin';
 
-
-
 export class PlayerChannelManager extends EventEmitter {
     public readonly channels: PlayerChannel[] = [];
 
@@ -28,7 +26,7 @@ export class PlayerChannelManager extends EventEmitter {
      * @returns
      */
     public getNextChannelId(): number {
-        return this.channels.length === 0 ? 1 : Math.max(...this.channels.map(channel => channel.id)) + 1;
+        return this.channels.length === 0 ? 1 : Math.max(...this.channels.map((channel) => channel.id)) + 1;
     }
 
     /**
@@ -54,7 +52,7 @@ export class PlayerChannelManager extends EventEmitter {
      */
     public renameChannel(id: number, name: string) {
         const channel = this.getChannelById(id);
-        if (! channel) {
+        if (!channel) {
             throw new Error(`Unable to rename non-existant channel ${id}`);
         }
 
@@ -68,7 +66,7 @@ export class PlayerChannelManager extends EventEmitter {
      */
     public deleteChannel(id: number) {
         const channel = this.getChannelById(id);
-        if (! channel) {
+        if (!channel) {
             throw new Error(`Unable to delete non-existant channel ${id}`);
         }
 
@@ -115,7 +113,7 @@ export class PlayerChannelManager extends EventEmitter {
 
         // Check that the given channel exists
         const channel = this.getChannelById(id);
-        if (! channel) {
+        if (!channel) {
             throw new Error(`Channel ${id} not found`);
         }
 
@@ -142,7 +140,8 @@ export class PlayerChannelManager extends EventEmitter {
         // Update mappings and session list
         const channel = this.getChannelById(channelId);
         this.sessionChannels.delete(session);
-        if (channel) { // If channel is not deleted
+        if (channel) {
+            // If channel is not deleted
             channel.sessions.splice(channel.sessions.indexOf(session), 1);
         }
         session.send('player-sync', { current: null, queue: [], cursor: 0 });
@@ -170,19 +169,29 @@ export class PlayerChannelManager extends EventEmitter {
      * @param id
      */
     public getChannelById(id: number): PlayerChannel | null {
-        return this.channels.find(channel => channel.id === id) || null;
+        return this.channels.find((channel) => channel.id === id) || null;
     }
 
     /**
      * What will be sent to the client
      */
     public sanitized(): SanitizedPlayerChannel[] {
-        return this.channels.map(channel => channel.sanitized());
+        return this.channels.map((channel) => channel.sanitized());
     }
 
     public toString(): string {
-        return PlayerChannelManager.name + ' (\n' + this.channels.map(channel =>
-            `  #${channel.id}: [${channel.sessions.map(session => session.identifier + '(' + session.connections.length + ')').join(', ')}] [${channel.currentVideoInfo ? channel.currentVideoInfo.video.id : ''}] [${channel.queue.length}]`
-        ).join('\n') + '\n)';
+        return (
+            PlayerChannelManager.name +
+            ' (\n' +
+            this.channels
+                .map(
+                    (channel) =>
+                        `  #${channel.id}: [${channel.sessions.map((session) => session.identifier + '(' + session.connections.length + ')').join(', ')}] [${
+                            channel.currentVideoInfo ? channel.currentVideoInfo.video.id : ''
+                        }] [${channel.queue.length}]`,
+                )
+                .join('\n') +
+            '\n)'
+        );
     }
 }

@@ -8,7 +8,6 @@ import { MessageFormatter } from '../../../skychat/MessageFormatter';
 import { GlobalPlugin } from '../../GlobalPlugin';
 import { Config } from '../../../skychat/Config';
 
-
 export class IpPlugin extends GlobalPlugin {
     static readonly commandName = 'ip';
 
@@ -21,7 +20,7 @@ export class IpPlugin extends GlobalPlugin {
             coolDown: 1000,
             minCount: 0,
             maxCount: 1,
-            params: [{ name: 'username', pattern: User.USERNAME_REGEXP }]
+            params: [{ name: 'username', pattern: User.USERNAME_REGEXP }],
         },
     };
 
@@ -36,7 +35,7 @@ export class IpPlugin extends GlobalPlugin {
             connections = Session.connections;
         } else {
             const session = Session.getSessionByIdentifier(param);
-            if (! session) {
+            if (!session) {
                 throw new Error('Username not found');
             }
             connections = session.connections;

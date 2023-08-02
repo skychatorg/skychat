@@ -9,7 +9,7 @@ const app = useAppStore();
 const client = useClientStore();
 
 // Avatar
-const uploadAvatar = async event => {
+const uploadAvatar = async (event) => {
     for (const file of event.target.files) {
         const fullUrl = await app.upload(file);
         client.sendMessage(`/avatar ${fullUrl}`);
@@ -18,33 +18,26 @@ const uploadAvatar = async event => {
 };
 
 // Motto
-let newMotto = ref(client.state.user.data.plugins.motto);
+const newMotto = ref(client.state.user.data.plugins.motto);
 const saveNewMotto = () => {
     client.sendMessage(`/motto ${newMotto.value}`);
 };
-watch(() => app.modals.profile, () => {
-    if (app.modals.profile) {
-        newMotto.value = client.state.user.data.plugins.motto;
-    }
-});
-
+watch(
+    () => app.modals.profile,
+    () => {
+        if (app.modals.profile) {
+            newMotto.value = client.state.user.data.plugins.motto;
+        }
+    },
+);
 </script>
 
 <template>
-    <ModalTemplate
-        id="profile"
-        title="Preferences"
-    >
+    <ModalTemplate id="profile" title="Preferences">
         <!-- Avatar -->
         <SectionSubTitle class="mt-2">Avatar</SectionSubTitle>
         <div class="flex justify-center gap-4">
-            <input
-                @change="uploadAvatar"
-                type="file"
-                class="grow form-control"
-                placeholder="Avatar"
-                accept="image/png, image/jpeg"
-            />
+            <input @change="uploadAvatar" type="file" class="grow form-control" placeholder="Avatar" accept="image/png, image/jpeg" />
         </div>
 
         <!-- Motto -->
@@ -58,7 +51,7 @@ watch(() => app.modals.profile, () => {
         <SectionSubTitle class="mt-6">Custom color</SectionSubTitle>
         <div class="mt-2 w-full md:w-2/3 lg:w-[120px] mx-auto flex flex-wrap gap-2 justify-center">
             <div
-                v-for="color, index in client.state.custom.color"
+                v-for="(color, index) in client.state.custom.color"
                 :key="index"
                 class="w-6 h-6 lg:w-4 lg:h-4 cursor-pointer transition-all hover:rounded"
                 :style="{
@@ -68,6 +61,5 @@ watch(() => app.modals.profile, () => {
                 @click="client.sendMessage(`/custom use color:${color.id}`)"
             ></div>
         </div>
-
     </ModalTemplate>
 </template>

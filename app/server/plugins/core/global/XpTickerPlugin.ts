@@ -4,7 +4,6 @@ import { UserController } from '../../../skychat/UserController';
 import { Session } from '../../../skychat/Session';
 import { RoomManager } from '../../../skychat/RoomManager';
 
-
 export class XpTickerPlugin extends GlobalPlugin {
     public static readonly MAX_INACTIVITY_DURATION_MS: number = 5 * 60 * 1000;
 

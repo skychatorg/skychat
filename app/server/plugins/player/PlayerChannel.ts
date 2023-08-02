@@ -5,14 +5,12 @@ import { UserController } from '../../skychat/UserController';
 import { PlayerChannelManager } from './PlayerChannelManager';
 import { PlayerChannelScheduler, SanitizedScheduler } from './PlayerChannelScheduler';
 
-
 export type QueuedVideoInfo = {
     user: SanitizedUser;
     video: VideoInfo;
 };
 
 export type VideoInfo = {
-
     /**
      * Video type (currently only youtube supported)
      */
@@ -47,20 +45,20 @@ export type VideoInfo = {
      * Video thumbnail image
      */
     thumb?: string;
-}
-
+};
 
 export type SanitizedPlayerChannel = {
     id: number;
     name: string;
     playing: boolean;
-    currentMedia: {
-        owner: string;
-        title: string;
-    } | undefined;
+    currentMedia:
+        | {
+              owner: string;
+              title: string;
+          }
+        | undefined;
     schedule: SanitizedScheduler;
-}
-
+};
 
 export class PlayerChannel {
     public static readonly HISTORY_LENGTH = 200;
@@ -87,7 +85,7 @@ export class PlayerChannel {
     /**
      * Keeps track of the dates when user last played a media
      */
-    public lastPlayedDates: {[userid: string]: Date} = {};
+    public lastPlayedDates: { [userid: string]: Date } = {};
 
     public currentVideoInfo: QueuedVideoInfo | null = null;
 
@@ -130,7 +128,7 @@ export class PlayerChannel {
             this.history.splice(0, this.history.length - PlayerChannel.HISTORY_LENGTH);
         }
         // If no video left to play
-        if (! this.hasNext()) {
+        if (!this.hasNext()) {
             // Remove current video & sync channel
             this.currentVideoInfo = null;
             this.sync();
@@ -155,7 +153,7 @@ export class PlayerChannel {
      * Returns whether there is currently something playing in the player
      */
     public isPlaying(): boolean {
-        return !! this.currentVideoInfo;
+        return !!this.currentVideoInfo;
     }
 
     /**
@@ -176,7 +174,7 @@ export class PlayerChannel {
             clearTimeout(this.playNextTimeout);
         }
         // If currently off, but there is a next video to play
-        if (! this.currentVideoInfo) {
+        if (!this.currentVideoInfo) {
             // Play it on next tick
             this.playNextTimeout = setTimeout(this.playNext.bind(this), 0);
             return;
@@ -195,7 +193,7 @@ export class PlayerChannel {
      * @param delta Duration in ms
      */
     public moveCursor(delta: number) {
-        if (! this.currentVideoInfo || ! this.currentVideoInfo.video.startTime) {
+        if (!this.currentVideoInfo || !this.currentVideoInfo.video.startTime) {
             throw new Error('No video playing currently');
         }
         this.currentVideoInfo.video.startTime -= delta;
@@ -218,14 +216,13 @@ export class PlayerChannel {
         this.playNext();
     }
 
-
     /**
      * Whether the given video is already in the list or currently playing
      * @param video
      * @returns
      */
     public isVideoPlayingOrInQueue(video: VideoInfo): boolean {
-        if (this.queue.find(q => q.video.type === video.type && q.video.id === video.id)) {
+        if (this.queue.find((q) => q.video.type === video.type && q.video.id === video.id)) {
             return true;
         }
         if (this.currentVideoInfo && this.currentVideoInfo.video.type === video.type && this.currentVideoInfo.video.id === video.id) {
@@ -247,7 +244,7 @@ export class PlayerChannel {
         for (const video of videos) {
             // If video is already in the queue
             if (this.isVideoPlayingOrInQueue(video)) {
-                if (! options.allowFailure) {
+                if (!options.allowFailure) {
                     throw new Error(`Media ${video.id} is already in the list`);
                 }
                 continue;
@@ -257,7 +254,7 @@ export class PlayerChannel {
                 user: user ? user.sanitized() : UserController.getNeutralUser().sanitized(),
                 video,
             });
-            ++ addedCount;
+            ++addedCount;
         }
         if (addedCount > 0) {
             this.fairShuffle();
@@ -271,7 +268,7 @@ export class PlayerChannel {
      * Retrieve an entry in the queue if it exists. If not, returns null.
      */
     public getQueueEntry(type: string, id: VideoInfo['id']): QueuedVideoInfo | null {
-        return this.queue.find(q => q.video.type === type && q.video.id === id) || null;
+        return this.queue.find((q) => q.video.type === type && q.video.id === id) || null;
     }
 
     /**
@@ -279,7 +276,7 @@ export class PlayerChannel {
      * @param video
      */
     public remove(video: VideoInfo) {
-        this.queue = this.queue.filter(q => q.video.type !== video.type || q.video.id !== video.id);
+        this.queue = this.queue.filter((q) => q.video.type !== video.type || q.video.id !== video.id);
         this.sync();
     }
 
@@ -306,7 +303,7 @@ export class PlayerChannel {
             }
             // If media owner left
             const ownerSession = Session.getSessionByIdentifier(owner);
-            if (! ownerSession || ! ownerSession.isAlive()) {
+            if (!ownerSession || !ownerSession.isAlive()) {
                 return true;
             }
         }
@@ -340,7 +337,7 @@ export class PlayerChannel {
      */
     public fairShuffle() {
         // Build a separate queue for each user
-        const users: {[id: number]: QueuedVideoInfo[]} = {};
+        const users: { [id: number]: QueuedVideoInfo[] } = {};
         for (const queuedVideo of this.queue) {
             if (typeof users[queuedVideo.user.id] === 'undefined') {
                 users[queuedVideo.user.id] = [];
@@ -348,9 +345,9 @@ export class PlayerChannel {
             users[queuedVideo.user.id].push(queuedVideo);
         }
         // Sort users fairly
-        const userIds: number[] = Object.keys(users).map(k => parseInt(k));
+        const userIds: number[] = Object.keys(users).map((k) => parseInt(k));
         userIds.sort((id1, id2) => {
-            const getDate = (id: number) => this.lastPlayedDates[id] ? this.lastPlayedDates[id].getTime() : 0;
+            const getDate = (id: number) => (this.lastPlayedDates[id] ? this.lastPlayedDates[id].getTime() : 0);
             return getDate(id1) - getDate(id2);
         });
         // Re-build the new queue
@@ -362,11 +359,11 @@ export class PlayerChannel {
             addedCount = 0;
             for (const userId of userIds) {
                 const queuedVideo = users[userId].shift();
-                if (! queuedVideo) {
+                if (!queuedVideo) {
                     continue;
                 }
                 queue.push(queuedVideo);
-                ++ addedCount;
+                ++addedCount;
             }
         }
         this.queue = queue;
@@ -391,10 +388,12 @@ export class PlayerChannel {
             id: this.id,
             name: this.name,
             playing: this.isPlaying(),
-            currentMedia: this.currentVideoInfo ? {
-                owner: this.currentVideoInfo.user.username,
-                title: this.currentVideoInfo.video.title
-            } : undefined,
+            currentMedia: this.currentVideoInfo
+                ? {
+                    owner: this.currentVideoInfo.user.username,
+                    title: this.currentVideoInfo.video.title,
+                }
+                : undefined,
             schedule: this.scheduler.sanitized(),
         };
     }

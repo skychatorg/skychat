@@ -1,7 +1,6 @@
 import { Connection } from '../../../skychat/Connection';
 import { GlobalPlugin } from '../../GlobalPlugin';
 
-
 export class AprilFoolsDay extends GlobalPlugin {
     static readonly commandName = 'aprilfoolsday';
 
@@ -10,7 +9,7 @@ export class AprilFoolsDay extends GlobalPlugin {
     readonly hidden = true;
 
     readonly rules = {
-        aprilfoolsday: { }
+        aprilfoolsday: {},
     };
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
@@ -25,7 +24,7 @@ export class AprilFoolsDay extends GlobalPlugin {
             return message;
         }
 
-        if (! message.startsWith('/message ')) {
+        if (!message.startsWith('/message ')) {
             return message;
         }
 
@@ -33,7 +32,10 @@ export class AprilFoolsDay extends GlobalPlugin {
             return message;
         }
 
-        const words = message.split(' ').slice(1).sort(() => Math.random() - 0.5);
+        const words = message
+            .split(' ')
+            .slice(1)
+            .sort(() => Math.random() - 0.5);
         return '/message ' + words.join(' ');
     }
 }

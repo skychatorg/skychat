@@ -4,28 +4,25 @@ import { UserController } from '../../../skychat/UserController';
 import { Room } from '../../../skychat/Room';
 import { Session } from '../../../skychat/Session';
 
-
 export class RoomManagerPlugin extends RoomPlugin {
     static readonly commandName = 'room';
 
     static readonly commandAliases = ['roomset', 'roomcreate', 'roomdelete'];
 
     readonly rules = {
-        room: { },
+        room: {},
         roomcreate: {
             minCount: 0,
-            params: [
-                { name: 'name', pattern: /.+/ },
-            ]
+            params: [{ name: 'name', pattern: /.+/ }],
         },
         roomset: {
             minCount: 2,
             params: [
                 { name: 'property', pattern: /^(name)$/ },
                 { name: 'value', pattern: /.?/ },
-            ]
+            ],
         },
-        roomdelete: { maxCount: 0, },
+        roomdelete: { maxCount: 0 },
     };
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
@@ -45,7 +42,7 @@ export class RoomManagerPlugin extends RoomPlugin {
     }
 
     async handleRoomCreate(param: string, connection: Connection): Promise<void> {
-        if (! connection.session.isOP()) {
+        if (!connection.session.isOP()) {
             throw new Error('Only OP can create public rooms');
         }
         const roomName = param.trim();
@@ -63,7 +60,7 @@ export class RoomManagerPlugin extends RoomPlugin {
     }
 
     async handleRoomSet(param: string, connection: Connection): Promise<void> {
-        if (! this.canManageRoom(connection.session, this.room)) {
+        if (!this.canManageRoom(connection.session, this.room)) {
             throw new Error('You do not have the permission to modify this room');
         }
         const property = param.substr(0, param.indexOf(' '));
@@ -77,7 +74,7 @@ export class RoomManagerPlugin extends RoomPlugin {
         default:
             throw new Error(`Invalid property ${property}`);
         }
-        Object.values(Session.sessions).forEach(session => this.room.manager.sendRoomList(session));
+        Object.values(Session.sessions).forEach((session) => this.room.manager.sendRoomList(session));
         const message = UserController.createNeutralMessage({ id: 0, content: `Room property ${property} set to ${value}` });
         connection.send('message', message.sanitized());
     }
@@ -86,7 +83,7 @@ export class RoomManagerPlugin extends RoomPlugin {
         if (this.room.isPrivate) {
             throw new Error('Use pmleave instead');
         }
-        if (! this.canManageRoom(connection.session, this.room)) {
+        if (!this.canManageRoom(connection.session, this.room)) {
             throw new Error('You do not have the permission to delete this room');
         }
         await this.room.manager.deleteRoom(this.room.id);

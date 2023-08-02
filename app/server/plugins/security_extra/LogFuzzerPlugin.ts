@@ -3,7 +3,6 @@ import { DatabaseHelper } from '../../skychat/DatabaseHelper';
 import { GlobalPlugin } from '../GlobalPlugin';
 import { RoomManager } from '../../skychat/RoomManager';
 
-
 export class LogFuzzerPlugin extends GlobalPlugin {
     static readonly DURATION_BEFORE_FUZZ = 20 * 24 * 60 * 60 * 1000;
 
@@ -18,7 +17,7 @@ export class LogFuzzerPlugin extends GlobalPlugin {
     /**
      * Last fuzzed message id in history
      */
-    protected storage: {lastId: number} = { lastId: 0 };
+    protected storage: { lastId: number } = { lastId: 0 };
 
     private tickTimeout?: any;
 
@@ -55,13 +54,13 @@ export class LogFuzzerPlugin extends GlobalPlugin {
     async tick(): Promise<void> {
         const limitTimestamp = Math.floor(new Date().getTime() - LogFuzzerPlugin.DURATION_BEFORE_FUZZ);
         const sqlQuery = SQL`select id, content from messages where id > ${this.storage.lastId} and date <= ${limitTimestamp} limit 5000`;
-        const messages: {content: string, id: number}[] = await DatabaseHelper.db.all(sqlQuery);
+        const messages: { content: string; id: number }[] = await DatabaseHelper.db.all(sqlQuery);
         for (const { id, content } of messages) {
             const sqlQuery = SQL`update messages set content=${this.fuzzContent(content)} where id=${id}`;
             await DatabaseHelper.db.run(sqlQuery);
         }
         if (messages.length > 0) {
-            const maxId = Math.max(...messages.map(message => message.id));
+            const maxId = Math.max(...messages.map((message) => message.id));
             this.storage.lastId = maxId;
             this.syncStorage();
         }

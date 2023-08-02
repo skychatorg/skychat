@@ -1,17 +1,14 @@
 import { PlayerChannel, VideoInfo } from './PlayerChannel';
 
-
 export type SchedulerEvent = {
     start: number;
     duration: number;
     media: VideoInfo;
 };
 
-
 export type SanitizedScheduler = {
     events: SchedulerEvent[];
 };
-
 
 export class PlayerChannelScheduler {
     /**
@@ -72,7 +69,7 @@ export class PlayerChannelScheduler {
      */
     insertEvent(newEvent: SchedulerEvent) {
         // Check that the time slot is available
-        if (! this.isTimeSlotFree(newEvent.start, newEvent.start + newEvent.duration)) {
+        if (!this.isTimeSlotFree(newEvent.start, newEvent.start + newEvent.duration)) {
             throw new Error('Time slot is not free');
         }
         // Find the list in which to add this event
@@ -80,7 +77,7 @@ export class PlayerChannelScheduler {
         // Find sorted index in the list where to add this event
         let index = 0;
         while (eventList[index] && eventList[index].start + eventList[index].duration < newEvent.start) {
-            ++ index;
+            ++index;
         }
         eventList.splice(index, 0, newEvent);
     }
@@ -90,8 +87,8 @@ export class PlayerChannelScheduler {
      * @param start
      */
     remove(start: number) {
-        this.pastEvents = this.pastEvents.filter(event => event.start !== start);
-        this.futureEvents = this.futureEvents.filter(event => event.start !== start);
+        this.pastEvents = this.pastEvents.filter((event) => event.start !== start);
+        this.futureEvents = this.futureEvents.filter((event) => event.start !== start);
     }
 
     /**
@@ -100,7 +97,7 @@ export class PlayerChannelScheduler {
      * @returns whether a time slot is free or not
      */
     isTimeSlotFree(start: number, end: number): boolean {
-        const conflictingEvent = this.events.find(event => {
+        const conflictingEvent = this.events.find((event) => {
             // start < e.start < end
             //      [    ]  : existing event
             //   [    ]     : new slot
@@ -121,7 +118,7 @@ export class PlayerChannelScheduler {
             }
             return false;
         });
-        return ! conflictingEvent;
+        return !conflictingEvent;
     }
 
     /**
@@ -133,12 +130,10 @@ export class PlayerChannelScheduler {
         // Get next event in list
         const nextEvent = this.futureEvents[0] || null;
         // If there is no event currently on, wait for the next tick
-        if (! nextEvent) {
+        if (!nextEvent) {
             // If there is no event to play next
-
         } else if (nextEvent.start > new Date().getTime()) {
             // If the event to play next as not yet started
-
         } else if (nextEvent.start + nextEvent.duration < new Date().getTime()) {
             // If current event has just finished, move the finished event in the list of past events
             this.pastEvents.push(this.futureEvents.shift() as SchedulerEvent);
@@ -148,7 +143,7 @@ export class PlayerChannelScheduler {
         }
 
         // If there is an event in progress, but the channel is not playing it
-        if (currentEvent && (! this.playerChannel.currentVideoInfo || this.playerChannel.currentVideoInfo.video.id !== currentEvent.media.id)) {
+        if (currentEvent && (!this.playerChannel.currentVideoInfo || this.playerChannel.currentVideoInfo.video.id !== currentEvent.media.id)) {
             // Empty the channel queue
             this.playerChannel.locked = true;
             this.playerChannel.flushQueue();
@@ -157,7 +152,7 @@ export class PlayerChannelScheduler {
         }
 
         // If there is not event in progress but the channel is still locked
-        if (! currentEvent && this.playerChannel.locked) {
+        if (!currentEvent && this.playerChannel.locked) {
             this.playerChannel.flushQueue();
             this.playerChannel.skip();
             this.playerChannel.locked = false;

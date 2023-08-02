@@ -2,7 +2,6 @@ import { VideoInfo } from '../PlayerChannel';
 import { PlayerPlugin } from '../PlayerPlugin';
 
 export interface VideoFetcher {
-
     /**
      * Get a media
      * @param playerPlugin

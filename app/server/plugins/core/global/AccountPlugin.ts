@@ -5,7 +5,6 @@ import { User } from '../../../skychat/User';
 import { Config } from '../../../skychat/Config';
 import { Session } from '../../../skychat/Session';
 
-
 export class AccountPlugin extends GlobalPlugin {
     static readonly CHANGE_USERNAME_PRICE = 2000;
 
@@ -21,8 +20,8 @@ export class AccountPlugin extends GlobalPlugin {
             coolDown: 100,
             params: [
                 { name: 'field', pattern: /^(email|password)$/ },
-                { name: 'value', pattern: /./ }
-            ]
+                { name: 'value', pattern: /./ },
+            ],
         },
         changeusername: {
             minCount: 2,
@@ -30,8 +29,8 @@ export class AccountPlugin extends GlobalPlugin {
             params: [
                 { name: 'new username', pattern: User.USERNAME_LOGGED_REGEXP },
                 { name: 'password', pattern: /./ },
-            ]
-        }
+            ],
+        },
     };
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
@@ -61,7 +60,7 @@ export class AccountPlugin extends GlobalPlugin {
         switch (field) {
         // Email
         case 'email':
-            if (! value.match(User.EMAIL_REGEXP)) {
+            if (!value.match(User.EMAIL_REGEXP)) {
                 throw new Error(`${value} is not a valid email`);
             }
             connection.session.user.email = value;
@@ -76,7 +75,7 @@ export class AccountPlugin extends GlobalPlugin {
             const oldHashedPassword = UserController.hashPassword(connection.session.user.id, connection.session.user.username.toLowerCase(), oldPassword);
             // eslint-disable-next-line no-case-declarations
             const newPassword = value.split(' ')[1];
-            if (! connection.session.user.testHashedPassword(oldHashedPassword)) {
+            if (!connection.session.user.testHashedPassword(oldHashedPassword)) {
                 throw new Error('Invalid current password');
             }
             UserController.changePassword(connection.session.user, newPassword);
@@ -97,11 +96,11 @@ export class AccountPlugin extends GlobalPlugin {
         const username = param.split(' ')[0];
         const password = param.split(' ').slice(1).join(' ');
 
-        if (! user.testHashedPassword(UserController.hashPassword(user.id, user.username, password))) {
+        if (!user.testHashedPassword(UserController.hashPassword(user.id, user.username, password))) {
             throw new Error('Invalid password');
         }
 
-        if (! connection.session.isOP() && Config.isInOPList(username)) {
+        if (!connection.session.isOP() && Config.isInOPList(username)) {
             throw new Error('You can not escalate yourself into OP by changing username. Please remove the new username from the OP list, change username, then re-add it.');
         }
 
@@ -126,7 +125,7 @@ export class AccountPlugin extends GlobalPlugin {
         const username = param.split(' ')[0].toLowerCase();
         const password = param.split(' ').slice(1).join(' ');
 
-        if (! connection.session.isOP()) {
+        if (!connection.session.isOP()) {
             throw new Error('You must be OP to reset an account password');
         }
 
@@ -136,7 +135,7 @@ export class AccountPlugin extends GlobalPlugin {
         }
 
         const userObject = await UserController.getUserByUsername(username);
-        if (! userObject) {
+        if (!userObject) {
             throw new Error('User does not exist');
         }
 

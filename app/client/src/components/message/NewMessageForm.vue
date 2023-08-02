@@ -8,7 +8,6 @@ import HoverCard from '@/components/util/HoverCard.vue';
 
 const MESSAGE_HISTORY_LENGTH = 500;
 
-
 const app = useAppStore();
 const client = useClientStore();
 const risibank = new RisiBank();
@@ -23,11 +22,10 @@ onMounted(() => {
     message.value.focus();
 });
 
-let typingListStr = computed(() => {
-
+const typingListStr = computed(() => {
     let typingUsers = client.state.typingList;
 
-    typingUsers = typingUsers.filter(user => user.username.toLowerCase() !== client.state.user.username.toLowerCase());
+    typingUsers = typingUsers.filter((user) => user.username.toLowerCase() !== client.state.user.username.toLowerCase());
 
     if (typingUsers.length === 0) {
         return '';
@@ -38,36 +36,44 @@ let typingListStr = computed(() => {
     }
 
     if (typingUsers.length <= 4) {
-        const usernames = typingUsers.map(user => user.username);
+        const usernames = typingUsers.map((user) => user.username);
         return `${usernames.join(', ')} are typing..`;
     }
 
-    return `multiple users are currently typing..`;
+    return 'multiple users are currently typing..';
 });
-
 
 // Watch when the new message input changes. The change does not necessarily come from this component, as the message input can be prepared elsewhere.
-watch(() => app.newMessage, (newValue, oldValue) => {
-    // Auto-set the message value
-    if (newValue !== message.value.value) {
-        message.value.value = newValue;
-    }
-    // Focus message input if not already focused
-    if (document.activeElement !== message.value) {
-        message.value.focus();
-    }
-});
+watch(
+    () => app.newMessage,
+    (newValue, oldValue) => {
+        // Auto-set the message value
+        if (newValue !== message.value.value) {
+            message.value.value = newValue;
+        }
+        // Focus message input if not already focused
+        if (document.activeElement !== message.value) {
+            message.value.focus();
+        }
+    },
+);
 
 // Focus message input when app is newly focused
-watch(() => app.focused, focused => focused && message.value.focus());
+watch(
+    () => app.focused,
+    (focused) => focused && message.value.focus(),
+);
 
 // Focus message input when app changes room
-watch(() => client.state.currentRoomId, currentRoomId => currentRoomId && message.value.focus());
+watch(
+    () => client.state.currentRoomId,
+    (currentRoomId) => currentRoomId && message.value.focus(),
+);
 
 /**
  * When the message changes
  */
-const onMessageInput = event => {
+const onMessageInput = (event) => {
     let newMessage = event.target.value;
 
     // Catches when pressing enter while the message input is empty.
@@ -85,21 +91,21 @@ const onMessageInput = event => {
 const updateTextAreaSize = () => {
     // Infer number of lines of the text area and make it scale accordingly
     let lineCount = app.newMessage.split('\n').length;
-    lineCount = lineCount + app.newMessage.split('\n').filter(line => line.length > 80).length;
+    lineCount = lineCount + app.newMessage.split('\n').filter((line) => line.length > 80).length;
     messageTextAreaRows.value = Math.min(lineCount, 8);
 };
 
 /**
  * Navigate into message history
  */
-const onNavigateIntoHistory = function(event, offset) {
+const onNavigateIntoHistory = function (event, offset) {
     if (offset < 0 && event.target.selectionStart > 1) {
         return;
     }
     if (offset > 0 && event.target.selectionStart < event.target.value.length - 1) {
         return;
     }
-    let index = historyIndex.value === null ? sentMessageHistory.value.length - 1 : historyIndex.value + offset;
+    const index = historyIndex.value === null ? sentMessageHistory.value.length - 1 : historyIndex.value + offset;
     if (typeof sentMessageHistory.value[index] === 'undefined') {
         return;
     }
@@ -112,7 +118,7 @@ const onNavigateIntoHistory = function(event, offset) {
 /**
  * Send the new message
  */
-const sendMessage = function() {
+const sendMessage = function () {
     sentMessageHistory.value.push(app.newMessage);
     sentMessageHistory.value.splice(0, sentMessageHistory.value.length - MESSAGE_HISTORY_LENGTH);
     historyIndex.value = null;
@@ -123,10 +129,8 @@ const sendMessage = function() {
 /**
  * Add a RisiBank media
  */
-const openRisiBank = function() {
-
+const openRisiBank = function () {
     risibank.activate({
-
         // Use default options for Overlay + Dark
         // Other defaults are all combinations of Overlay/Modal/Frame and Light/Dark/LightClassic/DarkClassic, e.g. RisiBank.Defaults.Frame.LightClassic
         ...RisiBank.Defaults.Overlay.Dark,
@@ -136,19 +140,16 @@ const openRisiBank = function() {
     });
 };
 
-
 /**
  * Autocomplete the username
  */
-const onKeyUpTab = function() {
+const onKeyUpTab = function () {
     const messageMatch = app.newMessage.match(/([*a-zA-Z0-9_-]+)$/);
     const username = messageMatch ? messageMatch[0].toLowerCase() : null;
-    if (! username) {
+    if (!username) {
         return;
     }
-    const matches = client.state.connectedList
-        .map(entry => entry.identifier)
-        .filter(identifier => identifier.indexOf(username) === 0);
+    const matches = client.state.connectedList.map((entry) => entry.identifier).filter((identifier) => identifier.indexOf(username) === 0);
     if (matches.length !== 1) {
         return;
     }
@@ -184,90 +185,60 @@ const hasUnreadMessagesInOtherRooms = computed(() => {
  */
 const recordingAudio = ref(false);
 const recordingAudioStopCb = ref(null);
-const uploadAudio = async function() {
+const uploadAudio = async function () {
     if (recordingAudio.value) {
         // Stop recording
-        const {blob, uri, audio} = await recordingAudioStopCb.value();
+        const { blob, uri, audio } = await recordingAudioStopCb.value();
         client.sendAudio(blob);
     } else {
         // Start recording
         recordingAudioStopCb.value = await AudioRecorder.start();
     }
-    recordingAudio.value = ! recordingAudio.value;
+    recordingAudio.value = !recordingAudio.value;
 };
-const cancelAudio = function() {
+const cancelAudio = function () {
     if (recordingAudio.value) {
         recordingAudioStopCb.value();
     }
     recordingAudio.value = false;
 };
-
 </script>
 
 <template>
     <div class="p-2">
         <!-- New message form -->
         <div class="flex flex-col-reverse lg:flex-row flex-nowrap">
-
             <!-- Add elements to message -->
             <div class="flex justify-center">
-
                 <!-- Go to room list -->
                 <div class="lg:hidden grow">
-                    <button
-                        class="form-control"
-                        @click="app.mobileSetView('left')"
-                    >
+                    <button class="form-control" @click="app.mobileSetView('left')">
                         <fa
-                            icon="chevron-left" 
+                            icon="chevron-left"
                             :class="{
                                 'text-danger': hasUnreadMessagesInOtherRooms,
                             }"
                         />
-                        <fa
-                            v-if="hasUnreadMessagesInOtherRooms"
-                            icon="bell"
-                            class="ml-2 text-danger"
-                        />
-                        <fa
-                            v-else
-                            icon="gears"
-                            class="ml-2"
-                        />
+                        <fa v-if="hasUnreadMessagesInOtherRooms" icon="bell" class="ml-2 text-danger" />
+                        <fa v-else icon="gears" class="ml-2" />
                     </button>
                 </div>
 
                 <!-- Upload media -->
                 <div title="Upload a media" class="flex flex-col justify-end">
-                    <label
-                        class="form-control cursor-pointer w-12"
-                        for="file-input"
-                    >
+                    <label class="form-control cursor-pointer w-12" for="file-input">
                         <fa icon="upload" />
                     </label>
-                    <input
-                        ref="fileUploadInput"
-                        @change="onFileInputChange"
-                        type="file"
-                        id="file-input"
-                        class="hidden"
-                    />
+                    <input ref="fileUploadInput" @change="onFileInputChange" type="file" id="file-input" class="hidden" />
                 </div>
 
                 <!-- Send audio -->
                 <div title="Send an audio" class="ml-2 flex flex-col justify-end">
                     <div class="flex">
-                        <button
-                            class="w-12 form-control"
-                            @click="uploadAudio"
-                        >
+                        <button class="w-12 form-control" @click="uploadAudio">
                             <fa icon="microphone" :class="{ 'text-primary': recordingAudio }" />
                         </button>
-                        <button
-                            v-show="recordingAudio"
-                            class="ml-2 w-12 form-control"
-                            @click="cancelAudio"
-                        >
+                        <button v-show="recordingAudio" class="ml-2 w-12 form-control" @click="cancelAudio">
                             <fa icon="ban" class="text-danger" />
                         </button>
                     </div>
@@ -276,16 +247,13 @@ const cancelAudio = function() {
                 <!-- RisiBank -->
                 <div title="Add a media from RisiBank" class="flex flex-col justify-end">
                     <button @click="openRisiBank" class="form-control ml-2 w-12 h-10 align-bottom">
-                        <img src="/assets/images/icons/risibank.png" class="w-4 h-4">
+                        <img src="/assets/images/icons/risibank.png" class="w-4 h-4" />
                     </button>
                 </div>
 
                 <!-- Go to user list -->
                 <div class="lg:hidden grow text-end">
-                    <button
-                        class="form-control"
-                        @click="app.mobileSetView('right')"
-                    >
+                    <button class="form-control" @click="app.mobileSetView('right')">
                         <fa icon="users" class="mr-2" />
                         <fa icon="chevron-right" />
                     </button>
@@ -294,7 +262,6 @@ const cancelAudio = function() {
 
             <!-- Message & send button -->
             <div class="mb-2 lg:mb-0 grow w-full lg:w-0 flex">
-
                 <!-- New message -->
                 <div class="grow flex flex-col">
                     <!-- Typing list -->
@@ -307,7 +274,7 @@ const cancelAudio = function() {
                         class="mousetrap form-control lg:ml-2 scrollbar resize-none"
                         type="text"
                         :placeholder="client.state.currentRoom ? `New message / ${client.state.currentRoom.name}` : '❌ Disconnected'"
-                        :disabled="! client.state.currentRoom"
+                        :disabled="!client.state.currentRoom"
                         @input="onMessageInput"
                         @keyup.up.exact="onNavigateIntoHistory($event, -1)"
                         @keyup.down.exact="onNavigateIntoHistory($event, 1)"
@@ -328,5 +295,4 @@ const cancelAudio = function() {
     </div>
 </template>
 
-<style scoped>
-</style>
+<style scoped></style>
