@@ -104,29 +104,33 @@ export class ConnectedListPlugin extends GlobalPlugin {
     private _syncNow() {
         this.syncLastDate = new Date();
 
+        const sortFunction = (a: Session, b: Session) => {
+            const sortArray = (session: Session): Array<number> => [
+                session.connections.length > 0 ? 1 : 0,
+                session.deadSince ? session.deadSince.getTime() : 0,
+                session.user.right,
+                session.user.xp,
+            ];
+            const aArray = sortArray(a);
+            const bArray = sortArray(b);
+            for (let i = 0; i < aArray.length; ++i) {
+                if (aArray[i] !== bArray[i]) {
+                    return bArray[i] - aArray[i];
+                }
+            }
+            return a.user.username.localeCompare(b.user.username);
+        };
+
         // Build a list of anon sessions to send to guests
         const anonSessions = Object.values(Session.sessions)
+            .sort(sortFunction)
             .map((sess) => sess.sanitized())
-            .map((sess) => ({ ...sess, user: { ...sess.user, money: 0, right: -1, xp: 0 } }))
-            .sort((a, b) => {
-                if (a.connectionCount === 0 || b.connectionCount === 0) {
-                    return b.connectionCount - a.connectionCount;
-                }
-                return a.user.username.localeCompare(b.user.username);
-            });
+            .map((sess) => ({ ...sess, user: { ...sess.user, money: 0, right: -1, xp: 0 } }));
 
         // Real session list
         const realSessions = Object.values(Session.sessions)
-            .map((sess) => sess.sanitized())
-            .sort((a, b) => {
-                if (a.connectionCount === 0 || b.connectionCount === 0) {
-                    return b.connectionCount - a.connectionCount;
-                }
-                if (a.user.right !== b.user.right) {
-                    return b.user.right - a.user.right;
-                }
-                return b.user.xp - a.user.xp;
-            });
+            .sort(sortFunction)
+            .map((sess) => sess.sanitized());
 
         Object.values(Session.sessions).forEach((session) => {
             session.connections.forEach((connection) => {
