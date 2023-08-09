@@ -195,8 +195,8 @@ export class Room implements IBroadcaster {
         // Otherwise, load data from this file
         try {
             const data = JSON.parse(fs.readFileSync(this.getStoragePath()).toString()) as StoredRoom;
-            this.name = data.name || this.name;
-            this.pluginGroupNames = data.pluginGroupNames || this.pluginGroupNames;
+            this.name = data.name ?? this.name;
+            this.pluginGroupNames = data.pluginGroupNames ?? this.pluginGroupNames;
             this.isPrivate = !!data.isPrivate;
             this.whitelist = data.whitelist;
         } catch (error) {
@@ -230,7 +230,9 @@ export class Room implements IBroadcaster {
      * Load last messages from the database
      */
     public async loadLastMessagesFromDB(): Promise<void> {
-        this.messages = (await MessageController.getMessages(['room_id', '=', this.id], 'id DESC', Room.MESSAGE_HISTORY_LENGTH)).sort((m1, m2) => m1.id - m2.id);
+        this.messages = (await MessageController.getMessages(['room_id', '=', this.id], 'id DESC', Room.MESSAGE_HISTORY_LENGTH)).sort(
+            (m1, m2) => m1.id - m2.id,
+        );
     }
 
     /**
@@ -287,7 +289,10 @@ export class Room implements IBroadcaster {
             .slice(startFromIndex, startFromIndex + count)
             .filter((message) => {
                 // Do not send messages from blacklisted users
-                if (Config.PREFERENCES.invertedBlacklist && BlacklistPlugin.hasBlacklisted(message.user, connection.session.user.username)) {
+                if (
+                    Config.PREFERENCES.invertedBlacklist &&
+                    BlacklistPlugin.hasBlacklisted(message.user, connection.session.user.username)
+                ) {
                     return false;
                 }
                 return true;
@@ -403,7 +408,11 @@ export class Room implements IBroadcaster {
         // Send it to clients
         for (const receiver of this.connections) {
             // If receiver was blacklisted by sender, do not send the message
-            if (Config.PREFERENCES.invertedBlacklist && options.connection && BlacklistPlugin.hasBlacklisted(options.connection.session.user, receiver.session.user.username)) {
+            if (
+                Config.PREFERENCES.invertedBlacklist &&
+                options.connection &&
+                BlacklistPlugin.hasBlacklisted(options.connection.session.user, receiver.session.user.username)
+            ) {
                 continue;
             }
             receiver.send('message', message.sanitized());
@@ -414,9 +423,9 @@ export class Room implements IBroadcaster {
         // Store it into the database
         const sqlQuery = SQL`insert into messages
             (\`id\`, \`room_id\`, \`user_id\`, \`quoted_message_id\`, \`content\`, \`date\`, \`ip\`) values
-            (${message.id}, ${this.id}, ${options.user.id}, ${options.quoted ? options.quoted.id : null}, ${message.content}, ${message.createdTime}, ${
-    options.connection ? options.connection.ip : null
-})`;
+            (${message.id}, ${this.id}, ${options.user.id}, ${options.quoted ? options.quoted.id : null}, ${message.content}, ${
+                message.createdTime
+            }, ${options.connection ? options.connection.ip : null})`;
         await DatabaseHelper.db.run(sqlQuery);
         // Return created message
         return message;
