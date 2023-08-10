@@ -21,7 +21,7 @@ const client = useClientStore();
                 hidden: app.mobileView !== 'left',
             }"
         >
-            <RoomList class="pl-2 pr-4 my-6 grow overflow-y-auto scrollbar" />
+            <RoomList class="pl-2 pr-4 my-6 flex-grow" />
             <PlayerChannelList class="pl-2 pr-4 mt-3 mb-2" />
             <div class="p-2 text-end lg:hidden">
                 <button class="form-control mr-2" @click="app.mobileSetView('middle')">
@@ -66,7 +66,12 @@ const client = useClientStore();
                 >
                     <fa icon="folder-tree" />
                 </button>
-                <button v-show="true" @click="app.toggleModal('profile')" title="Open user settings" class="form-control col-start-2 col-span-1">
+                <button
+                    v-show="true"
+                    @click="app.toggleModal('profile')"
+                    title="Open user settings"
+                    class="form-control col-start-2 col-span-1"
+                >
                     <fa icon="gears" />
                 </button>
             </div>
