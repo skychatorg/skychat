@@ -3,7 +3,6 @@ import { GlobalPlugin } from '../GlobalPlugin';
 import { RoomManager } from '../../skychat/RoomManager';
 import { PlayerChannelManager } from './PlayerChannelManager';
 import { YoutubeFetcher } from './fetcher/YoutubeFetcher';
-import { PluginCommandRules } from '../Plugin';
 import { IFrameFetcher } from './fetcher/IFrameFetcher';
 import { VideoFetcher } from './fetcher/VideoFetcher';
 import { TwitchFetcher } from './fetcher/TwitchFetcher';
@@ -26,11 +25,19 @@ export class PlayerPlugin extends GlobalPlugin {
 
     static readonly commandName = 'player';
 
-    static readonly commandAliases = ['playerchannelmanage', 'playerchannel', 'playersync', 'playersearch', 'playerremovevideo', 'schedule', 'unschedule'].concat(Object.keys(PlayerPlugin.FETCHERS));
+    static readonly commandAliases = [
+        'playerchannelmanage',
+        'playerchannel',
+        'playersync',
+        'playersearch',
+        'playerremovevideo',
+        'schedule',
+        'unschedule',
+    ].concat(Object.keys(PlayerPlugin.FETCHERS));
 
     static readonly defaultDataStorageValue: { channel: null | number } = { channel: null };
 
-    readonly rules: { [alias: string]: PluginCommandRules } = {
+    readonly rules = {
         player: {
             minCount: 1,
             maxCount: 1,
@@ -146,40 +153,40 @@ export class PlayerPlugin extends GlobalPlugin {
         }
 
         switch (alias) {
-        case 'player':
-            await this.handlePlayer(param, connection);
-            break;
+            case 'player':
+                await this.handlePlayer(param, connection);
+                break;
 
-        case 'playerchannel':
-            await this.handlePlayerChannel(param, connection);
-            break;
+            case 'playerchannel':
+                await this.handlePlayerChannel(param, connection);
+                break;
 
-        case 'playerchannelmanage':
-            await this.handlePlayerChannelManage(param, connection);
-            break;
+            case 'playerchannelmanage':
+                await this.handlePlayerChannelManage(param, connection);
+                break;
 
-        case 'playersync':
-            await this.handlePlayerSync(param, connection);
-            break;
+            case 'playersync':
+                await this.handlePlayerSync(param, connection);
+                break;
 
-        case 'playersearch':
-            await this.handlePlayerSearch(param, connection);
-            break;
+            case 'playersearch':
+                await this.handlePlayerSearch(param, connection);
+                break;
 
-        case 'playerremovevideo':
-            await this.handlePlayerRemoveVideo(param, connection);
-            break;
+            case 'playerremovevideo':
+                await this.handlePlayerRemoveVideo(param, connection);
+                break;
 
-        case 'schedule':
-            await this.handlePlayerSchedule(param, connection);
-            break;
+            case 'schedule':
+                await this.handlePlayerSchedule(param, connection);
+                break;
 
-        case 'unschedule':
-            await this.handlePlayerUnschedule(param, connection);
-            break;
+            case 'unschedule':
+                await this.handlePlayerUnschedule(param, connection);
+                break;
 
-        default:
-            throw new Error('Unsupported action');
+            default:
+                throw new Error('Unsupported action');
         }
     }
 
@@ -189,7 +196,8 @@ export class PlayerPlugin extends GlobalPlugin {
      * @returns
      */
     public canAddMedia(session: Session) {
-        const expectedRight = Config.PREFERENCES.minRightForPlayerAddMedia === 'op' ? Infinity : Config.PREFERENCES.minRightForPlayerAddMedia;
+        const expectedRight =
+            Config.PREFERENCES.minRightForPlayerAddMedia === 'op' ? Infinity : Config.PREFERENCES.minRightForPlayerAddMedia;
         const actualRight = session.isOP() ? Infinity : session.user.right;
         return actualRight >= expectedRight;
     }
@@ -200,7 +208,8 @@ export class PlayerPlugin extends GlobalPlugin {
      * @returns
      */
     public canSchedule(session: Session) {
-        const expectedRight = Config.PREFERENCES.minRightForPlayerManageSchedule === 'op' ? Infinity : Config.PREFERENCES.minRightForPlayerManageSchedule;
+        const expectedRight =
+            Config.PREFERENCES.minRightForPlayerManageSchedule === 'op' ? Infinity : Config.PREFERENCES.minRightForPlayerManageSchedule;
         const actualRight = session.isOP() ? Infinity : session.user.right;
         return actualRight >= expectedRight;
     }
@@ -443,57 +452,57 @@ export class PlayerPlugin extends GlobalPlugin {
         }
 
         switch (param) {
-        case 'replay30':
-            if (!channel.hasPlayerPermission(connection.session)) {
-                throw new Error('You are not authorized to modify the player right now');
-            }
-            channel.moveCursor(-30 * 1000);
-            break;
-
-        case 'skip30':
-            if (!channel.hasPlayerPermission(connection.session)) {
-                throw new Error('You are not authorized to modify the player right now');
-            }
-            channel.moveCursor(+30 * 1000);
-            break;
-
-        case 'skip':
-            // If user has player permission, skip directly
-            if (channel.hasPlayerPermission(connection.session)) {
-                channel.skip();
-                return;
-            }
-            // Has user permission to voteskip?
-            if (!this.canAddMedia(connection.session)) {
-                throw new Error('You are not authorized to perform this action');
-            }
-            // Vote skip
-            // eslint-disable-next-line no-case-declarations
-            const playerData = channel.getPlayerData();
-            if (this.manager.getPlugin('poll') && playerData.current) {
-                const poll = await (this.manager.getPlugin('poll') as PollPlugin).poll(
-                    `${channel.name}: Skip media?`,
-                    `${connection.session.identifier} wants to skip ${playerData.current.video.title}. Skip media?`,
-                    {
-                        audience: channel.sessions,
-                        defaultValue: false,
-                        timeout: 10 * 1000,
-                        minVotes: 2,
-                    },
-                );
-                if (poll.getResult()) {
-                    channel.skip();
+            case 'replay30':
+                if (!channel.hasPlayerPermission(connection.session)) {
+                    throw new Error('You are not authorized to modify the player right now');
                 }
-                return;
-            }
-            throw new Error('You are not authorized to modify the player right now');
+                channel.moveCursor(-30 * 1000);
+                break;
 
-        case 'flush':
-            if (!connection.session.isOP()) {
-                throw new Error('Only OP can flush the queue');
-            }
-            channel.flushQueue();
-            break;
+            case 'skip30':
+                if (!channel.hasPlayerPermission(connection.session)) {
+                    throw new Error('You are not authorized to modify the player right now');
+                }
+                channel.moveCursor(+30 * 1000);
+                break;
+
+            case 'skip':
+                // If user has player permission, skip directly
+                if (channel.hasPlayerPermission(connection.session)) {
+                    channel.skip();
+                    return;
+                }
+                // Has user permission to voteskip?
+                if (!this.canAddMedia(connection.session)) {
+                    throw new Error('You are not authorized to perform this action');
+                }
+                // Vote skip
+                // eslint-disable-next-line no-case-declarations
+                const playerData = channel.getPlayerData();
+                if (this.manager.getPlugin('poll') && playerData.current) {
+                    const poll = await (this.manager.getPlugin('poll') as PollPlugin).poll(
+                        `${channel.name}: Skip media?`,
+                        `${connection.session.identifier} wants to skip ${playerData.current.video.title}. Skip media?`,
+                        {
+                            audience: channel.sessions,
+                            defaultValue: false,
+                            timeout: 10 * 1000,
+                            minVotes: 2,
+                        },
+                    );
+                    if (poll.getResult()) {
+                        channel.skip();
+                    }
+                    return;
+                }
+                throw new Error('You are not authorized to modify the player right now');
+
+            case 'flush':
+                if (!connection.session.isOP()) {
+                    throw new Error('Only OP can flush the queue');
+                }
+                channel.flushQueue();
+                break;
         }
     }
 

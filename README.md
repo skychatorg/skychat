@@ -117,6 +117,7 @@ The `config/preferences.json` file specifies application preferences. The availa
 | maxConsecutiveMessages                | number |  1  | Max. number of consecutive messages in a room |
 | maxMessageMergeDelayMin               | number |  10 | Max. minutes before not merging consecutive messages |
 | invertedBlacklist                     | boolean |  false  | Whether blacklisted users can not see messages from users who blacklisted them |
+| messagesCooldown                      | ([number, number])[] | [ [ -1, 0] ] | Minimum duration between two consecutive messages for each right level, sorted by ascending right number |
 
 ### Customize the fake message history
 

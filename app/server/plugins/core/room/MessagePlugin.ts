@@ -13,7 +13,10 @@ export class MessagePlugin extends RoomPlugin {
     readonly hidden = true;
 
     readonly rules = {
-        message: { minCount: 1 },
+        message: {
+            minCount: 1,
+            coolDown: Config.PREFERENCES.messagesCooldown,
+        },
     };
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
@@ -48,10 +51,15 @@ export class MessagePlugin extends RoomPlugin {
 
         // If the last N messages in this room are from the same user, we merge the messages
         const lastMessages = this.room.messages.slice(-Config.PREFERENCES.maxConsecutiveMessages);
-        const matchingMessages = lastMessages.filter((m) => m.user.username.toLowerCase() === connection.session.user.username.toLowerCase());
-        const tooManyMessages = matchingMessages.length === Config.PREFERENCES.maxConsecutiveMessages && matchingMessages.length === lastMessages.length;
+        const matchingMessages = lastMessages.filter(
+            (m) => m.user.username.toLowerCase() === connection.session.user.username.toLowerCase(),
+        );
+        const tooManyMessages =
+            matchingMessages.length === Config.PREFERENCES.maxConsecutiveMessages && matchingMessages.length === lastMessages.length;
         const lastMessageTooRecent =
-            lastMessages.length > 0 && new Date().getTime() - lastMessages[lastMessages.length - 1].createdTime.getTime() < Config.PREFERENCES.maxMessageMergeDelayMin * 60 * 1000;
+            lastMessages.length > 0 &&
+            new Date().getTime() - lastMessages[lastMessages.length - 1].createdTime.getTime() <
+                Config.PREFERENCES.maxMessageMergeDelayMin * 60 * 1000;
         if (!quoted && tooManyMessages && lastMessageTooRecent) {
             const lastMessage = lastMessages[lastMessages.length - 1];
             lastMessage.edit(lastMessage.content + '\n' + content);

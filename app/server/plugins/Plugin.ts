@@ -22,7 +22,7 @@ export type PluginCommandRules = {
     /**
      * Minimum duration between two consecutive calls
      */
-    coolDown?: number;
+    coolDown?: number | Array<[number, number]>;
 
     /**
      * Maximum number of time this function can be called within a 10 second window
@@ -38,6 +38,8 @@ export type PluginCommandRules = {
         info?: string;
     }[];
 };
+
+export type PluginCommandAllRules = Record<string, PluginCommandRules>;
 
 /**
  * Abstract class that represents a plugin. A plugin has access to multiple points of the application through the usage
@@ -80,7 +82,7 @@ export abstract class Plugin {
     /**
      * Define command rules, ie expected parameters and cooldown. Can be defined globally or per command alias.
      */
-    public readonly rules?: { [alias: string]: PluginCommandRules };
+    public readonly rules?: PluginCommandAllRules;
 
     /**
      * Minimum right to execute this function
@@ -176,66 +178,77 @@ export abstract class Plugin {
             throw new Error('This command needs to be executed in a room');
         }
 
-        // Split message
-        const splitParams = param.length === 0 ? [] : param.split(' ');
+        if (!connection.session.isOP()) {
+            // Check user right
+            if (connection.session.user.right < this.minRight) {
+                throw new Error("You don't have the right to execute this command");
+            }
 
-        // Check user right
-        if (connection.session.user.right < this.minRight) {
-            throw new Error('You don\'t have the right to execute this command');
-        }
+            // Check OP
+            if (this.opOnly && !connection.session.isOP()) {
+                throw new Error('Command is only for op');
+            }
 
-        // Check op
-        if (this.opOnly && !connection.session.isOP()) {
-            throw new Error('Command is only for op');
-        }
+            // Check parameters
+            if (this.rules && typeof this.rules[alias] === 'object') {
+                // Get rule object
+                const identifier = connection.session.identifier;
+                const entryPointRule = this.rules[alias];
+                const maxCallsPer10Seconds = entryPointRule.maxCallsPer10Seconds || Infinity;
 
-        // Check parameters
-        if (this.rules && typeof this.rules[alias] === 'object') {
-            // Get rule object
-            const entryPointRule = this.rules[alias];
-            const minParamCount = entryPointRule.minCount || 0;
-            const maxParamCount = entryPointRule.maxCount || Infinity;
-            const coolDown = entryPointRule.coolDown || 0;
-            const maxCallsPer10Seconds = entryPointRule.maxCallsPer10Seconds || Infinity;
-            const params = entryPointRule.params || [];
-
-            // Check cool down
-            const identifier = connection.session.identifier;
-            // 1. Check
-            if (typeof this.coolDownEntries[identifier] !== 'undefined') {
-                // If cool down still applies
-                if (new Date() < new Date(this.coolDownEntries[identifier].last.getTime() + coolDown)) {
-                    throw new Error(`${alias}: Cool down still applies`);
+                // Check cool down
+                // 0. Get cool down parameters
+                let coolDown: number = 0;
+                if (typeof entryPointRule.coolDown === 'number') {
+                    coolDown = entryPointRule.coolDown;
+                } else if (Array.isArray(entryPointRule.coolDown) && entryPointRule.coolDown.length) {
+                    let entryIndex = entryPointRule.coolDown.findIndex(([right]) => connection.session.user.right <= right);
+                    entryIndex = entryIndex === -1 ? entryPointRule.coolDown.length - 1 : entryIndex;
+                    coolDown = entryPointRule.coolDown[entryIndex][1];
                 }
-                // If 10 second window entry still valid
-                if (this.coolDownEntries[identifier].first.getTime() + 10 * 1000 > new Date().getTime()) {
-                    // If maximum number of calls per 10 seconds reached
-                    if (this.coolDownEntries[identifier].count > maxCallsPer10Seconds) {
-                        throw new Error(`${alias}: 10 seconds window cool down still applies`);
+                // 1. Check
+                if (typeof this.coolDownEntries[identifier] !== 'undefined') {
+                    // If cool down still applies
+                    if (new Date() < new Date(this.coolDownEntries[identifier].last.getTime() + coolDown)) {
+                        throw new Error(`${alias}: Cool down still applies`);
+                    }
+                    // If 10 second window entry still valid
+                    if (this.coolDownEntries[identifier].first.getTime() + 10 * 1000 > new Date().getTime()) {
+                        // If maximum number of calls per 10 seconds reached
+                        if (this.coolDownEntries[identifier].count > maxCallsPer10Seconds) {
+                            throw new Error(`${alias}: 10 seconds window cool down still applies`);
+                        }
                     }
                 }
-            }
-            // 2. Update cool down entry
-            if (typeof this.coolDownEntries[identifier] !== 'undefined') {
-                // If entry expired
-                if (this.coolDownEntries[identifier].first.getTime() + 10 * 1000 < new Date().getTime()) {
-                    delete this.coolDownEntries[identifier];
+                // 2. Update cool down entry
+                if (typeof this.coolDownEntries[identifier] !== 'undefined') {
+                    // If entry expired
+                    if (this.coolDownEntries[identifier].first.getTime() + 10 * 1000 < new Date().getTime()) {
+                        delete this.coolDownEntries[identifier];
+                    }
+                }
+                if (typeof this.coolDownEntries[identifier] === 'undefined') {
+                    this.coolDownEntries[identifier] = { first: new Date(), last: new Date(), count: 1 };
+                } else {
+                    this.coolDownEntries[identifier].last = new Date();
+                    this.coolDownEntries[identifier].count++;
                 }
             }
-            if (typeof this.coolDownEntries[identifier] === 'undefined') {
-                this.coolDownEntries[identifier] = { first: new Date(), last: new Date(), count: 1 };
-            } else {
-                this.coolDownEntries[identifier].last = new Date();
-                this.coolDownEntries[identifier].count++;
-            }
+        }
 
-            // Check parameter count
+        // Check parameter count and format
+        if (this.rules && typeof this.rules[alias] === 'object') {
+            const splitParams = param.length === 0 ? [] : param.split(' ');
+            const entryPointRule = this.rules[alias];
+            const params = entryPointRule.params || [];
+            const minParamCount = entryPointRule.minCount || 0;
+            const maxParamCount = entryPointRule.maxCount || Infinity;
+
             if (splitParams.length < minParamCount) {
                 throw new Error('Expected at least ' + minParamCount + ' parameters. Got ' + splitParams.length);
             } else if (splitParams.length > maxParamCount) {
                 throw new Error('Expected at most ' + maxParamCount + ' parameters. Got ' + splitParams.length);
             }
-
             // Check parameter format
             for (let i = 0; i < Math.min(params.length, splitParams.length); ++i) {
                 if (!params[i].pattern.exec(splitParams[i])) {
@@ -259,7 +272,14 @@ export abstract class Plugin {
     /**
      * Plugin implementation
      */
-    public abstract run(alias: string, param: string, connection: Connection, session: Session, user: User, room: Room | null): Promise<void>;
+    public abstract run(
+        alias: string,
+        param: string,
+        connection: Connection,
+        session: Session,
+        user: User,
+        room: Room | null,
+    ): Promise<void>;
 
     /**
      * When binary data is received

@@ -22,6 +22,7 @@ export type Preferences = {
     maxConsecutiveMessages: number;
     maxMessageMergeDelayMin: number;
     invertedBlacklist: boolean;
+    messagesCooldown: Array<[number, number]>;
 };
 
 export type PublicConfig = {
@@ -108,7 +109,9 @@ export class Config {
         }
         Config.OP = env.op;
         if (Config.OP.length === 0) {
-            console.warn('You did not define any OP user in the .env.json file. You will not be able to escalate user right unless you add your username in this file.');
+            console.warn(
+                'You did not define any OP user in the .env.json file. You will not be able to escalate user right unless you add your username in this file.',
+            );
         }
         Config.OP_PASSCODE = env.op_passcode;
         if (typeof Config.OP_PASSCODE !== 'string') {
@@ -163,10 +166,13 @@ export class Config {
             'maxConsecutiveMessages',
             'maxMessageMergeDelayMin',
             'invertedBlacklist',
+            'messagesCooldown',
         ];
         for (const key of keys) {
             if (typeof (Config.PREFERENCES as any)[key] === 'undefined') {
-                throw new Error(`The field "${key}" is missing in the preferences.json file. Please copy the field from the preferences.json.template file to the preferences.json file.`);
+                throw new Error(
+                    `The field "${key}" is missing in the preferences.json file. Please copy the field from the preferences.json.template file to the preferences.json file.`,
+                );
             }
         }
     }

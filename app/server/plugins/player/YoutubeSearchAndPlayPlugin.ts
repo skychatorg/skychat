@@ -1,7 +1,6 @@
 import { Connection } from '../../skychat/Connection';
 import { GlobalPlugin } from '../GlobalPlugin';
 import { PlayerPlugin } from './PlayerPlugin';
-import { PluginCommandRules } from '../Plugin';
 import { YoutubeFetcher } from './fetcher/YoutubeFetcher';
 
 /**
@@ -10,7 +9,7 @@ import { YoutubeFetcher } from './fetcher/YoutubeFetcher';
 export class YoutubeSearchAndPlayPlugin extends GlobalPlugin {
     static readonly commandName = '#';
 
-    readonly rules: { [alias: string]: PluginCommandRules } = {
+    readonly rules = {
         '#': {
             minCount: 1,
             maxCallsPer10Seconds: 2,

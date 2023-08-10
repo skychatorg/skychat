@@ -17,5 +17,8 @@
     "maxNewlinesPerMessage": 20,
     "maxConsecutiveMessages": 1,
     "maxMessageMergeDelayMin": 10,
-    "invertedBlacklist": false
+    "invertedBlacklist": false,
+    "messagesCooldown": [
+        [-1, 0]
+    ]
 }
