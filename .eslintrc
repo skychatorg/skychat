@@ -30,49 +30,6 @@
                 "arrowParens": "always",
                 "endOfLine": "auto"
             }
-        ],
-        "indent": [
-            "error",
-            4
-        ],
-        "linebreak-style": [
-            "error",
-            "unix"
-        ],
-        "no-trailing-spaces": [
-            "error"
-        ],
-        "quotes": [
-            "error",
-            "single"
-        ],
-        "semi": [
-            "error",
-            "always"
-        ],
-        "object-curly-spacing": [
-            "warn",
-            "always"
-        ],
-        "space-before-blocks": [
-            "warn",
-            "always"
-        ],
-        "padded-blocks": [
-            "error",
-            { "blocks": "never", "switches": "never", "classes": "never" }
-        ],
-        "space-infix-ops": [
-            "error"
-        ],
-        "no-multi-spaces": [
-            "error"
-        ],
-        "@typescript-eslint/no-explicit-any": [
-            "off"
-        ],
-        "@typescript-eslint/no-non-null-assertion": [
-            "off"
         ]
     }
 }

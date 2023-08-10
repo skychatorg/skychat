@@ -27,17 +27,17 @@ export class RoomManagerPlugin extends RoomPlugin {
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
         switch (alias) {
-        case 'roomset':
-            await this.handleRoomSet(param, connection);
-            break;
+            case 'roomset':
+                await this.handleRoomSet(param, connection);
+                break;
 
-        case 'roomcreate':
-            await this.handleRoomCreate(param, connection);
-            break;
+            case 'roomcreate':
+                await this.handleRoomCreate(param, connection);
+                break;
 
-        case 'roomdelete':
-            await this.handleRoomDelete(param, connection);
-            break;
+            case 'roomdelete':
+                await this.handleRoomDelete(param, connection);
+                break;
         }
     }
 
@@ -67,12 +67,12 @@ export class RoomManagerPlugin extends RoomPlugin {
         const value = param.substr(param.indexOf(' ') + 1).trim();
 
         switch (property) {
-        case 'name':
-            this.room.name = value;
-            break;
+            case 'name':
+                this.room.name = value;
+                break;
 
-        default:
-            throw new Error(`Invalid property ${property}`);
+            default:
+                throw new Error(`Invalid property ${property}`);
         }
         Object.values(Session.sessions).forEach((session) => this.room.manager.sendRoomList(session));
         const message = UserController.createNeutralMessage({ id: 0, content: `Room property ${property} set to ${value}` });

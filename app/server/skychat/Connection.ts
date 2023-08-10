@@ -55,7 +55,10 @@ export class Connection extends EventEmitter implements IBroadcaster {
         this.origin = typeof request.headers['origin'] === 'string' ? request.headers['origin'] : '';
         this.userAgent = ua.getBrowser().name || '';
         this.device = ua.getDevice().type || '';
-        this.ip = typeof request.headers['x-forwarded-for'] === 'string' ? request.headers['x-forwarded-for'] : request.connection.remoteAddress || '';
+        this.ip =
+            typeof request.headers['x-forwarded-for'] === 'string'
+                ? request.headers['x-forwarded-for']
+                : request.connection.remoteAddress || '';
         this.lastPingDate = new Date();
 
         session.attachConnection(this);
@@ -197,7 +200,7 @@ export class Connection extends EventEmitter implements IBroadcaster {
      * @param event
      * @param payload
      */
-    public send(event: string, payload: any) {
+    public send(event: string, payload: unknown) {
         this.webSocket.send(
             JSON.stringify({
                 event,

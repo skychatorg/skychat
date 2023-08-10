@@ -28,7 +28,7 @@ export type SanitizedRoom = {
     whitelist: string[];
     lastReceivedMessageId: number;
     lastReceivedMessageTimestamp: number;
-    plugins: { [pluginName: string]: any };
+    plugins: { [pluginName: string]: unknown };
 };
 
 export class Room implements IBroadcaster {
@@ -367,7 +367,7 @@ export class Room implements IBroadcaster {
      * @param event
      * @param payload
      */
-    public send(event: string, payload: any): void {
+    public send(event: string, payload: unknown): void {
         this.connections.forEach((connection) => connection.send(event, payload));
     }
 
