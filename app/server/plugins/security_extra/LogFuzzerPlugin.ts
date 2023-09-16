@@ -2,9 +2,10 @@ import SQL from 'sql-template-strings';
 import { DatabaseHelper } from '../../skychat/DatabaseHelper';
 import { GlobalPlugin } from '../GlobalPlugin';
 import { RoomManager } from '../../skychat/RoomManager';
+import { Config } from '../../skychat/Config';
 
 export class LogFuzzerPlugin extends GlobalPlugin {
-    static readonly DURATION_BEFORE_FUZZ = 20 * 24 * 60 * 60 * 1000;
+    static readonly DURATION_BEFORE_FUZZ = Config.PREFERENCES.daysBeforeMessageFuzz * 24 * 60 * 60 * 1000;
 
     static readonly FUZZ_COOLDOWN = LogFuzzerPlugin.DURATION_BEFORE_FUZZ;
 
@@ -19,7 +20,7 @@ export class LogFuzzerPlugin extends GlobalPlugin {
      */
     protected storage: { lastId: number } = { lastId: 0 };
 
-    private tickTimeout?: any;
+    private tickTimeout?: NodeJS.Timeout;
 
     constructor(manager: RoomManager) {
         super(manager);
