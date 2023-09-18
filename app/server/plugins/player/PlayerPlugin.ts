@@ -117,7 +117,7 @@ export class PlayerPlugin extends GlobalPlugin {
         super(manager);
 
         for (const fetcherName of Object.keys(PlayerPlugin.FETCHERS)) {
-            this.rules[fetcherName] = {
+            (this.rules as any)[fetcherName] = {
                 minCount: 1,
                 maxCallsPer10Seconds: 10,
                 params: [{ name: 'action', pattern: /./ }],

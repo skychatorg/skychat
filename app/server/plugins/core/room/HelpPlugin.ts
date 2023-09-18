@@ -39,12 +39,13 @@ export class HelpPlugin extends RoomPlugin {
 
             // Get rule object
             const rules: PluginCommandRules = command.rules && command.rules[alias] ? command.rules[alias] : {};
+            const coolDown = Array.isArray(rules.coolDown) ? rules.coolDown.toString() : (rules.coolDown ?? 0) / 1000;
 
             content += `
             <tr>
                 <td>${alias}</td>
                 <td>${command.minRight}</td>
-                <td>${(rules.coolDown || 0) / 1000 || 0}s</td>
+                <td>${coolDown}s</td>
                 <td>${(rules.params || []).map((param: any) => param.name).join(', ')}</td>
             </tr>            
             `;
