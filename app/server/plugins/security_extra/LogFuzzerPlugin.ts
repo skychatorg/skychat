@@ -7,7 +7,7 @@ import { Config } from '../../skychat/Config';
 export class LogFuzzerPlugin extends GlobalPlugin {
     static readonly DURATION_BEFORE_FUZZ = Config.PREFERENCES.daysBeforeMessageFuzz * 24 * 60 * 60 * 1000;
 
-    static readonly FUZZ_COOLDOWN = LogFuzzerPlugin.DURATION_BEFORE_FUZZ;
+    static readonly FUZZ_COOLDOWN = Math.min(LogFuzzerPlugin.DURATION_BEFORE_FUZZ, 7 * 24 * 60 * 60 * 1000);
 
     static readonly commandName = 'logfuzzer';
 
