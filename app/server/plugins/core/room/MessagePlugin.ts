@@ -8,7 +8,7 @@ import SQL from 'sql-template-strings';
 export class MessagePlugin extends RoomPlugin {
     static readonly commandName = 'message';
 
-    readonly minRight = -1;
+    readonly minRight = Config.PREFERENCES.minRightForPublicMessages;
 
     readonly hidden = true;
 

@@ -2,6 +2,7 @@ import fs from 'fs';
 import * as Mail from 'nodemailer/lib/mailer';
 
 export type Preferences = {
+    minRightForPublicMessages: number;
     minRightForPrivateMessages: number;
     minRightForShortTermMessageHistory: number;
     minRightForMessageHistory: number;

@@ -98,6 +98,7 @@ The `config/preferences.json` file specifies application preferences. The availa
 
 | field | type | default | description |
 |-------|------|---------|-------------|
+| minRightForPublicMessages             | number |  -1 | Min. right to send public messages |
 | minRightForPrivateMessages            | number |  -1 | Min. right to send private messages |
 | minRightForShortTermMessageHistory    | number |  -1 | Min. right to access short term room message history |
 | minRightForMessageHistory             | number |  -1 | Min. right to access full room message history |
