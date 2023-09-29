@@ -103,7 +103,13 @@ export class RoomManager {
         );
 
         // Join a room
-        this.server.registerEvent('join-room', this.onJoinRoom.bind(this), 0, 120, new iof.ObjectFilter({ roomId: new iof.NumberFilter(0, Infinity, false) }));
+        this.server.registerEvent(
+            'join-room',
+            this.onJoinRoom.bind(this),
+            0,
+            120,
+            new iof.ObjectFilter({ roomId: new iof.NumberFilter(0, Infinity, false) }),
+        );
 
         // On message sent
         this.server.registerEvent('message', this.onMessage.bind(this), 0, Infinity, 'string');
@@ -344,6 +350,16 @@ export class RoomManager {
     }
 
     /**
+     * Execute before register hook
+     * @param connection
+     */
+    public async executeBeforeRegisterHook(payload: unknown, connection: Connection): Promise<void> {
+        for (const plugin of this.plugins) {
+            await plugin.onBeforeRegister(payload, connection);
+        }
+    }
+
+    /**
      * Execute connection authenticated hook
      * @param connection
      */
@@ -377,6 +393,7 @@ export class RoomManager {
     }
 
     private async onRegister(payload: any, connection: Connection): Promise<void> {
+        await this.executeBeforeRegisterHook(payload, connection);
         await UserController.registerUser(payload.username, payload.password);
         await this.onAuthSuccessful(payload.username, connection);
     }
