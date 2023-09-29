@@ -252,12 +252,13 @@ export class Room implements IBroadcaster {
         if (connection.room === this) {
             return;
         }
+        // Check it's possible to enter the new room
+        await this.executeBeforeConnectionJoinedRoom(connection, this);
         // If this connection was attached to another room
         if (connection.room) {
             // Detach from it
             connection.room.detachConnection(connection);
         }
-        await this.executeBeforeConnectionJoinedRoom(connection);
         // Attach the connection to this room
         connection.setRoom(this);
         this.connections.push(connection);
@@ -324,9 +325,9 @@ export class Room implements IBroadcaster {
      * Execute before room join hook
      * @param connection
      */
-    public async executeBeforeConnectionJoinedRoom(connection: Connection): Promise<void> {
+    public async executeBeforeConnectionJoinedRoom(connection: Connection, room: Room): Promise<void> {
         for (const plugin of this.plugins) {
-            await plugin.onBeforeConnectionJoinedRoom(connection);
+            await plugin.onBeforeConnectionJoinedRoom(connection, room);
         }
     }
 

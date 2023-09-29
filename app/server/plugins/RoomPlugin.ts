@@ -36,7 +36,7 @@ export abstract class RoomPlugin extends Plugin {
     /**
      * Get a summary of this plugin state to include in the room list
      */
-    public getRoomSummary(): any {
+    public getRoomSummary(): null | undefined | any {
         return null;
     }
 
@@ -55,9 +55,10 @@ export abstract class RoomPlugin extends Plugin {
      * Executed before a connection joins a room
      * @abstract
      * @param _connection
+     * @param _room
      */
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    public async onBeforeConnectionJoinedRoom(_connection: Connection): Promise<void> {
+    public async onBeforeConnectionJoinedRoom(_connection: Connection, _room: Room): Promise<void> {
         void 0;
     }
 
