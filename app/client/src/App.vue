@@ -7,6 +7,7 @@ import ProfileModal from '@/components/modal/ProfileModal.vue';
 import PlayerQueueModal from '@/components/modal/PlayerQueueModal.vue';
 import OngoingConvertsModal from '@/components/modal/OngoingConvertsModal.vue';
 import VideoConverterModal from '@/components/modal/VideoConverterModal.vue';
+import ManageRoomsModal from '@/components/modal/ManageRoomsModal.vue';
 </script>
 
 <template>
@@ -19,6 +20,7 @@ import VideoConverterModal from '@/components/modal/VideoConverterModal.vue';
         <VideoConverterModal />
         <GalleryModal />
         <PlayerQueueModal />
+        <ManageRoomsModal />
         <RouterView class="grow" />
     </div>
 </template>

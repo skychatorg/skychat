@@ -100,6 +100,11 @@ export const useAppStore = defineStore('app', {
              * List of next videos to play
              */
             playerQueue: false,
+
+            /**
+             * Room management modal
+             */
+            manageRooms: false,
         },
     }),
 

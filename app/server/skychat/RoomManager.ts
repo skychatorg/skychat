@@ -280,6 +280,42 @@ export class RoomManager {
     }
 
     /**
+     * Reorder public rooms
+     */
+    public async reOrderRooms(order: number[]) {
+        const roomIds = order.filter((roomId) => {
+            if (isNaN(roomId)) {
+                throw new Error('Invalid room id');
+            }
+            if (!this.hasRoomId(roomId)) {
+                throw new Error(`Room ${roomId} not found`);
+            }
+            const room = this.getRoomById(roomId);
+            if (!room || room.isPrivate) {
+                throw new Error(`Room ${roomId} is private`);
+            }
+            return true;
+        });
+
+        // Check there are no duplicates
+        if ([...new Set(roomIds)].length !== roomIds.length) {
+            throw new Error('Duplicate room ids');
+        }
+
+        // Set new order
+        for (let i = 0; i < roomIds.length; ++i) {
+            const room = this.getRoomById(roomIds[i]);
+            if (!room) {
+                throw new Error(`Room ${roomIds[i]} not found`);
+            }
+            room.order = roomIds.length - i;
+        }
+
+        // Send room list
+        Object.values(Session.sessions).forEach((session) => this.sendRoomList(session));
+    }
+
+    /**
      * Build a new session object when there is a new connection
      */
     private async getNewSession(): Promise<Session> {
@@ -318,8 +354,8 @@ export class RoomManager {
                     const getWeight = (room: Room): number => {
                         const privateValue = room.isPrivate ? 0 : 1;
                         const participantCountValue = room.isPrivate ? room.whitelist.length : 1;
-                        const score = [privateValue, participantCountValue, Room.CURRENT_ID - room.id];
-                        return score.reduce((a, b) => a * 1000 + b, 0);
+                        const score = [privateValue, participantCountValue, room.order, Room.CURRENT_ID - room.id];
+                        return score.reduce((a, b) => a * 10000 + b, 0);
                     };
                     return getWeight(b) - getWeight(a);
                 })

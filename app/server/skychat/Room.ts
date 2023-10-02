@@ -16,6 +16,7 @@ import { Config } from './Config';
 
 export type StoredRoom = {
     name: string;
+    order: number;
     pluginGroupNames: string[];
     isPrivate: boolean;
     whitelist: string[];
@@ -76,6 +77,11 @@ export class Room implements IBroadcaster {
      * This room name
      */
     public name: string;
+
+    /**
+     * Room order in the list (only for public rooms)
+     */
+    public order: number = 0;
 
     /**
      * List of enabled plugin groups
@@ -196,6 +202,7 @@ export class Room implements IBroadcaster {
         try {
             const data = JSON.parse(fs.readFileSync(this.getStoragePath()).toString()) as StoredRoom;
             this.name = data.name ?? this.name;
+            this.order = data.order ?? this.order;
             this.pluginGroupNames = data.pluginGroupNames ?? this.pluginGroupNames;
             this.isPrivate = !!data.isPrivate;
             this.whitelist = data.whitelist;
@@ -211,6 +218,7 @@ export class Room implements IBroadcaster {
     private save(): boolean {
         const data: StoredRoom = {
             name: this.name,
+            order: this.order,
             pluginGroupNames: this.pluginGroupNames,
             isPrivate: this.isPrivate,
             whitelist: this.whitelist,

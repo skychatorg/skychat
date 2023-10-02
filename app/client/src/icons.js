@@ -59,6 +59,7 @@ import {
     faInfo,
     faSpinner,
     faUser,
+    faGear,
 } from '@fortawesome/free-solid-svg-icons';
 
 library.add(
@@ -121,6 +122,7 @@ library.add(
     faInfo,
     faSpinner,
     faUser,
+    faGear,
 );
 
 export default library;
