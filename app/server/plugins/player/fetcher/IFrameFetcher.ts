@@ -12,6 +12,8 @@ export class IFrameFetcher implements VideoFetcher {
         'https://digdig.io',
         'https://streamable.com',
         'https://catbox.moe',
+        'https://vocaroo.com',
+        'https://voca.ro',
     ];
 
     /**
