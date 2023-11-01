@@ -99,6 +99,7 @@ export class RoomManager {
                 userId: new iof.NumberFilter(1, Infinity, false),
                 timestamp: new iof.NumberFilter(-Infinity, Infinity, false),
                 signature: new iof.ValueTypeFilter('string'),
+                roomId: new iof.NumberFilter(0, Infinity, false),
             }),
         );
 
@@ -431,18 +432,18 @@ export class RoomManager {
     private async onRegister(payload: any, connection: Connection): Promise<void> {
         await this.executeBeforeRegisterHook(payload, connection);
         await UserController.registerUser(payload.username, payload.password);
-        await this.onAuthSuccessful(payload.username, connection);
+        await this.onAuthSuccessful(connection, payload.username);
     }
 
     private async onLogin(payload: any, connection: Connection): Promise<void> {
         await UserController.login(payload.username, payload.password);
-        await this.onAuthSuccessful(payload.username, connection);
+        await this.onAuthSuccessful(connection, payload.username);
     }
 
     private async onSetToken(payload: any, connection: Connection): Promise<void> {
         try {
             const user = await UserController.verifyAuthToken(payload);
-            await this.onAuthSuccessful(user.username, connection);
+            await this.onAuthSuccessful(connection, user.username, payload.roomId);
         } catch (e) {
             connection.send('auth-token', null);
         }
@@ -469,7 +470,7 @@ export class RoomManager {
      * @param username
      * @param connection
      */
-    private async onAuthSuccessful(username: string, connection: Connection): Promise<void> {
+    private async onAuthSuccessful(connection: Connection, username: string, roomId?: number): Promise<void> {
         // Find an existing session belonging to the same user
         const recycledSession = Session.getSessionByIdentifier(username.toLowerCase());
         let user;
@@ -489,7 +490,12 @@ export class RoomManager {
         }
         connection.send('auth-token', UserController.getAuthToken(user.id));
         this.sendRoomList(connection);
-        const room = this.rooms.find((room) => !room.isPrivate);
+        // Find a room to join
+        let room;
+        if (typeof roomId === 'number') {
+            room = this.getRoomById(roomId);
+        }
+        room = room ?? this.rooms.find((room) => !room.isPrivate);
         if (room) {
             await room.attachConnection(connection);
             await this.executeConnectionAuthenticatedHook(connection);

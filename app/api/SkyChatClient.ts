@@ -69,6 +69,7 @@ export class SkyChatClient extends EventEmitter {
     static readonly CURSOR_DECAY_DELAY = 10 * 1e3;
 
     static readonly LOCAL_STORAGE_TOKEN_KEY = 'skychat-token';
+    static readonly LOCAL_STORAGE_ROOM_ID = 'skychat-room-id';
 
     private _websocket: WebSocket | null = null;
 
@@ -96,7 +97,11 @@ export class SkyChatClient extends EventEmitter {
     private _currentPlayerChannelId: number | null = null;
     private _currentPlayerChannel: SanitizedPlayerChannel | null = null;
     private _playerApiSearchResult: { type: string; items: Array<VideoInfo> } | null = null;
-    private _player: { current: QueuedVideoInfo | null; queue: QueuedVideoInfo[]; cursor: number } = { current: null, queue: [], cursor: 0 };
+    private _player: { current: QueuedVideoInfo | null; queue: QueuedVideoInfo[]; cursor: number } = {
+        current: null,
+        queue: [],
+        cursor: 0,
+    };
     private _playerLastUpdate: Date | null = null;
 
     constructor(public readonly url: string) {
@@ -230,7 +235,8 @@ export class SkyChatClient extends EventEmitter {
             this._user = ownUser.user;
         }
         ({ messageIdToLastSeenUsers: this._messageIdToLastSeenUsers } = this._generateMessageIdToLastSeenUsers());
-        ({ roomConnectedUsers: this._roomConnectedUsers, playerChannelUsers: this._playerChannelUsers } = this._generateRoomConnectedUsersAndPlayerChannelUsers());
+        ({ roomConnectedUsers: this._roomConnectedUsers, playerChannelUsers: this._playerChannelUsers } =
+            this._generateRoomConnectedUsersAndPlayerChannelUsers());
     }
 
     private _onRoomList(rooms: Array<SanitizedRoom>) {
@@ -238,8 +244,11 @@ export class SkyChatClient extends EventEmitter {
         this.emit('update', this.state);
     }
 
-    private _onCurrentRoomId(currentRoomId: number) {
+    private _onCurrentRoomId(currentRoomId: number | null) {
         this._currentRoomId = currentRoomId;
+        if (typeof localStorage !== 'undefined' && currentRoomId !== null) {
+            localStorage.setItem(SkyChatClient.LOCAL_STORAGE_ROOM_ID, currentRoomId.toString());
+        }
         this.emit('update', this.state);
         // Ask for message history if joined a room
         currentRoomId !== null && this.sendMessage('/messagehistory');
@@ -507,7 +516,12 @@ export class SkyChatClient extends EventEmitter {
         if (typeof localStorage !== 'undefined') {
             const authToken = localStorage.getItem(SkyChatClient.LOCAL_STORAGE_TOKEN_KEY);
             if (authToken) {
-                this._sendEvent('set-token', JSON.parse(authToken));
+                const rawRoomId = localStorage.getItem(SkyChatClient.LOCAL_STORAGE_ROOM_ID);
+                const roomId = rawRoomId ? parseInt(rawRoomId) : null;
+                this._sendEvent('set-token', {
+                    ...JSON.parse(authToken),
+                    roomId: roomId ?? undefined,
+                });
             }
         }
         this.emit('update', this.state);
