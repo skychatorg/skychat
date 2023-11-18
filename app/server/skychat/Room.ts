@@ -3,7 +3,6 @@ import SQL from 'sql-template-strings';
 import { Connection } from './Connection';
 import { IBroadcaster } from './IBroadcaster';
 import { Message, MessageConstructorOptions } from './Message';
-import { Plugin } from '../plugins/Plugin';
 import { DatabaseHelper } from './DatabaseHelper';
 import { MessageController } from './MessageController';
 import { RoomManager } from './RoomManager';
@@ -325,8 +324,8 @@ export class Room implements IBroadcaster {
      * Get a plugin instance by its name
      * @param name
      */
-    public getPlugin(name: string): Plugin | undefined {
-        return this.commands[name];
+    public getPlugin<T extends RoomPlugin>(name: string): T | undefined {
+        return this.commands[name] as T | undefined;
     }
 
     /**

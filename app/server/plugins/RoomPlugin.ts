@@ -46,7 +46,7 @@ export abstract class RoomPlugin extends Plugin {
      * @param message
      * @param _connection
      */
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    // eslint-disable-next-line no-unused-vars
     public async onBeforeMessageBroadcastHook(message: Message, _connection?: Connection): Promise<Message> {
         return message;
     }
@@ -57,7 +57,7 @@ export abstract class RoomPlugin extends Plugin {
      * @param _connection
      * @param _room
      */
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    // eslint-disable-next-line no-unused-vars
     public async onBeforeConnectionJoinedRoom(_connection: Connection, _room: Room): Promise<void> {
         void 0;
     }
@@ -67,7 +67,7 @@ export abstract class RoomPlugin extends Plugin {
      * @abstract
      * @param _connection
      */
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    // eslint-disable-next-line no-unused-vars
     public async onConnectionJoinedRoom(_connection: Connection): Promise<void> {
         void 0;
     }
@@ -77,7 +77,7 @@ export abstract class RoomPlugin extends Plugin {
      * @abstract
      * @param _connection
      */
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    // eslint-disable-next-line no-unused-vars
     public async onConnectionLeftRoom(_connection: Connection): Promise<void> {
         void 0;
     }
@@ -87,7 +87,8 @@ export abstract class RoomPlugin extends Plugin {
  * Defines default constructor for a room plugin (required for TypeScript)
  */
 export interface RoomPluginConstructor {
-    new (room: Room): RoomPlugin;
+    // eslint-disable-next-line no-unused-vars
+    new (_room: Room): RoomPlugin;
     commandName: string;
     commandAliases: string[];
     defaultDataStorageValue?: any;

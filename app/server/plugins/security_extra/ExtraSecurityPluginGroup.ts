@@ -6,9 +6,10 @@ import { TorBanPlugin } from './TorBanPlugin';
 import { TrackerPlugin } from './TrackerPlugin';
 import { UsurpPlugin } from './UsurpPlugin';
 import { BunkerPlugin } from './BunkerPlugin';
+import { MessageLimiterPlugin } from './MessageLimiterPlugin';
 
 export class ExtraSecurityPluginGroup extends PluginGroup {
-    roomPluginClasses = [RoomProtectPlugin, HistoryClearPlugin, UsurpPlugin];
+    roomPluginClasses = [MessageLimiterPlugin, RoomProtectPlugin, HistoryClearPlugin, UsurpPlugin];
 
     globalPluginClasses = [BunkerPlugin, LogFuzzerPlugin, TorBanPlugin, TrackerPlugin];
 }

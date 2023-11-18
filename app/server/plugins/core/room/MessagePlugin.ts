@@ -4,6 +4,7 @@ import { MessageController } from '../../../skychat/MessageController';
 import { RoomPlugin } from '../../RoomPlugin';
 import { DatabaseHelper } from '../../../skychat/DatabaseHelper';
 import SQL from 'sql-template-strings';
+import { MessageLimiterPlugin } from '../../security_extra/MessageLimiterPlugin';
 
 export class MessagePlugin extends RoomPlugin {
     static readonly commandName = 'message';
@@ -62,7 +63,14 @@ export class MessagePlugin extends RoomPlugin {
                 Config.PREFERENCES.maxMessageMergeDelayMin * 60 * 1000;
         if (!quoted && tooManyMessages && lastMessageTooRecent) {
             const lastMessage = lastMessages[lastMessages.length - 1];
-            lastMessage.edit(lastMessage.content + '\n' + content);
+            const newContent = lastMessage.content + '\n' + content;
+
+            // Ensure message limit is not reached
+            if (!this.room.getPlugin<MessageLimiterPlugin>(MessageLimiterPlugin.commandName)?.allowMessageEdit(lastMessage, newContent)) {
+                throw new Error(MessageLimiterPlugin.errorMessage);
+            }
+
+            lastMessage.edit(newContent);
             this.room.send('message-edit', lastMessage.sanitized());
             await DatabaseHelper.db.run(SQL`update messages set content = ${lastMessage.content} where id = ${lastMessage.id}`);
             return;

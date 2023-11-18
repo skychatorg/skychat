@@ -289,7 +289,7 @@ export abstract class Plugin {
      * @param _data
      * @returns Whether the data was handled. If returning true, no other plugin will be able to handle binary data.
      */
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    // eslint-disable-next-line no-unused-vars
     public async onBinaryDataReceived(_connection: Connection, _messageType: number, _data: Buffer): Promise<boolean> {
         return false;
     }

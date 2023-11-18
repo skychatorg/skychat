@@ -2,6 +2,7 @@ import SQL from 'sql-template-strings';
 import { Connection } from '../../../skychat/Connection';
 import { DatabaseHelper } from '../../../skychat/DatabaseHelper';
 import { RoomPlugin } from '../../RoomPlugin';
+import { MessageLimiterPlugin } from '../../security_extra/MessageLimiterPlugin';
 
 export class MessageEditPlugin extends RoomPlugin {
     static readonly commandName = 'edit';
@@ -45,6 +46,9 @@ export class MessageEditPlugin extends RoomPlugin {
         // Edit message
         if (alias === 'edit') {
             const content = param.split(' ').slice(1).join(' ');
+            if (!this.room.getPlugin<MessageLimiterPlugin>(MessageLimiterPlugin.commandName)?.allowMessageEdit(message, content)) {
+                throw new Error(MessageLimiterPlugin.errorMessage);
+            }
             message.edit(content);
         } else {
             message.edit('deleted', '<s>deleted</s>');

@@ -30,5 +30,8 @@
                 "endOfLine": "auto"
             }
         ]
+    },
+    "globals": {
+        "NodeJS": true
     }
 }
