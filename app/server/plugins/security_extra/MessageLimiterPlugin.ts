@@ -38,6 +38,10 @@ export class MessageLimiterPlugin extends RoomPlugin {
         this.loadStorage();
     }
 
+    public getRoomSummary(): null | number {
+        return this.storage.maxSuccessiveChars;
+    }
+
     async run(_alias: string, param: string, connection: Connection): Promise<void> {
         if (this.room.isPrivate) {
             throw new Error('This command is not available in private rooms');
