@@ -155,6 +155,11 @@ When the source files change, the build processes re-runs automatically.
 
 ### Add features
 
+Refer to [the Wiki](https://github.com/skychatorg/skychat/wiki) guides to contribute:
+- [Write a plugin](https://github.com/skychatorg/skychat/wiki/SkyChat-Plugin-Development-Documentation)
+- [Example: Write the TypingList Plugin](https://github.com/skychatorg/skychat/wiki/Room-Plugin-Example:-Writing-the-TypingList-Plugin)
+- [Plugin hooks](https://github.com/skychatorg/skychat/wiki/SkyChat-Plugin-Hooks-Documentation)
+
 Please use only one of the following to suggest new features (or bug fixes):
 - Create a pull request
 - Open an issue with your proposal 

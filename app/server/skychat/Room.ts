@@ -455,7 +455,7 @@ export class Room implements IBroadcaster {
     public sanitized(): SanitizedRoom {
         const lastMessage: Message | null = this.messages.length === 0 ? null : this.messages[this.messages.length - 1];
         // Merge summary data from every plugin
-        const plugins: { [pluginName: string]: string } = {};
+        const plugins: { [pluginName: string]: unknown } = {};
         for (const plugin of this.plugins) {
             const summary = plugin.getRoomSummary();
             if (summary === null || typeof summary === 'undefined') {

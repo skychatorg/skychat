@@ -477,12 +477,10 @@ export class PlayerPlugin extends GlobalPlugin {
                     throw new Error('You are not authorized to perform this action');
                 }
                 // Vote skip
-                // eslint-disable-next-line no-case-declarations
-                const playerData = channel.getPlayerData();
-                if (this.manager.getPlugin('poll') && playerData.current) {
+                if (this.manager.getPlugin('poll') && channel.getPlayerData().current) {
                     const poll = await (this.manager.getPlugin('poll') as PollPlugin).poll(
                         `${channel.name}: Skip media?`,
-                        `${connection.session.identifier} wants to skip ${playerData.current.video.title}. Skip media?`,
+                        `${connection.session.identifier} wants to skip ${channel.getPlayerData().current?.video.title}. Skip media?`,
                         {
                             audience: channel.sessions,
                             defaultValue: false,

@@ -46,7 +46,7 @@ export class HelpPlugin extends RoomPlugin {
                 <td>${alias}</td>
                 <td>${command.minRight}</td>
                 <td>${coolDown}s</td>
-                <td>${(rules.params || []).map((param) => param.name).join(', ')}</td>
+                <td>${(rules.params ?? []).map((param) => param.name).join(', ')}</td>
             </tr>            
             `;
         }

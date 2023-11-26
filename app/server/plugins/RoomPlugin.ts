@@ -36,7 +36,7 @@ export abstract class RoomPlugin extends Plugin {
     /**
      * Get a summary of this plugin state to include in the room list
      */
-    public getRoomSummary(): null | undefined | any {
+    public getRoomSummary(): unknown {
         return null;
     }
 

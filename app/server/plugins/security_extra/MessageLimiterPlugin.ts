@@ -53,7 +53,7 @@ export class MessageLimiterPlugin extends RoomPlugin {
 
         // Send message to connection
         const message = new Message({
-            content: 'Message limit: ' + (this.storage.maxSuccessiveChars === null ? 'off' : this.storage.maxSuccessiveChars),
+            content: 'Message limit: ' + (this.storage.maxSuccessiveChars ?? 'off'),
             user: UserController.getNeutralUser(),
         });
         connection.send('message', message.sanitized());
