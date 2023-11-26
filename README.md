@@ -98,6 +98,7 @@ The `config/preferences.json` file specifies application preferences. The availa
 
 | field | type | default | description |
 |-------|------|---------|-------------|
+| minRightForPublicMessages             | number |  -1 | Min. right to send public messages |
 | minRightForPrivateMessages            | number |  -1 | Min. right to send private messages |
 | minRightForShortTermMessageHistory    | number |  -1 | Min. right to access short term room message history |
 | minRightForMessageHistory             | number |  -1 | Min. right to access full room message history |
@@ -116,6 +117,7 @@ The `config/preferences.json` file specifies application preferences. The availa
 | maxNewlinesPerMessage                 | number |  20 | Max. number of newlines per message |
 | maxConsecutiveMessages                | number |  1  | Max. number of consecutive messages in a room |
 | maxMessageMergeDelayMin               | number |  10 | Max. minutes before not merging consecutive messages |
+| daysBeforeMessageFuzz                 | number |  7  | Number of days before messages are fuzzed, if ExtraSecurityPluginGroup is enabled |
 | invertedBlacklist                     | boolean |  false  | Whether blacklisted users can not see messages from users who blacklisted them |
 | messagesCooldown                      | ([number, number])[] | [ [ -1, 0] ] | Minimum duration between two consecutive messages for each right level, sorted by ascending right number |
 
@@ -152,6 +154,11 @@ This will start a static file server & websocket server, available under the loc
 When the source files change, the build processes re-runs automatically.
 
 ### Add features
+
+Refer to [the Wiki](https://github.com/skychatorg/skychat/wiki) guides to contribute:
+- [Write a plugin](https://github.com/skychatorg/skychat/wiki/SkyChat-Plugin-Development-Documentation)
+- [Example: Write the TypingList Plugin](https://github.com/skychatorg/skychat/wiki/Room-Plugin-Example:-Writing-the-TypingList-Plugin)
+- [Plugin hooks](https://github.com/skychatorg/skychat/wiki/SkyChat-Plugin-Hooks-Documentation)
 
 Please use only one of the following to suggest new features (or bug fixes):
 - Create a pull request

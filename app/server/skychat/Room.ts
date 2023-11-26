@@ -3,7 +3,6 @@ import SQL from 'sql-template-strings';
 import { Connection } from './Connection';
 import { IBroadcaster } from './IBroadcaster';
 import { Message, MessageConstructorOptions } from './Message';
-import { Plugin } from '../plugins/Plugin';
 import { DatabaseHelper } from './DatabaseHelper';
 import { MessageController } from './MessageController';
 import { RoomManager } from './RoomManager';
@@ -16,6 +15,7 @@ import { Config } from './Config';
 
 export type StoredRoom = {
     name: string;
+    order: number;
     pluginGroupNames: string[];
     isPrivate: boolean;
     whitelist: string[];
@@ -76,6 +76,11 @@ export class Room implements IBroadcaster {
      * This room name
      */
     public name: string;
+
+    /**
+     * Room order in the list (only for public rooms)
+     */
+    public order: number = 0;
 
     /**
      * List of enabled plugin groups
@@ -196,6 +201,7 @@ export class Room implements IBroadcaster {
         try {
             const data = JSON.parse(fs.readFileSync(this.getStoragePath()).toString()) as StoredRoom;
             this.name = data.name ?? this.name;
+            this.order = data.order ?? this.order;
             this.pluginGroupNames = data.pluginGroupNames ?? this.pluginGroupNames;
             this.isPrivate = !!data.isPrivate;
             this.whitelist = data.whitelist;
@@ -211,6 +217,7 @@ export class Room implements IBroadcaster {
     private save(): boolean {
         const data: StoredRoom = {
             name: this.name,
+            order: this.order,
             pluginGroupNames: this.pluginGroupNames,
             isPrivate: this.isPrivate,
             whitelist: this.whitelist,
@@ -252,12 +259,13 @@ export class Room implements IBroadcaster {
         if (connection.room === this) {
             return;
         }
+        // Check it's possible to enter the new room
+        await this.executeBeforeConnectionJoinedRoom(connection, this);
         // If this connection was attached to another room
         if (connection.room) {
             // Detach from it
             connection.room.detachConnection(connection);
         }
-        await this.executeBeforeConnectionJoinedRoom(connection);
         // Attach the connection to this room
         connection.setRoom(this);
         this.connections.push(connection);
@@ -316,17 +324,17 @@ export class Room implements IBroadcaster {
      * Get a plugin instance by its name
      * @param name
      */
-    public getPlugin(name: string): Plugin | undefined {
-        return this.commands[name];
+    public getPlugin<T extends RoomPlugin>(name: string): T | undefined {
+        return this.commands[name] as T | undefined;
     }
 
     /**
      * Execute before room join hook
      * @param connection
      */
-    public async executeBeforeConnectionJoinedRoom(connection: Connection): Promise<void> {
+    public async executeBeforeConnectionJoinedRoom(connection: Connection, room: Room): Promise<void> {
         for (const plugin of this.plugins) {
-            await plugin.onBeforeConnectionJoinedRoom(connection);
+            await plugin.onBeforeConnectionJoinedRoom(connection, room);
         }
     }
 
@@ -447,7 +455,7 @@ export class Room implements IBroadcaster {
     public sanitized(): SanitizedRoom {
         const lastMessage: Message | null = this.messages.length === 0 ? null : this.messages[this.messages.length - 1];
         // Merge summary data from every plugin
-        const plugins: { [pluginName: string]: string } = {};
+        const plugins: { [pluginName: string]: unknown } = {};
         for (const plugin of this.plugins) {
             const summary = plugin.getRoomSummary();
             if (summary === null || typeof summary === 'undefined') {

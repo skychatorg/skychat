@@ -61,6 +61,13 @@ const formattedName = computed(() => {
     }
 });
 
+/**
+ * Return whether this room is protected
+ */
+const isProtected = computed(() => {
+    return Boolean(props.room.plugins?.roomprotect);
+});
+
 // Choose icon to show and icon color
 const icon = computed(() => {
     if (props.room.isPrivate) {
@@ -72,8 +79,15 @@ const icon = computed(() => {
             };
         }
         return {
+            name: 'user',
+            classes: selected.value ? 'text-skygray-white' : 'text-skygray-lightest',
+        };
+    }
+    if (isProtected.value) {
+        return {
             name: 'lock',
             classes: selected.value ? 'text-skygray-white' : 'text-skygray-lightest',
+            title: `This room is protected. The minimum right to join is ${props.room.plugins.roomprotect}`,
         };
     }
     return null;
@@ -81,11 +95,17 @@ const icon = computed(() => {
 </script>
 
 <template>
-    <HoverCard :use-border-radius="true" :border-color="'rgb(var(' + borderColor + '))'" :selectable="true" :selected="selected" class="cursor-pointer">
+    <HoverCard
+        :use-border-radius="true"
+        :border-color="'rgb(var(' + borderColor + '))'"
+        :selectable="true"
+        :selected="selected"
+        class="cursor-pointer"
+    >
         <div @click="client.state.currentRoomId !== room.id && client.join(room.id)" class="py-2 px-3 flex flex-row select-none">
             <!-- Room name -->
             <div class="grow whitespace-nowrap w-0 overflow-hidden text-ellipsis pr-2">
-                <fa v-if="icon" class="mr-1" :class="icon.classes" :icon="icon.name" />
+                <fa v-if="icon" class="mr-1" :class="icon.classes" :icon="icon.name" :title="icon.title" />
                 {{ formattedName }}
             </div>
 

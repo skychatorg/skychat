@@ -2,6 +2,7 @@ import fs from 'fs';
 import * as Mail from 'nodemailer/lib/mailer';
 
 export type Preferences = {
+    minRightForPublicMessages: number;
     minRightForPrivateMessages: number;
     minRightForShortTermMessageHistory: number;
     minRightForMessageHistory: number;
@@ -21,6 +22,7 @@ export type Preferences = {
     maxNewlinesPerMessage: number;
     maxConsecutiveMessages: number;
     maxMessageMergeDelayMin: number;
+    daysBeforeMessageFuzz: number;
     invertedBlacklist: boolean;
     messagesCooldown: Array<[number, number]>;
 };
@@ -165,6 +167,7 @@ export class Config {
             'maxNewlinesPerMessage',
             'maxConsecutiveMessages',
             'maxMessageMergeDelayMin',
+            'daysBeforeMessageFuzz',
             'invertedBlacklist',
             'messagesCooldown',
         ];

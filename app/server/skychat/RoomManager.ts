@@ -99,11 +99,18 @@ export class RoomManager {
                 userId: new iof.NumberFilter(1, Infinity, false),
                 timestamp: new iof.NumberFilter(-Infinity, Infinity, false),
                 signature: new iof.ValueTypeFilter('string'),
+                roomId: new iof.NumberFilter(0, Infinity, false),
             }),
         );
 
         // Join a room
-        this.server.registerEvent('join-room', this.onJoinRoom.bind(this), 0, 120, new iof.ObjectFilter({ roomId: new iof.NumberFilter(0, Infinity, false) }));
+        this.server.registerEvent(
+            'join-room',
+            this.onJoinRoom.bind(this),
+            0,
+            120,
+            new iof.ObjectFilter({ roomId: new iof.NumberFilter(0, Infinity, false) }),
+        );
 
         // On message sent
         this.server.registerEvent('message', this.onMessage.bind(this), 0, Infinity, 'string');
@@ -274,6 +281,42 @@ export class RoomManager {
     }
 
     /**
+     * Reorder public rooms
+     */
+    public async reOrderRooms(order: number[]) {
+        const roomIds = order.filter((roomId) => {
+            if (isNaN(roomId)) {
+                throw new Error('Invalid room id');
+            }
+            if (!this.hasRoomId(roomId)) {
+                throw new Error(`Room ${roomId} not found`);
+            }
+            const room = this.getRoomById(roomId);
+            if (!room || room.isPrivate) {
+                throw new Error(`Room ${roomId} is private`);
+            }
+            return true;
+        });
+
+        // Check there are no duplicates
+        if ([...new Set(roomIds)].length !== roomIds.length) {
+            throw new Error('Duplicate room ids');
+        }
+
+        // Set new order
+        for (let i = 0; i < roomIds.length; ++i) {
+            const room = this.getRoomById(roomIds[i]);
+            if (!room) {
+                throw new Error(`Room ${roomIds[i]} not found`);
+            }
+            room.order = roomIds.length - i;
+        }
+
+        // Send room list
+        Object.values(Session.sessions).forEach((session) => this.sendRoomList(session));
+    }
+
+    /**
      * Build a new session object when there is a new connection
      */
     private async getNewSession(): Promise<Session> {
@@ -312,8 +355,8 @@ export class RoomManager {
                     const getWeight = (room: Room): number => {
                         const privateValue = room.isPrivate ? 0 : 1;
                         const participantCountValue = room.isPrivate ? room.whitelist.length : 1;
-                        const score = [privateValue, participantCountValue, Room.CURRENT_ID - room.id];
-                        return score.reduce((a, b) => a * 1000 + b, 0);
+                        const score = [privateValue, participantCountValue, room.order, Room.CURRENT_ID - room.id];
+                        return score.reduce((a, b) => a * 10000 + b, 0);
                     };
                     return getWeight(b) - getWeight(a);
                 })
@@ -340,6 +383,16 @@ export class RoomManager {
     public async executeConnectionAuthenticatedHook(connection: Connection): Promise<void> {
         for (const plugin of this.plugins) {
             await plugin.onConnectionAuthenticated(connection);
+        }
+    }
+
+    /**
+     * Execute before register hook
+     * @param connection
+     */
+    public async executeBeforeRegisterHook(payload: unknown, connection: Connection): Promise<void> {
+        for (const plugin of this.plugins) {
+            await plugin.onBeforeRegister(payload, connection);
         }
     }
 
@@ -377,19 +430,20 @@ export class RoomManager {
     }
 
     private async onRegister(payload: any, connection: Connection): Promise<void> {
+        await this.executeBeforeRegisterHook(payload, connection);
         await UserController.registerUser(payload.username, payload.password);
-        await this.onAuthSuccessful(payload.username, connection);
+        await this.onAuthSuccessful(connection, payload.username);
     }
 
     private async onLogin(payload: any, connection: Connection): Promise<void> {
         await UserController.login(payload.username, payload.password);
-        await this.onAuthSuccessful(payload.username, connection);
+        await this.onAuthSuccessful(connection, payload.username);
     }
 
     private async onSetToken(payload: any, connection: Connection): Promise<void> {
         try {
             const user = await UserController.verifyAuthToken(payload);
-            await this.onAuthSuccessful(user.username, connection);
+            await this.onAuthSuccessful(connection, user.username, payload.roomId);
         } catch (e) {
             connection.send('auth-token', null);
         }
@@ -416,7 +470,7 @@ export class RoomManager {
      * @param username
      * @param connection
      */
-    private async onAuthSuccessful(username: string, connection: Connection): Promise<void> {
+    private async onAuthSuccessful(connection: Connection, username: string, roomId?: number): Promise<void> {
         // Find an existing session belonging to the same user
         const recycledSession = Session.getSessionByIdentifier(username.toLowerCase());
         let user;
@@ -436,7 +490,12 @@ export class RoomManager {
         }
         connection.send('auth-token', UserController.getAuthToken(user.id));
         this.sendRoomList(connection);
-        const room = this.rooms.find((room) => !room.isPrivate);
+        // Find a room to join
+        let room;
+        if (typeof roomId === 'number') {
+            room = this.getRoomById(roomId);
+        }
+        room = room ?? this.rooms.find((room) => !room.isPrivate);
         if (room) {
             await room.attachConnection(connection);
             await this.executeConnectionAuthenticatedHook(connection);

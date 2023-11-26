@@ -7,7 +7,7 @@ import { Session } from '../../../skychat/Session';
 export class RoomManagerPlugin extends RoomPlugin {
     static readonly commandName = 'room';
 
-    static readonly commandAliases = ['roomset', 'roomcreate', 'roomdelete'];
+    static readonly commandAliases = ['roomset', 'roomcreate', 'roomdelete', 'roomorder'];
 
     readonly rules = {
         room: {},
@@ -23,6 +23,10 @@ export class RoomManagerPlugin extends RoomPlugin {
             ],
         },
         roomdelete: { maxCount: 0 },
+        roomorder: {
+            minCount: 1,
+            params: [{ name: 'offset', pattern: /^\d+(,\d+)*$/ }],
+        },
     };
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
@@ -37,6 +41,10 @@ export class RoomManagerPlugin extends RoomPlugin {
 
             case 'roomdelete':
                 await this.handleRoomDelete(param, connection);
+                break;
+
+            case 'roomorder':
+                await this.handleRoomOrder(param, connection);
                 break;
         }
     }
@@ -88,6 +96,16 @@ export class RoomManagerPlugin extends RoomPlugin {
         }
         await this.room.manager.deleteRoom(this.room.id);
         const message = UserController.createNeutralMessage({ id: 0, content: `Room ${this.room.id} has been deleted` });
+        connection.send('message', message.sanitized());
+    }
+
+    async handleRoomOrder(param: string, connection: Connection): Promise<void> {
+        if (!connection.session.isOP()) {
+            throw new Error('Only OP can reorder rooms');
+        }
+        const order = param.split(',').map((offset) => parseInt(offset));
+        await this.room.manager.reOrderRooms(order);
+        const message = UserController.createNeutralMessage({ id: 0, content: `Room have been reordered` });
         connection.send('message', message.sanitized());
     }
 }

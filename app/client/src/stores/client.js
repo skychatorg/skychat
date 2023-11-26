@@ -119,11 +119,9 @@ export const useClientStore = defineStore('client', {
 
         /**
          * Login
-         * @param {string} username
-         * @param {string} password
          */
-        login: ({ username, password }) => {
-            client.login(username, password);
+        login: ({ username, password, roomId }) => {
+            client.login(username, password, roomId);
         },
 
         /**
@@ -136,8 +134,8 @@ export const useClientStore = defineStore('client', {
         /**
          * Register
          */
-        register: ({ username, password }) => {
-            client.register(username, password);
+        register: ({ username, password, roomId }) => {
+            client.register(username, password, roomId);
         },
 
         /**

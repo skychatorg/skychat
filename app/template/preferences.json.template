@@ -1,5 +1,6 @@
 {
     "minRightForMessageHistory": -1,
+    "minRightForPublicMessages": -1,
     "minRightForPrivateMessages": -1,
     "minRightForUserModeration": "op",
     "minRightForSetRight": "op",
@@ -17,6 +18,7 @@
     "maxNewlinesPerMessage": 20,
     "maxConsecutiveMessages": 1,
     "maxMessageMergeDelayMin": 10,
+    "daysBeforeMessageFuzz": 7,
     "invertedBlacklist": false,
     "messagesCooldown": [
         [-1, 0]

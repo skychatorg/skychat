@@ -4,7 +4,6 @@ import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
 import { AudioRecorder } from '@/lib/AudioRecorder';
 import { RisiBank } from 'risibank-web-api';
-import HoverCard from '@/components/util/HoverCard.vue';
 
 const MESSAGE_HISTORY_LENGTH = 500;
 
@@ -22,7 +21,7 @@ onMounted(() => {
     message.value.focus();
 });
 
-const typingListStr = computed(() => {
+const typingListText = computed(() => {
     let typingUsers = client.state.typingList;
 
     typingUsers = typingUsers.filter((user) => user.username.toLowerCase() !== client.state.user.username.toLowerCase());
@@ -43,10 +42,21 @@ const typingListStr = computed(() => {
     return 'multiple users are currently typing..';
 });
 
+const textAreaPlaceholder = computed(() => {
+    if (!client.state.currentRoom) {
+        return '❌ Disconnected';
+    }
+    let placeholder = `New message / ${client.state.currentRoom.name}`;
+    if (client.state.currentRoom.plugins.messagelimiter) {
+        placeholder += ` (char limit: ${client.state.currentRoom.plugins.messagelimiter})`;
+    }
+    return placeholder;
+});
+
 // Watch when the new message input changes. The change does not necessarily come from this component, as the message input can be prepared elsewhere.
 watch(
     () => app.newMessage,
-    (newValue, oldValue) => {
+    (newValue) => {
         // Auto-set the message value
         if (newValue !== message.value.value) {
             message.value.value = newValue;
@@ -188,7 +198,7 @@ const recordingAudioStopCb = ref(null);
 const uploadAudio = async function () {
     if (recordingAudio.value) {
         // Stop recording
-        const { blob, uri, audio } = await recordingAudioStopCb.value();
+        const { blob } = await recordingAudioStopCb.value();
         client.sendAudio(blob);
     } else {
         // Start recording
@@ -229,7 +239,7 @@ const cancelAudio = function () {
                     <label class="form-control cursor-pointer w-12" for="file-input">
                         <fa icon="upload" />
                     </label>
-                    <input ref="fileUploadInput" @change="onFileInputChange" type="file" id="file-input" class="hidden" />
+                    <input id="file-input" ref="fileUploadInput" type="file" class="hidden" @change="onFileInputChange" />
                 </div>
 
                 <!-- Send audio -->
@@ -246,7 +256,7 @@ const cancelAudio = function () {
 
                 <!-- RisiBank -->
                 <div title="Add a media from RisiBank" class="flex flex-col justify-end">
-                    <button @click="openRisiBank" class="form-control ml-2 w-12 h-10 align-bottom">
+                    <button class="form-control ml-2 w-12 h-10 align-bottom" @click="openRisiBank">
                         <img src="/assets/images/icons/risibank.png" class="w-4 h-4" />
                     </button>
                 </div>
@@ -266,15 +276,16 @@ const cancelAudio = function () {
                 <div class="grow flex flex-col">
                     <!-- Typing list -->
                     <p class="h-5 pl-2 text-xs text-skygray-lightest">
-                        {{ typingListStr }}
+                        {{ typingListText }}
                     </p>
                     <textarea
                         ref="message"
                         :rows="messageTextAreaRows"
                         class="mousetrap form-control lg:ml-2 scrollbar resize-none"
                         type="text"
-                        :placeholder="client.state.currentRoom ? `New message / ${client.state.currentRoom.name}` : '❌ Disconnected'"
+                        :placeholder="textAreaPlaceholder"
                         :disabled="!client.state.currentRoom"
+                        :maxlength="client.state.currentRoom.plugins.messagelimiter ?? null"
                         @input="onMessageInput"
                         @keyup.up.exact="onNavigateIntoHistory($event, -1)"
                         @keyup.down.exact="onNavigateIntoHistory($event, 1)"
@@ -286,7 +297,7 @@ const cancelAudio = function () {
 
                 <!-- Send button -->
                 <div title="Send" class="flex flex-col justify-end">
-                    <button @click="sendMessage" class="form-control ml-2 h-fit align-bottom">
+                    <button class="form-control ml-2 h-fit align-bottom" @click="sendMessage">
                         <fa icon="paper-plane" />
                     </button>
                 </div>

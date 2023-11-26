@@ -41,6 +41,16 @@ export abstract class GlobalPlugin extends Plugin {
     }
 
     /**
+     * Execute before a connection registers
+     * @param payload
+     * @param connection
+     */
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    public async onBeforeRegister(payload: unknown, connection: Connection): Promise<void> {
+        void 0;
+    }
+
+    /**
      * When a connection is created
      * @abstract
      * @param _connection

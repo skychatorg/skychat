@@ -1,4 +1,4 @@
-import { PluginCommandRules } from '../../Plugin';
+import { Plugin, PluginCommandRules } from '../../Plugin';
 import { RoomPlugin } from '../../RoomPlugin';
 import { Connection } from '../../../skychat/Connection';
 import striptags from 'striptags';
@@ -11,7 +11,9 @@ export class HelpPlugin extends RoomPlugin {
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
         // Group commands by main name
-        const commandAliases = Object.keys(this.room.commands);
+        const commandAliases: [string, Plugin][] = (Object.entries(this.room.commands) as [string, Plugin][]).concat(
+            Object.entries(this.room.manager.commands),
+        );
         let content = '<table class="skychat-table">';
         content += `
             <tr>
@@ -21,9 +23,7 @@ export class HelpPlugin extends RoomPlugin {
                 <th>params</th>
             </tr>    
         `;
-        for (const alias of commandAliases) {
-            const command = this.room.commands[alias];
-
+        for (const [alias, command] of commandAliases) {
             // If user has not the right to access the command, hide it
             if (connection.session.user.right < command.minRight) {
                 continue;
@@ -39,13 +39,14 @@ export class HelpPlugin extends RoomPlugin {
 
             // Get rule object
             const rules: PluginCommandRules = command.rules && command.rules[alias] ? command.rules[alias] : {};
+            const coolDown = Array.isArray(rules.coolDown) ? rules.coolDown.toString() : (rules.coolDown ?? 0) / 1000;
 
             content += `
             <tr>
                 <td>${alias}</td>
                 <td>${command.minRight}</td>
-                <td>${(rules.coolDown || 0) / 1000 || 0}s</td>
-                <td>${(rules.params || []).map((param: any) => param.name).join(', ')}</td>
+                <td>${coolDown}s</td>
+                <td>${(rules.params ?? []).map((param) => param.name).join(', ')}</td>
             </tr>            
             `;
         }
