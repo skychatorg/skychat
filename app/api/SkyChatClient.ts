@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import WebSocket from 'isomorphic-ws';
 import { EventEmitter } from 'events';
 import { BinaryMessageTypes } from './BinaryMessageTypes';
@@ -46,6 +47,7 @@ export declare interface SkyChatClient {
     on(event: 'messages', listener: (messages: Array<SanitizedMessage>) => any): this;
     on(event: 'message-edit', listener: (message: SanitizedMessage) => any): this;
     on(event: 'message-seen', listener: (data: { user: number; data: any }) => any): this;
+    on(event: 'mention', listener: (mention: { roomId: number; identifier: string; messageId: number }) => any): this;
     on(event: 'poll', listener: (poll: SanitizedPoll) => any): this;
     on(event: 'cursor', listener: (cursor: { x: number; y: number; user: SanitizedUser }) => any): this;
     on(event: 'roll', listener: (roll: { state: boolean }) => any): this;
@@ -65,6 +67,7 @@ export declare interface SkyChatClient {
     on(event: 'player-sync', listener: (data: { current: QueuedVideoInfo | null; queue: QueuedVideoInfo[]; cursor: number }) => any): this;
 }
 
+// eslint-disable-next-line no-redeclare
 export class SkyChatClient extends EventEmitter {
     static readonly CURSOR_DECAY_DELAY = 10 * 1e3;
 
@@ -83,6 +86,7 @@ export class SkyChatClient extends EventEmitter {
     private _playerChannelUsers: { [roomId: number]: Array<SanitizedUser> } = {};
     private _rooms: Array<SanitizedRoom> = [];
     private _currentRoomId: number | null = null;
+    private _lastMention: { roomId: number; identifier: string; messageId: number } | null = null;
     private _typingList: Array<SanitizedUser> = [];
     private _polls: { [id: number]: SanitizedPoll } = {};
     private _cursors: { [identifier: string]: { date: Date; cursor: { x: number; y: number; user: SanitizedUser } } } = {};
@@ -121,6 +125,7 @@ export class SkyChatClient extends EventEmitter {
 
         // Messages
         this.on('message-seen', this._onMessageSeen.bind(this));
+        this.on('mention', this._onMention.bind(this));
 
         // Games & Features
         this.on('poll', this._onPoll.bind(this));
@@ -269,6 +274,11 @@ export class SkyChatClient extends EventEmitter {
         this.emit('update', this.state);
     }
 
+    private _onMention(mention: { roomId: number; identifier: string; messageId: number }) {
+        this._lastMention = mention;
+        this.emit('update', this.state);
+    }
+
     private _onPoll(poll: SanitizedPoll) {
         this._polls[poll.id] = poll;
         this.emit('update', this.state);
@@ -378,6 +388,7 @@ export class SkyChatClient extends EventEmitter {
             rooms: this._rooms,
             currentRoomId: this._currentRoomId,
             currentRoom: this._rooms.find((room) => room.id === this._currentRoomId) || null,
+            lastMention: this._lastMention,
             typingList: this._typingList,
             polls: this._polls,
             cursors: this._cursors,

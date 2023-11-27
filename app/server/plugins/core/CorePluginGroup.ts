@@ -25,9 +25,19 @@ import { IpPlugin } from './global/IpPlugin';
 import { KickPlugin } from './global/KickPlugin';
 import { XpTickerPlugin } from './global/XpTickerPlugin';
 import { BlacklistPlugin } from './global/BlacklistPlugin';
+import { MentionPlugin } from './room/MentionPlugin';
 
 export class CorePluginGroup extends PluginGroup {
-    roomPluginClasses = [HelpPlugin, MessageEditPlugin, MessageHistoryPlugin, MessagePlugin, MessageSeenPlugin, RoomManagerPlugin, TypingListPlugin];
+    roomPluginClasses = [
+        HelpPlugin,
+        MentionPlugin,
+        MessageEditPlugin,
+        MessageHistoryPlugin,
+        MessagePlugin,
+        MessageSeenPlugin,
+        RoomManagerPlugin,
+        TypingListPlugin,
+    ];
 
     globalPluginClasses = [
         AccountPlugin,

@@ -169,6 +169,17 @@ export const useAppStore = defineStore('app', {
                 },
             );
 
+            // Listen for last mention and send audio notification
+            watch(
+                () => clientStore.state.lastMention,
+                () => {
+                    // Notify user if quoted, user is not blacklisted and app is not focused
+                    if (!this.focused || this.mobileView !== 'middle') {
+                        new Audio(NOTIFICATION_SOUND_MP3_PATH).play();
+                    }
+                },
+            );
+
             // Listen for when the last received message changed
             watch(
                 () => clientStore.lastMessage,
@@ -176,15 +187,6 @@ export const useAppStore = defineStore('app', {
                     // If no message
                     if (!message) {
                         return;
-                    }
-
-                    // Notify user if quoted, user is not blacklisted and app is not focused
-                    if (
-                        message.content.match(new RegExp('@' + clientStore.state.user.username.toLowerCase(), 'i')) &&
-                        !(clientStore.state.user.data.plugins.blacklist || []).includes(message.user.username.toLowerCase()) &&
-                        (!this.focused || this.mobileView !== 'middle')
-                    ) {
-                        new Audio(NOTIFICATION_SOUND_MP3_PATH).play();
                     }
 
                     // If app is not focused, create notification
