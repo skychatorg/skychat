@@ -520,7 +520,7 @@ export class SkyChatClient extends EventEmitter {
                 const roomId = rawRoomId ? parseInt(rawRoomId) : null;
                 this._sendEvent('set-token', {
                     ...JSON.parse(authToken),
-                    roomId: roomId ?? undefined,
+                    roomId: roomId ?? this._rooms.find((room) => !room.isPrivate)?.id ?? null,
                 });
             }
         }

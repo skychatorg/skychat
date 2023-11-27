@@ -567,7 +567,5 @@ export class RoomManager {
                 }
             }
         }
-
-        throw new Error('Binary message not handled');
     }
 }
