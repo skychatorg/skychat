@@ -119,7 +119,7 @@ export abstract class Plugin {
      * Save this plugin's data to the disk
      */
     protected syncStorage(): void {
-        if (!this.storage) {
+        if (typeof this.storage === 'undefined') {
             return;
         }
         fs.mkdirSync(this.getStoragePath(), { recursive: true });
