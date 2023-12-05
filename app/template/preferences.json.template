@@ -1,5 +1,6 @@
 {
     "minRightForMessageHistory": -1,
+    "minRightForShortTermMessageHistory": -1,
     "minRightForPublicMessages": -1,
     "minRightForPrivateMessages": -1,
     "minRightForUserModeration": "op",
