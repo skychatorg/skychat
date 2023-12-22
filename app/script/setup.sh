@@ -11,7 +11,13 @@ if [[ ! -e gallery ]]; then
     mkdir -p gallery;
 fi
 if [[ ! -e storage ]]; then
-    mkdir -p storage/{plugins,rooms};
+    mkdir -p storage;
+fi
+if [[ ! -e storage/plugins ]]; then
+    mkdir -p storage/plugins;
+fi
+if [[ ! -e storage/rooms ]]; then
+    mkdir -p storage/rooms;
 fi
 
 # Initialize .env.json
