@@ -199,7 +199,9 @@ const cancelAudio = function () {
 };
 
 const autoSuggestItems = ref([]);
+const autoSuggestOpen = ref(false);
 function onOpen(key) {
+    autoSuggestOpen.value = true;
     if (key === '#') {
         autoSuggestItems.value = Object.values(client.state.rooms).map((room) => ({
             value: room.name,
@@ -217,10 +219,16 @@ function onOpen(key) {
             value: name.substring(1),
             searchText: name,
             label: name,
+            url: sticker,
         }));
     } else {
         autoSuggestItems.value = [];
     }
+}
+
+function onClose() {
+    autoSuggestOpen.value = false;
+    autoSuggestItems.value = [];
 }
 </script>
 
@@ -291,7 +299,15 @@ function onOpen(key) {
                         {{ typingListText }}
                     </p>
 
-                    <Mentionable :keys="['@', '#', ':']" :items="autoSuggestItems" offset="6" insert-space class="d-flex" @open="onOpen">
+                    <Mentionable
+                        :keys="['@', '#', ':']"
+                        :items="autoSuggestItems"
+                        offset="6"
+                        insert-space
+                        class="d-flex"
+                        @open="onOpen"
+                        @close="onClose"
+                    >
                         <textarea
                             ref="message"
                             type="text"
@@ -301,10 +317,10 @@ function onOpen(key) {
                             :disabled="!client.state.currentRoom"
                             :maxlength="client.state.currentRoom.plugins.messagelimiter ?? null"
                             @input="onMessageInput"
-                            @keyup.up.exact="onNavigateIntoHistory($event, -1)"
-                            @keyup.down.exact="onNavigateIntoHistory($event, 1)"
+                            @keyup.up.exact="!autoSuggestOpen && onNavigateIntoHistory($event, -1)"
+                            @keyup.down.exact="!autoSuggestOpen && onNavigateIntoHistory($event, 1)"
                             @keydown.shift.enter.stop=""
-                            @keydown.enter.exact.stop="sendMessage"
+                            @keydown.enter.exact.stop="!autoSuggestOpen && sendMessage()"
                         ></textarea>
 
                         <template #no-result>
@@ -324,8 +340,9 @@ function onOpen(key) {
                         </template>
 
                         <template #item-:="{ item }">
-                            <div class="autosuggest-item">
-                                {{ item.label }}
+                            <div class="autosuggest-item flex items-center gap-4">
+                                <img :src="item.url" class="w-4 h-4" />
+                                <span>{{ item.label }}</span>
                             </div>
                         </template>
                     </Mentionable>
@@ -344,6 +361,6 @@ function onOpen(key) {
 
 <style scoped lang="postcss">
 .autosuggest-item {
-    @apply px-4 py-2 hover:bg-gray-200;
+    @apply px-1 cursor-pointer;
 }
 </style>
