@@ -1,10 +1,8 @@
 <script setup>
 import { onMounted, nextTick, watch, ref, reactive } from 'vue';
-import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
 import SingleMessage from '@/components/message/SingleMessage.vue';
 
-const app = useAppStore();
 const client = useClientStore();
 
 const messagePannel = ref(null);
@@ -111,18 +109,39 @@ const onScroll = () => {
         scrollState.auto = true;
     }
 };
+
+function isMessageFirstOfDay(index) {
+    if (index === 0) {
+        return true;
+    }
+    const message = client.messages[index];
+    const previousMessage = client.messages[index - 1];
+    const messageDate = new Date(message.createdTimestamp * 1000);
+    const previousMessageDate = new Date(previousMessage?.createdTimestamp * 1000);
+    return (
+        messageDate.getDate() !== previousMessageDate.getDate() ||
+        messageDate.getMonth() !== previousMessageDate.getMonth() ||
+        messageDate.getFullYear() !== previousMessageDate.getFullYear()
+    );
+}
 </script>
 
 <template>
     <div
-        class="overflow-x-hidden overflow-y-auto pl-2 scrollbar"
         ref="messagePannel"
-        @scroll="onScroll"
+        class="overflow-x-hidden overflow-y-auto pl-2 scrollbar"
         :style="{
             'scroll-behavior': scrollState.smooth && scrollState.auto ? 'smooth' : 'auto',
         }"
+        @scroll="onScroll"
     >
-        <SingleMessage v-for="message in client.messages" :key="message.id" :message="message" @content-size-changed="scrollToBottomIfAutoScroll" />
+        <SingleMessage
+            v-for="(message, index) in client.messages"
+            :key="message.id"
+            :message="message"
+            :show-date="isMessageFirstOfDay(index)"
+            @content-size-changed="scrollToBottomIfAutoScroll"
+        />
     </div>
 </template>
 
