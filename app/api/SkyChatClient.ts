@@ -36,6 +36,7 @@ const defaultUser: SanitizedUser = {
 
 export declare interface SkyChatClient {
     on(event: 'config', listener: (config: PublicConfig) => any): this;
+    on(event: 'sticker-list', listener: (stickers: Record<string, string>) => any): this;
     on(event: 'custom', listener: (custom: CustomizationElements) => any): this;
     on(event: 'set-user', listener: (user: SanitizedUser) => any): this;
     on(event: 'auth-token', listener: (token: AuthToken | null) => any): this;
@@ -78,6 +79,7 @@ export class SkyChatClient extends EventEmitter {
 
     private _user: SanitizedUser = defaultUser;
     private _config: PublicConfig | null = null;
+    private _stickers: Record<string, string> = {};
     private _custom: CustomizationElements = {};
     private _token: AuthToken | null = null;
     private _connectedList: Array<SanitizedSession> = [];
@@ -113,6 +115,7 @@ export class SkyChatClient extends EventEmitter {
 
         // Auth & Config
         this.on('config', this._onConfig.bind(this));
+        this.on('sticker-list', this._onStickerList.bind(this));
         this.on('custom', this._onCustom.bind(this));
         this.on('set-user', this._onUser.bind(this));
         this.on('auth-token', this._onToken.bind(this));
@@ -156,6 +159,11 @@ export class SkyChatClient extends EventEmitter {
 
     private _onConfig(config: PublicConfig) {
         this._config = config;
+        this.emit('update', this.state);
+    }
+
+    private _onStickerList(stickers: Record<string, string>) {
+        this._stickers = stickers;
         this.emit('update', this.state);
     }
 
@@ -379,6 +387,7 @@ export class SkyChatClient extends EventEmitter {
             websocketReadyState: this._websocket ? this._websocket.readyState : WebSocket.CLOSED,
             user: this._user,
             config: this._config,
+            stickers: this._stickers,
             custom: this._custom,
             token: this._token,
             connectedList: this._connectedList,

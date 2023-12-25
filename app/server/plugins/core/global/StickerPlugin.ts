@@ -4,6 +4,7 @@ import { FileManager } from '../../../skychat/FileManager';
 import fs from 'fs';
 import { Config } from '../../../skychat/Config';
 import { StickerManager } from '../../../skychat/StickerManager';
+import { Connection } from '../../../skychat/Connection';
 
 export class StickerPlugin extends GlobalPlugin {
     static readonly commandName = 'sticker';
@@ -88,5 +89,9 @@ export class StickerPlugin extends GlobalPlugin {
             void 0;
         }
         StickerManager.unregisterSticker(code);
+    }
+
+    async onNewConnection(connection: Connection): Promise<void> {
+        connection.send('sticker-list', StickerManager.stickers);
     }
 }

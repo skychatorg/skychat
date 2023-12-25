@@ -212,6 +212,12 @@ function onOpen(key) {
             searchText: user.identifier,
             label: user.identifier,
         }));
+    } else if (key === ':') {
+        autoSuggestItems.value = Object.entries(client.state.stickers).map(([name, sticker]) => ({
+            value: name.substring(1),
+            searchText: name,
+            label: name,
+        }));
     } else {
         autoSuggestItems.value = [];
     }
@@ -285,7 +291,7 @@ function onOpen(key) {
                         {{ typingListText }}
                     </p>
 
-                    <Mentionable :keys="['@', '#']" :items="autoSuggestItems" offset="6" insert-space class="d-flex" @open="onOpen">
+                    <Mentionable :keys="['@', '#', ':']" :items="autoSuggestItems" offset="6" insert-space class="d-flex" @open="onOpen">
                         <textarea
                             ref="message"
                             type="text"
@@ -312,6 +318,12 @@ function onOpen(key) {
                         </template>
 
                         <template #item-#="{ item }">
+                            <div class="autosuggest-item">
+                                {{ item.label }}
+                            </div>
+                        </template>
+
+                        <template #item-:="{ item }">
                             <div class="autosuggest-item">
                                 {{ item.label }}
                             </div>
