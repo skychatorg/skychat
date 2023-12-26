@@ -4,6 +4,7 @@ import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
 import { AudioRecorder } from '@/lib/AudioRecorder';
 import { RisiBank } from 'risibank-web-api';
+import { Mentionable } from 'vue-mention';
 
 const MESSAGE_HISTORY_LENGTH = 500;
 
@@ -151,22 +152,6 @@ const openRisiBank = function () {
 };
 
 /**
- * Autocomplete the username
- */
-const onKeyUpTab = function () {
-    const messageMatch = app.newMessage.match(/([*a-zA-Z0-9_-]+)$/);
-    const username = messageMatch ? messageMatch[0].toLowerCase() : null;
-    if (!username) {
-        return;
-    }
-    const matches = client.state.connectedList.map((entry) => entry.identifier).filter((identifier) => identifier.indexOf(username) === 0);
-    if (matches.length !== 1) {
-        return;
-    }
-    app.setMessage(app.newMessage.substr(0, app.newMessage.length - username.length) + matches[0]);
-};
-
-/**
  * When the file input changed
  */
 const onFileInputChange = async () => {
@@ -212,9 +197,44 @@ const cancelAudio = function () {
     }
     recordingAudio.value = false;
 };
+
+const autoSuggestItems = ref([]);
+const autoSuggestOpen = ref(false);
+function onOpen(key) {
+    autoSuggestOpen.value = true;
+    if (key === '#') {
+        autoSuggestItems.value = Object.values(client.state.rooms).map((room) => ({
+            value: room.name,
+            searchText: room.name,
+            label: room.name,
+        }));
+    } else if (key === '@') {
+        autoSuggestItems.value = Object.values(client.state.connectedList).map((user) => ({
+            value: user.identifier,
+            searchText: user.identifier,
+            label: user.identifier,
+        }));
+    } else if (key === ':') {
+        autoSuggestItems.value = Object.entries(client.state.stickers).map(([name, sticker]) => ({
+            value: name.substring(1),
+            searchText: name,
+            label: name,
+            url: sticker,
+        }));
+    } else {
+        autoSuggestItems.value = [];
+    }
+}
+
+function onClose() {
+    autoSuggestOpen.value = false;
+    autoSuggestItems.value = [];
+}
 </script>
 
 <template>
+    <!-- eslint-disable vue/valid-attribute-name -->
+    <!-- eslint-disable vue/no-lone-template -->
     <div class="p-2">
         <!-- New message form -->
         <div class="flex flex-col-reverse lg:flex-row flex-nowrap">
@@ -278,21 +298,54 @@ const cancelAudio = function () {
                     <p class="h-5 pl-2 text-xs text-skygray-lightest">
                         {{ typingListText }}
                     </p>
-                    <textarea
-                        ref="message"
-                        :rows="messageTextAreaRows"
-                        class="mousetrap form-control lg:ml-2 scrollbar resize-none"
-                        type="text"
-                        :placeholder="textAreaPlaceholder"
-                        :disabled="!client.state.currentRoom"
-                        :maxlength="client.state.currentRoom.plugins.messagelimiter ?? null"
-                        @input="onMessageInput"
-                        @keyup.up.exact="onNavigateIntoHistory($event, -1)"
-                        @keyup.down.exact="onNavigateIntoHistory($event, 1)"
-                        @keydown.tab.prevent="onKeyUpTab"
-                        @keydown.shift.enter.stop=""
-                        @keydown.enter.exact.stop="sendMessage"
-                    ></textarea>
+
+                    <Mentionable
+                        :keys="['@', '#', ':']"
+                        :items="autoSuggestItems"
+                        offset="6"
+                        insert-space
+                        class="d-flex"
+                        @open="onOpen"
+                        @close="onClose"
+                    >
+                        <textarea
+                            ref="message"
+                            type="text"
+                            :rows="messageTextAreaRows"
+                            class="mousetrap form-control lg:ml-2 scrollbar resize-none w-full"
+                            :placeholder="textAreaPlaceholder"
+                            :disabled="!client.state.currentRoom"
+                            :maxlength="client.state.currentRoom.plugins.messagelimiter ?? null"
+                            @input="onMessageInput"
+                            @keyup.up.exact="!autoSuggestOpen && onNavigateIntoHistory($event, -1)"
+                            @keyup.down.exact="!autoSuggestOpen && onNavigateIntoHistory($event, 1)"
+                            @keydown.shift.enter.stop=""
+                            @keydown.enter.exact.stop="!autoSuggestOpen && sendMessage()"
+                        ></textarea>
+
+                        <template #no-result>
+                            <div class="dim">No result</div>
+                        </template>
+
+                        <template #item-@="{ item }">
+                            <div class="autosuggest-item">
+                                {{ item.label }}
+                            </div>
+                        </template>
+
+                        <template #item-#="{ item }">
+                            <div class="autosuggest-item">
+                                {{ item.label }}
+                            </div>
+                        </template>
+
+                        <template #item-:="{ item }">
+                            <div class="autosuggest-item flex items-center gap-4">
+                                <img :src="item.url" class="w-4 h-4" />
+                                <span>{{ item.label }}</span>
+                            </div>
+                        </template>
+                    </Mentionable>
                 </div>
 
                 <!-- Send button -->
@@ -306,4 +359,8 @@ const cancelAudio = function () {
     </div>
 </template>
 
-<style scoped></style>
+<style scoped lang="postcss">
+.autosuggest-item {
+    @apply px-1 cursor-pointer;
+}
+</style>

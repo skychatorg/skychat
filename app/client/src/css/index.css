@@ -3,6 +3,7 @@
 @import './scrollbar.css';
 @import './skychat.css';
 @import './util.css';
+@import './lib.css';
 
 @tailwind base;
 @tailwind components;
@@ -10,7 +11,6 @@
 
 @layer base {
     :root {
-
         --page-header-height: 4rem;
         --page-max-width: 1640px;
         --page-col-left-width: 260px;
@@ -26,14 +26,13 @@
         --color-skygray-darker: 17 17 17;
         --color-skygray-black: 0 0 3;
 
-
         --color-primary: 119 155 233;
         --color-primary-light: 182 200 244;
         --color-secondary: 161 111 218;
         --color-secondary-light: 211 173 255;
         --color-tertiary: 250 88 182;
         --color-tertiary-light: 247 166 219;
-        
+
         --color-info: 119 155 233;
         --color-info-light: 182 200 244;
         --color-warn: 228 159 77;

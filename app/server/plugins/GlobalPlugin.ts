@@ -35,7 +35,6 @@ export abstract class GlobalPlugin extends Plugin {
      * @param message
      * @param _connection
      */
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     public async onNewMessageHook(message: string, _connection: Connection): Promise<string> {
         return message;
     }

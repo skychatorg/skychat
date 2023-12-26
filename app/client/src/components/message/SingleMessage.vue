@@ -30,6 +30,10 @@ const props = defineProps({
         type: Boolean,
         default: false,
     },
+    showDate: {
+        type: Boolean,
+        default: false,
+    },
 });
 
 const content = ref(null);
@@ -42,8 +46,29 @@ const isBlacklisted = computed(() => {
     return blacklist.includes(props.message.user.username.toLowerCase());
 });
 
-// Shown date
+// Shown dates
 const formattedDate = computed(() => {
+    // Show "today" if today
+    // Show "yesterday" if yesterday
+    // Show "Month day" if this year
+    // Show "Month day, year" if not this year
+    const date = new Date(props.message.createdTimestamp * 1000);
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    if (date.toDateString() === today.toDateString()) {
+        return 'Today';
+    }
+    if (date.toDateString() === yesterday.toDateString()) {
+        return 'Yesterday';
+    }
+    if (date.getFullYear() === today.getFullYear()) {
+        return date.toLocaleString('default', { month: 'long', day: 'numeric' });
+    }
+    return date.toLocaleString('default', { month: 'long', day: 'numeric', year: 'numeric' });
+});
+const formattedTime = computed(() => {
+    // Show time as "HH:MM:SS"
     const date = new Date(props.message.createdTimestamp * 1000);
     const hours = date.getHours().toString().padStart(2, '0');
     const minutes = date.getMinutes().toString().padStart(2, '0');
@@ -85,7 +110,11 @@ const bindMessageContentEvents = () => {
     const buttons = Array.from(content.value.getElementsByClassName('skychat-button'));
     for (const button of buttons) {
         button.addEventListener('click', () => {
-            if (button.dataset.action[0] === '/' && button.dataset.trusted !== 'true' && !confirm('Send "' + button.dataset.action + '"?')) {
+            if (
+                button.dataset.action[0] === '/' &&
+                button.dataset.trusted !== 'true' &&
+                !confirm('Send "' + button.dataset.action + '"?')
+            ) {
                 return;
             }
             client.sendMessage(button.dataset.action);
@@ -124,7 +153,10 @@ const messageInteract = () => {
 </script>
 
 <template>
-    <ExpandableBlock :force-expand="forceExpand || message.user.username.toLowerCase() === client.state.user?.username.toLowerCase()" @content-size-changed="() => emit('content-size-changed')">
+    <ExpandableBlock
+        :force-expand="forceExpand || message.user.username.toLowerCase() === client.state.user?.username.toLowerCase()"
+        @content-size-changed="() => emit('content-size-changed')"
+    >
         <HoverCard
             :border-color="message.user.data.plugins.custom.color"
             :selectable="selectable"
@@ -135,6 +167,11 @@ const messageInteract = () => {
             }"
             @contextmenu.prevent="messageInteract"
         >
+            <div v-if="showDate" class="absolute w-full text-center text-xs">
+                <span class="border px-2 py-1/2 rounded-full">
+                    {{ formattedDate }}
+                </span>
+            </div>
             <div v-if="!isBlacklisted" class="py-1 px-3 flex flex-row">
                 <UserBigAvatar v-if="!compact" class="mt-1" :user="message.user" />
 
@@ -148,7 +185,11 @@ const messageInteract = () => {
                             }"
                         >
                             {{ message.user.username }}
-                            <sup v-if="isBlacklisted" title="This user is blacklisted. Click to remove from blacklist." @click.stop="client.sendMessage('/unblacklist ' + entry.user.username)">
+                            <sup
+                                v-if="isBlacklisted"
+                                title="This user is blacklisted. Click to remove from blacklist."
+                                @click.stop="client.sendMessage('/unblacklist ' + entry.user.username)"
+                            >
                                 <fa icon="ban" class="text-danger" />
                             </sup>
                             <sup v-if="message.meta.device === 'mobile'">
@@ -156,19 +197,32 @@ const messageInteract = () => {
                             </sup>
                         </div>
                         <div v-if="compact" class="text-skygray-lightest text-xs pt-1 ml-2">
-                            {{ formattedDate }}
+                            {{ formattedTime }}
                             <template v-if="room"> @ {{ room.name }} </template>
                         </div>
                     </div>
+
                     <!-- Quoted message -->
-                    <SingleMessage v-if="message.quoted" :message="message.quoted" :selectable="false" :compact="true" :force-expand="true" class="mt-2 mb-4 opacity-75" />
+                    <SingleMessage
+                        v-if="message.quoted"
+                        :message="message.quoted"
+                        :selectable="false"
+                        :compact="true"
+                        :force-expand="true"
+                        class="mt-2 mb-4 opacity-75"
+                    />
+
                     <!-- Message content -->
-                    <div class="text-skygray-white w-0 min-w-full whitespace-pre-wrap overflow-hidden break-words" v-html="message.formatted" ref="content" />
+                    <div
+                        ref="content"
+                        class="text-skygray-white w-0 min-w-full whitespace-pre-wrap overflow-hidden break-words"
+                        v-html="message.formatted"
+                    />
                 </div>
 
                 <div v-if="!compact" class="basis-16 w-16 flex flex-col text-center">
                     <span class="grow text-xs text-skygray-lightest">
-                        {{ formattedDate }}
+                        {{ formattedTime }}
                     </span>
                     <UserMiniAvatarCollection :users="lastSeenUsers" class="my-2" />
                 </div>
