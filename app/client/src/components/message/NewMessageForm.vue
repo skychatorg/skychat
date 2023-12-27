@@ -216,7 +216,7 @@ function onOpen(key) {
         }));
     } else if (key === ':') {
         autoSuggestItems.value = Object.entries(client.state.stickers).map(([name, sticker]) => ({
-            value: name.substring(1),
+            value: name,
             searchText: name,
             label: name,
             url: sticker,
@@ -229,6 +229,25 @@ function onOpen(key) {
 function onClose() {
     autoSuggestOpen.value = false;
     autoSuggestItems.value = [];
+}
+
+function mapInsert(item, key) {
+    if (['@', '#'].includes(key)) {
+        return item.value;
+    }
+    // ':' key
+    const start = message.value.selectionStart;
+    const lastChar = message.value.value.substring(start - 1, start);
+    if (lastChar === ':') {
+        // Next tick, move caret to the right
+        setTimeout(() => {
+            message.value.selectionStart = start + 1;
+            message.value.selectionEnd = start + 1;
+        });
+        // Remove first and last ':'
+        return item.value.substring(1, item.value.length - 1);
+    }
+    return item.value.substring(1);
 }
 </script>
 
@@ -302,9 +321,8 @@ function onClose() {
                     <Mentionable
                         :keys="['@', '#', ':']"
                         :items="autoSuggestItems"
-                        offset="6"
-                        insert-space
-                        class="d-flex"
+                        :map-insert="mapInsert"
+                        class="flex"
                         @open="onOpen"
                         @close="onClose"
                     >
