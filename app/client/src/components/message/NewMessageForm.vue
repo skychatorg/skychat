@@ -4,7 +4,7 @@ import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
 import { AudioRecorder } from '@/lib/AudioRecorder';
 import { RisiBank } from 'risibank-web-api';
-import { Mentionable } from 'vue-mention';
+import { SmartSuggest } from 'vue-smart-suggest';
 
 const MESSAGE_HISTORY_LENGTH = 500;
 
@@ -198,57 +198,35 @@ const cancelAudio = function () {
     recordingAudio.value = false;
 };
 
-const autoSuggestItems = ref([]);
 const autoSuggestOpen = ref(false);
-function onOpen(key) {
-    autoSuggestOpen.value = true;
-    if (key === '#') {
-        autoSuggestItems.value = Object.values(client.state.rooms).map((room) => ({
-            value: room.name,
-            searchText: room.name,
-            label: room.name,
-        }));
-    } else if (key === '@') {
-        autoSuggestItems.value = Object.values(client.state.connectedList).map((user) => ({
-            value: user.identifier,
+
+const suggestTriggers = computed(() => [
+    {
+        char: '@',
+        whitespaceBefore: true,
+        items: Object.values(client.state.connectedList).map((user) => ({
+            value: `@${user.identifier}`,
             searchText: user.identifier,
-            label: user.identifier,
-        }));
-    } else if (key === ':') {
-        autoSuggestItems.value = Object.entries(client.state.stickers).map(([name, sticker]) => ({
+        })),
+    },
+    {
+        char: ':',
+        searchRegExp: /([a-zA-Z0-9-_)(]*)$/,
+        whitespaceBefore: true,
+        items: Object.entries(client.state.stickers).map(([name, sticker]) => ({
             value: name,
-            searchText: name,
-            label: name,
-            url: sticker,
-        }));
-    } else {
-        autoSuggestItems.value = [];
-    }
-}
-
-function onClose() {
-    autoSuggestOpen.value = false;
-    autoSuggestItems.value = [];
-}
-
-function mapInsert(item, key) {
-    if (['@', '#'].includes(key)) {
-        return item.value;
-    }
-    // ':' key
-    const start = message.value.selectionStart;
-    const lastChar = message.value.value.substring(start - 1, start);
-    if (lastChar === ':') {
-        // Next tick, move caret to the right
-        setTimeout(() => {
-            message.value.selectionStart = start + 1;
-            message.value.selectionEnd = start + 1;
-        });
-        // Remove first and last ':'
-        return item.value.substring(1, item.value.length - 1);
-    }
-    return item.value.substring(1);
-}
+            image: sticker,
+        })),
+    },
+    {
+        char: '#',
+        items: Object.values(client.state.rooms).map((room) => ({
+            value: `# ${room.id}:${room.name.replace(/\s/g, '_')}`,
+            label: `# ${room.name}`,
+            searchText: room.name,
+        })),
+    },
+]);
 </script>
 
 <template>
@@ -318,14 +296,7 @@ function mapInsert(item, key) {
                         {{ typingListText }}
                     </p>
 
-                    <Mentionable
-                        :keys="['@', '#', ':']"
-                        :items="autoSuggestItems"
-                        :map-insert="mapInsert"
-                        class="flex"
-                        @open="onOpen"
-                        @close="onClose"
-                    >
+                    <SmartSuggest class="flex" :triggers="suggestTriggers" @open="autoSuggestOpen = true" @close="autoSuggestOpen = false">
                         <textarea
                             ref="message"
                             type="text"
@@ -340,30 +311,7 @@ function mapInsert(item, key) {
                             @keydown.shift.enter.stop=""
                             @keydown.enter.exact.stop="!autoSuggestOpen && sendMessage()"
                         ></textarea>
-
-                        <template #no-result>
-                            <div class="dim">No result</div>
-                        </template>
-
-                        <template #item-@="{ item }">
-                            <div class="autosuggest-item">
-                                {{ item.label }}
-                            </div>
-                        </template>
-
-                        <template #item-#="{ item }">
-                            <div class="autosuggest-item">
-                                {{ item.label }}
-                            </div>
-                        </template>
-
-                        <template #item-:="{ item }">
-                            <div class="autosuggest-item flex items-center gap-4">
-                                <img :src="item.url" class="w-4 h-4" />
-                                <span>{{ item.label }}</span>
-                            </div>
-                        </template>
-                    </Mentionable>
+                    </SmartSuggest>
                 </div>
 
                 <!-- Send button -->

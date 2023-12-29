@@ -7,8 +7,7 @@ import mousetrap from 'mousetrap';
 import Toast from 'vue-toastification';
 import 'vue-toastification/dist/index.css';
 
-// Needed for vue-mention
-import 'floating-vue/dist/style.css';
+import 'vue-smart-suggest/lib/style.css';
 
 import App from './App.vue';
 import Home from '@/views/Home.vue';
