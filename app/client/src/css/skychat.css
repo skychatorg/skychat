@@ -1,4 +1,3 @@
-
 /* Sticker */
 .skychat-sticker {
     @apply inline-block align-baseline;
@@ -49,7 +48,7 @@
 }
 
 .skychat-link {
-    text-decoration: none;
+    text-decoration: underline;
     color: white;
 }
 
@@ -60,7 +59,6 @@
 }
 .skychat-table tr {
     border-bottom: 1pt solid #4e4e4e;
-
 }
 .skychat-table tr td,
 .skychat-table tr th {
