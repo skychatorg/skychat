@@ -258,6 +258,9 @@ export class MessageFormatter {
 
         const beautifySearch = (search: string) => {
             search = search.replace(/^\?/, '');
+            if (search.length === 0) {
+                return '';
+            }
             if (search.length < MessageFormatter.LINK_SEARCH_TRUNCATE_LENGTH) {
                 return `?${search}`;
             }
