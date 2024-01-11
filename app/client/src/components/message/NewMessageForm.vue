@@ -217,6 +217,7 @@ const suggestTriggers = computed(() => [
             value: name,
             image: sticker,
         })),
+        maxRenderedItems: 12,
     },
     {
         char: '#',
