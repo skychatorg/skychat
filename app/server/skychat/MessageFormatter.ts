@@ -245,6 +245,9 @@ export class MessageFormatter {
             return protocol + '//';
         };
         const beautifyPath = (path: string) => {
+            if (path === '/') {
+                return '';
+            }
             if (path.length < MessageFormatter.LINK_PATHNAME_TRUNCATE_LENGTH) {
                 return path;
             }
