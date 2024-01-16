@@ -12,9 +12,20 @@ import { RandomGeneratorPlugin } from './room/RandomGeneratorPlugin';
 import { RollPlugin } from './room/RollPlugin';
 import { StatsPlugin } from './room/StatsPlugin';
 import { ConfusePlugin } from './global/ConfusePlugin';
+import { UserPollPlugin } from './room/UserPollPlugin';
 
 export class GamesPluginGroup extends PluginGroup {
-    roomPluginClasses = [DailyRollPlugin, GuessTheNumberPlugin, GiveMoneyPlugin, PointsCollectorPlugin, RacingPlugin, RandomGeneratorPlugin, RollPlugin, StatsPlugin];
+    roomPluginClasses = [
+        DailyRollPlugin,
+        GuessTheNumberPlugin,
+        GiveMoneyPlugin,
+        PointsCollectorPlugin,
+        RacingPlugin,
+        RandomGeneratorPlugin,
+        RollPlugin,
+        StatsPlugin,
+        UserPollPlugin,
+    ];
 
     globalPluginClasses = [AprilFoolsDay, ConfusePlugin, CursorPlugin, MoneyFarmerPlugin, OfferMoneyPlugin];
 }
