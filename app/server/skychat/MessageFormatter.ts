@@ -133,6 +133,17 @@ export class MessageFormatter {
     }
 
     /**
+     * Create a button
+     * @param display
+     * @param action
+     */
+    public createButton(display: string, action: string): string {
+        // Replace '/' in display with ' ' to avoid command injection
+        const sanitizedDisplay = display.replace('/', '／');
+        return `[[${sanitizedDisplay}/${action}]]`;
+    }
+
+    /**
      * Get the html code of a button
      * @param title
      * @param action
