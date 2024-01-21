@@ -1,3 +1,4 @@
+import beautifyUrl from 'beautify-url';
 import { Config } from './Config';
 import { StickerManager } from './StickerManager';
 import escapeHTML from 'escape-html';
@@ -246,56 +247,6 @@ export class MessageFormatter {
     }
 
     /**
-     * Replace an href with a human-friendly version
-     */
-    public beautifyHref(href: string): string {
-        const beautifyProtocol = (protocol: string) => {
-            if (protocol === 'https:') {
-                return '';
-            }
-            return protocol + '//';
-        };
-        const beautifyPath = (path: string) => {
-            if (path === '/') {
-                return '';
-            }
-            if (path.length < MessageFormatter.LINK_PATHNAME_TRUNCATE_LENGTH) {
-                return path;
-            }
-            const pathParts = path.split('/');
-            const lastPart = pathParts[pathParts.length - 1];
-            if (lastPart.length < MessageFormatter.LINK_PATHNAME_TRUNCATE_LENGTH && pathParts.length > 2) {
-                return `/[..]/${lastPart}`;
-            }
-            return `/[..]${lastPart.substring(lastPart.length - MessageFormatter.LINK_PATHNAME_TRUNCATE_LENGTH + 4)}`;
-        };
-
-        const beautifySearch = (search: string) => {
-            search = search.replace(/^\?/, '');
-            if (search.length === 0) {
-                return '';
-            }
-            if (search.length < MessageFormatter.LINK_SEARCH_TRUNCATE_LENGTH) {
-                return `?${search}`;
-            }
-            return `?[..]${search.substring(search.length - MessageFormatter.LINK_SEARCH_TRUNCATE_LENGTH + 5)}`;
-        };
-
-        if (href.length < MessageFormatter.LINK_TRUNCATE_LENGTH) {
-            return href;
-        }
-        try {
-            const url = new URL(href);
-            const protocol = beautifyProtocol(url.protocol);
-            const path = beautifyPath(url.pathname);
-            const search = beautifySearch(url.search);
-            return `${protocol}${url.hostname}${path}${search}`;
-        } catch (error) {
-            return href;
-        }
-    }
-
-    /**
      * Replace links in the message
      */
     public replaceLinks(text: string, remove?: boolean): string {
@@ -304,7 +255,7 @@ export class MessageFormatter {
         } else {
             text = text.replace(MessageFormatter.LINK_REGEXP, (_match, p1, fullHref) => {
                 // Match domain vs path
-                return `${p1}<a class="skychat-link" target="_blank" rel="nofollow noopener noreferrer" href="${fullHref}">${this.beautifyHref(
+                return `${p1}<a class="skychat-link" target="_blank" rel="nofollow noopener noreferrer" href="${fullHref}">${beautifyUrl(
                     fullHref,
                 )}</a>`;
             });
