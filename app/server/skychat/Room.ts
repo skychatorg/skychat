@@ -430,11 +430,11 @@ export class Room implements IBroadcaster {
         this.messages.splice(0, this.messages.length - Room.MESSAGE_HISTORY_LENGTH);
         // Store it into the database
         const sqlQuery = SQL`insert into messages
-            (\`id\`, \`room_id\`, \`user_id\`, \`quoted_message_id\`, \`content\`, \`date\`, \`ip\`) values
+            (id, room_id, user_id, quoted_message_id, content, date, ip) values
             (${message.id}, ${this.id}, ${options.user.id}, ${options.quoted ? options.quoted.id : null}, ${message.content}, ${
                 message.createdTime
             }, ${options.connection ? options.connection.ip : null})`;
-        await DatabaseHelper.db.run(sqlQuery);
+        await DatabaseHelper.db.query(sqlQuery);
         // Return created message
         return message;
     }
