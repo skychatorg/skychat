@@ -72,7 +72,7 @@ export class MessagePlugin extends RoomPlugin {
 
             lastMessage.edit(newContent);
             this.room.send('message-edit', lastMessage.sanitized());
-            await DatabaseHelper.db.run(SQL`update messages set content = ${lastMessage.content} where id = ${lastMessage.id}`);
+            await DatabaseHelper.db.query(SQL`update messages set content = ${lastMessage.content} where id = ${lastMessage.id}`);
             return;
         }
 

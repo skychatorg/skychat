@@ -19,6 +19,9 @@ fi
 if [[ ! -e storage/rooms ]]; then
     mkdir -p storage/rooms;
 fi
+if [[ ! -e app/database/data ]]; then
+    mkdir -p app/database/data;
+fi
 
 # Initialize .env.json
 if [[ ! -e .env.json ]]; then

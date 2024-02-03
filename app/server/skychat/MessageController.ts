@@ -56,7 +56,7 @@ export class MessageController {
             sqlQuery = sqlQuery.append('limit ' + limit + ' ');
         }
         // Get messages from db and build instances
-        const messageRows: MessageDBRow[] = await DatabaseHelper.db.all(sqlQuery);
+        const messageRows: MessageDBRow[] = (await DatabaseHelper.db.query(sqlQuery)).rows;
         const messages: Message[] = [];
         const users: any = {}; // User cache object to avoid non-necessary db queries
         for (const messageRow of messageRows) {

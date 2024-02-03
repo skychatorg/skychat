@@ -75,7 +75,7 @@ export class UserController {
      * @param username
      */
     public static async getUserByUsername(username: string): Promise<User | null> {
-        const userObject = await DatabaseHelper.db.get(SQL`SELECT * FROM users WHERE username = ${username.toLowerCase()}`);
+        const userObject = (await DatabaseHelper.db.query(SQL`SELECT * FROM users WHERE username = ${username.toLowerCase()}`)).rows[0];
         return userObject ? this.userRowToObject(userObject) : null;
     }
 
@@ -84,7 +84,7 @@ export class UserController {
      * @param userId
      */
     public static async getUserById(userId: number): Promise<User> {
-        const userObject = await DatabaseHelper.db.get(SQL`SELECT * FROM users WHERE id = ${userId}`);
+        const userObject = (await DatabaseHelper.db.query(SQL`SELECT * FROM users WHERE id = ${userId}`)).rows[0];
         if (!userObject) {
             throw new Error('User does not exist');
         }
@@ -95,16 +95,26 @@ export class UserController {
      * Get all users
      */
     public static async getAllUsers(): Promise<User[]> {
-        const userObjects = await DatabaseHelper.db.all(SQL`SELECT * FROM users`);
+        const userObjects = (await DatabaseHelper.db.query(SQL`SELECT * FROM users`)).rows;
         return userObjects.map((o) => this.userRowToObject(o));
     }
 
     /**
-     * Convert a user row fetched from sqlite to an user object
+     * Convert a user row fetched from sql to an user object
      * @param row
      */
     public static userRowToObject(row: any): User {
-        return new User(row.id, row.username_custom, row.email, row.password, row.money, row.xp, row.right, JSON.parse(row.data), JSON.parse(row.storage));
+        return new User(
+            row.id,
+            row.username_custom,
+            row.email,
+            row.password,
+            row.money,
+            row.xp,
+            row.right,
+            JSON.parse(row.data),
+            JSON.parse(row.storage),
+        );
     }
 
     /**
@@ -115,15 +125,17 @@ export class UserController {
     public static async registerUser(username: string, password: string): Promise<void> {
         const tms = Math.floor(Date.now() / 1000);
         const sqlQuery = SQL`insert into users
-            (username, username_custom, password, money, xp, right, data, storage, tms_created, tms_last_seen) values
-            (${username.toLowerCase()}, ${username}, ${''}, ${0}, ${0}, ${0}, ${JSON.stringify(User.DEFAULT_DATA_OBJECT)}, ${'{}'}, ${tms}, ${tms})`;
-        const statement = await DatabaseHelper.db.run(sqlQuery);
-        const userId = statement.lastID;
+            (username, username_custom, password, money, xp, "right", data, storage, tms_created, tms_last_seen) values
+            (${username.toLowerCase()}, ${username}, ${''}, ${0}, ${0}, ${0}, ${JSON.stringify(
+                User.DEFAULT_DATA_OBJECT,
+            )}, ${'{}'}, ${tms}, ${tms}) returning *`;
+        const statement = await DatabaseHelper.db.query(sqlQuery);
+        const userId = statement.rows[0].id;
         if (!userId) {
             throw new Error('Could not register user');
         }
         const hashedPassword = UserController.hashPassword(userId, username.toLowerCase(), password);
-        await DatabaseHelper.db.run(SQL`update users set password=${hashedPassword} where id=${userId}`);
+        await DatabaseHelper.db.query(SQL`update users set password=${hashedPassword} where id=${userId}`);
     }
 
     /**
@@ -199,7 +211,7 @@ export class UserController {
      */
     public static async giveMoney(user: User, amount: number): Promise<void> {
         if (amount < 0) {
-            throw new Error('Can\'t give negative amount');
+            throw new Error("Can't give negative amount");
         }
         user.money += amount;
         await UserController.sync(user);
@@ -212,7 +224,7 @@ export class UserController {
      */
     public static async giveXP(user: User, amount: number): Promise<void> {
         if (amount < 0) {
-            throw new Error('Can\'t give negative amount');
+            throw new Error("Can't give negative amount");
         }
         user.xp += amount;
         await UserController.sync(user);
@@ -237,11 +249,11 @@ export class UserController {
      * @param user
      */
     public static async sync(user: User) {
-        await DatabaseHelper.db.run(SQL`update users set
+        await DatabaseHelper.db.query(SQL`update users set
             email=${user.email},
             money=${user.money},
             xp=${user.xp},
-            right=${user.right},
+            "right"=${user.right},
             data=${JSON.stringify(user.data)},
             storage=${JSON.stringify(user.storage)}            
             where id=${user.id}`);
@@ -259,7 +271,7 @@ export class UserController {
         // Update cased username
         user.username = newUsernameCase;
         // Update database
-        await DatabaseHelper.db.run(SQL`update users set username_custom=${user.username} where id=${user.id}`);
+        await DatabaseHelper.db.query(SQL`update users set username_custom=${user.username} where id=${user.id}`);
     }
 
     /**
@@ -275,7 +287,7 @@ export class UserController {
         user.username = newUsername;
         user.setHashedPassword(newHashedPassword);
         // Update database
-        await DatabaseHelper.db.run(SQL`update users set
+        await DatabaseHelper.db.query(SQL`update users set
             username=${user.username.toLowerCase()},
             username_custom=${user.username},
             password=${newHashedPassword}
@@ -294,6 +306,6 @@ export class UserController {
         // Update user object
         user.setHashedPassword(newHashedPassword);
         // Update database
-        await DatabaseHelper.db.run(SQL`update users set password=${newHashedPassword} where id=${user.id}`);
+        await DatabaseHelper.db.query(SQL`update users set password=${newHashedPassword} where id=${user.id}`);
     }
 }

@@ -27,7 +27,7 @@ RUN ln -snf /usr/share/zoneinfo/$DOCKER_TZ /etc/localtime && \
     ln -s /mnt/skychat/storage ./storage && \
     ln -s /mnt/skychat/gallery ./gallery && \
     ln -s /mnt/skychat/uploads ./uploads && \
-    apk add --update nodejs npm zip ffmpeg sqlite
+    apk add --update nodejs npm zip ffmpeg
 
 # Copy build configuration
 COPY .env.json package*.json *config\.* ./

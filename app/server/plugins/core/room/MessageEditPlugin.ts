@@ -55,7 +55,7 @@ export class MessageEditPlugin extends RoomPlugin {
         }
 
         // Store it into the database
-        await DatabaseHelper.db.run(SQL`update messages set content = ${message.content} where id = ${message.id}`);
+        await DatabaseHelper.db.query(SQL`update messages set content = ${message.content} where id = ${message.id}`);
 
         // Notify room
         this.room.send('message-edit', message.sanitized());

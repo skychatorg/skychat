@@ -2,6 +2,7 @@ version: '3.8'
 
 services:
   app:
+    container_name: app
     cap_drop:
       - ALL
     build:
@@ -12,6 +13,10 @@ services:
         DOCKER_GID: "${DOCKER_GID}"
         DOCKER_TZ: "${DOCKER_TZ}"
         DOCKER_PORT: "${DOCKER_PORT}"
+    environment:
+      POSTGRES_USER: "${POSTGRES_USER}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+      POSTGRES_DB: "${POSTGRES_DB}"
     volumes:
       - ./config:/mnt/skychat/config
       - ./backups:/mnt/skychat/backups
@@ -19,4 +24,22 @@ services:
       - ./gallery:/mnt/skychat/gallery
       - ./uploads:/mnt/skychat/uploads
     ports:
-        - "${DOCKER_PORT}:${DOCKER_PORT}"
+      - "${DOCKER_PORT}:${DOCKER_PORT}"
+    depends_on:
+      - app_db
+
+  app_db:
+    container_name: app_db
+    restart: always
+    build:
+      context: ./app/database
+      args:
+        DOCKER_USER: "${DOCKER_USER}"
+        DOCKER_UID: "${DOCKER_UID}"
+        DOCKER_GID: "${DOCKER_GID}"
+    environment:
+      POSTGRES_USER: "${POSTGRES_USER}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+      POSTGRES_DB: "${POSTGRES_DB}"
+    volumes:
+      - ./app/database/data:/var/lib/postgresql/data:rw
