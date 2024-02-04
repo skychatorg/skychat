@@ -1,4 +1,4 @@
-import * as _ from 'lodash';
+import _ from 'lodash';
 import sha256 from 'sha256';
 import { Config } from './Config';
 import { DatabaseHelper } from './DatabaseHelper';
@@ -11,7 +11,7 @@ export class UserController {
     /**
      * Validity of the auth token in seconds
      */
-    public static AUTH_TOKEN_VALIDITY: number = 1000 * 60 * 60 * 24 * 7;
+    public static readonly AUTH_TOKEN_VALIDITY: number = 1000 * 60 * 60 * 24 * 7;
 
     /**
      *

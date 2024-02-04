@@ -32,8 +32,8 @@ RUN ln -snf /usr/share/zoneinfo/$DOCKER_TZ /etc/localtime && \
 # Copy build configuration
 COPY .env.json package*.json *config\.* ./
 
-# Copy source files
-COPY ./app ./app
+# Install dependencies
+RUN npm ci --ignore-scripts
 
 # Change files permissions
 RUN chown -R $DOCKER_UID:$DOCKER_GID ./
@@ -41,9 +41,11 @@ RUN chown -R $DOCKER_UID:$DOCKER_GID ./
 # Change to non-root privilege
 USER $DOCKER_UID:$DOCKER_GID
 
-# Install dependencies
-RUN npm ci && \
-    npm run build
+# Copy source files
+COPY ./app ./app
+
+# Build
+RUN npm run build
 
 # Expose app port
 EXPOSE $DOCKER_PORT
