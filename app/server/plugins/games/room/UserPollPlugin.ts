@@ -1,7 +1,8 @@
 import { Connection } from '../../../skychat/Connection';
 import { MessageFormatter } from '../../../skychat/MessageFormatter';
+import { Room } from '../../../skychat/Room';
 import { UserController } from '../../../skychat/UserController';
-import { RoomPlugin } from '../../RoomPlugin';
+import { GlobalPlugin } from '../../GlobalPlugin';
 
 type Poll = {
     question: string;
@@ -10,16 +11,16 @@ type Poll = {
     messageId?: number;
 };
 
-export class UserPollPlugin extends RoomPlugin {
+export class UserPollPlugin extends GlobalPlugin {
     static readonly commandName = 'userpoll';
 
-    static readonly commandAliases = ['userpollvote'];
+    static readonly commandAliases = ['userpollvote', 'userpolldetail'];
 
     readonly minRight = 0;
 
     readonly rules = {
         userpoll: {
-            minCount: 2,
+            minCount: 1,
             coolDown: 30000,
         },
         userpollvote: {
@@ -31,6 +32,12 @@ export class UserPollPlugin extends RoomPlugin {
                 { name: 'answer', pattern: /^[0-9]+$/ },
             ],
         },
+        userpolldetail: {
+            minCount: 1,
+            maxCount: 1,
+            coolDown: 500,
+            params: [{ name: 'pollId', pattern: /^\d+$/ }],
+        },
     };
 
     private currentPollId = 0;
@@ -38,12 +45,22 @@ export class UserPollPlugin extends RoomPlugin {
     private readonly polls: { [pollId: string]: Poll } = {};
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
+        // All commands require to be in a room
+        const room = connection.room;
+        if (!room) {
+            throw new Error('Not in a room');
+        }
+
         if (alias === 'userpoll') {
-            await this.handlePoll(param);
+            await this.handlePoll(param, room);
             return;
         }
         if (alias === 'userpollvote') {
-            await this.handleVote(param, connection);
+            await this.handleVote(param, room, connection);
+            return;
+        }
+        if (alias === 'userpolldetail') {
+            await this.handleDetail(param, connection);
             return;
         }
         throw new Error('Invalid command');
@@ -72,10 +89,28 @@ export class UserPollPlugin extends RoomPlugin {
                 parts.push(`${i + 1}. ${button}`);
             }
         }
+        parts.push('');
+        parts.push(formatter.createButton('See votes', `/userpolldetail ${id}`));
         return parts.join('\n');
     }
 
-    private async handlePoll(param: string): Promise<void> {
+    private formatPollVotes(poll: Poll): string {
+        const parts = [];
+        parts.push(`🔥 Poll 🔥 ${poll.question} - Votes`);
+        for (let i = 0; i < poll.answers.length; i++) {
+            const votants = Array.from(poll.votes.entries())
+                .filter(([, voteIndex]: [unknown, number]) => voteIndex === i)
+                .map(([identifier]) => identifier);
+            if (votants.length > 0) {
+                parts.push(`${i + 1}. ${poll.answers[i]} - ${votants.join(', ')}`);
+            } else {
+                parts.push(`${i + 1}. ${poll.answers[i]}`);
+            }
+        }
+        return parts.join('\n');
+    }
+
+    private async handlePoll(param: string, room: Room): Promise<void> {
         const [question, ...answers] = param.split('\n');
         if (!question || answers.filter((a) => a.trim().length > 0).length < 2) {
             throw new Error('Invalid poll');
@@ -90,7 +125,7 @@ export class UserPollPlugin extends RoomPlugin {
 
         const formatter = MessageFormatter.getInstance();
         const messageContent = this.formatPollMessage(pollId, poll);
-        const message = await this.room.sendMessage({
+        const message = await room.sendMessage({
             content: messageContent,
             formatted: formatter.format(messageContent, false, true),
             user: UserController.getNeutralUser(),
@@ -98,16 +133,16 @@ export class UserPollPlugin extends RoomPlugin {
         poll.messageId = message.id;
     }
 
-    private async handleVote(param: string, connection: Connection): Promise<void> {
+    private async handleVote(param: string, room: Room, connection: Connection): Promise<void> {
         const [pollId, answer] = param.split(' ');
         const poll = this.polls[pollId];
         if (!poll || isNaN(parseInt(pollId, 10)) || !poll.messageId) {
             throw new Error('Invalid poll');
         }
-        const userId = connection.session.user.id.toString();
+        const sessionIdentifier = connection.session.identifier;
 
         // If user has already voted, ignore
-        if (poll.votes.has(userId)) {
+        if (poll.votes.has(sessionIdentifier)) {
             throw new Error('You have already voted');
         }
 
@@ -118,15 +153,26 @@ export class UserPollPlugin extends RoomPlugin {
         }
 
         // Add vote
-        poll.votes.set(userId, answerIndex);
+        poll.votes.set(sessionIdentifier, answerIndex);
 
         // Update message
         const formatter = MessageFormatter.getInstance();
         const messageContent = this.formatPollMessage(parseInt(pollId, 10), poll);
-        const message = await this.room.getMessageById(poll.messageId);
+        const message = await room.getMessageById(poll.messageId);
         if (message) {
             message?.edit(messageContent, formatter.format(messageContent, false, true));
-            this.room.send('message-edit', message?.sanitized());
+            room.send('message-edit', message?.sanitized());
         }
+    }
+
+    private async handleDetail(param: string, connection: Connection): Promise<void> {
+        const pollId = parseInt(param, 10);
+        const poll = this.polls[pollId];
+        if (!poll || isNaN(pollId)) {
+            throw new Error('Invalid poll');
+        }
+        const content = this.formatPollVotes(poll);
+        const message = UserController.createNeutralMessage({ content, id: 0 });
+        connection.send('message', message.sanitized());
     }
 }

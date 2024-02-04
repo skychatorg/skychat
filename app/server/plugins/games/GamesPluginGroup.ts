@@ -24,8 +24,7 @@ export class GamesPluginGroup extends PluginGroup {
         RandomGeneratorPlugin,
         RollPlugin,
         StatsPlugin,
-        UserPollPlugin,
     ];
 
-    globalPluginClasses = [AprilFoolsDay, ConfusePlugin, CursorPlugin, MoneyFarmerPlugin, OfferMoneyPlugin];
+    globalPluginClasses = [AprilFoolsDay, UserPollPlugin, ConfusePlugin, CursorPlugin, MoneyFarmerPlugin, OfferMoneyPlugin];
 }
