@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS users (
   xp int NOT NULL,
   "right" int NOT NULL,
   data varchar(4096) NOT NULL,
-  storage varchar(8192) DEFAULT '{}'::varchar(8192) NOT NULL,
+  storage text DEFAULT '{}' NOT NULL,
   tms_created int NOT NULL,
   tms_last_seen int NOT NULL,
   CONSTRAINT username_unique UNIQUE(username)
@@ -22,9 +22,9 @@ CREATE TABLE IF NOT EXISTS messages (
   room_id INTEGER NOT NULL,
   user_id INTEGER NOT NULL,
   quoted_message_id INTEGER DEFAULT NULL,
-  content varchar(2048) NOT NULL,
+  content text NOT NULL,
   date timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
-  ip varchar(39) DEFAULT NULL
+  ip text DEFAULT NULL
 );
 
 `;
