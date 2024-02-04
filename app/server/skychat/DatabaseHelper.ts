@@ -27,6 +27,8 @@ CREATE TABLE IF NOT EXISTS messages (
   ip text DEFAULT NULL
 );
 
+-- Add index on room_id and id in descending order, if it doesn't exist
+CREATE INDEX IF NOT EXISTS room_id_id_index ON messages (room_id, id DESC);
 `;
 
 /**

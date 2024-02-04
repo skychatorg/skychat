@@ -130,19 +130,6 @@ The SkyChat is easily extensible through plugins. You can define custom plugins 
 
 ## Contribute
 
-### Develop
-
-To watch, build and run a local SkyChat server, use:
-
-```bash
-npm run dev:server
-# If you are also working on the client, type in an another bash:
-npm run dev:client
-```
-
-This will start a static file server & websocket server, available under the location specified in the `.env.json` file.
-When the source files change, the build processes re-runs automatically.
-
 ### Add features
 
 Refer to [the Wiki](https://github.com/skychatorg/skychat/wiki) guides to contribute:

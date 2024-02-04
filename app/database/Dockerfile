@@ -5,9 +5,6 @@ ARG DOCKER_USER
 ARG DOCKER_UID
 ARG DOCKER_GID
 
-# Install pgloader (needed for migration from sqlite)
-RUN apk --update add pgloader
-
 # Change workdir
 WORKDIR /app
 
