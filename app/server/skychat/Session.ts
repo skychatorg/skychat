@@ -155,13 +155,6 @@ export class Session implements IBroadcaster {
     }
 
     /**
-     * @returns Returns whether there is a real user in the database behind this session
-     */
-    public isGuest(): boolean {
-        return this.user.id === 0;
-    }
-
-    /**
      * @returns Returns whether all connections have disconnected from this session
      */
     public isAlive(): boolean {
@@ -169,7 +162,7 @@ export class Session implements IBroadcaster {
     }
 
     public getDefaultCleanUpDelay(): number {
-        return this.isGuest() ? Session.DEAD_GUEST_SESSION_CLEANUP_DELAY_MS : Session.DEAD_USER_SESSION_CLEANUP_DELAY_MS;
+        return this.user.isGuest() ? Session.DEAD_GUEST_SESSION_CLEANUP_DELAY_MS : Session.DEAD_USER_SESSION_CLEANUP_DELAY_MS;
     }
 
     /**
@@ -271,7 +264,9 @@ export class Session implements IBroadcaster {
         return {
             identifier: this.identifier,
             connectionCount: this.connections.length,
-            rooms: Array.from(new Set(this.connections.map((c) => (c.room ? c.room.id : null)).filter((roomId) => typeof roomId === 'number'))) as number[],
+            rooms: Array.from(
+                new Set(this.connections.map((c) => (c.room ? c.room.id : null)).filter((roomId) => typeof roomId === 'number')),
+            ) as number[],
             deadSinceTime: this.deadSince ? this.deadSince.getTime() * 0.001 : undefined,
             lastInteractionTime: this.lastInteractionDate.getTime() * 0.001,
             user: this.user.sanitized(),
