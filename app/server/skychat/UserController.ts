@@ -30,7 +30,7 @@ export class UserController {
      * Get a neutral user used for sending information messages
      */
     public static getNeutralUser(identifier?: string): User {
-        return new User(0, identifier || '[ Server ]', null, '', 0, 0, 0, {
+        return new User(-1, identifier || '[ Server ]', null, '', 0, 0, 0, {
             plugins: {
                 avatar: Config.LOCATION + '/assets/images/avatars/server.png',
                 custom: {

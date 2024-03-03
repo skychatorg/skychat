@@ -43,7 +43,8 @@ export class User {
     /**
      * Valid email regexp
      */
-    public static EMAIL_REGEXP = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+    public static EMAIL_REGEXP =
+        /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
 
     public readonly id: number;
 
@@ -63,7 +64,17 @@ export class User {
 
     public storage: any;
 
-    constructor(id: number, username: string, email: string | null, password: string, money: number, xp: number, right: number, data?: UserData, storage?: any) {
+    constructor(
+        id: number,
+        username: string,
+        email: string | null,
+        password: string,
+        money: number,
+        xp: number,
+        right: number,
+        data?: UserData,
+        storage?: any,
+    ) {
         this.id = id;
         this.username = username;
         this.email = email;
@@ -74,6 +85,20 @@ export class User {
         this.data = typeof data !== 'undefined' ? data : JSON.parse(JSON.stringify(User.DEFAULT_DATA_OBJECT));
         this.data.plugins = Object.assign(UserController.getPluginsDefaultData(), this.data.plugins || {});
         this.storage = storage || {};
+    }
+
+    /**
+     * Whether this user represents the system
+     */
+    public isSystem() {
+        return this.id === -1;
+    }
+
+    /**
+     * Whether this user is a guest
+     */
+    public isGuest() {
+        return this.id === 0;
     }
 
     /**

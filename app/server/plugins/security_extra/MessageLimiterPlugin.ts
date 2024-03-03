@@ -65,6 +65,11 @@ export class MessageLimiterPlugin extends RoomPlugin {
             return true;
         }
 
+        // System messages are always allowed
+        if (message.user.isSystem()) {
+            return true;
+        }
+
         // If no limit
         if (this.storage.maxSuccessiveChars === null) {
             return true;

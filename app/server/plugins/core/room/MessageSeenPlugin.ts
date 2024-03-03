@@ -36,7 +36,7 @@ export class MessageSeenPlugin extends RoomPlugin {
     };
 
     async run(_alias: string, param: string, connection: Connection): Promise<void> {
-        if (connection.session.isGuest()) {
+        if (connection.session.user.isGuest()) {
             return;
         }
         // Parse new last message seen id
