@@ -5,6 +5,7 @@ import { RoomPlugin } from '../../RoomPlugin';
 import { DatabaseHelper } from '../../../skychat/DatabaseHelper';
 import SQL from 'sql-template-strings';
 import { MessageLimiterPlugin } from '../../security_extra/MessageLimiterPlugin';
+import { BlacklistPlugin } from '../global/BlacklistPlugin';
 
 export class MessagePlugin extends RoomPlugin {
     static readonly commandName = 'message';
@@ -38,7 +39,12 @@ export class MessagePlugin extends RoomPlugin {
             // Otherwise, try to find the quoted message in the database
             quoted = quoted || (await MessageController.getMessageById(quoteId));
 
-            // If quote found, remote the quote string from the message
+            // If author has blacklisted the user, we don't allow the quote
+            if (quoted && BlacklistPlugin.hasBlacklisted(quoted?.user, connection.session.user.username)) {
+                throw new Error(`User ${param} has blacklisted you. You can not quote his messages`);
+            }
+
+            // If quote found, remove the quote string from the message
             if (quoted) {
                 content = content.slice(quoteMatch[0].length);
             }
