@@ -36,17 +36,17 @@ export class PrivateMessagePlugin extends GlobalPlugin {
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
         switch (alias) {
-        case 'pm':
-            await this.handlePM(param, connection);
-            break;
+            case 'pm':
+                await this.handlePM(param, connection);
+                break;
 
-        case 'pmadd':
-            await this.handlePMAdd(param, connection);
-            break;
+            case 'pmadd':
+                await this.handlePMAdd(param, connection);
+                break;
 
-        case 'pmleave':
-            await this.handlePMLeave(param, connection);
-            break;
+            case 'pmleave':
+                await this.handlePMLeave(param, connection);
+                break;
         }
     }
 
@@ -104,7 +104,7 @@ export class PrivateMessagePlugin extends GlobalPlugin {
             throw new Error('You can not add yourself to a private room');
         }
         if (BlacklistPlugin.hasBlacklisted(session.user, connection.session.user.username)) {
-            throw new Error(`User ${param} has blacklisted you. You can not add him to this private room`);
+            throw new Error(`User ${session.user.username} has blacklisted you. You can not add him to this private room`);
         }
         if (room.whitelist.indexOf(session.identifier) !== -1) {
             throw new Error(`User ${param} is already in this private room`);
