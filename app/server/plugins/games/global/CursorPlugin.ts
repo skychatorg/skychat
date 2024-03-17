@@ -5,6 +5,7 @@ import { UserController } from '../../../skychat/UserController';
 import { Session } from '../../../skychat/Session';
 import { RoomManager } from '../../../skychat/RoomManager';
 import { BinaryMessageTypes } from '../../../../api/BinaryMessageTypes';
+import { BlacklistPlugin } from '../../core/global/BlacklistPlugin';
 
 /**
  * Handle cursor events
@@ -67,6 +68,10 @@ export class CursorPlugin extends GlobalPlugin {
         for (const conn of Session.connections) {
             // If the user has cursors disabled, don't send
             if (!UserController.getUserPluginData(conn.session.user, this.commandName)) {
+                continue;
+            }
+            // If target user has blacklister the sender
+            if (BlacklistPlugin.hasBlacklisted(conn.session.user, user.username)) {
                 continue;
             }
             // If identifier is to be ignored
