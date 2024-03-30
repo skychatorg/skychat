@@ -32,17 +32,11 @@ export type PublicConfig = {
 };
 
 export class Config {
-    public static LOCATION = '';
+    public static LOCATION = process.env.PUBLIC_URL ?? '';
 
-    public static HOSTNAME = '';
+    public static HOSTNAME = '0.0.0.0';
 
-    public static PORT = 8080;
-
-    public static USE_SSL = false;
-
-    public static SSL_CERTIFICATE = '';
-
-    public static SSL_CERTIFICATE_KEY = '';
+    public static PORT = 80;
 
     public static USERS_PASSWORD_SALT = '';
 
@@ -85,17 +79,6 @@ export class Config {
     public static initialize() {
         // Load env variables
         const env = JSON.parse(fs.readFileSync('.env.json').toString());
-        Config.LOCATION = env.location;
-        Config.HOSTNAME = env.hostname;
-        Config.PORT = parseInt(env.port);
-        if (isNaN(Config.PORT)) {
-            throw new Error('Invalid port specified in the .env.json file');
-        }
-        Config.USE_SSL = !!env.ssl;
-        if (Config.USE_SSL) {
-            Config.SSL_CERTIFICATE = env.ssl.certificate;
-            Config.SSL_CERTIFICATE_KEY = env.ssl.key;
-        }
         Config.PLUGIN_GROUP_NAMES = env.plugins;
         Config.USERS_PASSWORD_SALT = env.users_passwords_salt;
         if (Config.USERS_PASSWORD_SALT.length === 0) {

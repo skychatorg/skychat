@@ -1,6 +1,25 @@
-version: '3.8'
-
 services:
+  traefik:
+    image: traefik:v2.9
+    container_name: traefik
+    command:
+      - "--log.level=DEBUG"
+      - "--entrypoints.web.address=:${PUBLIC_PORT}"
+      - "--api.insecure=true"
+      - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.email=${ADMIN_EMAIL}"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+      - "--providers.file.directory=/configuration/"
+      - "--providers.file.watch=true"
+    ports:
+      - ${PUBLIC_PORT}:${PUBLIC_PORT}
+      - 8085:8080
+    volumes:
+      - letsencrypt:/letsencrypt:rw
+      - ./app/traefik/dynamic.yml:/configuration/dynamic.yml:ro
+    env_file:
+      - .env
+
   app:
     container_name: app
     cap_drop:
@@ -12,7 +31,7 @@ services:
         DOCKER_UID: "${DOCKER_UID}"
         DOCKER_GID: "${DOCKER_GID}"
         DOCKER_TZ: "${DOCKER_TZ}"
-        DOCKER_PORT: "${DOCKER_PORT}"
+        PUBLIC_URL: "${PUBLIC_URL}"
     environment:
       POSTGRES_USER: "${POSTGRES_USER}"
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
@@ -23,8 +42,6 @@ services:
       - ./storage:/mnt/skychat/storage
       - ./gallery:/mnt/skychat/gallery
       - ./uploads:/mnt/skychat/uploads
-    ports:
-      - "${DOCKER_PORT}:${DOCKER_PORT}"
     depends_on:
       - app_db
 
@@ -43,3 +60,6 @@ services:
       POSTGRES_DB: "${POSTGRES_DB}"
     volumes:
       - ./app/database/data:/var/lib/postgresql/data:rw
+
+volumes:
+    letsencrypt:
