@@ -32,7 +32,8 @@ bash <(wget -q https://raw.githubusercontent.com/skychatorg/skychat/master/app/s
 
 # 2. Run the setup script and complete .env/.env.json files as you wish
 npm run setup
-cat .env .env.json
+cat .env
+cat .env.json
 
 # 3. Run the app in docker
 docker compose up
@@ -42,19 +43,18 @@ docker compose up
 
 By default, the application will be listening to `localhost:8080` and assume it is accessed from `http://localhost:8080`. In order to customize the domain name of your SkyChat application, edit the `.env.json` file. The fields in the .env.json contain the private variables of the application, listed below:
 
-| field                | type                                     | default                                                           | semantic                                                                                                                                            |
-| -------------------- | ---------------------------------------- | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| location             | string                                   | "http://localhost:8080"                                           | Server location, i.e. what user need to put in their browser to access your app                                                                     |
-| hostname             | string                                   | "localhost"                                                       | Hostname the server will listen to                                                                                                                  |
-| port                 | number                                   | 8080                                                              | Server port. If you are using docker only, modify DOCKER_PORT to match this value.                                                                  |
-| ssl                  | false or {certificate:string,key:string} | false                                                             | SSL configuration (paths to certificate and key files). Use false if SSL is disabled.                                                               |
-| plugins              | string[]                                 | []                                                                | List of enabled plugin groups. It is possible to disable the player, games, the gallery or other features by removing a plugin group from this list |
-| users_passwords_salt | string                                   | "$RANDOM_SALT"                                                    | Password salt.                                                                                                                                      |
-| users_token_salt     | string                                   | "$RANDOM_SALT"                                                    | Token salt.                                                                                                                                         |
-| youtube_api_key      | string                                   | ""                                                                | [Youtube api key](#setup-youtube)                                                                                                                   |
-| op                   | string[]                                 | []                                                                | OP usernames. OP usernames can use the /setright command.                                                                                           |
-| op_passcode          | string?                                  | "$RANDOM_PASSCODE"                                                | OP passcode. Activate your OP session with `/op $op_passcode`                                                                                       |
-| email_transport      | nodemailer.JSONTransport                 | {"sendmail": true,"newline": "unix","path": "/usr/sbin/sendmail"} | Value given to [nodemailer.createTransport](https://nodemailer.com/about/) to initialize the mailer                                                 |
+| field                | type                     | default                                                           | semantic                                                                                                                                            |
+| -------------------- | ------------------------ | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| location             | string                   | "http://localhost:8080"                                           | Server location, i.e. what user need to put in their browser to access your app                                                                     |
+| hostname             | string                   | "localhost"                                                       | Hostname the server will listen to                                                                                                                  |
+| port                 | number                   | 8080                                                              | Server port. If you are using docker only, modify PUBLIC_PORT to match this value.                                                                  |
+| plugins              | string[]                 | []                                                                | List of enabled plugin groups. It is possible to disable the player, games, the gallery or other features by removing a plugin group from this list |
+| users_passwords_salt | string                   | "$RANDOM_SALT"                                                    | Password salt.                                                                                                                                      |
+| users_token_salt     | string                   | "$RANDOM_SALT"                                                    | Token salt.                                                                                                                                         |
+| youtube_api_key      | string                   | ""                                                                | [Youtube api key](#setup-youtube)                                                                                                                   |
+| op                   | string[]                 | []                                                                | OP usernames. OP usernames can use the /setright command.                                                                                           |
+| op_passcode          | string?                  | "$RANDOM_PASSCODE"                                                | OP passcode. Activate your OP session with `/op $op_passcode`                                                                                       |
+| email_transport      | nodemailer.JSONTransport | {"sendmail": true,"newline": "unix","path": "/usr/sbin/sendmail"} | Value given to [nodemailer.createTransport](https://nodemailer.com/about/) to initialize the mailer                                                 |
 
 ### Setup Youtube
 

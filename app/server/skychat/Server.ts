@@ -1,11 +1,9 @@
 import * as WebSocket from 'ws';
 import * as http from 'http';
-import * as https from 'https';
 import { Connection } from './Connection';
 import * as iof from 'io-filter';
 import { Session } from './Session';
 import { Config } from './Config';
-import fs from 'fs';
 import { FileManager } from './FileManager';
 import express from 'express';
 import fileUpload from 'express-fileupload';
@@ -66,18 +64,7 @@ export class Server {
         this.app.get('*', function (req: express.Request, res: express.Response) {
             res.status(404).send('404');
         });
-        let server;
-        if (Config.USE_SSL) {
-            server = https.createServer(
-                {
-                    cert: fs.readFileSync(Config.SSL_CERTIFICATE),
-                    key: fs.readFileSync(Config.SSL_CERTIFICATE_KEY),
-                },
-                this.app,
-            );
-        } else {
-            server = http.createServer(this.app);
-        }
+        let server = http.createServer(this.app);
         this.wss = new WebSocket.Server({ noServer: true });
         this.wss.on('connection', this.onConnection.bind(this));
         server.on('upgrade', (request, socket, head) => {
@@ -120,7 +107,13 @@ export class Server {
      * @param maxCallsPer60Seconds
      * @param payloadType Type of payload. If set to a string, the type of the payload should be equal to this string. Can also be set to a valid mask filter.
      */
-    public registerEvent<PayloadType>(name: string, handler: EventHandler<PayloadType>, coolDownMs: number, maxCallsPer60Seconds: number, payloadType?: string | iof.MaskFilter): void {
+    public registerEvent<PayloadType>(
+        name: string,
+        handler: EventHandler<PayloadType>,
+        coolDownMs: number,
+        maxCallsPer60Seconds: number,
+        payloadType?: string | iof.MaskFilter,
+    ): void {
         const payloadFilter = typeof payloadType === 'string' ? new iof.ValueTypeFilter(payloadType) : payloadType;
         this.events[name] = {
             handler: handler.bind(handler),
@@ -172,11 +165,19 @@ export class Server {
             // If a cooldown is defined for this event
             if (event.coolDownMs) {
                 const key = `${eventName}/${connection.ip}`;
-                if (this.coolDownEntries[key] && event.coolDownMs && new Date() < new Date(this.coolDownEntries[key].last.getTime() + event.coolDownMs)) {
+                if (
+                    this.coolDownEntries[key] &&
+                    event.coolDownMs &&
+                    new Date() < new Date(this.coolDownEntries[key].last.getTime() + event.coolDownMs)
+                ) {
                     throw new Error('Please wait before performing this action again');
                 }
                 // If 10 second window entry still valid
-                if (this.coolDownEntries[key] && event.maxCallsPer60Seconds && this.coolDownEntries[key].first.getTime() + 60 * 1000 > new Date().getTime()) {
+                if (
+                    this.coolDownEntries[key] &&
+                    event.maxCallsPer60Seconds &&
+                    this.coolDownEntries[key].first.getTime() + 60 * 1000 > new Date().getTime()
+                ) {
                     // If maximum number of calls per 10 seconds reached
                     if (this.coolDownEntries[key].count > event.maxCallsPer60Seconds) {
                         throw new Error('Please wait before performing this action again');

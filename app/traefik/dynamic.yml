@@ -1,0 +1,21 @@
+http:
+    routers:
+        app:
+            service: app@file
+            entrypoints: web
+            middlewares: ["ratelimit-light"]
+            rule: "Host(`{{ env "PUBLIC_HOST" }}`)"
+            {{ if env "USE_TLS" }}
+            tls:
+                certResolver: letsencrypt
+            {{ end }}
+    middlewares:
+        ratelimit-light:
+            rateLimit:
+                average: 60
+                burst: 20
+    services:
+        app:
+            loadBalancer:
+                servers:
+                    - url: "http://app"
