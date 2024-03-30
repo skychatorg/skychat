@@ -6,6 +6,7 @@ import { DatabaseHelper } from '../../../skychat/DatabaseHelper';
 import SQL from 'sql-template-strings';
 import { MessageLimiterPlugin } from '../../security_extra/MessageLimiterPlugin';
 import { BlacklistPlugin } from '../global/BlacklistPlugin';
+import { RoomProtectPlugin } from '../../security_extra/RoomProtectPlugin';
 
 export class MessagePlugin extends RoomPlugin {
     static readonly commandName = 'message';
@@ -39,19 +40,25 @@ export class MessagePlugin extends RoomPlugin {
             // Otherwise, try to find the quoted message in the database
             quoted = quoted || (await MessageController.getMessageById(quoteId));
 
-            // If author has blacklisted the user, we don't allow the quote
-            if (quoted && BlacklistPlugin.hasBlacklisted(quoted?.user, connection.session.user.username)) {
-                throw new Error(`User ${param} has blacklisted you. You can not quote his messages`);
-            }
-
             // If quote found, remove the quote string from the message
             if (quoted) {
                 content = content.slice(quoteMatch[0].length);
             }
 
-            // If message is private
-            const room = quoted.room !== null ? this.room.manager.getRoomById(quoted.room) : null;
-            if (!room || (room.isPrivate && this.room.id !== room.id)) {
+            const quotedRoom = quoted.room !== null ? this.room.manager.getRoomById(quoted.room) : null;
+            const quotedRoomMinRight = quotedRoom?.getPlugin<RoomProtectPlugin>(RoomProtectPlugin.commandName)?.getMinRight() ?? -1;
+
+            if (!quotedRoom) {
+                // Room does not exist (anymore)
+                quoted = null;
+            } else if (quotedRoom.isPrivate && this.room.id !== quotedRoom.id) {
+                // If message is private
+                quoted = null;
+            } else if (connection.session.user.right < quotedRoomMinRight) {
+                // User does not have access to the room (according to RoomProtect plugin)
+                quoted = null;
+            } else if (quoted && BlacklistPlugin.hasBlacklisted(quoted?.user, connection.session.user.username)) {
+                // If author has blacklisted the user, we don't allow the quote
                 quoted = null;
             }
         }

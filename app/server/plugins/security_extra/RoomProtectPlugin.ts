@@ -36,6 +36,10 @@ export class RoomProtectPlugin extends RoomPlugin {
         await this.handleRoomProtect(param);
     }
 
+    public getMinRight() {
+        return this.storage === null ? -1 : this.storage;
+    }
+
     public getRoomSummary() {
         return this.storage;
     }
