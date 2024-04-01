@@ -1,4 +1,7 @@
 services:
+  traefik:
+    ports:
+      - 8085:8080
   app:
     ports:
       - 5173:5173

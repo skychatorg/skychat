@@ -3,8 +3,20 @@ http:
         app:
             service: app@file
             entrypoints: web
-            middlewares: ["ratelimit-light"]
+            middlewares:
+                - ratelimit-light
             rule: "Host(`{{ env "PUBLIC_HOST" }}`)"
+            {{ if env "USE_TLS" }}
+            tls:
+                certResolver: letsencrypt
+            {{ end }}
+        admin_filebrowser:
+            service: admin_filebrowser@file
+            entrypoints: web
+            middlewares:
+                - ratelimit-light
+                - admin-auth
+            rule: "Host(`{{ env "ADMIN_FILEBROWSER_HOST" }}`)"
             {{ if env "USE_TLS" }}
             tls:
                 certResolver: letsencrypt
@@ -14,8 +26,16 @@ http:
             rateLimit:
                 average: 60
                 burst: 20
+        admin-auth:
+            basicAuth:
+                users:
+                    - "{{ env "ADMIN_FILEBROWSER_AUTH" }}"
     services:
         app:
             loadBalancer:
                 servers:
                     - url: "http://app"
+        admin_filebrowser:
+            loadBalancer:
+                servers:
+                    - url: "http://admin_filebrowser"
