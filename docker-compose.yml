@@ -30,11 +30,11 @@ services:
         DOCKER_UID: "${DOCKER_UID}"
         DOCKER_GID: "${DOCKER_GID}"
         DOCKER_TZ: "${DOCKER_TZ}"
-        PUBLIC_URL: "${PUBLIC_URL}"
     environment:
       POSTGRES_USER: "${POSTGRES_USER}"
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
       POSTGRES_DB: "${POSTGRES_DB}"
+      PUBLIC_URL: "${PUBLIC_URL}"
     volumes:
       - ./config:/mnt/skychat/config
       - ./backups:/mnt/skychat/backups
