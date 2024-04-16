@@ -26,6 +26,7 @@ import { KickPlugin } from './global/KickPlugin';
 import { XpTickerPlugin } from './global/XpTickerPlugin';
 import { BlacklistPlugin } from './global/BlacklistPlugin';
 import { MentionPlugin } from './room/MentionPlugin';
+import { AdminConfigPlugin } from './global/AdminConfigPlugin';
 
 export class CorePluginGroup extends PluginGroup {
     roomPluginClasses = [
@@ -41,6 +42,7 @@ export class CorePluginGroup extends PluginGroup {
 
     globalPluginClasses = [
         AccountPlugin,
+        AdminConfigPlugin,
         AudioRecorderPlugin,
         AvatarPlugin,
         BackupPlugin,
