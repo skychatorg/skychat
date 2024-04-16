@@ -28,7 +28,9 @@ export class MessagePlugin extends RoomPlugin {
 
         // Parse quote
         const quoteMatch = content.match(/^@([0-9]+)/);
-        const canQuote = connection.session.user.right >= Config.PREFERENCES.minRightForMessageHistory;
+        const canQuote =
+            connection.session.user.right >=
+            Math.max(Config.PREFERENCES.minRightForMessageHistory, Config.PREFERENCES.minRightForMessageQuoting);
 
         // We also check that user has right to access message history
         if (quoteMatch && quoteMatch[1] && canQuote) {
