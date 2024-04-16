@@ -4,6 +4,7 @@ import * as Mail from 'nodemailer/lib/mailer';
 export type Preferences = {
     minRightForPublicMessages: number;
     minRightForPrivateMessages: number;
+    minRightForMessageQuoting: number;
     minRightForShortTermMessageHistory: number;
     minRightForMessageHistory: number;
     minRightForUserModeration: number | 'op';
@@ -134,6 +135,7 @@ export class Config {
         Config.PREFERENCES = JSON.parse(fs.readFileSync('config/preferences.json').toString());
         const keys: string[] = [
             'minRightForPrivateMessages',
+            'minRightForMessageQuoting',
             'minRightForShortTermMessageHistory',
             'minRightForMessageHistory',
             'minRightForUserModeration',

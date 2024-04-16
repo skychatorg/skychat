@@ -92,6 +92,7 @@ The `config/preferences.json` file specifies application preferences. The availa
 | ------------------------------------- | -------------------- | ------------ | -------------------------------------------------------------------------------------------------------- |
 | minRightForPublicMessages             | number               | -1           | Min. right to send public messages                                                                       |
 | minRightForPrivateMessages            | number               | -1           | Min. right to send private messages                                                                      |
+| minRightForMessageQuoting             | number               | -1           | Min. right to quote messages                                                                             |
 | minRightForShortTermMessageHistory    | number               | -1           | Min. right to access short term room message history                                                     |
 | minRightForMessageHistory             | number               | -1           | Min. right to access full room message history                                                           |
 | minRightForUserModeration             | number               | 'op'         | Min. right to ban, kick and access user ips                                                              |
