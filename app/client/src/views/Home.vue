@@ -24,7 +24,8 @@ watch(
 );
 
 const joinAsGuest = function () {
-    client.join(client.state.rooms[0].id);
+    const availableRoom = client.state.rooms.find((room) => !room.isPrivate && !room.plugins.roomprotect);
+    client.join(availableRoom.id);
     if (client.state.playerChannels.length > 0) {
         client.sendMessage('/playerchannel join ' + client.state.playerChannels[0].id);
     }
