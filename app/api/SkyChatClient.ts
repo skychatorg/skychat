@@ -513,6 +513,16 @@ export class SkyChatClient extends EventEmitter {
     }
 
     /**
+     * Authenticate with a token
+     */
+    setToken(authToken: AuthToken, roomId?: number) {
+        this._sendEvent('set-token', {
+            ...authToken,
+            roomId: typeof roomId === 'number' ? roomId : null,
+        });
+    }
+
+    /**
      * Emit an event to the server
      * @param eventName
      * @param payload
@@ -538,10 +548,7 @@ export class SkyChatClient extends EventEmitter {
             if (authToken) {
                 const rawRoomId = localStorage.getItem(SkyChatClient.LOCAL_STORAGE_ROOM_ID);
                 const roomId = rawRoomId ? parseInt(rawRoomId) : null;
-                this._sendEvent('set-token', {
-                    ...JSON.parse(authToken),
-                    roomId: roomId ?? this._rooms.find((room) => !room.isPrivate)?.id ?? null,
-                });
+                this.setToken(JSON.parse(authToken), roomId ?? this._rooms.find((room) => !room.isPrivate)?.id);
             }
         }
         this.emit('update', this.state);
