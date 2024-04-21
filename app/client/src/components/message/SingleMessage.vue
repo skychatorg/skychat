@@ -11,6 +11,8 @@ import UserMiniAvatarCollection from '@/components/user/UserMiniAvatarCollection
 const app = useAppStore();
 const client = useClientStore();
 
+const COMPACT_QUOTES_MAX_LENGTH = 30;
+
 const emit = defineEmits(['content-size-changed']);
 
 const props = defineProps({
@@ -26,17 +28,25 @@ const props = defineProps({
         type: Boolean,
         default: false,
     },
-    forceExpand: {
-        type: Boolean,
-        default: false,
-    },
     showDate: {
         type: Boolean,
         default: false,
     },
 });
 
+// Content ref
 const content = ref(null);
+
+// Force expand (quotes)
+const forceExpand = ref(false);
+const showCompact = computed(() => {
+    return props.compact && !forceExpand.value;
+});
+watch(showCompact, () => {
+    nextTick(() => {
+        emit('content-size-changed');
+    });
+});
 
 const isBlacklisted = computed(() => {
     if (!client.state.user) {
@@ -154,7 +164,7 @@ const messageInteract = () => {
 
 <template>
     <ExpandableBlock
-        :force-expand="forceExpand || message.user.username.toLowerCase() === client.state.user?.username.toLowerCase()"
+        :force-expand="message.user.username.toLowerCase() === client.state.user?.username.toLowerCase()"
         @content-size-changed="() => emit('content-size-changed')"
     >
         <HoverCard
@@ -213,14 +223,27 @@ const messageInteract = () => {
                     />
 
                     <!-- Message content -->
-                    <div
-                        ref="content"
-                        class="text-skygray-white w-0 min-w-full whitespace-pre-wrap overflow-hidden break-words"
-                        v-html="message.formatted"
-                    />
+                    <template v-if="showCompact">
+                        <div class="text-skygray-white w-0 min-w-full">
+                            <template v-if="message.content.length < COMPACT_QUOTES_MAX_LENGTH">
+                                {{ message.content }}
+                            </template>
+                            <template v-else>
+                                {{ message.content.substr(0, COMPACT_QUOTES_MAX_LENGTH) }}
+                                <button class="skychat-button" @click="forceExpand = true">...</button></template
+                            >
+                        </div>
+                    </template>
+                    <template v-else>
+                        <div
+                            ref="content"
+                            class="text-skygray-white w-0 min-w-full whitespace-pre-wrap overflow-hidden break-words"
+                            v-html="message.formatted"
+                        />
+                    </template>
                 </div>
 
-                <div v-if="!compact" class="basis-16 w-16 flex flex-col text-center">
+                <div v-if="!showCompact" class="basis-16 w-16 flex flex-col text-center">
                     <span class="grow text-xs text-skygray-lightest">
                         {{ formattedTime }}
                     </span>
