@@ -34,6 +34,39 @@ const defaultUser: SanitizedUser = {
     },
 };
 
+export type SkyChatClientState = {
+    websocketReadyState: number;
+    user: SanitizedUser;
+    config: PublicConfig | null;
+    stickers: Record<string, string>;
+    custom: CustomizationElements;
+    token: AuthToken | null;
+    connectedList: Array<SanitizedSession>;
+    messageIdToLastSeenUsers: { [id: number]: Array<SanitizedUser> };
+    roomConnectedUsers: { [roomId: number]: Array<SanitizedUser> };
+    playerChannelUsers: { [roomId: number]: Array<SanitizedUser> };
+    rooms: SanitizedRoom[];
+    currentRoomId: number | null;
+    currentRoom: SanitizedRoom | null;
+    lastMention: { roomId: number; identifier: string; messageId: number } | null;
+    typingList: SanitizedUser[];
+    polls: { [id: number]: SanitizedPoll };
+    cursors: { [identifier: string]: { date: Date; cursor: { x: number; y: number; user: SanitizedUser } } };
+    roll: { state: boolean };
+    op: boolean;
+    files: string[];
+    file: { filePath: string; content: string } | null;
+    gallery: FolderContent | null;
+    videoStreamInfo: VideoStreamInfo | null;
+    ongoingConverts: OngoingConvert[];
+    playerChannels: SanitizedPlayerChannel[];
+    currentPlayerChannelId: number | null;
+    currentPlayerChannel: SanitizedPlayerChannel | null;
+    playerApiSearchResult: { type: string; items: Array<VideoInfo> } | null;
+    player: { current: QueuedVideoInfo | null; queue: QueuedVideoInfo[]; cursor: number };
+    playerLastUpdate: Date | null;
+};
+
 export declare interface SkyChatClient {
     on(event: 'config', listener: (config: PublicConfig) => any): this;
     on(event: 'sticker-list', listener: (stickers: Record<string, string>) => any): this;
@@ -66,6 +99,8 @@ export declare interface SkyChatClient {
     on(event: 'player-channel', listener: (channelId: number | null) => any): this;
     on(event: 'player-search', listener: (data: { type: string; items: Array<VideoInfo> }) => any): this;
     on(event: 'player-sync', listener: (data: { current: QueuedVideoInfo | null; queue: QueuedVideoInfo[]; cursor: number }) => any): this;
+
+    on(event: 'update', listener: (state: SkyChatClientState) => any): this;
 }
 
 // eslint-disable-next-line no-redeclare
@@ -382,7 +417,7 @@ export class SkyChatClient extends EventEmitter {
      * Get the client current state. Sums up all that is relevant for the client.
      * Messages are not accumulated here. It is up to the client to decide what to do with them.
      */
-    get state() {
+    get state(): SkyChatClientState {
         return {
             websocketReadyState: this._websocket ? this._websocket.readyState : WebSocket.CLOSED,
             user: this._user,
