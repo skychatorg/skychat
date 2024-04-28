@@ -561,7 +561,7 @@ export class SkyChatClient extends EventEmitter {
     setToken(authToken: AuthToken, roomId?: number) {
         this._sendEvent('set-token', {
             ...authToken,
-            roomId: typeof roomId === 'number' ? roomId : null,
+            roomId: typeof roomId === 'number' ? roomId : undefined,
         });
     }
 

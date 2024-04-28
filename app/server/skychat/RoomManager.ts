@@ -101,7 +101,7 @@ export class RoomManager {
                 userId: new iof.NumberFilter(1, Infinity, false),
                 timestamp: new iof.NumberFilter(-Infinity, Infinity, false),
                 signature: new iof.ValueTypeFilter('string'),
-                roomId: new iof.NumberFilter(0, Infinity, false),
+                roomId: new iof.NumberFilter(0, Infinity, false).asOptional(),
             }),
         );
 
