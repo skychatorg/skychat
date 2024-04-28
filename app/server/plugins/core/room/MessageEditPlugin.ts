@@ -1,8 +1,8 @@
 import SQL from 'sql-template-strings';
-import { Connection } from '../../../skychat/Connection';
-import { DatabaseHelper } from '../../../skychat/DatabaseHelper';
-import { RoomPlugin } from '../../RoomPlugin';
-import { MessageLimiterPlugin } from '../../security_extra/MessageLimiterPlugin';
+import { Connection } from '../../../skychat/Connection.js';
+import { DatabaseHelper } from '../../../skychat/DatabaseHelper.js';
+import { RoomPlugin } from '../../RoomPlugin.js';
+import { MessageLimiterPlugin } from '../../security_extra/MessageLimiterPlugin.js';
 
 export class MessageEditPlugin extends RoomPlugin {
     static readonly commandName = 'edit';

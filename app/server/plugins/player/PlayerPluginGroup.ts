@@ -1,6 +1,6 @@
-import { PluginGroup } from '../PluginGroup';
-import { PlayerPlugin } from './PlayerPlugin';
-import { YoutubeSearchAndPlayPlugin } from './YoutubeSearchAndPlayPlugin';
+import { PluginGroup } from '../PluginGroup.js';
+import { PlayerPlugin } from './PlayerPlugin.js';
+import { YoutubeSearchAndPlayPlugin } from './YoutubeSearchAndPlayPlugin.js';
 
 export class PlayerPluginGroup extends PluginGroup {
     roomPluginClasses = [];

@@ -1,15 +1,15 @@
 import striptags from 'striptags';
-import { Connection } from '../../../skychat/Connection';
-import { User } from '../../../skychat/User';
-import { Session } from '../../../skychat/Session';
-import { UserController } from '../../../skychat/UserController';
-import { MessageFormatter } from '../../../skychat/MessageFormatter';
-import { Timing } from '../../../skychat/Timing';
-import { Message } from '../../../skychat/Message';
-import { GlobalPlugin } from '../../GlobalPlugin';
-import { RoomManager } from '../../../skychat/RoomManager';
-import { MessageHistoryPlugin } from '../../core/room/MessageHistoryPlugin';
-import { Config } from '../../../skychat/Config';
+import { Connection } from '../../../skychat/Connection.js';
+import { User } from '../../../skychat/User.js';
+import { Session } from '../../../skychat/Session.js';
+import { UserController } from '../../../skychat/UserController.js';
+import { MessageFormatter } from '../../../skychat/MessageFormatter.js';
+import { Timing } from '../../../skychat/Timing.js';
+import { Message } from '../../../skychat/Message.js';
+import { GlobalPlugin } from '../../GlobalPlugin.js';
+import { RoomManager } from '../../../skychat/RoomManager.js';
+import { MessageHistoryPlugin } from '../../core/room/MessageHistoryPlugin.js';
+import { Config } from '../../../skychat/Config.js';
 
 enum BAN_TYPES {
     ACCESS = 0,
@@ -82,17 +82,17 @@ export class BanPlugin extends GlobalPlugin {
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
         switch (alias) {
-        case BanPlugin.BAN_COMMAND:
-            await this.handleBan(param, connection);
-            break;
+            case BanPlugin.BAN_COMMAND:
+                await this.handleBan(param, connection);
+                break;
 
-        case BanPlugin.UNBAN_COMMAND:
-            await this.handleUnban(param, connection);
-            break;
+            case BanPlugin.UNBAN_COMMAND:
+                await this.handleUnban(param, connection);
+                break;
 
-        case BanPlugin.BANLIST_COMMAND:
-            await this.handleBanList(param, connection);
-            break;
+            case BanPlugin.BANLIST_COMMAND:
+                await this.handleBanList(param, connection);
+                break;
         }
     }
 

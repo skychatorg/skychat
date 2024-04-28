@@ -1,7 +1,7 @@
-import { Config } from '../../../skychat/Config';
-import { Connection } from '../../../skychat/Connection';
-import { GlobalPlugin } from '../../GlobalPlugin';
-import { UserController } from '../../../skychat/UserController';
+import { Config } from '../../../skychat/Config.js';
+import { Connection } from '../../../skychat/Connection.js';
+import { GlobalPlugin } from '../../GlobalPlugin.js';
+import { UserController } from '../../../skychat/UserController.js';
 
 export class OPPlugin extends GlobalPlugin {
     static readonly commandName = 'op';

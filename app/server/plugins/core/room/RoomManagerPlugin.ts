@@ -1,8 +1,8 @@
-import { Connection } from '../../../skychat/Connection';
-import { RoomPlugin } from '../../RoomPlugin';
-import { UserController } from '../../../skychat/UserController';
-import { Room } from '../../../skychat/Room';
-import { Session } from '../../../skychat/Session';
+import { Connection } from '../../../skychat/Connection.js';
+import { RoomPlugin } from '../../RoomPlugin.js';
+import { UserController } from '../../../skychat/UserController.js';
+import { Room } from '../../../skychat/Room.js';
+import { Session } from '../../../skychat/Session.js';
 
 export class RoomManagerPlugin extends RoomPlugin {
     static readonly commandName = 'room';

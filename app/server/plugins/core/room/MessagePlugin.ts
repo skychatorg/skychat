@@ -1,12 +1,12 @@
-import { Connection } from '../../../skychat/Connection';
-import { Config } from '../../../skychat/Config';
-import { MessageController } from '../../../skychat/MessageController';
-import { RoomPlugin } from '../../RoomPlugin';
-import { DatabaseHelper } from '../../../skychat/DatabaseHelper';
+import { Connection } from '../../../skychat/Connection.js';
+import { Config } from '../../../skychat/Config.js';
+import { MessageController } from '../../../skychat/MessageController.js';
+import { RoomPlugin } from '../../RoomPlugin.js';
+import { DatabaseHelper } from '../../../skychat/DatabaseHelper.js';
 import SQL from 'sql-template-strings';
-import { MessageLimiterPlugin } from '../../security_extra/MessageLimiterPlugin';
-import { BlacklistPlugin } from '../global/BlacklistPlugin';
-import { RoomProtectPlugin } from '../../security_extra/RoomProtectPlugin';
+import { MessageLimiterPlugin } from '../../security_extra/MessageLimiterPlugin.js';
+import { BlacklistPlugin } from '../global/BlacklistPlugin.js';
+import { RoomProtectPlugin } from '../../security_extra/RoomProtectPlugin.js';
 
 export class MessagePlugin extends RoomPlugin {
     static readonly commandName = 'message';

@@ -1,8 +1,8 @@
-import { Connection } from '../../../skychat/Connection';
-import { User } from '../../../skychat/User';
-import { Session } from '../../../skychat/Session';
-import { GlobalPlugin } from '../../GlobalPlugin';
-import { Config } from '../../../skychat/Config';
+import { Connection } from '../../../skychat/Connection.js';
+import { User } from '../../../skychat/User.js';
+import { Session } from '../../../skychat/Session.js';
+import { GlobalPlugin } from '../../GlobalPlugin.js';
+import { Config } from '../../../skychat/Config.js';
 
 /**
  * The kick plugin allows to force the disconnection of all the connections belonging to a session

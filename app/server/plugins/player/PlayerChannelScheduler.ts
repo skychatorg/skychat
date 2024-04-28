@@ -1,4 +1,4 @@
-import { PlayerChannel, VideoInfo } from './PlayerChannel';
+import { PlayerChannel, VideoInfo } from './PlayerChannel.js';
 
 export type SchedulerEvent = {
     start: number;
@@ -143,7 +143,10 @@ export class PlayerChannelScheduler {
         }
 
         // If there is an event in progress, but the channel is not playing it
-        if (currentEvent && (!this.playerChannel.currentVideoInfo || this.playerChannel.currentVideoInfo.video.id !== currentEvent.media.id)) {
+        if (
+            currentEvent &&
+            (!this.playerChannel.currentVideoInfo || this.playerChannel.currentVideoInfo.video.id !== currentEvent.media.id)
+        ) {
             // Empty the channel queue
             this.playerChannel.locked = true;
             this.playerChannel.flushQueue();

@@ -1,2 +1,2 @@
-export * from './BinaryMessageTypes';
-export * from './SkyChatClient';
+export * from './BinaryMessageTypes.js';
+export * from './SkyChatClient.js';

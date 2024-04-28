@@ -1,18 +1,18 @@
-import { PluginGroup } from '../PluginGroup';
-import { AprilFoolsDay } from './global/AprilFoolsDay';
-import { CursorPlugin } from './global/CursorPlugin';
-import { MoneyFarmerPlugin } from './global/MoneyFarmerPlugin';
-import { OfferMoneyPlugin } from './global/OfferMoneyPlugin';
-import { DailyRollPlugin } from './room/DailyRollPlugin';
-import { GuessTheNumberPlugin } from './room/GuessTheNumberPlugin';
-import { PointsCollectorPlugin } from './room/PointsCollectorPlugin';
-import { GiveMoneyPlugin } from './room/GiveMoneyPlugin';
-import { RacingPlugin } from './room/RacingPlugin';
-import { RandomGeneratorPlugin } from './room/RandomGeneratorPlugin';
-import { RollPlugin } from './room/RollPlugin';
-import { StatsPlugin } from './room/StatsPlugin';
-import { ConfusePlugin } from './global/ConfusePlugin';
-import { UserPollPlugin } from './room/UserPollPlugin';
+import { PluginGroup } from '../PluginGroup.js';
+import { AprilFoolsDay } from './global/AprilFoolsDay.js';
+import { CursorPlugin } from './global/CursorPlugin.js';
+import { MoneyFarmerPlugin } from './global/MoneyFarmerPlugin.js';
+import { OfferMoneyPlugin } from './global/OfferMoneyPlugin.js';
+import { DailyRollPlugin } from './room/DailyRollPlugin.js';
+import { GuessTheNumberPlugin } from './room/GuessTheNumberPlugin.js';
+import { PointsCollectorPlugin } from './room/PointsCollectorPlugin.js';
+import { GiveMoneyPlugin } from './room/GiveMoneyPlugin.js';
+import { RacingPlugin } from './room/RacingPlugin.js';
+import { RandomGeneratorPlugin } from './room/RandomGeneratorPlugin.js';
+import { RollPlugin } from './room/RollPlugin.js';
+import { StatsPlugin } from './room/StatsPlugin.js';
+import { ConfusePlugin } from './global/ConfusePlugin.js';
+import { UserPollPlugin } from './room/UserPollPlugin.js';
 
 export class GamesPluginGroup extends PluginGroup {
     roomPluginClasses = [

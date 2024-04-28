@@ -1,6 +1,6 @@
-import { Connection } from '../../../skychat/Connection';
-import { RoomPlugin } from '../../RoomPlugin';
-import { User } from '../../../skychat/User';
+import { Connection } from '../../../skychat/Connection.js';
+import { RoomPlugin } from '../../RoomPlugin.js';
+import { User } from '../../../skychat/User.js';
 
 /**
  * Handle cursor events

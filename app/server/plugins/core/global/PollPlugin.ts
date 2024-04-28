@@ -1,8 +1,8 @@
-import { Connection } from '../../../skychat/Connection';
-import { Plugin } from '../../Plugin';
-import { Poll, PollOptions } from './Poll';
-import { Config } from '../../../skychat/Config';
-import { GlobalPlugin } from '../../GlobalPlugin';
+import { Connection } from '../../../skychat/Connection.js';
+import { Plugin } from '../../Plugin.js';
+import { Poll, PollOptions } from './Poll.js';
+import { Config } from '../../../skychat/Config.js';
+import { GlobalPlugin } from '../../GlobalPlugin.js';
 
 export class PollPlugin extends GlobalPlugin {
     public static readonly POLL_CREATION_COOL_DOWN: number = 60 * 1000;

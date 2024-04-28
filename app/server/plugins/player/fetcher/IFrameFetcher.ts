@@ -1,6 +1,6 @@
-import { VideoInfo } from '../PlayerChannel';
-import { PlayerPlugin } from '../PlayerPlugin';
-import { VideoFetcher } from './VideoFetcher';
+import { VideoInfo } from '../PlayerChannel.js';
+import { PlayerPlugin } from '../PlayerPlugin.js';
+import { VideoFetcher } from './VideoFetcher.js';
 
 export class IFrameFetcher implements VideoFetcher {
     static ALLOWED_SOURCES: string[] = [

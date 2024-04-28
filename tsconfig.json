@@ -1,7 +1,8 @@
 {
     "compilerOptions": {
         "target": "ES6",
-        "module": "commonjs",
+        "module": "ES2020",
+        "moduleResolution": "Node",
         "strict": true,
         "skipLibCheck": true,
         "rootDir": "app",

@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 import WebSocket from 'isomorphic-ws';
 import { EventEmitter } from 'events';
-import { BinaryMessageTypes } from './BinaryMessageTypes';
+import { BinaryMessageTypes } from './BinaryMessageTypes.js';
 import {
     PublicConfig,
     CustomizationElements,
@@ -17,7 +17,7 @@ import {
     FolderContent,
     VideoStreamInfo,
     OngoingConvert,
-} from '../server';
+} from '../server/index.js';
 
 const defaultUser: SanitizedUser = {
     id: 0,

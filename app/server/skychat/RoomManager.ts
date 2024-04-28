@@ -1,16 +1,16 @@
 import fs from 'fs';
 import * as iof from 'io-filter';
-import { Server } from './Server';
-import { Connection } from './Connection';
-import { Session } from './Session';
-import { User } from './User';
-import { Room } from './Room';
-import { UserController } from './UserController';
-import { Config } from './Config';
-import { Message } from './Message';
-import { GlobalPlugin } from '../plugins/GlobalPlugin';
-import { globalPluginGroup } from '../plugins/GlobalPluginGroup';
-import { MessageFormatter } from './MessageFormatter';
+import { Server } from './Server.js';
+import { Connection } from './Connection.js';
+import { Session } from './Session.js';
+import { User } from './User.js';
+import { Room } from './Room.js';
+import { UserController } from './UserController.js';
+import { Config } from './Config.js';
+import { Message } from './Message.js';
+import { GlobalPlugin } from '../plugins/GlobalPlugin.js';
+import { globalPluginGroup } from '../plugins/GlobalPluginGroup.js';
+import { MessageFormatter } from './MessageFormatter.js';
 
 export type StoredSkyChat = {
     guestId: number;

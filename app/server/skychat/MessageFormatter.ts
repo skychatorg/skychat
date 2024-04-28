@@ -1,6 +1,6 @@
 import beautifyUrl from 'beautify-url';
-import { Config } from './Config';
-import { StickerManager } from './StickerManager';
+import { Config } from './Config.js';
+import { StickerManager } from './StickerManager.js';
 import escapeHTML from 'escape-html';
 
 /**

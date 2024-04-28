@@ -1,5 +1,5 @@
-import { Connection } from '../../../skychat/Connection';
-import { GlobalPlugin } from '../../GlobalPlugin';
+import { Connection } from '../../../skychat/Connection.js';
+import { GlobalPlugin } from '../../GlobalPlugin.js';
 
 export class AprilFoolsDay extends GlobalPlugin {
     static readonly commandName = 'aprilfoolsday';

@@ -1,1 +1,1 @@
-export { GamesPluginGroup } from './GamesPluginGroup';
+export { GamesPluginGroup } from './GamesPluginGroup.js';

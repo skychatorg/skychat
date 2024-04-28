@@ -1,17 +1,17 @@
 import fs from 'fs';
 import SQL from 'sql-template-strings';
-import { Connection } from './Connection';
-import { IBroadcaster } from './IBroadcaster';
-import { Message, MessageConstructorOptions } from './Message';
-import { DatabaseHelper } from './DatabaseHelper';
-import { MessageController } from './MessageController';
-import { RoomManager } from './RoomManager';
-import { RoomPlugin } from '../plugins/RoomPlugin';
-import { Session } from './Session';
-import { CorePluginGroup } from '../plugins';
-import { globalPluginGroup } from '../plugins/GlobalPluginGroup';
-import { BlacklistPlugin } from '../plugins/core/global/BlacklistPlugin';
-import { Config } from './Config';
+import { Connection } from './Connection.js';
+import { IBroadcaster } from './IBroadcaster.js';
+import { Message, MessageConstructorOptions } from './Message.js';
+import { DatabaseHelper } from './DatabaseHelper.js';
+import { MessageController } from './MessageController.js';
+import { RoomManager } from './RoomManager.js';
+import { RoomPlugin } from '../plugins/RoomPlugin.js';
+import { Session } from './Session.js';
+import { CorePluginGroup } from '../plugins/index.js';
+import { globalPluginGroup } from '../plugins/GlobalPluginGroup.js';
+import { BlacklistPlugin } from '../plugins/core/global/BlacklistPlugin.js';
+import { Config } from './Config.js';
 
 export type StoredRoom = {
     name: string;

@@ -1,6 +1,11 @@
 import fs from 'fs';
-import { RoomPlugin, GlobalPlugin } from '..';
-import { PluginGroup } from '../PluginGroup';
+import { RoomPlugin, GlobalPlugin } from '../index.js';
+import { PluginGroup } from '../PluginGroup.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
+const __dirname = path.dirname(__filename); // get the name of the directory
 
 // Find all plugins in this directory
 const pluginClasses: any[] = fs
@@ -10,7 +15,6 @@ const pluginClasses: any[] = fs
             return null;
         }
         // Require filename
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
         const loadedFile = require(`./${fileName}`);
         const defaultExport = loadedFile.default || null;
         if (!defaultExport) {

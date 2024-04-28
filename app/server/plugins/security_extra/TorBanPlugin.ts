@@ -1,7 +1,7 @@
 import axios from 'axios';
-import { Connection } from '../../skychat/Connection';
-import { GlobalPlugin } from '../GlobalPlugin';
-import { RoomManager } from '../../skychat/RoomManager';
+import { Connection } from '../../skychat/Connection.js';
+import { GlobalPlugin } from '../GlobalPlugin.js';
+import { RoomManager } from '../../skychat/RoomManager.js';
 
 export class TorBanPlugin extends GlobalPlugin {
     static readonly CHECK_TOR_URL = 'https://check.torproject.org/torbulkexitlist';

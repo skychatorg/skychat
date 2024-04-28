@@ -1,8 +1,8 @@
-import { Plugin, PluginCommandRules } from '../../Plugin';
-import { RoomPlugin } from '../../RoomPlugin';
-import { Connection } from '../../../skychat/Connection';
+import { Plugin, PluginCommandRules } from '../../Plugin.js';
+import { RoomPlugin } from '../../RoomPlugin.js';
+import { Connection } from '../../../skychat/Connection.js';
 import striptags from 'striptags';
-import { UserController } from '../../../skychat/UserController';
+import { UserController } from '../../../skychat/UserController.js';
 
 export class HelpPlugin extends RoomPlugin {
     static readonly commandName = 'help';

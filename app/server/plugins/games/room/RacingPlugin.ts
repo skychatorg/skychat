@@ -1,12 +1,12 @@
-import { Connection } from '../../../skychat/Connection';
-import { RoomPlugin } from '../../RoomPlugin';
-import { UserController } from '../../../skychat/UserController';
+import { Connection } from '../../../skychat/Connection.js';
+import { RoomPlugin } from '../../RoomPlugin.js';
+import { UserController } from '../../../skychat/UserController.js';
 import striptags from 'striptags';
-import { MessageFormatter } from '../../../skychat/MessageFormatter';
-import { RandomGenerator } from '../../../skychat/RandomGenerator';
-import { Session } from '../../../skychat/Session';
-import { Message } from '../../../skychat/Message';
-import { Timing } from '../../../skychat/Timing';
+import { MessageFormatter } from '../../../skychat/MessageFormatter.js';
+import { RandomGenerator } from '../../../skychat/RandomGenerator.js';
+import { Session } from '../../../skychat/Session.js';
+import { Message } from '../../../skychat/Message.js';
+import { Timing } from '../../../skychat/Timing.js';
 
 type GameObject = {
     state: 'pending' | 'starting' | 'started';
@@ -151,7 +151,9 @@ export class RacingPlugin extends RoomPlugin {
         }
 
         // Get winner list
-        const winners = this.currentGame.participants.filter((session) => this.currentGame && this.currentGame.bets[session.identifier] === this.currentGame.winnerId);
+        const winners = this.currentGame.participants.filter(
+            (session) => this.currentGame && this.currentGame.bets[session.identifier] === this.currentGame.winnerId,
+        );
         let content = '';
         if (winners.length > 0) {
             content += 'Winners:<br>';

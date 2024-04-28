@@ -5,6 +5,7 @@
     "description": "Future-proof virtual cinema platform",
     "types": "build/api/index.d.ts",
     "main": "build/api/index.js",
+    "type": "module",
     "files": [
         "/build/api",
         "/build/server"

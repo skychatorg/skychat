@@ -1,8 +1,8 @@
 import { google, youtube_v3 } from 'googleapis';
-import { Config } from '../../../skychat/Config';
-import { VideoInfo } from '../PlayerChannel';
-import { PlayerPlugin } from '../PlayerPlugin';
-import { VideoFetcher } from './VideoFetcher';
+import { Config } from '../../../skychat/Config.js';
+import { VideoInfo } from '../PlayerChannel.js';
+import { PlayerPlugin } from '../PlayerPlugin.js';
+import { VideoFetcher } from './VideoFetcher.js';
 
 export class YoutubeFetcher implements VideoFetcher {
     /**
@@ -196,7 +196,9 @@ export class YoutubeFetcher implements VideoFetcher {
         if (!result?.data?.items?.length) {
             throw new Error('No result found for ' + id);
         }
-        const videoIds: string[] = result.data.items.filter((item) => item.contentDetails && item.contentDetails.videoId).map((item) => item.contentDetails!.videoId as string);
+        const videoIds: string[] = result.data.items
+            .filter((item) => item.contentDetails && item.contentDetails.videoId)
+            .map((item) => item.contentDetails!.videoId as string);
         const videos = [];
         for (const videoId of videoIds) {
             videos.push(await this.getVideoInfo(videoId));

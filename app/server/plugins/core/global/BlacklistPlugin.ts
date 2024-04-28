@@ -1,8 +1,8 @@
-import { Connection } from '../../../skychat/Connection';
-import { ConnectedListPlugin } from './ConnectedListPlugin';
-import { UserController } from '../../../skychat/UserController';
-import { GlobalPlugin } from '../../GlobalPlugin';
-import { User } from '../../../skychat/User';
+import { Connection } from '../../../skychat/Connection.js';
+import { ConnectedListPlugin } from './ConnectedListPlugin.js';
+import { UserController } from '../../../skychat/UserController.js';
+import { GlobalPlugin } from '../../GlobalPlugin.js';
+import { User } from '../../../skychat/User.js';
 
 export type BlackList = Array<string>;
 

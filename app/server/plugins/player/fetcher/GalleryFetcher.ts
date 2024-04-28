@@ -1,8 +1,8 @@
-import { GalleryPlugin } from '../../gallery/GalleryPlugin';
-import { Gallery } from '../../gallery/Gallery';
-import { VideoInfo } from '../PlayerChannel';
-import { PlayerPlugin } from '../PlayerPlugin';
-import { VideoFetcher } from './VideoFetcher';
+import { GalleryPlugin } from '../../gallery/GalleryPlugin.js';
+import { Gallery } from '../../gallery/Gallery.js';
+import { VideoInfo } from '../PlayerChannel.js';
+import { PlayerPlugin } from '../PlayerPlugin.js';
+import { VideoFetcher } from './VideoFetcher.js';
 
 export class GalleryFetcher implements VideoFetcher {
     static readonly ALLOWED_EXTENSIONS: string[] = ['mp4', 'webm'];

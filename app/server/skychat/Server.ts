@@ -1,10 +1,10 @@
-import * as WebSocket from 'ws';
+import { WebSocket, WebSocketServer } from 'ws';
 import * as http from 'http';
-import { Connection } from './Connection';
+import { Connection } from './Connection.js';
 import * as iof from 'io-filter';
-import { Session } from './Session';
-import { Config } from './Config';
-import { FileManager } from './FileManager';
+import { Session } from './Session.js';
+import { Config } from './Config.js';
+import { FileManager } from './FileManager.js';
 import express from 'express';
 import fileUpload from 'express-fileupload';
 
@@ -32,7 +32,7 @@ export class Server {
 
     private readonly app: express.Application;
 
-    private readonly wss: WebSocket.Server;
+    private readonly wss: WebSocketServer;
 
     public onConnectionCreated?: (connection: Connection) => Promise<void>;
 
@@ -65,7 +65,8 @@ export class Server {
             res.status(404).send('404');
         });
         let server = http.createServer(this.app);
-        this.wss = new WebSocket.Server({ noServer: true });
+        console.log(WebSocketServer);
+        this.wss = new WebSocketServer({ noServer: true });
         this.wss.on('connection', this.onConnection.bind(this));
         server.on('upgrade', (request, socket, head) => {
             this.wss.handleUpgrade(request, socket, head, (ws) => {

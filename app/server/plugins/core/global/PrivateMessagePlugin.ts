@@ -1,11 +1,11 @@
-import { Connection } from '../../../skychat/Connection';
-import { GlobalPlugin } from '../../GlobalPlugin';
-import { Session } from '../../../skychat/Session';
-import { User } from '../../../skychat/User';
-import { Config } from '../../../skychat/Config';
-import { BlacklistPlugin } from './BlacklistPlugin';
-import { Room } from '../../../skychat/Room';
-import { UserController } from '../../../skychat/UserController';
+import { Connection } from '../../../skychat/Connection.js';
+import { GlobalPlugin } from '../../GlobalPlugin.js';
+import { Session } from '../../../skychat/Session.js';
+import { User } from '../../../skychat/User.js';
+import { Config } from '../../../skychat/Config.js';
+import { BlacklistPlugin } from './BlacklistPlugin.js';
+import { Room } from '../../../skychat/Room.js';
+import { UserController } from '../../../skychat/UserController.js';
 
 export class PrivateMessagePlugin extends GlobalPlugin {
     static readonly commandName = 'pm';

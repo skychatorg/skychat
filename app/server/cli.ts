@@ -1,4 +1,4 @@
-import { DatabaseHelper } from './skychat/DatabaseHelper';
+import { DatabaseHelper } from './skychat/DatabaseHelper.js';
 
 /**
  * Import a file in the gallery

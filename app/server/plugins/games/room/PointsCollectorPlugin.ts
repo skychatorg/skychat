@@ -1,12 +1,12 @@
-import { RoomPlugin } from '../../RoomPlugin';
-import { UserController } from '../../../skychat/UserController';
+import { RoomPlugin } from '../../RoomPlugin.js';
+import { UserController } from '../../../skychat/UserController.js';
 import striptags from 'striptags';
-import { MessageFormatter } from '../../../skychat/MessageFormatter';
-import { RandomGenerator } from '../../../skychat/RandomGenerator';
-import { Session } from '../../../skychat/Session';
-import { Message } from '../../../skychat/Message';
-import { Timing } from '../../../skychat/Timing';
-import { CursorPlugin } from '../global/CursorPlugin';
+import { MessageFormatter } from '../../../skychat/MessageFormatter.js';
+import { RandomGenerator } from '../../../skychat/RandomGenerator.js';
+import { Session } from '../../../skychat/Session.js';
+import { Message } from '../../../skychat/Message.js';
+import { Timing } from '../../../skychat/Timing.js';
+import { CursorPlugin } from '../global/CursorPlugin.js';
 
 type GameObject = {
     gameMessage: Message | null;
@@ -109,8 +109,12 @@ export class PointsCollectorPlugin extends RoomPlugin {
         if (!this.currentGame) {
             return;
         }
-        this.currentGame.point.x = PointsCollectorPlugin.POINT_COLLISION_RADIUS + RandomGenerator.random(8) * (1 - PointsCollectorPlugin.POINT_COLLISION_RADIUS * 2);
-        this.currentGame.point.y = PointsCollectorPlugin.POINT_COLLISION_RADIUS + RandomGenerator.random(8) * (1 - PointsCollectorPlugin.POINT_COLLISION_RADIUS * 2);
+        this.currentGame.point.x =
+            PointsCollectorPlugin.POINT_COLLISION_RADIUS +
+            RandomGenerator.random(8) * (1 - PointsCollectorPlugin.POINT_COLLISION_RADIUS * 2);
+        this.currentGame.point.y =
+            PointsCollectorPlugin.POINT_COLLISION_RADIUS +
+            RandomGenerator.random(8) * (1 - PointsCollectorPlugin.POINT_COLLISION_RADIUS * 2);
     }
 
     private async tick(delta: number, cursorPlugin: CursorPlugin): Promise<void> {
@@ -186,10 +190,18 @@ export class PointsCollectorPlugin extends RoomPlugin {
         }
 
         // Send ball
-        cursorPlugin.sendCursorPosition(UserController.getNeutralUser(`$${this.commandName}_ball`), this.currentGame.ball.pos.x, this.currentGame.ball.pos.y);
+        cursorPlugin.sendCursorPosition(
+            UserController.getNeutralUser(`$${this.commandName}_ball`),
+            this.currentGame.ball.pos.x,
+            this.currentGame.ball.pos.y,
+        );
 
         // Send point
-        cursorPlugin.sendCursorPosition(UserController.getNeutralUser(`$${this.commandName}_point`), this.currentGame.point.x, this.currentGame.point.y);
+        cursorPlugin.sendCursorPosition(
+            UserController.getNeutralUser(`$${this.commandName}_point`),
+            this.currentGame.point.x,
+            this.currentGame.point.y,
+        );
     }
 
     /**

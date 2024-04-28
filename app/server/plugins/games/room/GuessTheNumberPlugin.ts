@@ -1,9 +1,9 @@
-import { Connection } from '../../../skychat/Connection';
-import { RoomPlugin } from '../../RoomPlugin';
-import { UserController } from '../../../skychat/UserController';
-import { Message } from '../../../skychat/Message';
-import { Session } from '../../../skychat/Session';
-import { RandomGenerator } from '../../../skychat/RandomGenerator';
+import { Connection } from '../../../skychat/Connection.js';
+import { RoomPlugin } from '../../RoomPlugin.js';
+import { UserController } from '../../../skychat/UserController.js';
+import { Message } from '../../../skychat/Message.js';
+import { Session } from '../../../skychat/Session.js';
+import { RandomGenerator } from '../../../skychat/RandomGenerator.js';
 
 type GameObject = {
     state: 'pending' | 'running';
@@ -76,7 +76,9 @@ export class GuessTheNumberPlugin extends RoomPlugin {
 
         // Wait for participants
         await this.room.sendMessage({
-            content: `:d) New round (guess the number) :d) [[Participate (entry cost: ${GuessTheNumberPlugin.ENTRY_COST / 100}$)//${this.commandName} join]]`,
+            content: `:d) New round (guess the number) :d) [[Participate (entry cost: ${GuessTheNumberPlugin.ENTRY_COST / 100}$)//${
+                this.commandName
+            } join]]`,
             user: UserController.getNeutralUser(),
         });
         this.currentGame.participantListMessage = await this.room.sendMessage({
@@ -151,7 +153,9 @@ export class GuessTheNumberPlugin extends RoomPlugin {
                 await UserController.giveMoney(session.user, jackpot);
             }
             await this.room.sendMessage({
-                content: `${currentWinners.join(', ')} won this round :) ${currentWinners.length > 1 ? 'They' : 'He'} earned $${jackpot / 100}`,
+                content: `${currentWinners.join(', ')} won this round :) ${currentWinners.length > 1 ? 'They' : 'He'} earned $${
+                    jackpot / 100
+                }`,
                 user: UserController.getNeutralUser(),
             });
         }
@@ -201,6 +205,9 @@ export class GuessTheNumberPlugin extends RoomPlugin {
             throw new Error('Number should be between 0 and 1000');
         }
         this.currentGame.guesses[connection.session.identifier] = guess;
-        connection.send('message', UserController.createNeutralMessage({ content: 'Guess: ' + guess, room: this.room.id, id: 0 }).sanitized());
+        connection.send(
+            'message',
+            UserController.createNeutralMessage({ content: 'Guess: ' + guess, room: this.room.id, id: 0 }).sanitized(),
+        );
     }
 }

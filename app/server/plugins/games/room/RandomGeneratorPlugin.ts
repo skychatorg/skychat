@@ -1,7 +1,7 @@
-import { Connection } from '../../../skychat/Connection';
-import { RoomPlugin } from '../../RoomPlugin';
-import { UserController } from '../../../skychat/UserController';
-import { RandomGenerator } from '../../../skychat/RandomGenerator';
+import { Connection } from '../../../skychat/Connection.js';
+import { RoomPlugin } from '../../RoomPlugin.js';
+import { UserController } from '../../../skychat/UserController.js';
+import { RandomGenerator } from '../../../skychat/RandomGenerator.js';
 
 export class RandomGeneratorPlugin extends RoomPlugin {
     static readonly commandName = 'rand';

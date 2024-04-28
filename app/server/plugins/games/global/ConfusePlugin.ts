@@ -1,9 +1,9 @@
-import { Connection } from '../../../skychat/Connection';
-import { RoomManager } from '../../../skychat/RoomManager';
-import { Session } from '../../../skychat/Session';
-import { User } from '../../../skychat/User';
-import { UserController } from '../../../skychat/UserController';
-import { GlobalPlugin } from '../../GlobalPlugin';
+import { Connection } from '../../../skychat/Connection.js';
+import { RoomManager } from '../../../skychat/RoomManager.js';
+import { Session } from '../../../skychat/Session.js';
+import { User } from '../../../skychat/User.js';
+import { UserController } from '../../../skychat/UserController.js';
+import { GlobalPlugin } from '../../GlobalPlugin.js';
 
 export class ConfusePlugin extends GlobalPlugin {
     static readonly COST = 2 * 100;

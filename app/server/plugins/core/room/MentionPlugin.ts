@@ -1,8 +1,8 @@
-import { Connection } from '../../../skychat/Connection';
-import { Session } from '../../../skychat/Session';
-import { BlacklistPlugin } from '../global/BlacklistPlugin';
-import { RoomPlugin } from '../../RoomPlugin';
-import { Message } from '../../../skychat/Message';
+import { Connection } from '../../../skychat/Connection.js';
+import { Session } from '../../../skychat/Session.js';
+import { BlacklistPlugin } from '../global/BlacklistPlugin.js';
+import { RoomPlugin } from '../../RoomPlugin.js';
+import { Message } from '../../../skychat/Message.js';
 
 export class MentionPlugin extends RoomPlugin {
     static readonly commandName = 'mention';

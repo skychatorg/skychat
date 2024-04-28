@@ -1,5 +1,5 @@
-import { SanitizedUser, User } from './User';
-import { MessageFormatter } from './MessageFormatter';
+import { SanitizedUser, User } from './User.js';
+import { MessageFormatter } from './MessageFormatter.js';
 
 export interface SanitizedMessage {
     /**

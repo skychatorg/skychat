@@ -1,6 +1,6 @@
-import { PluginGroup } from '../PluginGroup';
-import { GalleryPlugin } from './GalleryPlugin';
-import { VideoConverterPlugin } from './VideoConverterPlugin';
+import { PluginGroup } from '../PluginGroup.js';
+import { GalleryPlugin } from './GalleryPlugin.js';
+import { VideoConverterPlugin } from './VideoConverterPlugin.js';
 
 export class GalleryPluginGroup extends PluginGroup {
     roomPluginClasses = [];

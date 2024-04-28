@@ -1,4 +1,4 @@
-import { UserController } from './UserController';
+import { UserController } from './UserController.js';
 
 export type UserData = {
     plugins: { [pluginName: string]: any };

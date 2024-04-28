@@ -1,8 +1,8 @@
-import { Connection } from '../../../skychat/Connection';
-import { GlobalPlugin } from '../../GlobalPlugin';
-import { UserController } from '../../../skychat/UserController';
-import { User } from '../../../skychat/User';
-import { Session } from '../../../skychat/Session';
+import { Connection } from '../../../skychat/Connection.js';
+import { GlobalPlugin } from '../../GlobalPlugin.js';
+import { UserController } from '../../../skychat/UserController.js';
+import { User } from '../../../skychat/User.js';
+import { Session } from '../../../skychat/Session.js';
 
 export class AccountPlugin extends GlobalPlugin {
     static readonly CHANGE_USERNAME_PRICE = 2000;

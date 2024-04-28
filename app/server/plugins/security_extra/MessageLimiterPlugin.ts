@@ -1,8 +1,8 @@
-import { RoomPlugin } from '../RoomPlugin';
-import { Room } from '../../skychat/Room';
-import { Connection } from '../../skychat/Connection';
-import { Message } from '../../skychat/Message';
-import { UserController } from '../../skychat/UserController';
+import { RoomPlugin } from '../RoomPlugin.js';
+import { Room } from '../../skychat/Room.js';
+import { Connection } from '../../skychat/Connection.js';
+import { Message } from '../../skychat/Message.js';
+import { UserController } from '../../skychat/UserController.js';
 
 export type MessageLimit = {
     maxSuccessiveChars: number | null;

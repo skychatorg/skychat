@@ -1,8 +1,8 @@
 import SQL from 'sql-template-strings';
-import { DatabaseHelper } from '../../skychat/DatabaseHelper';
-import { GlobalPlugin } from '../GlobalPlugin';
-import { RoomManager } from '../../skychat/RoomManager';
-import { Config } from '../../skychat/Config';
+import { DatabaseHelper } from '../../skychat/DatabaseHelper.js';
+import { GlobalPlugin } from '../GlobalPlugin.js';
+import { RoomManager } from '../../skychat/RoomManager.js';
+import { Config } from '../../skychat/Config.js';
 
 export class LogFuzzerPlugin extends GlobalPlugin {
     static readonly DURATION_BEFORE_FUZZ = Config.PREFERENCES.daysBeforeMessageFuzz * 24 * 60 * 60 * 1000;

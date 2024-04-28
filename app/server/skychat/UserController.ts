@@ -1,11 +1,11 @@
 import _ from 'lodash';
 import sha256 from 'sha256';
-import { Config } from './Config';
-import { DatabaseHelper } from './DatabaseHelper';
-import { AuthToken, User } from './User';
+import { Config } from './Config.js';
+import { DatabaseHelper } from './DatabaseHelper.js';
+import { AuthToken, User } from './User.js';
 import SQL from 'sql-template-strings';
-import { Message, MessageConstructorOptions } from './Message';
-import { globalPluginGroup } from '../plugins/GlobalPluginGroup';
+import { Message, MessageConstructorOptions } from './Message.js';
+import { globalPluginGroup } from '../plugins/GlobalPluginGroup.js';
 
 export class UserController {
     /**

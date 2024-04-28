@@ -1,6 +1,6 @@
-import { SanitizedUser, User } from './User';
-import { Connection } from './Connection';
-import { IBroadcaster } from './IBroadcaster';
+import { SanitizedUser, User } from './User.js';
+import { Connection } from './Connection.js';
+import { IBroadcaster } from './IBroadcaster.js';
 
 export const BinaryMessageTypes = 123;
 

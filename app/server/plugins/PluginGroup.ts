@@ -1,7 +1,7 @@
-import { Room } from '../skychat/Room';
-import { RoomManager } from '../skychat/RoomManager';
-import { GlobalPlugin, GlobalPluginConstructor } from './GlobalPlugin';
-import { RoomPlugin, RoomPluginConstructor } from './RoomPlugin';
+import { Room } from '../skychat/Room.js';
+import { RoomManager } from '../skychat/RoomManager.js';
+import { GlobalPlugin, GlobalPluginConstructor } from './GlobalPlugin.js';
+import { RoomPlugin, RoomPluginConstructor } from './RoomPlugin.js';
 
 /**
  * Defines a list of plugins that can be used together.

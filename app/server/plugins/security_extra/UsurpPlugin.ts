@@ -1,6 +1,6 @@
-import { User } from '../../skychat/User';
-import { Session } from '../../skychat/Session';
-import { RoomPlugin } from '../RoomPlugin';
+import { User } from '../../skychat/User.js';
+import { Session } from '../../skychat/Session.js';
+import { RoomPlugin } from '../RoomPlugin.js';
 
 /**
  *

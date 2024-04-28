@@ -1,14 +1,21 @@
 import * as fileUpload from 'express-fileupload';
 import fs from 'fs';
-import { RandomGenerator } from './RandomGenerator';
-import { MessageFormatter } from './MessageFormatter';
-import { Config } from './Config';
-import { ShellHelper } from './ShellHelper';
+import { RandomGenerator } from './RandomGenerator.js';
+import { MessageFormatter } from './MessageFormatter.js';
+import { Config } from './Config.js';
+import { ShellHelper } from './ShellHelper.js';
 
 export class FileManager {
     static getNewFileLocation(extension: string): string {
         const date = new Date();
-        return 'uploads/all/' + date.toISOString().substr(0, 19).replace(/(-|T)/g, '/').replace(/:/g, '-') + '-' + Math.floor(1000000000 * RandomGenerator.random(8)) + '.' + extension;
+        return (
+            'uploads/all/' +
+            date.toISOString().substr(0, 19).replace(/(-|T)/g, '/').replace(/:/g, '-') +
+            '-' +
+            Math.floor(1000000000 * RandomGenerator.random(8)) +
+            '.' +
+            extension
+        );
     }
 
     static saveFile(file: fileUpload.UploadedFile): string {
@@ -32,15 +39,26 @@ export class FileManager {
     }
 
     static isFileUrlUploaded(fileUrl: string): boolean {
-        return !!fileUrl.match(new RegExp('^' + MessageFormatter.escapeRegExp(Config.LOCATION + '/uploads/all/') + '([0-9a-zA-Z/-]+)\\.(jpg|jpeg|png|webp|gif|pdf|mp4|mkv|webm)$'));
+        return !!fileUrl.match(
+            new RegExp(
+                '^' +
+                    MessageFormatter.escapeRegExp(Config.LOCATION + '/uploads/all/') +
+                    '([0-9a-zA-Z/-]+)\\.(jpg|jpeg|png|webp|gif|pdf|mp4|mkv|webm)$',
+            ),
+        );
     }
 
     static isFileUrlInGallery(fileUrl: string): boolean {
-        return !!fileUrl.match(new RegExp('^' + MessageFormatter.escapeRegExp(Config.LOCATION + '/gallery/') + '([a-zA-Z0-9-_/]+).[a-z0-9]+$'));
+        return !!fileUrl.match(
+            new RegExp('^' + MessageFormatter.escapeRegExp(Config.LOCATION + '/gallery/') + '([a-zA-Z0-9-_/]+).[a-z0-9]+$'),
+        );
     }
 
     static uploadedFileExists(fileUrl: string): boolean {
-        return (this.isFileUrlUploaded(fileUrl) || this.isFileUrlInGallery(fileUrl)) && fs.existsSync(FileManager.getLocalPathFromFileUrl(fileUrl));
+        return (
+            (this.isFileUrlUploaded(fileUrl) || this.isFileUrlInGallery(fileUrl)) &&
+            fs.existsSync(FileManager.getLocalPathFromFileUrl(fileUrl))
+        );
     }
 
     static getLocalPathFromFileUrl(url: string): string {

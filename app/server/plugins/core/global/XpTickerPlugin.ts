@@ -1,8 +1,8 @@
-import { GlobalPlugin } from '../../GlobalPlugin';
-import { ConnectedListPlugin } from './ConnectedListPlugin';
-import { UserController } from '../../../skychat/UserController';
-import { Session } from '../../../skychat/Session';
-import { RoomManager } from '../../../skychat/RoomManager';
+import { GlobalPlugin } from '../../GlobalPlugin.js';
+import { ConnectedListPlugin } from './ConnectedListPlugin.js';
+import { UserController } from '../../../skychat/UserController.js';
+import { Session } from '../../../skychat/Session.js';
+import { RoomManager } from '../../../skychat/RoomManager.js';
 
 export class XpTickerPlugin extends GlobalPlugin {
     public static readonly MAX_INACTIVITY_DURATION_MS: number = 5 * 60 * 1000;
