@@ -1,8 +1,8 @@
-import { Connection } from '../../../skychat/Connection';
-import { MessageFormatter } from '../../../skychat/MessageFormatter';
-import { Room } from '../../../skychat/Room';
-import { UserController } from '../../../skychat/UserController';
-import { GlobalPlugin } from '../../GlobalPlugin';
+import { Connection } from '../../../skychat/Connection.js';
+import { MessageFormatter } from '../../../skychat/MessageFormatter.js';
+import { Room } from '../../../skychat/Room.js';
+import { UserController } from '../../../skychat/UserController.js';
+import { GlobalPlugin } from '../../GlobalPlugin.js';
 
 type Poll = {
     question: string;

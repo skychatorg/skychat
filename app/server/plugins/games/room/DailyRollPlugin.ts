@@ -1,13 +1,13 @@
-import { Connection } from '../../../skychat/Connection';
-import { RoomPlugin } from '../../RoomPlugin';
-import { UserController } from '../../../skychat/UserController';
-import { Room } from '../../../skychat/Room';
-import { Message } from '../../../skychat/Message';
-import { Session } from '../../../skychat/Session';
-import { MessageFormatter } from '../../../skychat/MessageFormatter';
+import { Connection } from '../../../skychat/Connection.js';
+import { RoomPlugin } from '../../RoomPlugin.js';
+import { UserController } from '../../../skychat/UserController.js';
+import { Room } from '../../../skychat/Room.js';
+import { Message } from '../../../skychat/Message.js';
+import { Session } from '../../../skychat/Session.js';
+import { MessageFormatter } from '../../../skychat/MessageFormatter.js';
 import striptags from 'striptags';
-import { RandomGenerator } from '../../../skychat/RandomGenerator';
-import { Timing } from '../../../skychat/Timing';
+import { RandomGenerator } from '../../../skychat/RandomGenerator.js';
+import { Timing } from '../../../skychat/Timing.js';
 
 type GameObject = {
     // Current game state
@@ -131,7 +131,10 @@ export class DailyRollPlugin extends RoomPlugin {
         while (this.currentGame.participants.length === 0) {
             await Timing.sleep(30 * 1000);
         }
-        const lastMessage = await this.room.sendMessage({ content: 'Hurry up, only 5 more seconds to chose your daily card', user: UserController.getNeutralUser() });
+        const lastMessage = await this.room.sendMessage({
+            content: 'Hurry up, only 5 more seconds to chose your daily card',
+            user: UserController.getNeutralUser(),
+        });
         await Timing.sleep(5 * 1000);
 
         // End chosing state

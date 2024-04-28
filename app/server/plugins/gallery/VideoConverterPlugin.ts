@@ -1,12 +1,12 @@
 import util from 'util';
 import { exec as oldExec } from 'node:child_process';
 import { spawn } from 'child_process';
-import { Config } from '../../skychat/Config';
-import { Connection } from '../../skychat/Connection';
-import { FileManager } from '../../skychat/FileManager';
-import { Session } from '../../skychat/Session';
-import { GlobalPlugin } from '../GlobalPlugin';
-import { Gallery } from './Gallery';
+import { Config } from '../../skychat/Config.js';
+import { Connection } from '../../skychat/Connection.js';
+import { FileManager } from '../../skychat/FileManager.js';
+import { Session } from '../../skychat/Session.js';
+import { GlobalPlugin } from '../GlobalPlugin.js';
+import { Gallery } from './Gallery.js';
 
 const exec = util.promisify(oldExec);
 
@@ -67,27 +67,27 @@ export class VideoConverterPlugin extends GlobalPlugin {
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
         switch (alias) {
-        case 'convertinfo':
-            await this.runConvertInfo(param, connection);
-            break;
+            case 'convertinfo':
+                await this.runConvertInfo(param, connection);
+                break;
 
-        case 'convert':
-            // eslint-disable-next-line no-case-declarations
-            const filePath = param.split(' ')[0];
-            // eslint-disable-next-line no-case-declarations
-            const streamIndexes = param
-                .split(' ')[1]
-                .split(',')
-                .map((index: string) => parseInt(index));
-            await this.runConvert(filePath, streamIndexes, connection);
-            break;
+            case 'convert':
+                // eslint-disable-next-line no-case-declarations
+                const filePath = param.split(' ')[0];
+                // eslint-disable-next-line no-case-declarations
+                const streamIndexes = param
+                    .split(' ')[1]
+                    .split(',')
+                    .map((index: string) => parseInt(index));
+                await this.runConvert(filePath, streamIndexes, connection);
+                break;
 
-        case 'convertlist':
-            await this.runConvertList(connection);
-            break;
+            case 'convertlist':
+                await this.runConvertList(connection);
+                break;
 
-        default:
-            throw new Error(`Unknown alias ${alias}`);
+            default:
+                throw new Error(`Unknown alias ${alias}`);
         }
     }
 

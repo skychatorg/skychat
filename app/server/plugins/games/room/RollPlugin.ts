@@ -1,13 +1,13 @@
-import { Connection } from '../../../skychat/Connection';
-import { RoomPlugin } from '../../RoomPlugin';
-import { Message } from '../../../skychat/Message';
-import { UserController } from '../../../skychat/UserController';
-import { Session } from '../../../skychat/Session';
+import { Connection } from '../../../skychat/Connection.js';
+import { RoomPlugin } from '../../RoomPlugin.js';
+import { Message } from '../../../skychat/Message.js';
+import { UserController } from '../../../skychat/UserController.js';
+import { Session } from '../../../skychat/Session.js';
 import striptags from 'striptags';
-import { MessageFormatter } from '../../../skychat/MessageFormatter';
-import { Room } from '../../../skychat/Room';
-import { RandomGenerator } from '../../../skychat/RandomGenerator';
-import { Timing } from '../../../skychat/Timing';
+import { MessageFormatter } from '../../../skychat/MessageFormatter.js';
+import { Room } from '../../../skychat/Room.js';
+import { RandomGenerator } from '../../../skychat/RandomGenerator.js';
+import { Timing } from '../../../skychat/Timing.js';
 
 type GameObject = {
     state: 'pending' | 'running';
@@ -113,8 +113,8 @@ export class RollPlugin extends RoomPlugin {
         <table class="skychat-table">
             <tr>
                 ${Array.from({ length: 10 })
-        .map((_: any, i: number) => `<td>[[slot ${i}//${this.commandName} ${i}]]</td>`)
-        .join(' ')}
+                    .map((_: any, i: number) => `<td>[[slot ${i}//${this.commandName} ${i}]]</td>`)
+                    .join(' ')}
             </tr>
         </table>`;
         const formatter = MessageFormatter.getInstance();
@@ -226,23 +226,33 @@ export class RollPlugin extends RoomPlugin {
         <table class="skychat-table">
             <tr>
                 ${Array.from({ length: 10 })
-        .map((_: any, i: number) => `<td>${i === ballPosition ? '&nbsp;&nbsp;&nbsp;↓' : ''}</td>`)
-        .join(' ')}
+                    .map((_: any, i: number) => `<td>${i === ballPosition ? '&nbsp;&nbsp;&nbsp;↓' : ''}</td>`)
+                    .join(' ')}
             </tr>
             <tr>
                 ${Array.from({ length: 10 })
-        .map((_: any, i: number) => `<td>slot ${i}</td>`)
-        .join(' ')}
+                    .map((_: any, i: number) => `<td>slot ${i}</td>`)
+                    .join(' ')}
             </tr>
             <tr>
                 ${Array.from({ length: 10 })
-        .map((_: any, i: number) => `<td>${bets.filter((bet) => bet === i).length === 0 ? '' : '&nbsp;&nbsp;&nbsp;' + bets.filter((bet) => bet === i).length}</td>`)
-        .join(' ')}
+                    .map(
+                        (_: any, i: number) =>
+                            `<td>${
+                                bets.filter((bet) => bet === i).length === 0
+                                    ? ''
+                                    : '&nbsp;&nbsp;&nbsp;' + bets.filter((bet) => bet === i).length
+                            }</td>`,
+                    )
+                    .join(' ')}
             </tr>
             <tr>
                 ${Array.from({ length: 10 })
-        .map((_: any, i: number) => `<td>${Math.floor(100 * (this.storage.lastGameResults[i] / (this.storage.totalGameCount || 1)))}%</td>`)
-        .join(' ')}
+                    .map(
+                        (_: any, i: number) =>
+                            `<td>${Math.floor(100 * (this.storage.lastGameResults[i] / (this.storage.totalGameCount || 1)))}%</td>`,
+                    )
+                    .join(' ')}
             </tr>
         </table>`;
         // Update message

@@ -1,4 +1,4 @@
-import { GlobalPlugin } from '../../GlobalPlugin';
+import { GlobalPlugin } from '../../GlobalPlugin.js';
 
 export class VoidPlugin extends GlobalPlugin {
     static readonly commandName = 'void';

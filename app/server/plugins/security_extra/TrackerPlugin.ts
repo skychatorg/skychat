@@ -1,11 +1,11 @@
-import { GlobalPlugin } from '../GlobalPlugin';
-import { Connection } from '../../skychat/Connection';
-import { Message } from '../../skychat/Message';
-import { UserController } from '../../skychat/UserController';
+import { GlobalPlugin } from '../GlobalPlugin.js';
+import { Connection } from '../../skychat/Connection.js';
+import { Message } from '../../skychat/Message.js';
+import { UserController } from '../../skychat/UserController.js';
 import striptags from 'striptags';
-import { MessageFormatter } from '../../skychat/MessageFormatter';
-import { Config } from '../../skychat/Config';
-import { RoomManager } from '../../skychat/RoomManager';
+import { MessageFormatter } from '../../skychat/MessageFormatter.js';
+import { Config } from '../../skychat/Config.js';
+import { RoomManager } from '../../skychat/RoomManager.js';
 
 type NodeType = 'username' | 'ip';
 
@@ -74,7 +74,11 @@ export class TrackerPlugin extends GlobalPlugin {
         return this.storage[TrackerPlugin.nodeToKey(type, value)] || [];
     }
 
-    public getAllRelatedNodesRecursive(type: NodeType, value: string, predicate?: (node: Node, path: Node[]) => boolean): { node: Node; path: Node[] }[] {
+    public getAllRelatedNodesRecursive(
+        type: NodeType,
+        value: string,
+        predicate?: (node: Node, path: Node[]) => boolean,
+    ): { node: Node; path: Node[] }[] {
         /**
          * Recursive lookup function
          * @param type
@@ -235,7 +239,11 @@ export class TrackerPlugin extends GlobalPlugin {
         if (!type) {
             throw new Error('No entry for ' + value);
         }
-        const entries = this.getAllRelatedNodesRecursive(type, value, (node: Node) => node.type !== 'username' || node.value !== '*guest').filter((entry) => entry.node.type === 'username');
+        const entries = this.getAllRelatedNodesRecursive(
+            type,
+            value,
+            (node: Node) => node.type !== 'username' || node.value !== '*guest',
+        ).filter((entry) => entry.node.type === 'username');
 
         const formatter = MessageFormatter.getInstance();
         let html = `<div>Associations for ${value} (${type}):</div><br>`;
@@ -357,12 +365,22 @@ export class TrackerPlugin extends GlobalPlugin {
     }
 
     public async onConnectionJoinedRoom(connection: Connection): Promise<void> {
-        this.registerAssociation('username', connection.session.user.id === 0 ? '*guest' : connection.session.identifier, 'ip', connection.ip);
+        this.registerAssociation(
+            'username',
+            connection.session.user.id === 0 ? '*guest' : connection.session.identifier,
+            'ip',
+            connection.ip,
+        );
         this.syncStorage();
     }
 
     public async onConnectionAuthenticated(connection: Connection): Promise<void> {
-        this.registerAssociation('username', connection.session.user.id === 0 ? '*guest' : connection.session.identifier, 'ip', connection.ip);
+        this.registerAssociation(
+            'username',
+            connection.session.user.id === 0 ? '*guest' : connection.session.identifier,
+            'ip',
+            connection.ip,
+        );
         this.syncStorage();
     }
 }

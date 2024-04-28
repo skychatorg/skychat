@@ -1,11 +1,11 @@
-import { Connection } from '../../../skychat/Connection';
-import { GlobalPlugin } from '../../GlobalPlugin';
-import { User } from '../../../skychat/User';
-import { UserController } from '../../../skychat/UserController';
-import { Session } from '../../../skychat/Session';
-import { RoomManager } from '../../../skychat/RoomManager';
-import { BinaryMessageTypes } from '../../../../api/BinaryMessageTypes';
-import { BlacklistPlugin } from '../../core/global/BlacklistPlugin';
+import { Connection } from '../../../skychat/Connection.js';
+import { GlobalPlugin } from '../../GlobalPlugin.js';
+import { User } from '../../../skychat/User.js';
+import { UserController } from '../../../skychat/UserController.js';
+import { Session } from '../../../skychat/Session.js';
+import { RoomManager } from '../../../skychat/RoomManager.js';
+import { BinaryMessageTypes } from '../../../../api/BinaryMessageTypes.js';
+import { BlacklistPlugin } from '../../core/global/BlacklistPlugin.js';
 
 /**
  * Handle cursor events

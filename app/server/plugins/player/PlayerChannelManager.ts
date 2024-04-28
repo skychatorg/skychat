@@ -1,8 +1,8 @@
 import { EventEmitter } from 'events';
-import { Connection } from '../../skychat/Connection';
-import { Session } from '../../skychat/Session';
-import { PlayerChannel, SanitizedPlayerChannel } from './PlayerChannel';
-import { PlayerPlugin } from './PlayerPlugin';
+import { Connection } from '../../skychat/Connection.js';
+import { Session } from '../../skychat/Session.js';
+import { PlayerChannel, SanitizedPlayerChannel } from './PlayerChannel.js';
+import { PlayerPlugin } from './PlayerPlugin.js';
 
 export class PlayerChannelManager extends EventEmitter {
     public readonly channels: PlayerChannel[] = [];
@@ -186,9 +186,9 @@ export class PlayerChannelManager extends EventEmitter {
             this.channels
                 .map(
                     (channel) =>
-                        `  #${channel.id}: [${channel.sessions.map((session) => session.identifier + '(' + session.connections.length + ')').join(', ')}] [${
-                            channel.currentVideoInfo ? channel.currentVideoInfo.video.id : ''
-                        }] [${channel.queue.length}]`,
+                        `  #${channel.id}: [${channel.sessions
+                            .map((session) => session.identifier + '(' + session.connections.length + ')')
+                            .join(', ')}] [${channel.currentVideoInfo ? channel.currentVideoInfo.video.id : ''}] [${channel.queue.length}]`,
                 )
                 .join('\n') +
             '\n)'

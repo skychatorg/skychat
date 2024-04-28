@@ -1,7 +1,7 @@
-import { Connection } from '../skychat/Connection';
-import { Message } from '../skychat/Message';
-import { Plugin } from './Plugin';
-import { Room } from '../skychat/Room';
+import { Connection } from '../skychat/Connection.js';
+import { Message } from '../skychat/Message.js';
+import { Plugin } from './Plugin.js';
+import { Room } from '../skychat/Room.js';
 
 export abstract class RoomPlugin extends Plugin {
     /**

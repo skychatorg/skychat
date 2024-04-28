@@ -1,7 +1,7 @@
 import { promises as fs } from 'fs';
-import { Config } from '../../skychat/Config';
-import { FileManager } from '../../skychat/FileManager';
-import { Session } from '../../skychat/Session';
+import { Config } from '../../skychat/Config.js';
+import { FileManager } from '../../skychat/FileManager.js';
+import { Session } from '../../skychat/Session.js';
 
 export type FileType = 'video' | 'audio' | 'image' | 'subtitle' | 'unknown';
 

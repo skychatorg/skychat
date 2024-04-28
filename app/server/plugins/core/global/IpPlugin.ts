@@ -1,12 +1,12 @@
 import * as geoip from 'geoip-lite';
 import striptags from 'striptags';
-import { Connection } from '../../../skychat/Connection';
-import { User } from '../../../skychat/User';
-import { Session } from '../../../skychat/Session';
-import { UserController } from '../../../skychat/UserController';
-import { MessageFormatter } from '../../../skychat/MessageFormatter';
-import { GlobalPlugin } from '../../GlobalPlugin';
-import { Config } from '../../../skychat/Config';
+import { Connection } from '../../../skychat/Connection.js';
+import { User } from '../../../skychat/User.js';
+import { Session } from '../../../skychat/Session.js';
+import { UserController } from '../../../skychat/UserController.js';
+import { MessageFormatter } from '../../../skychat/MessageFormatter.js';
+import { GlobalPlugin } from '../../GlobalPlugin.js';
+import { Config } from '../../../skychat/Config.js';
 
 export class IpPlugin extends GlobalPlugin {
     static readonly commandName = 'ip';
@@ -70,7 +70,13 @@ export class IpPlugin extends GlobalPlugin {
                         ${formatter.getButtonHtml(connection.ip, '/track ip ' + connection.ip, true)}
                          ${formatter.getButtonHtml('A', '/autotrack ' + connection.ip, true)}
                     </td>
-                    <td>${geoIp ? `<a class="skychat-link" href="${geoIpLink}" rel="nofollow" target="_blank">${geoIp.country + ' / ' + geoIp.city}</a>` : ''}</td>
+                    <td>${
+                        geoIp
+                            ? `<a class="skychat-link" href="${geoIpLink}" rel="nofollow" target="_blank">${
+                                  geoIp.country + ' / ' + geoIp.city
+                              }</a>`
+                            : ''
+                    }</td>
                 </tr>`;
         }
         content += '</table>';

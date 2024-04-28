@@ -1,6 +1,6 @@
-import { Connection } from '../../skychat/Connection';
-import { UserController } from '../../skychat/UserController';
-import { RoomPlugin } from '../RoomPlugin';
+import { Connection } from '../../skychat/Connection.js';
+import { UserController } from '../../skychat/UserController.js';
+import { RoomPlugin } from '../RoomPlugin.js';
 
 export class HistoryClearPlugin extends RoomPlugin {
     static readonly commandName = 'historyclear';

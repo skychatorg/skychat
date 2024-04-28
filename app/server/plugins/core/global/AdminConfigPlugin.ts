@@ -1,7 +1,7 @@
-import { Config } from '../../../skychat/Config';
-import { GlobalPlugin } from '../../GlobalPlugin';
-import { Connection } from '../../../skychat/Connection';
-import { UserController } from '../../../skychat/UserController';
+import { Config } from '../../../skychat/Config.js';
+import { GlobalPlugin } from '../../GlobalPlugin.js';
+import { Connection } from '../../../skychat/Connection.js';
+import { UserController } from '../../../skychat/UserController.js';
 
 export class AdminConfigPlugin extends GlobalPlugin {
     static readonly commandName = 'adminconfig';

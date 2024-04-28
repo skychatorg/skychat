@@ -1,9 +1,9 @@
-import { Connection } from '../../skychat/Connection';
-import { Session } from '../../skychat/Session';
-import { SanitizedUser, User } from '../../skychat/User';
-import { UserController } from '../../skychat/UserController';
-import { PlayerChannelManager } from './PlayerChannelManager';
-import { PlayerChannelScheduler, SanitizedScheduler } from './PlayerChannelScheduler';
+import { Connection } from '../../skychat/Connection.js';
+import { Session } from '../../skychat/Session.js';
+import { SanitizedUser, User } from '../../skychat/User.js';
+import { UserController } from '../../skychat/UserController.js';
+import { PlayerChannelManager } from './PlayerChannelManager.js';
+import { PlayerChannelScheduler, SanitizedScheduler } from './PlayerChannelScheduler.js';
 
 export type QueuedVideoInfo = {
     user: SanitizedUser;
@@ -390,9 +390,9 @@ export class PlayerChannel {
             playing: this.isPlaying(),
             currentMedia: this.currentVideoInfo
                 ? {
-                    owner: this.currentVideoInfo.user.username,
-                    title: this.currentVideoInfo.video.title,
-                }
+                      owner: this.currentVideoInfo.user.username,
+                      title: this.currentVideoInfo.video.title,
+                  }
                 : undefined,
             schedule: this.scheduler.sanitized(),
         };

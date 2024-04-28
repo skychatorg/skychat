@@ -1,7 +1,7 @@
 import SQL from 'sql-template-strings';
-import { DatabaseHelper } from './DatabaseHelper';
-import { Message } from './Message';
-import { UserController } from './UserController';
+import { DatabaseHelper } from './DatabaseHelper.js';
+import { Message } from './Message.js';
+import { UserController } from './UserController.js';
 
 export type MessageDBRow = {
     id: number;

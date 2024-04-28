@@ -1,16 +1,16 @@
-import { Connection } from '../../skychat/Connection';
-import { GlobalPlugin } from '../GlobalPlugin';
-import { RoomManager } from '../../skychat/RoomManager';
-import { PlayerChannelManager } from './PlayerChannelManager';
-import { YoutubeFetcher } from './fetcher/YoutubeFetcher';
-import { IFrameFetcher } from './fetcher/IFrameFetcher';
-import { VideoFetcher } from './fetcher/VideoFetcher';
-import { TwitchFetcher } from './fetcher/TwitchFetcher';
-import { PollPlugin } from '../core/global/PollPlugin';
-import { SanitizedPlayerChannel } from './PlayerChannel';
-import { Session } from '../../skychat/Session';
-import { Config } from '../../skychat/Config';
-import { GalleryFetcher } from './fetcher/GalleryFetcher';
+import { Connection } from '../../skychat/Connection.js';
+import { GlobalPlugin } from '../GlobalPlugin.js';
+import { RoomManager } from '../../skychat/RoomManager.js';
+import { PlayerChannelManager } from './PlayerChannelManager.js';
+import { YoutubeFetcher } from './fetcher/YoutubeFetcher.js';
+import { IFrameFetcher } from './fetcher/IFrameFetcher.js';
+import { VideoFetcher } from './fetcher/VideoFetcher.js';
+import { TwitchFetcher } from './fetcher/TwitchFetcher.js';
+import { PollPlugin } from '../core/global/PollPlugin.js';
+import { SanitizedPlayerChannel } from './PlayerChannel.js';
+import { Session } from '../../skychat/Session.js';
+import { Config } from '../../skychat/Config.js';
+import { GalleryFetcher } from './fetcher/GalleryFetcher.js';
 
 /**
  *

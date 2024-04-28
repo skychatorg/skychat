@@ -1,4 +1,4 @@
-import { Client } from 'pg';
+import pg from 'pg';
 
 const INSTALL_QUERY = `
 CREATE TABLE IF NOT EXISTS users (
@@ -38,13 +38,13 @@ export class DatabaseHelper {
     /**
      * DB instance
      */
-    static db: Client;
+    static db: pg.Client;
 
     /**
      * Connect to the database
      */
     static async load(): Promise<void> {
-        const db = new Client({
+        const db = new pg.Client({
             user: process.env.POSTGRES_USER,
             password: process.env.POSTGRES_PASSWORD,
             database: process.env.POSTGRES_DB,

@@ -1,1 +1,1 @@
-export { ExtraSecurityPluginGroup } from './ExtraSecurityPluginGroup';
+export { ExtraSecurityPluginGroup } from './ExtraSecurityPluginGroup.js';

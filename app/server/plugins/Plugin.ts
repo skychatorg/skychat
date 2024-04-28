@@ -1,9 +1,9 @@
 import fs from 'fs';
-import { Connection } from '../skychat/Connection';
-import { Session } from '../skychat/Session';
-import { User } from '../skychat/User';
-import { Room } from '../skychat/Room';
-import { UserController } from '../skychat/UserController';
+import { Connection } from '../skychat/Connection.js';
+import { Session } from '../skychat/Session.js';
+import { User } from '../skychat/User.js';
+import { Room } from '../skychat/Room.js';
+import { UserController } from '../skychat/UserController.js';
 
 /**
  * Plugin command parameters description object

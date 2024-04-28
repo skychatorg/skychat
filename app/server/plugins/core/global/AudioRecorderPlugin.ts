@@ -1,9 +1,9 @@
-import { GlobalPlugin } from '../../GlobalPlugin';
-import { Connection } from '../../../skychat/Connection';
-import { User } from '../../../skychat/User';
-import { MessageFormatter } from '../../../skychat/MessageFormatter';
-import { Config } from '../../../skychat/Config';
-import { BinaryMessageTypes } from '../../../../api/BinaryMessageTypes';
+import { GlobalPlugin } from '../../GlobalPlugin.js';
+import { Connection } from '../../../skychat/Connection.js';
+import { User } from '../../../skychat/User.js';
+import { MessageFormatter } from '../../../skychat/MessageFormatter.js';
+import { Config } from '../../../skychat/Config.js';
+import { BinaryMessageTypes } from '../../../../api/BinaryMessageTypes.js';
 
 export class AudioRecorderPlugin extends GlobalPlugin {
     // Maximum number of recordings to keep in memory

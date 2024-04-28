@@ -1,10 +1,10 @@
-import { Connection } from '../../../skychat/Connection';
-import { Config } from '../../../skychat/Config';
+import { Connection } from '../../../skychat/Connection.js';
+import { Config } from '../../../skychat/Config.js';
 import { createTransport, SentMessageInfo, Transporter } from 'nodemailer';
-import { UserController } from '../../../skychat/UserController';
-import { User } from '../../../skychat/User';
-import { GlobalPlugin } from '../../GlobalPlugin';
-import { RoomManager } from '../../../skychat/RoomManager';
+import { UserController } from '../../../skychat/UserController.js';
+import { User } from '../../../skychat/User.js';
+import { GlobalPlugin } from '../../GlobalPlugin.js';
+import { RoomManager } from '../../../skychat/RoomManager.js';
 
 export class MailPlugin extends GlobalPlugin {
     static readonly commandName = 'mail';
@@ -42,7 +42,10 @@ export class MailPlugin extends GlobalPlugin {
         const result = await this.sendMailToUsername(username, 'New mail from ' + Config.LOCATION, message);
 
         // Send back notification
-        connection.send('message', UserController.createNeutralMessage({ content: result.response, room: connection.roomId, id: 0 }).sanitized());
+        connection.send(
+            'message',
+            UserController.createNeutralMessage({ content: result.response, room: connection.roomId, id: 0 }).sanitized(),
+        );
     }
 
     /**

@@ -1,9 +1,9 @@
-import { Connection } from '../../../skychat/Connection';
-import { GlobalPlugin } from '../../GlobalPlugin';
-import { Session } from '../../../skychat/Session';
-import { User } from '../../../skychat/User';
-import { ConnectedListPlugin } from '../../core/global/ConnectedListPlugin';
-import { UserController } from '../../../skychat/UserController';
+import { Connection } from '../../../skychat/Connection.js';
+import { GlobalPlugin } from '../../GlobalPlugin.js';
+import { Session } from '../../../skychat/Session.js';
+import { User } from '../../../skychat/User.js';
+import { ConnectedListPlugin } from '../../core/global/ConnectedListPlugin.js';
+import { UserController } from '../../../skychat/UserController.js';
 
 export class OfferMoneyPlugin extends GlobalPlugin {
     static readonly commandName = 'offermoney';

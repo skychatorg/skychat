@@ -3,7 +3,6 @@ import path from 'path';
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 
-
 const envLocation = JSON.parse(fs.readFileSync('.env.json').toString()).location;
 
 export default defineConfig({
@@ -12,9 +11,7 @@ export default defineConfig({
         outDir: '../../dist',
         emptyOutDir: true,
     },
-    plugins: [
-        vue()
-    ],
+    plugins: [vue()],
     resolve: {
         alias: {
             '@': path.resolve(__dirname, './app/client/src'),

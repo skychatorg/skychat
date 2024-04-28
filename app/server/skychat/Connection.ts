@@ -1,11 +1,11 @@
-import * as WebSocket from 'ws';
+import { WebSocket } from 'ws';
 import * as http from 'http';
 import { UAParser } from 'ua-parser-js';
 import { Data } from 'ws';
 import { EventEmitter } from 'events';
-import { Room } from './Room';
-import { Session } from './Session';
-import { IBroadcaster } from './IBroadcaster';
+import { Room } from './Room.js';
+import { Session } from './Session.js';
+import { IBroadcaster } from './IBroadcaster.js';
 
 /**
  * A client represents an open connection to the server

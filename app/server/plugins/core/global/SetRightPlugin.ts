@@ -1,11 +1,11 @@
-import { User } from '../../../skychat/User';
-import { Session } from '../../../skychat/Session';
-import { ConnectedListPlugin } from './ConnectedListPlugin';
-import { UserController } from '../../../skychat/UserController';
-import { GlobalPlugin } from '../../GlobalPlugin';
-import { Config } from '../../../skychat/Config';
-import { isInteger } from 'lodash';
-import { Connection } from '../../../skychat/Connection';
+import { User } from '../../../skychat/User.js';
+import { Session } from '../../../skychat/Session.js';
+import { ConnectedListPlugin } from './ConnectedListPlugin.js';
+import { UserController } from '../../../skychat/UserController.js';
+import { GlobalPlugin } from '../../GlobalPlugin.js';
+import { Config } from '../../../skychat/Config.js';
+import lodash from 'lodash';
+import { Connection } from '../../../skychat/Connection.js';
 
 export class SetRightPlugin extends GlobalPlugin {
     static readonly commandName = 'setright';
@@ -30,7 +30,7 @@ export class SetRightPlugin extends GlobalPlugin {
         const identifier = usernameRaw.toLowerCase();
         const right = parseInt(rightRaw);
 
-        if (!isInteger(right)) {
+        if (!lodash.isInteger(right)) {
             throw new Error('Invalid right');
         }
 

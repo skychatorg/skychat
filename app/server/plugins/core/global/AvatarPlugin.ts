@@ -1,11 +1,11 @@
-import { Connection } from '../../../skychat/Connection';
-import { ConnectedListPlugin } from './ConnectedListPlugin';
-import { Config } from '../../../skychat/Config';
-import { UserController } from '../../../skychat/UserController';
+import { Connection } from '../../../skychat/Connection.js';
+import { ConnectedListPlugin } from './ConnectedListPlugin.js';
+import { Config } from '../../../skychat/Config.js';
+import { UserController } from '../../../skychat/UserController.js';
 import fs from 'fs';
-import { FileManager } from '../../../skychat/FileManager';
-import { Server } from '../../../skychat/Server';
-import { GlobalPlugin } from '../../GlobalPlugin';
+import { FileManager } from '../../../skychat/FileManager.js';
+import { Server } from '../../../skychat/Server.js';
+import { GlobalPlugin } from '../../GlobalPlugin.js';
 
 export class AvatarPlugin extends GlobalPlugin {
     static readonly DEFAULT_AVATAR: string = Config.LOCATION + '/assets/images/avatars/default.png';

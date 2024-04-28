@@ -1,7 +1,7 @@
-import { Connection } from '../../../skychat/Connection';
-import { GlobalPlugin } from '../../GlobalPlugin';
-import { ConnectedListPlugin } from '../../core/global/ConnectedListPlugin';
-import { UserController } from '../../../skychat/UserController';
+import { Connection } from '../../../skychat/Connection.js';
+import { GlobalPlugin } from '../../GlobalPlugin.js';
+import { ConnectedListPlugin } from '../../core/global/ConnectedListPlugin.js';
+import { UserController } from '../../../skychat/UserController.js';
 
 export class MottoPlugin extends GlobalPlugin {
     private static MOTTO_MAX_LENGTH = 64;

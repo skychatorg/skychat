@@ -1,7 +1,7 @@
-import { Session } from '../../../skychat/Session';
-import { Config } from '../../../skychat/Config';
-import { GlobalPlugin } from '../../GlobalPlugin';
-import { RoomManager } from '../../../skychat/RoomManager';
+import { Session } from '../../../skychat/Session.js';
+import { Config } from '../../../skychat/Config.js';
+import { GlobalPlugin } from '../../GlobalPlugin.js';
+import { RoomManager } from '../../../skychat/RoomManager.js';
 
 /**
  * Handle the list of currently active connections

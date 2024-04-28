@@ -1,12 +1,12 @@
-import { Room } from '../skychat/Room';
-import { RoomPlugin, RoomPluginConstructor } from './RoomPlugin';
-import { GlobalPlugin, GlobalPluginConstructor } from './GlobalPlugin';
-import { PluginGroup } from './PluginGroup';
-import { RoomManager } from '../skychat/RoomManager';
-import { Config } from '../skychat/Config';
+import { Room } from '../skychat/Room.js';
+import { RoomPlugin, RoomPluginConstructor } from './RoomPlugin.js';
+import { GlobalPlugin, GlobalPluginConstructor } from './GlobalPlugin.js';
+import { PluginGroup } from './PluginGroup.js';
+import { RoomManager } from '../skychat/RoomManager.js';
+import { Config } from '../skychat/Config.js';
 
 // Load all plugin implementations
-import * as impl from './index';
+import * as impl from './index.js';
 const AllPlugins: { [pluginGroupName: string]: any } = impl;
 
 /**
@@ -33,7 +33,9 @@ class GlobalPluginGroup {
         // Verify for each plugin group that it exists
         for (const pluginGroupName of pluginGroupNames) {
             if (typeof AllPlugins[pluginGroupName] !== 'function') {
-                throw new Error(`Unable to load command/plugin ${pluginGroupName}. Ensure the corresponding file is there and the plugin class exported.`);
+                throw new Error(
+                    `Unable to load command/plugin ${pluginGroupName}. Ensure the corresponding file is there and the plugin class exported.`,
+                );
             }
 
             this.pluginGroups.push(new AllPlugins[pluginGroupName]());

@@ -1,5 +1,5 @@
-import { Room } from '../../../skychat/Room';
-import { Session } from '../../../skychat/Session';
+import { Room } from '../../../skychat/Room.js';
+import { Session } from '../../../skychat/Session.js';
 
 export type PollState = 'pending' | 'started' | 'finished';
 

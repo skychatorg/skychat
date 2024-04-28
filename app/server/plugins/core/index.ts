@@ -1,1 +1,1 @@
-export { CorePluginGroup } from './CorePluginGroup';
+export { CorePluginGroup } from './CorePluginGroup.js';

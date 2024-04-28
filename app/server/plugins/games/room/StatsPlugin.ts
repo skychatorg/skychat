@@ -1,8 +1,8 @@
-import { RoomPlugin } from '../../RoomPlugin';
-import { UserController } from '../../../skychat/UserController';
-import { User } from '../../../skychat/User';
-import { Session } from '../../../skychat/Session';
-import { Config } from '../../../skychat/Config';
+import { RoomPlugin } from '../../RoomPlugin.js';
+import { UserController } from '../../../skychat/UserController.js';
+import { User } from '../../../skychat/User.js';
+import { Session } from '../../../skychat/Session.js';
+import { Config } from '../../../skychat/Config.js';
 
 export class StatsPlugin extends RoomPlugin {
     static readonly AVERAGE_BOOK_READ_TIME: number = 60 * 5;
@@ -46,9 +46,11 @@ export class StatsPlugin extends RoomPlugin {
         const movieCount = Math.floor(xp / StatsPlugin.AVERAGE_MOVIE_WATCH_TIME);
         const marathonCount = Math.floor(xp / StatsPlugin.AVERAGE_MARATHON_RUN_TIME);
 
-        const messageContent = `${session.user.username} spent ${minCount} ${minCount > 1 ? 'minutes' : 'minute'} here, that's ${hourCount} ${hourCount > 1 ? 'hours' : 'hour'}, ${dayCount} ${
-            dayCount > 1 ? 'days' : 'day'
-        } or ${weekCount} ${weekCount > 1 ? 'weeks' : 'week'}! During this time, he could have:
+        const messageContent = `${session.user.username} spent ${minCount} ${
+            minCount > 1 ? 'minutes' : 'minute'
+        } here, that's ${hourCount} ${hourCount > 1 ? 'hours' : 'hour'}, ${dayCount} ${dayCount > 1 ? 'days' : 'day'} or ${weekCount} ${
+            weekCount > 1 ? 'weeks' : 'week'
+        }! During this time, he could have:
             - read ${bookCount} ${bookCount > 1 ? 'books' : 'book'} 📖
             - watched ${movieCount} ${movieCount > 1 ? 'movies' : 'movie'} 🎥
             - run ${marathonCount} ${marathonCount > 1 ? 'marathons' : 'marathon'} 🏃        

@@ -1,8 +1,8 @@
-import { UserController } from '../../skychat/UserController';
-import { Connection } from '../../skychat/Connection';
-import { GlobalPlugin } from '../GlobalPlugin';
-import { RoomManager } from '../../skychat/RoomManager';
-import { Message } from '../../skychat/Message';
+import { UserController } from '../../skychat/UserController.js';
+import { Connection } from '../../skychat/Connection.js';
+import { GlobalPlugin } from '../GlobalPlugin.js';
+import { RoomManager } from '../../skychat/RoomManager.js';
+import { Message } from '../../skychat/Message.js';
 
 export class BunkerPlugin extends GlobalPlugin {
     static readonly commandName = 'bunker';

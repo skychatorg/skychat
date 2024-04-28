@@ -1,1 +1,1 @@
-export { GalleryPluginGroup } from './GalleryPluginGroup';
+export { GalleryPluginGroup } from './GalleryPluginGroup.js';

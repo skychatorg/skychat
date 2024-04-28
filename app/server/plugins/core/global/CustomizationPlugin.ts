@@ -1,6 +1,6 @@
-import { Connection } from '../../../skychat/Connection';
-import { GlobalPlugin } from '../../GlobalPlugin';
-import { ConnectedListPlugin } from './ConnectedListPlugin';
+import { Connection } from '../../../skychat/Connection.js';
+import { GlobalPlugin } from '../../GlobalPlugin.js';
+import { ConnectedListPlugin } from './ConnectedListPlugin.js';
 
 /**
  * One element that can be customized

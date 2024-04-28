@@ -1,7 +1,7 @@
-import { UserController } from '../../skychat/UserController';
-import { RoomPlugin } from '../RoomPlugin';
-import { Room } from '../../skychat/Room';
-import { Connection } from '../../skychat/Connection';
+import { UserController } from '../../skychat/UserController.js';
+import { RoomPlugin } from '../RoomPlugin.js';
+import { Room } from '../../skychat/Room.js';
+import { Connection } from '../../skychat/Connection.js';
 
 export class RoomProtectPlugin extends RoomPlugin {
     static readonly commandName = 'roomprotect';

@@ -1,10 +1,10 @@
-import { GlobalPlugin } from '../../GlobalPlugin';
-import { Server } from '../../../skychat/Server';
-import { FileManager } from '../../../skychat/FileManager';
+import { GlobalPlugin } from '../../GlobalPlugin.js';
+import { Server } from '../../../skychat/Server.js';
+import { FileManager } from '../../../skychat/FileManager.js';
 import fs from 'fs';
-import { Config } from '../../../skychat/Config';
-import { StickerManager } from '../../../skychat/StickerManager';
-import { Connection } from '../../../skychat/Connection';
+import { Config } from '../../../skychat/Config.js';
+import { StickerManager } from '../../../skychat/StickerManager.js';
+import { Connection } from '../../../skychat/Connection.js';
 
 export class StickerPlugin extends GlobalPlugin {
     static readonly commandName = 'sticker';

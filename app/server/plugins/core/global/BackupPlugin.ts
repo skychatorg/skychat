@@ -1,6 +1,6 @@
-import { Connection } from '../../../skychat/Connection';
-import { GlobalPlugin } from '../../GlobalPlugin';
-import { UserController } from '../../../skychat/UserController';
+import { Connection } from '../../../skychat/Connection.js';
+import { GlobalPlugin } from '../../GlobalPlugin.js';
+import { UserController } from '../../../skychat/UserController.js';
 import { exec } from 'child_process';
 
 export class BackupPlugin extends GlobalPlugin {
