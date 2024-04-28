@@ -1,16 +1,16 @@
 import fs from 'fs';
 import * as iof from 'io-filter';
-import { Server } from './Server.js';
-import { Connection } from './Connection.js';
-import { Session } from './Session.js';
-import { User } from './User.js';
-import { Room } from './Room.js';
-import { UserController } from './UserController.js';
-import { Config } from './Config.js';
-import { Message } from './Message.js';
 import { GlobalPlugin } from '../plugins/GlobalPlugin.js';
 import { globalPluginGroup } from '../plugins/GlobalPluginGroup.js';
+import { Config } from './Config.js';
+import { Connection } from './Connection.js';
+import { Message } from './Message.js';
 import { MessageFormatter } from './MessageFormatter.js';
+import { Room } from './Room.js';
+import { Server } from './Server.js';
+import { Session } from './Session.js';
+import { User } from './User.js';
+import { UserController } from './UserController.js';
 
 export type StoredSkyChat = {
     guestId: number;
@@ -26,6 +26,8 @@ export class RoomManager {
     static readonly STORAGE_MAIN_FILE: string = 'storage/main.json';
 
     private static TICK_INTERVAL: number = 5 * 1000;
+
+    private static FULL_SYNC_INTERVAL = 60 * 1000;
 
     private static CURRENT_GUEST_ID = 0;
 
@@ -127,7 +129,7 @@ export class RoomManager {
         // Periodically send the room list to users
         setInterval(() => {
             Object.values(Session.sessions).map((session) => this.sendRoomList(session));
-        }, 20 * 1000);
+        }, RoomManager.FULL_SYNC_INTERVAL);
 
         setInterval(this.tick.bind(this), RoomManager.TICK_INTERVAL);
     }

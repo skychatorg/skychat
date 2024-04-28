@@ -1,6 +1,6 @@
 import { Connection } from '../skychat/Connection.js';
-import { Plugin } from './Plugin.js';
 import { RoomManager } from '../skychat/RoomManager.js';
+import { Plugin } from './Plugin.js';
 
 /**
  * A global plugin is a plugin which instantied once at the level of the room manager
