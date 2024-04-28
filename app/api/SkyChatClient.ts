@@ -232,7 +232,6 @@ export class SkyChatClient extends EventEmitter {
     }
 
     private _onConnectedListPatch(patch: any) {
-        console.log('patch', patch);
         jsondiffpatch.patch(this._connectedList, patch);
         this._updateConnectedListMeta();
         this.emit('update', this.state);
