@@ -1,12 +1,12 @@
-import * as geoip from 'geoip-lite';
+import geoip from 'geoip-lite';
 import striptags from 'striptags';
-import { Connection } from '../../../skychat/Connection.js';
-import { User } from '../../../skychat/User.js';
-import { Session } from '../../../skychat/Session.js';
-import { UserController } from '../../../skychat/UserController.js';
-import { MessageFormatter } from '../../../skychat/MessageFormatter.js';
-import { GlobalPlugin } from '../../GlobalPlugin.js';
 import { Config } from '../../../skychat/Config.js';
+import { Connection } from '../../../skychat/Connection.js';
+import { MessageFormatter } from '../../../skychat/MessageFormatter.js';
+import { Session } from '../../../skychat/Session.js';
+import { User } from '../../../skychat/User.js';
+import { UserController } from '../../../skychat/UserController.js';
+import { GlobalPlugin } from '../../GlobalPlugin.js';
 
 export class IpPlugin extends GlobalPlugin {
     static readonly commandName = 'ip';

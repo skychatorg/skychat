@@ -1,12 +1,12 @@
-import { WebSocket, WebSocketServer } from 'ws';
-import * as http from 'http';
-import { Connection } from './Connection.js';
-import * as iof from 'io-filter';
-import { Session } from './Session.js';
-import { Config } from './Config.js';
-import { FileManager } from './FileManager.js';
 import express from 'express';
 import fileUpload from 'express-fileupload';
+import * as http from 'http';
+import * as iof from 'io-filter';
+import { WebSocket, WebSocketServer } from 'ws';
+import { Config } from './Config.js';
+import { Connection } from './Connection.js';
+import { FileManager } from './FileManager.js';
+import { Session } from './Session.js';
 
 type EventHandler<payloadFilter> = (payload: payloadFilter, client: Connection) => Promise<void>;
 
@@ -80,8 +80,6 @@ export class Server {
 
     /**
      * On file upload
-     * @param req
-     * @param res
      */
     public onFileUpload(req: express.Request, res: express.Response): void {
         try {

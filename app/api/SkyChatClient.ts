@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { EventEmitter } from 'events';
 import WebSocket from 'isomorphic-ws';
 import * as jsondiffpatch from 'jsondiffpatch';

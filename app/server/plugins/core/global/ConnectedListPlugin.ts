@@ -2,7 +2,7 @@ import * as jsondiffpatch from 'jsondiffpatch';
 import { Config } from '../../../skychat/Config.js';
 import { Connection } from '../../../skychat/Connection.js';
 import { RoomManager } from '../../../skychat/RoomManager.js';
-import { Session } from '../../../skychat/Session.js';
+import { SanitizedSession, Session } from '../../../skychat/Session.js';
 import { GlobalPlugin } from '../../GlobalPlugin.js';
 
 /**
@@ -15,6 +15,8 @@ export class ConnectedListPlugin extends GlobalPlugin {
 
     readonly opOnly = true;
 
+    private diffPatcher: jsondiffpatch.DiffPatcher;
+
     /**
      * Last connected list sent to clients
      */
@@ -24,6 +26,9 @@ export class ConnectedListPlugin extends GlobalPlugin {
         super(manager);
 
         this.lastConnectedList = this.getConnectedList();
+        this.diffPatcher = jsondiffpatch.create({
+            objectHash: (obj: any) => (obj as SanitizedSession).identifier,
+        });
         setInterval(this.sync.bind(this), ConnectedListPlugin.SYNC_DELAY);
     }
 
@@ -68,7 +73,7 @@ export class ConnectedListPlugin extends GlobalPlugin {
 
     private _patchClients() {
         const realSessions = this.getConnectedList();
-        const diff = jsondiffpatch.diff(this.lastConnectedList, realSessions);
+        const diff = this.diffPatcher.diff(this.lastConnectedList, realSessions);
         if (typeof diff === 'undefined') {
             return;
         }
