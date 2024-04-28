@@ -1,23 +1,23 @@
-/* eslint-disable no-unused-vars */
-import WebSocket from 'isomorphic-ws';
 import { EventEmitter } from 'events';
-import { BinaryMessageTypes } from './BinaryMessageTypes.js';
+import WebSocket from 'isomorphic-ws';
+import * as jsondiffpatch from 'jsondiffpatch';
 import {
-    PublicConfig,
-    CustomizationElements,
-    SanitizedMessage,
-    SanitizedUser,
     AuthToken,
-    SanitizedSession,
-    SanitizedRoom,
-    SanitizedPoll,
-    SanitizedPlayerChannel,
-    VideoInfo,
-    QueuedVideoInfo,
+    CustomizationElements,
     FolderContent,
-    VideoStreamInfo,
     OngoingConvert,
+    PublicConfig,
+    QueuedVideoInfo,
+    SanitizedMessage,
+    SanitizedPlayerChannel,
+    SanitizedPoll,
+    SanitizedRoom,
+    SanitizedSession,
+    SanitizedUser,
+    VideoInfo,
+    VideoStreamInfo,
 } from '../server/index.js';
+import { BinaryMessageTypes } from './BinaryMessageTypes.js';
 
 const defaultUser: SanitizedUser = {
     id: 0,
@@ -74,6 +74,7 @@ export declare interface SkyChatClient {
     on(event: 'set-user', listener: (user: SanitizedUser) => any): this;
     on(event: 'auth-token', listener: (token: AuthToken | null) => any): this;
     on(event: 'connected-list', listener: (sessions: Array<SanitizedSession>) => any): this;
+    on(event: 'connected-list-patch', listener: (sessions: Array<SanitizedSession>) => any): this;
     on(event: 'room-list', listener: (rooms: Array<SanitizedRoom>) => any): this;
     on(event: 'join-room', listener: (roomId: number) => any): this;
     on(event: 'typing-list', listener: (users: Array<SanitizedUser>) => any): this;
@@ -155,6 +156,7 @@ export class SkyChatClient extends EventEmitter {
         this.on('set-user', this._onUser.bind(this));
         this.on('auth-token', this._onToken.bind(this));
         this.on('connected-list', this._onConnectedList.bind(this));
+        this.on('connected-list-patch', this._onConnectedListPatch.bind(this));
 
         // Room
         this.on('room-list', this._onRoomList.bind(this));
@@ -223,9 +225,15 @@ export class SkyChatClient extends EventEmitter {
         this._token = token;
         this.emit('update', this.state);
     }
-
     private _onConnectedList(connectedList: Array<SanitizedSession>) {
         this._connectedList = connectedList;
+        this._updateConnectedListMeta();
+        this.emit('update', this.state);
+    }
+
+    private _onConnectedListPatch(patch: any) {
+        console.log('patch', patch);
+        jsondiffpatch.patch(this._connectedList, patch);
         this._updateConnectedListMeta();
         this.emit('update', this.state);
     }

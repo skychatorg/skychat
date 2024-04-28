@@ -1,11 +1,10 @@
-import { WebSocket } from 'ws';
+import { EventEmitter } from 'events';
 import * as http from 'http';
 import { UAParser } from 'ua-parser-js';
-import { Data } from 'ws';
-import { EventEmitter } from 'events';
+import { Data, WebSocket } from 'ws';
+import { IBroadcaster } from './IBroadcaster.js';
 import { Room } from './Room.js';
 import { Session } from './Session.js';
-import { IBroadcaster } from './IBroadcaster.js';
 
 /**
  * A client represents an open connection to the server
@@ -197,8 +196,6 @@ export class Connection extends EventEmitter implements IBroadcaster {
 
     /**
      * Send en event to the websocket
-     * @param event
-     * @param payload
      */
     public send(event: string, payload: unknown) {
         this.webSocket.send(

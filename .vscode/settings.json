@@ -1,6 +1,7 @@
 {
     "editor.codeActionsOnSave": {
-        "source.fixAll.eslint": "explicit"
+        "source.fixAll.eslint": "always",
+        "source.organizeImports": "always"
     },
     "eslint.validate": ["typescript", "vue", "html"]
 }

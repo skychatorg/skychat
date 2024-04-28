@@ -1,149 +1,88 @@
-import { Session } from '../../../skychat/Session.js';
+import * as jsondiffpatch from 'jsondiffpatch';
 import { Config } from '../../../skychat/Config.js';
-import { GlobalPlugin } from '../../GlobalPlugin.js';
+import { Connection } from '../../../skychat/Connection.js';
 import { RoomManager } from '../../../skychat/RoomManager.js';
+import { Session } from '../../../skychat/Session.js';
+import { GlobalPlugin } from '../../GlobalPlugin.js';
 
 /**
  * Handle the list of currently active connections
  */
 export class ConnectedListPlugin extends GlobalPlugin {
-    /**
-     * Maximum interval between two syncs, to ensure data is consistent on the client-side
-     */
-    static readonly MAX_SYNC_DELAY = 30 * 1000;
-
-    /**
-     * Minimum interval between two syncs, to save bandwidth
-     */
-    static readonly MIN_SYNC_DELAY = 3 * 1000;
+    static readonly SYNC_DELAY = 2 * 1000;
 
     static readonly commandName = 'connectedlist';
 
     readonly opOnly = true;
 
-    protected storage: { mode: 'show-all' | 'hide-details-by-right'; argument: number } = {
-        mode: 'show-all',
-        argument: 0,
-    };
-
-    readonly rules = {
-        connectedlist: {
-            minCount: 1,
-            params: [
-                { name: 'mode', pattern: /^(show-all|hide-details-by-right)$/ },
-                { name: 'argument', pattern: /^([0-9]+)$/ },
-            ],
-        },
-    };
-
     /**
-     * Debounced timeout to send a sync command to clients
+     * Last connected list sent to clients
      */
-    syncDebouncedTimeout: NodeJS.Timeout | null = null;
-
-    /**
-     * Last date when clients were synchronized
-     */
-    syncLastDate: Date = new Date();
+    private lastConnectedList: unknown = null;
 
     constructor(manager: RoomManager) {
         super(manager);
 
-        this.loadStorage();
-        setInterval(this.tick.bind(this), ConnectedListPlugin.MAX_SYNC_DELAY);
+        this.lastConnectedList = this.getConnectedList();
+        setInterval(this.sync.bind(this), ConnectedListPlugin.SYNC_DELAY);
     }
 
-    async run(_alias: string, param: string): Promise<void> {
-        // Update storage value
-        const [mode, arg]: string[] = param.split(' ');
-        this.storage = {
-            mode: mode as 'show-all' | 'hide-details-by-right',
-            argument: parseInt(arg),
-        };
-        this.syncStorage();
-
-        this.sync();
+    public run(): Promise<void> {
+        throw new Error('Method not implemented.');
     }
 
-    async onConnectionAuthenticated(): Promise<void> {
-        this.sync();
-    }
-
-    async onConnectionJoinedRoom(): Promise<void> {
-        this.sync();
+    async onNewConnection(connection: Connection): Promise<void> {
+        connection.send('connected-list', this.lastConnectedList);
     }
 
     async onConnectionLeftRoom(): Promise<void> {
         this.sync();
     }
 
-    private tick(): void {
-        // If last sync was long ago, we make a sync request
-        if (this.syncLastDate.getTime() + ConnectedListPlugin.MIN_SYNC_DELAY < new Date().getTime()) {
-            this._syncNow();
-            return;
-        }
-    }
-
     public sync(): void {
-        // If last sync was long ago, we can sync directly
-        if (this.syncLastDate.getTime() + ConnectedListPlugin.MIN_SYNC_DELAY < new Date().getTime()) {
-            this._syncNow();
+        this._patchClients();
+    }
+
+    private _sessionSortFunction(a: Session, b: Session) {
+        const sortArray = (session: Session): Array<number> => [
+            session.connections.length > 0 ? 1 : 0,
+            session.deadSince ? session.deadSince.getTime() : 0,
+            session.user.right,
+            session.user.xp,
+        ];
+        const aArray = sortArray(a);
+        const bArray = sortArray(b);
+        for (let i = 0; i < aArray.length; ++i) {
+            if (aArray[i] !== bArray[i]) {
+                return bArray[i] - aArray[i];
+            }
+        }
+        return a.user.username.localeCompare(b.user.username);
+    }
+
+    private getConnectedList() {
+        return Object.values(Session.sessions)
+            .sort(this._sessionSortFunction)
+            .map((sess) => sess.sanitized());
+    }
+
+    private _patchClients() {
+        const realSessions = this.getConnectedList();
+        const diff = jsondiffpatch.diff(this.lastConnectedList, realSessions);
+        if (typeof diff === 'undefined') {
             return;
         }
 
-        // Cancel old re-sync request if any and create request to re-sync when enough time has passed
-        if (this.syncDebouncedTimeout) {
-            clearTimeout(this.syncDebouncedTimeout);
-        }
-        const timeSinceLastSync = new Date().getTime() - this.syncLastDate.getTime();
-        const remainingWaitTime = ConnectedListPlugin.MIN_SYNC_DELAY - timeSinceLastSync;
-        this.syncDebouncedTimeout = setTimeout(this._syncNow.bind(this), remainingWaitTime);
-    }
-
-    private _syncNow() {
-        this.syncLastDate = new Date();
-
-        const sortFunction = (a: Session, b: Session) => {
-            const sortArray = (session: Session): Array<number> => [
-                session.connections.length > 0 ? 1 : 0,
-                session.deadSince ? session.deadSince.getTime() : 0,
-                session.user.right,
-                session.user.xp,
-            ];
-            const aArray = sortArray(a);
-            const bArray = sortArray(b);
-            for (let i = 0; i < aArray.length; ++i) {
-                if (aArray[i] !== bArray[i]) {
-                    return bArray[i] - aArray[i];
-                }
-            }
-            return a.user.username.localeCompare(b.user.username);
-        };
-
-        // Build a list of anon sessions to send to guests
-        const anonSessions = Object.values(Session.sessions)
-            .sort(sortFunction)
-            .map((sess) => sess.sanitized())
-            .map((sess) => ({ ...sess, user: { ...sess.user, money: 0, right: -1, xp: 0 } }));
-
-        // Real session list
-        const realSessions = Object.values(Session.sessions)
-            .sort(sortFunction)
-            .map((sess) => sess.sanitized());
-
-        Object.values(Session.sessions).forEach((session) => {
-            session.connections.forEach((connection) => {
+        for (const session of Object.values(Session.sessions)) {
+            for (const connection of session.connections) {
                 if (connection.session.user.right < Config.PREFERENCES.minRightForConnectedList) {
                     return;
                 }
 
-                if (this.storage.mode === 'hide-details-by-right' && connection.session.user.right < this.storage.argument) {
-                    connection.send('connected-list', anonSessions);
-                } else {
-                    connection.send('connected-list', realSessions);
-                }
-            });
-        });
+                connection.send('connected-list-patch', diff);
+            }
+        }
+
+        this.lastConnectedList = realSessions;
     }
 }
