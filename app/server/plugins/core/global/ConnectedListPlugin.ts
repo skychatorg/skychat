@@ -27,7 +27,7 @@ export class ConnectedListPlugin extends GlobalPlugin {
 
         this.lastConnectedList = this.getConnectedList();
         this.diffPatcher = jsondiffpatch.create({
-            objectHash: (obj: any) => (obj as SanitizedSession).identifier,
+            objectHash: (obj: any, index?: number | undefined) => (obj as SanitizedSession)?.identifier ?? obj.id ?? index,
         });
         setInterval(this.sync.bind(this), ConnectedListPlugin.SYNC_DELAY);
     }

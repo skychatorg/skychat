@@ -35,6 +35,10 @@ const defaultUser: SanitizedUser = {
     },
 };
 
+export type SkyChatOptions = {
+    autoMessageAck: boolean;
+};
+
 export type SkyChatClientState = {
     websocketReadyState: number;
     user: SanitizedUser;
@@ -147,8 +151,15 @@ export class SkyChatClient extends EventEmitter {
     };
     private _playerLastUpdate: Date | null = null;
 
-    constructor(public readonly url: string) {
+    private autoMessageAck: boolean;
+
+    constructor(
+        public readonly url: string,
+        options: SkyChatOptions,
+    ) {
         super();
+
+        this.autoMessageAck = options.autoMessageAck ?? false;
 
         // Auth & Config
         this.on('config', this._onConfig.bind(this));
@@ -158,6 +169,9 @@ export class SkyChatClient extends EventEmitter {
         this.on('auth-token', this._onToken.bind(this));
         this.on('connected-list', this._onConnectedList.bind(this));
         this.on('connected-list-patch', this._onConnectedListPatch.bind(this));
+
+        // Messages
+        this.on('message', this._onMessage.bind(this));
 
         // Room
         this.on('room-list', this._onRoomList.bind(this));
@@ -293,6 +307,19 @@ export class SkyChatClient extends EventEmitter {
         ({ messageIdToLastSeenUsers: this._messageIdToLastSeenUsers } = this._generateMessageIdToLastSeenUsers());
         ({ roomConnectedUsers: this._roomConnectedUsers, playerChannelUsers: this._playerChannelUsers } =
             this._generateRoomConnectedUsersAndPlayerChannelUsers());
+    }
+
+    private _onMessage(message: SanitizedMessage) {
+        if (!this.autoMessageAck) {
+            return;
+        }
+        if (this._user.id === 0) {
+            return;
+        }
+        if (message.id === 0) {
+            return;
+        }
+        this.notifySeenMessage(message.id);
     }
 
     private _onRoomList(rooms: Array<SanitizedRoom>) {
@@ -469,6 +496,13 @@ export class SkyChatClient extends EventEmitter {
         this._websocket.addEventListener('message', this._onWebSocketMessage.bind(this));
         this._websocket.addEventListener('close', this._onWebSocketClose.bind(this));
         this.emit('update', this.state);
+    }
+
+    /**
+     * Set whether the client should be considered focused or not
+     */
+    setAutoMessageAck(autoMessageAck: boolean) {
+        this.autoMessageAck = autoMessageAck;
     }
 
     /**
