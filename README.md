@@ -41,7 +41,7 @@ docker compose up
 
 ### Application setup
 
-By default, the application will be listening to `localhost:8080` and assume it is accessed from `http://localhost:8080`. In order to customize the domain name of your SkyChat application, edit the `.env.json` file. The fields in the .env.json contain the private variables of the application, listed below:
+By default, the application will be listening to `localhost:8081` and assume it is accessed from `http://localhost:8081`. In order to customize the domain name of your SkyChat application, edit the `.env.json` file. The fields in the .env.json contain the private variables of the application, listed below:
 
 | field                | type                     | default                                                           | semantic                                                                                                                                            |
 | -------------------- | ------------------------ | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
