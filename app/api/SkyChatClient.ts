@@ -36,7 +36,7 @@ const defaultUser: SanitizedUser = {
 };
 
 export type SkyChatOptions = {
-    autoMessageAck: boolean;
+    autoMessageAck?: boolean;
 };
 
 export type SkyChatClientState = {
@@ -155,7 +155,7 @@ export class SkyChatClient extends EventEmitter {
 
     constructor(
         public readonly url: string,
-        options: SkyChatOptions,
+        options: SkyChatOptions = {},
     ) {
         super();
 
