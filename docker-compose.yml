@@ -11,8 +11,10 @@ services:
       - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
       - "--providers.file.directory=/configuration/"
       - "--providers.file.watch=true"
+      - "--accesslog=true"
+      - "--accesslog.filePath=/logs/access.log"
     ports:
-      - ${PUBLIC_PORT}:${PUBLIC_PORT}
+      - ${BIND_INTERFACE}:${PUBLIC_PORT}:${PUBLIC_PORT}
     volumes:
       - letsencrypt:/letsencrypt:rw
       - ./app/traefik/dynamic.yml:/configuration/dynamic.yml:ro
