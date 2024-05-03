@@ -2,12 +2,16 @@ import express from 'express';
 import fileUpload from 'express-fileupload';
 import * as http from 'http';
 import * as iof from 'io-filter';
+import { RateLimiterMemory } from 'rate-limiter-flexible';
 import { WebSocket, WebSocketServer } from 'ws';
 import { Config } from './Config.js';
 import { Connection } from './Connection.js';
 import { FileManager } from './FileManager.js';
 import { Session } from './Session.js';
 
+const MAX_UPGRADES_PER_MINUTE = 5;
+
+// eslint-disable-next-line no-unused-vars
 type EventHandler<payloadFilter> = (payload: payloadFilter, client: Connection) => Promise<void>;
 
 type EventsDescription = {
@@ -34,11 +38,15 @@ export class Server {
 
     private readonly wss: WebSocketServer;
 
+    private readonly limiter: RateLimiterMemory;
+
+    // eslint-disable-next-line no-unused-vars
     public onConnectionCreated?: (connection: Connection) => Promise<void>;
 
     /**
      * Builds a session object when a new connection is initiated
      */
+    // eslint-disable-next-line no-unused-vars
     public sessionBuilder: (request: http.IncomingMessage) => Promise<Session>;
 
     /**
@@ -46,8 +54,15 @@ export class Server {
      */
     private coolDownEntries: { [key: string]: { first: Date; last: Date; count: number } } = {};
 
+    // eslint-disable-next-line no-unused-vars
     constructor(sessionBuilder: (request: http.IncomingMessage) => Promise<Session>) {
         this.sessionBuilder = sessionBuilder;
+
+        this.limiter = new RateLimiterMemory({
+            points: MAX_UPGRADES_PER_MINUTE,
+            duration: 60,
+        });
+
         this.app = express();
         this.app.use(express.static('dist'));
         this.app.use('/uploads', express.static('uploads'));
@@ -65,13 +80,23 @@ export class Server {
             res.status(404).send('404');
         });
         let server = http.createServer(this.app);
-        console.log(WebSocketServer);
         this.wss = new WebSocketServer({ noServer: true });
         this.wss.on('connection', this.onConnection.bind(this));
-        server.on('upgrade', (request, socket, head) => {
-            this.wss.handleUpgrade(request, socket, head, (ws) => {
-                this.wss.emit('connection', ws, request);
-            });
+        server.on('upgrade', async (request, socket, head) => {
+            if (!request.socket.remoteAddress) {
+                console.error('No remote address');
+                socket.destroy();
+                return;
+            }
+            try {
+                await this.limiter.consume(request.socket.remoteAddress);
+                this.wss.handleUpgrade(request, socket, head, (ws) => {
+                    this.wss.emit('connection', ws, request);
+                });
+            } catch (error) {
+                console.error('Rate limit exceeded for', request.socket.remoteAddress, JSON.stringify(error));
+                socket.destroy();
+            }
         });
         server.listen(Config.PORT, Config.HOSTNAME, function () {
             console.log('Listening on :' + Config.PORT);
