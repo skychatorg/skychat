@@ -1,10 +1,11 @@
 import { DatabaseHelper } from './skychat/DatabaseHelper.js';
-import { RoomManager } from './skychat/RoomManager.js';
+import { SkyChatServer } from './skychat/SkyChatServer.js';
 
 (async () => {
     console.log('Loading database');
     await DatabaseHelper.load();
 
     console.log('Starting server');
-    new RoomManager();
+    const skyChatServer = new SkyChatServer();
+    skyChatServer.start();
 })();

@@ -1,8 +1,8 @@
+import striptags from 'striptags';
+import { Connection } from '../../../skychat/Connection.js';
+import { UserController } from '../../../skychat/UserController.js';
 import { Plugin, PluginCommandRules } from '../../Plugin.js';
 import { RoomPlugin } from '../../RoomPlugin.js';
-import { Connection } from '../../../skychat/Connection.js';
-import striptags from 'striptags';
-import { UserController } from '../../../skychat/UserController.js';
 
 export class HelpPlugin extends RoomPlugin {
     static readonly commandName = 'help';
@@ -12,7 +12,7 @@ export class HelpPlugin extends RoomPlugin {
     async run(alias: string, param: string, connection: Connection): Promise<void> {
         // Group commands by main name
         const commandAliases: [string, Plugin][] = (Object.entries(this.room.commands) as [string, Plugin][]).concat(
-            Object.entries(this.room.manager.commands),
+            Object.entries(this.room.manager.pluginManager.commands),
         );
         let content = '<table class="skychat-table">';
         content += `

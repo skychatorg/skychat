@@ -53,10 +53,4 @@ export class BunkerPlugin extends GlobalPlugin {
         }
         return message;
     }
-
-    async onBeforeRegister(): Promise<void> {
-        if (this.storage) {
-            throw new Error('Application currently in bunker mode. Registration is disabled.');
-        }
-    }
 }

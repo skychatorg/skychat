@@ -1,16 +1,16 @@
+import { Config } from '../../skychat/Config.js';
 import { Connection } from '../../skychat/Connection.js';
-import { GlobalPlugin } from '../GlobalPlugin.js';
 import { RoomManager } from '../../skychat/RoomManager.js';
-import { PlayerChannelManager } from './PlayerChannelManager.js';
-import { YoutubeFetcher } from './fetcher/YoutubeFetcher.js';
-import { IFrameFetcher } from './fetcher/IFrameFetcher.js';
-import { VideoFetcher } from './fetcher/VideoFetcher.js';
-import { TwitchFetcher } from './fetcher/TwitchFetcher.js';
+import { Session } from '../../skychat/Session.js';
+import { GlobalPlugin } from '../GlobalPlugin.js';
 import { PollPlugin } from '../core/global/PollPlugin.js';
 import { SanitizedPlayerChannel } from './PlayerChannel.js';
-import { Session } from '../../skychat/Session.js';
-import { Config } from '../../skychat/Config.js';
+import { PlayerChannelManager } from './PlayerChannelManager.js';
 import { GalleryFetcher } from './fetcher/GalleryFetcher.js';
+import { IFrameFetcher } from './fetcher/IFrameFetcher.js';
+import { TwitchFetcher } from './fetcher/TwitchFetcher.js';
+import { VideoFetcher } from './fetcher/VideoFetcher.js';
+import { YoutubeFetcher } from './fetcher/YoutubeFetcher.js';
 
 /**
  *
@@ -506,27 +506,14 @@ export class PlayerPlugin extends GlobalPlugin {
 
     /**
      * @hook When a connection is created, send to this connection the list of channels
-     * @param connection
      */
     public async onNewConnection(connection: Connection): Promise<void> {
         this.channelManager.sync([connection]);
-    }
 
-    /**
-     * @hook When a connection is closed, cleanup the session if required
-     * @param connection
-     */
-    public async onConnectionClosed(connection: Connection): Promise<void> {
-        if (connection.session.connections.length === 0) {
-            this.channelManager.leaveChannel(connection.session);
+        if (connection.session.user.isGuest()) {
+            return;
         }
-    }
 
-    /**
-     * @hook When a connection successfully authenticated, make him join its channel
-     * @param connection
-     */
-    public async onConnectionAuthenticated(connection: Connection): Promise<void> {
         // Compare the saved channel id to this session
         const currentChannel = this.channelManager.getSessionChannel(connection.session);
         const savedChannelId = this.getUserData<unknown>(connection.session.user);
@@ -539,6 +526,15 @@ export class PlayerPlugin extends GlobalPlugin {
             // If this session is in a yt channel, synchronize this connection
             connection.send('player-channel', currentChannel.id);
             currentChannel.syncConnections([connection]);
+        }
+    }
+
+    /**
+     * @hook When a connection is closed, cleanup the session if required
+     */
+    public async onConnectionClosed(connection: Connection): Promise<void> {
+        if (connection.session.connections.length === 0) {
+            this.channelManager.leaveChannel(connection.session);
         }
     }
 }

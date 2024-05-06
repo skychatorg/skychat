@@ -1,10 +1,10 @@
-import { GlobalPlugin } from '../../GlobalPlugin.js';
-import { Server } from '../../../skychat/Server.js';
-import { FileManager } from '../../../skychat/FileManager.js';
 import fs from 'fs';
 import { Config } from '../../../skychat/Config.js';
-import { StickerManager } from '../../../skychat/StickerManager.js';
 import { Connection } from '../../../skychat/Connection.js';
+import { FileManager } from '../../../skychat/FileManager.js';
+import { HttpServer } from '../../../skychat/HttpServer.js';
+import { StickerManager } from '../../../skychat/StickerManager.js';
+import { GlobalPlugin } from '../../GlobalPlugin.js';
 
 export class StickerPlugin extends GlobalPlugin {
     static readonly commandName = 'sticker';
@@ -20,7 +20,7 @@ export class StickerPlugin extends GlobalPlugin {
             maxCount: 2,
             params: [
                 { name: 'code', pattern: StickerManager.STICKER_CODE_REGEXP },
-                { name: 'url', pattern: Server.UPLOADED_FILE_REGEXP },
+                { name: 'url', pattern: HttpServer.UPLOADED_FILE_REGEXP },
             ],
         },
         stickerdel: {

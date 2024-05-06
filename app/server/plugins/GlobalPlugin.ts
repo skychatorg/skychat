@@ -1,3 +1,4 @@
+import { ConnectionAcceptedEvent } from '../skychat/AuthBridge.js';
 import { Connection } from '../skychat/Connection.js';
 import { RoomManager } from '../skychat/RoomManager.js';
 import { Plugin } from './Plugin.js';
@@ -15,7 +16,6 @@ export abstract class GlobalPlugin extends Plugin {
 
     /**
      * A globally instantiated plugin
-     * @param manager
      */
     constructor(manager: RoomManager) {
         super();
@@ -32,49 +32,26 @@ export abstract class GlobalPlugin extends Plugin {
     /**
      * Executed when a new messages comes in
      * @abstract
-     * @param message
-     * @param _connection
      */
+    // eslint-disable-next-line no-unused-vars
     public async onNewMessageHook(message: string, _connection: Connection): Promise<string> {
         return message;
     }
 
     /**
-     * Execute before a connection registers
-     * @param payload
-     * @param connection
-     */
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    public async onBeforeRegister(payload: unknown, connection: Connection): Promise<void> {
-        void 0;
-    }
-
-    /**
      * When a connection is created
      * @abstract
-     * @param _connection
      */
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    public async onNewConnection(_connection: Connection): Promise<void> {
-        void 0;
-    }
-
-    /**
-     * When a connection successfully authenticated
-     * @abstract
-     * @param _connection
-     */
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    public async onConnectionAuthenticated(_connection: Connection): Promise<void> {
+    // eslint-disable-next-line no-unused-vars
+    public async onNewConnection(_connection: Connection, _event: ConnectionAcceptedEvent): Promise<void> {
         void 0;
     }
 
     /**
      * When a connection was closed
      * @abstract
-     * @param _connection
      */
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    // eslint-disable-next-line no-unused-vars
     public async onConnectionClosed(_connection: Connection): Promise<void> {
         void 0;
     }

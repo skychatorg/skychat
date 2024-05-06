@@ -3,6 +3,7 @@ import * as http from 'http';
 import { UAParser } from 'ua-parser-js';
 import { Data, WebSocket } from 'ws';
 import { IBroadcaster } from './IBroadcaster.js';
+import { RateLimiter } from './RateLimiter.js';
 import { Room } from './Room.js';
 import { Session } from './Session.js';
 
@@ -17,6 +18,8 @@ export class Connection extends EventEmitter implements IBroadcaster {
     public static readonly CLOSE_PING_TIMEOUT: number = 4504;
 
     public static readonly CLOSE_KICKED: number = 4403;
+
+    static readonly ACCEPTED_EVENTS = ['message'];
 
     public session!: Session;
 
@@ -40,9 +43,8 @@ export class Connection extends EventEmitter implements IBroadcaster {
     /**
      * Maps message types to specific handlers
      */
+    // eslint-disable-next-line no-unused-vars
     public readonly binaryMessageHandlers: { [keyCode: string]: (data: Buffer) => void } = {};
-
-    private lastPingDate: Date;
 
     constructor(session: Session, webSocket: WebSocket, request: http.IncomingMessage) {
         super();
@@ -54,58 +56,14 @@ export class Connection extends EventEmitter implements IBroadcaster {
         this.origin = typeof request.headers['origin'] === 'string' ? request.headers['origin'] : '';
         this.userAgent = ua.getBrowser().name || '';
         this.device = ua.getDevice().type || '';
-        this.ip =
-            typeof request.headers['x-forwarded-for'] === 'string'
-                ? request.headers['x-forwarded-for']
-                : request.connection.remoteAddress || '';
-        this.lastPingDate = new Date();
+        this.ip = RateLimiter.getIP(request);
 
         session.attachConnection(this);
         this.webSocket.on('message', (message) => this.onMessage(message));
         this.webSocket.on('close', () => this.onClose());
         this.webSocket.on('error', (error) => this.onError(error));
 
-        setTimeout(this.sendPing.bind(this), Connection.PING_INTERVAL_MS);
-        this.on('pong', this.onPong.bind(this));
-        this.on('ping', this.onPing.bind(this));
-
         this.setRoom(null);
-    }
-
-    /**
-     * Send a ping to the client
-     */
-    private async sendPing(): Promise<void> {
-        return;
-
-        // If websocket is not open, ignore
-        if (this.webSocket.readyState !== WebSocket.OPEN) {
-            return;
-        }
-
-        // If last pings did not came back
-        const missedPings = (new Date().getTime() - this.lastPingDate.getTime()) / Connection.PING_INTERVAL_MS - 1;
-        if (missedPings > Connection.MAXIMUM_MISSED_PING) {
-            this.webSocket.close(Connection.CLOSE_PING_TIMEOUT);
-            return;
-        }
-
-        this.send('ping', null);
-        setTimeout(this.sendPing.bind(this), Connection.PING_INTERVAL_MS);
-    }
-
-    /**
-     * When the pong comes back
-     */
-    private async onPong(): Promise<void> {
-        this.lastPingDate = new Date();
-    }
-
-    /**
-     * Send a pong to the client
-     */
-    private async onPing(): Promise<void> {
-        this.send('pong', null);
     }
 
     public get closed(): boolean {
@@ -117,25 +75,17 @@ export class Connection extends EventEmitter implements IBroadcaster {
 
     /**
      * When a message is received on the socket
-     * @param data
      */
     private async onMessage(data: Data): Promise<void> {
         try {
-            // Data is always buffer
+            // Only buffers are accepted
             if (!(data instanceof Buffer)) {
                 throw new Error('Invalid data type');
             }
 
-            /**
-             * TODO:
-             *  Always converting to string is not the cleanest solution we can find
-             *      to discriminate between binary and non-binary messages, but it eases debugging messages
-             *      from Chrome devtools as we can see the content of json messages.
-             */
-
             const dataAsString = data.toString();
 
-            // If data is not of type string, fail with error
+            // If not JSON, assume binary
             if (!dataAsString.startsWith('{')) {
                 const messageType = data.readUInt16LE(0);
                 const messageData = data.slice(2);
@@ -151,6 +101,10 @@ export class Connection extends EventEmitter implements IBroadcaster {
             // Check that the event name is valid and is registered
             if (typeof eventName !== 'string') {
                 throw new Error('Event could not be parsed');
+            }
+
+            if (!Connection.ACCEPTED_EVENTS.includes(eventName)) {
+                throw new Error('Invalid event');
             }
 
             // Call handler

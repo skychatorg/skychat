@@ -1,11 +1,11 @@
-import { GlobalPlugin } from '../GlobalPlugin.js';
+import striptags from 'striptags';
+import { Config } from '../../skychat/Config.js';
 import { Connection } from '../../skychat/Connection.js';
 import { Message } from '../../skychat/Message.js';
-import { UserController } from '../../skychat/UserController.js';
-import striptags from 'striptags';
 import { MessageFormatter } from '../../skychat/MessageFormatter.js';
-import { Config } from '../../skychat/Config.js';
 import { RoomManager } from '../../skychat/RoomManager.js';
+import { UserController } from '../../skychat/UserController.js';
+import { GlobalPlugin } from '../GlobalPlugin.js';
 
 type NodeType = 'username' | 'ip';
 
@@ -77,6 +77,7 @@ export class TrackerPlugin extends GlobalPlugin {
     public getAllRelatedNodesRecursive(
         type: NodeType,
         value: string,
+        // eslint-disable-next-line no-unused-vars
         predicate?: (node: Node, path: Node[]) => boolean,
     ): { node: Node; path: Node[] }[] {
         /**
@@ -364,17 +365,7 @@ export class TrackerPlugin extends GlobalPlugin {
         }
     }
 
-    public async onConnectionJoinedRoom(connection: Connection): Promise<void> {
-        this.registerAssociation(
-            'username',
-            connection.session.user.id === 0 ? '*guest' : connection.session.identifier,
-            'ip',
-            connection.ip,
-        );
-        this.syncStorage();
-    }
-
-    public async onConnectionAuthenticated(connection: Connection): Promise<void> {
+    public async executeNewConnectionHook(connection: Connection): Promise<void> {
         this.registerAssociation(
             'username',
             connection.session.user.id === 0 ? '*guest' : connection.session.identifier,

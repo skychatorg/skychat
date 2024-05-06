@@ -1,6 +1,6 @@
-import util from 'util';
-import { exec as oldExec } from 'node:child_process';
 import { spawn } from 'child_process';
+import { exec as oldExec } from 'node:child_process';
+import util from 'util';
 import { Config } from '../../skychat/Config.js';
 import { Connection } from '../../skychat/Connection.js';
 import { FileManager } from '../../skychat/FileManager.js';
@@ -192,13 +192,6 @@ export class VideoConverterPlugin extends GlobalPlugin {
         // If list of converting files is available for everyone, send it
         if (Config.PREFERENCES.minRightForGalleryRead === -1) {
             connection.send('convert-list', this.converts);
-        }
-    }
-
-    async onConnectionAuthenticated(connection: Connection): Promise<void> {
-        // If list of converting files was already sent
-        if (Config.PREFERENCES.minRightForGalleryRead === -1) {
-            return;
         }
         if (Gallery.canRead(connection.session)) {
             connection.send('convert-list', this.converts);

@@ -50,19 +50,8 @@ export class GalleryPlugin extends GlobalPlugin {
     }
 
     async onNewConnection(connection: Connection): Promise<void> {
-        // If gallery is available for everyone, send it
-        if (Config.PREFERENCES.minRightForGalleryRead === -1) {
-            connection.send('gallery', await Gallery.ls(''));
-        }
-    }
-
-    public async onConnectionAuthenticated(connection: Connection): Promise<void> {
         // If gallery was already sent
-        if (Config.PREFERENCES.minRightForGalleryRead === -1) {
-            return;
-        }
-        // If user can access the gallery
-        if (Gallery.canRead(connection.session)) {
+        if (Config.PREFERENCES.minRightForGalleryRead === -1 || Gallery.canRead(connection.session)) {
             connection.send('gallery', await Gallery.ls(''));
         }
     }

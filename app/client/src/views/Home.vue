@@ -1,7 +1,7 @@
 <script setup>
+import { useClientStore } from '@/stores/client';
 import { reactive, watch } from 'vue';
 import { useRouter } from 'vue-router';
-import { useClientStore } from '@/stores/client';
 
 const client = useClientStore();
 const router = useRouter();
@@ -23,9 +23,11 @@ watch(
     },
 );
 
-const joinAsGuest = function () {
-    const availableRoom = client.state.rooms.find((room) => !room.isPrivate && !room.plugins.roomprotect);
-    client.join(availableRoom.id);
+const authAsGuest = function () {
+    // Auth as guest
+    client.authAsGuest();
+
+    // Join the first player channel
     if (client.state.playerChannels.length > 0) {
         client.sendMessage('/playerchannel join ' + client.state.playerChannels[0].id);
     }
@@ -69,7 +71,7 @@ const login = function () {
                     </button>
                     <hr class="col-span-4" />
                     <p class="col-span-4">or</p>
-                    <button class="form-control col-span-4 lg:col-start-2 lg:col-span-2" @click.prevent.stop="joinAsGuest">
+                    <button class="form-control col-span-4 lg:col-start-2 lg:col-span-2" @click.prevent.stop="authAsGuest">
                         Continue as guest
                     </button>
                 </form>
