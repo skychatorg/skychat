@@ -13,7 +13,7 @@ export class JoinRoomPlugin extends GlobalPlugin {
         join: {
             minCount: 1,
             maxCount: 1,
-            coolDown: 1000,
+            coolDown: 500,
             params: [{ name: 'roomId', pattern: /^(\d+)$/ }],
         },
     };

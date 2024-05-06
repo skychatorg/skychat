@@ -98,14 +98,6 @@ export class Session implements IBroadcaster {
     }
 
     /**
-     * Send an info message to all connected connections
-     * @param message
-     */
-    public sendInfo(message: string): void {
-        this.connections.forEach((c) => c.sendInfo(message));
-    }
-
-    /**
      * Send an error to all connected connections
      * @param error
      */

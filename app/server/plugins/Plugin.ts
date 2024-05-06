@@ -1,8 +1,10 @@
 import fs from 'fs';
+import { RateLimiterMemory } from 'rate-limiter-flexible';
 import { Connection } from '../skychat/Connection.js';
+import { RateLimiter } from '../skychat/RateLimiter.js';
+import { Room } from '../skychat/Room.js';
 import { Session } from '../skychat/Session.js';
 import { User } from '../skychat/User.js';
-import { Room } from '../skychat/Room.js';
 import { UserController } from '../skychat/UserController.js';
 
 /**
@@ -22,12 +24,17 @@ export type PluginCommandRules = {
     /**
      * Minimum duration between two consecutive calls
      */
-    coolDown?: number | Array<[number, number]>;
+    coolDown?: number;
 
     /**
      * Maximum number of time this function can be called within a 10 second window
      */
     maxCallsPer10Seconds?: number;
+
+    /**
+     * Cost of each call per right level
+     */
+    callCostPerRight?: [number, number][]; // [right, weight]
 
     /**
      * Expected parameters
@@ -49,12 +56,12 @@ export abstract class Plugin {
     /**
      * Base path for plugin persistent storage
      */
-    public static readonly STORAGE_BASE_PATH: string = 'storage';
+    static readonly STORAGE_BASE_PATH: string = 'storage';
 
     /**
      * Helper regexp used by sub classes
      */
-    public static readonly POSITIVE_INTEGER_REGEXP: RegExp = /^([0-9]+)$/;
+    static readonly POSITIVE_INTEGER_REGEXP: RegExp = /^([0-9]+)$/;
 
     /**
      * Some plugins (i.e. plugin to ban users) are globally available.
@@ -62,53 +69,52 @@ export abstract class Plugin {
      * This static attribute need to be set
      * @abstract
      */
-    public static readonly isGlobal: boolean;
+    static readonly isGlobal: boolean;
 
     /**
      * Plugin command name
      */
-    public static readonly commandName: string = 'plugin';
+    static readonly commandName: string = 'plugin';
 
     /**
      * Plugin command aliases
      */
-    public static readonly commandAliases: string[] = [];
+    static readonly commandAliases: string[] = [];
 
     /**
      * If the plugin uses user storage, it needs to define a default value for its custom entry in user data object.
      */
-    public static readonly defaultDataStorageValue?: any;
+    static readonly defaultDataStorageValue?: any;
 
     /**
      * Define command rules, ie expected parameters and cooldown. Can be defined globally or per command alias.
      */
-    public readonly rules?: PluginCommandAllRules;
+    readonly rules: PluginCommandAllRules = {};
 
     /**
      * Minimum right to execute this function
      */
-    public readonly minRight: number = -1;
+    readonly minRight: number = -1;
 
     /**
      * Is the command reserved for op
      */
-    public readonly opOnly?: boolean;
+    readonly opOnly?: boolean;
 
     /**
      * Whether this command can be invoked using /{alias}
      */
-    public readonly callable: boolean = true;
+    readonly callable: boolean = true;
 
     /**
      * Whether this command should be hidden from the /help
      */
-    public readonly hidden: boolean = false;
+    readonly hidden: boolean = false;
 
     /**
-     *
-     * @param room
+     * Limiters for this plugin
      */
-    private readonly coolDownEntries: { [identifier: string]: { first: Date; last: Date; count: number } } = {};
+    private readonly limiters: Record<string, { cooldown?: RateLimiterMemory; '10sec'?: RateLimiterMemory }> = {};
 
     /**
      * This plugin's persistent storage
@@ -153,8 +159,6 @@ export abstract class Plugin {
 
     /**
      * Load user data for this plugin
-     * @param user
-     * @returns
      */
     public getUserData<T>(user: User): T {
         return UserController.getUserPluginData<T>(user, this.commandName);
@@ -162,8 +166,6 @@ export abstract class Plugin {
 
     /**
      * Save user data for this plugin
-     * @param user
-     * @returns
      */
     public async saveUserData(user: User, data: any) {
         await UserController.savePluginData(user, this.commandName, data);
@@ -172,7 +174,7 @@ export abstract class Plugin {
     /**
      * Check command rights and arguments
      */
-    public check(alias: string, param: string, connection: Connection) {
+    async check(alias: string, param: string, connection: Connection) {
         // Check room
         if (!connection.room) {
             throw new Error('This command needs to be executed in a room');
@@ -191,47 +193,48 @@ export abstract class Plugin {
 
             // Check parameters
             if (this.rules && typeof this.rules[alias] === 'object') {
-                // Get rule object
-                const identifier = connection.session.identifier;
-                const entryPointRule = this.rules[alias];
-                const maxCallsPer10Seconds = entryPointRule.maxCallsPer10Seconds || Infinity;
+                const coolDown = this.rules[alias].coolDown ?? Infinity;
+                const maxCallsPer10Seconds = this.rules[alias].maxCallsPer10Seconds ?? Infinity;
+                const callWeightPerRight = this.rules[alias].callCostPerRight;
 
-                // Check cool down
-                // 0. Get cool down parameters
-                let coolDown: number = 0;
-                if (typeof entryPointRule.coolDown === 'number') {
-                    coolDown = entryPointRule.coolDown;
-                } else if (Array.isArray(entryPointRule.coolDown) && entryPointRule.coolDown.length) {
-                    let entryIndex = entryPointRule.coolDown.findIndex(([right]) => connection.session.user.right <= right);
-                    entryIndex = entryIndex === -1 ? entryPointRule.coolDown.length - 1 : entryIndex;
-                    coolDown = entryPointRule.coolDown[entryIndex][1];
-                }
-                // 1. Check
-                if (typeof this.coolDownEntries[identifier] !== 'undefined') {
-                    // If cool down still applies
-                    if (new Date() < new Date(this.coolDownEntries[identifier].last.getTime() + coolDown)) {
-                        throw new Error(`${alias}: Cool down still applies`);
+                // If associated limiter wasn't set, set it
+                if (typeof this.limiters[alias] === 'undefined') {
+                    this.limiters[alias] = {};
+                    if (coolDown !== Infinity) {
+                        this.limiters[alias].cooldown = new RateLimiterMemory({
+                            points: 1,
+                            duration: coolDown / 1000,
+                        });
                     }
-                    // If 10 second window entry still valid
-                    if (this.coolDownEntries[identifier].first.getTime() + 10 * 1000 > new Date().getTime()) {
-                        // If maximum number of calls per 10 seconds reached
-                        if (this.coolDownEntries[identifier].count > maxCallsPer10Seconds) {
-                            throw new Error(`${alias}: 10 seconds window cool down still applies`);
+                    if (maxCallsPer10Seconds !== Infinity) {
+                        this.limiters[alias]['10sec'] = new RateLimiterMemory({
+                            points: maxCallsPer10Seconds,
+                            duration: 10,
+                        });
+                    }
+                }
+
+                // Strict cooldown
+                if (this.limiters[alias].cooldown) {
+                    await RateLimiter.rateLimit(this.limiters[alias].cooldown!, connection.ip, 1);
+                }
+
+                // 10-sec cooldown
+                if (typeof this.limiters[alias]['10sec'] === 'object') {
+                    let cost = 1;
+                    if (callWeightPerRight && callWeightPerRight.length > 0) {
+                        const nextEntry = callWeightPerRight.findIndex(([right]) => connection.session.user.right < right);
+                        if (nextEntry === 0) {
+                            // If user has a right lower than the lowest right in the list, use the lowest right
+                            cost = callWeightPerRight[0][1];
+                        } else if (nextEntry === -1) {
+                            // If user has a right higher than the highest right in the list, use the highest right
+                            cost = callWeightPerRight[callWeightPerRight.length - 1][1];
+                        } else if (nextEntry > 0) {
+                            cost = callWeightPerRight[nextEntry - 1][1];
                         }
                     }
-                }
-                // 2. Update cool down entry
-                if (typeof this.coolDownEntries[identifier] !== 'undefined') {
-                    // If entry expired
-                    if (this.coolDownEntries[identifier].first.getTime() + 10 * 1000 < new Date().getTime()) {
-                        delete this.coolDownEntries[identifier];
-                    }
-                }
-                if (typeof this.coolDownEntries[identifier] === 'undefined') {
-                    this.coolDownEntries[identifier] = { first: new Date(), last: new Date(), count: 1 };
-                } else {
-                    this.coolDownEntries[identifier].last = new Date();
-                    this.coolDownEntries[identifier].count++;
+                    await RateLimiter.rateLimit(this.limiters[alias]['10sec']!, connection.ip, cost);
                 }
             }
         }
@@ -265,7 +268,7 @@ export abstract class Plugin {
      * @param connection
      */
     public async execute(alias: string, param: string, connection: Connection) {
-        this.check(alias, param, connection);
+        await this.check(alias, param, connection);
         await this.run(alias, param, connection, connection.session, connection.session.user, connection.room);
     }
 
