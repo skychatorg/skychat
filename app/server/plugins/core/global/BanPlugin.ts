@@ -1,15 +1,15 @@
 import striptags from 'striptags';
-import { Connection } from '../../../skychat/Connection.js';
-import { User } from '../../../skychat/User.js';
-import { Session } from '../../../skychat/Session.js';
-import { UserController } from '../../../skychat/UserController.js';
-import { MessageFormatter } from '../../../skychat/MessageFormatter.js';
-import { Timing } from '../../../skychat/Timing.js';
-import { Message } from '../../../skychat/Message.js';
-import { GlobalPlugin } from '../../GlobalPlugin.js';
-import { RoomManager } from '../../../skychat/RoomManager.js';
-import { MessageHistoryPlugin } from '../../core/room/MessageHistoryPlugin.js';
 import { Config } from '../../../skychat/Config.js';
+import { Connection } from '../../../skychat/Connection.js';
+import { Message } from '../../../skychat/Message.js';
+import { MessageFormatter } from '../../../skychat/MessageFormatter.js';
+import { RoomManager } from '../../../skychat/RoomManager.js';
+import { Session } from '../../../skychat/Session.js';
+import { Timing } from '../../../skychat/Timing.js';
+import { User } from '../../../skychat/User.js';
+import { UserController } from '../../../skychat/UserController.js';
+import { GlobalPlugin } from '../../GlobalPlugin.js';
+import { MessageHistoryPlugin } from '../../core/room/MessageHistoryPlugin.js';
 
 enum BAN_TYPES {
     ACCESS = 0,
@@ -212,7 +212,7 @@ export class BanPlugin extends GlobalPlugin {
         return message;
     }
 
-    public async onConnectionAuthenticated(connection: Connection): Promise<void> {
+    public async onNewConnection(connection: Connection): Promise<void> {
         // If access ban, just close connection
         if (this.isBanned(connection, BAN_TYPES.ACCESS)) {
             connection.close(Connection.CLOSE_KICKED, 'You have been disconnected');

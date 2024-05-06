@@ -3,6 +3,7 @@ import { EventEmitter } from 'events';
 import WebSocket from 'isomorphic-ws';
 import * as jsondiffpatch from 'jsondiffpatch';
 import {
+    AuthData,
     AuthToken,
     CustomizationElements,
     FolderContent,
@@ -528,6 +529,7 @@ export class SkyChatClient extends EventEmitter {
         if (!this._websocket) {
             return;
         }
+        console.trace('sending raw data ' + JSON.stringify(data));
         this._websocket.send(data);
     }
 
@@ -553,24 +555,24 @@ export class SkyChatClient extends EventEmitter {
 
     /**
      * Join a specific room
-     * @param roomId
      */
     join(roomId: number) {
-        this._sendEvent('join-room', { roomId });
+        this.sendMessage(`/join ${roomId}`);
     }
 
     /**
      * Login
-     * @param username
-     * @param password
      */
     login(username: string, password: string) {
-        this._sendEvent('login', { username, password });
+        this.authenticate({
+            credentials: {
+                username,
+                password,
+            },
+            roomId: this.getPreferredRoomId(),
+        });
     }
 
-    /**
-     * Logout
-     */
     logout() {
         if (typeof localStorage !== 'undefined') {
             localStorage.removeItem(SkyChatClient.LOCAL_STORAGE_TOKEN_KEY);
@@ -580,34 +582,34 @@ export class SkyChatClient extends EventEmitter {
         }
     }
 
-    /**
-     * Register
-     * @param username
-     * @param password
-     */
     register(username: string, password: string) {
-        this._sendEvent('register', { username, password });
+        this.authenticate({
+            credentials: {
+                username,
+                password,
+                register: true,
+            },
+        });
     }
 
-    /**
-     * Authenticate with a token
-     */
-    setToken(authToken: AuthToken, roomId?: number) {
-        this._sendEvent('set-token', {
-            ...authToken,
-            roomId: typeof roomId === 'number' ? roomId : undefined,
+    authAsGuest() {
+        this.authenticate({
+            roomId: this.getPreferredRoomId(),
         });
+    }
+
+    authenticate(authData: AuthData) {
+        this._sendRaw(JSON.stringify(authData));
     }
 
     /**
      * Emit an event to the server
-     * @param eventName
-     * @param payload
      */
     private _sendEvent(eventName: string, payload: any) {
         if (!this._websocket) {
             return;
         }
+        console.trace('sending event ' + eventName + ' with payload ' + JSON.stringify(payload));
         this._websocket.send(
             JSON.stringify({
                 event: eventName,
@@ -617,15 +619,27 @@ export class SkyChatClient extends EventEmitter {
     }
 
     /**
+     * Get preferred room ID from local storage
+     */
+    private getPreferredRoomId() {
+        if (typeof localStorage === 'undefined') {
+            return undefined;
+        }
+        const rawRoomId = localStorage.getItem(SkyChatClient.LOCAL_STORAGE_ROOM_ID);
+        return rawRoomId ? parseInt(rawRoomId) : undefined;
+    }
+
+    /**
      * When the connection is made with the websocket server
      */
     private _onWebSocketConnect() {
         if (typeof localStorage !== 'undefined') {
             const authToken = localStorage.getItem(SkyChatClient.LOCAL_STORAGE_TOKEN_KEY);
             if (authToken) {
-                const rawRoomId = localStorage.getItem(SkyChatClient.LOCAL_STORAGE_ROOM_ID);
-                const roomId = rawRoomId ? parseInt(rawRoomId) : null;
-                this.setToken(JSON.parse(authToken), roomId ?? this._rooms.find((room) => !room.isPrivate)?.id);
+                this.authenticate({
+                    token: JSON.parse(authToken),
+                    roomId: this.getPreferredRoomId(),
+                });
             }
         }
         this.emit('update', this.state);

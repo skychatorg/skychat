@@ -1,5 +1,5 @@
-import { useToast } from 'vue-toastification';
 import { defineStore } from 'pinia';
+import { useToast } from 'vue-toastification';
 import { SkyChatClient } from '../../../api/index.ts';
 
 // Connect to SkyChatClient
@@ -115,6 +115,10 @@ export const useClientStore = defineStore('client', {
                 return false;
             }
             this.sendMessage('/messagehistory ' + realMessage.id);
+        },
+
+        authAsGuest: () => {
+            client.authAsGuest();
         },
 
         /**

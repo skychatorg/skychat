@@ -1,11 +1,11 @@
-import { Connection } from '../../../skychat/Connection.js';
-import { ConnectedListPlugin } from './ConnectedListPlugin.js';
-import { Config } from '../../../skychat/Config.js';
-import { UserController } from '../../../skychat/UserController.js';
 import fs from 'fs';
+import { Config } from '../../../skychat/Config.js';
+import { Connection } from '../../../skychat/Connection.js';
 import { FileManager } from '../../../skychat/FileManager.js';
-import { Server } from '../../../skychat/Server.js';
+import { HttpServer } from '../../../skychat/HttpServer.js';
+import { UserController } from '../../../skychat/UserController.js';
 import { GlobalPlugin } from '../../GlobalPlugin.js';
+import { ConnectedListPlugin } from './ConnectedListPlugin.js';
 
 export class AvatarPlugin extends GlobalPlugin {
     static readonly DEFAULT_AVATAR: string = Config.LOCATION + '/assets/images/avatars/default.png';
@@ -26,7 +26,7 @@ export class AvatarPlugin extends GlobalPlugin {
             params: [
                 {
                     name: 'avatar',
-                    pattern: Server.UPLOADED_FILE_REGEXP,
+                    pattern: HttpServer.UPLOADED_FILE_REGEXP,
                     info: 'Image link',
                 },
             ],

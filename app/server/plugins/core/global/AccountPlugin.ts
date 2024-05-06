@@ -1,8 +1,8 @@
 import { Connection } from '../../../skychat/Connection.js';
-import { GlobalPlugin } from '../../GlobalPlugin.js';
-import { UserController } from '../../../skychat/UserController.js';
-import { User } from '../../../skychat/User.js';
 import { Session } from '../../../skychat/Session.js';
+import { User } from '../../../skychat/User.js';
+import { UserController } from '../../../skychat/UserController.js';
+import { GlobalPlugin } from '../../GlobalPlugin.js';
 
 export class AccountPlugin extends GlobalPlugin {
     static readonly CHANGE_USERNAME_PRICE = 2000;
@@ -111,21 +111,26 @@ export class AccountPlugin extends GlobalPlugin {
         connection.send('message', message.sanitized());
     }
 
-    async onConnectionAuthenticated(connection: Connection): Promise<void> {
+    async onNewConnection(connection: Connection): Promise<void> {
         const user = connection.session.user;
-        if (user.email) {
+        if (user.isGuest()) {
             return;
         }
 
-        const message = UserController.createNeutralMessage({
-            content: `Your email is not set!
+        // Send updated auth token
+        connection.send('auth-token', UserController.getAuthToken(user.id));
+
+        if (!user.email) {
+            const message = UserController.createNeutralMessage({
+                content: `Your email is not set!
                 Use:
                 /set email your@email.com
                 
                 To set your email address`,
-            room: connection.roomId,
-            id: 0,
-        });
-        connection.send('message', message.sanitized());
+                room: connection.roomId,
+                id: 0,
+            });
+            connection.send('message', message.sanitized());
+        }
     }
 }

@@ -1,11 +1,11 @@
 import _ from 'lodash';
 import sha256 from 'sha256';
+import SQL from 'sql-template-strings';
+import { globalPluginGroup } from '../plugins/GlobalPluginGroup.js';
 import { Config } from './Config.js';
 import { DatabaseHelper } from './DatabaseHelper.js';
-import { AuthToken, User } from './User.js';
-import SQL from 'sql-template-strings';
 import { Message, MessageConstructorOptions } from './Message.js';
-import { globalPluginGroup } from '../plugins/GlobalPluginGroup.js';
+import { AuthToken, User } from './User.js';
 
 export class UserController {
     /**
@@ -119,10 +119,8 @@ export class UserController {
 
     /**
      * Store a new user in the database
-     * @param username
-     * @param password
      */
-    public static async registerUser(username: string, password: string): Promise<void> {
+    static async register(username: string, password: string): Promise<User> {
         const tms = Math.floor(Date.now() / 1000);
         const sqlQuery = SQL`insert into users
             (username, username_custom, password, money, xp, "right", data, storage, tms_created, tms_last_seen) values
@@ -136,14 +134,13 @@ export class UserController {
         }
         const hashedPassword = UserController.hashPassword(userId, username.toLowerCase(), password);
         await DatabaseHelper.db.query(SQL`update users set password=${hashedPassword} where id=${userId}`);
+        return UserController.getUserById(userId);
     }
 
     /**
      * Login attempt. If login is successful, updates the username case in the database.
-     * @param username
-     * @param password
      */
-    public static async login(username: string, password: string): Promise<void> {
+    static async login(username: string, password: string): Promise<User> {
         const user = await UserController.getUserByUsername(username);
         if (!user) {
             throw new Error('User does not exist');
@@ -151,6 +148,7 @@ export class UserController {
         if (!user.testHashedPassword(UserController.hashPassword(user.id, user.username, password))) {
             throw new Error('Incorrect password');
         }
+        return user;
     }
 
     /**

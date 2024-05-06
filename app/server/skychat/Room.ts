@@ -1,17 +1,18 @@
 import fs from 'fs';
 import SQL from 'sql-template-strings';
+import { globalPluginGroup } from '../plugins/GlobalPluginGroup.js';
+import { RoomPlugin } from '../plugins/RoomPlugin.js';
+import { BlacklistPlugin } from '../plugins/core/global/BlacklistPlugin.js';
+import { CorePluginGroup } from '../plugins/index.js';
+import { RoomProtectPlugin } from '../plugins/security_extra/RoomProtectPlugin.js';
+import { Config } from './Config.js';
 import { Connection } from './Connection.js';
+import { DatabaseHelper } from './DatabaseHelper.js';
 import { IBroadcaster } from './IBroadcaster.js';
 import { Message, MessageConstructorOptions } from './Message.js';
-import { DatabaseHelper } from './DatabaseHelper.js';
 import { MessageController } from './MessageController.js';
 import { RoomManager } from './RoomManager.js';
-import { RoomPlugin } from '../plugins/RoomPlugin.js';
 import { Session } from './Session.js';
-import { CorePluginGroup } from '../plugins/index.js';
-import { globalPluginGroup } from '../plugins/GlobalPluginGroup.js';
-import { BlacklistPlugin } from '../plugins/core/global/BlacklistPlugin.js';
-import { Config } from './Config.js';
 
 export type StoredRoom = {
     name: string;
@@ -139,6 +140,24 @@ export class Room implements IBroadcaster {
         this.commands = globalPluginGroup.extractCommandObjectFromPlugins(this.plugins) as { [commandName: string]: RoomPlugin };
 
         setInterval(this.tick.bind(this), Room.TICK_INTERVAL);
+    }
+
+    /**
+     * Whether this room can accept a specific connection
+     */
+    acceptsConnection(connection: Connection): boolean {
+        // Private room
+        if (this.isPrivate) {
+            return this.whitelist.includes(connection.session.identifier);
+        }
+
+        // Room protect plugin
+        const roomProtectPlugin = this.getPlugin<RoomProtectPlugin>(RoomProtectPlugin.commandName);
+        if (roomProtectPlugin) {
+            return connection.session.user.right >= roomProtectPlugin.getMinRight();
+        }
+
+        return true;
     }
 
     /**

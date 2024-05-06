@@ -1,6 +1,6 @@
-import { SanitizedUser, User } from './User.js';
 import { Connection } from './Connection.js';
 import { IBroadcaster } from './IBroadcaster.js';
+import { SanitizedUser, User } from './User.js';
 
 export const BinaryMessageTypes = 123;
 
@@ -25,6 +25,8 @@ export class Session implements IBroadcaster {
     static readonly DEAD_GUEST_SESSION_CLEANUP_DELAY_MS = 30 * 1000;
 
     static readonly DEAD_USER_SESSION_CLEANUP_DELAY_MS = 7 * 24 * 60 * 60 * 1000;
+
+    static readonly MAX_CONNECTIONS_PER_SESSION = 10;
 
     /**
      * Object mapping all active sessions
@@ -183,7 +185,8 @@ export class Session implements IBroadcaster {
      */
     public set identifier(identifier: string) {
         identifier = identifier.toLowerCase();
-        if (Session.getSessionByIdentifier(identifier)) {
+        const existingSession = Session.getSessionByIdentifier(identifier);
+        if (existingSession && existingSession !== this) {
             throw new Error('Cannot change identifier to ' + identifier + ': Identifier must be unique');
         }
         if (this._identifier) {
@@ -204,6 +207,9 @@ export class Session implements IBroadcaster {
     public attachConnection(connection: Connection): void {
         if (connection.session === this) {
             return;
+        }
+        if (this.connections.length > Session.MAX_CONNECTIONS_PER_SESSION) {
+            throw new Error(`Too many connections attached to this session`);
         }
         if (connection.session) {
             const oldIdentifier = connection.session.identifier;
