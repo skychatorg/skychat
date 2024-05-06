@@ -1,12 +1,13 @@
-import { Connection } from '../../../skychat/Connection.js';
-import { Config } from '../../../skychat/Config.js';
-import { MessageController } from '../../../skychat/MessageController.js';
-import { RoomPlugin } from '../../RoomPlugin.js';
-import { DatabaseHelper } from '../../../skychat/DatabaseHelper.js';
 import SQL from 'sql-template-strings';
+import { Config } from '../../../skychat/Config.js';
+import { Connection } from '../../../skychat/Connection.js';
+import { DatabaseHelper } from '../../../skychat/DatabaseHelper.js';
+import { MessageController } from '../../../skychat/MessageController.js';
+import { PluginCommandAllRules } from '../../Plugin.js';
+import { RoomPlugin } from '../../RoomPlugin.js';
 import { MessageLimiterPlugin } from '../../security_extra/MessageLimiterPlugin.js';
-import { BlacklistPlugin } from '../global/BlacklistPlugin.js';
 import { RoomProtectPlugin } from '../../security_extra/RoomProtectPlugin.js';
+import { BlacklistPlugin } from '../global/BlacklistPlugin.js';
 
 export class MessagePlugin extends RoomPlugin {
     static readonly commandName = 'message';
@@ -15,10 +16,11 @@ export class MessagePlugin extends RoomPlugin {
 
     readonly hidden = true;
 
-    readonly rules = {
+    readonly rules: PluginCommandAllRules = {
         message: {
             minCount: 1,
-            coolDown: Config.PREFERENCES.messagesCooldown,
+            maxCallsPer10Seconds: 100,
+            callCostPerRight: Config.PREFERENCES.messagesCooldown,
         },
     };
 

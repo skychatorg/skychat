@@ -88,31 +88,31 @@ In private rooms, only core plugins are loaded.
 
 The `config/preferences.json` file specifies application preferences. The available fields are detailed below.
 
-| field                                 | type                 | default      | description                                                                                              |
-| ------------------------------------- | -------------------- | ------------ | -------------------------------------------------------------------------------------------------------- |
-| minRightForPublicMessages             | number               | -1           | Min. right to send public messages                                                                       |
-| minRightForPrivateMessages            | number               | -1           | Min. right to send private messages                                                                      |
-| minRightForMessageQuoting             | number               | -1           | Min. right to quote messages                                                                             |
-| minRightForShortTermMessageHistory    | number               | -1           | Min. right to access short term room message history                                                     |
-| minRightForMessageHistory             | number               | -1           | Min. right to access full room message history                                                           |
-| minRightForUserModeration             | number               | 'op'         | Min. right to ban, kick and access user ips                                                              |
-| minRightForSetRight                   | number               | 'op'         | Min. right to set user right                                                                             |
-| minRightForAudioRecording             | number               | -1           | Min. right to share and play audio recordings                                                            |
-| minRightForConnectedList              | number               | -1           | Min. right to access the list of currently active users                                                  |
-| minRightForPolls                      | number               | -1           | Min. right to create polls                                                                               |
-| minRightForGalleryRead                | number \| 'op'       | 0            | Min. right to access the gallery                                                                         |
-| minRightForGalleryWrite               | number \| 'op'       | 'op'         | Min. right to add and remove gallery documents                                                           |
-| minRightForPlayerAddMedia             | number \| 'op'       | 0            | Min. right to add medias to the player                                                                   |
-| minRightForPlayerManageSchedule       | number \| 'op'       | 'op'         | Min. right to manage the player schedules                                                                |
-| maxReplacedImagesPerMessage           | number               | 50           | Max. number of replaced images per message                                                               |
-| maxReplacedStickersPerMessage         | number               | 50           | Max. number of replaced stickers per message                                                             |
-| maxReplacedRisiBankStickersPerMessage | number               | 50           | Max. number of replaced RisiBank stickers per message                                                    |
-| maxNewlinesPerMessage                 | number               | 20           | Max. number of newlines per message                                                                      |
-| maxConsecutiveMessages                | number               | 1            | Max. number of consecutive messages in a room                                                            |
-| maxMessageMergeDelayMin               | number               | 10           | Max. minutes before not merging consecutive messages                                                     |
-| daysBeforeMessageFuzz                 | number               | 7            | Number of days before messages are fuzzed, if ExtraSecurityPluginGroup is enabled                        |
-| invertedBlacklist                     | boolean              | false        | Whether blacklisted users can not see messages from users who blacklisted them                           |
-| messagesCooldown                      | ([number, number])[] | [ [ -1, 0] ] | Minimum duration between two consecutive messages for each right level, sorted by ascending right number |
+| field                                 | type                 | default      | description                                                                                                      |
+| ------------------------------------- | -------------------- | ------------ | ---------------------------------------------------------------------------------------------------------------- |
+| minRightForPublicMessages             | number               | -1           | Min. right to send public messages                                                                               |
+| minRightForPrivateMessages            | number               | -1           | Min. right to send private messages                                                                              |
+| minRightForMessageQuoting             | number               | -1           | Min. right to quote messages                                                                                     |
+| minRightForShortTermMessageHistory    | number               | -1           | Min. right to access short term room message history                                                             |
+| minRightForMessageHistory             | number               | -1           | Min. right to access full room message history                                                                   |
+| minRightForUserModeration             | number               | 'op'         | Min. right to ban, kick and access user ips                                                                      |
+| minRightForSetRight                   | number               | 'op'         | Min. right to set user right                                                                                     |
+| minRightForAudioRecording             | number               | -1           | Min. right to share and play audio recordings                                                                    |
+| minRightForConnectedList              | number               | -1           | Min. right to access the list of currently active users                                                          |
+| minRightForPolls                      | number               | -1           | Min. right to create polls                                                                                       |
+| minRightForGalleryRead                | number \| 'op'       | 0            | Min. right to access the gallery                                                                                 |
+| minRightForGalleryWrite               | number \| 'op'       | 'op'         | Min. right to add and remove gallery documents                                                                   |
+| minRightForPlayerAddMedia             | number \| 'op'       | 0            | Min. right to add medias to the player                                                                           |
+| minRightForPlayerManageSchedule       | number \| 'op'       | 'op'         | Min. right to manage the player schedules                                                                        |
+| maxReplacedImagesPerMessage           | number               | 50           | Max. number of replaced images per message                                                                       |
+| maxReplacedStickersPerMessage         | number               | 50           | Max. number of replaced stickers per message                                                                     |
+| maxReplacedRisiBankStickersPerMessage | number               | 50           | Max. number of replaced RisiBank stickers per message                                                            |
+| maxNewlinesPerMessage                 | number               | 20           | Max. number of newlines per message                                                                              |
+| maxConsecutiveMessages                | number               | 1            | Max. number of consecutive messages in a room                                                                    |
+| maxMessageMergeDelayMin               | number               | 10           | Max. minutes before not merging consecutive messages                                                             |
+| daysBeforeMessageFuzz                 | number               | 7            | Number of days before messages are fuzzed, if ExtraSecurityPluginGroup is enabled                                |
+| invertedBlacklist                     | boolean              | false        | Whether blacklisted users can not see messages from users who blacklisted them                                   |
+| messagesCooldown                      | ([number, number])[] | [ [ -1, 1] ] | (Rate limit) Number of points a message costs to be sent per right level. There is 100 pts / 10-sec time window. |
 
 ### Customize the fake message history
 

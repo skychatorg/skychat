@@ -23,6 +23,6 @@
     "daysBeforeMessageFuzz": 7,
     "invertedBlacklist": false,
     "messagesCooldown": [
-        [-1, 0]
+        [-1, 1],
     ]
 }

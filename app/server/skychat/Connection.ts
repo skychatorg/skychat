@@ -1,5 +1,6 @@
 import { EventEmitter } from 'events';
 import * as http from 'http';
+import { RateLimiterMemory } from 'rate-limiter-flexible';
 import { UAParser } from 'ua-parser-js';
 import { Data, WebSocket } from 'ws';
 import { IBroadcaster } from './IBroadcaster.js';
@@ -11,40 +12,50 @@ import { Session } from './Session.js';
  * A client represents an open connection to the server
  */
 export class Connection extends EventEmitter implements IBroadcaster {
-    public static readonly PING_INTERVAL_MS: number = 10 * 1000;
+    static readonly PING_INTERVAL_MS = 10 * 1000;
 
-    public static readonly MAXIMUM_MISSED_PING: number = 1;
+    static readonly MAX_RECEIVED_BYTES_PER_10_SEC = 1024 * 64;
 
-    public static readonly CLOSE_PING_TIMEOUT: number = 4504;
+    static readonly MAXIMUM_MISSED_PING = 1;
 
-    public static readonly CLOSE_KICKED: number = 4403;
+    static readonly CLOSE_PING_TIMEOUT = 4504;
+
+    static readonly CLOSE_KICKED = 4403;
 
     static readonly ACCEPTED_EVENTS = ['message'];
 
-    public session!: Session;
+    session!: Session;
 
-    public readonly webSocket: WebSocket;
+    readonly webSocket: WebSocket;
 
-    public room: Room | null = null;
+    room: Room | null = null;
 
     /**
      * Handshake request object
      */
-    public readonly request: http.IncomingMessage;
+    readonly request: http.IncomingMessage;
 
-    public readonly origin: string;
+    readonly origin: string;
 
-    public readonly userAgent: string;
+    readonly userAgent: string;
 
-    public readonly device: string;
+    readonly device: string;
 
-    public readonly ip: string;
+    readonly ip: string;
+
+    /**
+     * Will close the connection if the client sends too many non-binary messages
+     */
+    readonly byteRateLimiter = new RateLimiterMemory({
+        points: Connection.MAX_RECEIVED_BYTES_PER_10_SEC,
+        duration: 10,
+    });
 
     /**
      * Maps message types to specific handlers
      */
     // eslint-disable-next-line no-unused-vars
-    public readonly binaryMessageHandlers: { [keyCode: string]: (data: Buffer) => void } = {};
+    readonly binaryMessageHandlers: { [keyCode: string]: (data: Buffer) => void } = {};
 
     constructor(session: Session, webSocket: WebSocket, request: http.IncomingMessage) {
         super();
@@ -66,7 +77,7 @@ export class Connection extends EventEmitter implements IBroadcaster {
         this.setRoom(null);
     }
 
-    public get closed(): boolean {
+    get closed(): boolean {
         if (!this.webSocket) {
             return true;
         }
@@ -77,6 +88,25 @@ export class Connection extends EventEmitter implements IBroadcaster {
      * When a message is received on the socket
      */
     private async onMessage(data: Data): Promise<void> {
+        // Count bytes received for rate limit. Close connection if exceeded.
+        try {
+            if (typeof data === 'string' || data instanceof Buffer) {
+                await RateLimiter.rateLimit(this.byteRateLimiter, 'key', data.length);
+            } else if (data instanceof ArrayBuffer) {
+                await RateLimiter.rateLimit(this.byteRateLimiter, 'key', data.byteLength);
+            } else if (Array.isArray(data)) {
+                const sum = data.reduce((acc, val) => acc + val.length, 0);
+                await RateLimiter.rateLimit(this.byteRateLimiter, 'key', sum);
+            } else {
+                throw new Error('Invalid data type');
+            }
+        } catch (error) {
+            this.sendError(error as Error);
+            this.close();
+            return;
+        }
+
+        // Handle incoming message
         try {
             // Only buffers are accepted
             if (!(data instanceof Buffer)) {
@@ -136,7 +166,7 @@ export class Connection extends EventEmitter implements IBroadcaster {
      * Set this connection's room
      * @param room
      */
-    public setRoom(room: Room | null) {
+    setRoom(room: Room | null) {
         this.room = room;
         this.send('join-room', room ? room.id : null);
     }
@@ -144,36 +174,31 @@ export class Connection extends EventEmitter implements IBroadcaster {
     /**
      * Get current room id
      */
-    public get roomId(): number | null {
+    get roomId(): number | null {
         return this.room ? this.room.id : null;
     }
 
     /**
      * Send en event to the websocket
      */
-    public send(event: string, payload: unknown) {
-        this.webSocket.send(
-            JSON.stringify({
-                event,
-                data: payload,
-            }),
-        );
+    send(event: string, payload: unknown) {
+        const data = JSON.stringify({
+            event,
+            data: payload,
+        });
+        this.sendRaw(data);
     }
 
-    /**
-     * Send an info message to the websocket
-     * @param message
-     */
-    public sendInfo(message: string): void {
-        this.webSocket.send(JSON.stringify({ event: 'info', data: message }));
+    sendRaw(data: Buffer | string) {
+        this.webSocket.send(data);
     }
 
     /**
      * Send an error to the websocket
      * @param error
      */
-    public sendError(error: Error): void {
-        this.webSocket.send(
+    sendError(error: Error): void {
+        this.sendRaw(
             JSON.stringify({
                 event: 'error',
                 data: error.message,
@@ -184,7 +209,7 @@ export class Connection extends EventEmitter implements IBroadcaster {
     /**
      * Close the underlying websocket connection
      */
-    public close(code?: number, reason?: string): void {
+    close(code?: number, reason?: string): void {
         this.webSocket.close(code || 4500, reason || '');
         this.webSocket.terminate();
     }
