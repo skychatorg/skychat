@@ -30,12 +30,12 @@ You only need docker.
 # 1. Use the autoinstall script (Clones the repository then executes app/script/setup.sh)
 bash <(wget -q https://raw.githubusercontent.com/skychatorg/skychat/master/app/script/autoinstall.sh -O -) && cd skychat
 
-# 2. Run the setup script and complete .env/.env.json files as you wish
+# 2. Run the setup script and complete .env/.env.json files as you wish (see sections below for tips)
 npm run setup
 cat .env
 cat .env.json
 
-# 3. Run the app in docker
+# 3. Run the app
 docker compose up
 ```
 
@@ -45,9 +45,6 @@ By default, the application will be listening to `localhost:8081` and assume it 
 
 | field                | type                     | default                                                           | semantic                                                                                                                                            |
 | -------------------- | ------------------------ | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| location             | string                   | "http://localhost:8080"                                           | Server location, i.e. what user need to put in their browser to access your app                                                                     |
-| hostname             | string                   | "localhost"                                                       | Hostname the server will listen to                                                                                                                  |
-| port                 | number                   | 8080                                                              | Server port. If you are using docker only, modify PUBLIC_PORT to match this value.                                                                  |
 | plugins              | string[]                 | []                                                                | List of enabled plugin groups. It is possible to disable the player, games, the gallery or other features by removing a plugin group from this list |
 | users_passwords_salt | string                   | "$RANDOM_SALT"                                                    | Password salt.                                                                                                                                      |
 | users_token_salt     | string                   | "$RANDOM_SALT"                                                    | Token salt.                                                                                                                                         |
@@ -60,7 +57,7 @@ By default, the application will be listening to `localhost:8081` and assume it 
 
 The SkyChat requires a key for the Youtube plugin to work. This key needs to be put in your `.env.json` file.
 
-Using the Youtube API is free but there is a daily quota, which when exceeded blocks the requests until the next day. If it happens, the Youtube plugin will be disabled until the next day.
+Using the Youtube API is free but there is a daily quota, which when exceeded blocks the requests until the next day. If it happens, the Youtube plugin won't work until the next day.
 
 1. Go to [the Google Cloud Platform](https://console.cloud.google.com/apis/api/youtube.googleapis.com/credentials). If you never activated the account, you will have to activate it.
 2. Click `Create credentials > API key`
