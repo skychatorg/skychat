@@ -40,19 +40,23 @@ export class PluginManager {
 
     async onConnectionBinary(connection: Connection, { type, data }: { type: number; data: Buffer }): Promise<void> {
         // Try to find a global plugin that wants to handle the binary message
-        for (const plugin of this.plugins) {
-            if (await plugin.onBinaryDataReceived(connection, type, data)) {
-                return;
-            }
-        }
-
-        // Try to find a room plugin that wants to handle the binary message
-        if (connection.room) {
-            for (const plugin of connection.room.plugins) {
+        try {
+            for (const plugin of this.plugins) {
                 if (await plugin.onBinaryDataReceived(connection, type, data)) {
                     return;
                 }
             }
+
+            // Try to find a room plugin that wants to handle the binary message
+            if (connection.room) {
+                for (const plugin of connection.room.plugins) {
+                    if (await plugin.onBinaryDataReceived(connection, type, data)) {
+                        return;
+                    }
+                }
+            }
+        } catch (error) {
+            connection.sendError(error as Error);
         }
     }
 
