@@ -30,10 +30,9 @@ You only need docker.
 # 1. Use the autoinstall script (Clones the repository then executes app/script/setup.sh)
 bash <(wget -q https://raw.githubusercontent.com/skychatorg/skychat/master/app/script/autoinstall.sh -O -) && cd skychat
 
-# 2. Run the setup script and complete .env/.env.json files as you wish (see sections below for tips)
+# 2. Run the setup script and complete .env files as you wish (see sections below for tips)
 npm run setup
 cat .env
-cat .env.json
 
 # 3. Run the app
 docker compose up
@@ -41,28 +40,11 @@ docker compose up
 
 ### Application setup
 
-By default, the application will be listening to `localhost:8081` and assume it is accessed from `http://localhost:8081`. In order to customize the domain name of your SkyChat application, edit the `.env.json` file. The fields in the .env.json contain the private variables of the application, listed below:
-
-| field                | type                     | default                                                           | semantic                                                                                                                                            |
-| -------------------- | ------------------------ | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| plugins              | string[]                 | []                                                                | List of enabled plugin groups. It is possible to disable the player, games, the gallery or other features by removing a plugin group from this list |
-| users_passwords_salt | string                   | "$RANDOM_SALT"                                                    | Password salt.                                                                                                                                      |
-| users_token_salt     | string                   | "$RANDOM_SALT"                                                    | Token salt.                                                                                                                                         |
-| youtube_api_key      | string                   | ""                                                                | [Youtube api key](#setup-youtube)                                                                                                                   |
-| op                   | string[]                 | []                                                                | OP usernames. OP usernames can use the /setright command.                                                                                           |
-| op_passcode          | string?                  | "$RANDOM_PASSCODE"                                                | OP passcode. Activate your OP session with `/op $op_passcode`                                                                                       |
-| email_transport      | nodemailer.JSONTransport | {"sendmail": true,"newline": "unix","path": "/usr/sbin/sendmail"} | Value given to [nodemailer.createTransport](https://nodemailer.com/about/) to initialize the mailer                                                 |
+By default, the application will be listening to `localhost:8081` and assume it is accessed from `http://localhost:8081`. In order to customize the domain name of your SkyChat application, edit the `.env` file.
 
 ### Setup Youtube
 
-The SkyChat requires a key for the Youtube plugin to work. This key needs to be put in your `.env.json` file.
-
-Using the Youtube API is free but there is a daily quota, which when exceeded blocks the requests until the next day. If it happens, the Youtube plugin won't work until the next day.
-
-1. Go to [the Google Cloud Platform](https://console.cloud.google.com/apis/api/youtube.googleapis.com/credentials). If you never activated the account, you will have to activate it.
-2. Click `Create credentials > API key`
-3. Copy the generated API key, and paste it in your `.env.json` file (the variable name is `youtube_api_key`)
-4. Restart the server
+Refer to [the guide](app/doc/setup-youtube.md) to use the YouTube plugin to watch videos.
 
 ## Customize
 

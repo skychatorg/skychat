@@ -33,7 +33,7 @@ RUN ln -snf "/usr/share/zoneinfo/$DOCKER_TZ" /etc/localtime && \
     apk add --no-cache --update nodejs npm zip ffmpeg
 
 # Copy build configuration
-COPY .env.json package*.json *config\.* ./
+COPY package*.json *config\.* ./
 
 # Install dependencies
 RUN npm ci --ignore-scripts

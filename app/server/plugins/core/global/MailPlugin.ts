@@ -1,10 +1,12 @@
-import { Connection } from '../../../skychat/Connection.js';
+import formData from 'form-data';
+import Mailgun, { MailgunMessageData } from 'mailgun.js';
+import { IMailgunClient } from 'mailgun.js/Interfaces/index.js';
 import { Config } from '../../../skychat/Config.js';
-import { createTransport, SentMessageInfo, Transporter } from 'nodemailer';
-import { UserController } from '../../../skychat/UserController.js';
-import { User } from '../../../skychat/User.js';
-import { GlobalPlugin } from '../../GlobalPlugin.js';
+import { Connection } from '../../../skychat/Connection.js';
 import { RoomManager } from '../../../skychat/RoomManager.js';
+import { User } from '../../../skychat/User.js';
+import { UserController } from '../../../skychat/UserController.js';
+import { GlobalPlugin } from '../../GlobalPlugin.js';
 
 export class MailPlugin extends GlobalPlugin {
     static readonly commandName = 'mail';
@@ -14,7 +16,6 @@ export class MailPlugin extends GlobalPlugin {
     readonly rules = {
         mail: {
             minCount: 2,
-            maxCount: 2,
             coolDown: 1000,
             params: [
                 { name: 'username', pattern: User.USERNAME_REGEXP },
@@ -23,73 +24,72 @@ export class MailPlugin extends GlobalPlugin {
         },
     };
 
-    private readonly transporter?: Transporter<any>;
+    private readonly mailgunDomain = process.env.MAILGUN_DOMAIN ?? '';
+
+    private readonly mailgunClient?: IMailgunClient;
 
     constructor(manager: RoomManager) {
         super(manager);
 
-        if (Config.EMAIL_TRANSPORT) {
-            this.transporter = createTransport(Config.EMAIL_TRANSPORT);
+        if (process.env.MAILGUN_API_KEY && process.env.MAILGUN_DOMAIN) {
+            this.mailgunClient = new Mailgun(formData).client({
+                username: 'api',
+                key: process.env.MAILGUN_API_KEY,
+                url: 'https://api.eu.mailgun.net',
+            });
         }
     }
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
         // Parse parameters
         const username = param.split(' ')[0];
-        const message = param.split(' ').slice(1).join(' ');
+        const text = param.split(' ').slice(1).join(' ');
 
         // Send email
-        const result = await this.sendMailToUsername(username, 'New mail from ' + Config.LOCATION, message);
+        const result = await this.sendMailToUsername(username, {
+            subject: 'New mail from ' + Config.LOCATION,
+            text,
+        });
 
         // Send back notification
         connection.send(
             'message',
-            UserController.createNeutralMessage({ content: result.response, room: connection.roomId, id: 0 }).sanitized(),
+            UserController.createNeutralMessage({ content: `${result.id} sent`, room: connection.roomId, id: 0 }).sanitized(),
         );
     }
 
     /**
      * Send an email to an email address
-     * @param to
-     * @param subject
-     * @param content
      */
-    public async sendMail(to: string, subject: string, content: string): Promise<SentMessageInfo> {
-        if (!this.transporter) {
+    public async sendMail(data: MailgunMessageData) {
+        if (!this.mailgunClient) {
             throw new Error('Email transport not registered');
         }
 
-        return this.transporter.sendMail({
-            to: to,
-            subject: subject,
-            text: content,
+        return this.mailgunClient.messages.create(this.mailgunDomain, {
+            from: process.env.MAILGUN_FROM ?? 'SkyChat <mailgun@' + this.mailgunDomain + '>',
+            ...data,
         });
     }
 
     /**
      * Send an email to a specific user
-     * @param user
-     * @param subject
-     * @param content
      */
-    public async sendMailToUser(user: User, subject: string, content: string): Promise<SentMessageInfo> {
+    public async sendMailToUser(user: User, data: MailgunMessageData) {
         if (!user.email) {
-            throw new Error('This user does not accepts emails');
+            throw new Error('This user does not accept emails');
         }
-        return this.sendMail(user.email, subject, content);
+        return this.sendMail({ to: [user.email], ...data });
     }
 
     /**
      * Send an email to a user using its username
-     * @param username
-     * @param subject
-     * @param content
      */
-    public async sendMailToUsername(username: string, subject: string, content: string): Promise<SentMessageInfo> {
+    public async sendMailToUsername(username: string, data: MailgunMessageData) {
         const user = await UserController.getUserByUsername(username);
         if (!user) {
             throw new Error(`User ${username} not found`);
         }
-        return this.sendMailToUser(user, subject, content);
+        return this.sendMailToUser(user, data);
     }
 }

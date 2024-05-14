@@ -1,7 +1,6 @@
-import { Config } from '../../../skychat/Config.js';
 import { Connection } from '../../../skychat/Connection.js';
-import { GlobalPlugin } from '../../GlobalPlugin.js';
 import { UserController } from '../../../skychat/UserController.js';
+import { GlobalPlugin } from '../../GlobalPlugin.js';
 
 export class OPPlugin extends GlobalPlugin {
     static readonly commandName = 'op';
@@ -24,8 +23,14 @@ export class OPPlugin extends GlobalPlugin {
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
         // Check that the user identifier is in the list of OP usernames
-        if (!Config.isInOPList(connection.session.identifier)) {
-            throw new Error('Not in OP list');
+        if (!process.env.OP_LIST || process.env.OP_LIST.trim().length === 0) {
+            throw new Error(
+                'No OP list was set. Please set the OP_LIST environment variable if you want to have admin access to your instance.',
+            );
+        }
+        const opList = process.env.OP_LIST.toLowerCase().split(',');
+        if (!opList.includes(connection.session.identifier.toLowerCase())) {
+            throw new Error('Not OP');
         }
 
         if (alias === 'op') {
@@ -38,7 +43,9 @@ export class OPPlugin extends GlobalPlugin {
     }
 
     async handleOP(param: string, connection: Connection): Promise<void> {
-        if (Config.OP_PASSCODE !== null && param !== Config.OP_PASSCODE) {
+        if (!process.env.OP_PASSCODE || process.env.OP_PASSCODE.trim().length === 0) {
+            throw new Error('OP passcode not set');
+        } else if (param !== process.env.OP_PASSCODE) {
             throw new Error('Invalid passcode');
         }
         connection.session.setOP(true);
