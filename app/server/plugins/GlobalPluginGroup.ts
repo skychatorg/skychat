@@ -1,9 +1,8 @@
 import { Room } from '../skychat/Room.js';
-import { RoomPlugin, RoomPluginConstructor } from './RoomPlugin.js';
+import { RoomManager } from '../skychat/RoomManager.js';
 import { GlobalPlugin, GlobalPluginConstructor } from './GlobalPlugin.js';
 import { PluginGroup } from './PluginGroup.js';
-import { RoomManager } from '../skychat/RoomManager.js';
-import { Config } from '../skychat/Config.js';
+import { RoomPlugin, RoomPluginConstructor } from './RoomPlugin.js';
 
 // Load all plugin implementations
 import * as impl from './index.js';
@@ -85,4 +84,8 @@ class GlobalPluginGroup {
     }
 }
 
-export const globalPluginGroup = new GlobalPluginGroup(Config.PLUGIN_GROUP_NAMES);
+const plugins = process.env.ENABLED_PLUGINS;
+if (!plugins || plugins.trim().length === 0) {
+    throw new Error('No plugin enabled. Please set the ENABLED_PLUGINS environment variable.');
+}
+export const globalPluginGroup = new GlobalPluginGroup(plugins.split(','));

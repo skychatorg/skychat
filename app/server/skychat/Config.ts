@@ -1,5 +1,4 @@
 import fs from 'fs';
-import * as Mail from 'nodemailer/lib/mailer';
 
 export type Preferences = {
     minRightForPublicMessages: number;
@@ -39,29 +38,11 @@ export class Config {
 
     public static PORT = 80;
 
-    public static USERS_PASSWORD_SALT = '';
-
-    public static USERS_TOKEN_SALT = '';
-
-    public static YOUTUBE_API_KEY = '';
-
-    public static OP: string[] = [];
-
-    public static OP_PASSCODE: string | null = null;
-
-    public static EMAIL_TRANSPORT: Mail | null = null;
-
     public static PREFERENCES: Preferences;
 
     public static GUEST_NAMES: string[] = [];
 
     public static FAKE_MESSAGES: string[] = [];
-
-    public static PLUGIN_GROUP_NAMES: string[] = [];
-
-    public static isInOPList(identifier: string): boolean {
-        return Config.OP.indexOf(identifier.toLowerCase()) >= 0;
-    }
 
     public static getRandomGuestName(): string {
         const index = Math.floor(Math.random() * Config.GUEST_NAMES.length);
@@ -73,40 +54,11 @@ export class Config {
      */
     public static toClient(): PublicConfig {
         return {
-            galleryEnabled: Config.PLUGIN_GROUP_NAMES.includes('GalleryPluginGroup'),
+            galleryEnabled: Boolean(process.env.ENABLED_PLUGINS?.includes('GalleryPluginGroup')),
         };
     }
 
     public static initialize() {
-        // Load env variables
-        const env = JSON.parse(fs.readFileSync('.env.json').toString());
-        Config.PLUGIN_GROUP_NAMES = env.plugins;
-        Config.USERS_PASSWORD_SALT = env.users_passwords_salt;
-        if (Config.USERS_PASSWORD_SALT.length === 0) {
-            throw new Error('Please set the password salt in the .env.json file before running the application.');
-        }
-        Config.USERS_TOKEN_SALT = env.users_token_salt;
-        if (Config.USERS_TOKEN_SALT.length === 0) {
-            throw new Error('Please set the user token salt in the .env.json file before running the application.');
-        }
-        Config.YOUTUBE_API_KEY = env.youtube_api_key;
-        if (Config.YOUTUBE_API_KEY.length === 0) {
-            console.warn('The Youtube API key is NOT set in the .env.json file. You will not be able to play youtube videos.');
-        }
-        Config.OP = env.op;
-        if (Config.OP.length === 0) {
-            console.warn(
-                'You did not define any OP user in the .env.json file. You will not be able to escalate user right unless you add your username in this file.',
-            );
-        }
-        Config.OP_PASSCODE = env.op_passcode;
-        if (typeof Config.OP_PASSCODE !== 'string') {
-            console.warn('You did not define a passcode for OP activation. It is recommended to add one in the .env.json file.');
-            Config.OP_PASSCODE = null;
-        }
-        if (typeof env.email_transport === 'object') {
-            Config.EMAIL_TRANSPORT = env.email_transport;
-        }
         // Load guest names
         Config.GUEST_NAMES = fs
             .readFileSync('config/guestnames.txt')

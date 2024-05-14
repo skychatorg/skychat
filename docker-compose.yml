@@ -37,6 +37,15 @@ services:
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
       POSTGRES_DB: "${POSTGRES_DB}"
       PUBLIC_URL: "${PUBLIC_URL}"
+      USERS_PASSWORD_SALT: "${USERS_PASSWORD_SALT}"
+      USERS_TOKEN_SALT: "${USERS_TOKEN_SALT}"
+      YOUTUBE_API_KEY: "${YOUTUBE_API_KEY}"
+      OP_LIST: "${OP_LIST}"
+      OP_PASSCODE: "${OP_PASSCODE}"
+      ENABLED_PLUGINS: "${ENABLED_PLUGINS}"
+      MAILGUN_API_KEY: "${MAILGUN_API_KEY}"
+      MAILGUN_DOMAIN: "${MAILGUN_DOMAIN}"
+      MAILGUN_FROM: "${MAILGUN_FROM}"
     volumes:
       - ./config:/mnt/skychat/config
       - ./backups:/mnt/skychat/backups

@@ -1,9 +1,6 @@
-import fs from 'fs';
+import vue from '@vitejs/plugin-vue';
 import path from 'path';
 import { defineConfig } from 'vite';
-import vue from '@vitejs/plugin-vue';
-
-const envLocation = JSON.parse(fs.readFileSync('.env.json').toString()).location;
 
 export default defineConfig({
     root: 'app/client/',
@@ -21,12 +18,12 @@ export default defineConfig({
         open: true,
         proxy: {
             '/ws': {
-                target: envLocation,
+                target: process.env.PUBLIC_URL,
                 changeOrigin: true,
                 ws: true,
             },
             '/upload': {
-                target: envLocation,
+                target: process.env.PUBLIC_URL,
                 changeOrigin: true,
             },
         },

@@ -42,7 +42,6 @@ export class UserController {
 
     /**
      * Create a neutral message
-     * @param options
      */
     public static createNeutralMessage(options: Partial<MessageConstructorOptions>, identifier?: string): Message {
         return new Message({
@@ -59,20 +58,19 @@ export class UserController {
 
     /**
      * Hash a specific user's password
-     * @param userId
-     * @param username
-     * @param password
      */
     public static hashPassword(userId: number, username: string, password: string): string {
         if (typeof userId !== 'number' || userId <= 0 || username.length === 0 || password.length === 0) {
             throw new Error('User and passwords must be supplied to compute password hash');
         }
-        return sha256(userId + password + Config.USERS_PASSWORD_SALT + username.toLowerCase());
+        if (!process.env.USERS_PASSWORD_SALT || process.env.USERS_PASSWORD_SALT.trim().length === 0) {
+            throw new Error('Please set the password salt before running the application.');
+        }
+        return sha256(userId + password + process.env.USERS_PASSWORD_SALT + username.toLowerCase());
     }
 
     /**
      * Get an user in the database from its id
-     * @param username
      */
     public static async getUserByUsername(username: string): Promise<User | null> {
         const userObject = (await DatabaseHelper.db.query(SQL`SELECT * FROM users WHERE username = ${username.toLowerCase()}`)).rows[0];
@@ -81,7 +79,6 @@ export class UserController {
 
     /**
      * Get an user in the database from its id
-     * @param userId
      */
     public static async getUserById(userId: number): Promise<User> {
         const userObject = (await DatabaseHelper.db.query(SQL`SELECT * FROM users WHERE id = ${userId}`)).rows[0];
@@ -101,7 +98,6 @@ export class UserController {
 
     /**
      * Convert a user row fetched from sql to an user object
-     * @param row
      */
     public static userRowToObject(row: any): User {
         return new User(
@@ -153,21 +149,21 @@ export class UserController {
 
     /**
      * Build an auth token
-     * @param userId
-     * @param timestamp Timestamp (in milliseconds)
      */
     public static getAuthToken(userId: number, timestamp?: number): AuthToken {
         timestamp = timestamp || Date.now();
+        if (!process.env.USERS_TOKEN_SALT || process.env.USERS_TOKEN_SALT.trim().length === 0) {
+            throw new Error('Please set the token salt in the .env file before running the application.');
+        }
         return {
             userId,
             timestamp,
-            signature: sha256(userId + Config.USERS_TOKEN_SALT + timestamp),
+            signature: sha256(userId + process.env.USERS_TOKEN_SALT + timestamp),
         };
     }
 
     /**
      * Verify an auth token
-     * @param token
      */
     public static async verifyAuthToken(token: AuthToken): Promise<User> {
         const authToken = UserController.getAuthToken(token.userId, token.timestamp);
@@ -182,8 +178,6 @@ export class UserController {
 
     /**
      * Get a plugin stored data
-     * @param user
-     * @param pluginName
      */
     public static getUserPluginData<T>(user: User, pluginName: string): T {
         return typeof user.data.plugins[pluginName] === 'undefined' ? this.getPluginDefaultData(pluginName) : user.data.plugins[pluginName];
@@ -191,8 +185,6 @@ export class UserController {
 
     /**
      * Remove money from an user account
-     * @param user
-     * @param amount
      */
     public static async buy(user: User, amount: number): Promise<void> {
         if (amount > user.money) {
@@ -204,8 +196,6 @@ export class UserController {
 
     /**
      * Give money to an user
-     * @param user
-     * @param amount
      */
     public static async giveMoney(user: User, amount: number): Promise<void> {
         if (amount < 0) {
@@ -217,8 +207,6 @@ export class UserController {
 
     /**
      * Give XP to an user
-     * @param user
-     * @param amount
      */
     public static async giveXP(user: User, amount: number): Promise<void> {
         if (amount < 0) {
@@ -230,9 +218,6 @@ export class UserController {
 
     /**
      * Save plugin data
-     * @param user
-     * @param pluginName
-     * @param data
      */
     public static async savePluginData(user: User, pluginName: string, data: any): Promise<void> {
         if (user.right < 0) {
@@ -244,7 +229,6 @@ export class UserController {
 
     /**
      * Sync an user to the the database
-     * @param user
      */
     public static async sync(user: User) {
         await DatabaseHelper.db.query(SQL`update users set
@@ -274,9 +258,6 @@ export class UserController {
 
     /**
      * Change one's username
-     * @param user
-     * @param newUsername
-     * @param currentPassword
      */
     public static async changeUsername(user: User, newUsername: string, currentPassword: string) {
         // Compute new password
@@ -294,9 +275,6 @@ export class UserController {
 
     /**
      * Change one's password
-     * @param user
-     * @param newUsername
-     * @param currentPassword
      */
     public static async changePassword(user: User, newPassword: string) {
         // Compute new password

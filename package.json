@@ -27,6 +27,7 @@
         "events": "^3.3.0",
         "isomorphic-ws": "^5.0.0",
         "jsondiffpatch": "^0.6.0",
+        "mailgun.js": "^10.2.1",
         "rate-limiter-flexible": "^5.0.3"
     },
     "devDependencies": {
@@ -46,7 +47,6 @@
         "@types/lodash": "^4.14.189",
         "@types/node": "^18.11.9",
         "@types/node-fetch": "^2.6.2",
-        "@types/nodemailer": "^6.4.6",
         "@types/pg": "^8.10.9",
         "@types/sha256": "^0.2.0",
         "@types/striptags": "^3.1.1",
@@ -73,7 +73,6 @@
         "io-filter": "^2.1.2",
         "lodash": "^4.17.21",
         "mousetrap": "^1.6.5",
-        "nodemailer": "^6.8.0",
         "nodemon": "^2.0.20",
         "pg": "^8.11.3",
         "pinia": "^2.0.23",
