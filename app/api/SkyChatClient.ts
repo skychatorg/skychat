@@ -529,7 +529,6 @@ export class SkyChatClient extends EventEmitter {
         if (!this._websocket) {
             return;
         }
-        console.trace('sending raw data ' + JSON.stringify(data));
         this._websocket.send(data);
     }
 
@@ -609,7 +608,6 @@ export class SkyChatClient extends EventEmitter {
         if (!this._websocket) {
             return;
         }
-        console.trace('sending event ' + eventName + ' with payload ' + JSON.stringify(payload));
         this._websocket.send(
             JSON.stringify({
                 event: eventName,
