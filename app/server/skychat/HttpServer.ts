@@ -92,11 +92,12 @@ export class HttpServer extends EventEmitter {
     private async onServerUpgradeRequest(request: http.IncomingMessage, socket: internal.Duplex, head: Buffer) {
         try {
             // Rate-limit upgrade requests per IP (creating new connections is costly)
-            await RateLimiter.rateLimit(this.wsCreateSecLimiter, RateLimiter.getIP(request));
-            await RateLimiter.rateLimit(this.wsCreateMinLimiter, RateLimiter.getIP(request));
+            await this.wsCreateSecLimiter.consume(RateLimiter.getIP(request));
+            await this.wsCreateMinLimiter.consume(RateLimiter.getIP(request));
         } catch (error) {
             console.error('Rate limit exceeded for', RateLimiter.getIP(request), JSON.stringify(error));
             socket.destroy();
+            return;
         }
 
         // Register upgrade callback
@@ -110,7 +111,7 @@ export class HttpServer extends EventEmitter {
      */
     async onFileUpload(req: express.Request, res: express.Response): Promise<void> {
         try {
-            await RateLimiter.rateLimit(this.fileUploadLimiter, RateLimiter.getIP(req));
+            await RateLimiter.rateLimitSafe(this.fileUploadLimiter, RateLimiter.getIP(req));
             const file: fileUpload.UploadedFile | fileUpload.UploadedFile[] | undefined = req.files ? req.files.file : undefined;
             if (!file) {
                 throw new Error('File not found');

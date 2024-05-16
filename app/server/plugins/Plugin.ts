@@ -1,7 +1,6 @@
 import fs from 'fs';
 import { RateLimiterMemory } from 'rate-limiter-flexible';
 import { Connection } from '../skychat/Connection.js';
-import { RateLimiter } from '../skychat/RateLimiter.js';
 import { Room } from '../skychat/Room.js';
 import { Session } from '../skychat/Session.js';
 import { User } from '../skychat/User.js';
@@ -216,7 +215,11 @@ export abstract class Plugin {
 
                 // Strict cooldown
                 if (this.limiters[alias].cooldown) {
-                    await RateLimiter.rateLimit(this.limiters[alias].cooldown!, connection.ip, 1);
+                    try {
+                        await this.limiters[alias].cooldown?.consume(connection.ip, 1);
+                    } catch (error) {
+                        throw new Error(`You must wait before using this command again (${alias})`);
+                    }
                 }
 
                 // 10-sec cooldown
@@ -234,7 +237,11 @@ export abstract class Plugin {
                             cost = callWeightPerRight[nextEntry - 1][1];
                         }
                     }
-                    await RateLimiter.rateLimit(this.limiters[alias]['10sec']!, connection.ip, cost);
+                    try {
+                        await this.limiters[alias]['10sec']?.consume(connection.ip, cost);
+                    } catch (error) {
+                        throw new Error(`You must wait before using this command again (${alias})`);
+                    }
                 }
             }
         }

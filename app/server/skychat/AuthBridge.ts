@@ -2,7 +2,7 @@ import EventEmitter from 'events';
 import http from 'http';
 import { RateLimiterMemory } from 'rate-limiter-flexible';
 import { WebSocket } from 'ws';
-import { WS_CLOSE_CODE_ERROR, WS_MAX_PENDING_FOR_AUTH_PER_IP } from '../constants.js';
+import { WS_CLOSE_CODE_ERROR } from '../constants.js';
 import { ConnectionUpgradeEvent, HttpServer } from './HttpServer.js';
 import { RateLimiter } from './RateLimiter.js';
 import { AuthToken, User } from './User.js';
@@ -40,6 +40,11 @@ export class AuthBridge extends EventEmitter {
     static readonly MAX_GUEST_PER_MINUTE = 6;
 
     static readonly MAX_TOKEN_AUTH_PER_MINUTE = 10;
+
+    /**
+     * Max number of websockets pending for authentication per IP.
+     */
+    static readonly WS_MAX_PENDING_FOR_AUTH_PER_IP = 2;
 
     private readonly server: HttpServer;
 
@@ -122,7 +127,7 @@ export class AuthBridge extends EventEmitter {
         const pendingSockets = this.pendingSockets.get(ip)!;
 
         // Too many pending sockets?
-        if (pendingSockets.length >= WS_MAX_PENDING_FOR_AUTH_PER_IP) {
+        if (pendingSockets.length >= AuthBridge.WS_MAX_PENDING_FOR_AUTH_PER_IP) {
             this.sendError(webSocket, 'Too many pending connections. Are you using the latest client?');
             webSocket.close(WS_CLOSE_CODE_ERROR);
             return;
@@ -130,6 +135,7 @@ export class AuthBridge extends EventEmitter {
 
         // Add the socket to the pendingSockets map
         this.pendingSockets.get(ip)?.push(webSocket);
+        console.log(`Accepting connection from ${ip} (pending: ${pendingSockets.length})`);
 
         // Wait for the first message (auth data)
         webSocket.once('message', this.onMessage.bind(this, webSocket, request));
@@ -147,25 +153,25 @@ export class AuthBridge extends EventEmitter {
                 if (!data.token.signature || !data.token.timestamp || !data.token.userId) {
                     throw new Error('Missing token data');
                 }
-                await RateLimiter.rateLimit(this.tokenAuthLimiter, RateLimiter.getIP(request));
+                await RateLimiter.rateLimitSafe(this.tokenAuthLimiter, RateLimiter.getIP(request));
                 const user = await UserController.verifyAuthToken(data.token as AuthToken);
                 this.emit('connection-accepted', { webSocket, request, data, user });
                 return;
             } else if (data.credentials?.register) {
                 // Register
                 const user = await UserController.register(data.credentials.username, data.credentials.password);
-                await RateLimiter.rateLimit(this.registerLimiter, RateLimiter.getIP(request));
+                await RateLimiter.rateLimitSafe(this.registerLimiter, RateLimiter.getIP(request));
                 this.emit('connection-accepted', { webSocket, request, data, user });
                 return;
             } else if (data.credentials) {
                 // Login
-                await RateLimiter.rateLimit(this.loginLimiter, RateLimiter.getIP(request));
+                await RateLimiter.rateLimitSafe(this.loginLimiter, RateLimiter.getIP(request));
                 const user = await UserController.login(data.credentials.username, data.credentials.password);
                 this.emit('connection-accepted', { webSocket, request, data, user });
                 return;
             } else {
                 // Guest login
-                await RateLimiter.rateLimit(this.guestLimiter, RateLimiter.getIP(request));
+                await RateLimiter.rateLimitSafe(this.guestLimiter, RateLimiter.getIP(request));
                 this.emit('connection-accepted', { webSocket, request, data });
             }
         } catch (error) {

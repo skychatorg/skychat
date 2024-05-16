@@ -91,17 +91,15 @@ export class Connection extends EventEmitter implements IBroadcaster {
         // Count bytes received for rate limit. Close connection if exceeded.
         try {
             if (typeof data === 'string' || data instanceof Buffer) {
-                await RateLimiter.rateLimit(this.byteRateLimiter, 'key', data.length);
+                await this.byteRateLimiter.consume('key', data.length);
             } else if (data instanceof ArrayBuffer) {
-                await RateLimiter.rateLimit(this.byteRateLimiter, 'key', data.byteLength);
+                await this.byteRateLimiter.consume('key', data.byteLength);
             } else if (Array.isArray(data)) {
                 const sum = data.reduce((acc, val) => acc + val.length, 0);
-                await RateLimiter.rateLimit(this.byteRateLimiter, 'key', sum);
-            } else {
-                throw new Error('Invalid data type');
+                await this.byteRateLimiter.consume('key', sum);
             }
         } catch (error) {
-            this.sendError(error as Error);
+            this.sendError(new Error('Byte rate limit exceeded'));
             this.close();
             return;
         }

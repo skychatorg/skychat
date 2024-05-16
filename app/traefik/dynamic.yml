@@ -26,10 +26,9 @@ http:
             rateLimit:
                 average: 60
                 burst: 20
-                {{ if env "X_FORWARDED_FOR_DEPTH" }}
+                {{ if env "TRUSTED_IP_HEADER" }}
                 sourceCriterion:
-                    ipStrategy:
-                        depth: {{ env "X_FORWARDED_FOR_DEPTH" }}
+                    requestHeaderName: {{ env "TRUSTED_IP_HEADER" }}
                 {{ end }}
         admin-auth:
             basicAuth:
