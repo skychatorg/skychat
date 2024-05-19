@@ -16,6 +16,8 @@ export class Connection extends EventEmitter implements IBroadcaster {
 
     static readonly MAX_RECEIVED_BYTES_PER_10_SEC = 1024 * 64;
 
+    static readonly MAX_EVENTS_PER_SEC = 16;
+
     static readonly MAXIMUM_MISSED_PING = 1;
 
     static readonly CLOSE_PING_TIMEOUT = 4504;
@@ -49,6 +51,14 @@ export class Connection extends EventEmitter implements IBroadcaster {
     readonly byteRateLimiter = new RateLimiterMemory({
         points: Connection.MAX_RECEIVED_BYTES_PER_10_SEC,
         duration: 10,
+    });
+
+    /**
+     * Will close the connection if the client sends too many events
+     */
+    readonly eventRateLimiter = new RateLimiterMemory({
+        points: Connection.MAX_EVENTS_PER_SEC,
+        duration: 1,
     });
 
     /**
@@ -88,6 +98,15 @@ export class Connection extends EventEmitter implements IBroadcaster {
      * When a message is received on the socket
      */
     private async onMessage(data: Data): Promise<void> {
+        // Max events per second
+        try {
+            await this.eventRateLimiter.consume('key');
+        } catch (error) {
+            this.sendError(new Error('Event rate limit exceeded'));
+            this.close();
+            return;
+        }
+
         // Count bytes received for rate limit. Close connection if exceeded.
         try {
             if (typeof data === 'string' || data instanceof Buffer) {
