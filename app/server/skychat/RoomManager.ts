@@ -117,7 +117,7 @@ export class RoomManager {
     }
 
     findSuitableRoom(connection: Connection) {
-        return this.rooms.find((room) => room.acceptsConnection(connection));
+        return this.rooms.find((room) => room.accepts(connection.session));
     }
 
     /**

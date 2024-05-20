@@ -65,7 +65,7 @@ export class JoinRoomPlugin extends GlobalPlugin {
         let savedRoomId: number | undefined = undefined;
         if (typeof event.data.roomId === 'number') {
             const room = this.manager.getRoomById(event.data.roomId);
-            if (room && room.acceptsConnection(connection)) {
+            if (room && room.accepts(connection.session)) {
                 savedRoomId = event.data.roomId;
             }
         }

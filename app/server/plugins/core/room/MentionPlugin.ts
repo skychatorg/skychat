@@ -1,8 +1,8 @@
 import { Connection } from '../../../skychat/Connection.js';
-import { Session } from '../../../skychat/Session.js';
-import { BlacklistPlugin } from '../global/BlacklistPlugin.js';
-import { RoomPlugin } from '../../RoomPlugin.js';
 import { Message } from '../../../skychat/Message.js';
+import { Session } from '../../../skychat/Session.js';
+import { RoomPlugin } from '../../RoomPlugin.js';
+import { BlacklistPlugin } from '../global/BlacklistPlugin.js';
 
 export class MentionPlugin extends RoomPlugin {
     static readonly commandName = 'mention';
@@ -27,17 +27,22 @@ export class MentionPlugin extends RoomPlugin {
             .map((identifier) => Session.getSessionByIdentifier(identifier))
             .filter((session) => session !== undefined) as Session[];
 
-        // No valid user
-        if (allSessions.length === 0) {
-            return message;
-        }
-
         // Remove duplicates
         const sessions = Array.from(new Set(allSessions));
 
+        // No valid session
+        if (sessions.length === 0) {
+            return message;
+        }
+
         // Send mention to each session
         for (const session of sessions) {
+            // Skip blacklisted users
             if (BlacklistPlugin.hasBlacklisted(session.user, connection.session.user.username)) {
+                continue;
+            }
+            // Skip if in a room where the mentioned user is not allowed
+            if (!connection.room || !connection.room.accepts(session)) {
                 continue;
             }
             session.send('mention', {
