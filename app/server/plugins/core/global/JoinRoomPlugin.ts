@@ -7,13 +7,13 @@ export class JoinRoomPlugin extends GlobalPlugin {
 
     static readonly commandName = 'join';
 
-    readonly minRight = 0;
+    readonly minRight = -1;
 
     readonly rules = {
         join: {
             minCount: 1,
             maxCount: 1,
-            coolDown: 500,
+            maxCallsPer10Seconds: 5,
             params: [{ name: 'roomId', pattern: /^(\d+)$/ }],
         },
     };

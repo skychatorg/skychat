@@ -1,11 +1,8 @@
 <script setup>
-import { useAppStore } from '@/stores/app';
-import { useClientStore } from '@/stores/client';
-import HoverCard from '@/components/util/HoverCard.vue';
 import SingleConnectedUser from '@/components/user/SingleConnectedUser.vue';
 import SectionTitle from '@/components/util/SectionTitle.vue';
+import { useClientStore } from '@/stores/client';
 
-const app = useAppStore();
 const client = useClientStore();
 </script>
 
