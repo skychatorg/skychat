@@ -1,11 +1,9 @@
 <script setup>
-import { computed } from 'vue';
-import { useAppStore } from '@/stores/app';
-import { useClientStore } from '@/stores/client';
-import HoverCard from '@/components/util/HoverCard.vue';
 import UserBigAvatar from '@/components/user/UserBigAvatar.vue';
+import HoverCard from '@/components/util/HoverCard.vue';
+import { useClientStore } from '@/stores/client';
+import { computed } from 'vue';
 
-const app = useAppStore();
 const client = useClientStore();
 
 const props = defineProps({
@@ -51,12 +49,26 @@ const formattedDurationSinceDead = computed(() => {
     }
     return Math.round(duration) + 's';
 });
+
+const borderColor = computed(() => {
+    const sameRoom =
+        props.entry.user.username.toLowerCase() === client.state.user.username.toLowerCase() ||
+        props.entry.rooms.includes(client.state.currentRoomId);
+
+    if (props.entry.deadSinceTime) {
+        return 'transparent';
+    } else if (sameRoom) {
+        return 'rgb(var(--color-primary))';
+    } else {
+        return 'rgb(var(--color-skygray-light))';
+    }
+});
 </script>
 
 <template>
     <HoverCard
         v-show="!isBlacklisted"
-        :border-color="props.entry.deadSinceTime ? 'transparent' : 'rgb(var(--color-skygray-lightest))'"
+        :border-color="borderColor"
         :use-border-radius="true"
         :selectable="true"
         :selected="false"
@@ -86,7 +98,9 @@ const formattedDurationSinceDead = computed(() => {
                         <sup v-if="entry.connectionCount > 1">{{ entry.connectionCount }}</sup>
                     </div>
                     <div class="text-xs text-right text-skygray-lighter flex justify-end space-x-4 pt-1">
-                        <span v-show="entry.user.money > 0" :title="(entry.user.money / 100).toFixed(2)" class="text-yellow-300">{{ formattedMoney }}</span>
+                        <span v-show="entry.user.money > 0" :title="(entry.user.money / 100).toFixed(2)" class="text-yellow-300">{{
+                            formattedMoney
+                        }}</span>
                         <span v-show="entry.user.right > 0" :title="entry.user.right" class="text-primary">{{ entry.user.right }}</span>
                     </div>
                 </div>
@@ -106,14 +120,21 @@ const formattedDurationSinceDead = computed(() => {
                         </span>
 
                         <!-- Disconnected -->
-                        <span v-if="entry.connectionCount === 0" :title="'User has disconnected ' + formattedDurationSinceDead + ' ago'" class="text-danger whitespace-nowrap">
+                        <span
+                            v-if="entry.connectionCount === 0"
+                            :title="'User has disconnected ' + formattedDurationSinceDead + ' ago'"
+                            class="text-danger whitespace-nowrap"
+                        >
                             <fa icon="link-slash" />
                             {{ formattedDurationSinceDead }}
                         </span>
                     </div>
 
                     <!-- Motto -->
-                    <div class="w-0 grow text-right text-skygray-lighter whitespace-nowrap text-ellipsis overflow-hidden" :title="entry.user.data.plugins.motto">
+                    <div
+                        class="w-0 grow text-right text-skygray-lighter whitespace-nowrap text-ellipsis overflow-hidden"
+                        :title="entry.user.data.plugins.motto"
+                    >
                         {{ entry.user.data.plugins.motto }}
                     </div>
                 </div>
