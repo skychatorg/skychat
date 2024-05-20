@@ -145,16 +145,16 @@ export class Room implements IBroadcaster {
     /**
      * Whether this room can accept a specific connection
      */
-    acceptsConnection(connection: Connection): boolean {
+    accepts(session: Session): boolean {
         // Private room
         if (this.isPrivate) {
-            return this.whitelist.includes(connection.session.identifier);
+            return this.whitelist.includes(session.identifier);
         }
 
         // Room protect plugin
         const roomProtectPlugin = this.getPlugin<RoomProtectPlugin>(RoomProtectPlugin.commandName);
         if (roomProtectPlugin) {
-            return connection.session.user.right >= roomProtectPlugin.getMinRight();
+            return session.user.right >= roomProtectPlugin.getMinRight();
         }
 
         return true;
