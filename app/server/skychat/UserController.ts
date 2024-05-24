@@ -117,6 +117,11 @@ export class UserController {
      * Store a new user in the database
      */
     static async register(username: string, password: string): Promise<User> {
+        // Check that username matches regex
+        if (!User.USERNAME_LOGGED_REGEXP.test(username)) {
+            throw new Error('Invalid username');
+        }
+
         const tms = Math.floor(Date.now() / 1000);
         const sqlQuery = SQL`insert into users
             (username, username_custom, password, money, xp, "right", data, storage, tms_created, tms_last_seen) values
