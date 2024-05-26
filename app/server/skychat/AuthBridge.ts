@@ -37,14 +37,14 @@ export class AuthBridge extends EventEmitter {
 
     static readonly MAX_LOGIN_PER_MINUTE = 10;
 
-    static readonly MAX_GUEST_PER_MINUTE = 6;
+    static readonly MAX_GUEST_PER_MINUTE = 8;
 
-    static readonly MAX_TOKEN_AUTH_PER_MINUTE = 10;
+    static readonly MAX_TOKEN_AUTH_PER_MINUTE = 20;
 
     /**
      * Max number of websockets pending for authentication per IP.
      */
-    static readonly WS_MAX_PENDING_FOR_AUTH_PER_IP = 2;
+    static readonly WS_MAX_PENDING_FOR_AUTH_PER_IP = 3;
 
     private readonly server: HttpServer;
 
