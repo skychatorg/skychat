@@ -2,7 +2,7 @@
 import UserBigAvatar from '@/components/user/UserBigAvatar.vue';
 import HoverCard from '@/components/util/HoverCard.vue';
 import { useClientStore } from '@/stores/client';
-import { computed } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 
 const client = useClientStore();
 
@@ -26,9 +26,20 @@ const formattedMoney = computed(() => {
     return '$' + Math.floor(props.entry.user.money / 1e2);
 });
 
+const nowDate = ref(new Date().getTime() * 0.001);
+const nowDateInterval = ref();
+onMounted(() => {
+    nowDateInterval.value = setInterval(() => {
+        nowDate.value = new Date().getTime() * 0.001;
+    }, 1000);
+});
+onUnmounted(() => {
+    clearInterval(nowDateInterval.value);
+});
+
 // Number of minutes since the last message was sent
 const minutesSinceLastMessage = computed(() => {
-    const duration = new Date().getTime() * 0.001 - props.entry.lastInteractionTime;
+    const duration = nowDate.value - props.entry.lastInteractionTime;
     return Math.floor(duration / 60);
 });
 
@@ -37,7 +48,7 @@ const formattedDurationSinceDead = computed(() => {
     if (!props.entry.deadSinceTime) {
         return '';
     }
-    const duration = new Date().getTime() * 0.001 - props.entry.deadSinceTime;
+    const duration = nowDate.value - props.entry.deadSinceTime;
     if (duration > 60 * 60 * 24) {
         return Math.round(duration / 60 / 60 / 24) + 'd';
     }
