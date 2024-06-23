@@ -1,7 +1,7 @@
 http:
     routers:
-        app:
-            service: app@file
+        skychat_app:
+            service: skychat_app@file
             entrypoints: web
             middlewares:
                 - ratelimit-light
@@ -10,8 +10,8 @@ http:
             tls:
                 certResolver: letsencrypt
             {{ end }}
-        admin_filebrowser:
-            service: admin_filebrowser@file
+        skychat_admin_filebrowser:
+            service: skychat_admin_filebrowser@file
             entrypoints: web
             middlewares:
                 - ratelimit-light
@@ -35,11 +35,11 @@ http:
                 users:
                     - "{{ env "ADMIN_FILEBROWSER_AUTH" }}"
     services:
-        app:
+        skychat_app:
             loadBalancer:
                 servers:
-                    - url: "http://app"
-        admin_filebrowser:
+                    - url: "http://skychat_app"
+        skychat_admin_filebrowser:
             loadBalancer:
                 servers:
-                    - url: "http://admin_filebrowser"
+                    - url: "http://skychat_admin_filebrowser"

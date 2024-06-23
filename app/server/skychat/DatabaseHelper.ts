@@ -48,7 +48,7 @@ export class DatabaseHelper {
             user: process.env.POSTGRES_USER,
             password: process.env.POSTGRES_PASSWORD,
             database: process.env.POSTGRES_DB,
-            host: 'app_db',
+            host: 'skychat_db',
             port: 5432,
         });
         await db.connect();
