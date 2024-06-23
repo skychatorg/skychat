@@ -1,8 +1,8 @@
 services:
-  traefik:
+  skychat_traefik:
     ports:
       - 8085:8080
-  app:
+  skychat_app:
     ports:
       - 5173:5173
   

@@ -1,7 +1,7 @@
 services:
-  traefik:
+  skychat_traefik:
     image: traefik:v2.9
-    container_name: traefik
+    container_name: skychat_traefik
     command:
       - "--entrypoints.web.address=:${PUBLIC_PORT}"
       - "--api.insecure=true"
@@ -15,13 +15,13 @@ services:
     ports:
       - ${BIND_INTERFACE}:${PUBLIC_PORT}:${PUBLIC_PORT}
     volumes:
-      - letsencrypt:/letsencrypt:rw
+      - skychat_letsencrypt:/letsencrypt:rw
       - ./app/traefik/dynamic.yml:/configuration/dynamic.yml:ro
     env_file:
       - .env
 
-  app:
-    container_name: app
+  skychat_app:
+    container_name: skychat_app
     cap_drop:
       - ALL
     build:
@@ -53,10 +53,10 @@ services:
       - ./gallery:/mnt/skychat/gallery
       - ./uploads:/mnt/skychat/uploads
     depends_on:
-      - app_db
+      - skychat_db
 
-  app_db:
-    container_name: app_db
+  skychat_db:
+    container_name: skychat_db
     restart: always
     build:
       context: ./app/database
@@ -71,8 +71,8 @@ services:
     volumes:
       - ./app/database/data:/var/lib/postgresql/data:rw
   
-  admin_filebrowser:
-    container_name: admin_filebrowser
+  skychat_admin_filebrowser:
+    container_name: skychat_admin_filebrowser
     build:
       context: ./app/filebrowser
       args:
@@ -89,4 +89,4 @@ services:
       - ./uploads/stickers:/mnt/skychat/uploads/stickers:ro
 
 volumes:
-    letsencrypt:
+    skychat_letsencrypt:
