@@ -1,8 +1,8 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import UserMiniAvatar from '@/components/user/UserMiniAvatar.vue';
 import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
-import UserMiniAvatar from '@/components/user/UserMiniAvatar.vue';
+import { computed, onMounted, ref } from 'vue';
 
 const app = useAppStore();
 const client = useClientStore();
@@ -31,6 +31,9 @@ onMounted(() => {
 });
 
 const sendCursorPosition = (x, y) => {
+    if (x < 0 || x > 1 || y < 0 || y > 1) {
+        return;
+    }
     const delay = new Date().getTime() - lastSentDate.value.getTime();
     if (delay < CURSOR_POSITION_DELAY_MS) {
         clearTimeout(timeout);
@@ -47,9 +50,9 @@ const cursorList = computed(() => Object.values(client.state.cursors));
 <template>
     <div class="pointer-events-none fixed opacity-25 z-10">
         <div
-            class="w-fit h-fit transition duration-200 relative"
             v-for="entry in cursorList"
             :key="entry.cursor.user.id"
+            class="w-fit h-fit transition duration-200 relative"
             :style="{
                 transform: `translate(${entry.cursor.x * 100}vw, ${entry.cursor.y * 100}vh)`,
             }"
