@@ -118,14 +118,14 @@ export const useClientStore = defineStore('client', {
         },
 
         authAsGuest: () => {
-            client.authAsGuest();
+            return client.authAsGuest();
         },
 
         /**
          * Login
          */
         login: ({ username, password, roomId }) => {
-            client.login(username, password, roomId);
+            return client.login(username, password, roomId);
         },
 
         /**
@@ -139,7 +139,7 @@ export const useClientStore = defineStore('client', {
          * Register
          */
         register: ({ username, password, roomId }) => {
-            client.register(username, password, roomId);
+            return client.register(username, password, roomId);
         },
 
         /**
