@@ -22,14 +22,18 @@ export class Timing {
             s: { singular: ' day', plural: ' day' },
         };
 
-        const durations = [
-            ['d', days],
-            ['h', hours],
-            ['m', minutes],
-            ['s', seconds],
-        ]
+        const durations = (
+            [
+                ['d', days],
+                ['h', hours],
+                ['m', minutes],
+                ['s', seconds],
+            ] as [string, number][]
+        )
             .filter((entry) => entry[1] > 0)
-            .map((entry) => `${entry[1]}${shortNames ? entry[0] : entry[1] > 1 ? longNames[entry[0]].plural : longNames[entry[0]].singular}`);
+            .map(
+                (entry) => `${entry[1]}${shortNames ? entry[0] : entry[1] > 1 ? longNames[entry[0]].plural : longNames[entry[0]].singular}`,
+            );
 
         if (durations.length === 0) {
             return 'now';
