@@ -94,6 +94,9 @@ export class AuthBridge extends EventEmitter {
                 pendingSockets.filter((socket) => socket !== webSocket),
             );
         }
+
+        // Notify websocket
+        webSocket.send(JSON.stringify({ event: 'connection-accepted' }));
     }
 
     private tick() {

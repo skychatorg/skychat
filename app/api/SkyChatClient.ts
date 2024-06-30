@@ -75,6 +75,8 @@ export type SkyChatClientState = {
 };
 
 export declare interface SkyChatClient {
+    on(event: 'connection-accepted', listener: () => unknown): this;
+
     on(event: 'config', listener: (config: PublicConfig) => any): this;
     on(event: 'sticker-list', listener: (stickers: Record<string, string>) => any): this;
     on(event: 'custom', listener: (custom: CustomizationElements) => any): this;
@@ -564,7 +566,7 @@ export class SkyChatClient extends EventEmitter {
      * Login
      */
     login(username: string, password: string) {
-        this.authenticate({
+        return this.authenticate({
             credentials: {
                 username,
                 password,
@@ -583,7 +585,7 @@ export class SkyChatClient extends EventEmitter {
     }
 
     register(username: string, password: string) {
-        this.authenticate({
+        return this.authenticate({
             credentials: {
                 username,
                 password,
@@ -593,13 +595,30 @@ export class SkyChatClient extends EventEmitter {
     }
 
     authAsGuest() {
-        this.authenticate({
+        return this.authenticate({
             roomId: this.getPreferredRoomId(),
         });
     }
 
-    authenticate(authData: AuthData) {
-        this._sendRaw(JSON.stringify(authData));
+    authenticate(authData: AuthData): Promise<void> {
+        return new Promise((resolve, reject) => {
+            let resolved = false;
+            this._sendRaw(JSON.stringify(authData));
+            this.once('error', (error) => {
+                if (resolved) {
+                    return;
+                }
+                resolved = true;
+                reject(error);
+            });
+            this.once('connection-accepted', () => {
+                if (resolved) {
+                    return;
+                }
+                resolved = true;
+                resolve();
+            });
+        });
     }
 
     /**
