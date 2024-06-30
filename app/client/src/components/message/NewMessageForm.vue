@@ -1,16 +1,15 @@
 <script setup>
-import { onMounted, computed, ref, watch } from 'vue';
+import { AudioRecorder } from '@/lib/AudioRecorder';
 import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
-import { AudioRecorder } from '@/lib/AudioRecorder';
 import { RisiBank } from 'risibank-web-api';
+import { computed, onMounted, ref, watch } from 'vue';
 import { SmartSuggest } from 'vue-smart-suggest';
 
 const MESSAGE_HISTORY_LENGTH = 500;
 
 const app = useAppStore();
 const client = useClientStore();
-const risibank = new RisiBank();
 
 const message = ref(null);
 const messageTextAreaRows = ref(1);
@@ -141,7 +140,7 @@ const sendMessage = function () {
  * Add a RisiBank media
  */
 const openRisiBank = function () {
-    risibank.activate({
+    RisiBank.activate({
         // Use default options for Overlay + Dark
         // Other defaults are all combinations of Overlay/Modal/Frame and Light/Dark/LightClassic/DarkClassic, e.g. RisiBank.Defaults.Frame.LightClassic
         ...RisiBank.Defaults.Overlay.Dark,
