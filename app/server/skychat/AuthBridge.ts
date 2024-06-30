@@ -4,6 +4,7 @@ import { RateLimiterMemory } from 'rate-limiter-flexible';
 import { WebSocket } from 'ws';
 import { WS_CLOSE_CODE_ERROR } from '../constants.js';
 import { ConnectionUpgradeEvent, HttpServer } from './HttpServer.js';
+import { Logging } from './Logging.js';
 import { RateLimiter } from './RateLimiter.js';
 import { AuthToken, User } from './User.js';
 import { UserController } from './UserController.js';
@@ -135,7 +136,7 @@ export class AuthBridge extends EventEmitter {
 
         // Add the socket to the pendingSockets map
         this.pendingSockets.get(ip)?.push(webSocket);
-        console.log(`Accepting connection from ${ip} (pending: ${pendingSockets.length})`);
+        Logging.info(`Accepting connection from ${ip} (pending: ${pendingSockets.length})`);
 
         // Wait for the first message (auth data)
         webSocket.once('message', this.onMessage.bind(this, webSocket, request));

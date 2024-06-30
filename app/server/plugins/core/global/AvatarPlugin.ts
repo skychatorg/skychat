@@ -3,6 +3,7 @@ import { Config } from '../../../skychat/Config.js';
 import { Connection } from '../../../skychat/Connection.js';
 import { FileManager } from '../../../skychat/FileManager.js';
 import { HttpServer } from '../../../skychat/HttpServer.js';
+import { Logging } from '../../../skychat/Logging.js';
 import { UserController } from '../../../skychat/UserController.js';
 import { GlobalPlugin } from '../../GlobalPlugin.js';
 import { ConnectedListPlugin } from './ConnectedListPlugin.js';
@@ -54,7 +55,7 @@ export class AvatarPlugin extends GlobalPlugin {
             try {
                 fs.unlinkSync(previousAvatarLocalPath);
             } catch (error) {
-                console.warn('Unable to rm avatar local path');
+                Logging.warn('Unable to rm avatar local path');
             }
         }
 

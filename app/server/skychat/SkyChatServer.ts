@@ -2,6 +2,7 @@ import { AuthBridge, ConnectionAcceptedEvent } from './AuthBridge.js';
 import { Config } from './Config.js';
 import { Connection } from './Connection.js';
 import { HttpServer } from './HttpServer.js';
+import { Logging } from './Logging.js';
 import { PluginManager } from './PluginManager.js';
 import { RoomManager } from './RoomManager.js';
 import { Session } from './Session.js';
@@ -27,7 +28,7 @@ export class SkyChatServer {
     }
 
     start() {
-        console.log('Starting services');
+        Logging.info('Starting services');
         this.httpServer.start();
         this.authBridge.start();
         this.pluginManager.start(this.roomManager);
@@ -38,7 +39,7 @@ export class SkyChatServer {
 
     private async onConnectionAccepted(event: ConnectionAcceptedEvent) {
         try {
-            console.log('Connection accepted', event.user ? event.user.username : '*guest');
+            Logging.info('Connection accepted', event.user ? event.user.username : '*guest');
             const session = event.user
                 ? await this.getUserSession(event.user, event.data.credentials?.username)
                 : await this.getNewGuestSession();
@@ -53,7 +54,7 @@ export class SkyChatServer {
             this.roomManager.onConnectionCreated(connection);
             this.pluginManager.onConnectionCreated(connection, event);
         } catch (error) {
-            console.error(error);
+            Logging.error(error);
             event.webSocket.send(
                 JSON.stringify({
                     event: 'error',

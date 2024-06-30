@@ -19,6 +19,7 @@ import {
     VideoInfo,
     VideoStreamInfo,
 } from '../server/index.js';
+import { Logging } from '../server/skychat/Logging.js';
 import { BinaryMessageTypes } from './BinaryMessageTypes.js';
 
 const defaultUser: SanitizedUser = {
@@ -674,7 +675,7 @@ export class SkyChatClient extends EventEmitter {
                     y,
                 });
             } else {
-                console.warn(`Unknown message type: ${messageType}`);
+                Logging.warn(`Unknown message type: ${messageType}`);
             }
             return;
         }

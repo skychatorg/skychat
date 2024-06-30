@@ -1,4 +1,5 @@
 import { DatabaseHelper } from './skychat/DatabaseHelper.js';
+import { Logging } from './skychat/Logging.js';
 
 /**
  * Import a file in the gallery
@@ -34,7 +35,7 @@ export async function main() {
     const { argCount, handler, usage } = ACTIONS[action];
 
     if (args.length !== argCount) {
-        console.warn(`Usage:\ncli.js ${action} ${usage}`);
+        Logging.warn(`Usage:\ncli.js ${action} ${usage}`);
         return;
     }
 
