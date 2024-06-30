@@ -1,11 +1,12 @@
 import { DatabaseHelper } from './skychat/DatabaseHelper.js';
+import { Logging } from './skychat/Logging.js';
 import { SkyChatServer } from './skychat/SkyChatServer.js';
 
 (async () => {
-    console.log('Loading database');
+    Logging.info('Loading database');
     await DatabaseHelper.load();
 
-    console.log('Starting server');
+    Logging.info('Starting server');
     const skyChatServer = new SkyChatServer();
     skyChatServer.start();
 })();

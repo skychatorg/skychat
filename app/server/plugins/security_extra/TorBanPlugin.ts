@@ -1,7 +1,8 @@
 import axios from 'axios';
 import { Connection } from '../../skychat/Connection.js';
-import { GlobalPlugin } from '../GlobalPlugin.js';
+import { Logging } from '../../skychat/Logging.js';
 import { RoomManager } from '../../skychat/RoomManager.js';
+import { GlobalPlugin } from '../GlobalPlugin.js';
 
 export class TorBanPlugin extends GlobalPlugin {
     static readonly CHECK_TOR_URL = 'https://check.torproject.org/torbulkexitlist';
@@ -39,7 +40,7 @@ export class TorBanPlugin extends GlobalPlugin {
             const ips = text.trim().split('\n');
             this.torExitNodes = ips;
         } catch (error) {
-            console.warn(error);
+            Logging.warn(error);
         }
     }
 

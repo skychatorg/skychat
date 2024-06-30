@@ -23,9 +23,9 @@ watch(
     },
 );
 
-const authAsGuest = function () {
+const authAsGuest = async function () {
     // Auth as guest
-    client.authAsGuest();
+    await client.authAsGuest();
 
     // Join the first player channel
     if (client.state.playerChannels.length > 0) {
@@ -33,8 +33,8 @@ const authAsGuest = function () {
     }
 };
 
-const login = function () {
-    client.login({
+const login = async function () {
+    await client.login({
         username: state.username,
         password: state.password,
     });

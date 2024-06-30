@@ -7,6 +7,7 @@ import internal from 'stream';
 import { WebSocket, WebSocketServer } from 'ws';
 import { Config } from './Config.js';
 import { FileManager } from './FileManager.js';
+import { Logging } from './Logging.js';
 import { RateLimiter } from './RateLimiter.js';
 
 export type ConnectionUpgradeEvent = {
@@ -62,7 +63,7 @@ export class HttpServer extends EventEmitter {
     start() {
         this.httpServer.on('upgrade', this.onServerUpgradeRequest.bind(this));
         this.httpServer.listen(Config.PORT, Config.HOSTNAME, function () {
-            console.log(`Listening on : ${Config.PORT}`);
+            Logging.info(`Listening on : ${Config.PORT}`);
         });
     }
 
@@ -95,7 +96,7 @@ export class HttpServer extends EventEmitter {
             await this.wsCreateSecLimiter.consume(RateLimiter.getIP(request));
             await this.wsCreateMinLimiter.consume(RateLimiter.getIP(request));
         } catch (error) {
-            console.error('Rate limit exceeded for', RateLimiter.getIP(request), JSON.stringify(error));
+            Logging.error('Rate limit exceeded for', RateLimiter.getIP(request), JSON.stringify(error));
             socket.destroy();
             return;
         }
