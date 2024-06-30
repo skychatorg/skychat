@@ -4,6 +4,7 @@ import { RateLimiterMemory } from 'rate-limiter-flexible';
 import { UAParser } from 'ua-parser-js';
 import { Data, WebSocket } from 'ws';
 import { IBroadcaster } from './IBroadcaster.js';
+import { Logging } from './Logging.js';
 import { RateLimiter } from './RateLimiter.js';
 import { Room } from './Room.js';
 import { Session } from './Session.js';
@@ -177,7 +178,7 @@ export class Connection extends EventEmitter implements IBroadcaster {
      * @param error
      */
     private async onError(error: Error): Promise<void> {
-        console.error('WebSocket error', this, error);
+        Logging.error('WebSocket error', this, error);
     }
 
     /**
@@ -228,6 +229,7 @@ export class Connection extends EventEmitter implements IBroadcaster {
      * Close the underlying websocket connection
      */
     close(code?: number, reason?: string): void {
+        Logging.info(`Closing connection ${this.session.identifier} with code ${code} and reason ${reason}`);
         this.webSocket.close(code || 4500, reason || '');
         this.webSocket.terminate();
     }

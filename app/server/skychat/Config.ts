@@ -1,4 +1,5 @@
 import fs from 'fs';
+import { Logging } from './Logging.js';
 
 export type Preferences = {
     minRightForPublicMessages: number;
@@ -68,7 +69,7 @@ export class Config {
             .map((l) => l.trim())
             .filter((l) => l.length > 0);
         if (Config.GUEST_NAMES.length === 0) {
-            console.warn('No guest name found (guestnames.txt file is empty). Using default "Guest" username for all guests.');
+            Logging.warn('No guest name found (guestnames.txt file is empty). Using default "Guest" username for all guests.');
             Config.GUEST_NAMES.push('Guest');
         }
         // Load fake messages
@@ -80,7 +81,7 @@ export class Config {
             .map((l) => l.trim())
             .filter((l) => l.length > 0);
         if (Config.FAKE_MESSAGES.length === 0) {
-            console.warn('No fake messages found (fakemessages.txt file is empty). Using a single empty fake message.');
+            Logging.warn('No fake messages found (fakemessages.txt file is empty). Using a single empty fake message.');
             Config.GUEST_NAMES.push('');
         }
         // Load preferences.json

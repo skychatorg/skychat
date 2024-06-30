@@ -1,4 +1,5 @@
 import { google, youtube_v3 } from 'googleapis';
+import { Logging } from '../../../skychat/Logging.js';
 import { VideoInfo } from '../PlayerChannel.js';
 import { PlayerPlugin } from '../PlayerPlugin.js';
 import { VideoFetcher } from './VideoFetcher.js';
@@ -78,7 +79,7 @@ export class YoutubeFetcher implements VideoFetcher {
 
     constructor() {
         if (!process.env.YOUTUBE_API_KEY || process.env.YOUTUBE_API_KEY.trim().length === 0) {
-            console.log('No youtube api key found. The youtube fetcher will not work.');
+            Logging.warn('No youtube api key found. The youtube fetcher will not work.');
         }
         // Youtube API object
         this.youtube = google.youtube({

@@ -1,4 +1,5 @@
 import fs from 'fs';
+import { Logging } from './Logging.js';
 
 /**
  * Manages stickers
@@ -21,7 +22,7 @@ export class StickerManager {
         try {
             this.stickers = JSON.parse(fs.readFileSync(StickerManager.STICKERS_JSON).toString());
         } catch (e) {
-            console.warn('stickers.json did NOT exist. It has been created automatically.');
+            Logging.warn('stickers.json did NOT exist. It has been created automatically.');
             this.stickers = {};
             this.saveStickers();
         }

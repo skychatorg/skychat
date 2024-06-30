@@ -1,6 +1,7 @@
 import { promises as fs } from 'fs';
 import { Config } from '../../skychat/Config.js';
 import { FileManager } from '../../skychat/FileManager.js';
+import { Logging } from '../../skychat/Logging.js';
 import { Session } from '../../skychat/Session.js';
 
 export type FileType = 'video' | 'audio' | 'image' | 'subtitle' | 'unknown';
@@ -101,7 +102,7 @@ export class Gallery {
                 } else if (stats.isDirectory()) {
                     folderContent.folders.push(fileName);
                 } else {
-                    console.warn('Unknown file type', fileName);
+                    Logging.warn('Unknown file type', fileName);
                 }
             }
             return folderContent;
