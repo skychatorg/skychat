@@ -1,13 +1,13 @@
 <script setup>
-import { useAppStore } from '@/stores/app';
-import { useClientStore } from '@/stores/client';
-import RoomList from '@/components/room/RoomList.vue';
-import PlayerChannelList from '@/components/playerchannel/PlayerChannelList.vue';
-import PlayerPannel from '@/components/player/PlayerPannel.vue';
 import MessagePannel from '@/components/message/MessagePannel.vue';
 import NewMessageForm from '@/components/message/NewMessageForm.vue';
-import ConnectedList from '@/components/user/ConnectedList.vue';
+import PlayerPannel from '@/components/player/PlayerPannel.vue';
+import PlayerChannelList from '@/components/playerchannel/PlayerChannelList.vue';
 import PollList from '@/components/poll/PollList.vue';
+import RoomList from '@/components/room/RoomList.vue';
+import ConnectedList from '@/components/user/ConnectedList.vue';
+import { useAppStore } from '@/stores/app';
+import { useClientStore } from '@/stores/client';
 
 const app = useAppStore();
 const client = useClientStore();
@@ -57,20 +57,20 @@ const client = useClientStore();
             <div class="pl-4 pr-6 mt-3 mb-2 grid grid-cols-2 gap-4">
                 <button
                     v-if="client.state.config.galleryEnabled"
-                    @click="app.toggleModal('gallery')"
                     title="Open gallery"
                     class="form-control col-start-1 col-span-1"
                     :class="{
                         'text-tertiary': client.state.ongoingConverts.length > 0,
                     }"
+                    @click="app.toggleModal('gallery')"
                 >
                     <fa icon="folder-tree" />
                 </button>
                 <button
                     v-show="true"
-                    @click="app.toggleModal('profile')"
                     title="Open user settings"
                     class="form-control col-start-2 col-span-1"
+                    @click="app.toggleModal('profile')"
                 >
                     <fa icon="gears" />
                 </button>

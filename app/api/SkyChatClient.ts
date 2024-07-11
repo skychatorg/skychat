@@ -526,6 +526,36 @@ export class SkyChatClient extends EventEmitter {
     }
 
     /**
+     * Whether the user has access to a given room
+     */
+    hasAccessToRoom(roomId: number) {
+        const room = this._rooms.find((room) => room.id === roomId);
+        if (!room) {
+            return false;
+        }
+        if (room.isPrivate && !room.whitelist.includes(this._user.username.toLowerCase())) {
+            return false;
+        }
+        if (typeof room.plugins.roomprotect === 'number' && room.plugins.roomprotect > this._user.right) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Whether the user has unread messages in a given room (or any, if not specified)
+     */
+    hasUnreadMessages(roomId?: number) {
+        if (this._user.id === 0) {
+            return false;
+        }
+        const rooms = typeof roomId === 'undefined' ? this._rooms : this._rooms.filter((room) => room.id === roomId);
+        return rooms.some(
+            (room) => this.hasAccessToRoom(room.id) && room.lastReceivedMessageId > (this._user.data.plugins.lastseen[room.id] ?? 0),
+        );
+    }
+
+    /**
      * Send anything (blob, binary)
      */
     _sendRaw(data: any) {
