@@ -1,27 +1,15 @@
 <script setup>
-import { computed } from 'vue';
-import { useClientStore } from '@/stores/client';
-import { useAppStore } from '@/stores/app';
 import SingleRoom from '@/components/room/SingleRoom.vue';
 import SectionTitle from '@/components/util/SectionTitle.vue';
+import { useAppStore } from '@/stores/app';
+import { useClientStore } from '@/stores/client';
+import { computed } from 'vue';
 
 const app = useAppStore();
 const client = useClientStore();
 
-// Whether has unread
 const hasUnread = computed(() => {
-    if (client.state.user.id === 0) {
-        return false;
-    }
-
-    // Check last seen message in this room vs last received message in this room
-    for (const room of client.state.rooms) {
-        if (room.lastReceivedMessageId > (client.state.user.data.plugins.lastseen[room.id] ?? 0)) {
-            return true;
-        }
-    }
-
-    return false;
+    return client.hasUnreadMessages();
 });
 
 function manageRooms() {
@@ -33,7 +21,7 @@ function manageRooms() {
     <div class="flex flex-col">
         <SectionTitle
             :class="{
-                'text-red-400': hasUnread,
+                '!text-red-400': hasUnread,
             }"
         >
             Rooms

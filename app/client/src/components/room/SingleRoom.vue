@@ -1,7 +1,7 @@
 <script setup>
-import { computed } from 'vue';
-import { useClientStore } from '@/stores/client';
 import HoverCard from '@/components/util/HoverCard.vue';
+import { useClientStore } from '@/stores/client';
+import { computed } from 'vue';
 
 const client = useClientStore();
 
@@ -14,17 +14,7 @@ const props = defineProps({
 
 // Whether has unread
 const hasUnread = computed(() => {
-    if (client.state.user.id === 0) {
-        return false;
-    }
-
-    // If already in this room, don't show unread
-    if (client.state.currentRoomId === props.room.id) {
-        return false;
-    }
-
-    // Check last seen message in this room vs last received message in this room
-    return (client.state.user.data.plugins.lastseen[props.room.id] || 0) < props.room.lastReceivedMessageId;
+    return !selected.value && client.hasAccessToRoom(props.room.id) && client.hasUnreadMessages(props.room.id);
 });
 
 // Whether this room is selected
@@ -102,7 +92,7 @@ const icon = computed(() => {
         :selected="selected"
         class="cursor-pointer"
     >
-        <div @click="client.state.currentRoomId !== room.id && client.join(room.id)" class="py-2 px-3 flex flex-row select-none">
+        <div class="py-2 px-3 flex flex-row select-none" @click="client.state.currentRoomId !== room.id && client.join(room.id)">
             <!-- Room name -->
             <div class="grow whitespace-nowrap w-0 overflow-hidden text-ellipsis pr-2">
                 <fa v-if="icon" class="mr-1" :class="icon.classes" :icon="icon.name" :title="icon.title" />

@@ -120,57 +120,32 @@ export const useClientStore = defineStore('client', {
         authAsGuest: () => {
             return client.authAsGuest();
         },
-
-        /**
-         * Login
-         */
         login: ({ username, password, roomId }) => {
             return client.login(username, password, roomId);
         },
-
-        /**
-         * Logout
-         */
         logout: () => {
             client.logout();
         },
-
-        /**
-         * Register
-         */
         register: ({ username, password, roomId }) => {
             return client.register(username, password, roomId);
         },
-
-        /**
-         * Send a message to the server
-         * @param {string} message
-         */
         sendMessage: (message) => {
             client.sendMessage(message);
         },
-
-        /**
-         * Send an audio message to the server
-         * @param {Blob} blob
-         */
         sendAudio: (blob) => {
             client.sendAudio(blob);
         },
-
-        /**
-         * Send user cursor position
-         */
         sendCursorPosition: (x, y) => {
             client.sendCursorPosition(x, y);
         },
-
-        /**
-         * Send a last message seen notification
-         * @param messageId
-         */
         notifySeenMessage(messageId) {
             client.notifySeenMessage(messageId);
+        },
+        hasAccessToRoom(roomId) {
+            return client.hasAccessToRoom(roomId);
+        },
+        hasUnreadMessages(roomId) {
+            return client.hasUnreadMessages(roomId);
         },
     },
 });
