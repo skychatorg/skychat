@@ -1,12 +1,12 @@
 <script setup>
-import { nextTick, computed, onMounted, ref, watch } from 'vue';
-import { useAppStore } from '@/stores/app';
-import { useClientStore } from '@/stores/client';
-import ExpandableBlock from '@/components/util/ExpandableBlock.vue';
-import HoverCard from '@/components/util/HoverCard.vue';
 import UserBigAvatar from '@/components/user/UserBigAvatar.vue';
 import UserMiniAvatar from '@/components/user/UserMiniAvatar.vue';
 import UserMiniAvatarCollection from '@/components/user/UserMiniAvatarCollection.vue';
+import ExpandableBlock from '@/components/util/ExpandableBlock.vue';
+import HoverCard from '@/components/util/HoverCard.vue';
+import { useAppStore } from '@/stores/app';
+import { useClientStore } from '@/stores/client';
+import { computed, nextTick, onMounted, ref, watch } from 'vue';
 
 const app = useAppStore();
 const client = useClientStore();

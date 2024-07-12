@@ -1,13 +1,13 @@
 <script setup>
-import AppHeader from '@/components/layout/AppHeader.vue';
 import CursorOverlay from '@/components/cursor/CursorOverlay.vue';
-import YoutubeVideoSearcherModal from '@/components/modal/YoutubeVideoSearcherModal.vue';
+import AppHeader from '@/components/layout/AppHeader.vue';
 import GalleryModal from '@/components/modal/GalleryModal.vue';
-import ProfileModal from '@/components/modal/ProfileModal.vue';
-import PlayerQueueModal from '@/components/modal/PlayerQueueModal.vue';
-import OngoingConvertsModal from '@/components/modal/OngoingConvertsModal.vue';
-import VideoConverterModal from '@/components/modal/VideoConverterModal.vue';
 import ManageRoomsModal from '@/components/modal/ManageRoomsModal.vue';
+import OngoingConvertsModal from '@/components/modal/OngoingConvertsModal.vue';
+import PlayerQueueModal from '@/components/modal/PlayerQueueModal.vue';
+import ProfileModal from '@/components/modal/ProfileModal.vue';
+import VideoConverterModal from '@/components/modal/VideoConverterModal.vue';
+import YoutubeVideoSearcherModal from '@/components/modal/YoutubeVideoSearcherModal.vue';
 </script>
 
 <template>

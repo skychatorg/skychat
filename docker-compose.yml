@@ -47,11 +47,12 @@ services:
       MAILGUN_DOMAIN: "${MAILGUN_DOMAIN}"
       MAILGUN_FROM: "${MAILGUN_FROM}"
     volumes:
-      - ./config:/mnt/skychat/config
-      - ./backups:/mnt/skychat/backups
-      - ./storage:/mnt/skychat/storage
-      - ./gallery:/mnt/skychat/gallery
-      - ./uploads:/mnt/skychat/uploads
+      - ./config:/workdir/config
+      - ./backups:/workdir/backups
+      - ./storage:/workdir/storage
+      - ./gallery:/workdir/gallery
+      - ./uploads:/workdir/uploads
+      - ./app:/workdir/app:ro
     depends_on:
       - skychat_db
 

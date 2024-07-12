@@ -26,9 +26,9 @@ The SkyChat lets you:
 
 You only need docker.
 
-```bash
+```sh
 # 1. Use the autoinstall script (Clones the repository then executes app/script/setup.sh)
-bash <(wget -q https://raw.githubusercontent.com/skychatorg/skychat/master/app/script/autoinstall.sh -O -) && cd skychat
+sh <(wget -q https://raw.githubusercontent.com/skychatorg/skychat/master/app/script/autoinstall.sh -O -) && cd skychat
 
 # 2. Run the setup script and complete .env files as you wish (see sections below for tips)
 npm run setup

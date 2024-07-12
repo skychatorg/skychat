@@ -1,7 +1,7 @@
-import { Connection } from '../../../skychat/Connection.js';
-import { GlobalPlugin } from '../../GlobalPlugin.js';
-import { UserController } from '../../../skychat/UserController.js';
 import { exec } from 'child_process';
+import { Connection } from '../../../skychat/Connection.js';
+import { UserController } from '../../../skychat/UserController.js';
+import { GlobalPlugin } from '../../GlobalPlugin.js';
 
 export class BackupPlugin extends GlobalPlugin {
     static readonly commandName = 'backup';
@@ -23,7 +23,7 @@ export class BackupPlugin extends GlobalPlugin {
 
     public makeBackup(): Promise<string> {
         return new Promise((resolve, reject) => {
-            exec('bash app/script/backup.sh', (error, stdout, stderr) => {
+            exec('sh app/script/backup.sh', (error, stdout, stderr) => {
                 // If backup fails
                 if (error || stderr) {
                     return reject(error || new Error(stderr));

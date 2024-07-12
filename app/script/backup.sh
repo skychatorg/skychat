@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 
 # Constants
 BACKUP_DIRS="config storage uploads/avatars uploads/stickers"
