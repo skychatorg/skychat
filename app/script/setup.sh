@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 
 # Create empty directories if they do not exist
 if [[ ! -e backups ]]; then

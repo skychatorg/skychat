@@ -5,4 +5,8 @@ services:
   skychat_app:
     ports:
       - 5173:5173
-  
+    command:
+      - /bin/sh
+      - -c
+      - |
+        npx nodemon --watch app/client/ --watch app/api/ --watch app/server/ -e js,ts,json,vue --exec "npm run docker-command"
