@@ -7,6 +7,7 @@ import HoverCard from '@/components/util/HoverCard.vue';
 import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
 import { computed, nextTick, onMounted, ref, watch } from 'vue';
+import MessageReactions from './MessageReactions.vue';
 
 const app = useAppStore();
 const client = useClientStore();
@@ -145,6 +146,11 @@ watch(
     () => nextTick(bindMessageContentEvents),
 );
 
+watch(
+    () => props.message.storage?.reactions,
+    () => nextTick(() => emit('content-size-changed')),
+);
+
 // When interacting with a message
 const messageInteract = () => {
     // Cycle between these texts
@@ -175,6 +181,7 @@ const messageInteract = () => {
             :class="{
                 blacklisted: isBlacklisted,
             }"
+            class="relative flex flex-row"
             @contextmenu.prevent="messageInteract"
         >
             <div v-if="showDate" class="absolute w-full text-center text-xs">
@@ -182,6 +189,7 @@ const messageInteract = () => {
                     {{ formattedDate }}
                 </span>
             </div>
+
             <div v-if="!isBlacklisted" class="py-1 px-3 flex flex-row">
                 <UserBigAvatar v-if="!compact" class="mt-1" :user="message.user" />
 
@@ -258,6 +266,8 @@ const messageInteract = () => {
                     </a>
                 </div>
             </div>
+
+            <MessageReactions v-if="message.storage.reactions" :message="message" />
         </HoverCard>
     </ExpandableBlock>
 </template>

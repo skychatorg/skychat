@@ -16,6 +16,7 @@ import { MottoPlugin } from './global/MottoPlugin.js';
 import { OPPlugin } from './global/OPPlugin.js';
 import { PollPlugin } from './global/PollPlugin.js';
 import { PrivateMessagePlugin } from './global/PrivateMessagePlugin.js';
+import { ReactionPlugin } from './global/ReactionPlugin.js';
 import { SetRightPlugin } from './global/SetRightPlugin.js';
 import { StickerPlugin } from './global/StickerPlugin.js';
 import { VoidPlugin } from './global/VoidPlugin.js';
@@ -59,6 +60,7 @@ export class CorePluginGroup extends PluginGroup {
         OPPlugin,
         PollPlugin,
         PrivateMessagePlugin,
+        ReactionPlugin,
         SetRightPlugin,
         StickerPlugin,
         VoidPlugin,
