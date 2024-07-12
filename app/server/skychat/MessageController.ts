@@ -1,6 +1,7 @@
 import SQL from 'sql-template-strings';
 import { DatabaseHelper } from './DatabaseHelper.js';
-import { Message } from './Message.js';
+import { Logging } from './Logging.js';
+import { Message, MessageStorage } from './Message.js';
 import { UserController } from './UserController.js';
 
 export type MessageDBRow = {
@@ -11,6 +12,7 @@ export type MessageDBRow = {
     date: Date;
     content: string;
     ip: string;
+    storage: string;
 };
 
 export class MessageController {
@@ -35,7 +37,7 @@ export class MessageController {
      * @returns {Message[]}
      */
     static async getMessages(conditions: any[][] | any[], order?: string, limit?: number): Promise<Message[]> {
-        let sqlQuery = SQL`select id, room_id, user_id, quoted_message_id, date, content, ip from messages where `;
+        let sqlQuery = SQL`select id, room_id, user_id, quoted_message_id, date, content, ip, storage from messages where `;
         // Build conditions
         if (conditions.length > 0 && typeof conditions[0] === 'string') {
             conditions = [conditions];
@@ -68,6 +70,13 @@ export class MessageController {
             } catch (error) {
                 users[messageRow.user_id] = UserController.getNeutralUser('Guest');
             }
+            let storage: MessageStorage | undefined;
+            try {
+                storage = JSON.parse(messageRow.storage);
+            } catch (error) {
+                Logging.error('Failed to parse message storage', error);
+                storage = {};
+            }
             messages.push(
                 new Message({
                     id: messageRow.id,
@@ -75,6 +84,7 @@ export class MessageController {
                     content: messageRow.content,
                     createdTime: new Date(messageRow.date),
                     user: users[messageRow.user_id],
+                    storage,
                 }),
             );
         }

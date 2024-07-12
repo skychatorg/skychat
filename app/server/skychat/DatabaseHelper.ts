@@ -24,7 +24,8 @@ CREATE TABLE IF NOT EXISTS messages (
   quoted_message_id INTEGER DEFAULT NULL,
   content text NOT NULL,
   date timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
-  ip text DEFAULT NULL
+  ip text DEFAULT NULL,
+  storage text DEFAULT '{}' NOT NULL
 );
 
 -- Add index on room_id and id in descending order, if it doesn't exist

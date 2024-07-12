@@ -401,7 +401,7 @@ export class Room implements IBroadcaster {
     /**
      * Find a message from history by its unique id. Try to load it from cache, or go find it in database if it does not exist.
      */
-    public async getMessageById(id: number): Promise<Message | null> {
+    public getMessageById(id: number): Message | null {
         return this.messages.find((message) => message.id === id) || null;
     }
 
@@ -449,10 +449,10 @@ export class Room implements IBroadcaster {
         this.messages.splice(0, this.messages.length - Room.MESSAGE_HISTORY_LENGTH);
         // Store it into the database
         const sqlQuery = SQL`insert into messages
-            (id, room_id, user_id, quoted_message_id, content, date, ip) values
+            (id, room_id, user_id, quoted_message_id, content, date, ip, storage) values
             (${message.id}, ${this.id}, ${options.user.id}, ${options.quoted ? options.quoted.id : null}, ${message.content}, ${
                 message.createdTime
-            }, ${options.connection ? options.connection.ip : null})`;
+            }, ${options.connection ? options.connection.ip : null}, ${JSON.stringify(message.storage)})`;
         await DatabaseHelper.db.query(sqlQuery);
         // Return created message
         return message;

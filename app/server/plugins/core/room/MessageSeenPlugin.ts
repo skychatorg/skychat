@@ -1,6 +1,6 @@
-import { RoomPlugin } from '../../RoomPlugin.js';
 import { Connection } from '../../../skychat/Connection.js';
 import { UserController } from '../../../skychat/UserController.js';
+import { RoomPlugin } from '../../RoomPlugin.js';
 
 export type MessageSeenEventData = {
     user: number;
@@ -41,7 +41,7 @@ export class MessageSeenPlugin extends RoomPlugin {
         }
         // Parse new last message seen id
         const newLastMessageSeen = parseInt(param);
-        const message = await this.room.getMessageById(newLastMessageSeen);
+        const message = this.room.getMessageById(newLastMessageSeen);
         if (!message) {
             return;
         }

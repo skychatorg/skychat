@@ -158,7 +158,7 @@ export class UserPollPlugin extends GlobalPlugin {
         // Update message
         const formatter = MessageFormatter.getInstance();
         const messageContent = this.formatPollMessage(parseInt(pollId, 10), poll);
-        const message = await room.getMessageById(poll.messageId);
+        const message = room.getMessageById(poll.messageId);
         if (message) {
             message?.edit(messageContent, formatter.format(messageContent, false, true));
             room.send('message-edit', message?.sanitized());

@@ -1,5 +1,9 @@
-import { SanitizedUser, User } from './User.js';
+import SQL from 'sql-template-strings';
+import { DatabaseHelper } from './DatabaseHelper.js';
 import { MessageFormatter } from './MessageFormatter.js';
+import { SanitizedUser, User } from './User.js';
+
+export type MessageStorage = { [key: string]: unknown };
 
 export interface SanitizedMessage {
     /**
@@ -41,6 +45,11 @@ export interface SanitizedMessage {
      * Message metadata
      */
     meta: MessageMeta;
+
+    /**
+     * Plugin storage
+     */
+    storage: MessageStorage;
 }
 
 export type MessageMeta = {
@@ -58,9 +67,12 @@ export type MessageConstructorOptions = {
     quoted?: Message | null;
     createdTime?: Date | null;
     meta?: Partial<MessageMeta> | null;
+    storage?: MessageStorage;
 };
 
 export class Message {
+    public static readonly DEFAULT_STORAGE = {};
+
     public static ID = 1;
 
     public readonly id: number;
@@ -79,6 +91,8 @@ export class Message {
 
     public readonly meta: MessageMeta;
 
+    public storage: MessageStorage;
+
     constructor(options: MessageConstructorOptions) {
         this.id = typeof options.id !== 'undefined' ? options.id : ++Message.ID;
         this.room = typeof options.room === 'number' ? options.room : null;
@@ -87,6 +101,7 @@ export class Message {
         this.quoted = options.quoted || null;
         this.user = options.user;
         this.createdTime = options.createdTime instanceof Date ? options.createdTime : new Date();
+        this.storage = options.storage || { ...Message.DEFAULT_STORAGE };
         this.meta = Object.assign(
             {
                 device: '',
@@ -126,9 +141,6 @@ export class Message {
         return this.content.split('\n').length;
     }
 
-    /**
-     *
-     */
     public sanitized(quoteDepth = 2): SanitizedMessage {
         return {
             id: this.id,
@@ -139,6 +151,16 @@ export class Message {
             user: this.user.sanitized(),
             createdTimestamp: this.createdTime.getTime() * 0.001,
             meta: this.meta,
+            storage: this.storage,
         };
+    }
+
+    async update() {
+        return DatabaseHelper.db.query(SQL`update messages set
+            content = ${this.content},
+            quoted_message_id = ${this.quoted ? this.quoted.id : null},
+            storage = ${JSON.stringify(this.storage)}
+            where id = ${this.id}
+        `);
     }
 }
