@@ -55,7 +55,7 @@ export class ReactionPlugin extends GlobalPlugin {
 
         ReactionPlugin.QUEUE.add(async () => {
             try {
-                const message = await MessageController.getMessageById(messageId);
+                const message = await MessageController.getMessageById(messageId, true);
                 const reactions = (message.storage.reactions ?? { ...ReactionPlugin.DEFAULT_DATA }) as ReactionPluginData;
 
                 if (reactions[reaction]?.includes(connection.session.identifier)) {

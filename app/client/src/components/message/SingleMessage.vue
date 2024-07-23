@@ -191,7 +191,7 @@ const messageInteract = () => {
                 </span>
             </div>
 
-            <div class="hidden group-hover:block absolute right-[80px] top-0">
+            <div v-if="!compact" class="hidden group-hover:block absolute right-[80px] top-0">
                 <MessageReactionAdd :message-id="message.id" />
             </div>
 
@@ -272,9 +272,7 @@ const messageInteract = () => {
                 </div>
             </div>
 
-            <MessageReactions v-if="message.storage.reactions" :message="message" />
+            <MessageReactions v-if="message.storage.reactions && !compact" :message="message" />
         </HoverCard>
     </ExpandableBlock>
 </template>
-
-<style scoped></style>
