@@ -10,7 +10,7 @@ const props = defineProps({
 
 const emit = defineEmits(['content-size-changed']);
 
-const EXPANDABLE_HEIGHT = 300;
+const EXPANDABLE_HEIGHT = 500;
 
 const observer: Ref<null | ResizeObserver> = ref(null);
 const container: Ref<null | HTMLDivElement> = ref(null);
@@ -47,7 +47,7 @@ function expand() {
     >
         <slot />
         <div v-if="expandable" class="expandable-overlay">
-            <button @click="expand" class="form-control">
+            <button class="form-control" @click="expand">
                 <fa class="text-sm" icon="chevron-down" />
             </button>
         </div>
@@ -56,7 +56,7 @@ function expand() {
 
 <style scoped>
 .expandable {
-    height: 301px; /* 1px more than EXPANDABLE_HEIGHT */
+    height: 501px; /* 1px more than EXPANDABLE_HEIGHT */
     overflow: hidden;
     position: relative;
 }
