@@ -16,15 +16,15 @@ export type MessageDBRow = {
 };
 
 export class MessageController {
-    /**
-     * Load a message instance from the database
-     * @param id
-     * @returns
-     */
-    static async getMessageById(id: number): Promise<Message> {
+    static async getMessageById(id: number, fetchQuote: boolean): Promise<Message> {
         const message = (await MessageController.getMessages(['id', '=', id]))[0];
         if (!message) {
             throw new Error('Message not found');
+        }
+
+        // Load quoted message recursively
+        if (fetchQuote && typeof message.meta._quoted_message_id === 'number') {
+            message.quoted = await MessageController.getMessageById(message.meta._quoted_message_id, false);
         }
         return message;
     }
@@ -85,6 +85,9 @@ export class MessageController {
                     createdTime: new Date(messageRow.date),
                     user: users[messageRow.user_id],
                     storage,
+                    meta: {
+                        _quoted_message_id: messageRow.quoted_message_id,
+                    },
                 }),
             );
         }

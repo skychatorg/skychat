@@ -42,7 +42,7 @@ export class MessagePlugin extends RoomPlugin {
             quoted = await this.room.getMessageById(quoteId);
 
             // Otherwise, try to find the quoted message in the database
-            quoted = quoted || (await MessageController.getMessageById(quoteId));
+            quoted = quoted || (await MessageController.getMessageById(quoteId, false));
 
             // If quote found, remove the quote string from the message
             if (quoted) {

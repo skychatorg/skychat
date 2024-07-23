@@ -53,8 +53,8 @@ export interface SanitizedMessage {
 }
 
 export type MessageMeta = {
+    [key: string]: unknown;
     device: string;
-
     audio: number;
 };
 
