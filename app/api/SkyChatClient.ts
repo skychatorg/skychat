@@ -45,6 +45,7 @@ export type SkyChatClientState = {
     websocketReadyState: number;
     user: SanitizedUser;
     config: PublicConfig | null;
+    reactions: string[];
     stickers: Record<string, string>;
     custom: CustomizationElements;
     token: AuthToken | null;
@@ -78,6 +79,7 @@ export declare interface SkyChatClient {
     on(event: 'connection-accepted', listener: () => unknown): this;
 
     on(event: 'config', listener: (config: PublicConfig) => any): this;
+    on(event: 'reaction', listener: (reactions: string[]) => void): this;
     on(event: 'sticker-list', listener: (stickers: Record<string, string>) => any): this;
     on(event: 'custom', listener: (custom: CustomizationElements) => any): this;
     on(event: 'set-user', listener: (user: SanitizedUser) => any): this;
@@ -124,6 +126,7 @@ export class SkyChatClient extends EventEmitter {
 
     private _user: SanitizedUser = defaultUser;
     private _config: PublicConfig | null = null;
+    private _reactions: string[] = [];
     private _stickers: Record<string, string> = {};
     private _custom: CustomizationElements = {};
     private _token: AuthToken | null = null;
@@ -167,6 +170,7 @@ export class SkyChatClient extends EventEmitter {
 
         // Auth & Config
         this.on('config', this._onConfig.bind(this));
+        this.on('reaction', this._onReaction.bind(this));
         this.on('sticker-list', this._onStickerList.bind(this));
         this.on('custom', this._onCustom.bind(this));
         this.on('set-user', this._onUser.bind(this));
@@ -215,6 +219,11 @@ export class SkyChatClient extends EventEmitter {
 
     private _onConfig(config: PublicConfig) {
         this._config = config;
+        this.emit('update', this.state);
+    }
+
+    private _onReaction(reactions: string[]) {
+        this._reactions = reactions;
         this.emit('update', this.state);
     }
 
@@ -461,6 +470,7 @@ export class SkyChatClient extends EventEmitter {
             websocketReadyState: this._websocket ? this._websocket.readyState : WebSocket.CLOSED,
             user: this._user,
             config: this._config,
+            reactions: this._reactions,
             stickers: this._stickers,
             custom: this._custom,
             token: this._token,

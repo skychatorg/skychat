@@ -7,6 +7,7 @@ import HoverCard from '@/components/util/HoverCard.vue';
 import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
 import { computed, nextTick, onMounted, ref, watch } from 'vue';
+import MessageReactionAdd from './MessageReactionAdd.vue';
 import MessageReactions from './MessageReactions.vue';
 
 const app = useAppStore();
@@ -181,13 +182,17 @@ const messageInteract = () => {
             :class="{
                 blacklisted: isBlacklisted,
             }"
-            class="relative flex flex-row"
+            class="group relative flex flex-row"
             @contextmenu.prevent="messageInteract"
         >
             <div v-if="showDate" class="absolute w-full text-center text-xs">
                 <span class="border px-2 py-1/2 rounded-full">
                     {{ formattedDate }}
                 </span>
+            </div>
+
+            <div class="hidden group-hover:block absolute right-[80px] top-0">
+                <MessageReactionAdd :message-id="message.id" />
             </div>
 
             <div v-if="!isBlacklisted" class="py-1 px-3 flex flex-row">

@@ -1,6 +1,6 @@
 <script setup>
-import { useClientStore } from '@/stores/client';
 import { computed } from 'vue';
+import MessageReaction from './MessageReaction.vue';
 
 const props = defineProps({
     message: {
@@ -23,19 +23,16 @@ const reactions = computed(() => {
         };
     });
 });
-
-const client = useClientStore();
 </script>
 
 <template>
     <div class="flex ml-[66px] mb-1">
-        <button
+        <MessageReaction
             v-for="reaction in reactions"
             :key="reaction.id"
-            class="flex items-center bg-skygray-dark/25 rounded-full px-2 py-1 mr-1"
-            @click="client.sendMessage(`/reaction ${props.message.id} ${reaction.id}`)"
-        >
-            <div class="text-xs text-gray-500">{{ reaction.id }} {{ reaction.count }}</div>
-        </button>
+            :message-id="props.message.id"
+            :reaction="reaction.id"
+            :count="reaction.count"
+        />
     </div>
 </template>
