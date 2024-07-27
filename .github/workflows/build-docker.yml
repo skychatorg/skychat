@@ -21,4 +21,6 @@ jobs:
         cache: 'npm'
     - run: npm ci
     - run: npm run setup
+    - run: echo $USER; id -u $USER; id -g $USER
+    - run: cp .github/workflows/.env.github .env
     - run: docker-compose up -d
