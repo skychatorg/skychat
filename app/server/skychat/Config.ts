@@ -45,6 +45,8 @@ export class Config {
 
     public static FAKE_MESSAGES: string[] = [];
 
+    public static WELCOME_MESSAGE: string | null = null;
+
     public static getRandomGuestName(): string {
         const index = Math.floor(Math.random() * Config.GUEST_NAMES.length);
         return Config.GUEST_NAMES[index];
@@ -83,6 +85,13 @@ export class Config {
         if (Config.FAKE_MESSAGES.length === 0) {
             Logging.warn('No fake messages found (fakemessages.txt file is empty). Using a single empty fake message.');
             Config.GUEST_NAMES.push('');
+        }
+        // Load welcome message
+        try {
+            Config.WELCOME_MESSAGE = fs.readFileSync('config/welcome.txt').toString().trim();
+        } catch (e) {
+            Logging.info('No welcome message found (welcome.txt file is missing). Will not display a welcome message.');
+            Config.WELCOME_MESSAGE = null;
         }
         // Load preferences.json
         Config.PREFERENCES = JSON.parse(fs.readFileSync('config/preferences.json').toString());
