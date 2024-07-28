@@ -20,6 +20,7 @@ import { ReactionPlugin } from './global/ReactionPlugin.js';
 import { SetRightPlugin } from './global/SetRightPlugin.js';
 import { StickerPlugin } from './global/StickerPlugin.js';
 import { VoidPlugin } from './global/VoidPlugin.js';
+import { WelcomePlugin } from './global/WelcomePlugin.js';
 import { XpTickerPlugin } from './global/XpTickerPlugin.js';
 import { HelpPlugin } from './room/HelpPlugin.js';
 import { MentionPlugin } from './room/MentionPlugin.js';
@@ -64,6 +65,7 @@ export class CorePluginGroup extends PluginGroup {
         SetRightPlugin,
         StickerPlugin,
         VoidPlugin,
+        WelcomePlugin,
         XpTickerPlugin,
     ];
 }

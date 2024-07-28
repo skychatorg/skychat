@@ -99,6 +99,10 @@ The `config/preferences.json` file specifies application preferences. The availa
 
 `minRightForMessageHistory` defines who can quote old messages and navigate room old history.
 
+### Customize the welcome message
+
+By default, guests are welcomes with a welcome message that you can change in `config/welcome.txt`. If you remove this file, there won't be a welcome message anymore.
+
 ### Customize guest names
 
 `config/guestnames.txt` is the pool of non-logged usernames.
