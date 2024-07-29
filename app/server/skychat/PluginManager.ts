@@ -63,7 +63,7 @@ export class PluginManager {
     private async onConnectionMessage(connection: Connection, payload: string): Promise<void> {
         try {
             // Handle default command (/message)
-            if (payload[0] !== '/') {
+            if (!payload.startsWith('/')) {
                 payload = '/message ' + payload;
             }
 
