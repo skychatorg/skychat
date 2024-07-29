@@ -5,6 +5,7 @@ export type Preferences = {
     minRightForPublicMessages: number;
     minRightForPrivateMessages: number;
     minRightForMessageQuoting: number;
+    minRightForUserMention: number;
     minRightForShortTermMessageHistory: number;
     minRightForMessageHistory: number;
     minRightForUserModeration: number | 'op';
@@ -96,10 +97,11 @@ export class Config {
         // Load preferences.json
         Config.PREFERENCES = JSON.parse(fs.readFileSync('config/preferences.json').toString());
         const keys: string[] = [
-            'minRightForPrivateMessages',
-            'minRightForMessageQuoting',
             'minRightForShortTermMessageHistory',
             'minRightForMessageHistory',
+            'minRightForPrivateMessages',
+            'minRightForMessageQuoting',
+            'minRightForUserMention',
             'minRightForUserModeration',
             'minRightForSetRight',
             'minRightForAudioRecording',
