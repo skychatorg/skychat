@@ -181,7 +181,7 @@ export class BanPlugin extends GlobalPlugin {
         // If access ban, just close connection
         if (this.isBanned(connection, BAN_TYPES.ACCESS)) {
             connection.close(Connection.CLOSE_KICKED, 'You have been disconnected');
-            throw new Error();
+            return '/void';
         }
         // If shadow banned
         if (this.isBanned(connection, BAN_TYPES.SHADOW)) {

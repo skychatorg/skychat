@@ -72,6 +72,7 @@ The `config/preferences.json` file specifies application preferences. The availa
 | minRightForPublicMessages             | number               | -1           | Min. right to send public messages                                                                               |
 | minRightForPrivateMessages            | number               | -1           | Min. right to send private messages                                                                              |
 | minRightForMessageQuoting             | number               | -1           | Min. right to quote messages                                                                                     |
+| minRightForUserMention                | number               | -1           | Min. right to mention users                                                                                      |
 | minRightForShortTermMessageHistory    | number               | -1           | Min. right to access short term room message history                                                             |
 | minRightForMessageHistory             | number               | -1           | Min. right to access full room message history                                                                   |
 | minRightForUserModeration             | number               | 'op'         | Min. right to ban, kick and access user ips                                                                      |
@@ -98,6 +99,10 @@ The `config/preferences.json` file specifies application preferences. The availa
 `config/fakemessages.txt` contains the fake messages shown to users whose right level is less than `minRightForShortTermMessageHistory` defined in `preferences.json`. If `minRightForShortTermMessageHistory` is set to -1, you do not need to modify the fake messages since not one will see them.
 
 `minRightForMessageHistory` defines who can quote old messages and navigate room old history.
+
+### Customize the welcome message
+
+By default, guests are welcomes with a welcome message that you can change in `config/welcome.txt`. If you remove this file, there won't be a welcome message anymore.
 
 ### Customize guest names
 

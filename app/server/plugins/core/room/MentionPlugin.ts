@@ -1,3 +1,4 @@
+import { Config } from '../../../skychat/Config.js';
 import { Connection } from '../../../skychat/Connection.js';
 import { Message } from '../../../skychat/Message.js';
 import { Session } from '../../../skychat/Session.js';
@@ -13,6 +14,10 @@ export class MentionPlugin extends RoomPlugin {
 
     // Intercept quotes in messages
     public async onBeforeMessageBroadcastHook(message: Message, connection: Connection) {
+        if (connection.session.user.right < Config.PREFERENCES.minRightForUserMention) {
+            return message;
+        }
+
         const mentions = message.content.match(/@[a-zA-Z0-9-_]+/g);
 
         // Note quote detected
@@ -42,7 +47,7 @@ export class MentionPlugin extends RoomPlugin {
                 continue;
             }
             // Skip if in a room where the mentioned user is not allowed
-            if (!connection.room || !connection.room.accepts(session)) {
+            if (!connection.room?.accepts(session)) {
                 continue;
             }
             session.send('mention', {

@@ -149,7 +149,8 @@ export class Connection extends EventEmitter implements IBroadcaster {
 
             // Check that the event name is valid and is registered
             if (typeof eventName !== 'string') {
-                throw new Error('Event could not be parsed');
+                Logging.error(`Event could not be parsed: "${eventName}" from event "${dataAsString}"`);
+                throw new Error(`Event could not be parsed: "${eventName}"`);
             }
 
             if (!Connection.ACCEPTED_EVENTS.includes(eventName)) {

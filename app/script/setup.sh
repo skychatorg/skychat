@@ -61,3 +61,8 @@ fi
 if [[ ! -e config/fakemessages.txt ]]; then
     cp app/template/fakemessages.txt.template config/fakemessages.txt;
 fi
+
+# Initialize welcome.txt.template
+if [[ ! -e config/welcome.txt.template ]]; then
+    cp app/template/welcome.txt.template config/welcome.txt;
+fi

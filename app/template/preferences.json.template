@@ -4,6 +4,7 @@
     "minRightForPublicMessages": -1,
     "minRightForPrivateMessages": -1,
     "minRightForMessageQuoting": -1,
+    "minRightForUserMention": -1,
     "minRightForUserModeration": "op",
     "minRightForSetRight": "op",
     "minRightForAudioRecording": -1,
