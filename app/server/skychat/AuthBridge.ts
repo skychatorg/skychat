@@ -36,9 +36,9 @@ export class AuthBridge extends EventEmitter {
 
     static readonly MAX_REGISTER_PER_HOUR = 1;
 
-    static readonly MAX_LOGIN_PER_MINUTE = 10;
+    static readonly MAX_LOGIN_PER_MINUTE = 20;
 
-    static readonly MAX_GUEST_PER_MINUTE = 8;
+    static readonly MAX_GUEST_PER_MINUTE = 20;
 
     static readonly MAX_TOKEN_AUTH_PER_MINUTE = 20;
 

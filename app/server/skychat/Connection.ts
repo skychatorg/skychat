@@ -13,16 +13,10 @@ import { Session } from './Session.js';
  * A client represents an open connection to the server
  */
 export class Connection extends EventEmitter implements IBroadcaster {
-    static readonly PING_INTERVAL_MS = 10 * 1000;
-
     // TODO: This limit is also used for the AudioRecorderPlugin, so we currently have to keep it high. The audio limit should be different.
     static readonly MAX_RECEIVED_BYTES_PER_10_SEC = 1024 * 400;
 
-    static readonly MAX_EVENTS_PER_SEC = 16;
-
-    static readonly MAXIMUM_MISSED_PING = 1;
-
-    static readonly CLOSE_PING_TIMEOUT = 4504;
+    static readonly MAX_EVENTS_PER_SEC = 30;
 
     static readonly CLOSE_KICKED = 4403;
 
