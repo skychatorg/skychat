@@ -2,6 +2,7 @@ import { GlobalPlugin } from '../plugins/GlobalPlugin.js';
 import { globalPluginGroup } from '../plugins/GlobalPluginGroup.js';
 import { ConnectionAcceptedEvent } from './AuthBridge.js';
 import { Connection } from './Connection.js';
+import { Logging } from './Logging.js';
 import { MessageFormatter } from './MessageFormatter.js';
 import { RoomManager } from './RoomManager.js';
 
@@ -66,6 +67,8 @@ export class PluginManager {
             if (!payload.startsWith('/')) {
                 payload = '/message ' + payload;
             }
+
+            Logging.info(`Command received: ${connection.session.identifier} ${payload.split(' ')[0]} (length: ${payload.length})`);
 
             payload = await this.executeNewMessageHook(payload, connection);
 
