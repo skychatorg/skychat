@@ -13,7 +13,12 @@ export class MentionPlugin extends RoomPlugin {
     async run(): Promise<void> {}
 
     // Intercept quotes in messages
-    public async onBeforeMessageBroadcastHook(message: Message, connection: Connection) {
+    public async onBeforeMessageBroadcastHook(message: Message, connection?: Connection) {
+        // It is currently not possible to mention an user if there's not connection the mention originates from
+        if (!connection) {
+            return message;
+        }
+
         if (connection.session.user.right < Config.PREFERENCES.minRightForUserMention) {
             return message;
         }
