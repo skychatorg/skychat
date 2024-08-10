@@ -25,7 +25,7 @@ export type ConnectionUpgradeEvent = {
 export class HttpServer extends EventEmitter {
     public static readonly UPLOADED_FILE_REGEXP: RegExp = new RegExp('^' + Config.LOCATION + '/uploads/all/([-\\/._a-zA-Z0-9]+)$');
 
-    static readonly MAX_UPGRADES_PER_SECOND = 3;
+    static readonly MAX_UPGRADES_PER_SECOND = 4;
 
     static readonly MAX_UPGRADES_PER_MINUTE = 20;
 
@@ -39,7 +39,7 @@ export class HttpServer extends EventEmitter {
 
     private readonly wsCreateSecLimiter: RateLimiterMemory = new RateLimiterMemory({
         points: HttpServer.MAX_UPGRADES_PER_SECOND,
-        duration: 60,
+        duration: 1,
     });
 
     private readonly wsCreateMinLimiter: RateLimiterMemory = new RateLimiterMemory({
