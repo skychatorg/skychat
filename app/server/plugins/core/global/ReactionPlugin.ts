@@ -13,7 +13,7 @@ type ReactionPluginData = {
 export class ReactionPlugin extends GlobalPlugin {
     static readonly DEFAULT_DATA: ReactionPluginData = {};
 
-    static readonly REACTIONS: string[] = ['💯', '😂', '🤡', '🥸', '👋', '🥒'];
+    static readonly REACTIONS: string[] = ['🐒', '🤡', '🥒', '🤔', '✅', '❌'];
 
     static readonly QUEUE = new pQueue({ concurrency: 1 });
 
