@@ -1,6 +1,7 @@
 import fs from 'fs';
 import { GlobalPlugin } from '../plugins/GlobalPlugin.js';
 import { Connection } from './Connection.js';
+import { Logging } from './Logging.js';
 import { Message } from './Message.js';
 import { PluginManager } from './PluginManager.js';
 import { Room } from './Room.js';
@@ -72,6 +73,7 @@ export class RoomManager {
 
         // Create rooms
         const rooms = data.rooms || [1];
+        Logging.info(`Lodaded ${rooms.length} rooms from storage`);
         this.rooms = rooms.map((id) => new Room(this, false, id));
     }
 
