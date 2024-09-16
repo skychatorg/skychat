@@ -1,8 +1,9 @@
 import SQL from 'sql-template-strings';
-import { DatabaseHelper } from '../../skychat/DatabaseHelper.js';
-import { GlobalPlugin } from '../GlobalPlugin.js';
-import { RoomManager } from '../../skychat/RoomManager.js';
 import { Config } from '../../skychat/Config.js';
+import { DatabaseHelper } from '../../skychat/DatabaseHelper.js';
+import { Logging } from '../../skychat/Logging.js';
+import { RoomManager } from '../../skychat/RoomManager.js';
+import { GlobalPlugin } from '../GlobalPlugin.js';
 
 export class LogFuzzerPlugin extends GlobalPlugin {
     static readonly DURATION_BEFORE_FUZZ = Config.PREFERENCES.daysBeforeMessageFuzz * 24 * 60 * 60 * 1000;
@@ -54,6 +55,7 @@ export class LogFuzzerPlugin extends GlobalPlugin {
 
     async tick(): Promise<void> {
         const limitTimestamp = Math.floor(new Date().getTime() - LogFuzzerPlugin.DURATION_BEFORE_FUZZ);
+        Logging.info('Fuzzing messages before', new Date(limitTimestamp).toISOString());
         const sqlQuery = SQL`select id, content from messages where id > ${this.storage.lastId} and date <= ${limitTimestamp} limit 5000`;
         const messages: { content: string; id: number }[] = (await DatabaseHelper.db.query(sqlQuery)).rows;
         for (const { id, content } of messages) {
