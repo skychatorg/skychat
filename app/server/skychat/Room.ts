@@ -9,6 +9,7 @@ import { Config } from './Config.js';
 import { Connection } from './Connection.js';
 import { DatabaseHelper } from './DatabaseHelper.js';
 import { IBroadcaster } from './IBroadcaster.js';
+import { Logging } from './Logging.js';
 import { Message, MessageConstructorOptions } from './Message.js';
 import { MessageController } from './MessageController.js';
 import { RoomManager } from './RoomManager.js';
@@ -224,6 +225,10 @@ export class Room implements IBroadcaster {
             this.pluginGroupNames = data.pluginGroupNames ?? this.pluginGroupNames;
             this.isPrivate = !!data.isPrivate;
             this.whitelist = data.whitelist;
+
+            if (this.isPrivate && this.whitelist.length === 0) {
+                Logging.warn(`Room ${this.id} is private but has no whitelist`);
+            }
         } catch (error) {
             console.error(`Could not load room ${this.id} data from disk: ${error}`);
             this.name = `Room ${this.id} (corrupted)`;
