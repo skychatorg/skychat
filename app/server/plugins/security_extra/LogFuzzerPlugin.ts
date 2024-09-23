@@ -56,7 +56,9 @@ export class LogFuzzerPlugin extends GlobalPlugin {
     async tick(): Promise<void> {
         const limitTimestamp = Math.floor(new Date().getTime() - LogFuzzerPlugin.DURATION_BEFORE_FUZZ);
         Logging.info('Fuzzing messages before', new Date(limitTimestamp).toISOString());
-        const sqlQuery = SQL`select id, content from messages where id > ${this.storage.lastId} and date <= ${limitTimestamp} limit 5000`;
+        const sqlQuery = SQL`select id, content from messages where id > ${this.storage.lastId} and date <= ${new Date(
+            limitTimestamp,
+        ).toISOString()} limit 5000`;
         const messages: { content: string; id: number }[] = (await DatabaseHelper.db.query(sqlQuery)).rows;
         for (const { id, content } of messages) {
             const sqlQuery = SQL`update messages set content=${this.fuzzContent(content)} where id=${id}`;
