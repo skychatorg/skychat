@@ -52,7 +52,7 @@ export class SkyChatServer {
 
             // Notify the room manager & plugin manager
             this.roomManager.onConnectionCreated(connection);
-            this.pluginManager.onConnectionCreated(connection, event);
+            await this.pluginManager.onConnectionCreated(connection, event);
         } catch (error) {
             Logging.error(error);
             event.webSocket.send(
