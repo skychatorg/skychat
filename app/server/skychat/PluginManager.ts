@@ -33,7 +33,7 @@ export class PluginManager {
         connection.on('binary-message', this.onConnectionBinary.bind(this, connection));
         connection.on('message', this.onConnectionMessage.bind(this, connection));
 
-        this.executeNewConnectionHook(connection, event);
+        await this.executeNewConnectionHook(connection, event);
         connection.webSocket.on('close', () => {
             this.executeConnectionClosedHook(connection);
         });
