@@ -80,7 +80,7 @@ export class SandalePlugin extends GlobalPlugin {
         await UserController.buy(connection.session.user, SandalePlugin.COST);
 
         // Notify everyone but the user who is sandalized
-        const messageContent = `${connection.session.identifier} sandaled ${identifier} 🤯 (cost: $${SandalePlugin.COST / 100}) :sandale:`;
+        const messageContent = `${connection.session.identifier} sandaled ${identifier} 🤯 (cost: $${SandalePlugin.COST / 100}) 👞`;
         const message = UserController.createNeutralMessage({ id: 0, content: messageContent });
         if (connection.room) {
             connection.room.connections.forEach((c) => {
@@ -101,7 +101,7 @@ export class SandalePlugin extends GlobalPlugin {
     public async onNewMessageHook(message: string, connection: Connection): Promise<string> {
         if (message.indexOf('/message') === 0 && message.split(' ').length > 2 && this.isSandaled(connection.session.identifier)) {
             // Replace the message with the sandale smiley
-            return '/message :sandale:';
+            return '/message 👞';
         }
         return message;
     }
