@@ -101,6 +101,7 @@ export class SandalePlugin extends GlobalPlugin {
     public async onNewMessageHook(message: string, connection: Connection): Promise<string> {
         if (message.indexOf('/message') === 0 && message.split(' ').length > 2 && this.isSandaled(connection.session.identifier)) {
             // Replace the message with the sandale smiley
+            this.setSandaled(connection.session.identifier, false);
             return '/message 👞';
         }
         return message;
