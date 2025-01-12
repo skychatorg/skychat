@@ -91,18 +91,26 @@ export class HttpServer extends EventEmitter {
     }
 
     private async onServerUpgradeRequest(request: http.IncomingMessage, socket: internal.Duplex, head: Buffer) {
+        const ip = RateLimiter.getIP(request);
+
         try {
             // Rate-limit upgrade requests per IP (creating new connections is costly)
-            await this.wsCreateSecLimiter.consume(RateLimiter.getIP(request));
-            await this.wsCreateMinLimiter.consume(RateLimiter.getIP(request));
+            await this.wsCreateSecLimiter.consume(ip);
+            await this.wsCreateMinLimiter.consume(ip);
         } catch (error) {
-            Logging.error('Rate limit exceeded for', RateLimiter.getIP(request), JSON.stringify(error));
+            Logging.error('Rate limit exceeded for', ip, JSON.stringify(error));
             socket.destroy();
             return;
         }
 
         // Register upgrade callback
         this.wss.handleUpgrade(request, socket, head, (webSocket: WebSocket) => {
+            // We need to listen for error events on the webSocket as soon as it is created,
+            //  otherwise the error will be thrown and crash the server
+            webSocket.on('error', (error) => {
+                Logging.error(`WebSocket error from ${ip}: ${error}`);
+            });
+
             this.emit('connection-upgraded', { request, socket, head, webSocket } as ConnectionUpgradeEvent);
         });
     }
