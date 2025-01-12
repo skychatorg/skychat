@@ -39,7 +39,7 @@ export class MessagePlugin extends RoomPlugin {
             const quoteId = parseInt(quoteMatch[1]);
 
             // Try to find message in room message cache
-            quoted = await this.room.getMessageById(quoteId);
+            quoted = this.room.getMessageById(quoteId);
 
             // Otherwise, try to find the quoted message in the database
             quoted = quoted || (await MessageController.getMessageById(quoteId, false));
