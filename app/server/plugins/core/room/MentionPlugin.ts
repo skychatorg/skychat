@@ -4,6 +4,7 @@ import { Message } from '../../../skychat/Message.js';
 import { Session } from '../../../skychat/Session.js';
 import { RoomPlugin } from '../../RoomPlugin.js';
 import { BlacklistPlugin } from '../global/BlacklistPlugin.js';
+import { WebPushPlugin } from '../global/WebPushPlugin.js';
 
 export class MentionPlugin extends RoomPlugin {
     static readonly commandName = 'mention';
@@ -25,7 +26,7 @@ export class MentionPlugin extends RoomPlugin {
 
         const mentions = message.content.match(/@[a-zA-Z0-9-_]+/g);
 
-        // Note quote detected
+        // No quote detected
         if (mentions === null) {
             return message;
         }
@@ -60,9 +61,18 @@ export class MentionPlugin extends RoomPlugin {
                 identifier: connection.session.identifier,
                 messageId: message.id,
             });
+
+            // Send push notification
+            const webPushPlugin = this.room.manager.getPlugin(WebPushPlugin.commandName) as WebPushPlugin;
+            if (webPushPlugin && session.user.id) {
+                webPushPlugin.send(session.user, {
+                    title: `Mention in #${this.room.name}`,
+                    body: `${connection.session.user.username} mentioned you in #${this.room.name}`,
+                    tag: 'mention',
+                });
+            }
         }
 
-        // For each quote
         return message;
     }
 }
