@@ -14,6 +14,7 @@ export default defineConfig({
             '@': path.resolve(__dirname, './app/client/src'),
         },
     },
+    envPrefix: ['VAPID_PUBLIC_', 'VITE_'],
     server: {
         open: true,
         proxy: {

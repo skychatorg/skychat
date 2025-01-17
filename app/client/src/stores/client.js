@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import { useToast } from 'vue-toastification';
 import { SkyChatClient } from '../../../api/index.ts';
+import { WebPush } from '../lib/WebPush.js';
 
 // Connect to SkyChatClient
 const protocol = document.location.protocol === 'http:' ? 'ws' : 'wss';
@@ -82,6 +83,23 @@ export const useClientStore = defineStore('client', {
                     return;
                 }
                 this.messages[messageIndex] = message;
+            });
+
+            // Ask for push notification permission on user login
+            client.on('set-user', async (user) => {
+                if (!user.id) {
+                    return;
+                }
+
+                try {
+                    const subscription = await WebPush.register(import.meta.env.VAPID_PUBLIC_KEY);
+                    if (subscription) {
+                        client.sendMessage(`/push ${JSON.stringify(subscription)}`);
+                    }
+                } catch (error) {
+                    console.error(error);
+                    return;
+                }
             });
 
             client.on('info', (info) => {
