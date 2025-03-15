@@ -240,6 +240,22 @@ export class RoomManager {
     }
 
     /**
+     * Get a sorted list of rooms
+     */
+    getSortedRoomList(): Room[] {
+        const publicRooms = this.rooms.filter((room) => !room.isPrivate);
+        const privateRooms = this.rooms.filter((room) => room.isPrivate);
+
+        // Sort public rooms by order only
+        publicRooms.sort((a, b) => b.order - a.order);
+
+        // Sort private rooms by last message date (most recent first)
+        privateRooms.sort((a, b) => b.getLastReceivedMessageDate().getTime() - a.getLastReceivedMessageDate().getTime());
+
+        return [...publicRooms, ...privateRooms];
+    }
+
+    /**
      * Send the list of rooms for a specific connection
      * @param connection
      */
@@ -248,17 +264,8 @@ export class RoomManager {
         const session = connectionOrSession instanceof Connection ? connectionOrSession.session : connectionOrSession;
         connectionOrSession.send(
             'room-list',
-            this.rooms
+            this.getSortedRoomList()
                 .filter((room) => !room.isPrivate || room.whitelist.indexOf(session.identifier) !== -1)
-                .sort((a, b) => {
-                    const getWeight = (room: Room): number => {
-                        const privateValue = room.isPrivate ? 0 : 1;
-                        const participantCountValue = room.isPrivate ? room.whitelist.length : 1;
-                        const score = [privateValue, participantCountValue, room.order, Room.CURRENT_ID - room.id];
-                        return score.reduce((a, b) => a * 10000 + b, 0);
-                    };
-                    return getWeight(b) - getWeight(a);
-                })
                 .map((room) => room.sanitized()),
         );
     }

@@ -474,6 +474,13 @@ export class Room implements IBroadcaster {
     }
 
     /**
+     * Get the date of the last message received by this room
+     */
+    public getLastReceivedMessageDate(): Date {
+        return this.messages.length === 0 ? new Date() : this.messages[this.messages.length - 1].createdTime;
+    }
+
+    /**
      * Get metadata about this room
      */
     public sanitized(): SanitizedRoom {
