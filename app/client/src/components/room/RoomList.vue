@@ -3,14 +3,17 @@ import SingleRoom from '@/components/room/SingleRoom.vue';
 import SectionTitle from '@/components/util/SectionTitle.vue';
 import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
-import { computed } from 'vue';
+import { ref, watch } from 'vue';
 
 const app = useAppStore();
 const client = useClientStore();
 
-const hasUnread = computed(() => {
-    return client.hasUnreadMessages();
-});
+// Manage unread messages
+const hasUnread = ref(client.hasUnreadMessages());
+const updateHandler = () => {
+    hasUnread.value = client.hasUnreadMessages();
+};
+watch(() => client.state, updateHandler, { deep: true });
 
 function manageRooms() {
     app.toggleModal('manageRooms');
