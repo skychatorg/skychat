@@ -74,7 +74,17 @@ export class RoomManager {
         // Create rooms
         const rooms = data.rooms || [1];
         Logging.info(`Lodaded ${rooms.length} rooms from storage`);
-        this.rooms = rooms.map((id) => new Room(this, false, id));
+        this.rooms = rooms
+            .map((id) => {
+                Logging.info(`Loading room ${id}`);
+                try {
+                    return new Room(this, false, id);
+                } catch (e) {
+                    Logging.error(`Error loading room ${id}: ${e}`);
+                    return null;
+                }
+            })
+            .filter((room) => room !== null) as Room[];
     }
 
     /**

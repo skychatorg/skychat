@@ -1,6 +1,5 @@
 import SQL from 'sql-template-strings';
 import { DatabaseHelper } from './DatabaseHelper.js';
-import { Logging } from './Logging.js';
 import { MessageFormatter } from './MessageFormatter.js';
 import { SanitizedUser, User } from './User.js';
 
@@ -102,7 +101,6 @@ export class Message {
         this.quoted = options.quoted || null;
         this.user = options.user;
         this.createdTime = options.createdTime instanceof Date ? options.createdTime : new Date();
-        Logging.info(`Instantiated message ${this.id} with createdTime: ${this.createdTime}`); // TODO: Clean this debug log when the crashes are fixed
         this.storage = options.storage || { ...Message.DEFAULT_STORAGE };
         this.meta = Object.assign(
             {
