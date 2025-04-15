@@ -1,10 +1,10 @@
-import { RoomPlugin } from '../../RoomPlugin.js';
+import { Config } from '../../../skychat/Config.js';
 import { Connection } from '../../../skychat/Connection.js';
 import { Message } from '../../../skychat/Message.js';
 import { Room } from '../../../skychat/Room.js';
-import { Config } from '../../../skychat/Config.js';
 import { StickerManager } from '../../../skychat/StickerManager.js';
 import { User } from '../../../skychat/User.js';
+import { RoomPlugin } from '../../RoomPlugin.js';
 
 export class MessageHistoryPlugin extends RoomPlugin {
     static readonly commandName = 'messagehistory';
@@ -14,7 +14,7 @@ export class MessageHistoryPlugin extends RoomPlugin {
     readonly rules = {
         messagehistory: {
             minCount: 0,
-            maxCallsPer10Seconds: 3,
+            maxCallsPer10Seconds: 8,
             params: [{ pattern: /^([0-9]+)$/, name: 'lastId' }],
         },
     };
