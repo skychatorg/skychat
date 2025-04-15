@@ -1,4 +1,5 @@
 import fs from 'fs';
+import sharp from 'sharp';
 import { Config } from '../../../skychat/Config.js';
 import { Connection } from '../../../skychat/Connection.js';
 import { FileManager } from '../../../skychat/FileManager.js';
@@ -48,26 +49,32 @@ export class AvatarPlugin extends GlobalPlugin {
         }
         const newAvatarPath = 'uploads/avatars/' + connection.session.identifier + '.' + extension;
 
-        // Remove previous avatar
+        // Remove previous avatar if it exists
         const previousAvatarUrl = UserController.getUserPluginData<string>(connection.session.user, this.commandName);
         const previousAvatarLocalPath = '.' + previousAvatarUrl.substr(Config.LOCATION.length).split('?')[0];
         if (previousAvatarUrl.match('^uploads/avatars/')) {
             try {
                 fs.unlinkSync(previousAvatarLocalPath);
             } catch (error) {
-                Logging.warn('Unable to rm avatar local path');
+                Logging.warn('Unable to remove previous avatar local path');
             }
         }
 
-        // Copy avatar
-        fs.copyFileSync(localPath, newAvatarPath);
+        // Resize and save the new avatar using the sharp library
+        try {
+            await sharp(localPath).resize({ width: 200, height: 200, fit: 'inside' }).toFile(newAvatarPath);
+        } catch (err) {
+            Logging.error('Failed to resize avatar', err);
+            throw new Error('Failed to resize avatar');
+        }
 
-        // Get new avatar url. Append random string for immediately invalidating cache
+        // Generate new avatar URL with a cache-busting query parameter
         const avatarNewUrl = Config.LOCATION + '/' + newAvatarPath + '?' + new Date().getTime();
 
-        // Save data to database
+        // Save the new avatar URL to the database
         await UserController.savePluginData(connection.session.user, this.commandName, avatarNewUrl);
 
+        // Sync with the connected list plugin
         (this.manager.getPlugin('connectedlist') as ConnectedListPlugin).sync();
     }
 }

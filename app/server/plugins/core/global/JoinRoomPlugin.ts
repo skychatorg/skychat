@@ -13,7 +13,7 @@ export class JoinRoomPlugin extends GlobalPlugin {
         join: {
             minCount: 1,
             maxCount: 1,
-            maxCallsPer10Seconds: 5,
+            maxCallsPer10Seconds: 10,
             params: [{ name: 'roomId', pattern: /^(\d+)$/ }],
         },
     };
