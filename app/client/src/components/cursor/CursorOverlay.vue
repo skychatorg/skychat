@@ -45,6 +45,36 @@ const sendCursorPosition = (x, y) => {
 };
 
 const cursorList = computed(() => Object.values(client.state.cursors));
+
+function getEasterDate(year) {
+    const f = Math.floor;
+    const G = year % 19;
+    const C = f(year / 100);
+    const H = (C - f(C / 4) - f((8 * C + 13) / 25) + 19 * G + 15) % 30;
+    const I = H - f(H / 28) * (1 - f(29 / (H + 1)) * f((21 - G) / 11));
+    const J = (year + f(year / 4) + I + 2 - C + f(C / 4)) % 7;
+    const L = I - J;
+    const month = 3 + f((L + 40) / 44);
+    const day = L + 28 - 31 * f(month / 4);
+    return new Date(year, month - 1, day);
+}
+
+const isEaster = computed(() => {
+    /**
+     * Return whether today is Easter's weekend or not
+     */
+    const today = new Date();
+    const easterSunday = getEasterDate(today.getFullYear());
+
+    const easterSaturday = new Date(easterSunday);
+    easterSaturday.setDate(easterSunday.getDate() - 1);
+
+    const easterMonday = new Date(easterSunday);
+    easterMonday.setDate(easterSunday.getDate() + 1);
+
+    const sameDay = (a, b) => a.getDate() === b.getDate() && a.getMonth() === b.getMonth() && a.getFullYear() === b.getFullYear();
+    return sameDay(today, easterSaturday) || sameDay(today, easterSunday) || sameDay(today, easterMonday);
+});
 </script>
 
 <template>
@@ -57,8 +87,13 @@ const cursorList = computed(() => Object.values(client.state.cursors));
                 transform: `translate(${entry.cursor.x * 100}vw, ${entry.cursor.y * 100}vh)`,
             }"
         >
-            <fa icon="arrow-pointer" class="absolute top-0 left-0 text-primary" />
-            <UserMiniAvatar :user="entry.cursor.user" class="absolute top-4 left-3" />
+            <template v-if="isEaster">
+                <fa icon="fa-solid fa-egg" class="absolute top-0 left-0 text-primary text-4xl" />
+            </template>
+            <template v-else>
+                <fa icon="arrow-pointer" class="absolute top-0 left-0 text-primary" />
+                <UserMiniAvatar :user="entry.cursor.user" class="absolute top-4 left-3" />
+            </template>
         </div>
     </div>
 </template>
