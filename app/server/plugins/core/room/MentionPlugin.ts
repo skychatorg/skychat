@@ -1,17 +1,55 @@
 import { Config } from '../../../skychat/Config.js';
 import { Connection } from '../../../skychat/Connection.js';
+import { Logging } from '../../../skychat/Logging.js';
 import { Message } from '../../../skychat/Message.js';
 import { Session } from '../../../skychat/Session.js';
 import { RoomPlugin } from '../../RoomPlugin.js';
 import { BlacklistPlugin } from '../global/BlacklistPlugin.js';
-import { WebPushPlugin } from '../global/WebPushPlugin.js';
+
+type ParsedMentions = {
+    here: boolean;
+    users: string[];
+};
 
 export class MentionPlugin extends RoomPlugin {
     static readonly commandName = 'mention';
 
+    static readonly MENTION_REGEX = /@[a-zA-Z0-9-_]+/g;
+
+    static readonly MENTION_HERE = 'here';
+
     public callable = false;
 
     async run(): Promise<void> {}
+
+    private parseMentions(message: Message): ParsedMentions {
+        const parsedMentions: ParsedMentions = {
+            here: false,
+            users: [],
+        };
+
+        // No quote detected
+        const mentions = message.content.match(MentionPlugin.MENTION_REGEX);
+        if (mentions === null) {
+            return parsedMentions;
+        }
+
+        for (const mention of mentions) {
+            const identifier = mention.substring(1).toLowerCase();
+
+            if (identifier === MentionPlugin.MENTION_HERE) {
+                parsedMentions.here = true;
+                continue;
+            }
+
+            const session = Session.getSessionByIdentifier(identifier);
+            if (session) {
+                parsedMentions.users.push(session.user.username);
+            }
+        }
+
+        return parsedMentions;
+    }
 
     // Intercept quotes in messages
     public async onBeforeMessageBroadcastHook(message: Message, connection?: Connection) {
@@ -24,55 +62,66 @@ export class MentionPlugin extends RoomPlugin {
             return message;
         }
 
-        const mentions = message.content.match(/@[a-zA-Z0-9-_]+/g);
+        const mentions = this.parseMentions(message);
 
-        // No quote detected
-        if (mentions === null) {
+        // No mentions detected
+        if (!mentions.here && mentions.users.length === 0) {
             return message;
         }
 
-        // Get users from mentions
-        const allSessions = mentions
-            .map((mention) => mention.substring(1).toLowerCase())
-            .filter((identifier) => identifier !== connection.session.identifier)
-            .map((identifier) => Session.getSessionByIdentifier(identifier))
-            .filter((session) => session !== undefined) as Session[];
-
-        // Remove duplicates
-        const sessions = Array.from(new Set(allSessions));
-
-        // No valid session
-        if (sessions.length === 0) {
-            return message;
+        // If `here`
+        if (mentions.here) {
+            this.handleHereMention(connection, message);
         }
 
-        // Send mention to each session
-        for (const session of sessions) {
-            // Skip blacklisted users
-            if (BlacklistPlugin.hasBlacklisted(session.user, connection.session.user.username)) {
-                continue;
-            }
-            // Skip if in a room where the mentioned user is not allowed
-            if (!connection.room?.accepts(session)) {
-                continue;
-            }
-            session.send('mention', {
-                roomId: this.room.id,
-                identifier: connection.session.identifier,
-                messageId: message.id,
-            });
-
-            // Send push notification
-            const webPushPlugin = this.room.manager.getPlugin(WebPushPlugin.commandName) as WebPushPlugin;
-            if (webPushPlugin && session.user.id) {
-                webPushPlugin.send(session.user, {
-                    title: `Mention in #${this.room.name}`,
-                    body: `${connection.session.user.username} mentioned you in #${this.room.name}`,
-                    tag: 'mention',
-                });
-            }
+        // If `@user`
+        if (mentions.users.length > 0) {
+            this.handleUserMentions(connection, message, mentions.users);
         }
 
         return message;
+    }
+
+    private canReceiveMention(receiver: Connection, sender: Connection): boolean {
+        // Blacklisted?
+        if (BlacklistPlugin.hasBlacklisted(receiver.session.user, sender.session.identifier)) {
+            return false;
+        }
+
+        // Receiver can join the room?
+        if (!sender.room?.accepts(receiver.session)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private handleHereMention(sender: Connection, message: Message) {
+        for (const receiver of Session.connections) {
+            if (this.canReceiveMention(receiver, sender)) {
+                this.sendMention(receiver, sender, message);
+            }
+        }
+    }
+
+    private handleUserMentions(sender: Connection, message: Message, users: string[]) {
+        const sessions = users.map((user) => Session.getSessionByIdentifier(user)).filter((session) => session !== undefined);
+
+        for (const session of sessions) {
+            for (const receiver of session.connections) {
+                if (this.canReceiveMention(receiver, sender)) {
+                    this.sendMention(receiver, sender, message);
+                }
+            }
+        }
+    }
+
+    private sendMention(receiver: Connection, sender: Connection, message: Message) {
+        Logging.info(`MentionPlugin: ${sender.session.identifier} mentioned ${receiver.session.identifier} in room ${this.room.id}`);
+        receiver.send('mention', {
+            roomId: this.room.id,
+            identifier: sender.session.identifier,
+            messageId: message.id,
+        });
     }
 }

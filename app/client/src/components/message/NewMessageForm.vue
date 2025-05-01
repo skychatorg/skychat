@@ -203,10 +203,17 @@ const suggestTriggers = computed(() => [
     {
         char: '@',
         whitespaceBefore: true,
-        items: Object.values(client.state.connectedList).map((user) => ({
-            value: `@${user.identifier}`,
-            searchText: user.identifier,
-        })),
+        items: Object.values(client.state.connectedList)
+            .map((user) => ({
+                value: `@${user.identifier}`,
+                searchText: user.identifier,
+            }))
+            .concat([
+                {
+                    value: `@here`,
+                    searchText: `@here (all connected users)`,
+                },
+            ]),
     },
     {
         char: ':',
