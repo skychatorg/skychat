@@ -1,3 +1,4 @@
+import { Logging } from '../skychat/Logging.js';
 import { Room } from '../skychat/Room.js';
 import { RoomManager } from '../skychat/RoomManager.js';
 import { GlobalPlugin, GlobalPluginConstructor } from './GlobalPlugin.js';
@@ -75,6 +76,7 @@ class GlobalPluginGroup {
         const commands: { [commandName: string]: any } = {};
         for (const plugin of plugins) {
             const PluginClass = plugin.constructor as RoomPluginConstructor | GlobalPluginConstructor;
+            Logging.info(`Registering command ${PluginClass.commandName} for plugin ${plugin.constructor.name}`);
             commands[PluginClass.commandName] = plugin;
             for (const alias of PluginClass.commandAliases) {
                 commands[alias] = plugin;

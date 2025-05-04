@@ -8,6 +8,8 @@ const protocol = document.location.protocol === 'http:' ? 'ws' : 'wss';
 const url = protocol + '://' + document.location.host + '/ws';
 const client = new SkyChatClient(url);
 
+export { client as apiClient };
+
 export const useClientStore = defineStore('client', {
     state: () => ({
         /**
@@ -40,7 +42,9 @@ export const useClientStore = defineStore('client', {
                     // Clear messages
                     this.messages = [];
                 }
-                this.state = client.state;
+                for (const key in client.state) {
+                    this.state[key] = client.state[key];
+                }
             });
 
             // Audio received
