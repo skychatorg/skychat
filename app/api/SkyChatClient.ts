@@ -21,6 +21,7 @@ import {
 } from '../server/index.js';
 import { Logging } from '../server/skychat/Logging.js';
 import { BinaryMessageTypes } from './BinaryMessageTypes.js';
+import { MutePluginHelper } from './plugins/MutePluginHelper.js';
 
 const defaultUser: SanitizedUser = {
     id: 0,
@@ -160,6 +161,10 @@ export class SkyChatClient extends EventEmitter {
 
     private autoMessageAck: boolean;
 
+    public readonly plugins: {
+        mute: MutePluginHelper;
+    };
+
     constructor(
         public readonly url: string,
         options: SkyChatOptions = {},
@@ -215,6 +220,11 @@ export class SkyChatClient extends EventEmitter {
 
         // URL
         this.url = url;
+
+        // Plugin helpers
+        this.plugins = {
+            mute: new MutePluginHelper(this),
+        };
     }
 
     private _onConfig(config: PublicConfig) {
@@ -560,9 +570,18 @@ export class SkyChatClient extends EventEmitter {
             return false;
         }
         const rooms = typeof roomId === 'undefined' ? this._rooms : this._rooms.filter((room) => room.id === roomId);
-        return rooms.some(
-            (room) => this.hasAccessToRoom(room.id) && room.lastReceivedMessageId > (this._user.data.plugins.lastseen[room.id] ?? 0),
-        );
+        return rooms.some((room) => {
+            if (!this.hasAccessToRoom(room.id)) {
+                return false;
+            }
+            if (this.plugins.mute.isRoomMuted(room.id)) {
+                return false;
+            }
+            if (room.lastReceivedMessageId <= (this._user.data.plugins.lastseen[room.id] ?? 0)) {
+                return false;
+            }
+            return true;
+        });
     }
 
     /**

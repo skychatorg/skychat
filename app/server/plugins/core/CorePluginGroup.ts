@@ -13,6 +13,7 @@ import { JoinRoomPlugin } from './global/JoinRoomPlugin.js';
 import { KickPlugin } from './global/KickPlugin.js';
 import { MailPlugin } from './global/MailPlugin.js';
 import { MottoPlugin } from './global/MottoPlugin.js';
+import { MutePlugin } from './global/MutePlugin.js';
 import { OPPlugin } from './global/OPPlugin.js';
 import { PollPlugin } from './global/PollPlugin.js';
 import { PrivateMessagePlugin } from './global/PrivateMessagePlugin.js';
@@ -59,6 +60,7 @@ export class CorePluginGroup extends PluginGroup {
         KickPlugin,
         MailPlugin,
         MottoPlugin,
+        MutePlugin,
         OPPlugin,
         PollPlugin,
         PrivateMessagePlugin,
