@@ -230,9 +230,9 @@ const suggestTriggers = computed(() => [
         items: Object.values(client.state.rooms)
             .filter((room) => !room.isPrivate)
             .map((room) => ({
-                value: `#${room.id}:${room.name.replace(/\s/g, '_')}`,
+                value: room.id.toString(),
                 label: `# ${room.name}`,
-                searchText: room.name,
+                searchMatch: room.name,
             })),
     },
 ]);

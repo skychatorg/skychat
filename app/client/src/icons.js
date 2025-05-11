@@ -60,6 +60,7 @@ import {
     faUser,
     faUsers,
     faVideo,
+    faVolumeXmark,
     faXmark,
 } from '@fortawesome/free-solid-svg-icons';
 
@@ -124,6 +125,7 @@ library.add(
     faUser,
     faUsers,
     faVideo,
+    faVolumeXmark,
     faXmark,
 );
 
