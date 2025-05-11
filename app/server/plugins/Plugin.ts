@@ -166,7 +166,7 @@ export abstract class Plugin {
     /**
      * Save user data for this plugin
      */
-    public async saveUserData(user: User, data: any) {
+    public async saveUserData(user: User, data: unknown) {
         await UserController.savePluginData(user, this.commandName, data);
     }
 

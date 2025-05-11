@@ -1,7 +1,8 @@
 <script setup>
 import HoverCard from '@/components/util/HoverCard.vue';
-import { useClientStore } from '@/stores/client';
-import { computed } from 'vue';
+import { useClientState } from '@/composables/useClientState.js';
+import { apiClient, useClientStore } from '@/stores/client';
+import { computed, ref } from 'vue';
 
 const client = useClientStore();
 
@@ -12,12 +13,17 @@ const props = defineProps({
     },
 });
 
-// Whether has unread
 const hasUnread = computed(() => {
     return !selected.value && client.hasAccessToRoom(props.room.id) && client.hasUnreadMessages(props.room.id);
 });
 
-// Whether this room is selected
+const isMuted = ref(false);
+useClientState(() => {
+    const data = apiClient.plugins.mute.isRoomMuted(props.room.id);
+    isMuted.value = data;
+});
+
+// Whether user is in the room
 const selected = computed(() => {
     return client.state.currentRoomId === props.room.id;
 });
@@ -91,6 +97,9 @@ const icon = computed(() => {
         :selectable="true"
         :selected="selected"
         class="cursor-pointer"
+        :class="{
+            'opacity-50': isMuted,
+        }"
     >
         <div class="py-2 px-3 flex flex-row select-none" @click="client.state.currentRoomId !== room.id && client.join(room.id)">
             <!-- Room name -->
@@ -102,8 +111,13 @@ const icon = computed(() => {
             <!-- Icons -->
             <div class="flex">
                 <!-- Unread -->
-                <p v-if="hasUnread" class="text-danger font-bold mr-2" title="This room has unread messages">
+                <p v-if="hasUnread && !isMuted" class="text-danger font-bold mr-2" title="This room has unread messages">
                     <fa icon="bell" size="xs" />
+                </p>
+
+                <!-- Muted -->
+                <p v-if="isMuted" class="font-bold mr-2" title="This room is muted">
+                    <fa icon="volume-xmark" size="xs" />
                 </p>
 
                 <!-- User count -->
