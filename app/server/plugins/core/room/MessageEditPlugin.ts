@@ -39,7 +39,7 @@ export class MessageEditPlugin extends RoomPlugin {
         }
 
         // Check rights
-        if (message.user !== connection.session.user && !connection.session.isOP()) {
+        if (message.user.id !== connection.session.user.id && !connection.session.isOP()) {
             throw new Error('You can only edit your own messages');
         }
 
