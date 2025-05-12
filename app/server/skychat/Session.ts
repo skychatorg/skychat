@@ -24,7 +24,7 @@ export type SanitizedSession = {
 export class Session implements IBroadcaster {
     static readonly DEAD_GUEST_SESSION_CLEANUP_DELAY_MS = 30 * 1000;
 
-    static readonly DEAD_USER_SESSION_CLEANUP_DELAY_MS = 7 * 24 * 60 * 60 * 1000;
+    static readonly DEAD_USER_SESSION_CLEANUP_DELAY_MS = 60 * 24 * 60 * 60 * 1000;
 
     static readonly MAX_CONNECTIONS_PER_SESSION = 10;
 
