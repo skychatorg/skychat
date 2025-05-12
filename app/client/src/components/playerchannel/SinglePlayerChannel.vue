@@ -1,10 +1,10 @@
 <script setup>
-import { computed } from 'vue';
-import { useAppStore } from '@/stores/app';
-import { useClientStore } from '@/stores/client';
-import HoverCard from '@/components/util/HoverCard.vue';
 import UserMiniAvatar from '@/components/user/UserMiniAvatar.vue';
 import UserMiniAvatarCollection from '@/components/user/UserMiniAvatarCollection.vue';
+import HoverCard from '@/components/util/HoverCard.vue';
+import { useAppStore } from '@/stores/app';
+import { useClientStore } from '@/stores/client';
+import { computed } from 'vue';
 
 const app = useAppStore();
 const client = useClientStore();
@@ -23,7 +23,8 @@ const users = computed(() => {
 
 // Owner user object
 const owner = computed(() => {
-    const entry = client.state.connectedList.find((entry) => entry.identifier === props.playerChannel.currentMedia.owner.toLowerCase()) || null;
+    const entry =
+        client.state.connectedList.find((entry) => entry.identifier === props.playerChannel.currentMedia.owner.toLowerCase()) || null;
     return entry ? entry.user : null;
 });
 </script>
@@ -34,8 +35,12 @@ const owner = computed(() => {
         :border-color="'rgb(var(--color-skygray-lightest))'"
         :selectable="true"
         :selected="client.state.currentPlayerChannelId === playerChannel.id"
-        @click="client.sendMessage(`/playerchannel ${client.state.currentPlayerChannelId === playerChannel.id ? 'leave' : 'join'} ${playerChannel.id}`)"
         class="cursor-pointer"
+        @click="
+            client.sendMessage(
+                `/playerchannel ${client.state.currentPlayerChannelId === playerChannel.id ? 'leave' : 'join'} ${playerChannel.id}`,
+            )
+        "
     >
         <div class="px-3 py-1 grid grid-cols-4 gap-1">
             <!-- Title -->
@@ -45,7 +50,10 @@ const owner = computed(() => {
 
             <!-- Current media -->
             <div class="h-6 col-start-2 col-span-3 overflow-hidden text-ellipsis">
-                <p v-if="playerChannel.playing" :title="`${playerChannel.currentMedia.title} - added by ${playerChannel.currentMedia.owner}`">
+                <p
+                    v-if="playerChannel.playing"
+                    :title="`${playerChannel.currentMedia.title} - added by ${playerChannel.currentMedia.owner}`"
+                >
                     {{ playerChannel.currentMedia.title }}
                 </p>
             </div>
@@ -58,7 +66,7 @@ const owner = computed(() => {
             </div>
 
             <!-- Users -->
-            <div class="h-4 col-start-2 col-span-3 flex justify-end -space-x-1.5">
+            <div class="h-4 col-start-2 col-span-3 flex justify-end -space-x-1.5 overflow-x-hidden">
                 <UserMiniAvatarCollection :users="users" />
             </div>
         </div>

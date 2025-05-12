@@ -5,6 +5,7 @@ import { globalPluginGroup } from '../plugins/GlobalPluginGroup.js';
 import { Config } from './Config.js';
 import { DatabaseHelper } from './DatabaseHelper.js';
 import { Message, MessageConstructorOptions } from './Message.js';
+import { Session } from './Session.js';
 import { AuthToken, User } from './User.js';
 
 export class UserController {
@@ -288,5 +289,25 @@ export class UserController {
         user.setHashedPassword(newHashedPassword);
         // Update database
         await DatabaseHelper.db.query(SQL`update users set password=${newHashedPassword} where id=${user.id}`);
+    }
+
+    /**
+     * Get a user session (or create one if it does not exist)
+     */
+    public static async getOrCreateUserSession(user: User, usernameWithCustomCase?: string): Promise<Session> {
+        const identifier = user.username.toLowerCase();
+        const recycledSession = Session.getSessionByIdentifier(identifier);
+        if (recycledSession) {
+            if (usernameWithCustomCase) {
+                await UserController.changeUsernameCase(user, usernameWithCustomCase);
+            }
+            return recycledSession;
+        }
+        const newSession = new Session(identifier);
+        if (usernameWithCustomCase) {
+            await UserController.changeUsernameCase(user, usernameWithCustomCase);
+        }
+        newSession.setUser(user);
+        return newSession;
     }
 }
