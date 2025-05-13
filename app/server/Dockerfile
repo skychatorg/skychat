@@ -22,7 +22,7 @@ RUN ln -snf "/usr/share/zoneinfo/$DOCKER_TZ" /etc/localtime && \
     echo "$DOCKER_TZ" > /etc/timezone && \
     addgroup -g "$DOCKER_GID" "$DOCKER_USER" && \
     adduser -u "$DOCKER_UID" -G "$DOCKER_USER" -D "$DOCKER_USER" && \
-    apk add --no-cache --update ffmpeg nodejs npm zip
+    apk add --no-cache --update ffmpeg nodejs npm zip imagemagick
 
 COPY package*.json *config\.* ./
 
