@@ -66,7 +66,7 @@ const owner = computed(() => {
             </div>
 
             <!-- Users -->
-            <div class="h-4 col-start-2 col-span-3 flex justify-end -space-x-1.5 overflow-x-hidden">
+            <div class="h-4 col-start-2 col-span-3 flex justify-end -space-x-1.5 overflow-x-hidden overflow-y-visible">
                 <UserMiniAvatarCollection :users="users" />
             </div>
         </div>
