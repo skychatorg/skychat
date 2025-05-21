@@ -6,6 +6,7 @@ import { Message } from './Message.js';
 import { PluginManager } from './PluginManager.js';
 import { Room } from './Room.js';
 import { Session } from './Session.js';
+import { UserController } from './UserController.js';
 
 export type StoredSkyChat = {
     guestId: number;
@@ -42,16 +43,43 @@ export class RoomManager {
         }
     }
 
-    start() {
-        // Load last messages from all rooms (do not wait on it)
-        Promise.all(this.rooms.map((room) => room.loadLastMessagesFromDB()));
-
+    async start() {
         // Periodically send the room list to users
         setInterval(() => {
             Object.values(Session.sessions).map((session) => this.sendRoomList(session));
         }, RoomManager.FULL_SYNC_INTERVAL);
 
         setInterval(this.tick.bind(this), RoomManager.TICK_INTERVAL);
+
+        // Load last messages from all rooms (do not wait on it)
+        await Promise.all(this.rooms.map((room) => room.loadLastMessagesFromDB()));
+
+        // Get all user ids from all rooms (and their associated last message date)
+        const userIds: Record<number, Date> = {};
+        for (const room of this.rooms) {
+            for (const message of room.messages) {
+                if (message.user.id > 0) {
+                    if (userIds[message.user.id] === undefined) {
+                        userIds[message.user.id] = message.createdTime;
+                    } else if (userIds[message.user.id] < message.createdTime) {
+                        userIds[message.user.id] = message.createdTime;
+                    }
+                }
+            }
+        }
+
+        // Load all these users
+        for (const userId in userIds) {
+            const deadDuration = new Date().getTime() - userIds[userId].getTime();
+            if (deadDuration > Session.DEAD_USER_SESSION_CLEANUP_DELAY_MS) {
+                Logging.info(`User ${userId} is dead since ${userIds[userId]} - Skipping`);
+                continue;
+            }
+            const user = await UserController.getUserById(parseInt(userId));
+            const session = await UserController.getOrCreateUserSession(user);
+            Logging.info(`Adding user ${session.identifier} (${user.id}) to the session list (last message date: ${userIds[userId]})`);
+            session.deadSince = userIds[userId];
+        }
     }
 
     /**

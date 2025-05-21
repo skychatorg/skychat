@@ -6,7 +6,6 @@ import { Logging } from './Logging.js';
 import { PluginManager } from './PluginManager.js';
 import { RoomManager } from './RoomManager.js';
 import { Session } from './Session.js';
-import { User } from './User.js';
 import { UserController } from './UserController.js';
 
 export class SkyChatServer {
@@ -41,7 +40,7 @@ export class SkyChatServer {
         try {
             Logging.info('Connection accepted', event.user ? event.user.username : '*guest');
             const session = event.user
-                ? await this.getUserSession(event.user, event.data.credentials?.username)
+                ? await UserController.getOrCreateUserSession(event.user, event.data.credentials?.username)
                 : await this.getNewGuestSession();
 
             // Create a new connection object & attach it to the session
@@ -63,23 +62,6 @@ export class SkyChatServer {
             );
             return;
         }
-    }
-
-    private async getUserSession(user: User, usernameWithCustomCase?: string): Promise<Session> {
-        const identifier = user.username.toLowerCase();
-        const recycledSession = Session.getSessionByIdentifier(identifier);
-        if (recycledSession) {
-            if (usernameWithCustomCase) {
-                await UserController.changeUsernameCase(user, usernameWithCustomCase);
-            }
-            return recycledSession;
-        }
-        const newSession = new Session(identifier);
-        if (usernameWithCustomCase) {
-            await UserController.changeUsernameCase(user, usernameWithCustomCase);
-        }
-        newSession.setUser(user);
-        return newSession;
     }
 
     /**
