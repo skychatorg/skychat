@@ -5,6 +5,8 @@ import { useClientStore } from '@/stores/client';
 import { RisiBank } from 'risibank-web-api';
 import { computed, onMounted, ref, watch } from 'vue';
 import { SmartSuggest } from 'vue-smart-suggest';
+import { useClientState } from '../../composables/useClientState';
+import { has } from 'lodash';
 
 const MESSAGE_HISTORY_LENGTH = 500;
 
@@ -162,16 +164,9 @@ const onFileInputChange = async () => {
 /**
  * Whether the user has unread messages in any other rooms
  */
-const hasUnreadMessagesInOtherRooms = computed(() => {
-    if (client.state.user.id <= 0) {
-        return false;
-    }
-    for (const room of client.state.rooms) {
-        if ((client.state.user.data.plugins.lastseen[room.id] || 0) < room.lastReceivedMessageId) {
-            return true;
-        }
-    }
-    return false;
+const hasUnread = ref(client.hasUnreadMessages());
+useClientState(() => {
+    hasUnread.value = client.hasUnreadMessages();
 });
 
 /**
