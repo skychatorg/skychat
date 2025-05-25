@@ -104,6 +104,15 @@ The `config/preferences.json` file specifies application preferences. The availa
 
 By default, guests are welcomes with a welcome message that you can change in `config/welcome.txt`. If you remove this file, there won't be a welcome message anymore.
 
+### Enable the file browser
+
+There is a file browser which allows managing uploads and gallery files. Enable it in your `.env` by setting:
+
+-   `ADMIN_FILEBROWSER_ENABLED=true`
+-   `ADMIN_FILEBROWSER_AUTH="xxxxxxxxx" # Basic auth (htpasswd -nb user password)`
+
+It is crucial to set up `ADMIN_FILEBROWSER_AUTH`, otherwise all gallery and uploads would be exposed.
+
 ### Customize guest names
 
 `config/guestnames.txt` is the pool of non-logged usernames.

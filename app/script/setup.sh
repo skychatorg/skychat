@@ -22,6 +22,10 @@ fi
 if [ ! -e app/database/data ]; then
     mkdir -p app/database/data;
 fi
+if [ ! -e app/filebrowser/data ]; then
+    mkdir -p app/filebrowser/data;
+    touch app/filebrowser/data/filebrowser.db;
+fi
 
 # Initialize .env
 if [ ! -e .env ]; then

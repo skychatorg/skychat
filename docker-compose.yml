@@ -113,6 +113,10 @@ services:
       - ./uploads/all:/mnt/skychat/uploads/all:rw
       - ./uploads/avatars:/mnt/skychat/uploads/avatars:ro
       - ./uploads/stickers:/mnt/skychat/uploads/stickers:ro
+      - ./app/filebrowser/data/filebrowser.db:/app/filebrowser.db:rw
+    environment:
+      ADMIN_FILEBROWSER_ENABLED: "${ADMIN_FILEBROWSER_ENABLED}"
+      ADMIN_FILEBROWSER_AUTH: "${ADMIN_FILEBROWSER_AUTH}"
 
 volumes:
     skychat_letsencrypt:

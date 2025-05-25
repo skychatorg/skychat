@@ -1,6 +1,6 @@
 FROM alpine:3.21.3
 EXPOSE 80
-CMD ["filebrowser", "-a", "0.0.0.0", "-p", "80", "-b", "/filebrowser", "-r", "files"]
+CMD sh start.sh
 
 ARG DOCKER_USER
 ARG DOCKER_UID
@@ -17,6 +17,9 @@ RUN apk add --no-cache --update curl bash && \
     ln -s /mnt/skychat/gallery ./files/gallery && \
     ln -s /mnt/skychat/uploads ./files/uploads && \
     chown "$DOCKER_UID:$DOCKER_GID" /app
+
+COPY --chown="$DOCKER_UID:$DOCKER_GID" settings.json /config/settings.json
+COPY --chown="$DOCKER_UID:$DOCKER_GID" start.sh /app/start.sh
 
 # Change user
 USER $DOCKER_UID:$DOCKER_GID
