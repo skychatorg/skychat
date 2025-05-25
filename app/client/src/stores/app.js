@@ -1,8 +1,8 @@
-import { watch } from 'vue';
-import { defineStore } from 'pinia';
-import { useClientStore } from './client';
-import { useToast } from 'vue-toastification';
 import mousetrap from 'mousetrap';
+import { defineStore } from 'pinia';
+import { watch } from 'vue';
+import { useToast } from 'vue-toastification';
+import { useClientStore } from './client';
 
 const DEFAULT_DOCUMENT_TITLE = '~ SkyChat';
 
@@ -335,7 +335,7 @@ export const useAppStore = defineStore('app', {
                 // Create form and send request to backend
                 const data = new FormData();
                 data.append('file', file);
-                const result = await (await fetch('/upload', { method: 'POST', body: data })).json();
+                const result = await (await fetch('/api/upload', { method: 'POST', body: data })).json();
                 if (result.status === 500) {
                     throw new Error('Unable to upload: ' + result.message);
                 }

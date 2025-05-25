@@ -23,7 +23,5 @@
     "maxMessageMergeDelayMin": 10,
     "daysBeforeMessageFuzz": 7,
     "invertedBlacklist": false,
-    "messagesCooldown": [
-        [-1, 1],
-    ]
+    "messagesCooldown": [[-1, 1]]
 }

@@ -70,12 +70,6 @@ export class HttpServer extends EventEmitter {
     private getExpressApp() {
         const app = express();
 
-        // Bind static files
-        // TODO: Use a reverse proxy
-        app.use(express.static('dist'));
-        app.use('/uploads', express.static('uploads'));
-        app.use('/gallery', express.static('gallery'));
-
         // Handle file upload
         app.use(
             fileUpload({
@@ -85,7 +79,7 @@ export class HttpServer extends EventEmitter {
                 tempFileDir: '/tmp/',
             }),
         );
-        app.post('/upload', this.onFileUpload.bind(this));
+        app.post('/api/upload', this.onFileUpload.bind(this));
 
         return app;
     }

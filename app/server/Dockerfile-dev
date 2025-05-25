@@ -1,0 +1,34 @@
+FROM alpine:latest
+CMD npx nodemon --watch app/client/ --watch app/api/ --watch app/server/ -e js,ts,json,vue --exec "sh -c 'npm run build && sh app/script/start-server.sh'"
+EXPOSE 80
+
+# Define build-time arguments
+ARG DOCKER_USER
+ARG DOCKER_UID
+ARG DOCKER_GID
+ARG DOCKER_TZ
+ARG PUBLIC_PORT
+
+WORKDIR /workdir
+
+# Avoid "JavaScript heap out of memory"
+ENV NODE_OPTIONS="--max-old-space-size=8192"
+
+# Set timezone, create user, install dependencies
+RUN ln -snf "/usr/share/zoneinfo/${DOCKER_TZ}" /etc/localtime && \
+    echo "${DOCKER_TZ}" > /etc/timezone && \
+    addgroup -g "${DOCKER_GID}" "${DOCKER_USER}" && \
+    adduser -u "${DOCKER_UID}" -G "${DOCKER_USER}" -D "${DOCKER_USER}" && \
+    apk add --no-cache --update ffmpeg nodejs npm zip
+
+# Copy package files and configs
+COPY ["package.json", "package-lock.json", "*config.*", "./"]
+
+# Fix permissions
+RUN chown "${DOCKER_UID}:${DOCKER_GID}" /workdir
+
+# Switch to non-root user
+USER ${DOCKER_UID}:${DOCKER_GID}
+
+# Install dependencies
+RUN npm ci --ignore-scripts
