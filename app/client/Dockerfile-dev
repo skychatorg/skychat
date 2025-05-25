@@ -1,0 +1,11 @@
+FROM node:24-alpine3.20
+EXPOSE 80
+CMD ["npx", "vite"]
+
+ENV NODE_ENV=development
+
+WORKDIR /workdir
+
+COPY package*.json *config\.* ./
+
+RUN npm ci --ignore-scripts

@@ -2,11 +2,19 @@ services:
   skychat_traefik:
     ports:
       - 8085:8080
-  skychat_app:
+    environment:
+      - MODE=DEVELOPMENT
+  skychat_frontend:
     ports:
       - 5173:5173
-    command:
-      - /bin/sh
-      - -c
-      - |
-        npx nodemon --watch app/client/ --watch app/api/ --watch app/server/ -e js,ts,json,vue --exec "npm run docker-command"
+    build:
+      context: .
+      dockerfile: app/client/Dockerfile-dev
+    volumes:
+      - ./app:/workdir/app:ro
+  skychat_backend:
+    build:
+      context: .
+      dockerfile: app/server/Dockerfile-dev
+    volumes:
+      - ./app:/workdir/app:ro

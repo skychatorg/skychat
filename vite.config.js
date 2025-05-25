@@ -16,17 +16,7 @@ export default defineConfig({
     },
     envPrefix: ['VAPID_PUBLIC_', 'VITE_'],
     server: {
-        open: true,
-        proxy: {
-            '/ws': {
-                target: process.env.PUBLIC_URL,
-                changeOrigin: true,
-                ws: true,
-            },
-            '/upload': {
-                target: process.env.PUBLIC_URL,
-                changeOrigin: true,
-            },
-        },
+        port: 80,
+        host: '0.0.0.0',
     },
 });

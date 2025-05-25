@@ -5,7 +5,7 @@ import { WebPush } from '../lib/WebPush.js';
 
 // Connect to SkyChatClient
 const protocol = document.location.protocol === 'http:' ? 'ws' : 'wss';
-const url = protocol + '://' + document.location.host + '/ws';
+const url = protocol + '://' + document.location.host + '/api/ws';
 const client = new SkyChatClient(url);
 
 export { client as apiClient };
