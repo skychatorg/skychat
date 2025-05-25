@@ -11,16 +11,13 @@
         "/build/server"
     ],
     "scripts": {
+        "build": "concurrently \"tsc\" \"vite build\"",
+        "dev": "docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build",
+        "start": "docker compose up --build -d",
+        "backup": "sh app/script/backup.sh",
         "reset": "sh app/script/reset.sh",
         "setup": "sh app/script/setup.sh",
-        "build": "concurrently \"tsc\" \"vite build\"",
-        "dev": "sh app/script/dev.sh",
-        "docker-command": "sh app/script/docker-command.sh",
-        "start": "sh app/script/start.sh",
-        "start:server": "sh app/script/start-server.sh",
-        "backup": "sh app/script/backup.sh",
-        "lint": "eslint app",
-        "test": "echo \"⚠ No test ⚠\""
+        "lint": "eslint app"
     },
     "keywords": [],
     "author": "7PH <b.raymond@protonmail.com>",

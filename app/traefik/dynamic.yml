@@ -1,11 +1,33 @@
 http:
     routers:
-        skychat_app:
-            service: skychat_app@file
+        skychat_backend:
+            service: skychat_backend@file
             entrypoints: web
             middlewares:
                 - ratelimit-light
-            rule: "Host(`{{ env "PUBLIC_HOST" }}`)"
+            rule: "Host(`{{ env "PUBLIC_HOST" }}`) && PathPrefix(`/api`)"
+            {{ if env "USE_TLS" }}
+            tls:
+                certResolver: letsencrypt
+            {{ end }}
+        skychat_frontend:
+            service: skychat_frontend@file
+            entrypoints: web
+            {{ if eq (env "MODE") "PRODUCTION" }}
+            middlewares:
+                - ratelimit-light
+            {{ end }}
+            rule: "Host(`{{ env "PUBLIC_HOST" }}`) && !PathPrefix(`/api`) && !PathPrefix(`/uploads`) && !PathPrefix(`/gallery`)"
+            {{ if env "USE_TLS" }}
+            tls:
+                certResolver: letsencrypt
+            {{ end }}
+        skychat_static:
+            service: skychat_static@file
+            entrypoints: web
+            middlewares:
+                - ratelimit-light
+            rule: "Host(`{{ env "PUBLIC_HOST" }}`) && (PathPrefix(`/uploads`) || PathPrefix(`/gallery`))"
             {{ if env "USE_TLS" }}
             tls:
                 certResolver: letsencrypt
@@ -35,10 +57,18 @@ http:
                 users:
                     - "{{ env "ADMIN_FILEBROWSER_AUTH" }}"
     services:
-        skychat_app:
+        skychat_backend:
             loadBalancer:
                 servers:
-                    - url: "http://skychat_app"
+                    - url: "http://skychat_backend"
+        skychat_frontend:
+            loadBalancer:
+                servers:
+                    - url: "http://skychat_frontend"
+        skychat_static:
+            loadBalancer:
+                servers:
+                    - url: "http://skychat_static"
         skychat_admin_filebrowser:
             loadBalancer:
                 servers:
