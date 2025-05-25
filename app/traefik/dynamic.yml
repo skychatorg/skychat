@@ -32,17 +32,29 @@ http:
             tls:
                 certResolver: letsencrypt
             {{ end }}
+        {{ if eq (env "ADMIN_FILEBROWSER_ENABLED") "true" }}
         skychat_admin_filebrowser:
             service: skychat_admin_filebrowser@file
             entrypoints: web
             middlewares:
                 - ratelimit-light
                 - admin-auth
-            rule: "Host(`{{ env "ADMIN_FILEBROWSER_HOST" }}`)"
+            rule: "Host(`{{ env "ADMIN_FILEBROWSER_HOST" }}`) && !(PathPrefix(`/filebrowser/share`) || PathPrefix(`/filebrowser/api/public`) || PathPrefix(`/filebrowser/static/`))"
             {{ if env "USE_TLS" }}
             tls:
                 certResolver: letsencrypt
             {{ end }}
+        skychat_admin_filebrowser_shared:
+            service: skychat_admin_filebrowser@file
+            entrypoints: web
+            middlewares:
+                - ratelimit-light
+            rule: "Host(`{{ env "ADMIN_FILEBROWSER_HOST" }}`) && (PathPrefix(`/filebrowser/share`) || PathPrefix(`/filebrowser/api/public`) || PathPrefix(`/filebrowser/static/`))"
+            {{ if env "USE_TLS" }}
+            tls:
+                certResolver: letsencrypt
+            {{ end }}
+        {{ end }}
     middlewares:
         ratelimit-light:
             rateLimit:
@@ -69,7 +81,9 @@ http:
             loadBalancer:
                 servers:
                     - url: "http://skychat_static"
+        {{ if eq (env "ADMIN_FILEBROWSER_ENABLED") "true" }}
         skychat_admin_filebrowser:
             loadBalancer:
                 servers:
                     - url: "http://skychat_admin_filebrowser"
+        {{ end }}
