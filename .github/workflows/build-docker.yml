@@ -19,7 +19,7 @@ jobs:
               with:
                   node-version: ${{ matrix.node-version }}
                   cache: 'npm'
-            - run: npm ci
+            - run: npm ci --ignore-scripts
             - run: npm run setup
             - run: echo $USER; id -u $USER; id -g $USER
             - run: cp .github/workflows/.env.github .env

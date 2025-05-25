@@ -1,4 +1,4 @@
-FROM alpine:3.16.0
+FROM alpine:3.21.3
 EXPOSE 80
 CMD ["filebrowser", "-a", "0.0.0.0", "-p", "80", "-b", "/filebrowser", "-r", "files"]
 
@@ -14,7 +14,6 @@ RUN apk add --no-cache --update curl bash && \
     addgroup -g "$DOCKER_GID" "$DOCKER_USER" && \
     adduser -u "$DOCKER_UID" -G "$DOCKER_USER" -D "$DOCKER_USER" && \
     mkdir files && \
-    ln -s /mnt/skychat/backups ./files/backups && \
     ln -s /mnt/skychat/gallery ./files/gallery && \
     ln -s /mnt/skychat/uploads ./files/uploads && \
     chown "$DOCKER_UID:$DOCKER_GID" /app

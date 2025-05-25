@@ -19,13 +19,16 @@ services:
       - ./app/traefik/dynamic.yml:/configuration/dynamic.yml:ro
     env_file:
       - .env
+    environment:
+      - MODE=PRODUCTION
 
-  skychat_app:
-    container_name: skychat_app
+  skychat_backend:
+    container_name: skychat_backend
     cap_drop:
       - ALL
     build:
       context: .
+      dockerfile: app/server/Dockerfile
       args:
         DOCKER_USER: "${DOCKER_USER}"
         DOCKER_UID: "${DOCKER_UID}"
@@ -54,9 +57,30 @@ services:
       - ./storage:/workdir/storage
       - ./gallery:/workdir/gallery
       - ./uploads:/workdir/uploads
-      - ./app:/workdir/app:ro
     depends_on:
       - skychat_db
+
+  skychat_frontend:
+    container_name: skychat_frontend
+    cap_drop:
+      - ALL
+    build:
+      context: .
+      dockerfile: app/client/Dockerfile
+    environment:
+      PUBLIC_URL: "${PUBLIC_URL}"
+      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY}
+
+  skychat_static:
+    container_name: skychat_static
+    cap_drop:
+      - ALL
+    build:
+      context: .
+      dockerfile: app/static/Dockerfile
+    volumes:
+      - ./gallery:/usr/share/nginx/html/gallery:ro
+      - ./uploads:/usr/share/nginx/html/uploads:ro
 
   skychat_db:
     container_name: skychat_db
@@ -85,7 +109,6 @@ services:
         DOCKER_TZ: "${DOCKER_TZ}"
         PUBLIC_URL: "${PUBLIC_URL}"
     volumes:
-      - ./backups:/mnt/skychat/backups:ro
       - ./gallery:/mnt/skychat/gallery:rw
       - ./uploads/all:/mnt/skychat/uploads/all:rw
       - ./uploads/avatars:/mnt/skychat/uploads/avatars:ro
