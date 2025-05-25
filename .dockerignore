@@ -1,2 +1,8 @@
 node_modules
 npm-debug.log
+
+# App directories
+backups
+gallery
+storage
+uploads
