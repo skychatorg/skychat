@@ -39,7 +39,7 @@ http:
             middlewares:
                 - ratelimit-light
                 - admin-auth
-            rule: "Host(`{{ env "ADMIN_FILEBROWSER_HOST" }}`) && !(PathPrefix(`/filebrowser/share`) || PathPrefix(`/filebrowser/api/public`) || PathPrefix(`/filebrowser/static/`))"
+            rule: "Host(`{{ env "ADMIN_FILEBROWSER_HOST" }}`) && !(PathPrefix(`/filebrowser/share`) || PathPrefix(`/filebrowser/api/public`) || PathPrefix(`/filebrowser/api/login`) || PathPrefix(`/filebrowser/static/`))"
             {{ if env "USE_TLS" }}
             tls:
                 certResolver: letsencrypt
@@ -49,7 +49,7 @@ http:
             entrypoints: web
             middlewares:
                 - ratelimit-light
-            rule: "Host(`{{ env "ADMIN_FILEBROWSER_HOST" }}`) && (PathPrefix(`/filebrowser/share`) || PathPrefix(`/filebrowser/api/public`) || PathPrefix(`/filebrowser/static/`))"
+            rule: "Host(`{{ env "ADMIN_FILEBROWSER_HOST" }}`) && (PathPrefix(`/filebrowser/share`) || PathPrefix(`/filebrowser/api/public`) || PathPrefix(`/filebrowser/api/login`) || PathPrefix(`/filebrowser/static/`))"
             {{ if env "USE_TLS" }}
             tls:
                 certResolver: letsencrypt
