@@ -1,5 +1,5 @@
 FROM alpine:latest
-CMD npx nodemon --watch app/client/ --watch app/api/ --watch app/server/ -e js,ts,json,vue --exec "sh -c 'npm run build && sh app/script/start-server.sh'"
+CMD npx nodemon --watch app/api/ --watch app/server/ -e js,ts,json,vue --exec "sh -c 'npm run build && sh app/script/start-server.sh'"
 EXPOSE 80
 
 # Define build-time arguments
