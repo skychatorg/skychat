@@ -88,21 +88,26 @@ export class Gallery {
         };
         try {
             const fileNames = await fs.readdir(Gallery.BASE_PATH + folderPath);
+
             for (const fileName of fileNames) {
-                const stats = await fs.stat(Gallery.BASE_PATH + folderPath + '/' + fileName);
-                if (!folderContent.thumb && Gallery.THUMB_FILE_NAMES.includes(fileName)) {
-                    folderContent.thumb = Config.LOCATION + '/' + Gallery.BASE_PATH + folderPath + '/' + fileName;
-                }
-                if (stats.isFile()) {
-                    const ext = fileName.split('.').pop() as string;
-                    folderContent.files.push({
-                        name: fileName,
-                        type: Gallery.EXTENSION_FILE_TYPES[ext] || Gallery.DEFAULT_FILE_TYPE,
-                    });
-                } else if (stats.isDirectory()) {
-                    folderContent.folders.push(fileName);
-                } else {
-                    Logging.warn('Unknown file type', fileName);
+                try {
+                    const stats = await fs.stat(Gallery.BASE_PATH + folderPath + '/' + fileName);
+                    if (!folderContent.thumb && Gallery.THUMB_FILE_NAMES.includes(fileName)) {
+                        folderContent.thumb = Config.LOCATION + '/' + Gallery.BASE_PATH + folderPath + '/' + fileName;
+                    }
+                    if (stats.isFile()) {
+                        const ext = fileName.split('.').pop() as string;
+                        folderContent.files.push({
+                            name: fileName,
+                            type: Gallery.EXTENSION_FILE_TYPES[ext] || Gallery.DEFAULT_FILE_TYPE,
+                        });
+                    } else if (stats.isDirectory()) {
+                        folderContent.folders.push(fileName);
+                    } else {
+                        Logging.warn('Unknown file type', fileName);
+                    }
+                } catch (err) {
+                    Logging.warn('Error reading file or directory', fileName, err);
                 }
             }
             return folderContent;
