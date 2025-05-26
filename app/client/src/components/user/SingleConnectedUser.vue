@@ -1,4 +1,5 @@
 <script setup>
+import SkyTooltip from '@/components/common/SkyTooltip.vue';
 import UserBigAvatar from '@/components/user/UserBigAvatar.vue';
 import HoverCard from '@/components/util/HoverCard.vue';
 import { useClientStore } from '@/stores/client';
@@ -142,11 +143,19 @@ const borderColor = computed(() => {
                     </div>
 
                     <!-- Motto -->
-                    <div
-                        class="w-0 grow text-right text-skygray-lighter whitespace-nowrap text-ellipsis overflow-hidden"
-                        :title="entry.user.data.plugins.motto"
-                    >
-                        {{ entry.user.data.plugins.motto }}
+                    <div v-if="entry.user.data.plugins.motto" class="w-0 grow flex justify-end">
+                        <SkyTooltip trigger-class="w-0 grow">
+                            <template #trigger>
+                                <div
+                                    class="text-right text-skygray-lighter whitespace-nowrap text-ellipsis overflow-hidden"
+                                    :title="entry.user.data.plugins.motto"
+                                >
+                                    {{ entry.user.data.plugins.motto }}
+                                </div>
+                            </template>
+
+                            <p>{{ entry.user.data.plugins.motto }}</p>
+                        </SkyTooltip>
                     </div>
                 </div>
             </div>
