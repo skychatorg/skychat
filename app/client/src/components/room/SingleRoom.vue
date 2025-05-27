@@ -3,6 +3,8 @@ import HoverCard from '@/components/util/HoverCard.vue';
 import { useClientState } from '@/composables/useClientState.js';
 import { apiClient, useClientStore } from '@/stores/client';
 import { computed, ref } from 'vue';
+import SkyDropdown from '../common/SkyDropdown.vue';
+import SkyDropdownItem from '../common/SkyDropdownItem.vue';
 
 const client = useClientStore();
 
@@ -101,15 +103,18 @@ const icon = computed(() => {
             'opacity-50': isMuted,
         }"
     >
-        <div class="py-2 px-3 flex flex-row select-none" @click="client.state.currentRoomId !== room.id && client.join(room.id)">
+        <div class="flex flex-row gap-2 select-none">
             <!-- Room name -->
-            <div class="grow whitespace-nowrap w-0 overflow-hidden text-ellipsis pr-2">
+            <div
+                class="py-2 pl-2 grow whitespace-nowrap w-0 overflow-hidden text-ellipsis pr-2"
+                @click="client.state.currentRoomId !== room.id && client.join(room.id)"
+            >
                 <fa v-if="icon" class="mr-1" :class="icon.classes" :icon="icon.name" :title="icon.title" />
                 {{ formattedName }}
             </div>
 
             <!-- Icons -->
-            <div class="flex">
+            <div class="py-2 pr-2 flex">
                 <!-- Unread -->
                 <p v-if="hasUnread && !isMuted" class="text-danger font-bold mr-2" title="This room has unread messages">
                     <fa icon="bell" size="xs" />
@@ -128,9 +133,22 @@ const icon = computed(() => {
                 >
                     <fa icon="users" size="xs" /> {{ (client.state.roomConnectedUsers[room.id] || []).length }}
                 </p>
+
+                <!-- Room actions -->
+                <SkyDropdown>
+                    <template #trigger>
+                        <fa icon="chevron-down" class="text-skygray-lightest ml-2" />
+                    </template>
+
+                    <template #default>
+                        <SkyDropdownItem v-if="client.state.currentRoomId !== room.id" @click="client.join(room.id)">
+                            Join
+                        </SkyDropdownItem>
+                        <SkyDropdownItem v-if="!isMuted" @click="client.sendMessage(`/mute ${room.id}`)"> Mute room </SkyDropdownItem>
+                        <SkyDropdownItem v-else @click="client.sendMessage(`/unmute ${room.id}`)"> Unmute room </SkyDropdownItem>
+                    </template>
+                </SkyDropdown>
             </div>
         </div>
     </HoverCard>
 </template>
-
-<style scoped></style>
