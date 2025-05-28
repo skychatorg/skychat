@@ -26,6 +26,8 @@ export class MutePlugin extends GlobalPlugin {
         },
     };
 
+    readonly minRight = 0;
+
     async run(alias: string, param: string, connection: Connection): Promise<void> {
         const user = connection.session.user;
         const list: number[] = this.getUserData<number[]>(user) ?? [];
