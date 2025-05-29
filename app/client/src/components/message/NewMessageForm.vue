@@ -292,7 +292,7 @@ const suggestTriggers = computed(() => [
             </div>
 
             <!-- Message & send button -->
-            <div class="mb-2 lg:mb-0 grow w-full lg:w-0 flex">
+            <div v-if="client.state.currentRoom" class="mb-2 lg:mb-0 grow w-full lg:w-0 flex">
                 <!-- New message -->
                 <div class="grow flex flex-col">
                     <!-- Typing list -->
