@@ -19,7 +19,6 @@ import {
     VideoInfo,
     VideoStreamInfo,
 } from '../server/index.js';
-import { Logging } from '../server/skychat/Logging.js';
 import { BinaryMessageTypes } from './BinaryMessageTypes.js';
 import { MutePluginHelper } from './plugins/MutePluginHelper.js';
 
@@ -519,6 +518,7 @@ export class SkyChatClient extends EventEmitter {
         this._websocket.addEventListener('open', this._onWebSocketConnect.bind(this));
         this._websocket.addEventListener('message', this._onWebSocketMessage.bind(this));
         this._websocket.addEventListener('close', this._onWebSocketClose.bind(this));
+        this._websocket.addEventListener('error', this._onWebSocketError.bind(this));
         this.emit('update', this.state);
     }
 
@@ -753,7 +753,7 @@ export class SkyChatClient extends EventEmitter {
                     y,
                 });
             } else {
-                Logging.warn(`Unknown message type: ${messageType}`);
+                console.warn(`Unknown message type: ${messageType}`);
             }
             return;
         }
@@ -767,7 +767,8 @@ export class SkyChatClient extends EventEmitter {
     /**
      *
      */
-    private _onWebSocketClose(event: any) {
+    private _onWebSocketClose(event: WebSocket.CloseEvent) {
+        console.warn(`WebSocket closed: ${event.code} - ${event.reason}`);
         // Reset some (not all) values
         this._currentRoomId = null;
         this._typingList = [];
@@ -781,5 +782,10 @@ export class SkyChatClient extends EventEmitter {
             return;
         }
         setTimeout(this.connect.bind(this), 1000);
+    }
+
+    private _onWebSocketError(event: WebSocket.ErrorEvent) {
+        console.warn(`WebSocket error: ${event.message}`);
+        this.emit('error', event.message);
     }
 }
