@@ -20,6 +20,8 @@ export class Connection extends EventEmitter implements IBroadcaster {
 
     static readonly CLOSE_KICKED = 4403;
 
+    static readonly PING_INTERVAL = 30 * 1000;
+
     static readonly ACCEPTED_EVENTS = ['message'];
 
     session!: Session;
@@ -27,6 +29,8 @@ export class Connection extends EventEmitter implements IBroadcaster {
     readonly webSocket: WebSocket;
 
     room: Room | null = null;
+
+    private pingInterval: NodeJS.Timeout | null = null;
 
     /**
      * Handshake request object
@@ -81,6 +85,29 @@ export class Connection extends EventEmitter implements IBroadcaster {
         this.webSocket.on('error', (error) => this.onError(error));
 
         this.setRoom(null);
+        this.startPing();
+    }
+
+    private startPing(): void {
+        if (this.pingInterval) {
+            this.stopPing();
+        }
+
+        this.pingInterval = setInterval(() => {
+            if (this.webSocket.readyState !== WebSocket.OPEN) {
+                this.stopPing();
+                return;
+            }
+
+            this.send('ping', null);
+        }, Connection.PING_INTERVAL);
+    }
+
+    private stopPing(): void {
+        if (this.pingInterval) {
+            clearInterval(this.pingInterval);
+            this.pingInterval = null;
+        }
     }
 
     get closed(): boolean {
