@@ -35,4 +35,4 @@ COPY app app
 
 RUN npm ci --ignore-scripts
 
-RUN npm run build
+RUN npm run build:server
