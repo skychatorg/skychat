@@ -8,7 +8,7 @@ COPY package*.json *config\.* ./
 COPY app ./app
 
 RUN npm ci --ignore-scripts
-RUN npm run build
+RUN npm run build:client
 
 FROM nginxinc/nginx-unprivileged:alpine3.21-perl AS production
 

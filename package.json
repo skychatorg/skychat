@@ -11,7 +11,9 @@
         "/build/server"
     ],
     "scripts": {
-        "build": "concurrently \"tsc\" \"vite build\"",
+        "build:server": "tsc",
+        "build:client": "vite build",
+        "build": "concurrently \"npm run build:client\" \"npm run build:server\"",
         "dev": "docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build",
         "start": "docker compose up --build -d",
         "backup": "sh app/script/backup.sh",
