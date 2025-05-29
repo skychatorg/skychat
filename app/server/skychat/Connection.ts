@@ -77,7 +77,7 @@ export class Connection extends EventEmitter implements IBroadcaster {
 
         session.attachConnection(this);
         this.webSocket.on('message', (message) => this.onMessage(message));
-        this.webSocket.on('close', () => this.onClose());
+        this.webSocket.on('close', (code, reason) => this.onClose(code, reason));
         this.webSocket.on('error', (error) => this.onError(error));
 
         this.setRoom(null);
@@ -161,7 +161,8 @@ export class Connection extends EventEmitter implements IBroadcaster {
     /**
      * When the connection is closed
      */
-    private async onClose(): Promise<void> {
+    private async onClose(code: number, reason: Buffer): Promise<void> {
+        Logging.info(`Connection closed for session ${this.session.identifier} with code ${code} and reason ${reason.toString()}`);
         this.session.detachConnection(this);
         if (this.room) {
             this.room.detachConnection(this);
