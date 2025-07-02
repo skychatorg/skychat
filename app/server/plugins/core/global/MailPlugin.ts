@@ -1,8 +1,10 @@
 import formData from 'form-data';
-import Mailgun, { MailgunMessageData } from 'mailgun.js';
+import Mailgun from 'mailgun.js';
 import { IMailgunClient } from 'mailgun.js/Interfaces/index.js';
+import { MailgunClientOptions, MailgunMessageData } from 'mailgun.js/definitions';
 import { Config } from '../../../skychat/Config.js';
 import { Connection } from '../../../skychat/Connection.js';
+import { Logging } from '../../../skychat/Logging.js';
 import { RoomManager } from '../../../skychat/RoomManager.js';
 import { User } from '../../../skychat/User.js';
 import { UserController } from '../../../skychat/UserController.js';
@@ -36,7 +38,7 @@ export class MailPlugin extends GlobalPlugin {
                 username: 'api',
                 key: process.env.MAILGUN_API_KEY,
                 url: 'https://api.eu.mailgun.net',
-            });
+            } as MailgunClientOptions);
         }
     }
 
@@ -46,16 +48,20 @@ export class MailPlugin extends GlobalPlugin {
         const text = param.split(' ').slice(1).join(' ');
 
         // Send email
-        const result = await this.sendMailToUsername(username, {
-            subject: 'New mail from ' + Config.LOCATION,
-            text,
-        });
+        try {
+            const result = await this.sendMailToUsername(username, {
+                subject: 'New mail from ' + Config.LOCATION,
+                text,
+            });
 
-        // Send back notification
-        connection.send(
-            'message',
-            UserController.createNeutralMessage({ content: `${result.id} sent`, room: connection.roomId, id: 0 }).sanitized(),
-        );
+            // Send back notification
+            connection.send(
+                'message',
+                UserController.createNeutralMessage({ content: `${result.id} sent`, room: connection.roomId, id: 0 }).sanitized(),
+            );
+        } catch (error) {
+            Logging.error('MailPlugin', `Error sending email to ${username}:`, error);
+        }
     }
 
     /**
