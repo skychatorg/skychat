@@ -30,7 +30,7 @@
         "file-type": "^20.5.0",
         "isomorphic-ws": "^5.0.0",
         "jsondiffpatch": "^0.6.0",
-        "mailgun.js": "^10.2.1",
+        "mailgun.js": "^12.0.2",
         "p-queue": "^8.0.1",
         "pino": "^9.2.0",
         "radix-vue": "^1.9.17",
