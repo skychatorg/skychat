@@ -1,16 +1,16 @@
+import { Config } from '../../../skychat/Config.js';
 import { Connection } from '../../../skychat/Connection.js';
-import { GlobalPlugin } from '../../GlobalPlugin.js';
+import { Room } from '../../../skychat/Room.js';
 import { Session } from '../../../skychat/Session.js';
 import { User } from '../../../skychat/User.js';
-import { Config } from '../../../skychat/Config.js';
-import { BlacklistPlugin } from './BlacklistPlugin.js';
-import { Room } from '../../../skychat/Room.js';
 import { UserController } from '../../../skychat/UserController.js';
+import { GlobalPlugin } from '../../GlobalPlugin.js';
+import { BlacklistPlugin } from './BlacklistPlugin.js';
 
 export class PrivateMessagePlugin extends GlobalPlugin {
     static readonly commandName = 'pm';
 
-    static readonly commandAliases = ['pmadd', 'pmleave'];
+    static readonly commandAliases = ['pmadd', 'pmleave', 'pmremove'];
 
     readonly minRight = Config.PREFERENCES.minRightForPrivateMessages;
 
@@ -28,10 +28,58 @@ export class PrivateMessagePlugin extends GlobalPlugin {
             params: [{ name: 'username', pattern: User.USERNAME_REGEXP }],
         },
         pmleave: { minCount: 0 },
+        pmremove: {
+            minCount: 1,
+            maxCount: 1,
+            maxCallsPer10Seconds: 10,
+            params: [{ name: 'username', pattern: User.USERNAME_REGEXP }],
+        },
     };
 
     canManageRoom(identifier: string, room: Room): boolean {
         return room.whitelist.indexOf(identifier) !== -1;
+    }
+
+    /**
+     * Removes a user from a private room and handles cleanup
+     * @param room The private room to remove the user from
+     * @param userIdentifier The identifier of the user to remove
+     * @param removalMessage The message to send to the room about the removal
+     * @param notifyRemovedUser Whether to send room list update to the removed user's connection
+     */
+    private async removeUserFromPrivateRoom(
+        room: Room,
+        userIdentifier: string,
+        removalMessage: string,
+        notifyRemovedUser: boolean = false,
+    ): Promise<void> {
+        // Remove user from room
+        room.unallow(userIdentifier);
+
+        // Send notification message to the room
+        room.sendMessage({
+            user: UserController.getNeutralUser(),
+            content: removalMessage,
+        });
+
+        // Update room list for the removed user if requested
+        if (notifyRemovedUser) {
+            const removedSession = Session.getSessionByIdentifier(userIdentifier);
+            if (removedSession) {
+                room.manager.sendRoomList(removedSession);
+            }
+        }
+
+        // Update room list for all remaining users
+        room.whitelist
+            .map((ident) => Session.getSessionByIdentifier(ident))
+            .filter((session) => !!session)
+            .forEach((session) => room.manager.sendRoomList(session as Session));
+
+        // If the room is now empty, delete it
+        if (room.whitelist.length === 0) {
+            await room.manager.deleteRoom(room.id);
+        }
     }
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
@@ -46,6 +94,10 @@ export class PrivateMessagePlugin extends GlobalPlugin {
 
             case 'pmleave':
                 await this.handlePMLeave(param, connection);
+                break;
+
+            case 'pmremove':
+                await this.handlePMRemove(param, connection);
                 break;
         }
     }
@@ -131,24 +183,45 @@ export class PrivateMessagePlugin extends GlobalPlugin {
         if (!this.canManageRoom(connection.session.identifier, room)) {
             throw new Error('You do not have the permission to leave this room');
         }
-        // Leaving room if there's others in it
+
+        // If leaving room and there are others in it, use the utility function
         if (room.whitelist.length > 1) {
-            room.unallow(connection.session.identifier);
-            room.sendMessage({
-                user: UserController.getNeutralUser(),
-                content: `${connection.session.user.username} has left the room`,
-            });
-            room.manager.sendRoomList(connection);
-            room.whitelist
-                .map((ident) => Session.getSessionByIdentifier(ident))
-                .filter((session) => !!session)
-                .forEach((session) => room.manager.sendRoomList(session as Session));
-            return;
+            await this.removeUserFromPrivateRoom(
+                room,
+                connection.session.identifier,
+                `${connection.session.user.username} has left the room`,
+                true,
+            );
         } else {
-            // Delete room
+            // Delete room if it's the last user
             await room.manager.deleteRoom(room.id);
             const message = UserController.createNeutralMessage({ id: 0, content: `Room ${room.id} has been deleted` });
             connection.send('message', message.sanitized());
         }
+    }
+
+    async handlePMRemove(param: string, connection: Connection): Promise<void> {
+        const room = connection.room;
+        if (!room) {
+            throw new Error('You are not in a room');
+        }
+        if (!room.isPrivate) {
+            throw new Error('You can not remove users from a public room');
+        }
+        if (!this.canManageRoom(connection.session.identifier, room)) {
+            throw new Error('You do not have the permission to remove users from this room');
+        }
+        const session = Session.getSessionByIdentifier(param.toLowerCase());
+        if (!session) {
+            throw new Error(`User ${param} not found`);
+        }
+        if (session.identifier === connection.session.identifier) {
+            throw new Error('You can not remove yourself from a private room. Use /pmleave instead');
+        }
+        if (room.whitelist.indexOf(session.identifier) === -1) {
+            throw new Error(`User ${param} is not in this private room`);
+        }
+
+        await this.removeUserFromPrivateRoom(room, session.identifier, `${session.user.username} has been removed from the room`);
     }
 }
