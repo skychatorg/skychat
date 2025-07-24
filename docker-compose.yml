@@ -118,5 +118,16 @@ services:
       ADMIN_FILEBROWSER_ENABLED: "${ADMIN_FILEBROWSER_ENABLED}"
       ADMIN_FILEBROWSER_AUTH: "${ADMIN_FILEBROWSER_AUTH}"
 
+  skychat_jellyfin:
+    image: jellyfin/jellyfin
+    container_name: skychat_jellyfin
+    user: "${DOCKER_UID}:${DOCKER_GID}"
+    volumes:
+      - ./app/jellyfin/config:/config
+      - ./app/jellyfin/cache:/cache
+      - ./gallery:/media:ro
+    environment:
+      - "JELLYFIN_PublishedServerUrl=${JELLYFIN_PUBLIC_URL}"
+
 volumes:
     skychat_letsencrypt:
