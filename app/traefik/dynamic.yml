@@ -55,7 +55,25 @@ http:
                 certResolver: letsencrypt
             {{ end }}
         {{ end }}
+        skychat_jellyfin:
+            service: skychat_jellyfin@file
+            entrypoints: web
+            middlewares:
+                - ratelimit-ultralight
+            rule: "Host(`{{ env "JELLYFIN_HOST" }}`)"
+            {{ if env "USE_TLS" }}
+            tls:
+                certResolver: letsencrypt
+            {{ end }}
     middlewares:
+        ratelimit-ultralight:
+            rateLimit:
+                average: 150
+                burst: 50
+                {{ if env "TRUSTED_IP_HEADER" }}
+                sourceCriterion:
+                    requestHeaderName: {{ env "TRUSTED_IP_HEADER" }}
+                {{ end }}
         ratelimit-light:
             rateLimit:
                 average: 60
@@ -87,3 +105,7 @@ http:
                 servers:
                     - url: "http://skychat_admin_filebrowser"
         {{ end }}
+        skychat_jellyfin:
+            loadBalancer:
+                servers:
+                    - url: "http://skychat_jellyfin:8096"
