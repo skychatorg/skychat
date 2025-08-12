@@ -124,10 +124,11 @@ services:
     user: "${DOCKER_UID}:${DOCKER_GID}"
     volumes:
       - ./app/jellyfin/config:/config
-      - ./app/jellyfin/cache:/cache
+      - jellyfin_cache:/cache
       - ./gallery:/media:ro
     environment:
       - "JELLYFIN_PublishedServerUrl=${JELLYFIN_PUBLIC_URL}"
 
 volumes:
-    skychat_letsencrypt:
+  skychat_letsencrypt:
+  jellyfin_cache:

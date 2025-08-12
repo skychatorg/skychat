@@ -29,9 +29,6 @@ fi
 if [ ! -e app/jellyfin/config ]; then
     mkdir -p app/jellyfin/config;
 fi
-if [ ! -e app/jellyfin/cache ]; then
-    mkdir -p app/jellyfin/cache;
-fi
 
 # Initialize .env
 if [ ! -e .env ]; then
