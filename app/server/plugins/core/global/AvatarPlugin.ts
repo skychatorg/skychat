@@ -13,7 +13,7 @@ import { ConnectedListPlugin } from './ConnectedListPlugin.js';
 export class AvatarPlugin extends GlobalPlugin {
     static readonly DEFAULT_AVATAR: string = Config.LOCATION + '/assets/images/avatars/default.png';
 
-    static readonly AVATAR_SIZE = 40;
+    static readonly AVATAR_SIZE = 40 * 6; // Miniature size is 40px but we use a larger size for better quality on high-DPI screens
 
     static readonly defaultDataStorageValue = AvatarPlugin.DEFAULT_AVATAR;
 
