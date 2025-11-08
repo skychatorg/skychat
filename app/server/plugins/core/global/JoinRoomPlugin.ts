@@ -19,27 +19,32 @@ export class JoinRoomPlugin extends GlobalPlugin {
     };
 
     async run(_alias: string, param: string, connection: Connection): Promise<void> {
-        // Validate the room id
-        const roomId = parseInt(param, 10);
-        if (typeof roomId !== 'number') {
-            throw new Error('Invalid room specified');
-        }
-
-        // Ensure room exists
-        const room = this.manager.getRoomById(roomId);
-        if (!room) {
-            throw new Error('Invalid room specified');
-        }
-
-        // Ensure user is allowed to join the room
-        if (room.isPrivate) {
-            if (!room.whitelist.includes(connection.session.identifier)) {
-                throw new Error('You are not allowed to join this room');
+        try {
+            // Validate the room id
+            const roomId = parseInt(param, 10);
+            if (typeof roomId !== 'number') {
+                throw new Error('Invalid room specified');
             }
-        }
 
-        // Join the room
-        await room.attachConnection(connection);
+            // Ensure room exists
+            const room = this.manager.getRoomById(roomId);
+            if (!room) {
+                throw new Error('Invalid room specified');
+            }
+
+            // Ensure user is allowed to join the room
+            if (room.isPrivate) {
+                if (!room.whitelist.includes(connection.session.identifier)) {
+                    throw new Error('You are not allowed to join this room');
+                }
+            }
+
+            // Join the room
+            await room.attachConnection(connection);
+        } catch (error) {
+            connection.send('join-room', connection.room?.id ?? null);
+            throw error;
+        }
     }
 
     async joinRoom(connection: Connection, roomId: number) {
