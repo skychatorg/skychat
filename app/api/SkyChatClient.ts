@@ -55,6 +55,7 @@ export type SkyChatClientState = {
     playerChannelUsers: { [roomId: number]: Array<SanitizedUser> };
     rooms: SanitizedRoom[];
     currentRoomId: number | null;
+    currentRoomReady: boolean;
     currentRoom: SanitizedRoom | null;
     lastMention: { roomId: number; identifier: string; messageId: number } | null;
     typingList: SanitizedUser[];
@@ -136,6 +137,7 @@ export class SkyChatClient extends EventEmitter {
     private _playerChannelUsers: { [roomId: number]: Array<SanitizedUser> } = {};
     private _rooms: Array<SanitizedRoom> = [];
     private _currentRoomId: number | null = null;
+    private _currentRoomReady: boolean = false;
     private _lastMention: { roomId: number; identifier: string; messageId: number } | null = null;
     private _typingList: Array<SanitizedUser> = [];
     private _polls: { [id: number]: SanitizedPoll } = {};
@@ -184,10 +186,11 @@ export class SkyChatClient extends EventEmitter {
 
         // Messages
         this.on('message', this._onMessage.bind(this));
+        this.on('messages', this._onMessages.bind(this));
 
         // Room
         this.on('room-list', this._onRoomList.bind(this));
-        this.on('join-room', this._onCurrentRoomId.bind(this));
+        this.on('join-room', this._onJoinRoom.bind(this));
         this.on('typing-list', this._onTypingList.bind(this));
 
         // Messages
@@ -344,19 +347,25 @@ export class SkyChatClient extends EventEmitter {
         this.notifySeenMessage(message.id);
     }
 
+    private _onMessages() {
+        this._currentRoomReady = true;
+    }
+
     private _onRoomList(rooms: Array<SanitizedRoom>) {
         this._rooms = rooms;
         this.emit('update', this.state);
     }
 
-    private _onCurrentRoomId(currentRoomId: number | null) {
+    private _onJoinRoom(currentRoomId: number | null) {
         this._currentRoomId = currentRoomId;
         if (typeof localStorage !== 'undefined' && currentRoomId !== null) {
             localStorage.setItem(SkyChatClient.LOCAL_STORAGE_ROOM_ID, currentRoomId.toString());
         }
         this.emit('update', this.state);
         // Ask for message history if joined a room
-        currentRoomId !== null && this.sendMessage('/messagehistory');
+        if (currentRoomId !== null) {
+            this.sendMessage('/messagehistory');
+        }
     }
 
     private _onTypingList(typingList: Array<SanitizedUser>) {
@@ -489,6 +498,7 @@ export class SkyChatClient extends EventEmitter {
             playerChannelUsers: this._playerChannelUsers,
             rooms: this._rooms,
             currentRoomId: this._currentRoomId,
+            currentRoomReady: this._currentRoomReady,
             currentRoom: this._rooms.find((room) => room.id === this._currentRoomId) || null,
             lastMention: this._lastMention,
             typingList: this._typingList,
@@ -618,6 +628,11 @@ export class SkyChatClient extends EventEmitter {
      * Join a specific room
      */
     join(roomId: number) {
+        // Client-side prediction
+        this._currentRoomReady = false;
+        this._currentRoomId = roomId;
+        this.emit('update', this.state);
+        // Send join request
         this.sendMessage(`/join ${roomId}`);
     }
 

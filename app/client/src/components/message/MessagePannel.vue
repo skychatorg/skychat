@@ -1,7 +1,7 @@
 <script setup>
-import { onMounted, nextTick, watch, ref, reactive } from 'vue';
-import { useClientStore } from '@/stores/client';
 import SingleMessage from '@/components/message/SingleMessage.vue';
+import { useClientStore } from '@/stores/client';
+import { nextTick, onMounted, reactive, ref, watch } from 'vue';
 
 const client = useClientStore();
 
@@ -135,13 +135,18 @@ function isMessageFirstOfDay(index) {
         }"
         @scroll="onScroll"
     >
-        <SingleMessage
-            v-for="(message, index) in client.messages"
-            :key="message.id"
-            :message="message"
-            :show-date="isMessageFirstOfDay(index)"
-            @content-size-changed="scrollToBottomIfAutoScroll"
-        />
+        <template v-if="client.state.currentRoomReady">
+            <SingleMessage
+                v-for="(message, index) in client.messages"
+                :key="message.id"
+                :message="message"
+                :show-date="isMessageFirstOfDay(index)"
+                @content-size-changed="scrollToBottomIfAutoScroll"
+            />
+        </template>
+        <template v-else>
+            <div class="text-center text-gray-500 mt-4">loading...</div>
+        </template>
     </div>
 </template>
 
