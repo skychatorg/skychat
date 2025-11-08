@@ -6,3 +6,6 @@ backups
 gallery
 storage
 uploads
+
+# Ignore jellyfin config folder because it's mounted as a volume (and it's huge)
+/app/jellyfin/config
