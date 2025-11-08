@@ -1,11 +1,11 @@
+import { BinaryMessageTypes } from '../../../../api/BinaryMessageTypes.js';
 import { Connection } from '../../../skychat/Connection.js';
-import { GlobalPlugin } from '../../GlobalPlugin.js';
+import { RoomManager } from '../../../skychat/RoomManager.js';
+import { Session } from '../../../skychat/Session.js';
 import { User } from '../../../skychat/User.js';
 import { UserController } from '../../../skychat/UserController.js';
-import { Session } from '../../../skychat/Session.js';
-import { RoomManager } from '../../../skychat/RoomManager.js';
-import { BinaryMessageTypes } from '../../../../api/BinaryMessageTypes.js';
 import { BlacklistPlugin } from '../../core/global/BlacklistPlugin.js';
+import { GlobalPlugin } from '../../GlobalPlugin.js';
 
 /**
  * Handle cursor events
@@ -66,6 +66,11 @@ export class CursorPlugin extends GlobalPlugin {
     async sendCursorPosition(user: User, x: number, y: number, identifierIgnoreList?: string[]): Promise<void> {
         // For every connection in the room
         for (const conn of Session.connections) {
+            // Do not send cursors on users on mobile
+            if (conn && conn.device === 'mobile') {
+                continue;
+            }
+
             // If the user has cursors disabled, don't send
             if (!UserController.getUserPluginData(conn.session.user, this.commandName)) {
                 continue;
