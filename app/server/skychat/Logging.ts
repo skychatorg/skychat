@@ -4,7 +4,18 @@ export class Logging {
     private static readonly logger: pino.Logger = pino();
 
     private static argsToString(args: unknown[]): string {
-        return args.map((a) => (typeof a === 'string' ? a : JSON.stringify(a))).join(' ');
+        return args
+            .map((a) => {
+                if (typeof a === 'string') {
+                    return a;
+                }
+                try {
+                    return JSON.stringify(a);
+                } catch {
+                    return '[Unserializable]';
+                }
+            })
+            .join(' ');
     }
 
     static info(...messages: unknown[]) {
