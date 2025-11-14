@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 import { useToast } from 'vue-toastification';
 import { SkyChatClient } from '../../../api/index.ts';
 import { WebPush } from '../lib/WebPush.js';
+import { useEncryptionStore } from './encryption';
 
 // Connect to SkyChatClient
 const protocol = document.location.protocol === 'http:' ? 'ws' : 'wss';
@@ -35,6 +36,7 @@ export const useClientStore = defineStore('client', {
          * Initialize client (subscribe to relevant events) & make initial socket connection
          */
         init: function () {
+            const encryptionStore = useEncryptionStore();
             // On global client state changed
             client.on('update', () => {
                 // Room id changed
@@ -43,6 +45,10 @@ export const useClientStore = defineStore('client', {
                     this.messages = [];
                 }
                 this.state = client.state;
+            });
+
+            client.on('room-list', (rooms) => {
+                encryptionStore.handleRoomDescriptors(rooms);
             });
 
             // Audio received
@@ -66,25 +72,30 @@ export const useClientStore = defineStore('client', {
             });
 
             // On new message
-            client.on('message', (message) => {
-                this.messages.push(message);
+            client.on('message', async (message) => {
+                const decrypted = await encryptionStore.decryptIncomingMessage(message, client.state.rooms);
+                this.messages.push(decrypted);
             });
 
             // On new messages
-            client.on('messages', (messages) => {
+            client.on('messages', async (messages) => {
                 // Filter messages we already have, if any
                 messages = messages.filter((message) => message.id === 0 || !this.messages.find((m) => m.id === message.id));
                 // Prepend new messages (we always get previous messages in this event)
-                this.messages = messages.concat(this.messages);
+                const decrypted = await Promise.all(
+                    messages.map((message) => encryptionStore.decryptIncomingMessage(message, client.state.rooms)),
+                );
+                this.messages = decrypted.concat(this.messages);
             });
 
             // Message edit
-            client.on('message-edit', (message) => {
+            client.on('message-edit', async (message) => {
                 const messageIndex = this.messages.findIndex((m) => m.id === message.id);
                 if (messageIndex === -1) {
                     return;
                 }
-                this.messages[messageIndex] = message;
+                const decrypted = await encryptionStore.decryptIncomingMessage(message, client.state.rooms);
+                this.messages[messageIndex] = decrypted;
             });
 
             // Ask for push notification permission on user login

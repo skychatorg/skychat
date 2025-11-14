@@ -77,6 +77,7 @@ export class MessageController {
                 Logging.error('Failed to parse message storage', error);
                 storage = {};
             }
+            const encrypted = typeof storage?.e2ee !== 'undefined';
             messages.push(
                 new Message({
                     id: messageRow.id,
@@ -87,6 +88,7 @@ export class MessageController {
                     storage,
                     meta: {
                         _quoted_message_id: messageRow.quoted_message_id,
+                        encrypted,
                     },
                 }),
             );

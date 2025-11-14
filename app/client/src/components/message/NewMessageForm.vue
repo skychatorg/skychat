@@ -2,6 +2,7 @@
 import { AudioRecorder } from '@/lib/AudioRecorder';
 import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
+import { useEncryptionStore } from '@/stores/encryption';
 import { RisiBank } from 'risibank-web-api';
 import { computed, onMounted, ref, watch } from 'vue';
 import { SmartSuggest } from 'vue-smart-suggest';
@@ -12,6 +13,7 @@ const MESSAGE_HISTORY_LENGTH = 500;
 
 const app = useAppStore();
 const client = useClientStore();
+const encryption = useEncryptionStore();
 
 const message = ref(null);
 const messageTextAreaRows = ref(1);
@@ -82,6 +84,7 @@ watch(
     (currentRoomId) => currentRoomId && message.value.focus(),
 );
 
+
 /**
  * When the message changes
  */
@@ -130,12 +133,19 @@ const onNavigateIntoHistory = function (event, offset) {
 /**
  * Send the new message
  */
-const sendMessage = function () {
-    sentMessageHistory.value.push(app.newMessage);
+const sendMessage = async function () {
+    const currentMessage = app.newMessage;
+    if (currentMessage.trim().length === 0) {
+        return;
+    }
+    const sent = await app.sendMessage();
+    if (!sent) {
+        return;
+    }
+    sentMessageHistory.value.push(currentMessage);
     sentMessageHistory.value.splice(0, sentMessageHistory.value.length - MESSAGE_HISTORY_LENGTH);
     historyIndex.value = null;
     messageTextAreaRows.value = 1;
-    app.sendMessage();
 };
 
 /**
@@ -231,6 +241,43 @@ const suggestTriggers = computed(() => [
             })),
     },
 ]);
+
+const passphraseInput = ref('');
+const encryptionEnabled = computed(() => client.state.currentRoom?.encryption?.enabled);
+const hasEncryptionKey = computed(() => {
+    const room = client.state.currentRoom;
+    if (!room) {
+        return false;
+    }
+    return encryption.hasKey(room.id);
+});
+const encryptionError = computed(() => {
+    const room = client.state.currentRoom;
+    if (!room) {
+        return null;
+    }
+    return encryption.roomErrors[room.id] || null;
+});
+const unlockRoom = async () => {
+    if (!client.state.currentRoom) {
+        return;
+    }
+    await encryption.setPassphrase(client.state.currentRoom, passphraseInput.value.trim());
+    passphraseInput.value = '';
+};
+const forgetRoomKey = () => {
+    if (!client.state.currentRoom) {
+        return;
+    }
+    encryption.forgetRoom(client.state.currentRoom.id);
+};
+
+watch(
+    () => client.state.currentRoomId,
+    () => {
+        passphraseInput.value = '';
+    },
+);
 </script>
 
 <template>
@@ -299,6 +346,31 @@ const suggestTriggers = computed(() => [
                     <p class="h-5 pl-2 text-xs text-skygray-lightest">
                         {{ typingListText }}
                     </p>
+
+                    <div
+                        v-if="encryptionEnabled"
+                        class="bg-skygray-dark/25 border border-primary rounded px-3 py-2 mb-2 text-xs text-skygray-lightest"
+                    >
+                        <div class="flex items-center text-primary">
+                            <fa icon="lock" class="mr-2" />
+                            <span>Messages in this room are end-to-end encrypted.</span>
+                        </div>
+                        <div v-if="!hasEncryptionKey" class="mt-2 flex flex-col gap-2 lg:flex-row">
+                            <input
+                                v-model="passphraseInput"
+                                type="password"
+                                class="form-control w-full"
+                                placeholder="Enter room passphrase"
+                                @keydown.enter.prevent="unlockRoom"
+                            />
+                            <button class="form-control lg:w-32" @click="unlockRoom">Unlock</button>
+                        </div>
+                        <div v-else class="mt-2 flex items-center justify-between">
+                            <span>Passphrase stored locally for this session.</span>
+                            <button class="text-xs text-danger underline" @click="forgetRoomKey">Forget</button>
+                        </div>
+                        <p v-if="encryptionError" class="mt-2 text-danger">{{ encryptionError }}</p>
+                    </div>
 
                     <SmartSuggest class="flex" :triggers="suggestTriggers" @open="autoSuggestOpen = true" @close="autoSuggestOpen = false">
                         <textarea

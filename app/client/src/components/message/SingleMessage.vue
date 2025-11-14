@@ -102,6 +102,22 @@ const lastSeenUsers = computed(() => {
     return (client.state.messageIdToLastSeenUsers[props.message.id] || []).slice(0, 6);
 });
 
+const encryptionWarning = computed(() => {
+    if (!props.message.meta?.encrypted) {
+        return null;
+    }
+    if (!props.message.meta?.decryptionError) {
+        return null;
+    }
+    if (props.message.meta.decryptionError === 'missing-key') {
+        return 'Enter the room passphrase to unlock this message.';
+    }
+    if (props.message.meta.decryptionError === 'invalid-key') {
+        return 'Unable to decrypt this message with the current passphrase.';
+    }
+    return 'Unable to decrypt this message.';
+});
+
 // listen for events for buttons
 const bindMessageContentEvents = () => {
     if (!content.value) {
@@ -248,6 +264,10 @@ const messageInteract = () => {
                         </div>
                     </template>
                     <template v-else>
+                        <div v-if="encryptionWarning" class="text-xs text-primary flex items-center mb-2">
+                            <fa icon="lock" class="mr-2" />
+                            <span>{{ encryptionWarning }}</span>
+                        </div>
                         <div
                             ref="content"
                             class="text-skygray-white w-0 min-w-full whitespace-pre-wrap overflow-hidden break-words"

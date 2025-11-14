@@ -3,6 +3,7 @@ import { defineStore } from 'pinia';
 import { watch } from 'vue';
 import { useToast } from 'vue-toastification';
 import { useClientStore } from './client';
+import { useEncryptionStore } from './encryption';
 
 const DEFAULT_DOCUMENT_TITLE = '~ SkyChat';
 
@@ -270,13 +271,19 @@ export const useAppStore = defineStore('app', {
             this.newMessage = message;
         },
 
-        sendMessage: function () {
+        sendMessage: async function () {
             if (this.newMessage.trim().length === 0) {
-                return;
+                return false;
             }
             const clientStore = useClientStore();
-            clientStore.sendMessage(this.newMessage);
+            const encryptionStore = useEncryptionStore();
+            const payload = await encryptionStore.prepareOutgoingMessage(this.newMessage, clientStore.state.currentRoom);
+            if (payload === null) {
+                return false;
+            }
+            clientStore.sendMessage(payload);
             this.newMessage = '';
+            return true;
         },
 
         focus: function () {
