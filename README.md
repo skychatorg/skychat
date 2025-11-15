@@ -63,6 +63,10 @@ Plugins are grouped in so-called `PluginGroup` instances. It is possible to disa
 
 In private rooms, only core plugins are loaded.
 
+### Enable end-to-end encrypted rooms
+
+To keep specific rooms fully client-encrypted, mark them with an `encryption` block inside `storage/rooms/<roomId>.json`. When `enabled` is set to `true`, the server advertises a salt but never stores plaintext content, and the web client shows a lock banner that lets users enter the shared passphrase. See [app/doc/encrypted-rooms.md](app/doc/encrypted-rooms.md) for a full walkthrough covering setup, client behavior, and passphrase rotation.
+
 ### Customize preferences
 
 The `config/preferences.json` file specifies application preferences. The available fields are detailed below.
