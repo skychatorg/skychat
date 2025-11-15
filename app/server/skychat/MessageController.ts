@@ -89,6 +89,8 @@ export class MessageController {
                     meta: {
                         _quoted_message_id: messageRow.quoted_message_id,
                         encrypted,
+                        keyHash: encrypted ? (storage?.e2ee as any)?.keyHash ?? null : null,
+                        encryptionLabel: encrypted ? (storage?.e2ee as any)?.label ?? null : null,
                     },
                 }),
             );

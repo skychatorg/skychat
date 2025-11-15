@@ -47,10 +47,6 @@ export const useClientStore = defineStore('client', {
                 this.state = client.state;
             });
 
-            client.on('room-list', (rooms) => {
-                encryptionStore.handleRoomDescriptors(rooms);
-            });
-
             // Audio received
             client.on('audio', ({ id, blob }) => {
                 // Try and find the message that corresponds to the audio
@@ -73,7 +69,7 @@ export const useClientStore = defineStore('client', {
 
             // On new message
             client.on('message', async (message) => {
-                const decrypted = await encryptionStore.decryptIncomingMessage(message, client.state.rooms);
+                const decrypted = await encryptionStore.decryptIncomingMessage(message);
                 this.messages.push(decrypted);
             });
 
@@ -82,9 +78,7 @@ export const useClientStore = defineStore('client', {
                 // Filter messages we already have, if any
                 messages = messages.filter((message) => message.id === 0 || !this.messages.find((m) => m.id === message.id));
                 // Prepend new messages (we always get previous messages in this event)
-                const decrypted = await Promise.all(
-                    messages.map((message) => encryptionStore.decryptIncomingMessage(message, client.state.rooms)),
-                );
+                const decrypted = await Promise.all(messages.map((message) => encryptionStore.decryptIncomingMessage(message)));
                 this.messages = decrypted.concat(this.messages);
             });
 
@@ -94,7 +88,7 @@ export const useClientStore = defineStore('client', {
                 if (messageIndex === -1) {
                     return;
                 }
-                const decrypted = await encryptionStore.decryptIncomingMessage(message, client.state.rooms);
+                const decrypted = await encryptionStore.decryptIncomingMessage(message);
                 this.messages[messageIndex] = decrypted;
             });
 

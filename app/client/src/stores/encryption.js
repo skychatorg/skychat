@@ -1,6 +1,6 @@
 import escapeHtml from 'escape-html';
 import { defineStore } from 'pinia';
-import { ROOM_ENCRYPTION_VERSION } from '../../../api/encryption.ts';
+import { MESSAGE_ENCRYPTION_VERSION } from '../../../api/encryption.ts';
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
@@ -31,6 +31,13 @@ const base64ToBuffer = (value) => {
     return bytes.buffer;
 };
 
+const bufferToHex = (buffer) => {
+    const bytes = new Uint8Array(buffer);
+    return Array.from(bytes)
+        .map((byte) => byte.toString(16).padStart(2, '0'))
+        .join('');
+};
+
 const formatPlaintext = (plaintext) => {
     return escapeHtml(plaintext).replace(/\n/g, '<br>');
 };
@@ -53,85 +60,78 @@ const decryptString = async (key, payload) => {
     return decoder.decode(plaintextBuffer);
 };
 
+const deriveMessageKey = async (keyMaterial, salt) => {
+    const subtle = getSubtleCrypto();
+    return subtle.deriveKey(
+        {
+            name: 'PBKDF2',
+            salt,
+            iterations: 600000,
+            hash: 'SHA-256',
+        },
+        keyMaterial,
+        { name: 'AES-GCM', length: 256 },
+        false,
+        ['encrypt', 'decrypt'],
+    );
+};
+
+const randomSalt = () => {
+    const salt = globalThis.crypto.getRandomValues(new Uint8Array(16));
+    return {
+        raw: salt,
+        serialized: bufferToBase64(salt.buffer),
+    };
+};
+
 export const useEncryptionStore = defineStore('encryption', {
     state: () => ({
-        roomKeys: {},
-        roomErrors: {},
+        passphrases: {},
+        composerError: null,
     }),
 
+    getters: {
+        knownPassphrases(state) {
+            return Object.entries(state.passphrases).map(([keyHash, entry]) => ({
+                keyHash,
+                label: entry.label || 'Unnamed key',
+            }));
+        },
+    },
+
     actions: {
-        handleRoomDescriptors(rooms) {
-            const knownRoomIds = new Set(rooms.map((room) => room.id));
-            Object.keys(this.roomKeys).forEach((roomId) => {
-                if (!knownRoomIds.has(parseInt(roomId, 10))) {
-                    this.forgetRoom(parseInt(roomId, 10));
-                }
-            });
-            rooms.forEach((room) => {
-                if (!room.encryption?.enabled) {
-                    this.forgetRoom(room.id);
-                } else {
-                    const entry = this.roomKeys[room.id];
-                    if (entry && entry.salt !== room.encryption.salt) {
-                        this.forgetRoom(room.id);
-                    }
-                }
-            });
+        clearComposerError() {
+            this.composerError = null;
         },
 
-        async setPassphrase(room, passphrase) {
-            if (!room?.encryption?.enabled) {
-                return;
-            }
-            if (!passphrase) {
-                this.roomErrors[room.id] = 'Passphrase is required to unlock this room.';
-                return;
-            }
-            try {
-                const subtle = getSubtleCrypto();
-                const keyMaterial = await subtle.importKey('raw', encoder.encode(passphrase), 'PBKDF2', false, ['deriveKey']);
-                const key = await subtle.deriveKey(
-                    {
-                        name: 'PBKDF2',
-                        salt: encoder.encode(room.encryption.salt || ''),
-                        iterations: 600000,
-                        hash: 'SHA-256',
-                    },
-                    keyMaterial,
-                    { name: 'AES-GCM', length: 256 },
-                    false,
-                    ['encrypt', 'decrypt'],
-                );
-                this.roomKeys[room.id] = {
-                    key,
-                    salt: room.encryption.salt || '',
-                };
-                delete this.roomErrors[room.id];
-            } catch (error) {
-                console.error(error);
-                this.roomErrors[room.id] = 'Unable to derive encryption key.';
-            }
+        async rememberPassphrase(passphrase, label = null) {
+            const trimmedLabel = label?.trim() || null;
+            const subtle = getSubtleCrypto();
+            const keyMaterial = await subtle.importKey('raw', encoder.encode(passphrase), 'PBKDF2', false, ['deriveKey']);
+            const hashBuffer = await subtle.digest('SHA-256', encoder.encode(passphrase));
+            const keyHash = bufferToHex(hashBuffer);
+            const existing = this.passphrases[keyHash];
+            this.passphrases[keyHash] = {
+                keyMaterial,
+                label: trimmedLabel ?? existing?.label ?? null,
+            };
+            return { keyHash, entry: this.passphrases[keyHash] };
         },
 
-        forgetRoom(roomId) {
-            delete this.roomKeys[roomId];
-            delete this.roomErrors[roomId];
+        forgetPassphrase(keyHash) {
+            delete this.passphrases[keyHash];
         },
 
-        hasKey(roomId) {
-            return typeof this.roomKeys[roomId] !== 'undefined';
-        },
-
-        async prepareOutgoingMessage(rawMessage, room) {
-            if (!room?.encryption?.enabled || rawMessage.startsWith('/')) {
+        async prepareOutgoingMessage(rawMessage, options = {}) {
+            const { encrypt = false, passphrase = '', keyHash = null, label = '', remember = true } = options;
+            if (rawMessage.startsWith('/')) {
+                this.clearComposerError();
                 return rawMessage;
             }
-            const entry = this.roomKeys[room.id];
-            if (!entry) {
-                this.roomErrors[room.id] = 'Enter the room passphrase to send messages.';
-                return null;
+            if (!encrypt) {
+                this.clearComposerError();
+                return rawMessage;
             }
-            delete this.roomErrors[room.id];
             let content = rawMessage;
             let quotedId = null;
             const quoteMatch = content.match(/^@([0-9]+)/);
@@ -139,42 +139,84 @@ export const useEncryptionStore = defineStore('encryption', {
                 quotedId = parseInt(quoteMatch[1], 10);
                 content = content.slice(quoteMatch[0].length);
             }
-            const { ciphertext, iv } = await encryptString(entry.key, content);
-            const payload = {
-                ciphertext,
-                iv,
-                version: ROOM_ENCRYPTION_VERSION,
-            };
-            if (quotedId) {
-                payload.quotedId = quotedId;
+            try {
+                let resolvedHash = keyHash;
+                let entry = resolvedHash ? this.passphrases[resolvedHash] : null;
+                if (!entry) {
+                    if (!passphrase) {
+                        this.composerError = keyHash
+                            ? 'Unknown encryption key. Select another key or provide a passphrase.'
+                            : 'Passphrase is required to encrypt this message.';
+                        return null;
+                    }
+                    const cached = await this.rememberPassphrase(passphrase, label || null);
+                    resolvedHash = cached.keyHash;
+                    entry = cached.entry;
+                    if (!remember) {
+                        delete this.passphrases[resolvedHash];
+                    }
+                } else if (label?.trim()) {
+                    entry.label = label.trim();
+                }
+                const salt = randomSalt();
+                const aesKey = await deriveMessageKey(entry.keyMaterial, salt.raw);
+                const { ciphertext, iv } = await encryptString(aesKey, content);
+                const payload = {
+                    type: 'skychat.e2ee',
+                    ciphertext,
+                    iv,
+                    salt: salt.serialized,
+                    keyHash: resolvedHash,
+                    label: entry.label,
+                    version: MESSAGE_ENCRYPTION_VERSION,
+                };
+                if (quotedId) {
+                    payload.quotedId = quotedId;
+                }
+                this.clearComposerError();
+                return JSON.stringify(payload);
+            } catch (error) {
+                console.error(error);
+                this.composerError = 'Unable to encrypt this message.';
+                return null;
             }
-            return JSON.stringify(payload);
         },
 
-        async decryptIncomingMessage(message, rooms) {
+        async decryptIncomingMessage(message) {
             if (!message?.meta?.encrypted || !message.storage?.e2ee) {
                 if (message?.quoted) {
-                    message.quoted = await this.decryptIncomingMessage(message.quoted, rooms);
+                    message.quoted = await this.decryptIncomingMessage(message.quoted);
                 }
                 return message;
             }
-            const room = rooms.find((entry) => entry.id === message.room);
-            if (!room?.encryption?.enabled) {
+            const payload = message.storage.e2ee;
+            const keyHash = payload.keyHash || message.meta?.keyHash;
+            if (!payload.salt || !payload.ciphertext || !payload.iv) {
+                message.meta.decryptionError = 'invalid-key';
                 if (message?.quoted) {
-                    message.quoted = await this.decryptIncomingMessage(message.quoted, rooms);
+                    message.quoted = await this.decryptIncomingMessage(message.quoted);
                 }
                 return message;
             }
-            const entry = this.roomKeys[room.id];
+            if (!keyHash) {
+                message.meta.decryptionError = 'missing-key';
+                if (message?.quoted) {
+                    message.quoted = await this.decryptIncomingMessage(message.quoted);
+                }
+                return message;
+            }
+            const entry = this.passphrases[keyHash];
             if (!entry) {
                 message.meta.decryptionError = 'missing-key';
                 if (message?.quoted) {
-                    message.quoted = await this.decryptIncomingMessage(message.quoted, rooms);
+                    message.quoted = await this.decryptIncomingMessage(message.quoted);
                 }
                 return message;
             }
             try {
-                const plaintext = await decryptString(entry.key, message.storage.e2ee);
+                const saltBuffer = base64ToBuffer(payload.salt);
+                const aesKey = await deriveMessageKey(entry.keyMaterial, new Uint8Array(saltBuffer));
+                const plaintext = await decryptString(aesKey, payload);
                 message.content = plaintext;
                 message.formatted = formatPlaintext(plaintext);
                 delete message.meta.decryptionError;
@@ -183,9 +225,24 @@ export const useEncryptionStore = defineStore('encryption', {
                 message.meta.decryptionError = 'invalid-key';
             }
             if (message?.quoted) {
-                message.quoted = await this.decryptIncomingMessage(message.quoted, rooms);
+                message.quoted = await this.decryptIncomingMessage(message.quoted);
             }
             return message;
+        },
+
+        async unlockMessage(message, passphrase, label = null) {
+            if (!message?.storage?.e2ee) {
+                return false;
+            }
+            try {
+                await this.rememberPassphrase(passphrase, label ?? message.storage.e2ee.label ?? null);
+                await this.decryptIncomingMessage(message);
+                return !message.meta.decryptionError;
+            } catch (error) {
+                console.error(error);
+                message.meta.decryptionError = 'invalid-key';
+                return false;
+            }
         },
     },
 });

@@ -1,4 +1,3 @@
-import crypto from 'crypto';
 import fs from 'fs';
 import SQL from 'sql-template-strings';
 import { globalPluginGroup } from '../plugins/GlobalPluginGroup.js';
@@ -6,7 +5,6 @@ import { RoomPlugin } from '../plugins/RoomPlugin.js';
 import { BlacklistPlugin } from '../plugins/core/global/BlacklistPlugin.js';
 import { CorePluginGroup } from '../plugins/index.js';
 import { RoomProtectPlugin } from '../plugins/security_extra/RoomProtectPlugin.js';
-import { RoomEncryptionDescriptor, ROOM_ENCRYPTION_VERSION } from '../../api/encryption.js';
 import { Config } from './Config.js';
 import { Connection } from './Connection.js';
 import { DatabaseHelper } from './DatabaseHelper.js';
@@ -22,7 +20,6 @@ export type StoredRoom = {
     pluginGroupNames: string[];
     isPrivate: boolean;
     whitelist: string[];
-    encryption?: RoomEncryptionDescriptor;
 };
 
 export type SanitizedRoom = {
@@ -33,7 +30,6 @@ export type SanitizedRoom = {
     lastReceivedMessageId: number;
     lastReceivedMessageTimestamp: number;
     plugins: { [pluginName: string]: unknown };
-    encryption: RoomEncryptionDescriptor;
 };
 
 export class Room implements IBroadcaster {
@@ -117,12 +113,6 @@ export class Room implements IBroadcaster {
      */
     public readonly plugins: RoomPlugin[];
 
-    public encryption: RoomEncryptionDescriptor = {
-        enabled: false,
-        salt: null,
-        version: ROOM_ENCRYPTION_VERSION,
-    };
-
     constructor(manager: RoomManager, isPrivate?: boolean, id?: number) {
         this.manager = manager;
         this.isPrivate = !!isPrivate;
@@ -143,8 +133,6 @@ export class Room implements IBroadcaster {
         // We only load non-core plugin groups if not a private room
         if (!this.isPrivate) {
             this.load();
-        } else {
-            this.ensureEncryptionSalt();
         }
 
         // Load all plugins
@@ -236,12 +224,6 @@ export class Room implements IBroadcaster {
             this.pluginGroupNames = data.pluginGroupNames ?? this.pluginGroupNames;
             this.isPrivate = !!data.isPrivate;
             this.whitelist = data.whitelist;
-            this.encryption = {
-                enabled: !!data.encryption?.enabled,
-                salt: data.encryption?.salt ?? null,
-                version: data.encryption?.version ?? ROOM_ENCRYPTION_VERSION,
-            };
-            this.ensureEncryptionSalt();
         } catch (error) {
             console.error(`Could not load room ${this.id} data from disk: ${error}`);
             this.name = `Room ${this.id} (corrupted)`;
@@ -266,7 +248,6 @@ export class Room implements IBroadcaster {
             pluginGroupNames: this.pluginGroupNames,
             isPrivate: this.isPrivate,
             whitelist: this.whitelist,
-            encryption: this.encryption,
         };
         fs.writeFileSync(this.getStoragePath(), JSON.stringify(data));
         return true;
@@ -524,19 +505,6 @@ export class Room implements IBroadcaster {
             lastReceivedMessageId: lastMessage ? lastMessage.id : 0,
             lastReceivedMessageTimestamp: lastMessage ? lastMessage.createdTime.getTime() : 0,
             plugins,
-            encryption: this.encryption,
         };
-    }
-
-    private ensureEncryptionSalt(): void {
-        if (!this.encryption.enabled) {
-            this.encryption.salt = null;
-            this.encryption.version = ROOM_ENCRYPTION_VERSION;
-            return;
-        }
-        if (!this.encryption.salt) {
-            this.encryption.salt = crypto.randomBytes(16).toString('hex');
-        }
-        this.encryption.version = this.encryption.version ?? ROOM_ENCRYPTION_VERSION;
     }
 }

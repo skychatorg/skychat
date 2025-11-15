@@ -40,13 +40,17 @@ export class MessagePlugin extends RoomPlugin {
             connection.session.user.right >=
             Math.max(Config.PREFERENCES.minRightForMessageHistory, Config.PREFERENCES.minRightForMessageQuoting);
 
-        if (this.room.encryption.enabled) {
-            const payload = this.parseEncryptedPayload(content);
-            storage = { ...Message.DEFAULT_STORAGE, e2ee: payload };
+        const encryptedPayload = this.parseEncryptedPayload(content);
+
+        if (encryptedPayload) {
+            if (connection.session.user.right < Config.PREFERENCES.minRightForEncryptedMessages) {
+                throw new Error('You are not allowed to send encrypted messages.');
+            }
+            storage = { ...Message.DEFAULT_STORAGE, e2ee: encryptedPayload };
             content = MessagePlugin.ENCRYPTED_PLACEHOLDER;
             formatted = MessagePlugin.ENCRYPTED_PLACEHOLDER_FORMATTED;
-            if (payload.quotedId && canQuote) {
-                quoted = await this.loadQuotedMessage(payload.quotedId, connection);
+            if (encryptedPayload.quotedId && canQuote) {
+                quoted = await this.loadQuotedMessage(encryptedPayload.quotedId, connection);
             }
         } else {
             const quoteMatch = content.match(/^@([0-9]+)/);
@@ -60,7 +64,7 @@ export class MessagePlugin extends RoomPlugin {
         }
 
         // If the last N messages in this room are from the same user, we merge the messages
-        if (!this.room.encryption.enabled) {
+        if (!encryptedPayload) {
             const lastMessages = this.room.messages.slice(-Config.PREFERENCES.maxConsecutiveMessages);
             const matchingMessages = lastMessages.filter(
                 (m) => m.user.username.toLowerCase() === connection.session.user.username.toLowerCase(),
@@ -94,7 +98,11 @@ export class MessagePlugin extends RoomPlugin {
             user: connection.session.user,
             quoted,
             connection,
-            meta: { encrypted: this.room.encryption.enabled },
+            meta: {
+                encrypted: Boolean(encryptedPayload),
+                keyHash: encryptedPayload?.keyHash,
+                encryptionLabel: encryptedPayload?.label ?? null,
+            },
             storage,
         });
 
@@ -104,14 +112,23 @@ export class MessagePlugin extends RoomPlugin {
         }
     }
 
-    private parseEncryptedPayload(content: string): EncryptedMessagePayload {
+    private parseEncryptedPayload(content: string): EncryptedMessagePayload | null {
         let payload: EncryptedMessagePayload;
         try {
             payload = JSON.parse(content);
         } catch (error) {
-            throw new Error('Encrypted messages are required in this room.');
+            return null;
+        }
+        if (!payload || typeof payload !== 'object') {
+            return null;
+        }
+        if ((payload as EncryptedMessagePayload).type !== 'skychat.e2ee') {
+            return null;
         }
         if (typeof payload.ciphertext !== 'string' || typeof payload.iv !== 'string') {
+            throw new Error('Malformed encrypted payload');
+        }
+        if (typeof payload.salt !== 'string' || typeof payload.keyHash !== 'string') {
             throw new Error('Malformed encrypted payload');
         }
         if (typeof payload.version !== 'number') {

@@ -138,7 +138,13 @@ const sendMessage = async function () {
     if (currentMessage.trim().length === 0) {
         return;
     }
-    const sent = await app.sendMessage();
+    const sent = await app.sendMessage({
+        encrypt: encryptMessage.value,
+        keyHash: encryptMessage.value && selectedKeyHash.value ? selectedKeyHash.value : null,
+        passphrase: encryptMessage.value ? encryptionPassphrase.value.trim() : '',
+        label: encryptMessage.value ? encryptionLabel.value.trim() : '',
+        remember: encryptMessage.value ? rememberEncryptionKey.value : true,
+    });
     if (!sent) {
         return;
     }
@@ -146,6 +152,9 @@ const sendMessage = async function () {
     sentMessageHistory.value.splice(0, sentMessageHistory.value.length - MESSAGE_HISTORY_LENGTH);
     historyIndex.value = null;
     messageTextAreaRows.value = 1;
+    if (encryptMessage.value && !rememberEncryptionKey.value) {
+        encryptionPassphrase.value = '';
+    }
 };
 
 /**
@@ -242,42 +251,29 @@ const suggestTriggers = computed(() => [
     },
 ]);
 
-const passphraseInput = ref('');
-const encryptionEnabled = computed(() => client.state.currentRoom?.encryption?.enabled);
-const hasEncryptionKey = computed(() => {
-    const room = client.state.currentRoom;
-    if (!room) {
-        return false;
-    }
-    return encryption.hasKey(room.id);
-});
-const encryptionError = computed(() => {
-    const room = client.state.currentRoom;
-    if (!room) {
-        return null;
-    }
-    return encryption.roomErrors[room.id] || null;
-});
-const unlockRoom = async () => {
-    if (!client.state.currentRoom) {
-        return;
-    }
-    await encryption.setPassphrase(client.state.currentRoom, passphraseInput.value.trim());
-    passphraseInput.value = '';
-};
-const forgetRoomKey = () => {
-    if (!client.state.currentRoom) {
-        return;
-    }
-    encryption.forgetRoom(client.state.currentRoom.id);
-};
+const encryptMessage = ref(false);
+const encryptionPassphrase = ref('');
+const encryptionLabel = ref('');
+const rememberEncryptionKey = ref(true);
+const selectedKeyHash = ref('');
+const knownEncryptionKeys = computed(() => encryption.knownPassphrases);
+const encryptionError = computed(() => encryption.composerError);
 
-watch(
-    () => client.state.currentRoomId,
-    () => {
-        passphraseInput.value = '';
-    },
-);
+watch(encryptMessage, (value) => {
+    if (!value) {
+        encryptionPassphrase.value = '';
+        encryptionLabel.value = '';
+        selectedKeyHash.value = '';
+        encryption.clearComposerError();
+    }
+});
+
+const forgetSavedKey = (hash) => {
+    encryption.forgetPassphrase(hash);
+    if (selectedKeyHash.value === hash) {
+        selectedKeyHash.value = '';
+    }
+};
 </script>
 
 <template>
@@ -348,28 +344,69 @@ watch(
                     </p>
 
                     <div
-                        v-if="encryptionEnabled"
                         class="bg-skygray-dark/25 border border-primary rounded px-3 py-2 mb-2 text-xs text-skygray-lightest"
                     >
-                        <div class="flex items-center text-primary">
-                            <fa icon="lock" class="mr-2" />
-                            <span>Messages in this room are end-to-end encrypted.</span>
-                        </div>
-                        <div v-if="!hasEncryptionKey" class="mt-2 flex flex-col gap-2 lg:flex-row">
+                        <label class="flex items-center text-primary gap-2">
+                            <fa icon="lock" />
+                            <span>Encrypt the next message before sending.</span>
+                            <input type="checkbox" class="form-checkbox ml-auto" v-model="encryptMessage" />
+                        </label>
+                        <div v-if="encryptMessage" class="mt-3 space-y-3">
+                            <div>
+                                <label class="block text-[11px] uppercase tracking-wide text-skygray-lightest/70">
+                                    Encryption key
+                                </label>
+                                <select class="form-control mt-1" v-model="selectedKeyHash">
+                                    <option value="">Use new passphrase</option>
+                                    <option v-for="key in knownEncryptionKeys" :key="key.keyHash" :value="key.keyHash">
+                                        {{ key.label }} — {{ key.keyHash.slice(0, 8) }}
+                                    </option>
+                                </select>
+                            </div>
                             <input
-                                v-model="passphraseInput"
+                                v-model="encryptionPassphrase"
                                 type="password"
                                 class="form-control w-full"
-                                placeholder="Enter room passphrase"
-                                @keydown.enter.prevent="unlockRoom"
+                                :disabled="!!selectedKeyHash"
+                                placeholder="Enter passphrase"
                             />
-                            <button class="form-control lg:w-32" @click="unlockRoom">Unlock</button>
+                            <input
+                                v-model="encryptionLabel"
+                                type="text"
+                                class="form-control w-full"
+                                placeholder="Optional label shown to recipients"
+                            />
+                            <label class="flex items-center gap-2 text-skygray-lightest/80">
+                                <input type="checkbox" v-model="rememberEncryptionKey" :disabled="!!selectedKeyHash" />
+                                <span>
+                                    <template v-if="selectedKeyHash">
+                                        Saved keys stay available until you forget them.
+                                    </template>
+                                    <template v-else>
+                                        Remember this passphrase for this session
+                                    </template>
+                                </span>
+                            </label>
+                            <p v-if="encryptionError" class="text-danger">{{ encryptionError }}</p>
+                            <div v-if="knownEncryptionKeys.length" class="border-t border-primary/30 pt-2">
+                                <p class="text-[11px] uppercase tracking-wide text-skygray-lightest/70">Saved keys</p>
+                                <ul class="mt-1 space-y-1">
+                                    <li
+                                        v-for="key in knownEncryptionKeys"
+                                        :key="`saved-${key.keyHash}`"
+                                        class="flex items-center justify-between"
+                                    >
+                                        <span>{{ key.label }} · {{ key.keyHash.slice(0, 8) }}</span>
+                                        <button
+                                            class="text-[10px] text-danger uppercase"
+                                            @click="forgetSavedKey(key.keyHash)"
+                                        >
+                                            Forget
+                                        </button>
+                                    </li>
+                                </ul>
+                            </div>
                         </div>
-                        <div v-else class="mt-2 flex items-center justify-between">
-                            <span>Passphrase stored locally for this session.</span>
-                            <button class="text-xs text-danger underline" @click="forgetRoomKey">Forget</button>
-                        </div>
-                        <p v-if="encryptionError" class="mt-2 text-danger">{{ encryptionError }}</p>
                     </div>
 
                     <SmartSuggest class="flex" :triggers="suggestTriggers" @open="autoSuggestOpen = true" @close="autoSuggestOpen = false">

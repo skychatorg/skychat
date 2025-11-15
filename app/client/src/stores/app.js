@@ -271,13 +271,13 @@ export const useAppStore = defineStore('app', {
             this.newMessage = message;
         },
 
-        sendMessage: async function () {
+        sendMessage: async function (encryptionOptions = {}) {
             if (this.newMessage.trim().length === 0) {
                 return false;
             }
             const clientStore = useClientStore();
             const encryptionStore = useEncryptionStore();
-            const payload = await encryptionStore.prepareOutgoingMessage(this.newMessage, clientStore.state.currentRoom);
+            const payload = await encryptionStore.prepareOutgoingMessage(this.newMessage, encryptionOptions);
             if (payload === null) {
                 return false;
             }

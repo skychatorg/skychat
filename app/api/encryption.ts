@@ -1,14 +1,12 @@
-export const ROOM_ENCRYPTION_VERSION = 1;
-
-export type RoomEncryptionDescriptor = {
-    enabled: boolean;
-    salt: string | null;
-    version: number;
-};
+export const MESSAGE_ENCRYPTION_VERSION = 1;
 
 export type EncryptedMessagePayload = {
+    type: 'skychat.e2ee';
     ciphertext: string;
     iv: string;
+    salt: string;
+    keyHash: string;
     version: number;
+    label?: string | null;
     quotedId?: number | null;
 };
