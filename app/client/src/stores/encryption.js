@@ -1,6 +1,6 @@
 import escapeHtml from 'escape-html';
 import { defineStore } from 'pinia';
-import { ROOM_ENCRYPTION_PREFIX, ROOM_ENCRYPTION_VERSION } from '../../../api/encryption.ts';
+import { ROOM_ENCRYPTION_VERSION } from '../../../api/encryption.ts';
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
@@ -148,7 +148,7 @@ export const useEncryptionStore = defineStore('encryption', {
             if (quotedId) {
                 payload.quotedId = quotedId;
             }
-            return `${ROOM_ENCRYPTION_PREFIX}${JSON.stringify(payload)}`;
+            return JSON.stringify(payload);
         },
 
         async decryptIncomingMessage(message, rooms) {

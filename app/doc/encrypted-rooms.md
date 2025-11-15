@@ -41,7 +41,7 @@ When a user enters an encrypted room, the composer displays a lock banner:
 1. The user enters the shared passphrase and presses **Unlock**. The browser derives the key and keeps it only in memory for the current session. Use the **Forget** button at any time to wipe it.
 2. Once unlocked, sending a message works as usual. The client:
     * Strips an optional quote prefix such as `@123` (only when quoting is allowed).
-    * Encrypts the rest of the text plus the quoted ID (if any) with AES-GCM and prepends the `::skychat-encrypted::` prefix required by the server.
+    * Encrypts the rest of the text plus the quoted ID (if any) with AES-GCM and sends the resulting JSON payload to the server.
     * Leaves slash commands (`/kick`, `/help`, …) untouched, so administrative commands continue to work even when the room is marked as encrypted.
 3. Incoming messages are decrypted automatically when the derived key is present. If the user has not provided the passphrase (or used a wrong one), the message bubble shows a small warning explaining why it is still locked.
 

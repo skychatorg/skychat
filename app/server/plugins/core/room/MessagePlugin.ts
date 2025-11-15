@@ -1,5 +1,5 @@
 import SQL from 'sql-template-strings';
-import { EncryptedMessagePayload, ROOM_ENCRYPTION_PREFIX } from '../../../../api/encryption.js';
+import { EncryptedMessagePayload } from '../../../../api/encryption.js';
 import { Config } from '../../../skychat/Config.js';
 import { Connection } from '../../../skychat/Connection.js';
 import { DatabaseHelper } from '../../../skychat/DatabaseHelper.js';
@@ -105,14 +105,11 @@ export class MessagePlugin extends RoomPlugin {
     }
 
     private parseEncryptedPayload(content: string): EncryptedMessagePayload {
-        if (!content.startsWith(ROOM_ENCRYPTION_PREFIX)) {
-            throw new Error('Encrypted messages are required in this room.');
-        }
         let payload: EncryptedMessagePayload;
         try {
-            payload = JSON.parse(content.slice(ROOM_ENCRYPTION_PREFIX.length));
+            payload = JSON.parse(content);
         } catch (error) {
-            throw new Error('Invalid encrypted message payload');
+            throw new Error('Encrypted messages are required in this room.');
         }
         if (typeof payload.ciphertext !== 'string' || typeof payload.iv !== 'string') {
             throw new Error('Malformed encrypted payload');

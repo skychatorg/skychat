@@ -1,4 +1,3 @@
-export const ROOM_ENCRYPTION_PREFIX = '::skychat-encrypted::';
 export const ROOM_ENCRYPTION_VERSION = 1;
 
 export type RoomEncryptionDescriptor = {
