@@ -2,16 +2,17 @@
 import { AudioRecorder } from '@/lib/AudioRecorder';
 import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
+import { useEncryptionStore } from '@/stores/encryption';
 import { RisiBank } from 'risibank-web-api';
 import { computed, onMounted, ref, watch } from 'vue';
 import { SmartSuggest } from 'vue-smart-suggest';
 import { useClientState } from '../../composables/useClientState';
-import { has } from 'lodash';
 
 const MESSAGE_HISTORY_LENGTH = 500;
 
 const app = useAppStore();
 const client = useClientStore();
+const encryption = useEncryptionStore();
 
 const message = ref(null);
 const messageTextAreaRows = ref(1);
@@ -130,12 +131,26 @@ const onNavigateIntoHistory = function (event, offset) {
 /**
  * Send the new message
  */
-const sendMessage = function () {
-    sentMessageHistory.value.push(app.newMessage);
+const sendMessage = async function () {
+    const currentMessage = app.newMessage;
+    if (currentMessage.trim().length === 0) {
+        return;
+    }
+    const sent = await app.sendMessage({
+        encrypt: encryptMessage.value,
+        passphrase: encryptMessage.value ? encryptionPassphrase.value.trim() : '',
+        label: encryptMessage.value ? encryptionLabel.value.trim() : '',
+    });
+    if (!sent) {
+        return;
+    }
+    sentMessageHistory.value.push(currentMessage);
     sentMessageHistory.value.splice(0, sentMessageHistory.value.length - MESSAGE_HISTORY_LENGTH);
     historyIndex.value = null;
     messageTextAreaRows.value = 1;
-    app.sendMessage();
+    if (encryptMessage.value) {
+        encryptMessage.value = false;
+    }
 };
 
 /**
@@ -231,6 +246,29 @@ const suggestTriggers = computed(() => [
             })),
     },
 ]);
+
+const encryptMessage = ref(false);
+const encryptionPassphrase = ref('');
+const encryptionLabel = ref('');
+const encryptionError = computed(() => encryption.composerError);
+
+watch(encryptMessage, (value) => {
+    if (!value) {
+        encryptionPassphrase.value = '';
+        encryptionLabel.value = '';
+        encryption.clearComposerError();
+    }
+});
+
+watch([encryptionPassphrase, encryptionLabel], () => {
+    if (encryptionError.value) {
+        encryption.clearComposerError();
+    }
+});
+
+const toggleEncryptionPanel = () => {
+    encryptMessage.value = !encryptMessage.value;
+};
 </script>
 
 <template>
@@ -282,6 +320,18 @@ const suggestTriggers = computed(() => [
                     </button>
                 </div>
 
+                <!-- Encrypt message -->
+                <div title="Encrypt the next message" class="flex flex-col justify-end">
+                    <button
+                        type="button"
+                        class="form-control ml-2 w-12 h-10 align-bottom"
+                        :class="{ 'text-primary': encryptMessage }"
+                        @click="toggleEncryptionPanel"
+                    >
+                        <fa icon="lock" />
+                    </button>
+                </div>
+
                 <!-- Go to user list -->
                 <div class="lg:hidden grow text-end">
                     <button class="form-control" @click="app.mobileSetView('right')">
@@ -299,6 +349,38 @@ const suggestTriggers = computed(() => [
                     <p class="h-5 pl-2 text-xs text-skygray-lightest">
                         {{ typingListText }}
                     </p>
+
+                    <div
+                        v-if="encryptMessage"
+                        class="bg-skygray-dark/25 border border-primary rounded px-3 py-3 mb-2 text-xs text-skygray-lightest"
+                    >
+                        <div class="flex items-center text-primary gap-2">
+                            <fa icon="lock" />
+                            <span>Encrypt the next message before sending.</span>
+                            <button
+                                type="button"
+                                class="ml-auto text-[11px] uppercase tracking-wide text-skygray-lightest/70 hover:text-white"
+                                @click="toggleEncryptionPanel"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                        <div class="mt-3 space-y-3">
+                            <input
+                                v-model="encryptionPassphrase"
+                                type="password"
+                                class="form-control w-full"
+                                placeholder="Enter passphrase"
+                            />
+                            <input
+                                v-model="encryptionLabel"
+                                type="text"
+                                class="form-control w-full"
+                                placeholder="Optional label shown to recipients"
+                            />
+                            <p v-if="encryptionError" class="text-danger">{{ encryptionError }}</p>
+                        </div>
+                    </div>
 
                     <SmartSuggest class="flex" :triggers="suggestTriggers" @open="autoSuggestOpen = true" @close="autoSuggestOpen = false">
                         <textarea

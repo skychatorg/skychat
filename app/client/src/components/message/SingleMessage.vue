@@ -6,12 +6,14 @@ import ExpandableBlock from '@/components/util/ExpandableBlock.vue';
 import HoverCard from '@/components/util/HoverCard.vue';
 import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
+import { useEncryptionStore } from '@/stores/encryption';
 import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import MessageReactionAdd from './MessageReactionAdd.vue';
 import MessageReactions from './MessageReactions.vue';
 
 const app = useAppStore();
 const client = useClientStore();
+const encryptionStore = useEncryptionStore();
 
 const COMPACT_QUOTES_MAX_LENGTH = 30;
 
@@ -100,6 +102,46 @@ const room = computed(() => {
 // Users whose last seen message is this message
 const lastSeenUsers = computed(() => {
     return (client.state.messageIdToLastSeenUsers[props.message.id] || []).slice(0, 6);
+});
+
+const shouldShowUnlockForm = computed(() => {
+    return props.message.meta?.encrypted && Boolean(props.message.meta?.decryptionError);
+});
+
+const unlockPassphrase = ref('');
+const unlockError = ref('');
+const unlocking = ref(false);
+
+const unlockEncryptedMessage = async () => {
+    if (!shouldShowUnlockForm.value || unlockPassphrase.value.trim().length === 0) {
+        unlockError.value = 'Passphrase is required.';
+        return;
+    }
+    unlocking.value = true;
+    unlockError.value = '';
+    const success = await encryptionStore.unlockMessage(props.message, unlockPassphrase.value.trim());
+    if (success) {
+        unlockPassphrase.value = '';
+    } else {
+        unlockError.value = 'Unable to decrypt this message with that passphrase.';
+    }
+    unlocking.value = false;
+};
+
+watch(
+    () => props.message.meta?.decryptionError,
+    (value) => {
+        if (!value) {
+            unlockPassphrase.value = '';
+            unlockError.value = '';
+        }
+    },
+);
+
+watch(unlockPassphrase, () => {
+    if (unlockError.value) {
+        unlockError.value = '';
+    }
 });
 
 // listen for events for buttons
@@ -248,7 +290,29 @@ const messageInteract = () => {
                         </div>
                     </template>
                     <template v-else>
+                        <div v-if="shouldShowUnlockForm" class="text-xs text-primary flex items-center mb-2 italic">
+                            <fa icon="lock" class="mr-2" />
+                            <span>
+                                {{ message.meta.encryptionLabel ?? 'Encrypted message' }}
+                            </span>
+                        </div>
+                        <div v-if="shouldShowUnlockForm" class="mb-3 text-xs">
+                            <div class="flex flex-col gap-2 lg:flex-row">
+                                <input
+                                    v-model="unlockPassphrase"
+                                    type="password"
+                                    class="form-control w-full"
+                                    placeholder="Enter passphrase"
+                                    @keydown.enter.prevent="unlockEncryptedMessage"
+                                />
+                                <button class="form-control lg:w-32" :disabled="unlocking" @click="unlockEncryptedMessage">
+                                    {{ unlocking ? 'Unlocking…' : 'Unlock' }}
+                                </button>
+                            </div>
+                            <p v-if="unlockError" class="text-danger mt-2">{{ unlockError }}</p>
+                        </div>
                         <div
+                            v-if="!shouldShowUnlockForm"
                             ref="content"
                             class="text-skygray-white w-0 min-w-full whitespace-pre-wrap overflow-hidden break-words"
                             v-html="message.formatted"
