@@ -65,7 +65,7 @@ In private rooms, only core plugins are loaded.
 
 ### Send end-to-end encrypted messages
 
-Trusted users can encrypt individual messages directly from the composer. The browser derives a key from the provided passphrase, encrypts the plaintext with AES-GCM, and uploads only ciphertext plus metadata (`salt`, `iv`, `keyHash`, and a non-secret label). Configure who can send encrypted messages via `minRightForEncryptedMessages`, and follow the detailed usage guide in [app/doc/encrypted-messages.md](app/doc/encrypted-messages.md).
+Trusted users can encrypt individual messages directly from the composer. The browser derives a key from the provided passphrase, encrypts the plaintext with AES-GCM, and uploads only ciphertext plus metadata (`salt`, `iv`, and a non-secret label). Configure who can send encrypted messages via `minRightForEncryptedMessages`, and follow the detailed usage guide in [app/doc/encrypted-messages.md](app/doc/encrypted-messages.md).
 
 ### Customize preferences
 

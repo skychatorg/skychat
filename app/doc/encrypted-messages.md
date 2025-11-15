@@ -11,20 +11,17 @@ Users whose right is below this value can still read encrypted messages if they 
 
 ## 2. Send an encrypted message
 
-1. Open the chat composer and flip the **Encrypt the next message** toggle.
-2. Pick one of your saved keys from the dropdown or keep "Use new passphrase" selected.
-3. If you are creating a new key, enter the passphrase and optionally set a human-friendly label. The label is visible to everyone and helps recipients choose the right passphrase; it is not secret.
-4. Choose whether to remember the passphrase for the current browser session. Remembered keys are stored as non-exportable `CryptoKey` instances so you can send future encrypted messages without retyping the passphrase.
-5. Type your message and press **Send**. The client derives a random salt, encrypts the plaintext with AES-GCM, and uploads a JSON payload that contains `{ ciphertext, iv, salt, keyHash, label }`. The server stores the payload as-is and replaces the visible content with `[encrypted message]`.
+1. Click the **Encrypt** lock button that sits next to the RisiBank shortcut in the composer toolbar. A panel appears directly above the input field.
+2. Enter the shared passphrase (required) and, if you want to give recipients a hint, set an optional non-secret label. The passphrase is never saved locally and is cleared as soon as you send or cancel the panel.
+3. Type your message and press **Send**. The client derives a random salt, encrypts the plaintext with AES-GCM, and uploads a JSON payload that contains `{ ciphertext, iv, salt, label }`. The server stores the payload as-is and replaces the visible content with `🔒 Encrypted message`.
 
 ## 3. Unlock an encrypted message
 
-1. Encrypted messages display a lock banner (and the label if provided). Click into the passphrase input below the banner.
-2. Enter the shared passphrase and click **Unlock**. Successful decryption replaces the ciphertext with the original plaintext, and the key is cached for future messages that reuse the same passphrase hash.
-3. If a key was remembered by mistake, use the **Saved keys** list in the composer to forget it.
+1. Locked messages display an italic “Encrypted message” line with a lock icon, followed by a passphrase form.
+2. Enter the shared passphrase and click **Unlock**. Successful decryption replaces the ciphertext with the original plaintext. The passphrase is never cached, so you must re-enter it for each encrypted message you want to view.
 
 ## 4. Operational notes
 
-- Passphrase hashes (`keyHash`) and labels are visible to the server. Do not use easily guessable phrases if metadata leakage is a concern.
+- Labels are visible to the server. Do not use labels or passphrases that leak sensitive information.
 - Because ciphertext is attached to individual messages, you can mix encrypted and plaintext content within the same room without impacting moderation tools.
 - Rotating a passphrase is as simple as picking a new label + passphrase in the composer. Old messages stay encrypted with the previous key unless you repost them manually.

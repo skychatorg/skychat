@@ -28,7 +28,7 @@ export class MessagePlugin extends RoomPlugin {
 
     static readonly ENCRYPTED_PLACEHOLDER = '[encrypted message]';
 
-    static readonly ENCRYPTED_PLACEHOLDER_FORMATTED = '<i>Encrypted message</i>';
+    static readonly ENCRYPTED_PLACEHOLDER_FORMATTED = '<i>🔒 Encrypted message</i>';
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
         let content = param;
@@ -100,7 +100,6 @@ export class MessagePlugin extends RoomPlugin {
             connection,
             meta: {
                 encrypted: Boolean(encryptedPayload),
-                keyHash: encryptedPayload?.keyHash,
                 encryptionLabel: encryptedPayload?.label ?? null,
             },
             storage,
@@ -128,7 +127,7 @@ export class MessagePlugin extends RoomPlugin {
         if (typeof payload.ciphertext !== 'string' || typeof payload.iv !== 'string') {
             throw new Error('Malformed encrypted payload');
         }
-        if (typeof payload.salt !== 'string' || typeof payload.keyHash !== 'string') {
+        if (typeof payload.salt !== 'string') {
             throw new Error('Malformed encrypted payload');
         }
         if (typeof payload.version !== 'number') {

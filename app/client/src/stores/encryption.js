@@ -31,13 +31,6 @@ const base64ToBuffer = (value) => {
     return bytes.buffer;
 };
 
-const bufferToHex = (buffer) => {
-    const bytes = new Uint8Array(buffer);
-    return Array.from(bytes)
-        .map((byte) => byte.toString(16).padStart(2, '0'))
-        .join('');
-};
-
 const formatPlaintext = (plaintext) => {
     return escapeHtml(plaintext).replace(/\n/g, '<br>');
 };
@@ -84,46 +77,23 @@ const randomSalt = () => {
     };
 };
 
+const importPassphraseMaterial = async (passphrase) => {
+    const subtle = getSubtleCrypto();
+    return subtle.importKey('raw', encoder.encode(passphrase), 'PBKDF2', false, ['deriveKey']);
+};
+
 export const useEncryptionStore = defineStore('encryption', {
     state: () => ({
-        passphrases: {},
         composerError: null,
     }),
-
-    getters: {
-        knownPassphrases(state) {
-            return Object.entries(state.passphrases).map(([keyHash, entry]) => ({
-                keyHash,
-                label: entry.label || 'Unnamed key',
-            }));
-        },
-    },
 
     actions: {
         clearComposerError() {
             this.composerError = null;
         },
 
-        async rememberPassphrase(passphrase, label = null) {
-            const trimmedLabel = label?.trim() || null;
-            const subtle = getSubtleCrypto();
-            const keyMaterial = await subtle.importKey('raw', encoder.encode(passphrase), 'PBKDF2', false, ['deriveKey']);
-            const hashBuffer = await subtle.digest('SHA-256', encoder.encode(passphrase));
-            const keyHash = bufferToHex(hashBuffer);
-            const existing = this.passphrases[keyHash];
-            this.passphrases[keyHash] = {
-                keyMaterial,
-                label: trimmedLabel ?? existing?.label ?? null,
-            };
-            return { keyHash, entry: this.passphrases[keyHash] };
-        },
-
-        forgetPassphrase(keyHash) {
-            delete this.passphrases[keyHash];
-        },
-
         async prepareOutgoingMessage(rawMessage, options = {}) {
-            const { encrypt = false, passphrase = '', keyHash = null, label = '', remember = true } = options;
+            const { encrypt = false, passphrase = '', label = '' } = options;
             if (rawMessage.startsWith('/')) {
                 this.clearComposerError();
                 return rawMessage;
@@ -140,34 +110,22 @@ export const useEncryptionStore = defineStore('encryption', {
                 content = content.slice(quoteMatch[0].length);
             }
             try {
-                let resolvedHash = keyHash;
-                let entry = resolvedHash ? this.passphrases[resolvedHash] : null;
-                if (!entry) {
-                    if (!passphrase) {
-                        this.composerError = keyHash
-                            ? 'Unknown encryption key. Select another key or provide a passphrase.'
-                            : 'Passphrase is required to encrypt this message.';
-                        return null;
-                    }
-                    const cached = await this.rememberPassphrase(passphrase, label || null);
-                    resolvedHash = cached.keyHash;
-                    entry = cached.entry;
-                    if (!remember) {
-                        delete this.passphrases[resolvedHash];
-                    }
-                } else if (label?.trim()) {
-                    entry.label = label.trim();
+                const normalizedPassphrase = passphrase?.trim();
+                if (!normalizedPassphrase) {
+                    this.composerError = 'Passphrase is required to encrypt this message.';
+                    return null;
                 }
+                const trimmedLabel = label?.trim() || null;
+                const keyMaterial = await importPassphraseMaterial(normalizedPassphrase);
                 const salt = randomSalt();
-                const aesKey = await deriveMessageKey(entry.keyMaterial, salt.raw);
+                const aesKey = await deriveMessageKey(keyMaterial, salt.raw);
                 const { ciphertext, iv } = await encryptString(aesKey, content);
                 const payload = {
                     type: 'skychat.e2ee',
                     ciphertext,
                     iv,
                     salt: salt.serialized,
-                    keyHash: resolvedHash,
-                    label: entry.label,
+                    label: trimmedLabel,
                     version: MESSAGE_ENCRYPTION_VERSION,
                 };
                 if (quotedId) {
@@ -183,61 +141,58 @@ export const useEncryptionStore = defineStore('encryption', {
         },
 
         async decryptIncomingMessage(message) {
+            if (!message.meta) {
+                message.meta = {};
+            }
             if (!message?.meta?.encrypted || !message.storage?.e2ee) {
                 if (message?.quoted) {
                     message.quoted = await this.decryptIncomingMessage(message.quoted);
                 }
                 return message;
             }
-            const payload = message.storage.e2ee;
-            const keyHash = payload.keyHash || message.meta?.keyHash;
-            if (!payload.salt || !payload.ciphertext || !payload.iv) {
-                message.meta.decryptionError = 'invalid-key';
+            if (message.meta?.decrypted) {
                 if (message?.quoted) {
                     message.quoted = await this.decryptIncomingMessage(message.quoted);
                 }
                 return message;
             }
-            if (!keyHash) {
-                message.meta.decryptionError = 'missing-key';
-                if (message?.quoted) {
-                    message.quoted = await this.decryptIncomingMessage(message.quoted);
-                }
-                return message;
-            }
-            const entry = this.passphrases[keyHash];
-            if (!entry) {
-                message.meta.decryptionError = 'missing-key';
-                if (message?.quoted) {
-                    message.quoted = await this.decryptIncomingMessage(message.quoted);
-                }
-                return message;
-            }
-            try {
-                const saltBuffer = base64ToBuffer(payload.salt);
-                const aesKey = await deriveMessageKey(entry.keyMaterial, new Uint8Array(saltBuffer));
-                const plaintext = await decryptString(aesKey, payload);
-                message.content = plaintext;
-                message.formatted = formatPlaintext(plaintext);
-                delete message.meta.decryptionError;
-            } catch (error) {
-                console.error(error);
-                message.meta.decryptionError = 'invalid-key';
-            }
+            message.meta.decryptionError = message.meta.decryptionError || 'locked';
             if (message?.quoted) {
                 message.quoted = await this.decryptIncomingMessage(message.quoted);
             }
             return message;
         },
 
-        async unlockMessage(message, passphrase, label = null) {
+        async unlockMessage(message, passphrase) {
             if (!message?.storage?.e2ee) {
                 return false;
             }
+            if (!message.meta) {
+                message.meta = {};
+            }
             try {
-                await this.rememberPassphrase(passphrase, label ?? message.storage.e2ee.label ?? null);
-                await this.decryptIncomingMessage(message);
-                return !message.meta.decryptionError;
+                const payload = message.storage.e2ee;
+                if (!payload.salt || !payload.iv || !payload.ciphertext) {
+                    message.meta.decryptionError = 'invalid-key';
+                    return false;
+                }
+                const normalizedPassphrase = passphrase?.trim();
+                if (!normalizedPassphrase) {
+                    message.meta.decryptionError = 'missing-passphrase';
+                    return false;
+                }
+                const keyMaterial = await importPassphraseMaterial(normalizedPassphrase);
+                const saltBuffer = base64ToBuffer(payload.salt);
+                const aesKey = await deriveMessageKey(keyMaterial, new Uint8Array(saltBuffer));
+                const plaintext = await decryptString(aesKey, payload);
+                message.content = plaintext;
+                message.formatted = formatPlaintext(plaintext);
+                delete message.meta.decryptionError;
+                message.meta.decrypted = true;
+                if (message?.quoted) {
+                    await this.unlockMessage(message.quoted, normalizedPassphrase);
+                }
+                return true;
             } catch (error) {
                 console.error(error);
                 message.meta.decryptionError = 'invalid-key';

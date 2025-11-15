@@ -104,26 +104,6 @@ const lastSeenUsers = computed(() => {
     return (client.state.messageIdToLastSeenUsers[props.message.id] || []).slice(0, 6);
 });
 
-const encryptionLabel = computed(() => {
-    return props.message.meta?.encryptionLabel || props.message.storage?.e2ee?.label || null;
-});
-
-const encryptionWarning = computed(() => {
-    if (!props.message.meta?.encrypted) {
-        return null;
-    }
-    if (!props.message.meta?.decryptionError) {
-        return encryptionLabel.value ? `Encrypted message (${encryptionLabel.value})` : 'Encrypted message';
-    }
-    if (props.message.meta.decryptionError === 'missing-key') {
-        return 'Encrypted message. Enter the shared passphrase to view it.';
-    }
-    if (props.message.meta.decryptionError === 'invalid-key') {
-        return 'Encrypted message. The provided passphrase was rejected.';
-    }
-    return 'Encrypted message.';
-});
-
 const shouldShowUnlockForm = computed(() => {
     return props.message.meta?.encrypted && Boolean(props.message.meta?.decryptionError);
 });
@@ -139,11 +119,7 @@ const unlockEncryptedMessage = async () => {
     }
     unlocking.value = true;
     unlockError.value = '';
-    const success = await encryptionStore.unlockMessage(
-        props.message,
-        unlockPassphrase.value.trim(),
-        encryptionLabel.value || null,
-    );
+    const success = await encryptionStore.unlockMessage(props.message, unlockPassphrase.value.trim());
     if (success) {
         unlockPassphrase.value = '';
     } else {
@@ -314,9 +290,9 @@ const messageInteract = () => {
                         </div>
                     </template>
                     <template v-else>
-                        <div v-if="encryptionWarning" class="text-xs text-primary flex items-center mb-2">
+                        <div v-if="shouldShowUnlockForm" class="text-xs text-primary flex items-center mb-2 italic">
                             <fa icon="lock" class="mr-2" />
-                            <span>{{ encryptionWarning }}</span>
+                            <span>Encrypted message</span>
                         </div>
                         <div v-if="shouldShowUnlockForm" class="mb-3 text-xs">
                             <div class="flex flex-col gap-2 lg:flex-row">
@@ -334,6 +310,7 @@ const messageInteract = () => {
                             <p v-if="unlockError" class="text-danger mt-2">{{ unlockError }}</p>
                         </div>
                         <div
+                            v-if="!shouldShowUnlockForm"
                             ref="content"
                             class="text-skygray-white w-0 min-w-full whitespace-pre-wrap overflow-hidden break-words"
                             v-html="message.formatted"

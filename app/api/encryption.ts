@@ -5,7 +5,6 @@ export type EncryptedMessagePayload = {
     ciphertext: string;
     iv: string;
     salt: string;
-    keyHash: string;
     version: number;
     label?: string | null;
     quotedId?: number | null;
