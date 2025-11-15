@@ -63,6 +63,10 @@ Plugins are grouped in so-called `PluginGroup` instances. It is possible to disa
 
 In private rooms, only core plugins are loaded.
 
+### Send end-to-end encrypted messages
+
+Trusted users can encrypt individual messages directly from the composer. The browser derives a key from the provided passphrase, encrypts the plaintext with AES-GCM, and uploads only ciphertext plus metadata (`salt`, `iv`, `keyHash`, and a non-secret label). Configure who can send encrypted messages via `minRightForEncryptedMessages`, and follow the detailed usage guide in [app/doc/encrypted-messages.md](app/doc/encrypted-messages.md).
+
 ### Customize preferences
 
 The `config/preferences.json` file specifies application preferences. The available fields are detailed below.
@@ -75,6 +79,7 @@ The `config/preferences.json` file specifies application preferences. The availa
 | minRightForUserMention                | number               | -1           | Min. right to mention users                                                                                      |
 | minRightForShortTermMessageHistory    | number               | -1           | Min. right to access short term room message history                                                             |
 | minRightForMessageHistory             | number               | -1           | Min. right to access full room message history                                                                   |
+| minRightForEncryptedMessages          | number               | 0            | Min. right to send end-to-end encrypted messages                                                           |
 | minRightForUserModeration             | number               | 'op'         | Min. right to ban, kick and access user ips                                                                      |
 | minRightForSetRight                   | number               | 'op'         | Min. right to set user right                                                                                     |
 | minRightForAudioRecording             | number               | -1           | Min. right to share and play audio recordings                                                                    |

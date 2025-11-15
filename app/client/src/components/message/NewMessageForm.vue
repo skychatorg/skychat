@@ -2,6 +2,7 @@
 import { AudioRecorder } from '@/lib/AudioRecorder';
 import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
+import { useEncryptionStore } from '@/stores/encryption';
 import { RisiBank } from 'risibank-web-api';
 import { computed, onMounted, ref, watch } from 'vue';
 import { SmartSuggest } from 'vue-smart-suggest';
@@ -12,6 +13,7 @@ const MESSAGE_HISTORY_LENGTH = 500;
 
 const app = useAppStore();
 const client = useClientStore();
+const encryption = useEncryptionStore();
 
 const message = ref(null);
 const messageTextAreaRows = ref(1);
@@ -82,6 +84,7 @@ watch(
     (currentRoomId) => currentRoomId && message.value.focus(),
 );
 
+
 /**
  * When the message changes
  */
@@ -130,12 +133,28 @@ const onNavigateIntoHistory = function (event, offset) {
 /**
  * Send the new message
  */
-const sendMessage = function () {
-    sentMessageHistory.value.push(app.newMessage);
+const sendMessage = async function () {
+    const currentMessage = app.newMessage;
+    if (currentMessage.trim().length === 0) {
+        return;
+    }
+    const sent = await app.sendMessage({
+        encrypt: encryptMessage.value,
+        keyHash: encryptMessage.value && selectedKeyHash.value ? selectedKeyHash.value : null,
+        passphrase: encryptMessage.value ? encryptionPassphrase.value.trim() : '',
+        label: encryptMessage.value ? encryptionLabel.value.trim() : '',
+        remember: encryptMessage.value ? rememberEncryptionKey.value : true,
+    });
+    if (!sent) {
+        return;
+    }
+    sentMessageHistory.value.push(currentMessage);
     sentMessageHistory.value.splice(0, sentMessageHistory.value.length - MESSAGE_HISTORY_LENGTH);
     historyIndex.value = null;
     messageTextAreaRows.value = 1;
-    app.sendMessage();
+    if (encryptMessage.value && !rememberEncryptionKey.value) {
+        encryptionPassphrase.value = '';
+    }
 };
 
 /**
@@ -231,6 +250,30 @@ const suggestTriggers = computed(() => [
             })),
     },
 ]);
+
+const encryptMessage = ref(false);
+const encryptionPassphrase = ref('');
+const encryptionLabel = ref('');
+const rememberEncryptionKey = ref(true);
+const selectedKeyHash = ref('');
+const knownEncryptionKeys = computed(() => encryption.knownPassphrases);
+const encryptionError = computed(() => encryption.composerError);
+
+watch(encryptMessage, (value) => {
+    if (!value) {
+        encryptionPassphrase.value = '';
+        encryptionLabel.value = '';
+        selectedKeyHash.value = '';
+        encryption.clearComposerError();
+    }
+});
+
+const forgetSavedKey = (hash) => {
+    encryption.forgetPassphrase(hash);
+    if (selectedKeyHash.value === hash) {
+        selectedKeyHash.value = '';
+    }
+};
 </script>
 
 <template>
@@ -299,6 +342,72 @@ const suggestTriggers = computed(() => [
                     <p class="h-5 pl-2 text-xs text-skygray-lightest">
                         {{ typingListText }}
                     </p>
+
+                    <div
+                        class="bg-skygray-dark/25 border border-primary rounded px-3 py-2 mb-2 text-xs text-skygray-lightest"
+                    >
+                        <label class="flex items-center text-primary gap-2">
+                            <fa icon="lock" />
+                            <span>Encrypt the next message before sending.</span>
+                            <input type="checkbox" class="form-checkbox ml-auto" v-model="encryptMessage" />
+                        </label>
+                        <div v-if="encryptMessage" class="mt-3 space-y-3">
+                            <div>
+                                <label class="block text-[11px] uppercase tracking-wide text-skygray-lightest/70">
+                                    Encryption key
+                                </label>
+                                <select class="form-control mt-1" v-model="selectedKeyHash">
+                                    <option value="">Use new passphrase</option>
+                                    <option v-for="key in knownEncryptionKeys" :key="key.keyHash" :value="key.keyHash">
+                                        {{ key.label }} — {{ key.keyHash.slice(0, 8) }}
+                                    </option>
+                                </select>
+                            </div>
+                            <input
+                                v-model="encryptionPassphrase"
+                                type="password"
+                                class="form-control w-full"
+                                :disabled="!!selectedKeyHash"
+                                placeholder="Enter passphrase"
+                            />
+                            <input
+                                v-model="encryptionLabel"
+                                type="text"
+                                class="form-control w-full"
+                                placeholder="Optional label shown to recipients"
+                            />
+                            <label class="flex items-center gap-2 text-skygray-lightest/80">
+                                <input type="checkbox" v-model="rememberEncryptionKey" :disabled="!!selectedKeyHash" />
+                                <span>
+                                    <template v-if="selectedKeyHash">
+                                        Saved keys stay available until you forget them.
+                                    </template>
+                                    <template v-else>
+                                        Remember this passphrase for this session
+                                    </template>
+                                </span>
+                            </label>
+                            <p v-if="encryptionError" class="text-danger">{{ encryptionError }}</p>
+                            <div v-if="knownEncryptionKeys.length" class="border-t border-primary/30 pt-2">
+                                <p class="text-[11px] uppercase tracking-wide text-skygray-lightest/70">Saved keys</p>
+                                <ul class="mt-1 space-y-1">
+                                    <li
+                                        v-for="key in knownEncryptionKeys"
+                                        :key="`saved-${key.keyHash}`"
+                                        class="flex items-center justify-between"
+                                    >
+                                        <span>{{ key.label }} · {{ key.keyHash.slice(0, 8) }}</span>
+                                        <button
+                                            class="text-[10px] text-danger uppercase"
+                                            @click="forgetSavedKey(key.keyHash)"
+                                        >
+                                            Forget
+                                        </button>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
 
                     <SmartSuggest class="flex" :triggers="suggestTriggers" @open="autoSuggestOpen = true" @close="autoSuggestOpen = false">
                         <textarea
