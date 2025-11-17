@@ -44,7 +44,13 @@ export class WebPushPlugin extends GlobalPlugin {
     constructor(manager: RoomManager) {
         super(manager);
 
-        webpush.setVapidDetails(WebPushPlugin.REPO_URL, process.env.VAPID_PUBLIC_KEY as string, process.env.VAPID_PRIVATE_KEY as string);
+        if (process.env.VAPID_PUBLIC_KEY) {
+            webpush.setVapidDetails(
+                WebPushPlugin.REPO_URL,
+                process.env.VAPID_PUBLIC_KEY as string,
+                process.env.VAPID_PRIVATE_KEY as string,
+            );
+        }
     }
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
