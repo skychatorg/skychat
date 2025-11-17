@@ -1,4 +1,5 @@
 <script setup>
+import { computed } from 'vue';
 import { useClientStore } from '@/stores/client';
 
 const props = defineProps({
@@ -16,6 +17,11 @@ const props = defineProps({
         required: false,
         default: null,
     },
+    users: {
+        type: Array,
+        required: false,
+        default: () => [],
+    },
 });
 
 const client = useClientStore();
@@ -26,12 +32,35 @@ function onClick() {
     }
     client.sendMessage(`/reaction ${props.messageId} ${props.reaction}`);
 }
+
+const tooltipText = computed(() => {
+    if (!props.users.length) {
+        return '';
+    }
+    const names = props.users.map((user) => (user.isCurrentUser ? 'You' : user.username));
+    if (names.length <= 4) {
+        return names.join(', ');
+    }
+    const [first, second, third, fourth] = names;
+    const shown = [first, second, third, fourth].filter(Boolean);
+    return `${shown.join(', ')} +${names.length - shown.length}`;
+});
+
+const hasReacted = computed(() => props.users.some((user) => user.isCurrentUser));
 </script>
 
 <template>
-    <button class="flex items-center bg-skygray-dark/25 rounded-full px-2 py-1 mr-1" @click="onClick">
-        <div class="text-xs text-gray-500">
-            {{ reaction }}<template v-if="count !== null"> {{ count }}</template>
-        </div>
+    <button
+        class="flex items-center rounded-full px-2 py-1 mr-1 border transition text-xs gap-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 hover:-translate-y-0.5 hover:shadow-sm hover:shadow-primary/20 active:translate-y-0"
+        :class="{
+            'border-primary/80 bg-primary/10 text-primary': hasReacted,
+            'border-transparent bg-skygray-dark/25 text-gray-500 hover:border-skygray-light/60': !hasReacted,
+        }"
+        :aria-label="tooltipText ? 'Reactions by: ' + tooltipText : 'Message reaction'"
+        :title="tooltipText ? 'Reactions by: ' + tooltipText : null"
+        @click="onClick"
+    >
+        <span>{{ reaction }}</span>
+        <span v-if="count !== null">{{ count }}</span>
     </button>
 </template>
