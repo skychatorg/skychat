@@ -3,6 +3,7 @@ import { Connection } from '../../../skychat/Connection.js';
 import { Logging } from '../../../skychat/Logging.js';
 import { MessageController } from '../../../skychat/MessageController.js';
 import { Session } from '../../../skychat/Session.js';
+import { StickerManager } from '../../../skychat/StickerManager.js';
 import { GlobalPlugin } from '../../GlobalPlugin.js';
 import { Plugin } from '../../Plugin.js';
 
@@ -12,8 +13,6 @@ type ReactionPluginData = {
 
 export class ReactionPlugin extends GlobalPlugin {
     static readonly DEFAULT_DATA: ReactionPluginData = {};
-
-    static readonly REACTIONS: string[] = ['✅', '❌', '🔥', '🥰', '🤮', '🤡', '🥒'];
 
     static readonly QUEUE = new pQueue({ concurrency: 1 });
 
@@ -49,7 +48,8 @@ export class ReactionPlugin extends GlobalPlugin {
             throw new Error('Invalid message id');
         }
 
-        if (!ReactionPlugin.REACTIONS.includes(reaction)) {
+        const resolvedReaction = StickerManager.resolveStickerCode(reaction);
+        if (!resolvedReaction) {
             throw new Error('Invalid reaction');
         }
 
@@ -58,15 +58,17 @@ export class ReactionPlugin extends GlobalPlugin {
                 const message = await MessageController.getMessageById(messageId, true);
                 const reactions = (message.storage.reactions ?? { ...ReactionPlugin.DEFAULT_DATA }) as ReactionPluginData;
 
-                if (reactions[reaction]?.includes(connection.session.identifier)) {
-                    reactions[reaction] = reactions[reaction] ?? [];
-                    reactions[reaction] = reactions[reaction].filter((identifier) => identifier !== connection.session.identifier);
-                    if (!reactions[reaction].length) {
-                        delete reactions[reaction];
+                if (reactions[resolvedReaction]?.includes(connection.session.identifier)) {
+                    reactions[resolvedReaction] = reactions[resolvedReaction] ?? [];
+                    reactions[resolvedReaction] = reactions[resolvedReaction].filter(
+                        (identifier) => identifier !== connection.session.identifier,
+                    );
+                    if (!reactions[resolvedReaction].length) {
+                        delete reactions[resolvedReaction];
                     }
                 } else {
-                    reactions[reaction] = reactions[reaction] ?? [];
-                    reactions[reaction].push(connection.session.identifier);
+                    reactions[resolvedReaction] = reactions[resolvedReaction] ?? [];
+                    reactions[resolvedReaction].push(connection.session.identifier);
                 }
 
                 message.storage.reactions = reactions;
@@ -98,7 +100,4 @@ export class ReactionPlugin extends GlobalPlugin {
         });
     }
 
-    async onNewConnection(connection: Connection): Promise<void> {
-        connection.send(ReactionPlugin.commandName, ReactionPlugin.REACTIONS);
-    }
 }

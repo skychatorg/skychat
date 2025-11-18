@@ -47,6 +47,11 @@ const tooltipText = computed(() => {
 });
 
 const hasReacted = computed(() => props.users.some((user) => user.isCurrentUser));
+
+const stickerUrl = computed(() => {
+    const stickers = client.state.stickers || {};
+    return stickers[props.reaction] || null;
+});
 </script>
 
 <template>
@@ -60,7 +65,15 @@ const hasReacted = computed(() => props.users.some((user) => user.isCurrentUser)
         :title="tooltipText ? 'Reactions by: ' + tooltipText : null"
         @click="onClick"
     >
-        <span>{{ reaction }}</span>
+        <span v-if="!stickerUrl">{{ reaction }}</span>
+        <img
+            v-else
+            :src="stickerUrl"
+            :alt="reaction"
+            :title="reaction"
+            class="w-5 h-5 object-contain"
+            loading="lazy"
+        />
         <span v-if="count !== null">{{ count }}</span>
     </button>
 </template>
