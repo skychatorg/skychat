@@ -52,6 +52,52 @@ export class StickerManager {
     }
 
     /**
+     * Resolve a sticker code by allowing a few variations (missing leading / trailing colons, casing, etc)
+     * @param code
+     */
+    public static resolveStickerCode(code: string): string | null {
+        if (!code) {
+            return null;
+        }
+        const trimmed = code.trim().toLowerCase();
+        if (!trimmed) {
+            return null;
+        }
+
+        const candidates = new Set<string>();
+        candidates.add(trimmed);
+
+        if (!trimmed.startsWith(':')) {
+            candidates.add(`:${trimmed}`);
+        } else if (trimmed.length > 1) {
+            candidates.add(trimmed.slice(1));
+        }
+
+        if (!trimmed.endsWith(':')) {
+            candidates.add(`${trimmed}:`);
+        } else if (trimmed.length > 1) {
+            candidates.add(trimmed.slice(0, -1));
+        }
+
+        let wrapped = trimmed;
+        if (!wrapped.startsWith(':')) {
+            wrapped = `:${wrapped}`;
+        }
+        if (!wrapped.endsWith(':')) {
+            wrapped = `${wrapped}:`;
+        }
+        candidates.add(wrapped);
+
+        for (const candidate of candidates) {
+            if (this.stickerExists(candidate)) {
+                return candidate.toLowerCase();
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Delete a sticker
      * @param code
      */
