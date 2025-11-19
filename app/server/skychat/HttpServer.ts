@@ -7,6 +7,7 @@ import internal from 'stream';
 import { WebSocket, WebSocketServer } from 'ws';
 import { Config } from './Config.js';
 import { FileManager } from './FileManager.js';
+import { GlobalPlugin } from '../plugins/GlobalPlugin.js';
 import { Logging } from './Logging.js';
 import { RateLimiter } from './RateLimiter.js';
 
@@ -65,6 +66,21 @@ export class HttpServer extends EventEmitter {
         this.httpServer.listen(Config.PORT, Config.HOSTNAME, function () {
             Logging.info(`Listening on : ${Config.PORT}`);
         });
+    }
+
+    /**
+     * Register routes from plugins
+     */
+    registerPluginRoutes(plugins: GlobalPlugin[]) {
+        for (const plugin of plugins) {
+            const commandName = (plugin.constructor as any).commandName;
+            const routes = plugin.getRoutes();
+            for (const route of routes) {
+                const fullPath = `/api/plugin/${commandName}${route.path}`;
+                Logging.info(`Registering plugin route: ${route.method.toUpperCase()} ${fullPath}`);
+                this.app[route.method](fullPath, route.handler);
+            }
+        }
     }
 
     private getExpressApp() {

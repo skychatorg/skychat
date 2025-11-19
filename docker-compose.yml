@@ -52,6 +52,8 @@ services:
       VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY}
       VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY}
       DISCORD_GUILD_ID: "${DISCORD_GUILD_ID}"
+      DISCORD_OAUTH_CLIENT_ID: "${DISCORD_OAUTH_CLIENT_ID}"
+      DISCORD_OAUTH_CLIENT_SECRET: "${DISCORD_OAUTH_CLIENT_SECRET}"
     volumes:
       - ./config:/workdir/config
       - ./backups:/workdir/backups

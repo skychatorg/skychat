@@ -42,6 +42,14 @@ export class Session implements IBroadcaster {
     }
 
     /**
+     * Find an existing session by user ID
+     * @param userId
+     */
+    public static getSessionByUserId(userId: number): Session | undefined {
+        return Object.values(Session.sessions).find((session) => session.user.id === userId);
+    }
+
+    /**
      * Get all connections from all sessions
      */
     public static get connections(): Connection[] {

@@ -120,7 +120,16 @@ const borderColor = computed(() => {
                 <!-- Second row -->
                 <div class="flex">
                     <!-- Status icons -->
-                    <div class="flex flex-row w-16 basis-16">
+                    <div class="flex flex-row w-20 basis-20 space-x-2">
+                        <!-- Discord online -->
+                        <span
+                            v-if="client.state.discordPresence?.onlineUserIds?.includes(entry.user.id)"
+                            title="Online on Discord"
+                            class="text-[#5865F2]"
+                        >
+                            <fa :icon="['fab', 'discord']" />
+                        </span>
+
                         <!-- Last activity -->
                         <span
                             v-if="entry.connectionCount > 0 && minutesSinceLastMessage > 0"
