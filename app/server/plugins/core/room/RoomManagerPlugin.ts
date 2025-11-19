@@ -1,8 +1,9 @@
 import { Connection } from '../../../skychat/Connection.js';
-import { RoomPlugin } from '../../RoomPlugin.js';
-import { UserController } from '../../../skychat/UserController.js';
+import { Logging } from '../../../skychat/Logging.js';
 import { Room } from '../../../skychat/Room.js';
 import { Session } from '../../../skychat/Session.js';
+import { UserController } from '../../../skychat/UserController.js';
+import { RoomPlugin } from '../../RoomPlugin.js';
 
 export class RoomManagerPlugin extends RoomPlugin {
     static readonly commandName = 'room';
@@ -18,7 +19,7 @@ export class RoomManagerPlugin extends RoomPlugin {
         roomset: {
             minCount: 2,
             params: [
-                { name: 'property', pattern: /^(name)$/ },
+                { name: 'property', pattern: /^(name|shiny)$/ },
                 { name: 'value', pattern: /.?/ },
             ],
         },
@@ -73,11 +74,21 @@ export class RoomManagerPlugin extends RoomPlugin {
         }
         const property = param.substr(0, param.indexOf(' '));
         const value = param.substr(param.indexOf(' ') + 1).trim();
+        Logging.info('Setting room property', property, 'to', value, 'for', this.room.id);
 
         switch (property) {
             case 'name':
                 this.room.name = value;
                 break;
+
+            case 'shiny': {
+                if (!value) {
+                    throw new Error('Missing shiny value (true/false)');
+                }
+                Logging.info('Setting shiny to', value === 'true', 'for', this.room.id);
+                this.room.shiny = value === 'true';
+                break;
+            }
 
             default:
                 throw new Error(`Invalid property ${property}`);
