@@ -85,6 +85,8 @@ The `config/preferences.json` file specifies application preferences. The availa
 | minRightForAudioRecording             | number               | -1           | Min. right to share and play audio recordings                                                                    |
 | minRightForConnectedList              | number               | -1           | Min. right to access the list of currently active users                                                          |
 | minRightForPolls                      | number               | -1           | Min. right to create polls                                                                                       |
+| minRightForStickerManagement          | number \| 'op'       | 'op'         | Min. right to add or delete stickers
+                                                                 |
 | minRightForGalleryRead                | number \| 'op'       | 0            | Min. right to access the gallery                                                                                 |
 | minRightForGalleryWrite               | number \| 'op'       | 'op'         | Min. right to add and remove gallery documents                                                                   |
 | minRightForPlayerAddMedia             | number \| 'op'       | 0            | Min. right to add medias to the player                                                                           |

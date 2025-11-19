@@ -11,6 +11,7 @@
     "minRightForAudioRecording": -1,
     "minRightForConnectedList": -1,
     "minRightForPolls": -1,
+    "minRightForStickerManagement": "op",
     "minRightForGalleryRead": 0,
     "minRightForGalleryWrite": "op",
     "minRightForGalleryDelete": "op",

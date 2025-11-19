@@ -8,9 +8,19 @@ import RoomList from '@/components/room/RoomList.vue';
 import ConnectedList from '@/components/user/ConnectedList.vue';
 import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
+import { computed } from 'vue';
 
 const app = useAppStore();
 const client = useClientStore();
+
+const canManageStickers = computed(() => {
+    const threshold = client.state.config?.minRightForStickerManagement ?? 'op';
+    if (threshold === 'op') {
+        return client.state.op;
+    }
+    const userRight = client.state.user?.right ?? -1;
+    return client.state.op || userRight >= threshold;
+});
 </script>
 
 <template>
@@ -73,6 +83,12 @@ const client = useClientStore();
                     @click="app.toggleModal('profile')"
                 >
                     <fa icon="gears" />
+                </button>
+            </div>
+            <div v-if="canManageStickers" class="pl-4 pr-6 mb-2">
+                <button class="form-control w-full" @click="app.toggleModal('manageStickers')">
+                    <fa icon="image" class="mr-2" />
+                    Manage stickers
                 </button>
             </div>
             <div class="p-2 lg:hidden">

@@ -106,6 +106,11 @@ export const useAppStore = defineStore('app', {
              * Room management modal
              */
             manageRooms: false,
+
+            /**
+             * Sticker management modal
+             */
+            manageStickers: false,
         },
     }),
 
