@@ -20,6 +20,7 @@ export type StoredRoom = {
     pluginGroupNames: string[];
     isPrivate: boolean;
     whitelist: string[];
+    shiny?: boolean;
 };
 
 export type SanitizedRoom = {
@@ -30,6 +31,7 @@ export type SanitizedRoom = {
     lastReceivedMessageId: number;
     lastReceivedMessageTimestamp: number;
     plugins: { [pluginName: string]: unknown };
+    shiny: boolean;
 };
 
 export class Room implements IBroadcaster {
@@ -112,6 +114,11 @@ export class Room implements IBroadcaster {
      * Plugins
      */
     public readonly plugins: RoomPlugin[];
+
+    /**
+     * Whether the room should display a shiny border
+     */
+    public shiny = false;
 
     constructor(manager: RoomManager, isPrivate?: boolean, id?: number) {
         this.manager = manager;
@@ -224,6 +231,7 @@ export class Room implements IBroadcaster {
             this.pluginGroupNames = data.pluginGroupNames ?? this.pluginGroupNames;
             this.isPrivate = !!data.isPrivate;
             this.whitelist = data.whitelist;
+            this.shiny = !!data.shiny;
         } catch (error) {
             console.error(`Could not load room ${this.id} data from disk: ${error}`);
             this.name = `Room ${this.id} (corrupted)`;
@@ -248,6 +256,7 @@ export class Room implements IBroadcaster {
             pluginGroupNames: this.pluginGroupNames,
             isPrivate: this.isPrivate,
             whitelist: this.whitelist,
+            shiny: this.shiny,
         };
         fs.writeFileSync(this.getStoragePath(), JSON.stringify(data));
         return true;
@@ -505,6 +514,7 @@ export class Room implements IBroadcaster {
             lastReceivedMessageId: lastMessage ? lastMessage.id : 0,
             lastReceivedMessageTimestamp: lastMessage ? lastMessage.createdTime.getTime() : 0,
             plugins,
+            shiny: this.shiny,
         };
     }
 }

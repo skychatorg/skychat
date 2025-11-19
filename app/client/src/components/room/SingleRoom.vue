@@ -98,6 +98,7 @@ const icon = computed(() => {
         :border-color="'rgb(var(' + borderColor + '))'"
         :selectable="true"
         :selected="selected"
+        :shiny="room.shiny && !selected"
         class="cursor-pointer"
         :class="{
             'opacity-50': isMuted,
