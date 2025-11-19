@@ -31,6 +31,7 @@ export class SkyChatServer {
         this.httpServer.start();
         this.authBridge.start();
         this.pluginManager.start(this.roomManager);
+        this.httpServer.registerPluginRoutes(this.pluginManager.plugins);
         this.roomManager.start();
 
         this.authBridge.on('connection-accepted', this.onConnectionAccepted.bind(this));

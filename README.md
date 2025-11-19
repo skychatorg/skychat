@@ -130,6 +130,25 @@ To find your Guild ID, enable Developer Mode in Discord (User Settings → Advan
 
 You must also enable the Server Widget in your Discord server: Server Settings → Widget → Enable Server Widget.
 
+#### Link Discord accounts
+
+Users can link their Discord account to their SkyChat account to show a Discord icon next to their name in the connected users list when they're online on Discord.
+
+To enable Discord account linking, you need to create a Discord application:
+
+1. Go to [Discord Developer Portal](https://discord.com/developers/applications)
+2. Create a new application
+3. Go to OAuth2 settings and add redirect URI: `{YOUR_PUBLIC_URL}/api/plugin/discord/callback`
+4. Copy the Client ID and Client Secret to your `.env`:
+   -   `DISCORD_OAUTH_CLIENT_ID=your_client_id`
+   -   `DISCORD_OAUTH_CLIENT_SECRET=your_client_secret`
+
+Users can then use these commands:
+
+-   `/discord` - Show current linked Discord account
+-   `/discord link` - Get an OAuth link to verify your Discord account
+-   `/discord unlink` - Unlink your Discord account
+
 ### Customize guest names
 
 `config/guestnames.txt` is the pool of non-logged usernames.

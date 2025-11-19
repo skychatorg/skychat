@@ -1,7 +1,14 @@
+import express from 'express';
 import { ConnectionAcceptedEvent } from '../skychat/AuthBridge.js';
 import { Connection } from '../skychat/Connection.js';
 import { RoomManager } from '../skychat/RoomManager.js';
 import { Plugin } from './Plugin.js';
+
+export type PluginRoute = {
+    method: 'get' | 'post' | 'put' | 'delete';
+    path: string;
+    handler: (req: express.Request, res: express.Response) => Promise<void>;
+};
 
 /**
  * A global plugin is a plugin which instantied once at the level of the room manager
@@ -54,6 +61,14 @@ export abstract class GlobalPlugin extends Plugin {
     // eslint-disable-next-line no-unused-vars
     public async onConnectionClosed(_connection: Connection): Promise<void> {
         void 0;
+    }
+
+    /**
+     * Get HTTP routes for this plugin
+     * Routes will be registered under /api/plugin/{commandName}/{path}
+     */
+    public getRoutes(): PluginRoute[] {
+        return [];
     }
 }
 

@@ -25,6 +25,7 @@
     "author": "7PH <b.raymond@protonmail.com>",
     "license": "ISC",
     "dependencies": {
+        "@fortawesome/free-brands-svg-icons": "^6.7.2",
         "cross-spawn": "^7.0.6",
         "events": "^3.3.0",
         "file-type": "^20.5.0",

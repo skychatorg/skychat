@@ -1,4 +1,5 @@
 import { library } from '@fortawesome/fontawesome-svg-core';
+import { faDiscord } from '@fortawesome/free-brands-svg-icons';
 import {
     faArrowLeft,
     faArrowPointer,
@@ -66,6 +67,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 
 library.add(
+    faDiscord,
     faArrowLeft,
     faArrowPointer,
     faArrowRightFromBracket,

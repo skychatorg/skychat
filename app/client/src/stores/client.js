@@ -117,6 +117,9 @@ export const useClientStore = defineStore('client', {
                 const toast = useToast();
                 toast.error(error);
             });
+            client.on('discord-link', (url) => {
+                window.open(url, '_blank', 'width=500,height=800');
+            });
             client.connect();
         },
 
