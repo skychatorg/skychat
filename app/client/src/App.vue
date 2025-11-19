@@ -3,6 +3,7 @@ import CursorOverlay from '@/components/cursor/CursorOverlay.vue';
 import AppHeader from '@/components/layout/AppHeader.vue';
 import GalleryModal from '@/components/modal/GalleryModal.vue';
 import ManageRoomsModal from '@/components/modal/ManageRoomsModal.vue';
+import ManageStickersModal from '@/components/modal/ManageStickersModal.vue';
 import OngoingConvertsModal from '@/components/modal/OngoingConvertsModal.vue';
 import PlayerQueueModal from '@/components/modal/PlayerQueueModal.vue';
 import ProfileModal from '@/components/modal/ProfileModal.vue';
@@ -21,6 +22,7 @@ import YoutubeVideoSearcherModal from '@/components/modal/YoutubeVideoSearcherMo
         <GalleryModal />
         <PlayerQueueModal />
         <ManageRoomsModal />
+        <ManageStickersModal />
         <RouterView class="grow" />
     </div>
 </template>

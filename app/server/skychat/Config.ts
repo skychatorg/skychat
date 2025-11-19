@@ -14,6 +14,7 @@ export type Preferences = {
     minRightForAudioRecording: number;
     minRightForConnectedList: number;
     minRightForPolls: number;
+    minRightForStickerManagement: number | 'op';
     minRightForGalleryRead: number | 'op';
     minRightForGalleryWrite: number | 'op';
     minRightForGalleryDelete: number | 'op';
@@ -32,6 +33,7 @@ export type Preferences = {
 
 export type PublicConfig = {
     galleryEnabled: boolean;
+    minRightForStickerManagement: number | 'op';
 };
 
 export class Config {
@@ -60,6 +62,7 @@ export class Config {
     public static toClient(): PublicConfig {
         return {
             galleryEnabled: Boolean(process.env.ENABLED_PLUGINS?.includes('GalleryPluginGroup')),
+            minRightForStickerManagement: Config.PREFERENCES.minRightForStickerManagement,
         };
     }
 
@@ -109,6 +112,7 @@ export class Config {
             'minRightForAudioRecording',
             'minRightForConnectedList',
             'minRightForPolls',
+            'minRightForStickerManagement',
             'minRightForGalleryRead',
             'minRightForGalleryWrite',
             'minRightForPlayerAddMedia',

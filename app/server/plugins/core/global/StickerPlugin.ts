@@ -3,6 +3,7 @@ import { Config } from '../../../skychat/Config.js';
 import { Connection } from '../../../skychat/Connection.js';
 import { FileManager } from '../../../skychat/FileManager.js';
 import { HttpServer } from '../../../skychat/HttpServer.js';
+import { Session } from '../../../skychat/Session.js';
 import { StickerManager } from '../../../skychat/StickerManager.js';
 import { GlobalPlugin } from '../../GlobalPlugin.js';
 
@@ -11,7 +12,10 @@ export class StickerPlugin extends GlobalPlugin {
 
     static readonly commandAliases = ['stickeradd', 'stickerdel'];
 
-    readonly opOnly = true;
+    readonly minRight =
+        typeof Config.PREFERENCES.minRightForStickerManagement === 'number' ? Config.PREFERENCES.minRightForStickerManagement : -1;
+
+    readonly opOnly = Config.PREFERENCES.minRightForStickerManagement === 'op';
 
     readonly rules = {
         sticker: { maxCount: 0 },
@@ -70,6 +74,7 @@ export class StickerPlugin extends GlobalPlugin {
         const newStickerUrl = Config.LOCATION + '/' + newStickerPath + '?' + new Date().getTime();
         fs.copyFileSync(localFilePath, newStickerPath);
         StickerManager.registerSticker(code, newStickerUrl);
+        Session.send('sticker-list', StickerManager.stickers);
     }
 
     /**
@@ -89,6 +94,7 @@ export class StickerPlugin extends GlobalPlugin {
             void 0;
         }
         StickerManager.unregisterSticker(code);
+        Session.send('sticker-list', StickerManager.stickers);
     }
 
     async onNewConnection(connection: Connection): Promise<void> {
