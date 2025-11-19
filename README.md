@@ -120,6 +120,16 @@ There is a file browser which allows managing uploads and gallery files. Enable 
 
 It is crucial to set up `ADMIN_FILEBROWSER_AUTH`, otherwise all gallery and uploads would be exposed.
 
+### Enable Discord presence
+
+Display the online presence of your Discord server in the connected users list. Set the following in your `.env`:
+
+-   `DISCORD_GUILD_ID=your_guild_id`
+
+To find your Guild ID, enable Developer Mode in Discord (User Settings → Advanced → Developer Mode), then right-click your server and select "Copy Server ID".
+
+You must also enable the Server Widget in your Discord server: Server Settings → Widget → Enable Server Widget.
+
 ### Customize guest names
 
 `config/guestnames.txt` is the pool of non-logged usernames.

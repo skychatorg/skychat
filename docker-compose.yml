@@ -51,6 +51,7 @@ services:
       MAILGUN_FROM: "${MAILGUN_FROM}"
       VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY}
       VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY}
+      DISCORD_GUILD_ID: "${DISCORD_GUILD_ID}"
     volumes:
       - ./config:/workdir/config
       - ./backups:/workdir/backups
