@@ -1,3 +1,4 @@
+export type { DiscordPresence } from './plugins/core/global/DiscordPresencePlugin.js';
 export type { CustomizationElements } from './plugins/core/global/CustomizationPlugin.js';
 export type { PollState, SanitizedPoll } from './plugins/core/global/Poll.js';
 export type { MessageSeenEventData } from './plugins/core/room/MessageSeenPlugin.js';

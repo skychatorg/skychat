@@ -6,6 +6,7 @@ import {
     AuthData,
     AuthToken,
     CustomizationElements,
+    DiscordPresence,
     FolderContent,
     OngoingConvert,
     PublicConfig,
@@ -49,6 +50,7 @@ export type SkyChatClientState = {
     custom: CustomizationElements;
     token: AuthToken | null;
     connectedList: Array<SanitizedSession>;
+    discordPresence: DiscordPresence;
     messageIdToLastSeenUsers: { [id: number]: Array<SanitizedUser> };
     roomConnectedUsers: { [roomId: number]: Array<SanitizedUser> };
     playerChannelUsers: { [roomId: number]: Array<SanitizedUser> };
@@ -85,6 +87,7 @@ export declare interface SkyChatClient {
     on(event: 'auth-token', listener: (token: AuthToken | null) => any): this;
     on(event: 'connected-list', listener: (sessions: Array<SanitizedSession>) => any): this;
     on(event: 'connected-list-patch', listener: (sessions: Array<SanitizedSession>) => any): this;
+    on(event: 'discord-presence', listener: (presence: DiscordPresence) => any): this;
     on(event: 'room-list', listener: (rooms: Array<SanitizedRoom>) => any): this;
     on(event: 'join-room', listener: (roomId: number) => any): this;
     on(event: 'typing-list', listener: (users: Array<SanitizedUser>) => any): this;
@@ -129,6 +132,7 @@ export class SkyChatClient extends EventEmitter {
     private _custom: CustomizationElements = {};
     private _token: AuthToken | null = null;
     private _connectedList: Array<SanitizedSession> = [];
+    private _discordPresence: DiscordPresence = null;
     private _messageIdToLastSeenUsers: { [id: number]: Array<SanitizedUser> } = {};
     private _roomConnectedUsers: { [roomId: number]: Array<SanitizedUser> } = {};
     private _playerChannelUsers: { [roomId: number]: Array<SanitizedUser> } = {};
@@ -179,6 +183,7 @@ export class SkyChatClient extends EventEmitter {
         this.on('auth-token', this._onToken.bind(this));
         this.on('connected-list', this._onConnectedList.bind(this));
         this.on('connected-list-patch', this._onConnectedListPatch.bind(this));
+        this.on('discord-presence', this._onDiscordPresence.bind(this));
 
         // Messages
         this.on('message', this._onMessage.bind(this));
@@ -265,6 +270,11 @@ export class SkyChatClient extends EventEmitter {
     private _onConnectedListPatch(patch: any) {
         jsondiffpatch.patch(this._connectedList, patch);
         this._updateConnectedListMeta();
+        this.emit('update', this.state);
+    }
+
+    private _onDiscordPresence(presence: DiscordPresence) {
+        this._discordPresence = presence;
         this.emit('update', this.state);
     }
 
@@ -483,6 +493,7 @@ export class SkyChatClient extends EventEmitter {
             custom: this._custom,
             token: this._token,
             connectedList: this._connectedList,
+            discordPresence: this._discordPresence,
             messageIdToLastSeenUsers: this._messageIdToLastSeenUsers,
             roomConnectedUsers: this._roomConnectedUsers,
             playerChannelUsers: this._playerChannelUsers,
