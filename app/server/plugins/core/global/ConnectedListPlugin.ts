@@ -81,7 +81,7 @@ export class ConnectedListPlugin extends GlobalPlugin {
         for (const session of Object.values(Session.sessions)) {
             for (const connection of session.connections) {
                 if (connection.session.user.right < Config.PREFERENCES.minRightForConnectedList) {
-                    return;
+                    continue;
                 }
 
                 connection.send('connected-list-patch', diff);

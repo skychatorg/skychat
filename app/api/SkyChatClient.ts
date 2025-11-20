@@ -163,6 +163,10 @@ export class SkyChatClient extends EventEmitter {
 
     private autoMessageAck: boolean;
 
+    private diffPatcher = jsondiffpatch.create({
+        objectHash: (obj: any, index?: number) => (obj as SanitizedSession)?.identifier ?? obj.id ?? index,
+    });
+
     public readonly plugins: {
         mute: MutePluginHelper;
     };
@@ -268,7 +272,7 @@ export class SkyChatClient extends EventEmitter {
     }
 
     private _onConnectedListPatch(patch: any) {
-        jsondiffpatch.patch(this._connectedList, patch);
+        this.diffPatcher.patch(this._connectedList, patch);
         this._updateConnectedListMeta();
         this.emit('update', this.state);
     }
