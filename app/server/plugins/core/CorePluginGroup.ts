@@ -22,6 +22,7 @@ import { ReactionPlugin } from './global/ReactionPlugin.js';
 import { SetRightPlugin } from './global/SetRightPlugin.js';
 import { StickerPlugin } from './global/StickerPlugin.js';
 import { VoidPlugin } from './global/VoidPlugin.js';
+import { UploadPlugin } from './global/UploadPlugin.js';
 import { WebPushPlugin } from './global/WebPushPlugin.js';
 import { WelcomePlugin } from './global/WelcomePlugin.js';
 import { XpTickerPlugin } from './global/XpTickerPlugin.js';
@@ -69,6 +70,7 @@ export class CorePluginGroup extends PluginGroup {
         ReactionPlugin,
         SetRightPlugin,
         StickerPlugin,
+        UploadPlugin,
         VoidPlugin,
         WebPushPlugin,
         WelcomePlugin,
