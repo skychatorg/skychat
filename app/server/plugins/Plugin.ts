@@ -1,3 +1,4 @@
+import express from 'express';
 import fs from 'fs';
 import { RateLimiterMemory } from 'rate-limiter-flexible';
 import { Connection } from '../skychat/Connection.js';
@@ -155,6 +156,14 @@ export abstract class Plugin {
      * @abstract
      */
     public abstract getStoragePath(): string;
+
+    /**
+     * Install plugin-wide resources on the HTTP server
+     */
+    // eslint-disable-next-line no-unused-vars
+    public install(_app: express.Application): void {
+        void 0;
+    }
 
     /**
      * Load user data for this plugin
