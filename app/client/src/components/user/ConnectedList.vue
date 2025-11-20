@@ -1,17 +1,25 @@
 <script setup>
+import { computed } from 'vue';
 import SingleConnectedUser from '@/components/user/SingleConnectedUser.vue';
 import SectionTitle from '@/components/util/SectionTitle.vue';
 import { useClientStore } from '@/stores/client';
 
 const client = useClientStore();
+
+const presence = computed(() => client.state.discordPresence);
+const showPresence = computed(() => (presence.value?.onlineCount || 0) > 0);
+const hasVoiceActivity = computed(() => (presence.value?.voiceCount || 0) > 0);
 </script>
 
 <template>
     <div>
         <SectionTitle>Active now</SectionTitle>
         <div
-            v-if="client.state.discordPresence"
-            class="flex items-center justify-center gap-1.5 px-3 py-2 mb-2 bg-indigo-500/15 rounded-md text-xs text-indigo-400"
+            v-if="showPresence"
+            :class="[
+                'flex items-center justify-center gap-1.5 px-3 py-2 mb-2 rounded-md text-xs',
+                hasVoiceActivity ? 'bg-emerald-500/15 text-emerald-500' : 'bg-indigo-500/15 text-indigo-400',
+            ]"
         >
             <span class="flex items-center">
                 <svg width="16" height="16" viewBox="0 0 71 55" fill="currentColor">
@@ -21,8 +29,8 @@ const client = useClientStore();
                 </svg>
             </span>
             <span class="font-medium">
-                {{ client.state.discordPresence.guildName }}: {{ client.state.discordPresence.onlineCount }} online<template v-if="client.state.discordPresence.voiceCount > 0"
-                    >, {{ client.state.discordPresence.voiceCount }} in voice</template
+                {{ presence?.guildName }}: {{ presence?.onlineCount }} online<template v-if="presence?.voiceCount > 0"
+                    >, {{ presence?.voiceCount }} in voice</template
                 >
             </span>
         </div>
