@@ -19,9 +19,23 @@ const messageTextAreaRows = ref(1);
 const fileUploadInput = ref(null);
 const historyIndex = ref(null);
 const sentMessageHistory = ref([]);
+const savedCurrentMessage = ref('');
+
+// UX improvement states
+const isFocused = ref(false);
+const isManuallyExpanded = ref(false);
+const showMoreActions = ref(false);
+const moreActionsContainer = ref(null);
 
 onMounted(() => {
     message.value.focus();
+
+    // Close popover when clicking outside
+    document.addEventListener('click', (event) => {
+        if (showMoreActions.value && moreActionsContainer.value && !moreActionsContainer.value.contains(event.target)) {
+            showMoreActions.value = false;
+        }
+    });
 });
 
 const typingListText = computed(() => {
@@ -105,7 +119,41 @@ const updateTextAreaSize = () => {
     // Infer number of lines of the text area and make it scale accordingly
     let lineCount = app.newMessage.split('\n').length;
     lineCount = lineCount + app.newMessage.split('\n').filter((line) => line.length > 80).length;
-    messageTextAreaRows.value = Math.min(lineCount, 8);
+
+    // Determine minimum rows based on state
+    // Only expand after user starts typing (not just on focus)
+    let minRows = 1;
+    if (isManuallyExpanded.value) {
+        minRows = 6;
+    } else if (isFocused.value && app.newMessage.length > 0) {
+        minRows = 3;
+    }
+
+    messageTextAreaRows.value = Math.min(Math.max(lineCount, minRows), 8);
+};
+
+const onFocus = () => {
+    isFocused.value = true;
+    updateTextAreaSize();
+};
+
+const onBlur = () => {
+    isFocused.value = false;
+    // Delay to allow click events on buttons to fire first
+    setTimeout(() => {
+        if (!isFocused.value) {
+            updateTextAreaSize();
+        }
+    }, 150);
+};
+
+const toggleExpand = () => {
+    isManuallyExpanded.value = !isManuallyExpanded.value;
+    updateTextAreaSize();
+};
+
+const toggleMoreActions = () => {
+    showMoreActions.value = !showMoreActions.value;
 };
 
 /**
@@ -118,14 +166,41 @@ const onNavigateIntoHistory = function (event, offset) {
     if (offset > 0 && event.target.selectionStart < event.target.value.length - 1) {
         return;
     }
-    const index = historyIndex.value === null ? sentMessageHistory.value.length - 1 : historyIndex.value + offset;
-    if (typeof sentMessageHistory.value[index] === 'undefined') {
+
+    // Save current message when first entering history
+    if (historyIndex.value === null && offset < 0) {
+        savedCurrentMessage.value = app.newMessage;
+    }
+
+    const newIndex = historyIndex.value === null ? sentMessageHistory.value.length - 1 : historyIndex.value + offset;
+
+    // If navigating past the end of history, restore saved message
+    if (newIndex >= sentMessageHistory.value.length) {
+        historyIndex.value = null;
+        app.setMessage(savedCurrentMessage.value);
+        updateTextAreaSize();
         return;
     }
-    // Set message
-    historyIndex.value = index;
-    app.setMessage(sentMessageHistory.value[index]);
+
+    if (newIndex < 0 || typeof sentMessageHistory.value[newIndex] === 'undefined') {
+        return;
+    }
+
+    // Set message from history
+    historyIndex.value = newIndex;
+    app.setMessage(sentMessageHistory.value[newIndex]);
     updateTextAreaSize();
+};
+
+/**
+ * Exit history navigation and restore current message
+ */
+const exitHistory = function () {
+    if (historyIndex.value !== null) {
+        historyIndex.value = null;
+        app.setMessage(savedCurrentMessage.value);
+        updateTextAreaSize();
+    }
 };
 
 /**
@@ -147,6 +222,7 @@ const sendMessage = async function () {
     sentMessageHistory.value.push(currentMessage);
     sentMessageHistory.value.splice(0, sentMessageHistory.value.length - MESSAGE_HISTORY_LENGTH);
     historyIndex.value = null;
+    savedCurrentMessage.value = '';
     messageTextAreaRows.value = 1;
     if (encryptMessage.value) {
         encryptMessage.value = false;
@@ -278,64 +354,96 @@ const toggleEncryptionPanel = () => {
         <!-- New message form -->
         <div class="flex flex-col-reverse lg:flex-row flex-nowrap">
             <!-- Add elements to message -->
-            <div class="flex justify-center">
-                <!-- Go to room list -->
-                <div class="lg:hidden grow">
-                    <button class="form-control" @click="app.mobileSetView('left')">
+            <div class="flex justify-center items-end gap-1">
+                <!-- Go to room list (mobile) -->
+                <div class="lg:hidden">
+                    <button class="form-control h-10 px-3" @click="app.mobileSetView('left')">
                         <fa
                             icon="chevron-left"
                             :class="{
                                 'text-danger': hasUnread,
                             }"
                         />
-                        <fa v-if="hasUnread" icon="bell" class="ml-2 text-danger" />
-                        <fa v-else icon="gears" class="ml-2" />
+                        <fa v-if="hasUnread" icon="bell" class="ml-1 text-danger" />
+                        <fa v-else icon="gears" class="ml-1" />
                     </button>
                 </div>
 
+                <!-- Primary actions -->
                 <!-- Upload media -->
-                <div title="Upload a media" class="flex flex-col justify-end">
-                    <label class="form-control cursor-pointer w-12" for="file-input">
+                <div title="Upload a media">
+                    <label class="form-control cursor-pointer w-10 h-10 flex items-center justify-center" for="file-input">
                         <fa icon="upload" />
                     </label>
                     <input id="file-input" ref="fileUploadInput" type="file" class="hidden" @change="onFileInputChange" />
                 </div>
 
                 <!-- Send audio -->
-                <div title="Send an audio" class="ml-2 flex flex-col justify-end">
-                    <div class="flex">
-                        <button class="w-12 form-control" @click="uploadAudio">
+                <div title="Send an audio">
+                    <div class="flex gap-1">
+                        <button class="w-10 h-10 form-control" @click="uploadAudio">
                             <fa icon="microphone" :class="{ 'text-primary': recordingAudio }" />
                         </button>
-                        <button v-show="recordingAudio" class="ml-2 w-12 form-control" @click="cancelAudio">
+                        <button v-show="recordingAudio" class="w-10 h-10 form-control" @click="cancelAudio">
                             <fa icon="ban" class="text-danger" />
                         </button>
                     </div>
                 </div>
 
-                <!-- RisiBank -->
-                <div title="Add a media from RisiBank" class="flex flex-col justify-end">
-                    <button class="form-control ml-2 w-12 h-10 align-bottom" @click="openRisiBank">
-                        <img src="/assets/images/icons/risibank.png" class="w-4 h-4" />
-                    </button>
-                </div>
-
-                <!-- Encrypt message -->
-                <div title="Encrypt the next message" class="flex flex-col justify-end">
+                <!-- More actions menu -->
+                <div ref="moreActionsContainer" class="relative">
                     <button
-                        type="button"
-                        class="form-control ml-2 w-12 h-10 align-bottom"
-                        :class="{ 'text-primary': encryptMessage }"
-                        @click="toggleEncryptionPanel"
+                        title="More actions"
+                        class="form-control w-10 h-10 flex items-center justify-center"
+                        :class="{ 'text-primary': showMoreActions || encryptMessage }"
+                        @click="toggleMoreActions"
                     >
-                        <fa icon="lock" />
+                        <fa icon="plus" />
                     </button>
+
+                    <!-- Popover menu -->
+                    <div
+                        v-show="showMoreActions"
+                        class="absolute bottom-12 left-0 form-control p-2 flex flex-col gap-1 z-50 min-w-max"
+                    >
+                        <!-- RisiBank -->
+                        <button
+                            title="Add a media from RisiBank"
+                            class="form-control w-full h-10 flex items-center gap-2 px-3"
+                            @click="openRisiBank(); showMoreActions = false"
+                        >
+                            <img src="/assets/images/icons/risibank.png" class="w-4 h-4" />
+                            <span class="text-sm">RisiBank</span>
+                        </button>
+
+                        <!-- Encrypt message -->
+                        <button
+                            title="Encrypt the next message"
+                            class="form-control w-full h-10 flex items-center gap-2 px-3"
+                            :class="{ 'text-primary': encryptMessage }"
+                            @click="toggleEncryptionPanel(); showMoreActions = false"
+                        >
+                            <fa icon="lock" />
+                            <span class="text-sm">Encrypt</span>
+                        </button>
+
+                        <!-- Expand/collapse -->
+                        <button
+                            title="Expand input"
+                            class="form-control w-full h-10 flex items-center gap-2 px-3"
+                            :class="{ 'text-primary': isManuallyExpanded }"
+                            @click="toggleExpand(); showMoreActions = false"
+                        >
+                            <fa :icon="isManuallyExpanded ? 'compress' : 'expand'" />
+                            <span class="text-sm">{{ isManuallyExpanded ? 'Collapse' : 'Expand' }}</span>
+                        </button>
+                    </div>
                 </div>
 
-                <!-- Go to user list -->
-                <div class="lg:hidden grow text-end">
-                    <button class="form-control" @click="app.mobileSetView('right')">
-                        <fa icon="users" class="mr-2" />
+                <!-- Go to user list (mobile) -->
+                <div class="lg:hidden">
+                    <button class="form-control h-10 px-3" @click="app.mobileSetView('right')">
+                        <fa icon="users" class="mr-1" />
                         <fa icon="chevron-right" />
                     </button>
                 </div>
@@ -392,8 +500,11 @@ const toggleEncryptionPanel = () => {
                             :disabled="!client.state.currentRoom"
                             :maxlength="client.state.currentRoom.plugins.messagelimiter ?? null"
                             @input="onMessageInput"
+                            @focus="onFocus"
+                            @blur="onBlur"
                             @keyup.up.exact="!autoSuggestOpen && onNavigateIntoHistory($event, -1)"
                             @keyup.down.exact="!autoSuggestOpen && onNavigateIntoHistory($event, 1)"
+                            @keydown.escape="exitHistory"
                             @keydown.shift.enter.stop=""
                             @keydown.enter.exact.stop="!autoSuggestOpen && sendMessage()"
                         ></textarea>
@@ -414,5 +525,9 @@ const toggleEncryptionPanel = () => {
 <style scoped lang="postcss">
 .autosuggest-item {
     @apply px-1 cursor-pointer;
+}
+
+textarea {
+    transition: height 0.15s ease-out;
 }
 </style>
