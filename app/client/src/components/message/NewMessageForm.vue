@@ -66,7 +66,7 @@ watch(
         }
         // Focus message input if not already focused
         if (document.activeElement !== message.value) {
-            message.value.focus();
+            message.value?.focus();
         }
     },
 );
@@ -74,13 +74,13 @@ watch(
 // Focus message input when app is newly focused
 watch(
     () => app.focused,
-    (focused) => focused && message.value.focus(),
+    (focused) => focused && message.value?.focus(),
 );
 
 // Focus message input when app changes room
 watch(
     () => client.state.currentRoomId,
-    (currentRoomId) => currentRoomId && message.value.focus(),
+    (currentRoomId) => currentRoomId && message.value?.focus(),
 );
 
 /**
@@ -285,10 +285,10 @@ const toggleEncryptionPanel = () => {
                         <fa
                             icon="chevron-left"
                             :class="{
-                                'text-danger': hasUnreadMessagesInOtherRooms,
+                                'text-danger': hasUnread,
                             }"
                         />
-                        <fa v-if="hasUnreadMessagesInOtherRooms" icon="bell" class="ml-2 text-danger" />
+                        <fa v-if="hasUnread" icon="bell" class="ml-2 text-danger" />
                         <fa v-else icon="gears" class="ml-2" />
                     </button>
                 </div>
