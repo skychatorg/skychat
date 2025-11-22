@@ -5,6 +5,7 @@ import { Message } from '../../../skychat/Message.js';
 import { Session } from '../../../skychat/Session.js';
 import { RoomPlugin } from '../../RoomPlugin.js';
 import { BlacklistPlugin } from '../global/BlacklistPlugin.js';
+import { WebPushPlugin } from '../global/WebPushPlugin.js';
 
 type ParsedMentions = {
     here: boolean;
@@ -123,5 +124,16 @@ export class MentionPlugin extends RoomPlugin {
             identifier: sender.session.identifier,
             messageId: message.id,
         });
+
+        // Send Web Push notification
+        const webPushPlugin = this.room.manager.getPlugin('push') as WebPushPlugin | undefined;
+        if (webPushPlugin) {
+            const truncatedContent = message.content.length > 100 ? message.content.substring(0, 100) + '...' : message.content;
+            webPushPlugin.send(receiver.session.user, {
+                title: `@${sender.session.identifier} mentioned you`,
+                body: truncatedContent,
+                tag: `mention-${message.id}`,
+            });
+        }
     }
 }
