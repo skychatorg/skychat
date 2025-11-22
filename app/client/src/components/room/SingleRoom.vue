@@ -15,6 +15,8 @@ const props = defineProps({
     },
 });
 
+const dropdownOpen = ref(false);
+
 const hasUnread = computed(() => {
     return !selected.value && client.hasAccessToRoom(props.room.id) && client.hasUnreadMessages(props.room.id);
 });
@@ -24,6 +26,33 @@ useClientState(() => {
     const data = apiClient.plugins.mute.isRoomMuted(props.room.id);
     isMuted.value = data;
 });
+
+// Actions
+const joinRoom = () => {
+    if (client.state.currentRoomId !== props.room.id) {
+        client.join(props.room.id);
+    }
+};
+
+const markAsRead = () => {
+    // Get last message ID from room and mark as seen
+    const lastMessageId = props.room.lastReceivedMessageId;
+    if (lastMessageId) {
+        client.sendMessage(`/lastseen ${lastMessageId}`);
+    }
+};
+
+const copyRoomId = () => {
+    navigator.clipboard.writeText(props.room.id.toString());
+};
+
+const leaveRoom = () => {
+    // Join first available room that's not this one
+    const otherRoom = client.state.rooms.find(r => r.id !== props.room.id && client.hasAccessToRoom(r.id));
+    if (otherRoom) {
+        client.join(otherRoom.id);
+    }
+};
 
 // Whether user is in the room
 const selected = computed(() => {
@@ -136,17 +165,43 @@ const icon = computed(() => {
                 </p>
 
                 <!-- Room actions -->
-                <SkyDropdown>
+                <SkyDropdown v-model:open="dropdownOpen">
                     <template #trigger>
-                        <fa icon="chevron-down" class="text-skygray-lightest ml-2" />
+                        <button
+                            class="ml-2 px-1.5 py-0.5 rounded border border-transparent transition text-xs"
+                            :class="dropdownOpen
+                                ? 'bg-primary/20 text-primary border-primary/50'
+                                : 'text-skygray-lightest hover:bg-skygray-dark/50 hover:border-skygray-light/30'"
+                        >
+                            <fa icon="ellipsis" />
+                        </button>
                     </template>
 
                     <template #default>
-                        <SkyDropdownItem v-if="client.state.currentRoomId !== room.id" @click="client.join(room.id)">
-                            Join
+                        <SkyDropdownItem v-if="!selected" @click="joinRoom">
+                            <fa icon="arrow-right-from-bracket" class="w-4 mr-2" />
+                            Join room
                         </SkyDropdownItem>
-                        <SkyDropdownItem v-if="!isMuted" @click="client.sendMessage(`/mute ${room.id}`)"> Mute room </SkyDropdownItem>
-                        <SkyDropdownItem v-else @click="client.sendMessage(`/unmute ${room.id}`)"> Unmute room </SkyDropdownItem>
+                        <SkyDropdownItem v-if="selected" @click="leaveRoom">
+                            <fa icon="arrow-left" class="w-4 mr-2" />
+                            Leave room
+                        </SkyDropdownItem>
+                        <SkyDropdownItem v-if="hasUnread" @click="markAsRead">
+                            <fa icon="circle-dot" class="w-4 mr-2" />
+                            Mark as read
+                        </SkyDropdownItem>
+                        <SkyDropdownItem v-if="!isMuted" @click="client.sendMessage(`/mute ${room.id}`)">
+                            <fa icon="volume-xmark" class="w-4 mr-2" />
+                            Mute room
+                        </SkyDropdownItem>
+                        <SkyDropdownItem v-else @click="client.sendMessage(`/unmute ${room.id}`)">
+                            <fa icon="bell" class="w-4 mr-2" />
+                            Unmute room
+                        </SkyDropdownItem>
+                        <SkyDropdownItem @click="copyRoomId">
+                            <fa icon="copy" class="w-4 mr-2" />
+                            Copy room ID
+                        </SkyDropdownItem>
                     </template>
                 </SkyDropdown>
             </div>

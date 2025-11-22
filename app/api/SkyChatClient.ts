@@ -44,6 +44,9 @@ export type SkyChatOptions = {
 
 export type SkyChatClientState = {
     websocketReadyState: number;
+    isConnected: boolean;
+    isReconnecting: boolean;
+    reconnectAttempts: number;
     user: SanitizedUser;
     config: PublicConfig | null;
     stickers: Record<string, string>;
@@ -115,6 +118,11 @@ export declare interface SkyChatClient {
     on(event: 'player-sync', listener: (data: { current: QueuedVideoInfo | null; queue: QueuedVideoInfo[]; cursor: number }) => any): this;
 
     on(event: 'update', listener: (state: SkyChatClientState) => any): this;
+
+    // Connection resilience events
+    on(event: 'reconnecting', listener: (data: { attempt: number; delay: number }) => any): this;
+    on(event: 'reconnected', listener: () => any): this;
+    on(event: 'connection_lost', listener: (data: { code: number; reason: string }) => any): this;
 }
 
 // eslint-disable-next-line no-redeclare
@@ -160,6 +168,13 @@ export class SkyChatClient extends EventEmitter {
         cursor: 0,
     };
     private _playerLastUpdate: Date | null = null;
+
+    // Connection resilience properties
+    private _reconnectAttempts: number = 0;
+    private _reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+    private _messageQueue: Array<{ type: 'raw' | 'event'; data: any; eventName?: string }> = [];
+    private _maxQueueSize: number = 100;
+    private _isReconnecting: boolean = false;
 
     private autoMessageAck: boolean;
 
@@ -232,6 +247,79 @@ export class SkyChatClient extends EventEmitter {
         this.plugins = {
             mute: new MutePluginHelper(this),
         };
+
+        // Set up network and visibility event listeners for mobile resilience
+        this._setupNetworkListeners();
+    }
+
+    /**
+     * Set up event listeners for network changes and page visibility
+     */
+    private _setupNetworkListeners() {
+        // Only set up browser-specific listeners in browser environment
+        if (typeof window === 'undefined' || typeof document === 'undefined') {
+            return;
+        }
+
+        // Handle network online/offline events
+        window.addEventListener('online', () => {
+            console.info('Network online detected, attempting reconnection');
+            this._attemptReconnect(true);
+        });
+
+        window.addEventListener('offline', () => {
+            console.warn('Network offline detected');
+            if (this._reconnectTimer) {
+                clearTimeout(this._reconnectTimer);
+                this._reconnectTimer = null;
+            }
+        });
+
+        // Handle page visibility changes (important for mobile)
+        if (typeof document.addEventListener === 'function') {
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible') {
+                    // Check if we need to reconnect when page becomes visible
+                    if (!this._websocket || this._websocket.readyState !== WebSocket.OPEN) {
+                        console.info('Page visible with closed connection, attempting reconnection');
+                        this._attemptReconnect(true);
+                    }
+                }
+            });
+        }
+    }
+
+    /**
+     * Attempt to reconnect with exponential backoff
+     */
+    private _attemptReconnect(immediate: boolean = false) {
+        if (this._reconnectTimer) {
+            clearTimeout(this._reconnectTimer);
+            this._reconnectTimer = null;
+        }
+
+        if (immediate) {
+            this._reconnectAttempts = 0;
+            this.connect();
+            return;
+        }
+
+        // Exponential backoff with jitter: 1s, 2s, 4s, 8s, 16s, 30s max
+        const baseDelay = Math.min(1000 * Math.pow(2, this._reconnectAttempts), 30000);
+        const jitter = Math.random() * 1000; // Add up to 1s jitter
+        const delay = baseDelay + jitter;
+
+        this._reconnectAttempts++;
+        this._isReconnecting = true;
+        this.emit('reconnecting', { attempt: this._reconnectAttempts, delay });
+        this.emit('update', this.state);
+
+        console.info(`Reconnecting in ${Math.round(delay)}ms (attempt ${this._reconnectAttempts})`);
+
+        this._reconnectTimer = setTimeout(() => {
+            this._reconnectTimer = null;
+            this.connect();
+        }, delay);
     }
 
     private _onConfig(config: PublicConfig) {
@@ -491,6 +579,9 @@ export class SkyChatClient extends EventEmitter {
     get state(): SkyChatClientState {
         return {
             websocketReadyState: this._websocket ? this._websocket.readyState : WebSocket.CLOSED,
+            isConnected: this._websocket !== null && this._websocket.readyState === WebSocket.OPEN,
+            isReconnecting: this._isReconnecting,
+            reconnectAttempts: this._reconnectAttempts,
             user: this._user,
             config: this._config,
             stickers: this._stickers,
@@ -603,7 +694,11 @@ export class SkyChatClient extends EventEmitter {
      * Send anything (blob, binary)
      */
     _sendRaw(data: any) {
-        if (!this._websocket) {
+        if (!this._websocket || this._websocket.readyState !== WebSocket.OPEN) {
+            // Queue message for replay when reconnected (skip binary data like audio/cursor)
+            if (typeof data === 'string' && this._messageQueue.length < this._maxQueueSize) {
+                this._messageQueue.push({ type: 'raw', data });
+            }
             return;
         }
         this._websocket.send(data);
@@ -704,7 +799,11 @@ export class SkyChatClient extends EventEmitter {
      * Emit an event to the server
      */
     private _sendEvent(eventName: string, payload: any) {
-        if (!this._websocket) {
+        if (!this._websocket || this._websocket.readyState !== WebSocket.OPEN) {
+            // Queue event for replay when reconnected
+            if (this._messageQueue.length < this._maxQueueSize) {
+                this._messageQueue.push({ type: 'event', eventName, data: payload });
+            }
             return;
         }
         this._websocket.send(
@@ -730,6 +829,11 @@ export class SkyChatClient extends EventEmitter {
      * When the connection is made with the websocket server
      */
     private _onWebSocketConnect() {
+        // Reset reconnection state
+        const wasReconnecting = this._isReconnecting;
+        this._reconnectAttempts = 0;
+        this._isReconnecting = false;
+
         if (typeof localStorage !== 'undefined') {
             const authToken = localStorage.getItem(SkyChatClient.LOCAL_STORAGE_TOKEN_KEY);
             if (authToken) {
@@ -739,7 +843,37 @@ export class SkyChatClient extends EventEmitter {
                 });
             }
         }
+
+        // Emit reconnected event if this was a reconnection
+        if (wasReconnecting) {
+            this.emit('reconnected');
+        }
+
+        // Replay queued messages
+        this._replayMessageQueue();
+
         this.emit('update', this.state);
+    }
+
+    /**
+     * Replay queued messages after reconnection
+     */
+    private _replayMessageQueue() {
+        if (this._messageQueue.length === 0) {
+            return;
+        }
+
+        console.info(`Replaying ${this._messageQueue.length} queued messages`);
+        const queue = this._messageQueue;
+        this._messageQueue = [];
+
+        for (const item of queue) {
+            if (item.type === 'raw') {
+                this._sendRaw(item.data);
+            } else if (item.type === 'event' && item.eventName) {
+                this._sendEvent(item.eventName, item.data);
+            }
+        }
     }
 
     /**
@@ -795,13 +929,16 @@ export class SkyChatClient extends EventEmitter {
         this._polls = {};
         this._cursors = {};
         this._roll = { state: false };
+        // Emit connection lost event
+        this.emit('connection_lost', { code: event.code, reason: event.reason });
         // Send state update
         this.emit('update', this.state);
         // If kicked, do not try to auto re-connect
         if (event.code === 4403) {
             return;
         }
-        setTimeout(this.connect.bind(this), 1000);
+        // Use exponential backoff for reconnection
+        this._attemptReconnect();
     }
 
     private _onWebSocketError(event: WebSocket.ErrorEvent) {

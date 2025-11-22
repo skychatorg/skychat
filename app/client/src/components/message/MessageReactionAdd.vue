@@ -9,6 +9,8 @@ const props = defineProps({
     },
 });
 
+const emit = defineEmits(['picker-toggle']);
+
 const client = useClientStore();
 
 const pickerOpen = ref(false);
@@ -140,30 +142,30 @@ watch(pickerOpen, (open) => {
     if (!open) {
         searchQuery.value = '';
     }
+    emit('picker-toggle', open);
 });
 </script>
 
 <template>
-    <div class="flex ml-[66px] mb-1">
-        <div ref="pickerRef" class="relative">
-            <button
-                class="flex items-center rounded-full px-3 py-1 border transition text-xs gap-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 hover:-translate-y-0.5 hover:shadow-sm hover:shadow-primary/20 active:translate-y-0"
-                :class="{
-                    'border-primary/80 bg-primary/10 text-primary': pickerOpen,
-                    'border-transparent bg-skygray-dark/25 text-gray-500 hover:border-skygray-light/60': !pickerOpen,
-                }"
-                type="button"
-                :disabled="!hasStickers"
-                :aria-expanded="pickerOpen"
-                @click="togglePicker"
-            >
-                <span class="font-semibold">+</span>
-                <span>Add reaction</span>
-            </button>
+    <div ref="pickerRef" class="relative">
+        <button
+            class="flex items-center rounded-full px-2 py-1 border transition text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 hover:-translate-y-0.5 hover:shadow-sm hover:shadow-primary/20 active:translate-y-0"
+            :class="{
+                'border-primary/80 bg-primary/10 text-primary': pickerOpen,
+                'border-transparent bg-skygray-dark/50 text-skygray-lightest hover:border-skygray-light/60': !pickerOpen,
+            }"
+            type="button"
+            title="Add reaction"
+            :disabled="!hasStickers"
+            :aria-expanded="pickerOpen"
+            @click="togglePicker"
+        >
+            <fa icon="thumbs-up" />
+        </button>
 
             <div
                 v-if="pickerOpen"
-                class="absolute right-0 z-10 mt-2 w-64 sm:w-72 rounded-xl border border-skygray-light/50 bg-slate-800/95 p-3 shadow-xl"
+                class="absolute right-0 bottom-full mb-2 z-10 w-64 sm:w-72 rounded-xl border border-skygray-light/50 bg-slate-800/95 p-3 shadow-xl"
             >
                 <label class="sr-only" for="reaction-search-input">Search stickers</label>
                 <input
@@ -197,6 +199,5 @@ watch(pickerOpen, (open) => {
                     <span v-else>No stickers are available on this instance yet</span>
                 </div>
             </div>
-        </div>
     </div>
 </template>

@@ -17,8 +17,10 @@ const logout = () => {
 };
 
 const connectionStatus = computed(() => {
-    if (client.state.websocketReadyState === WebSocket.OPEN) {
+    if (client.state.isConnected) {
         return 'connected';
+    } else if (client.state.isReconnecting) {
+        return 'reconnecting';
     } else if (client.state.websocketReadyState === WebSocket.CONNECTING) {
         return 'connecting';
     } else {
@@ -59,6 +61,11 @@ const connectionStatus = computed(() => {
             </template>
             <template v-if="connectionStatus === 'connecting'">
                 <p class="p-4 text-primary font-bold text-center">Connecting..</p>
+            </template>
+            <template v-if="connectionStatus === 'reconnecting'">
+                <p class="p-4 text-warning font-bold text-center">
+                    Reconnecting<span v-if="client.state.reconnectAttempts > 1"> ({{ client.state.reconnectAttempts }})</span>..
+                </p>
             </template>
             <template v-if="connectionStatus === 'disconnected'">
                 <p class="p-4 text-danger font-bold text-center">Disconnected</p>

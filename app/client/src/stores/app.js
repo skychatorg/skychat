@@ -14,6 +14,93 @@ const STORE_SAVED_KEYS = ['playerMode'];
 
 const toast = useToast();
 
+// Pre-loaded audio element for notifications
+let notificationAudio = null;
+let audioContext = null;
+let audioBuffer = null;
+
+// Initialize audio system
+const initAudio = async () => {
+    // Pre-load Audio element
+    notificationAudio = new Audio(NOTIFICATION_SOUND_MP3_PATH);
+    notificationAudio.load();
+
+    // Initialize AudioContext for better background support
+    try {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        audioContext = new AudioContextClass();
+        const response = await fetch(NOTIFICATION_SOUND_MP3_PATH);
+        const arrayBuffer = await response.arrayBuffer();
+        audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+    } catch (e) {
+        console.warn('AudioContext initialization failed:', e);
+    }
+};
+
+// Play notification sound with fallbacks
+const playNotificationSound = async () => {
+    // Try AudioContext first (better background support)
+    if (audioContext && audioBuffer) {
+        try {
+            // Resume context if suspended (required after user interaction)
+            if (audioContext.state === 'suspended') {
+                await audioContext.resume();
+            }
+            const source = audioContext.createBufferSource();
+            source.buffer = audioBuffer;
+            source.connect(audioContext.destination);
+            source.start(0);
+            return;
+        } catch (e) {
+            console.warn('AudioContext playback failed:', e);
+        }
+    }
+
+    // Fallback to pre-loaded Audio element
+    if (notificationAudio) {
+        try {
+            notificationAudio.currentTime = 0;
+            await notificationAudio.play();
+            return;
+        } catch (e) {
+            console.warn('Audio element playback failed:', e);
+        }
+    }
+
+    // Last resort: create new Audio
+    try {
+        await new Audio(NOTIFICATION_SOUND_MP3_PATH).play();
+    } catch (e) {
+        console.warn('All audio playback methods failed:', e);
+    }
+};
+
+// Show browser notification
+const showBrowserNotification = (title, body) => {
+    if (!('Notification' in window)) {
+        return;
+    }
+
+    if (Notification.permission === 'granted') {
+        new Notification(title, {
+            body,
+            icon: '/favicon.ico',
+            tag: 'skychat-mention',
+        });
+    }
+};
+
+// Request notification permission
+const requestNotificationPermission = async () => {
+    if (!('Notification' in window)) {
+        return;
+    }
+
+    if (Notification.permission === 'default') {
+        await Notification.requestPermission();
+    }
+};
+
 export const useAppStore = defineStore('app', {
     state: () => ({
         /**
@@ -121,6 +208,10 @@ export const useAppStore = defineStore('app', {
             const clientStore = useClientStore();
             clientStore.init();
 
+            // Initialize audio system and request notification permission
+            initAudio();
+            requestNotificationPermission();
+
             // Handle height on mobile phones
             const resize = () => {
                 document.body.style.height = window.innerHeight + 'px';
@@ -175,13 +266,21 @@ export const useAppStore = defineStore('app', {
                 },
             );
 
-            // Listen for last mention and send audio notification
+            // Listen for last mention and send audio + browser notification
             watch(
                 () => clientStore.state.lastMention,
-                () => {
-                    // Notify user if quoted, user is not blacklisted and app is not focused
+                (mention) => {
+                    // Notify user if mentioned and app is not focused or not on chat view
                     if (!this.focused || this.mobileView !== 'middle') {
-                        new Audio(NOTIFICATION_SOUND_MP3_PATH).play();
+                        playNotificationSound();
+
+                        // Show browser notification
+                        if (mention && mention.identifier) {
+                            showBrowserNotification(
+                                `@${mention.identifier} mentioned you`,
+                                'You have been mentioned in SkyChat',
+                            );
+                        }
                     }
                 },
             );
@@ -211,9 +310,13 @@ export const useAppStore = defineStore('app', {
             // Watch for new polls
             watch(
                 () => Object.keys(clientStore.state.polls).length,
-                (newLength, oldLength) => {
+                async (newLength, oldLength) => {
                     if (newLength > oldLength) {
-                        new Audio('/assets/sound/new-poll.ogg').play();
+                        try {
+                            await new Audio('/assets/sound/new-poll.ogg').play();
+                        } catch (e) {
+                            console.warn('Poll audio playback failed:', e);
+                        }
                     }
                 },
             );

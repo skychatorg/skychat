@@ -17,6 +17,13 @@ const encryptionStore = useEncryptionStore();
 
 const COMPACT_QUOTES_MAX_LENGTH = 30;
 
+// Action menu state
+const showActionMenu = ref(false);
+const actionMenuContainer = ref(null);
+const reactionPickerOpen = ref(false);
+
+const anyMenuOpen = computed(() => showActionMenu.value || reactionPickerOpen.value);
+
 const emit = defineEmits(['content-size-changed']);
 
 const props = defineProps({
@@ -183,7 +190,16 @@ const bindMessageContentEvents = () => {
         });
     }
 };
-onMounted(bindMessageContentEvents);
+onMounted(() => {
+    bindMessageContentEvents();
+
+    // Close action menu when clicking outside
+    document.addEventListener('click', (event) => {
+        if (showActionMenu.value && actionMenuContainer.value && !actionMenuContainer.value.contains(event.target)) {
+            showActionMenu.value = false;
+        }
+    });
+});
 watch(
     () => props.message.formatted,
     () => nextTick(bindMessageContentEvents),
@@ -194,20 +210,50 @@ watch(
     () => nextTick(() => emit('content-size-changed')),
 );
 
-// When interacting with a message
-const messageInteract = () => {
-    // Cycle between these texts
-    const editText = '/edit ' + props.message.id + ' ' + props.message.content;
-    const deleteText = '/delete ' + props.message.id;
-    const quoteText = '@' + props.message.id + ' ';
-    const rotation = [quoteText, editText, deleteText];
+// Check if message supports actions (id = 0 are automated messages)
+const isAutomatedMessage = computed(() => props.message.id === 0);
 
-    // Find whether we have one of these text set already & Decide new text
-    const currentPosition = rotation.indexOf(app.newMessage);
-    const newPosition = (currentPosition + 1) % rotation.length;
+// Check if user can edit/delete this message
+const canEditMessage = computed(() => {
+    if (isAutomatedMessage.value) return false;
+    return props.message.user.username.toLowerCase() === client.state.user?.username.toLowerCase();
+});
 
-    // Set new text & Focus on input
-    app.setMessage(rotation[newPosition]);
+const canDeleteMessage = computed(() => {
+    if (isAutomatedMessage.value) return false;
+    // Own message or moderator
+    const threshold = client.state.config?.minRightForUserModeration ?? 'op';
+    const canModerate = threshold === 'op' ? client.state.op : client.state.op || (client.state.user?.right ?? -1) >= threshold;
+    return canEditMessage.value || canModerate;
+});
+
+// Action handlers
+const quoteMessage = () => {
+    app.setMessage('@' + props.message.id + ' ');
+    showActionMenu.value = false;
+};
+
+const editMessage = () => {
+    if (!canEditMessage.value) return;
+    app.setMessage('/edit ' + props.message.id + ' ' + props.message.content);
+    showActionMenu.value = false;
+};
+
+const deleteMessage = () => {
+    if (!canDeleteMessage.value) return;
+    if (confirm('Delete this message?')) {
+        client.sendMessage('/delete ' + props.message.id);
+    }
+    showActionMenu.value = false;
+};
+
+const copyMessage = () => {
+    navigator.clipboard.writeText(props.message.content);
+    showActionMenu.value = false;
+};
+
+const toggleActionMenu = () => {
+    showActionMenu.value = !showActionMenu.value;
 };
 </script>
 
@@ -225,7 +271,6 @@ const messageInteract = () => {
                 blacklisted: isBlacklisted,
             }"
             class="group relative flex flex-row"
-            @contextmenu.prevent="messageInteract"
         >
             <div v-if="showDate" class="absolute w-full text-center text-xs">
                 <span class="border px-2 py-1/2 rounded-full">
@@ -233,11 +278,61 @@ const messageInteract = () => {
                 </span>
             </div>
 
-            <div v-if="!compact" class="hidden group-hover:block absolute right-[80px] top-0">
-                <MessageReactionAdd :message-id="message.id" />
+            <!-- Hover action buttons -->
+            <div
+                v-if="!compact && !isAutomatedMessage"
+                class="absolute right-[80px] top-0 items-center gap-1"
+                :class="anyMenuOpen ? 'flex' : 'hidden group-hover:flex'"
+            >
+                <!-- Quote -->
+                <button
+                    title="Quote"
+                    class="flex items-center rounded-full px-2 py-1 border border-transparent bg-skygray-dark/50 text-skygray-lightest hover:border-skygray-light/60 hover:-translate-y-0.5 hover:shadow-sm hover:shadow-primary/20 active:translate-y-0 transition text-xs"
+                    @click="quoteMessage"
+                >
+                    <fa icon="comments" />
+                </button>
+
+                <!-- React -->
+                <MessageReactionAdd :message-id="message.id" @picker-toggle="reactionPickerOpen = $event" />
+
+                <!-- More actions menu -->
+                <div ref="actionMenuContainer" class="relative">
+                    <button
+                        title="More actions"
+                        class="flex items-center rounded-full px-2 py-1 border border-transparent bg-skygray-dark/50 text-skygray-lightest hover:border-skygray-light/60 hover:-translate-y-0.5 hover:shadow-sm hover:shadow-primary/20 active:translate-y-0 transition text-xs"
+                        @click="toggleActionMenu"
+                    >
+                        <fa icon="ellipsis" />
+                    </button>
+
+                    <!-- Dropdown menu -->
+                    <div v-show="showActionMenu" class="absolute right-0 top-9 form-control p-1 flex flex-col gap-1 z-50 min-w-max">
+                        <button
+                            v-if="canEditMessage"
+                            class="form-control w-full h-8 flex items-center gap-2 px-3 text-sm"
+                            @click="editMessage"
+                        >
+                            <fa icon="pen-to-square" class="w-4" />
+                            <span>Edit</span>
+                        </button>
+                        <button
+                            v-if="canDeleteMessage"
+                            class="form-control w-full h-8 flex items-center gap-2 px-3 text-sm text-danger"
+                            @click="deleteMessage"
+                        >
+                            <fa icon="trash" class="w-4" />
+                            <span>Delete</span>
+                        </button>
+                        <button class="form-control w-full h-8 flex items-center gap-2 px-3 text-sm" @click="copyMessage">
+                            <fa icon="copy" class="w-4" />
+                            <span>Copy</span>
+                        </button>
+                    </div>
+                </div>
             </div>
 
-            <div v-if="!isBlacklisted" class="py-1 px-3 flex flex-row">
+            <div v-if="!isBlacklisted" class="py-1 px-3 flex flex-row" :class="{ 'opacity-60 italic': isAutomatedMessage }">
                 <UserBigAvatar v-if="!compact" class="mt-1" :user="message.user" />
 
                 <div class="grow pl-4">
