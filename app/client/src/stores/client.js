@@ -22,6 +22,20 @@ export const useClientStore = defineStore('client', {
          * Messages that are currently shown in the chat
          */
         messages: [],
+
+        /**
+         * Last message search results
+         */
+        messageSearch: {
+            query: '',
+            roomId: null,
+            results: [],
+        },
+
+        /**
+         * Whether a message search is in progress
+         */
+        messageSearchLoading: false,
     }),
 
     getters: {
@@ -43,6 +57,8 @@ export const useClientStore = defineStore('client', {
                 if (this.state.roomId !== client.state.roomId) {
                     // Clear messages
                     this.messages = [];
+                    this.messageSearch = { query: '', roomId: null, results: [] };
+                    this.messageSearchLoading = false;
                 }
                 this.state = client.state;
             });
@@ -82,6 +98,12 @@ export const useClientStore = defineStore('client', {
                 this.messages = decrypted.concat(this.messages);
             });
 
+            client.on('message-search', async ({ roomId, query, results }) => {
+                const decrypted = await Promise.all(results.map((message) => encryptionStore.decryptIncomingMessage(message)));
+                this.messageSearch = { roomId, query, results: decrypted.toReversed() };
+                this.messageSearchLoading = false;
+            });
+
             // Message edit
             client.on('message-edit', async (message) => {
                 const messageIndex = this.messages.findIndex((m) => m.id === message.id);
@@ -116,6 +138,7 @@ export const useClientStore = defineStore('client', {
             client.on('error', (error) => {
                 const toast = useToast();
                 toast.error(error);
+                this.messageSearchLoading = false;
             });
             client.on('discord-link', (url) => {
                 window.open(url, '_blank', 'width=500,height=800');
@@ -174,6 +197,23 @@ export const useClientStore = defineStore('client', {
         },
         hasUnreadMessages(roomId) {
             return client.hasUnreadMessages(roomId);
+        },
+        searchMessages(query) {
+            const sanitizedQuery = query.trim();
+            if (!sanitizedQuery) {
+                return;
+            }
+            this.messageSearchLoading = true;
+            this.messageSearch = {
+                query: sanitizedQuery,
+                roomId: this.state.roomId,
+                results: [],
+            };
+            client.sendMessage(`/messagesearch ${sanitizedQuery}`);
+        },
+        clearMessageSearch() {
+            this.messageSearch = { query: '', roomId: null, results: [] };
+            this.messageSearchLoading = false;
         },
     },
 });

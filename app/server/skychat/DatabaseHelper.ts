@@ -30,6 +30,12 @@ CREATE TABLE IF NOT EXISTS messages (
 
 -- Add index on room_id and id in descending order, if it doesn't exist
 CREATE INDEX IF NOT EXISTS room_id_id_index ON messages (room_id, id DESC);
+
+-- Enable trigram extension for fast text search
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
+-- Add trigram index on content for fast ILIKE queries
+CREATE INDEX IF NOT EXISTS messages_content_trgm_idx ON messages USING GIN (content gin_trgm_ops);
 `;
 
 /**

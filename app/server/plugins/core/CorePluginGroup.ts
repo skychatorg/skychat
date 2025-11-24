@@ -31,6 +31,7 @@ import { HelpPlugin } from './room/HelpPlugin.js';
 import { MentionPlugin } from './room/MentionPlugin.js';
 import { MessageEditPlugin } from './room/MessageEditPlugin.js';
 import { MessageHistoryPlugin } from './room/MessageHistoryPlugin.js';
+import { MessageSearchPlugin } from './room/MessageSearchPlugin.js';
 import { MessagePlugin } from './room/MessagePlugin.js';
 import { MessageSeenPlugin } from './room/MessageSeenPlugin.js';
 import { RoomManagerPlugin } from './room/RoomManagerPlugin.js';
@@ -42,6 +43,7 @@ export class CorePluginGroup extends PluginGroup {
         MentionPlugin,
         MessageEditPlugin,
         MessageHistoryPlugin,
+        MessageSearchPlugin,
         MessagePlugin,
         MessageSeenPlugin,
         RoomManagerPlugin,

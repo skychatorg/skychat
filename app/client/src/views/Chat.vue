@@ -8,10 +8,12 @@ import RoomList from '@/components/room/RoomList.vue';
 import ConnectedList from '@/components/user/ConnectedList.vue';
 import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 
 const app = useAppStore();
 const client = useClientStore();
+
+const query = ref('');
 
 const canManageStickers = computed(() => {
     const threshold = client.state.config?.minRightForStickerManagement ?? 'op';
@@ -21,6 +23,21 @@ const canManageStickers = computed(() => {
     const userRight = client.state.user?.right ?? -1;
     return client.state.op || userRight >= threshold;
 });
+
+const currentRoomName = computed(() => client.state.currentRoom?.name ?? 'this room');
+
+const runSearch = () => {
+    const sanitizedQuery = query.value.trim();
+    if (!sanitizedQuery) {
+        return;
+    }
+    client.searchMessages(sanitizedQuery);
+};
+
+const clearSearch = () => {
+    query.value = '';
+    client.clearMessageSearch();
+};
 </script>
 
 <template>
@@ -53,6 +70,24 @@ const canManageStickers = computed(() => {
         >
             <PlayerPannel v-if="client.state.currentPlayerChannel" class="bg-skygray-lighter/5 backdrop-blur-2xl backdrop-brightness-125" />
             <PollList class="bg-skygray-lighter/5 backdrop-blur-2xl backdrop-brightness-125" />
+            <div class="px-3 py-1 flex justify-end bg-skygray-lighter/5 backdrop-blur-2xl backdrop-brightness-125">
+                <form class="flex gap-1.5 items-center text-sm" @submit.prevent="runSearch">
+                    <button
+                        v-if="client.messageSearch.query || client.messageSearchLoading"
+                        type="button"
+                        class="form-control flex items-center justify-center gap-1.5 py-2 px-4 whitespace-nowrap"
+                        @click="clearSearch"
+                    >
+                        <fa icon="times" />
+                        <span>Clear</span>
+                    </button>
+                    <input v-model="query" type="text" class="form-control w-64 py-2 px-3" :placeholder="`Search in ${currentRoomName}`" />
+                    <button type="submit" class="form-control flex items-center justify-center gap-1.5 py-2 px-4 whitespace-nowrap">
+                        <fa icon="magnifying-glass" />
+                        <span>Search</span>
+                    </button>
+                </form>
+            </div>
             <MessagePannel class="grow bg-skygray-white/10 backdrop-brightness-125 backdrop-blur-2xl" />
             <NewMessageForm class="basis-12 bg-skygray-lighter/5 backdrop-blur-2xl backdrop-brightness-125" />
         </div>

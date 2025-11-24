@@ -96,6 +96,7 @@ export declare interface SkyChatClient {
     on(event: 'typing-list', listener: (users: Array<SanitizedUser>) => any): this;
     on(event: 'message', listener: (message: SanitizedMessage) => any): this;
     on(event: 'messages', listener: (messages: Array<SanitizedMessage>) => any): this;
+    on(event: 'message-search', listener: (payload: { roomId: number; query: string; results: Array<SanitizedMessage> }) => any): this;
     on(event: 'message-edit', listener: (message: SanitizedMessage) => any): this;
     on(event: 'message-seen', listener: (data: { user: number; data: any }) => any): this;
     on(event: 'mention', listener: (mention: { roomId: number; identifier: string; messageId: number }) => any): this;

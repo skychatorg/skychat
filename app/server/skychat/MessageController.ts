@@ -16,6 +16,45 @@ export type MessageDBRow = {
 };
 
 export class MessageController {
+    private static async buildMessagesFromRows(messageRows: MessageDBRow[]): Promise<Message[]> {
+        const messages: Message[] = [];
+        const users: any = {}; // User cache object to avoid non-necessary db queries
+        for (const messageRow of messageRows) {
+            try {
+                if (!messageRow.user_id) {
+                    throw new Error('User not found');
+                }
+                users[messageRow.user_id] = users[messageRow.user_id] || (await UserController.getUserById(messageRow.user_id));
+            } catch (error) {
+                users[messageRow.user_id] = UserController.getNeutralUser('Guest');
+            }
+            let storage: MessageStorage | undefined;
+            try {
+                storage = JSON.parse(messageRow.storage);
+            } catch (error) {
+                Logging.error('Failed to parse message storage', error);
+                storage = {};
+            }
+            const encrypted = typeof storage?.e2ee !== 'undefined';
+            messages.push(
+                new Message({
+                    id: messageRow.id,
+                    room: messageRow.room_id,
+                    content: messageRow.content,
+                    createdTime: new Date(messageRow.date),
+                    user: users[messageRow.user_id],
+                    storage,
+                    meta: {
+                        _quoted_message_id: messageRow.quoted_message_id,
+                        encrypted,
+                        encryptionLabel: encrypted ? (storage?.e2ee as any)?.label ?? null : null,
+                    },
+                }),
+            );
+        }
+        return messages;
+    }
+
     static async getMessageById(id: number, fetchQuote: boolean): Promise<Message> {
         const message = (await MessageController.getMessages(['id', '=', id]))[0];
         if (!message) {
@@ -59,41 +98,21 @@ export class MessageController {
         }
         // Get messages from db and build instances
         const messageRows: MessageDBRow[] = (await DatabaseHelper.db.query(sqlQuery)).rows;
-        const messages: Message[] = [];
-        const users: any = {}; // User cache object to avoid non-necessary db queries
-        for (const messageRow of messageRows) {
-            try {
-                if (!messageRow.user_id) {
-                    throw new Error('User not found');
-                }
-                users[messageRow.user_id] = users[messageRow.user_id] || (await UserController.getUserById(messageRow.user_id));
-            } catch (error) {
-                users[messageRow.user_id] = UserController.getNeutralUser('Guest');
-            }
-            let storage: MessageStorage | undefined;
-            try {
-                storage = JSON.parse(messageRow.storage);
-            } catch (error) {
-                Logging.error('Failed to parse message storage', error);
-                storage = {};
-            }
-            const encrypted = typeof storage?.e2ee !== 'undefined';
-            messages.push(
-                new Message({
-                    id: messageRow.id,
-                    room: messageRow.room_id,
-                    content: messageRow.content,
-                    createdTime: new Date(messageRow.date),
-                    user: users[messageRow.user_id],
-                    storage,
-                    meta: {
-                        _quoted_message_id: messageRow.quoted_message_id,
-                        encrypted,
-                        encryptionLabel: encrypted ? (storage?.e2ee as any)?.label ?? null : null,
-                    },
-                }),
-            );
-        }
-        return messages;
+        return MessageController.buildMessagesFromRows(messageRows);
+    }
+
+    static async searchMessages(roomId: number, query: string, limit: number): Promise<Message[]> {
+        const escapedQuery = query.replace(/[%_]/g, '\\$&');
+        const likeQuery = `%${escapedQuery}%`;
+        const sqlQuery = SQL`
+            select id, room_id, user_id, quoted_message_id, date, content, ip, storage
+            from messages
+            where room_id = ${roomId} and content ILIKE ${likeQuery} ESCAPE '\\'
+            order by id DESC
+            limit ${limit}
+        `;
+
+        const messageRows: MessageDBRow[] = (await DatabaseHelper.db.query(sqlQuery)).rows;
+        return MessageController.buildMessagesFromRows(messageRows);
     }
 }
