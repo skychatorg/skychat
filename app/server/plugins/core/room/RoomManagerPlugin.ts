@@ -4,6 +4,7 @@ import { Room } from '../../../skychat/Room.js';
 import { Session } from '../../../skychat/Session.js';
 import { UserController } from '../../../skychat/UserController.js';
 import { RoomPlugin } from '../../RoomPlugin.js';
+import { RoomProtectPlugin } from '../../security_extra/RoomProtectPlugin.js';
 
 export class RoomManagerPlugin extends RoomPlugin {
     static readonly commandName = 'room';
@@ -19,7 +20,7 @@ export class RoomManagerPlugin extends RoomPlugin {
         roomset: {
             minCount: 2,
             params: [
-                { name: 'property', pattern: /^(name|shiny)$/ },
+                { name: 'property', pattern: /^(name|main)$/ },
                 { name: 'value', pattern: /.?/ },
             ],
         },
@@ -81,12 +82,33 @@ export class RoomManagerPlugin extends RoomPlugin {
                 this.room.name = value;
                 break;
 
-            case 'shiny': {
-                if (!value) {
-                    throw new Error('Missing shiny value (true/false)');
+            case 'main': {
+                if (value !== 'true') {
+                    throw new Error('Use /roomset main true to set this room as main. To change main room, run this command in another room.');
                 }
-                Logging.info('Setting shiny to', value === 'true', 'for', this.room.id);
-                this.room.shiny = value === 'true';
+
+                // Validate: must be a public room
+                if (this.room.isPrivate) {
+                    throw new Error('Only public rooms can be set as the main room');
+                }
+
+                // Unset any existing main room
+                for (const room of this.room.manager.rooms) {
+                    if (room.main && room.id !== this.room.id) {
+                        room.main = false;
+                        Logging.info('Unsetting main for room', room.id);
+                    }
+                }
+
+                // Auto-disable RoomProtect if enabled
+                const roomProtectPlugin = this.room.getPlugin<RoomProtectPlugin>(RoomProtectPlugin.commandName);
+                if (roomProtectPlugin && roomProtectPlugin.getMinRight() > -1) {
+                    roomProtectPlugin.disableProtection();
+                    Logging.info('Auto-disabled RoomProtect for main room', this.room.id);
+                }
+
+                Logging.info('Setting main to true for', this.room.id);
+                this.room.main = true;
                 break;
             }
 

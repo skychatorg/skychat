@@ -1,7 +1,7 @@
+import { Connection } from '../../skychat/Connection.js';
+import { Room } from '../../skychat/Room.js';
 import { UserController } from '../../skychat/UserController.js';
 import { RoomPlugin } from '../RoomPlugin.js';
-import { Room } from '../../skychat/Room.js';
-import { Connection } from '../../skychat/Connection.js';
 
 export class RoomProtectPlugin extends RoomPlugin {
     static readonly commandName = 'roomprotect';
@@ -40,6 +40,11 @@ export class RoomProtectPlugin extends RoomPlugin {
         return this.storage === null ? -1 : this.storage;
     }
 
+    public disableProtection() {
+        this.storage = null;
+        this.syncStorage();
+    }
+
     public getRoomSummary() {
         return this.storage;
     }
@@ -48,6 +53,9 @@ export class RoomProtectPlugin extends RoomPlugin {
         if (param === 'off') {
             this.storage = null;
         } else if (!isNaN(parseInt(param, 10))) {
+            if (this.room.main) {
+                throw new Error('Cannot set protection on the main room');
+            }
             this.storage = parseInt(param, 10);
         }
         this.syncStorage();

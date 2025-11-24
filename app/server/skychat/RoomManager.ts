@@ -39,7 +39,9 @@ export class RoomManager {
         this.load();
 
         if (this.rooms.length === 0) {
-            this.rooms.push(new Room(this, false));
+            const room = new Room(this, false);
+            room.main = true;
+            this.rooms.push();
         }
     }
 

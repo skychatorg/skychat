@@ -37,9 +37,9 @@ defineProps({
     },
 
     /**
-     * Whether the border should animate with a shiny effect
+     * Whether this is the main room (shows animated border)
      */
-    shiny: {
+    main: {
         type: Boolean,
         required: false,
         default: () => false,
@@ -53,7 +53,7 @@ defineProps({
         :class="{
             selectable: selectable,
             selected: selected,
-            shiny: shiny && !selected,
+            main: main && !selected,
         }"
     >
         <div class="colored-border"></div>
@@ -94,7 +94,7 @@ defineProps({
 .hover-card.selected > .content {
     background-color: rgb(var(--color-skygray-light));
 }
-.hover-card.shiny > .colored-border {
+.hover-card.main > .colored-border {
     background-image: linear-gradient(
         120deg,
         rgb(var(--color-primary)),
@@ -102,10 +102,10 @@ defineProps({
         rgb(var(--color-secondary))
     );
     background-size: 300% 300%;
-    animation: hover-card-shiny 2.5s linear infinite;
+    animation: hover-card-main 2.5s linear infinite;
     box-shadow: 0 0 6px rgba(var(--color-primary), 0.6);
 }
-@keyframes hover-card-shiny {
+@keyframes hover-card-main {
     0% {
         background-position: 0% 50%;
     }

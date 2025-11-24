@@ -7,6 +7,7 @@ import { Plugin } from './Plugin.js';
 export type PluginRoute = {
     method: 'get' | 'post' | 'put' | 'delete';
     path: string;
+    // eslint-disable-next-line no-unused-vars
     handler: (req: express.Request, res: express.Response) => Promise<void>;
 };
 
@@ -76,6 +77,7 @@ export abstract class GlobalPlugin extends Plugin {
  * Defines default constructor for a global plugin (required for TypeScript)
  */
 export interface GlobalPluginConstructor {
+    // eslint-disable-next-line no-unused-vars
     new (manager: RoomManager): GlobalPlugin;
     commandName: string;
     commandAliases: string[];
