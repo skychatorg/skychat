@@ -1,6 +1,5 @@
-import { spawn } from 'child_process';
-import { exec as oldExec } from 'node:child_process';
-import util from 'util';
+import { execFile, spawn } from 'child_process';
+import { promisify } from 'util';
 import { Config } from '../../skychat/Config.js';
 import { Connection } from '../../skychat/Connection.js';
 import { FileManager } from '../../skychat/FileManager.js';
@@ -8,7 +7,7 @@ import { Session } from '../../skychat/Session.js';
 import { GlobalPlugin } from '../GlobalPlugin.js';
 import { Gallery } from './Gallery.js';
 
-const exec = util.promisify(oldExec);
+const execFileAsync = promisify(execFile);
 
 export type VideoStreamInfo = Array<{
     index: number;
@@ -119,7 +118,8 @@ export class VideoConverterPlugin extends GlobalPlugin {
             throw new Error(`File ${filePath} does not exist`);
         }
         const streams = await this.getVideoStreamInfo(filePath);
-        let command = `ffmpeg -i ${Gallery.BASE_PATH + filePath} -y`;
+        const inputPath = Gallery.BASE_PATH + filePath;
+        const args: string[] = ['-i', inputPath, '-y'];
         for (const index of streamIndexes) {
             // Get corresponding stream
             const stream = streams.find((stream) => stream.index === index);
@@ -127,14 +127,14 @@ export class VideoConverterPlugin extends GlobalPlugin {
                 throw new Error(`Stream #${index} does not exist`);
             }
             if (['Video', 'Audio'].includes(stream.type)) {
-                command += ` -map 0:${stream.index}`;
+                args.push('-map', `0:${stream.index}`);
             } else if (stream.type === 'Subtitle') {
-                command += ` -vf subtitles=${filePath}:stream_index=${stream.index}`;
+                args.push('-vf', `subtitles=${inputPath}:stream_index=${stream.index}`);
             }
         }
         // -pix_fmt yuv420p
         const target = `${Gallery.BASE_PATH + filePath.replace(/\.[a-z0-9]$/, '')}-${streamIndexes.join('-')}.mp4`;
-        command += target;
+        args.push(target);
         const convert: OngoingConvert = {
             status: 'converting',
             source: filePath,
@@ -144,7 +144,7 @@ export class VideoConverterPlugin extends GlobalPlugin {
             lastUpdate: null,
         };
         this.converts.push(convert);
-        const process = spawn(command.split(' ')[0], command.split(' ').slice(1));
+        const process = spawn('ffmpeg', args);
         // ffmpeg sends data on stderr
         process.stderr.on('data', (data) => {
             const line = data.toString().trim();
@@ -172,11 +172,18 @@ export class VideoConverterPlugin extends GlobalPlugin {
     }
 
     async getVideoStreamInfo(filePath: string): Promise<VideoStreamInfo> {
-        const { stdout } = await exec(`ffmpeg -i ${Gallery.BASE_PATH + filePath} 2>&1 | grep "Stream #"`);
-        return stdout
+        const inputPath = Gallery.BASE_PATH + filePath;
+        // ffmpeg -i exits with code 1 but still outputs stream info to stderr
+        let stderr = '';
+        try {
+            await execFileAsync('ffmpeg', ['-i', inputPath]);
+        } catch (err: any) {
+            stderr = err.stderr || '';
+        }
+        return stderr
             .split('\n')
             .map((line: string) => line.trim())
-            .filter((line: string) => !!line && line.startsWith('Stream #'))
+            .filter((line: string) => line.startsWith('Stream #'))
             .map((streamInfo: string) => {
                 const [, index, lang, type, info] = streamInfo.match(/^Stream #0:(\d+)([^:]+)?: ([^:]+): (.*)$/) || [];
                 return {

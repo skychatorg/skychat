@@ -16,6 +16,40 @@ export type MessageDBRow = {
 };
 
 export class MessageController {
+    // Valid columns for ORDER BY clause
+    private static readonly ALLOWED_ORDER_COLUMNS = ['id', 'room_id', 'user_id', 'date'];
+    private static readonly ALLOWED_ORDER_DIRECTIONS = ['ASC', 'DESC'];
+
+    /**
+     * Validate and sanitize ORDER BY clause to prevent SQL injection
+     */
+    private static validateOrderClause(order: string): string {
+        const parts = order.trim().split(/\s+/);
+        if (parts.length < 1 || parts.length > 2) {
+            throw new Error('Invalid order clause format');
+        }
+        const column = parts[0].toLowerCase();
+        const direction = parts.length > 1 ? parts[1].toUpperCase() : 'ASC';
+        if (!MessageController.ALLOWED_ORDER_COLUMNS.includes(column)) {
+            throw new Error(`Invalid order column: ${column}`);
+        }
+        if (!MessageController.ALLOWED_ORDER_DIRECTIONS.includes(direction)) {
+            throw new Error(`Invalid order direction: ${direction}`);
+        }
+        return `${column} ${direction}`;
+    }
+
+    /**
+     * Validate limit as a positive integer
+     */
+    private static validateLimit(limit: number): number {
+        const parsed = Math.floor(limit);
+        if (!Number.isFinite(parsed) || parsed < 1 || parsed > 10000) {
+            throw new Error('Invalid limit value');
+        }
+        return parsed;
+    }
+
     private static async buildMessagesFromRows(messageRows: MessageDBRow[]): Promise<Message[]> {
         const messages: Message[] = [];
         // Batch load all users in a single query
@@ -84,13 +118,15 @@ export class MessageController {
                 sqlQuery = sqlQuery.append('AND ');
             }
         }
-        // Order by
+        // Order by (validated to prevent SQL injection)
         if (order) {
-            sqlQuery = sqlQuery.append('order by ' + order + ' ');
+            const validatedOrder = MessageController.validateOrderClause(order);
+            sqlQuery = sqlQuery.append('order by ' + validatedOrder + ' ');
         }
-        // Limit
+        // Limit (validated to prevent SQL injection)
         if (limit) {
-            sqlQuery = sqlQuery.append('limit ' + limit + ' ');
+            const validatedLimit = MessageController.validateLimit(limit);
+            sqlQuery = sqlQuery.append('limit ' + validatedLimit + ' ');
         }
         // Get messages from db and build instances
         const messageRows: MessageDBRow[] = (await DatabaseHelper.db.query(sqlQuery)).rows;

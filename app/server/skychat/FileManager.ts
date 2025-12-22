@@ -1,9 +1,12 @@
 import * as fileUpload from 'express-fileupload';
 import fs from 'fs';
+import { execFile } from 'child_process';
+import { promisify } from 'util';
 import { RandomGenerator } from './RandomGenerator.js';
 import { MessageFormatter } from './MessageFormatter.js';
 import { Config } from './Config.js';
-import { ShellHelper } from './ShellHelper.js';
+
+const execFileAsync = promisify(execFile);
 
 export class FileManager {
     static getNewFileLocation(extension: string): string {
@@ -84,13 +87,11 @@ export class FileManager {
 
     /**
      * Get a locally stored video duration in ms
-     * @param path
-     * @returns
      */
     static async getVideoDuration(path: string): Promise<number> {
-        const cmd = `ffprobe -v error -show_format -show_streams ${path} | grep 'duration=' | grep -v 'N/A' | head -n 1 | cut -d'=' -f2`;
-        const { stdout } = await ShellHelper.exec(cmd);
-        return parseFloat(stdout.trim()) * 1000;
+        const { stdout } = await execFileAsync('ffprobe', ['-v', 'error', '-show_format', '-show_streams', path]);
+        const durationLine = stdout.split('\n').find((line) => line.startsWith('duration=') && !line.includes('N/A'));
+        return durationLine ? parseFloat(durationLine.split('=')[1]) * 1000 : 0;
     }
 
     static getFileExtension(pathOrUrl: string): string {
