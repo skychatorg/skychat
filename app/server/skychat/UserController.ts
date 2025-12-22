@@ -90,6 +90,22 @@ export class UserController {
     }
 
     /**
+     * Get multiple users by their IDs in a single query
+     */
+    public static async getUsersByIds(userIds: number[]): Promise<Map<number, User>> {
+        const userMap = new Map<number, User>();
+        if (userIds.length === 0) {
+            return userMap;
+        }
+        const placeholders = userIds.map((_, i) => `$${i + 1}`).join(', ');
+        const result = await DatabaseHelper.db.query(`SELECT * FROM users WHERE id IN (${placeholders})`, userIds);
+        for (const row of result.rows) {
+            userMap.set(row.id, this.userRowToObject(row));
+        }
+        return userMap;
+    }
+
+    /**
      * Get all users
      */
     public static async getAllUsers(): Promise<User[]> {

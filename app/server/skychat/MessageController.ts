@@ -18,16 +18,12 @@ export type MessageDBRow = {
 export class MessageController {
     private static async buildMessagesFromRows(messageRows: MessageDBRow[]): Promise<Message[]> {
         const messages: Message[] = [];
-        const users: any = {}; // User cache object to avoid non-necessary db queries
+        // Batch load all users in a single query
+        const userIds = [...new Set(messageRows.map((r) => r.user_id).filter(Boolean))];
+        const userMap = await UserController.getUsersByIds(userIds);
         for (const messageRow of messageRows) {
-            try {
-                if (!messageRow.user_id) {
-                    throw new Error('User not found');
-                }
-                users[messageRow.user_id] = users[messageRow.user_id] || (await UserController.getUserById(messageRow.user_id));
-            } catch (error) {
-                users[messageRow.user_id] = UserController.getNeutralUser('Guest');
-            }
+            const user = messageRow.user_id ? userMap.get(messageRow.user_id) : undefined;
+            const resolvedUser = user || UserController.getNeutralUser('Guest');
             let storage: MessageStorage | undefined;
             try {
                 storage = JSON.parse(messageRow.storage);
@@ -42,7 +38,7 @@ export class MessageController {
                     room: messageRow.room_id,
                     content: messageRow.content,
                     createdTime: new Date(messageRow.date),
-                    user: users[messageRow.user_id],
+                    user: resolvedUser,
                     storage,
                     meta: {
                         _quoted_message_id: messageRow.quoted_message_id,

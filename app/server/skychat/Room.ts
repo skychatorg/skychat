@@ -449,6 +449,8 @@ export class Room implements IBroadcaster {
         }
         let message = new Message(options);
         message = await this.executeOnBeforeMessageBroadcastHook(message, options.connection);
+        // Serialize once before broadcasting to all connections
+        const sanitizedMessage = message.sanitized();
         // Send it to clients
         for (const receiver of this.connections) {
             // If receiver was blacklisted by sender, do not send the message
@@ -459,7 +461,7 @@ export class Room implements IBroadcaster {
             ) {
                 continue;
             }
-            receiver.send('message', message.sanitized());
+            receiver.send('message', sanitizedMessage);
         }
         // Add it to history
         this.messages.push(message);
