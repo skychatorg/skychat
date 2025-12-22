@@ -19,10 +19,42 @@ const pickerRef = ref(null);
 const searchInputRef = ref(null);
 
 const MAX_RESULTS = 50;
+const LAST_USED_STORAGE_KEY = 'reaction-last-used';
+
+const lastUsedMap = ref({});
+
+const loadLastUsed = () => {
+    try {
+        const stored = localStorage.getItem(LAST_USED_STORAGE_KEY);
+        if (stored) {
+            lastUsedMap.value = JSON.parse(stored);
+        }
+    } catch {
+        lastUsedMap.value = {};
+    }
+};
+
+const saveLastUsed = (code) => {
+    lastUsedMap.value[code] = Date.now();
+    try {
+        localStorage.setItem(LAST_USED_STORAGE_KEY, JSON.stringify(lastUsedMap.value));
+    } catch {
+        // Ignore storage errors
+    }
+};
 
 const stickerEntries = computed(() => {
     const stickers = client.state.stickers || {};
-    return Object.entries(stickers).sort(([a], [b]) => a.localeCompare(b));
+    const used = lastUsedMap.value;
+    return Object.entries(stickers).sort(([a], [b]) => {
+        const aTime = used[a] || 0;
+        const bTime = used[b] || 0;
+        // Sort by last-used descending, then alphabetically
+        if (aTime !== bTime) {
+            return bTime - aTime;
+        }
+        return a.localeCompare(b);
+    });
 });
 
 const stickerLookup = computed(() => {
@@ -107,6 +139,7 @@ const sendReaction = (code) => {
     if (!code) {
         return;
     }
+    saveLastUsed(code);
     client.sendMessage(`/reaction ${props.messageId} ${code}`);
     closePicker();
 };
@@ -131,6 +164,7 @@ const onDocumentClick = (event) => {
 };
 
 onMounted(() => {
+    loadLastUsed();
     document.addEventListener('click', onDocumentClick);
 });
 
@@ -163,41 +197,41 @@ watch(pickerOpen, (open) => {
             <fa icon="thumbs-up" />
         </button>
 
-            <div
-                v-if="pickerOpen"
-                class="absolute right-0 bottom-full mb-2 z-10 w-64 sm:w-72 rounded-xl border border-skygray-light/50 bg-slate-800/95 p-3 shadow-xl"
-            >
-                <label class="sr-only" for="reaction-search-input">Search stickers</label>
-                <input
-                    id="reaction-search-input"
-                    ref="searchInputRef"
-                    v-model="searchQuery"
-                    type="text"
-                    placeholder="Search sticker by code"
-                    class="w-full rounded-md border border-skygray-light/30 bg-slate-900/70 px-2 py-1 text-sm text-white placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
-                    @keydown.enter.prevent="onSubmitSearch"
-                    @keydown.esc.prevent="closePicker"
-                />
-                <p class="mt-1 text-[11px] text-slate-400">Showing up to {{ MAX_RESULTS }} results</p>
+        <div
+            v-if="pickerOpen"
+            class="absolute right-0 bottom-full mb-2 z-10 w-64 sm:w-72 rounded-xl border border-skygray-light/50 bg-slate-800/95 p-3 shadow-xl"
+        >
+            <label class="sr-only" for="reaction-search-input">Search stickers</label>
+            <input
+                id="reaction-search-input"
+                ref="searchInputRef"
+                v-model="searchQuery"
+                type="text"
+                placeholder="Search sticker by code"
+                class="w-full rounded-md border border-skygray-light/30 bg-slate-900/70 px-2 py-1 text-sm text-white placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+                @keydown.enter.prevent="onSubmitSearch"
+                @keydown.esc.prevent="closePicker"
+            />
+            <p class="mt-1 text-[11px] text-slate-400">Showing up to {{ MAX_RESULTS }} results</p>
 
-                <div v-if="filteredStickers.length" class="mt-2 max-h-60 overflow-y-auto pr-1">
-                    <ul class="grid grid-cols-3 gap-2 sm:grid-cols-4">
-                        <li v-for="[code, url] in filteredStickers" :key="code">
-                            <button
-                                type="button"
-                                class="flex h-full w-full flex-col items-center gap-1 rounded-md border border-transparent bg-slate-900/40 px-2 py-2 text-[11px] text-white transition hover:border-primary/50 hover:bg-slate-900/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
-                                @click="sendReaction(code)"
-                            >
-                                <img :src="url" :alt="code" class="h-10 w-10 object-contain" loading="lazy" />
-                                <span class="w-full truncate text-center">{{ code }}</span>
-                            </button>
-                        </li>
-                    </ul>
-                </div>
-                <div v-else class="mt-3 rounded-md bg-slate-900/60 px-3 py-2 text-center text-xs text-slate-300">
-                    <span v-if="hasStickers">No stickers match your search</span>
-                    <span v-else>No stickers are available on this instance yet</span>
-                </div>
+            <div v-if="filteredStickers.length" class="mt-2 max-h-60 overflow-y-auto pr-1">
+                <ul class="grid grid-cols-3 gap-2 sm:grid-cols-4">
+                    <li v-for="[code, url] in filteredStickers" :key="code">
+                        <button
+                            type="button"
+                            class="flex h-full w-full flex-col items-center gap-1 rounded-md border border-transparent bg-slate-900/40 px-2 py-2 text-[11px] text-white transition hover:border-primary/50 hover:bg-slate-900/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+                            @click="sendReaction(code)"
+                        >
+                            <img :src="url" :alt="code" class="h-10 w-10 object-contain" loading="lazy" />
+                            <span class="w-full truncate text-center">{{ code }}</span>
+                        </button>
+                    </li>
+                </ul>
             </div>
+            <div v-else class="mt-3 rounded-md bg-slate-900/60 px-3 py-2 text-center text-xs text-slate-300">
+                <span v-if="hasStickers">No stickers match your search</span>
+                <span v-else>No stickers are available on this instance yet</span>
+            </div>
+        </div>
     </div>
 </template>
