@@ -276,10 +276,7 @@ export const useAppStore = defineStore('app', {
 
                         // Show browser notification
                         if (mention && mention.identifier) {
-                            showBrowserNotification(
-                                `@${mention.identifier} mentioned you`,
-                                'You have been mentioned in SkyChat',
-                            );
+                            showBrowserNotification(`@${mention.identifier} mentioned you`, 'You have been mentioned in SkyChat');
                         }
                     }
                 },
