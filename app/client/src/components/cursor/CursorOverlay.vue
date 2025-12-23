@@ -1,10 +1,8 @@
 <script setup>
 import UserMiniAvatar from '@/components/user/UserMiniAvatar.vue';
-import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
 import { computed, onMounted, ref } from 'vue';
 
-const app = useAppStore();
 const client = useClientStore();
 
 const CURSOR_POSITION_DELAY_MS = 150;
@@ -75,6 +73,16 @@ const isEaster = computed(() => {
     const sameDay = (a, b) => a.getDate() === b.getDate() && a.getMonth() === b.getMonth() && a.getFullYear() === b.getFullYear();
     return sameDay(today, easterSaturday) || sameDay(today, easterSunday) || sameDay(today, easterMonday);
 });
+
+const isChristmas = computed(() => {
+    /**
+     * Return whether today is Christmas period (Dec 24-26)
+     */
+    const today = new Date();
+    const month = today.getMonth(); // 0-indexed, so December = 11
+    const day = today.getDate();
+    return month === 11 && day >= 24 && day <= 26;
+});
 </script>
 
 <template>
@@ -87,7 +95,10 @@ const isEaster = computed(() => {
                 transform: `translate(${entry.cursor.x * 100}vw, ${entry.cursor.y * 100}vh)`,
             }"
         >
-            <template v-if="isEaster">
+            <template v-if="isChristmas">
+                <span class="absolute top-0 left-0 text-4xl">🎅</span>
+            </template>
+            <template v-else-if="isEaster">
                 <fa icon="fa-solid fa-egg" class="absolute top-0 left-0 text-primary text-4xl" />
             </template>
             <template v-else>
