@@ -34,6 +34,7 @@ export type Preferences = {
 export type PublicConfig = {
     galleryEnabled: boolean;
     minRightForStickerManagement: number | 'op';
+    minRightForMessageHistory: number;
 };
 
 export class Config {
@@ -63,6 +64,7 @@ export class Config {
         return {
             galleryEnabled: Boolean(process.env.ENABLED_PLUGINS?.includes('GalleryPluginGroup')),
             minRightForStickerManagement: Config.PREFERENCES.minRightForStickerManagement,
+            minRightForMessageHistory: Config.PREFERENCES.minRightForMessageHistory,
         };
     }
 

@@ -1,3 +1,4 @@
+import { Config } from '../../../skychat/Config.js';
 import { Connection } from '../../../skychat/Connection.js';
 import { MessageController } from '../../../skychat/MessageController.js';
 import { RoomPlugin } from '../../RoomPlugin.js';
@@ -23,6 +24,10 @@ export class MessageSearchPlugin extends RoomPlugin {
 
         if (!connection.room) {
             throw new Error('You need to join a room before searching messages');
+        }
+
+        if (connection.session.user.right < Config.PREFERENCES.minRightForMessageHistory) {
+            throw new Error('You do not have the permission to search messages');
         }
 
         if (!query) {

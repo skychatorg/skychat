@@ -24,6 +24,12 @@ const canManageStickers = computed(() => {
     return client.state.op || userRight >= threshold;
 });
 
+const canSearchMessages = computed(() => {
+    const threshold = client.state.config?.minRightForMessageHistory ?? -1;
+    const userRight = client.state.user?.right ?? -1;
+    return client.state.op || userRight >= threshold;
+});
+
 const currentRoomName = computed(() => client.state.currentRoom?.name ?? 'this room');
 
 const runSearch = () => {
@@ -70,7 +76,7 @@ const clearSearch = () => {
         >
             <PlayerPannel v-if="client.state.currentPlayerChannel" class="bg-skygray-lighter/5 backdrop-blur-2xl backdrop-brightness-125" />
             <PollList class="bg-skygray-lighter/5 backdrop-blur-2xl backdrop-brightness-125" />
-            <div class="px-3 py-1 flex justify-end bg-skygray-lighter/5 backdrop-blur-2xl backdrop-brightness-125">
+            <div v-if="canSearchMessages" class="px-3 py-1 flex justify-end bg-skygray-lighter/5 backdrop-blur-2xl backdrop-brightness-125">
                 <form class="flex gap-1.5 items-center text-sm" @submit.prevent="runSearch">
                     <button
                         v-if="client.messageSearch.query || client.messageSearchLoading"
