@@ -291,8 +291,13 @@ export class DiscordPresencePlugin extends GlobalPlugin {
 
             const data = await response.json();
 
-            // Count users in voice channels
-            const voiceCount = data.members.filter((member: any) => Boolean(member.channel_id)).length;
+            // Count users in voice channels, excluding private/hidden channels
+            const excludedChannelIds = new Set(
+                (process.env.DISCORD_EXCLUDED_CHANNEL_IDS || '').split(',').map((id: string) => id.trim()).filter(Boolean),
+            );
+            const voiceCount = data.members.filter(
+                (member: any) => Boolean(member.channel_id) && !excludedChannelIds.has(member.channel_id),
+            ).length;
 
             // Update online Discord usernames (widget anonymizes IDs, so we match by username)
             this.onlineDiscordUsernames = new Set(data.members.map((member: any) => (member.username as string).toLowerCase()));
