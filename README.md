@@ -55,7 +55,7 @@ Plugins are grouped in so-called `PluginGroup` instances. It is possible to disa
 | name                     | removable | description                                                                                                                 |
 | ------------------------ | --------- | --------------------------------------------------------------------------------------------------------------------------- |
 | CorePluginGroup          | ❌        | Basic features for the SkyChat to run properly                                                                              |
-| PlayerPluginGroup        | ✅        | Shared player functionnality                                                                                                |
+| PlayerPluginGroup        | ✅        | Shared player functionality                                                                                                 |
 | GamesPluginGroup         | ✅        | All the fun features, live cursor visualization and mini games                                                              |
 | ExtraSecurityPluginGroup | ✅        | Log fuzzer, TOR auto-ban, IP history tracker, user usurp command                                                            |
 | GalleryPluginGroup       | ✅        | Gallery for self-hosted medias                                                                                              |
