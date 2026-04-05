@@ -26,13 +26,13 @@ export class SkyChatServer {
         this.roomManager = new RoomManager(this.pluginManager);
     }
 
-    start() {
+    async start() {
         Logging.info('Starting services');
         this.httpServer.start();
         this.authBridge.start();
         this.pluginManager.start(this.roomManager);
         this.httpServer.registerPluginRoutes(this.pluginManager.plugins);
-        this.roomManager.start();
+        await this.roomManager.start();
 
         this.authBridge.on('connection-accepted', this.onConnectionAccepted.bind(this));
     }

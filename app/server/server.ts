@@ -8,5 +8,5 @@ import { SkyChatServer } from './skychat/SkyChatServer.js';
 
     Logging.info('Starting server');
     const skyChatServer = new SkyChatServer();
-    skyChatServer.start();
+    await skyChatServer.start();
 })();

@@ -56,7 +56,7 @@ export class RoomManagerPlugin extends RoomPlugin {
             throw new Error('Only OP can create public rooms');
         }
         const roomName = param.trim();
-        const room = this.room.manager.createRoom(roomName);
+        const room = await this.room.manager.createRoom(roomName);
         const message = UserController.createNeutralMessage({ id: 0, content: `Room ${room.id} has been created` });
         connection.send('message', message.sanitized());
     }
@@ -80,6 +80,7 @@ export class RoomManagerPlugin extends RoomPlugin {
         switch (property) {
             case 'name':
                 this.room.name = value;
+                this.room.markDirty();
                 break;
 
             case 'main': {
@@ -96,6 +97,7 @@ export class RoomManagerPlugin extends RoomPlugin {
                 for (const room of this.room.manager.rooms) {
                     if (room.main && room.id !== this.room.id) {
                         room.main = false;
+                        room.markDirty();
                         Logging.info('Unsetting main for room', room.id);
                     }
                 }
@@ -109,6 +111,7 @@ export class RoomManagerPlugin extends RoomPlugin {
 
                 Logging.info('Setting main to true for', this.room.id);
                 this.room.main = true;
+                this.room.markDirty();
                 break;
             }
 

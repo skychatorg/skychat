@@ -36,6 +36,27 @@ CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
 -- Add trigram index on content for fast ILIKE queries
 CREATE INDEX IF NOT EXISTS messages_content_trgm_idx ON messages USING GIN (content gin_trgm_ops);
+
+CREATE TABLE IF NOT EXISTS rooms (
+  id SERIAL PRIMARY KEY,
+  name varchar(256) NOT NULL,
+  "order" int DEFAULT 0 NOT NULL,
+  plugin_group_names jsonb DEFAULT '["core"]'::jsonb NOT NULL,
+  is_private boolean DEFAULT false NOT NULL,
+  whitelist jsonb DEFAULT '[]'::jsonb NOT NULL,
+  is_main boolean DEFAULT false NOT NULL,
+  created_at timestamptz DEFAULT NOW() NOT NULL,
+  updated_at timestamptz DEFAULT NOW() NOT NULL,
+  deleted_at timestamptz DEFAULT NULL
+);
+
+-- Partial index: only query active rooms
+CREATE INDEX IF NOT EXISTS rooms_active_idx ON rooms (id) WHERE deleted_at IS NULL;
+
+CREATE TABLE IF NOT EXISTS state_counters (
+  key varchar(64) PRIMARY KEY,
+  value int NOT NULL
+);
 `;
 
 /**

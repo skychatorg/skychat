@@ -1,31 +1,27 @@
 import fs from 'fs';
 import { GlobalPlugin } from '../plugins/GlobalPlugin.js';
+import { CorePluginGroup } from '../plugins/index.js';
 import { Connection } from './Connection.js';
+import { DatabaseHelper } from './DatabaseHelper.js';
 import { Logging } from './Logging.js';
 import { Message } from './Message.js';
 import { PluginManager } from './PluginManager.js';
-import { Room } from './Room.js';
+import { Room, StoredRoom } from './Room.js';
+import { RoomController } from './RoomController.js';
 import { Session } from './Session.js';
 import { UserController } from './UserController.js';
 
-export type StoredSkyChat = {
+type StoredSkyChat = {
     guestId: number;
     messageId: number;
     roomId: number;
     rooms: number[];
 };
 
-/**
- * The room manager
- */
 export class RoomManager {
-    static readonly STORAGE_MAIN_FILE: string = 'storage/main.json';
-
     private static TICK_INTERVAL: number = 5 * 1000;
 
     private static FULL_SYNC_INTERVAL = 60 * 1000;
-
-    private static CURRENT_GUEST_ID = 0;
 
     readonly pluginManager: PluginManager;
 
@@ -33,27 +29,29 @@ export class RoomManager {
 
     constructor(pluginManager: PluginManager) {
         this.pluginManager = pluginManager;
-
-        // Try to load this instance's settings from storage
-        // Load rooms from storage
-        this.load();
-
-        if (this.rooms.length === 0) {
-            const room = new Room(this, false);
-            room.main = true;
-            this.rooms.push();
-        }
     }
 
     async start() {
+        // Load rooms from database (migrating from disk if needed)
+        await this.loadFromDB();
+
+        // Ensure at least one room exists
+        if (this.rooms.length === 0) {
+            const room = await this.createRoom('Room 1');
+            room.main = true;
+            room.markDirty();
+            await room.saveToDB();
+        }
+
         // Periodically send the room list to users
         setInterval(() => {
             Object.values(Session.sessions).map((session) => this.sendRoomList(session));
         }, RoomManager.FULL_SYNC_INTERVAL);
 
+        // Periodically save counters
         setInterval(this.tick.bind(this), RoomManager.TICK_INTERVAL);
 
-        // Load last messages from all rooms (do not wait on it)
+        // Load last messages from all rooms
         await Promise.all(this.rooms.map((room) => room.loadLastMessagesFromDB()));
 
         // Get all user ids from all rooms (and their associated last message date)
@@ -85,63 +83,119 @@ export class RoomManager {
     }
 
     /**
-     * Try to load the room manager data from disk
+     * Load rooms from the database. If the DB is empty and disk files exist, migrate first.
      */
-    private load(): void {
-        if (!fs.existsSync(RoomManager.STORAGE_MAIN_FILE)) {
-            this.save();
-            return;
+    private async loadFromDB(): Promise<void> {
+        const hasRooms = await RoomController.hasRooms();
+        const diskFilesExist = fs.existsSync('storage/main.json');
+
+        if (!hasRooms && diskFilesExist) {
+            await this.migrateFromDisk();
+        } else if (hasRooms && diskFilesExist) {
+            throw new Error(
+                'Inconsistent state: storage/main.json exists but database already contains rooms. ' +
+                    'Remove storage/main.json (and storage/rooms/) if migration already succeeded, ' +
+                    'or clear the rooms table to re-migrate.',
+            );
         }
 
-        // Load data from disk
-        const data = JSON.parse(fs.readFileSync(RoomManager.STORAGE_MAIN_FILE).toString()) as StoredSkyChat;
+        // Load message ID counter
+        const messageId = await RoomController.getMessageIdCounter();
+        if (messageId !== null) {
+            Message.ID = messageId;
+        }
 
-        // Register ids
-        RoomManager.CURRENT_GUEST_ID = data.guestId || 0;
-        Message.ID = data.messageId || 0;
-        Room.CURRENT_ID = data.roomId || 1;
-
-        // Create rooms
-        const rooms = data.rooms || [1];
-        Logging.info(`Lodaded ${rooms.length} rooms from storage`);
-        this.rooms = rooms
-            .map((id) => {
-                Logging.info(`Loading room ${id}`);
-                try {
-                    return new Room(this, false, id);
-                } catch (e) {
-                    Logging.error(`Error loading room ${id}: ${e}`);
-                    return null;
-                }
-            })
-            .filter((room) => room !== null) as Room[];
+        // Load rooms
+        const roomRows = await RoomController.getAll();
+        Logging.info(`Loading ${roomRows.length} rooms from database`);
+        for (const { id, data, createdAt } of roomRows) {
+            try {
+                const room = await Room.create(this, data, id, createdAt);
+                this.rooms.push(room);
+            } catch (e) {
+                Logging.error(`Error loading room ${id}: ${e}`);
+            }
+        }
     }
 
     /**
-     * Save the room manager data to disk
+     * Migrate room data from disk JSON files to the database.
+     * Runs in a single transaction for atomicity.
      */
-    private save(): boolean {
+    private async migrateFromDisk(): Promise<void> {
+        Logging.info('Migrating room data from disk to database...');
+
+        const raw = fs.readFileSync('storage/main.json').toString();
+        const mainData = JSON.parse(raw) as StoredSkyChat;
+
+        const roomIds = mainData.rooms || [1];
+        const messageId = mainData.messageId || 0;
+
+        // Run entire migration in a transaction
+        await DatabaseHelper.db.query('BEGIN');
         try {
-            // Build storage object
-            const data: StoredSkyChat = {
-                guestId: RoomManager.CURRENT_GUEST_ID,
-                messageId: Message.ID,
-                roomId: Room.CURRENT_ID,
-                rooms: this.rooms.map((room) => room.id),
-            };
+            let migratedCount = 0;
+            for (const id of roomIds) {
+                const filePath = `storage/rooms/${id}.json`;
+                if (!fs.existsSync(filePath)) {
+                    Logging.warn(`Room file ${filePath} does not exist, skipping`);
+                    continue;
+                }
 
-            fs.writeFileSync(RoomManager.STORAGE_MAIN_FILE, JSON.stringify(data));
-            return true;
-        } catch (e) {
-            return false;
+                let data: StoredRoom;
+                try {
+                    const fileContent = JSON.parse(fs.readFileSync(filePath).toString());
+                    const rawWhitelist: string[] = fileContent.whitelist ?? [];
+                    data = {
+                        name: fileContent.name ?? `Room ${id}`,
+                        order: fileContent.order ?? 0,
+                        pluginGroupNames: fileContent.pluginGroupNames ?? [CorePluginGroup.name],
+                        isPrivate: !!fileContent.isPrivate,
+                        whitelist: rawWhitelist.map((w: string) => w.toLowerCase()).sort(),
+                        main: !!fileContent.main,
+                    };
+                } catch (parseErr) {
+                    // Abort on any parse failure for active rooms
+                    throw new Error(`Failed to parse room file ${filePath}: ${parseErr}`);
+                }
+
+                await RoomController.insertForMigration(DatabaseHelper.db, id, data);
+                migratedCount++;
+            }
+
+            // guestId intentionally not migrated — guest IDs are ephemeral, reset on restart
+            await RoomController.saveMessageIdCounterForMigration(DatabaseHelper.db, messageId);
+            await DatabaseHelper.db.query('COMMIT');
+
+            // Resync the sequence so the next SERIAL id is correct
+            await DatabaseHelper.db.query(`SELECT setval(pg_get_serial_sequence('rooms', 'id'), (SELECT MAX(id) FROM rooms))`);
+            Logging.info(`Migration complete: ${migratedCount} rooms migrated to database`);
+        } catch (err) {
+            await DatabaseHelper.db.query('ROLLBACK');
+            throw new Error(`Room migration failed (transaction rolled back): ${err}`);
+        }
+
+        // Archive disk files only after successful commit
+        try {
+            if (fs.existsSync('storage/main.json')) {
+                fs.unlinkSync('storage/main.json');
+                Logging.info('Removed storage/main.json');
+            }
+            if (fs.existsSync('storage/rooms')) {
+                const archiveName = `storage/rooms-pre-migration-${Date.now()}`;
+                fs.renameSync('storage/rooms', archiveName);
+                Logging.info(`Archived storage/rooms/ to ${archiveName}/`);
+            }
+        } catch (cleanupErr) {
+            Logging.warn(`Post-migration cleanup failed (non-fatal): ${cleanupErr}`);
         }
     }
 
     /**
-     * Clean-up function, executed once in a while
+     * Save counters to the database
      */
     private tick(): void {
-        this.save();
+        RoomController.saveMessageIdCounter(Message.ID).catch((err) => Logging.error(`Failed to save counters: ${err}`));
     }
 
     /**
@@ -165,11 +219,17 @@ export class RoomManager {
     /**
      * Create a new room
      */
-    createRoom(name?: string) {
-        const room = new Room(this);
-        if (name) {
-            room.name = name;
-        }
+    async createRoom(name?: string): Promise<Room> {
+        const data: StoredRoom = {
+            name: name || 'New Room',
+            order: 0,
+            pluginGroupNames: [CorePluginGroup.name],
+            isPrivate: false,
+            whitelist: [],
+            main: false,
+        };
+        const id = await RoomController.insert(data);
+        const room = await Room.create(this, data, id);
         this.rooms.push(room);
         Object.values(Session.sessions).forEach((session) => this.sendRoomList(session));
         return room;
@@ -201,12 +261,19 @@ export class RoomManager {
     /**
      * Create a new private room
      */
-    createPrivateRoom(usernames: string[]) {
+    async createPrivateRoom(usernames: string[]): Promise<Room> {
         usernames = usernames.sort();
         const identifiers = usernames.map((username) => username.toLowerCase());
-        const room = new Room(this, true);
-        identifiers.forEach((identifier) => room.allow(identifier));
-        room.name = '';
+        const data: StoredRoom = {
+            name: '',
+            order: 0,
+            pluginGroupNames: [CorePluginGroup.name],
+            isPrivate: true,
+            whitelist: identifiers,
+            main: false,
+        };
+        const id = await RoomController.insert(data);
+        const room = await Room.create(this, data, id);
         this.rooms.push(room);
         identifiers
             .map((identifier) => Session.getSessionByIdentifier(identifier))
@@ -220,19 +287,26 @@ export class RoomManager {
      */
     async deleteRoom(id: number) {
         if (this.rooms.length === 1) {
-            throw new Error('Impossible to remote the last remaining room');
+            throw new Error('Impossible to remove the last remaining room');
         }
         const room = this.getRoomById(id);
         if (!room) {
             throw new Error(`Room ${id} not found`);
         }
         // Move all connections to another room
-        const anyRoom: Room = this.rooms.find((room) => room.id !== id && !room.isPrivate) as Room;
-        for (const connection of anyRoom.connections) {
-            await anyRoom.attachConnection(connection);
+        const fallbackRoom = this.rooms.find((r) => r.id !== id && !r.isPrivate);
+        if (!fallbackRoom) {
+            throw new Error('No public room available to move connections to');
         }
-        // Remove old room
-        this.rooms = this.rooms.filter((room) => room.id !== id);
+        for (const connection of [...room.connections]) {
+            await fallbackRoom.attachConnection(connection);
+        }
+        // Clean up the room
+        await room.destroy();
+        // Remove from in-memory list
+        this.rooms = this.rooms.filter((r) => r.id !== id);
+        // Soft delete in database
+        await RoomController.softDelete(id);
         Object.values(Session.sessions).forEach((session) => this.sendRoomList(session));
     }
 
@@ -259,14 +333,16 @@ export class RoomManager {
             throw new Error('Duplicate room ids');
         }
 
-        // Set new order
+        // Set new order and persist
         for (let i = 0; i < roomIds.length; ++i) {
             const room = this.getRoomById(roomIds[i]);
             if (!room) {
                 throw new Error(`Room ${roomIds[i]} not found`);
             }
             room.order = roomIds.length - i;
+            room.markDirty();
         }
+        await Promise.all(roomIds.map((roomId) => this.getRoomById(roomId)!.saveToDB()));
 
         // Send room list
         Object.values(Session.sessions).forEach((session) => this.sendRoomList(session));
@@ -297,7 +373,6 @@ export class RoomManager {
 
     /**
      * Send the list of rooms for a specific connection
-     * @param connection
      */
     sendRoomList(connectionOrSession: Connection | Session) {
         // Get the session object

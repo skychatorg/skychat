@@ -1,16 +1,16 @@
-import fs from 'fs';
 import SQL from 'sql-template-strings';
 import { globalPluginGroup } from '../plugins/GlobalPluginGroup.js';
 import { RoomPlugin } from '../plugins/RoomPlugin.js';
 import { BlacklistPlugin } from '../plugins/core/global/BlacklistPlugin.js';
-import { CorePluginGroup } from '../plugins/index.js';
 import { RoomProtectPlugin } from '../plugins/security_extra/RoomProtectPlugin.js';
 import { Config } from './Config.js';
 import { Connection } from './Connection.js';
 import { DatabaseHelper } from './DatabaseHelper.js';
 import { IBroadcaster } from './IBroadcaster.js';
+import { Logging } from './Logging.js';
 import { Message, MessageConstructorOptions } from './Message.js';
 import { MessageController } from './MessageController.js';
+import { RoomController } from './RoomController.js';
 import { RoomManager } from './RoomManager.js';
 import { Session } from './Session.js';
 
@@ -36,19 +36,9 @@ export type SanitizedRoom = {
 
 export class Room implements IBroadcaster {
     /**
-     * Base path for rooms persistent storage
-     */
-    public static readonly STORAGE_BASE_PATH: string = 'storage/rooms';
-
-    /**
      * Room tick duration
      */
     private static TICK_INTERVAL: number = 5 * 1000;
-
-    /**
-     * Current global room id
-     */
-    static CURRENT_ID = 1;
 
     /**
      * Number of messages kept in memory
@@ -120,33 +110,61 @@ export class Room implements IBroadcaster {
      */
     public main = false;
 
-    constructor(manager: RoomManager, isPrivate?: boolean, id?: number) {
+    /**
+     * When this room was created
+     */
+    public readonly createdAt: Date;
+
+    /**
+     * Whether this room has unsaved changes
+     */
+    private dirty = false;
+
+    /**
+     * Tick interval handle for cleanup
+     */
+    private tickInterval: ReturnType<typeof setInterval> | null = null;
+
+    /**
+     * Private constructor. Use Room.create() instead.
+     */
+    private constructor(manager: RoomManager, data: StoredRoom, id: number, createdAt: Date) {
         this.manager = manager;
-        this.isPrivate = !!isPrivate;
+        this.id = id;
+        this.createdAt = createdAt;
 
-        // Find unique room id
-        if (typeof id === 'number') {
-            this.id = id;
-            if (this.id + 1 > Room.CURRENT_ID) {
-                Room.CURRENT_ID = this.id + 1;
-            }
-        } else {
-            this.id = Room.CURRENT_ID++;
-        }
+        // Set properties from data
+        this.name = data.name;
+        this.order = data.order;
+        this.pluginGroupNames = data.pluginGroupNames;
+        this.isPrivate = data.isPrivate;
+        this.whitelist = data.whitelist;
+        this.main = !!data.main;
 
-        // Set default value for stored values then load storage file if it exists (will override default values)
-        this.name = `Room ${this.id}`;
-        this.pluginGroupNames = [CorePluginGroup.name];
-        // We only load non-core plugin groups if not a private room
-        if (!this.isPrivate) {
-            this.load();
-        }
-
-        // Load all plugins
+        // Instantiate plugins (depends on pluginGroupNames being set)
         this.plugins = globalPluginGroup.instantiateRoomPlugins(this);
         this.commands = globalPluginGroup.extractCommandObjectFromPlugins(this.plugins) as { [commandName: string]: RoomPlugin };
+    }
 
-        setInterval(this.tick.bind(this), Room.TICK_INTERVAL);
+    /**
+     * Create a new Room from stored data. Validates, instantiates plugins, starts tick.
+     */
+    static async create(manager: RoomManager, data: StoredRoom, id: number, createdAt: Date = new Date()): Promise<Room> {
+        const room = new Room(manager, data, id, createdAt);
+
+        // Validate private room whitelist
+        if (room.isPrivate) {
+            if (room.whitelist.length === 0) {
+                throw new Error(`Room ${id} is private but has no whitelist entry`);
+            } else if (room.whitelist.length === 1) {
+                throw new Error(`Room ${id} is private but has only one whitelist entry ${room.whitelist[0]}`);
+            }
+        }
+
+        // Start periodic save
+        room.tickInterval = setInterval(room.tick.bind(room), Room.TICK_INTERVAL);
+
+        return room;
     }
 
     /**
@@ -169,7 +187,6 @@ export class Room implements IBroadcaster {
 
     /**
      * Allow an identifier to access this room (only for private rooms)
-     * @param identifier
      */
     public allow(identifier: string): boolean {
         if (!this.isPrivate) {
@@ -177,6 +194,7 @@ export class Room implements IBroadcaster {
         }
         if (this.whitelist.indexOf(identifier) === -1) {
             this.whitelist.push(identifier);
+            this.dirty = true;
             return true;
         } else {
             return false;
@@ -185,7 +203,6 @@ export class Room implements IBroadcaster {
 
     /**
      * Unallow an identifier to access this room (only for private rooms)
-     * @param identifier
      */
     public unallow(identifier: string): boolean {
         if (!this.isPrivate) {
@@ -196,6 +213,7 @@ export class Room implements IBroadcaster {
             return false;
         }
         this.whitelist.splice(index, 1);
+        this.dirty = true;
         return true;
     }
 
@@ -207,66 +225,48 @@ export class Room implements IBroadcaster {
     }
 
     /**
-     * Get this room own storage path
+     * Save this room's data to the database
      */
-    public getStoragePath(): string {
-        return `${Room.STORAGE_BASE_PATH}/${this.id}.json`;
-    }
-
-    /**
-     * Try to load this room's data from disk storage
-     */
-    private load(): void {
-        // If the storage does not exist, create it
-        if (!fs.existsSync(this.getStoragePath())) {
-            this.save();
-            return;
-        }
-
-        // Otherwise, load data from this file
-        try {
-            const data = JSON.parse(fs.readFileSync(this.getStoragePath()).toString()) as StoredRoom;
-            this.name = data.name ?? this.name;
-            this.order = data.order ?? this.order;
-            this.pluginGroupNames = data.pluginGroupNames ?? this.pluginGroupNames;
-            this.isPrivate = !!data.isPrivate;
-            this.whitelist = data.whitelist;
-            this.main = !!data.main;
-        } catch (error) {
-            console.error(`Could not load room ${this.id} data from disk: ${error}`);
-            this.name = `Room ${this.id} (corrupted)`;
-        }
-
-        if (this.isPrivate) {
-            if (this.whitelist.length === 0) {
-                throw new Error(`Room ${this.id} is private but has no whitelist entry`);
-            } else if (this.whitelist.length === 1) {
-                throw new Error(`Room ${this.id} is private but has only one whitelist entry ${this.whitelist[0]}`);
-            }
-        }
-    }
-
-    /**
-     * Save this room's data to disk
-     */
-    private save(): boolean {
-        const data: StoredRoom = {
+    public async saveToDB(): Promise<void> {
+        await RoomController.update(this.id, {
             name: this.name,
             order: this.order,
             pluginGroupNames: this.pluginGroupNames,
             isPrivate: this.isPrivate,
             whitelist: this.whitelist,
             main: this.main,
-        };
-        fs.writeFileSync(this.getStoragePath(), JSON.stringify(data));
-        return true;
+        });
+        this.dirty = false;
     }
 
     /**
-     * Periodical cleanup/storage of this room data
+     * Mark this room as having unsaved changes
+     */
+    public markDirty(): void {
+        this.dirty = true;
+    }
+
+    /**
+     * Periodical save of this room data (only if changed)
      */
     private tick(): void {
-        this.save();
+        if (!this.dirty) {
+            return;
+        }
+        this.saveToDB().catch((err) => Logging.error(`Failed to save room ${this.id} to DB: ${err}`));
+    }
+
+    /**
+     * Stop the periodic save, flush any pending changes, and clean up
+     */
+    public async destroy(): Promise<void> {
+        if (this.tickInterval) {
+            clearInterval(this.tickInterval);
+            this.tickInterval = null;
+        }
+        if (this.dirty) {
+            await this.saveToDB();
+        }
     }
 
     /**
@@ -280,7 +280,6 @@ export class Room implements IBroadcaster {
 
     /**
      * Detach a connection from this room
-     * @param connection
      */
     public detachConnection(connection: Connection) {
         this.connections = this.connections.filter((c) => c !== connection);
@@ -289,7 +288,6 @@ export class Room implements IBroadcaster {
 
     /**
      * Attach a connection to this room
-     * @param connection
      */
     public async attachConnection(connection: Connection) {
         if (connection.room === this) {
@@ -310,7 +308,6 @@ export class Room implements IBroadcaster {
 
     /**
      * Send the history of last messages to a specific connection
-     * @param connection
      */
     public sendHistory(connection: Connection, lastId?: number, count?: number): void {
         // Default number of messages to send
@@ -358,7 +355,6 @@ export class Room implements IBroadcaster {
 
     /**
      * Get a plugin instance by its name
-     * @param name
      */
     public getPlugin<T extends RoomPlugin>(name: string): T | undefined {
         return this.commands[name] as T | undefined;
@@ -366,7 +362,6 @@ export class Room implements IBroadcaster {
 
     /**
      * Execute before room join hook
-     * @param connection
      */
     public async executeBeforeConnectionJoinedRoom(connection: Connection, room: Room): Promise<void> {
         for (const plugin of this.plugins) {
@@ -376,7 +371,6 @@ export class Room implements IBroadcaster {
 
     /**
      * Execute room join hook
-     * @param connection
      */
     public async executeConnectionJoinedRoom(connection: Connection): Promise<void> {
         for (const plugin of this.plugins) {
@@ -386,7 +380,6 @@ export class Room implements IBroadcaster {
 
     /**
      * Execute connection closed hook
-     * @param connection
      */
     public async executeOnConnectionLeftRoom(connection: Connection): Promise<void> {
         for (const plugin of this.plugins) {
@@ -396,8 +389,6 @@ export class Room implements IBroadcaster {
 
     /**
      * Execute on before mesasge broadcast hooks
-     * @param message
-     * @param connection
      */
     public async executeOnBeforeMessageBroadcastHook(message: Message, connection?: Connection): Promise<Message> {
         for (const plugin of this.plugins) {
@@ -408,22 +399,20 @@ export class Room implements IBroadcaster {
 
     /**
      * Send to all sessions
-     * @param event
-     * @param payload
      */
     public send(event: string, payload: unknown): void {
         this.connections.forEach((connection) => connection.send(event, payload));
     }
 
     /**
-     * Find a message from history by its unique id. Try to load it from cache, or go find it in database if it does not exist.
+     * Find a message from history by its unique id.
      */
     public getMessageById(id: number): Message | null {
         return this.messages.find((message) => message.id === id) || null;
     }
 
     /**
-     * Send a new message to the room
+     * Get the last sent message
      */
     public getLastSentMessage(): Message | null {
         if (this.messages.length === 0) {
@@ -434,7 +423,6 @@ export class Room implements IBroadcaster {
 
     /**
      * Send a new message to the room
-     * @param options
      */
     public async sendMessage(options: MessageConstructorOptions & { connection?: Connection }): Promise<Message> {
         options.meta = options.meta || {};

@@ -134,7 +134,7 @@ export class PrivateMessagePlugin extends GlobalPlugin {
             return;
         }
 
-        this.manager.createPrivateRoom(usernames);
+        await this.manager.createPrivateRoom(usernames);
     }
 
     async handlePMAdd(param: string, connection: Connection): Promise<void> {
