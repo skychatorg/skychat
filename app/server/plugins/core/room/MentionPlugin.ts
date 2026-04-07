@@ -85,7 +85,7 @@ export class MentionPlugin extends RoomPlugin {
 
     private canReceiveMention(receiver: Connection, sender: Connection): boolean {
         // Blacklisted?
-        if (BlacklistPlugin.hasBlacklisted(receiver.session.user, sender.session.identifier)) {
+        if (BlacklistPlugin.isBlockedBy(receiver.session.user, sender.session.user)) {
             return false;
         }
 

@@ -116,7 +116,7 @@ export class PrivateMessagePlugin extends GlobalPlugin {
             if (session.identifier === connection.session.identifier) {
                 throw new Error('You can not send private messages to yourself');
             }
-            if (BlacklistPlugin.hasBlacklisted(session.user, connection.session.user.username)) {
+            if (BlacklistPlugin.isBlockedBy(session.user, connection.session.user)) {
                 throw new Error(`User ${username} has blacklisted you. You can not send him private messages`);
             }
             sessions.push(session);
@@ -155,7 +155,7 @@ export class PrivateMessagePlugin extends GlobalPlugin {
         if (session.identifier === connection.session.identifier) {
             throw new Error('You can not add yourself to a private room');
         }
-        if (BlacklistPlugin.hasBlacklisted(session.user, connection.session.user.username)) {
+        if (BlacklistPlugin.isBlockedBy(session.user, connection.session.user)) {
             throw new Error(`User ${session.user.username} has blacklisted you. You can not add him to this private room`);
         }
         if (room.whitelist.indexOf(session.identifier) !== -1) {

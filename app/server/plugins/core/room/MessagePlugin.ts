@@ -169,7 +169,7 @@ export class MessagePlugin extends RoomPlugin {
         if (connection.session.user.right < quotedRoomMinRight) {
             return null;
         }
-        if (quoted && BlacklistPlugin.hasBlacklisted(quoted.user, connection.session.user.username)) {
+        if (quoted && BlacklistPlugin.isBlockedBy(quoted.user, connection.session.user)) {
             return null;
         }
         return quoted;

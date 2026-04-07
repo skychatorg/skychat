@@ -4,6 +4,7 @@ import SkyDropdownItem from '@/components/common/SkyDropdownItem.vue';
 import SkyTooltip from '@/components/common/SkyTooltip.vue';
 import UserBigAvatar from '@/components/user/UserBigAvatar.vue';
 import HoverCard from '@/components/util/HoverCard.vue';
+import { useIsBlacklisted } from '@/composables/useIsBlacklisted';
 import { useClientStore } from '@/stores/client';
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 
@@ -18,13 +19,7 @@ const props = defineProps({
 
 const dropdownOpen = ref(false);
 
-const isBlacklisted = computed(() => {
-    if (!client.state.user) {
-        return false;
-    }
-    const blacklist = client.state.user.data.plugins.blacklist || [];
-    return blacklist.includes(props.entry.user.username.toLowerCase());
-});
+const isBlacklisted = useIsBlacklisted(() => props.entry.user);
 
 const isSelf = computed(() => {
     return props.entry.user.username.toLowerCase() === client.state.user?.username.toLowerCase();

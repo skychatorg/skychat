@@ -5,6 +5,7 @@ import UserMiniAvatarCollection from '@/components/user/UserMiniAvatarCollection
 import ExpandableBlock from '@/components/util/ExpandableBlock.vue';
 import HoverCard from '@/components/util/HoverCard.vue';
 import { useAppStore } from '@/stores/app';
+import { useIsBlacklisted } from '@/composables/useIsBlacklisted';
 import { useClientStore } from '@/stores/client';
 import { useEncryptionStore } from '@/stores/encryption';
 import { computed, nextTick, onMounted, ref, watch } from 'vue';
@@ -59,13 +60,7 @@ watch(showCompact, () => {
     });
 });
 
-const isBlacklisted = computed(() => {
-    if (!client.state.user) {
-        return false;
-    }
-    const blacklist = client.state.user.data.plugins.blacklist || [];
-    return blacklist.includes(props.message.user.username.toLowerCase());
-});
+const isBlacklisted = useIsBlacklisted(() => props.message.user);
 
 // Shown dates
 const formattedDate = computed(() => {

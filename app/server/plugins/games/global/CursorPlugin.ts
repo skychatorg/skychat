@@ -76,7 +76,7 @@ export class CursorPlugin extends GlobalPlugin {
                 continue;
             }
             // If target user has blacklister the sender
-            if (BlacklistPlugin.hasBlacklisted(conn.session.user, user.username)) {
+            if (BlacklistPlugin.isBlockedBy(conn.session.user, user)) {
                 continue;
             }
             // If identifier is to be ignored

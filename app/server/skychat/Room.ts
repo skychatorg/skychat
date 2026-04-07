@@ -332,7 +332,7 @@ export class Room implements IBroadcaster {
                 // Do not send messages from blacklisted users
                 if (
                     Config.PREFERENCES.invertedBlacklist &&
-                    BlacklistPlugin.hasBlacklisted(message.user, connection.session.user.username)
+                    BlacklistPlugin.isBlockedBy(message.user, connection.session.user)
                 ) {
                     return false;
                 }
@@ -445,7 +445,7 @@ export class Room implements IBroadcaster {
             if (
                 Config.PREFERENCES.invertedBlacklist &&
                 options.connection &&
-                BlacklistPlugin.hasBlacklisted(options.connection.session.user, receiver.session.user.username)
+                BlacklistPlugin.isBlockedBy(options.connection.session.user, receiver.session.user)
             ) {
                 continue;
             }

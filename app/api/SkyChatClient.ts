@@ -418,10 +418,12 @@ export class SkyChatClient extends EventEmitter {
     }
 
     private _updateConnectedListMeta() {
-        // Update self entry
-        const ownUser = this._connectedList.find((entry) => entry.user.username === this._user.username);
-        if (ownUser) {
-            this._user = ownUser.user;
+        // Keep connected list entry's user in sync with the authoritative _user from set-user events.
+        // Without this, jsondiffpatch partial patches (e.g. only lastInteractionTime) would leave
+        // stale user data in the entry, which then overwrites _user.
+        const ownEntry = this._connectedList.find((entry) => entry.user.username === this._user.username);
+        if (ownEntry) {
+            ownEntry.user = this._user;
         }
         ({ messageIdToLastSeenUsers: this._messageIdToLastSeenUsers } = this._generateMessageIdToLastSeenUsers());
         ({ roomConnectedUsers: this._roomConnectedUsers, playerChannelUsers: this._playerChannelUsers } =

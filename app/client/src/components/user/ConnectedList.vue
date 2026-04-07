@@ -10,11 +10,40 @@ const client = useClientStore();
 const presence = computed(() => client.state.discordPresence);
 const showPresence = computed(() => (presence.value?.onlineCount || 0) > 0);
 const hasVoiceActivity = computed(() => (presence.value?.voiceCount || 0) > 0);
+
+const isLoggedIn = computed(() => (client.state.user?.right ?? -1) >= 0);
+
+const guestsBlacklisted = computed(() => {
+    const blacklist = client.state.user?.data?.plugins?.blacklist;
+    if (!blacklist || Array.isArray(blacklist)) {
+        return false;
+    }
+    return blacklist.guests;
+});
+
+const toggleGuestBlacklist = () => {
+    client.sendMessage(guestsBlacklisted.value ? '/unblacklistguests' : '/blacklistguests');
+};
 </script>
 
 <template>
     <div>
-        <SectionTitle>Active now</SectionTitle>
+        <div class="flex items-center justify-between">
+            <SectionTitle>Active now</SectionTitle>
+            <SkyTooltip v-if="isLoggedIn">
+                <template #trigger>
+                    <button
+                        class="px-1.5 py-0.5 rounded text-xs transition"
+                        :class="guestsBlacklisted ? 'text-danger' : 'text-skygray-lightest hover:text-skygray-lighter'"
+                        :title="guestsBlacklisted ? 'Guests are hidden. Click to show.' : 'Hide all guests'"
+                        @click="toggleGuestBlacklist"
+                    >
+                        <fa icon="user-slash" />
+                    </button>
+                </template>
+                {{ guestsBlacklisted ? 'Guests are hidden. Click to show.' : 'Hide all guest messages' }}
+            </SkyTooltip>
+        </div>
         <div v-if="showPresence" class="flex justify-end mb-2">
             <!-- No voice activity: icon only with tooltip -->
             <SkyTooltip v-if="!hasVoiceActivity">
