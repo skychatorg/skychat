@@ -127,21 +127,24 @@ export class MentionPlugin extends RoomPlugin {
         });
 
         // Send Web Push notification
-        const truncatedContent = message.content.length > 100 ? message.content.substring(0, 100) + '...' : message.content;
-        const notificationPayload = {
-            title: `@${sender.session.identifier} mentioned you`,
-            body: truncatedContent,
-            tag: `mention-${message.id}`,
-        };
-
         const webPushPlugin = this.room.manager.getPlugin('push') as WebPushPlugin | undefined;
         if (webPushPlugin) {
-            webPushPlugin.send(receiver.session.user, notificationPayload);
+            const truncatedContent = message.content.length > 100 ? message.content.substring(0, 100) + '...' : message.content;
+            webPushPlugin.send(receiver.session.user, {
+                title: `@${sender.session.identifier} mentioned you`,
+                body: truncatedContent,
+                tag: `mention-${message.id}`,
+            });
         }
 
         const expoPushPlugin = this.room.manager.getPlugin('expopush') as ExpoPushPlugin | undefined;
         if (expoPushPlugin) {
-            expoPushPlugin.send(receiver.session.user, notificationPayload);
+            const truncatedContent = message.content.length > 100 ? message.content.substring(0, 100) + '...' : message.content;
+            expoPushPlugin.send(receiver.session.user, {
+                title: `@${sender.session.identifier} mentioned you`,
+                body: truncatedContent,
+                tag: `mention-${message.id}`,
+            });
         }
     }
 }
