@@ -5,6 +5,7 @@ import { Message } from '../../../skychat/Message.js';
 import { Session } from '../../../skychat/Session.js';
 import { RoomPlugin } from '../../RoomPlugin.js';
 import { BlacklistPlugin } from '../global/BlacklistPlugin.js';
+import { ExpoPushPlugin } from '../global/ExpoPushPlugin.js';
 import { WebPushPlugin } from '../global/WebPushPlugin.js';
 
 type ParsedMentions = {
@@ -126,14 +127,21 @@ export class MentionPlugin extends RoomPlugin {
         });
 
         // Send Web Push notification
+        const truncatedContent = message.content.length > 100 ? message.content.substring(0, 100) + '...' : message.content;
+        const notificationPayload = {
+            title: `@${sender.session.identifier} mentioned you`,
+            body: truncatedContent,
+            tag: `mention-${message.id}`,
+        };
+
         const webPushPlugin = this.room.manager.getPlugin('push') as WebPushPlugin | undefined;
         if (webPushPlugin) {
-            const truncatedContent = message.content.length > 100 ? message.content.substring(0, 100) + '...' : message.content;
-            webPushPlugin.send(receiver.session.user, {
-                title: `@${sender.session.identifier} mentioned you`,
-                body: truncatedContent,
-                tag: `mention-${message.id}`,
-            });
+            webPushPlugin.send(receiver.session.user, notificationPayload);
+        }
+
+        const expoPushPlugin = this.room.manager.getPlugin('expopush') as ExpoPushPlugin | undefined;
+        if (expoPushPlugin) {
+            expoPushPlugin.send(receiver.session.user, notificationPayload);
         }
     }
 }

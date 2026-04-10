@@ -28,6 +28,7 @@
         "@fortawesome/free-brands-svg-icons": "^6.7.2",
         "cross-spawn": "^7.0.6",
         "events": "^3.3.0",
+        "expo-server-sdk": "^6.1.0",
         "file-type": "^20.5.0",
         "isomorphic-ws": "^5.0.0",
         "jsondiffpatch": "^0.6.0",
