@@ -350,89 +350,115 @@ const toggleEncryptionPanel = () => {
 <template>
     <!-- eslint-disable vue/valid-attribute-name -->
     <!-- eslint-disable vue/no-lone-template -->
-    <div class="p-2">
-        <!-- New message form -->
-        <div class="flex flex-col-reverse lg:flex-row flex-nowrap">
-            <!-- Add elements to message -->
-            <div class="flex justify-center items-end gap-1">
-                <!-- Go to room list (mobile) -->
-                <div class="lg:hidden">
-                    <button class="form-control h-10 px-3" @click="app.mobileSetView('left')">
-                        <fa
-                            icon="chevron-left"
-                            :class="{
-                                'text-danger': hasUnread,
-                            }"
-                        />
-                        <fa v-if="hasUnread" icon="bell" class="ml-1 text-danger" />
-                        <fa v-else icon="gears" class="ml-1" />
+    <div class="p-3 pt-0">
+        <div class="rounded-xl hairline-strong bg-white/[.02]">
+            <!-- Typing indicator -->
+            <div class="px-3 pt-2 text-xs text-white/40 flex items-center gap-1.5 h-5">
+                <template v-if="typingListText">
+                    <span class="flex gap-0.5">
+                        <span class="w-1 h-1 rounded-full bg-primary animate-pulse" />
+                        <span class="w-1 h-1 rounded-full bg-primary animate-pulse" style="animation-delay: 0.15s" />
+                        <span class="w-1 h-1 rounded-full bg-primary animate-pulse" style="animation-delay: 0.3s" />
+                    </span>
+                    <span>{{ typingListText }}</span>
+                </template>
+            </div>
+
+            <!-- Encryption inline panel -->
+            <div
+                v-if="encryptMessage"
+                class="mx-3 mb-2 bg-skygray-dark/25 border border-primary rounded px-3 py-3 text-xs text-skygray-lightest"
+            >
+                <div class="flex items-center text-primary gap-2">
+                    <fa icon="lock" />
+                    <span>Encrypt the next message before sending.</span>
+                    <button
+                        type="button"
+                        class="ml-auto text-xs uppercase tracking-wide text-skygray-lightest/70 hover:text-white"
+                        @click="toggleEncryptionPanel"
+                    >
+                        Cancel
                     </button>
                 </div>
-
-                <!-- Primary actions -->
-                <!-- Upload media -->
-                <div title="Upload a media">
-                    <label class="form-control cursor-pointer w-10 h-10 flex items-center justify-center" for="file-input">
-                        <fa icon="upload" />
-                    </label>
-                    <input id="file-input" ref="fileUploadInput" type="file" class="hidden" @change="onFileInputChange" />
+                <div class="mt-3 space-y-3">
+                    <input v-model="encryptionPassphrase" type="password" class="form-control w-full" placeholder="Enter passphrase" />
+                    <input
+                        v-model="encryptionLabel"
+                        type="text"
+                        class="form-control w-full"
+                        placeholder="Optional label shown to recipients"
+                    />
+                    <p v-if="encryptionError" class="text-danger">{{ encryptionError }}</p>
                 </div>
+            </div>
 
-                <!-- Send audio -->
-                <div title="Send an audio">
-                    <div class="flex gap-1">
-                        <button class="w-10 h-10 form-control" @click="uploadAudio">
-                            <fa icon="microphone" :class="{ 'text-primary': recordingAudio }" />
-                        </button>
-                        <button v-show="recordingAudio" class="w-10 h-10 form-control" @click="cancelAudio">
-                            <fa icon="ban" class="text-danger" />
-                        </button>
-                    </div>
-                </div>
+            <!-- Textarea -->
+            <SmartSuggest class="flex" :triggers="suggestTriggers" @open="autoSuggestOpen = true" @close="autoSuggestOpen = false">
+                <textarea
+                    ref="message"
+                    type="text"
+                    :rows="messageTextAreaRows"
+                    class="mousetrap w-full bg-transparent px-3 py-2 text-base resize-none focus:outline-none placeholder:text-white/30 scrollbar"
+                    :placeholder="textAreaPlaceholder"
+                    :disabled="!client.state.currentRoom"
+                    :maxlength="client.state.currentRoom?.plugins.messagelimiter ?? null"
+                    @input="onMessageInput"
+                    @focus="onFocus"
+                    @blur="onBlur"
+                    @keyup.up.exact="!autoSuggestOpen && onNavigateIntoHistory($event, -1)"
+                    @keyup.down.exact="!autoSuggestOpen && onNavigateIntoHistory($event, 1)"
+                    @keydown.escape="exitHistory"
+                    @keydown.shift.enter.stop=""
+                    @keydown.enter.exact.stop="!autoSuggestOpen && sendMessage()"
+                ></textarea>
+            </SmartSuggest>
 
-                <!-- More actions menu -->
+            <!-- Button row -->
+            <div class="flex items-center gap-1 px-2 pb-2">
+                <!-- Mobile: room list -->
+                <button
+                    class="lg:hidden w-8 h-8 rounded-lg flex items-center justify-center text-white/60 hover:text-white hover:bg-white/5"
+                    title="Rooms"
+                    @click="app.mobileSetView('left')"
+                >
+                    <fa icon="chevron-left" :class="{ 'text-danger': hasUnread }" />
+                </button>
+
+                <!-- More actions -->
                 <div ref="moreActionsContainer" class="relative">
                     <button
+                        class="w-8 h-8 rounded-lg flex items-center justify-center transition"
+                        :class="
+                            showMoreActions || encryptMessage
+                                ? 'bg-primary/15 text-primary ring-1 ring-primary/40'
+                                : 'text-white/60 hover:text-white hover:bg-white/5'
+                        "
                         title="More actions"
-                        class="form-control w-10 h-10 flex items-center justify-center"
-                        :class="{ 'text-primary': showMoreActions || encryptMessage }"
                         @click="toggleMoreActions"
                     >
                         <fa icon="plus" />
                     </button>
-
-                    <!-- Popover menu -->
-                    <div
-                        v-show="showMoreActions"
-                        class="absolute bottom-12 left-0 form-control p-2 flex flex-col gap-1 z-50 min-w-max"
-                    >
-                        <!-- RisiBank -->
-                        <button
-                            title="Add a media from RisiBank"
-                            class="form-control w-full h-10 flex items-center gap-2 px-3"
-                            @click="openRisiBank(); showMoreActions = false"
-                        >
-                            <img src="/assets/images/icons/risibank.png" class="w-4 h-4" />
-                            <span class="text-sm">RisiBank</span>
-                        </button>
-
-                        <!-- Encrypt message -->
+                    <div v-show="showMoreActions" class="absolute bottom-10 left-0 form-control p-2 flex flex-col gap-1 z-50 min-w-max">
                         <button
                             title="Encrypt the next message"
                             class="form-control w-full h-10 flex items-center gap-2 px-3"
                             :class="{ 'text-primary': encryptMessage }"
-                            @click="toggleEncryptionPanel(); showMoreActions = false"
+                            @click="
+                                toggleEncryptionPanel();
+                                showMoreActions = false;
+                            "
                         >
                             <fa icon="lock" />
                             <span class="text-sm">Encrypt</span>
                         </button>
-
-                        <!-- Expand/collapse -->
                         <button
                             title="Expand input"
                             class="form-control w-full h-10 flex items-center gap-2 px-3"
                             :class="{ 'text-primary': isManuallyExpanded }"
-                            @click="toggleExpand(); showMoreActions = false"
+                            @click="
+                                toggleExpand();
+                                showMoreActions = false;
+                            "
                         >
                             <fa :icon="isManuallyExpanded ? 'compress' : 'expand'" />
                             <span class="text-sm">{{ isManuallyExpanded ? 'Collapse' : 'Expand' }}</span>
@@ -440,81 +466,68 @@ const toggleEncryptionPanel = () => {
                     </div>
                 </div>
 
-                <!-- Go to user list (mobile) -->
-                <div class="lg:hidden">
-                    <button class="form-control h-10 px-3" @click="app.mobileSetView('right')">
-                        <fa icon="users" class="mr-1" />
-                        <fa icon="chevron-right" />
-                    </button>
-                </div>
-            </div>
+                <!-- Upload -->
+                <label
+                    for="file-input"
+                    class="w-8 h-8 rounded-lg flex items-center justify-center text-white/60 hover:text-white hover:bg-white/5 cursor-pointer"
+                    title="Upload a file"
+                >
+                    <fa icon="paperclip" />
+                </label>
+                <input id="file-input" ref="fileUploadInput" type="file" class="hidden" @change="onFileInputChange" />
 
-            <!-- Message & send button -->
-            <div v-if="client.state.currentRoom" class="mb-2 lg:mb-0 grow w-full lg:w-0 flex">
-                <!-- New message -->
-                <div class="grow flex flex-col">
-                    <!-- Typing list -->
-                    <p class="h-5 pl-2 text-xs text-skygray-lightest">
-                        {{ typingListText }}
-                    </p>
+                <!-- RisiBank -->
+                <button
+                    class="w-8 h-8 rounded-lg flex items-center justify-center text-white/60 hover:text-white hover:bg-white/5"
+                    title="Add a media from RisiBank"
+                    @click="openRisiBank"
+                >
+                    <img src="/assets/images/icons/risibank.png" class="w-4 h-4" />
+                </button>
 
-                    <div
-                        v-if="encryptMessage"
-                        class="bg-skygray-dark/25 border border-primary rounded px-3 py-3 mb-2 text-xs text-skygray-lightest"
+                <!-- Audio -->
+                <button
+                    class="w-8 h-8 rounded-lg flex items-center justify-center transition"
+                    :class="
+                        recordingAudio
+                            ? 'bg-primary/15 text-primary ring-1 ring-primary/40'
+                            : 'text-white/60 hover:text-white hover:bg-white/5'
+                    "
+                    title="Record audio"
+                    @click="uploadAudio"
+                >
+                    <fa icon="microphone" />
+                </button>
+                <button
+                    v-show="recordingAudio"
+                    class="w-8 h-8 rounded-lg flex items-center justify-center text-danger hover:bg-white/5"
+                    title="Cancel audio"
+                    @click="cancelAudio"
+                >
+                    <fa icon="ban" />
+                </button>
+
+                <!-- Mobile: user list -->
+                <button
+                    class="lg:hidden w-8 h-8 rounded-lg flex items-center justify-center text-white/60 hover:text-white hover:bg-white/5"
+                    title="Users"
+                    @click="app.mobileSetView('right')"
+                >
+                    <fa icon="users" />
+                </button>
+
+                <!-- Send -->
+                <div class="ml-auto flex items-center gap-2">
+                    <span class="font-mono text-xs text-white/30 hidden xl:inline"> <kbd>↵</kbd> send </span>
+                    <button
+                        class="px-3 h-10 rounded-lg text-sm font-medium text-white flex items-center gap-1.5 hover:brightness-110 transition disabled:opacity-50"
+                        :class="app.newMessage.trim() ? 'bg-primary' : 'bg-white/[.08]'"
+                        :disabled="!client.state.currentRoom"
+                        title="Send"
+                        @click="sendMessage"
                     >
-                        <div class="flex items-center text-primary gap-2">
-                            <fa icon="lock" />
-                            <span>Encrypt the next message before sending.</span>
-                            <button
-                                type="button"
-                                class="ml-auto text-[11px] uppercase tracking-wide text-skygray-lightest/70 hover:text-white"
-                                @click="toggleEncryptionPanel"
-                            >
-                                Cancel
-                            </button>
-                        </div>
-                        <div class="mt-3 space-y-3">
-                            <input
-                                v-model="encryptionPassphrase"
-                                type="password"
-                                class="form-control w-full"
-                                placeholder="Enter passphrase"
-                            />
-                            <input
-                                v-model="encryptionLabel"
-                                type="text"
-                                class="form-control w-full"
-                                placeholder="Optional label shown to recipients"
-                            />
-                            <p v-if="encryptionError" class="text-danger">{{ encryptionError }}</p>
-                        </div>
-                    </div>
-
-                    <SmartSuggest class="flex" :triggers="suggestTriggers" @open="autoSuggestOpen = true" @close="autoSuggestOpen = false">
-                        <textarea
-                            ref="message"
-                            type="text"
-                            :rows="messageTextAreaRows"
-                            class="mousetrap form-control lg:ml-2 scrollbar resize-none w-full"
-                            :placeholder="textAreaPlaceholder"
-                            :disabled="!client.state.currentRoom"
-                            :maxlength="client.state.currentRoom.plugins.messagelimiter ?? null"
-                            @input="onMessageInput"
-                            @focus="onFocus"
-                            @blur="onBlur"
-                            @keyup.up.exact="!autoSuggestOpen && onNavigateIntoHistory($event, -1)"
-                            @keyup.down.exact="!autoSuggestOpen && onNavigateIntoHistory($event, 1)"
-                            @keydown.escape="exitHistory"
-                            @keydown.shift.enter.stop=""
-                            @keydown.enter.exact.stop="!autoSuggestOpen && sendMessage()"
-                        ></textarea>
-                    </SmartSuggest>
-                </div>
-
-                <!-- Send button -->
-                <div title="Send" class="flex flex-col justify-end">
-                    <button class="form-control ml-2 h-fit align-bottom" @click="sendMessage">
                         <fa icon="paper-plane" />
+                        Send
                     </button>
                 </div>
             </div>

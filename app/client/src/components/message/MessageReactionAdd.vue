@@ -212,14 +212,14 @@ watch(pickerOpen, (open) => {
                 @keydown.enter.prevent="onSubmitSearch"
                 @keydown.esc.prevent="closePicker"
             />
-            <p class="mt-1 text-[11px] text-slate-400">Showing up to {{ MAX_RESULTS }} results</p>
+            <p class="mt-1 text-xs text-slate-400">Showing up to {{ MAX_RESULTS }} results</p>
 
             <div v-if="filteredStickers.length" class="mt-2 max-h-60 overflow-y-auto pr-1">
                 <ul class="grid grid-cols-3 gap-2 sm:grid-cols-4">
                     <li v-for="[code, url] in filteredStickers" :key="code">
                         <button
                             type="button"
-                            class="flex h-full w-full flex-col items-center gap-1 rounded-md border border-transparent bg-slate-900/40 px-2 py-2 text-[11px] text-white transition hover:border-primary/50 hover:bg-slate-900/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+                            class="flex h-full w-full flex-col items-center gap-1 rounded-md border border-transparent bg-slate-900/40 px-2 py-2 text-xs text-white transition hover:border-primary/50 hover:bg-slate-900/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
                             @click="sendReaction(code)"
                         >
                             <img :src="url" :alt="code" class="h-10 w-10 object-contain" loading="lazy" />

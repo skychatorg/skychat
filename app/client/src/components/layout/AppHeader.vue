@@ -1,9 +1,8 @@
 <script setup>
-import { computed } from 'vue';
 import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
+import { computed } from 'vue';
 import { useRouter } from 'vue-router';
-import UserBigAvatar from '@/components/user/UserBigAvatar.vue';
 
 const app = useAppStore();
 const client = useClientStore();
@@ -27,58 +26,71 @@ const connectionStatus = computed(() => {
         return 'disconnected';
     }
 });
+
+const onlineCount = computed(() => (client.state.connectedList || []).length);
 </script>
 
 <template>
-    <header class="header h-16 w-full flex bg-skygray-white/10 backdrop-brightness-150 backdrop-blur">
-        <!-- Left col (empty for now) -->
-        <div class="w-0 lg:w-[var(--page-col-left-width)]"></div>
-
-        <!-- Logo -->
-        <div class="pl-6 lg:pl-0 lg:grow text-center flex lg:justify-center" href="/">
-            <div class="flex flex-col justify-center">
-                <a href="/"><img src="/assets/logo.png" width="60" height="40.5" /></a>
+    <header class="h-16 shrink-0 hairline backdrop-blur-xl" :style="{ background: 'var(--header)' }">
+        <div class="h-full w-full max-w-[var(--page-max-width)] mx-auto flex items-stretch">
+            <!-- Logo + wordmark — aligned with the left column on desktop -->
+            <div class="flex items-center justify-center gap-2 px-3 select-none lg:w-[var(--page-col-left-width)] lg:shrink-0">
+                <a href="/" class="flex items-center gap-2">
+                    <img src="/assets/logo.png" alt="SkyChat" class="h-7 w-auto" />
+                    <span class="font-semibold text-base tracking-tight">SkyChat</span>
+                </a>
             </div>
-        </div>
 
-        <!-- User -->
-        <div class="p-2 w-0 w-[var(--page-col-right-width)]">
-            <template v-if="connectionStatus === 'connected'">
-                <div class="flex items-center mr-2">
-                    <div class="grow flex flex-col mr-4">
-                        <span class="text-right whitespace-nowrap">
-                            {{ client.state.user.username }}
-                        </span>
-                        <div class="flex justify-end">
-                            <button @click="logout" title="Logout">
-                                <fa icon="arrow-right-from-bracket" />
-                            </button>
+            <!-- Middle spacer -->
+            <div class="grow"></div>
+
+            <!-- Right: status + user pill — aligned with the right column on desktop -->
+            <div class="flex items-center justify-end gap-3 px-3 lg:w-[var(--page-col-right-width)] lg:shrink-0">
+                <template v-if="connectionStatus === 'connected'">
+                    <span
+                        v-if="onlineCount > 0"
+                        class="inline-flex items-center gap-1 px-1.5 py-[2px] rounded font-mono text-xs font-medium bg-primary/15 text-primary ring-1 ring-primary/30"
+                    >
+                        <fa icon="circle" class="text-[6px]" />
+                        {{ onlineCount }} online
+                    </span>
+                    <button
+                        class="flex items-center gap-2 pl-2 pr-2 py-1 hairline rounded-lg bg-white/[.02] hover:bg-white/[.05] transition"
+                        @click="app.toggleModal('profile')"
+                    >
+                        <div
+                            class="w-[22px] h-[22px] rounded overflow-hidden bg-black border-2"
+                            :style="{ borderColor: client.state.user.data.plugins.custom.color }"
+                        >
+                            <img
+                                :src="client.state.user.data.plugins.avatar"
+                                :alt="client.state.user.username"
+                                class="h-full w-full object-cover"
+                            />
                         </div>
-                    </div>
-
-                    <UserBigAvatar :user="client.state.user" />
-                </div>
-            </template>
-            <template v-if="connectionStatus === 'connecting'">
-                <p class="p-4 text-primary font-bold text-center">Connecting..</p>
-            </template>
-            <template v-if="connectionStatus === 'reconnecting'">
-                <p class="p-4 text-warning font-bold text-center">
-                    Reconnecting<span v-if="client.state.reconnectAttempts > 1"> ({{ client.state.reconnectAttempts }})</span>..
-                </p>
-            </template>
-            <template v-if="connectionStatus === 'disconnected'">
-                <p class="p-4 text-danger font-bold text-center">Disconnected</p>
-            </template>
+                        <span class="text-sm">{{ client.state.user.username }}</span>
+                        <span class="font-mono text-xs text-white/40">{{ client.state.user.right }}</span>
+                    </button>
+                    <button
+                        class="w-10 h-10 rounded-md flex items-center justify-center text-white/50 hover:text-white hover:bg-white/5 transition"
+                        title="Logout"
+                        @click="logout"
+                    >
+                        <fa icon="arrow-right-from-bracket" />
+                    </button>
+                </template>
+                <template v-if="connectionStatus === 'connecting'">
+                    <span class="text-primary font-mono text-sm">Connecting…</span>
+                </template>
+                <template v-if="connectionStatus === 'reconnecting'">
+                    <span class="text-warn font-mono text-sm">
+                        Reconnecting<span v-if="client.state.reconnectAttempts > 1"> ({{ client.state.reconnectAttempts }})</span>…
+                    </span>
+                </template>
+                <template v-if="connectionStatus === 'disconnected'">
+                    <span class="text-danger font-mono text-sm">Disconnected</span>
+                </template>
+            </div>
         </div>
     </header>
 </template>
-
-<style scoped>
-.header {
-    height: var(--page-header-height);
-    width: 100%;
-    max-width: var(--page-max-width);
-    margin: 0 auto;
-}
-</style>

@@ -43,5 +43,25 @@
         --color-scrollbar-track: #34343422;
         --color-scrollbar-thumb: rgba(78, 78, 78, 0.5);
         --color-scrollbar-thumb-hover: #888;
+
+        /* Redesign — accent (defaults mirror existing --color-primary) */
+        --accent: rgb(var(--color-primary));
+        --accent-rgb: var(--color-primary);
+        --accent2: #8fb2ef;
+
+        /* Redesign — surfaces */
+        --surface: rgba(22, 22, 36, 0.78);
+        --surface-2: rgba(14, 14, 26, 0.78);
+        --header: rgba(22, 22, 36, 0.7);
+        --app-bg: transparent;
+    }
+}
+
+@layer utilities {
+    .hairline {
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+    }
+    .hairline-strong {
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
     }
 }

@@ -55,7 +55,7 @@ const reactions = computed(() => {
 </script>
 
 <template>
-    <TransitionGroup name="message-reaction" tag="div" class="flex ml-[66px] mb-1">
+    <TransitionGroup name="message-reaction" tag="div" class="flex flex-wrap gap-1 mt-1">
         <MessageReaction
             v-for="reaction in reactions"
             :key="reaction.id"
@@ -70,7 +70,9 @@ const reactions = computed(() => {
 <style scoped>
 .message-reaction-enter-active,
 .message-reaction-leave-active {
-    transition: transform 150ms ease, opacity 150ms ease;
+    transition:
+        transform 150ms ease,
+        opacity 150ms ease;
 }
 
 .message-reaction-enter-from,

@@ -151,7 +151,7 @@ export class RoomManager {
                         order: fileContent.order ?? 0,
                         pluginGroupNames: fileContent.pluginGroupNames ?? [CorePluginGroup.name],
                         isPrivate: !!fileContent.isPrivate,
-                        whitelist: rawWhitelist.map((w: string) => w.toLowerCase()).sort(),
+                        whitelist: rawWhitelist.map((w: string) => w.toLowerCase()).sort((a, b) => a.localeCompare(b)),
                         main: !!fileContent.main,
                     };
                 } catch (parseErr) {

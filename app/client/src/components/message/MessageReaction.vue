@@ -1,6 +1,6 @@
 <script setup>
-import { computed } from 'vue';
 import { useClientStore } from '@/stores/client';
+import { computed } from 'vue';
 
 const props = defineProps({
     reaction: {
@@ -56,24 +56,14 @@ const stickerUrl = computed(() => {
 
 <template>
     <button
-        class="flex items-center rounded-full px-2 py-1 mr-1 border transition text-xs gap-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 hover:-translate-y-0.5 hover:shadow-sm hover:shadow-primary/20 active:translate-y-0"
-        :class="{
-            'border-primary/80 bg-primary/10 text-primary': hasReacted,
-            'border-transparent bg-skygray-dark/25 text-gray-500 hover:border-skygray-light/60': !hasReacted,
-        }"
+        class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md font-mono text-xs transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+        :class="hasReacted ? 'bg-primary/15 text-primary ring-1 ring-primary/30' : 'bg-white/5 text-white/70 hairline hover:bg-white/10'"
         :aria-label="tooltipText ? 'Reactions by: ' + tooltipText : 'Message reaction'"
         :title="tooltipText ? 'Reactions by: ' + tooltipText : null"
         @click="onClick"
     >
         <span v-if="!stickerUrl">{{ reaction }}</span>
-        <img
-            v-else
-            :src="stickerUrl"
-            :alt="reaction"
-            :title="reaction"
-            class="w-5 h-5 object-contain"
-            loading="lazy"
-        />
-        <span v-if="count !== null">{{ count }}</span>
+        <img v-else :src="stickerUrl" :alt="reaction" :title="reaction" class="w-4 h-4 object-contain" loading="lazy" />
+        <span v-if="count !== null" class="tabular-nums">{{ count }}</span>
     </button>
 </template>

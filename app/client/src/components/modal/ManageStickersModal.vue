@@ -1,5 +1,6 @@
 <script setup>
 import ModalTemplate from '@/components/modal/ModalTemplate.vue';
+import { useUserRight } from '@/composables/useUserRight';
 import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
 import { computed, ref } from 'vue';
@@ -16,14 +17,7 @@ const isSubmitting = ref(false);
 const feedbackMessage = ref('');
 const feedbackType = ref(null);
 
-const canManageStickers = computed(() => {
-    const threshold = client.state.config?.minRightForStickerManagement ?? 'op';
-    if (threshold === 'op') {
-        return client.state.op;
-    }
-    const userRight = client.state.user?.right ?? -1;
-    return client.state.op || userRight >= threshold;
-});
+const canManageStickers = useUserRight('minRightForStickerManagement');
 
 const stickerEntries = computed(() => {
     const stickers = client.state.stickers || {};

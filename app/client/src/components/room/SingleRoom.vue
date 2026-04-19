@@ -1,5 +1,4 @@
 <script setup>
-import HoverCard from '@/components/util/HoverCard.vue';
 import { useClientState } from '@/composables/useClientState.js';
 import { apiClient, useClientStore } from '@/stores/client';
 import { computed, ref } from 'vue';
@@ -17,17 +16,43 @@ const props = defineProps({
 
 const dropdownOpen = ref(false);
 
+const selected = computed(() => {
+    return client.state.currentRoomId === props.room.id;
+});
+
 const hasUnread = computed(() => {
     return !selected.value && client.hasAccessToRoom(props.room.id) && client.hasUnreadMessages(props.room.id);
 });
 
 const isMuted = ref(false);
 useClientState(() => {
-    const data = apiClient.plugins.mute.isRoomMuted(props.room.id);
-    isMuted.value = data;
+    isMuted.value = apiClient.plugins.mute.isRoomMuted(props.room.id);
 });
 
-// Actions
+const isProtected = computed(() => {
+    return Boolean(props.room.plugins?.roomprotect);
+});
+
+const isGroup = computed(() => {
+    return props.room.isPrivate && (props.room.whitelist?.length ?? 0) > 2;
+});
+
+const formattedName = computed(() => {
+    if (props.room.isPrivate) {
+        if (props.room.name) {
+            return props.room.name;
+        }
+        const otherUsernames = props.room.whitelist.filter((identifier) => client.state.user.username.toLowerCase() !== identifier);
+        if (otherUsernames.length === 0) {
+            return `Archive: ${props.room.name}`;
+        }
+        return `@${otherUsernames.join(', @')}`;
+    }
+    return props.room.name;
+});
+
+const userCount = computed(() => (client.state.roomConnectedUsers[props.room.id] || []).length);
+
 const joinRoom = () => {
     if (client.state.currentRoomId !== props.room.id) {
         client.join(props.room.id);
@@ -35,7 +60,6 @@ const joinRoom = () => {
 };
 
 const markAsRead = () => {
-    // Get last message ID from room and mark as seen
     const lastMessageId = props.room.lastReceivedMessageId;
     if (lastMessageId) {
         client.sendMessage(`/lastseen ${lastMessageId}`);
@@ -47,164 +71,97 @@ const copyRoomId = () => {
 };
 
 const leaveRoom = () => {
-    // Join first available room that's not this one
-    const otherRoom = client.state.rooms.find(r => r.id !== props.room.id && client.hasAccessToRoom(r.id));
+    const otherRoom = client.state.rooms.find((r) => r.id !== props.room.id && client.hasAccessToRoom(r.id));
     if (otherRoom) {
         client.join(otherRoom.id);
     }
 };
-
-// Whether user is in the room
-const selected = computed(() => {
-    return client.state.currentRoomId === props.room.id;
-});
-
-// Choose border color
-const borderColor = computed(() => {
-    if (hasUnread.value) {
-        return '--color-danger';
-    } else if (props.room.isPrivate) {
-        return '--color-skygray-lightest';
-    } else {
-        return '--color-skygray-lightest';
-    }
-});
-
-// Formatted room name
-const formattedName = computed(() => {
-    if (props.room.isPrivate) {
-        // If a room name is set explicitly, use that
-        if (props.room.name) {
-            return props.room.name;
-        }
-        // Otherwise, find a relevant name (exclude current user and show other participants)
-        const otherUsernames = props.room.whitelist.filter((identifier) => client.state.user.username.toLowerCase() !== identifier);
-        if (otherUsernames.length === 0) {
-            return `Archive: ${props.room.name}`;
-        }
-        return `@${otherUsernames.join(', @')}`;
-    } else {
-        return props.room.name;
-    }
-});
-
-/**
- * Return whether this room is protected
- */
-const isProtected = computed(() => {
-    return Boolean(props.room.plugins?.roomprotect);
-});
-
-// Choose icon to show and icon color
-const icon = computed(() => {
-    if (props.room.isPrivate) {
-        // If group conv
-        if (props.room.whitelist.length > 2) {
-            return {
-                name: 'users',
-                classes: selected.value ? 'text-skygray-white' : 'text-skygray-lightest',
-            };
-        }
-        return {
-            name: 'user',
-            classes: selected.value ? 'text-skygray-white' : 'text-skygray-lightest',
-        };
-    }
-    if (isProtected.value) {
-        return {
-            name: 'lock',
-            classes: selected.value ? 'text-skygray-white' : 'text-skygray-lightest',
-            title: `This room is protected. The minimum right to join is ${props.room.plugins.roomprotect}`,
-        };
-    }
-    return null;
-});
 </script>
 
 <template>
-    <HoverCard
-        :use-border-radius="true"
-        :border-color="'rgb(var(' + borderColor + '))'"
-        :selectable="true"
-        :selected="selected"
-        :main="room.main && !selected"
-        class="cursor-pointer"
-        :class="{
-            'opacity-50': isMuted,
-        }"
+    <div
+        class="group relative w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left transition cursor-pointer select-none"
+        :class="[
+            selected
+                ? 'bg-primary/10 text-white ring-1 ring-primary/30'
+                : hasUnread
+                ? 'text-white hover:bg-white/5'
+                : 'text-white/60 hover:text-white hover:bg-white/5',
+            isMuted ? 'opacity-50' : '',
+        ]"
+        @click="joinRoom"
     >
-        <div class="flex flex-row gap-2 select-none">
-            <!-- Room name -->
-            <div
-                class="py-2 pl-2 grow whitespace-nowrap w-0 overflow-hidden text-ellipsis pr-2"
-                @click="client.state.currentRoomId !== room.id && client.join(room.id)"
-            >
-                <fa v-if="icon" class="mr-1" :class="icon.classes" :icon="icon.name" :title="icon.title" />
-                {{ formattedName }}
-            </div>
+        <div v-if="selected" class="absolute left-0 top-2 bottom-2 w-[2px] rounded-r bg-primary" />
 
-            <!-- Icons -->
-            <div class="py-2 pr-2 flex">
-                <!-- Unread -->
-                <p v-if="hasUnread && !isMuted" class="text-danger font-bold mr-2" title="This room has unread messages">
-                    <fa icon="bell" size="xs" />
-                </p>
+        <!-- Icon slot -->
+        <span
+            class="w-4 text-center text-xs shrink-0"
+            :class="selected ? 'text-primary' : 'text-white/40'"
+            :title="isProtected ? `Protected room (min right ${room.plugins.roomprotect})` : undefined"
+        >
+            <fa v-if="room.isPrivate && isGroup" icon="users" />
+            <fa v-else-if="room.isPrivate" icon="at" />
+            <fa v-else-if="isProtected" icon="lock" />
+            <span v-else class="font-mono">#</span>
+        </span>
 
-                <!-- Muted -->
-                <p v-if="isMuted" class="font-bold mr-2" title="This room is muted">
-                    <fa icon="volume-xmark" size="xs" />
-                </p>
+        <!-- Name -->
+        <span class="flex-1 truncate text-sm">{{ formattedName }}</span>
 
-                <!-- User count -->
-                <p
-                    v-show="(client.state.roomConnectedUsers[room.id] || []).length > 0"
-                    class="text-primary font-bold"
-                    :title="(client.state.roomConnectedUsers[room.id] || []).length + ' users in this room'"
-                >
-                    <fa icon="users" size="xs" /> {{ (client.state.roomConnectedUsers[room.id] || []).length }}
-                </p>
+        <!-- Muted icon -->
+        <fa v-if="isMuted" icon="volume-xmark" class="text-xs text-white/30" title="Muted" />
 
-                <!-- Room actions -->
-                <SkyDropdown v-model:open="dropdownOpen">
-                    <template #trigger>
-                        <button
-                            class="ml-2 px-1.5 py-0.5 rounded border border-transparent transition text-xs"
-                            :class="dropdownOpen
-                                ? 'bg-primary/20 text-primary border-primary/50'
-                                : 'text-skygray-lightest hover:bg-skygray-dark/50 hover:border-skygray-light/30'"
-                        >
-                            <fa icon="ellipsis" />
-                        </button>
-                    </template>
+        <!-- User count (shown when no unread) -->
+        <span
+            v-if="userCount > 0 && !hasUnread"
+            class="font-mono text-xs text-white/30 tabular-nums"
+            :title="userCount + ' users in this room'"
+        >
+            {{ userCount }}
+        </span>
 
-                    <template #default>
-                        <SkyDropdownItem v-if="!selected" @click="joinRoom">
-                            <fa icon="arrow-right-from-bracket" class="w-4 mr-2" />
-                            Join room
-                        </SkyDropdownItem>
-                        <SkyDropdownItem v-if="selected" @click="leaveRoom">
-                            <fa icon="arrow-left" class="w-4 mr-2" />
-                            Leave room
-                        </SkyDropdownItem>
-                        <SkyDropdownItem v-if="hasUnread" @click="markAsRead">
-                            <fa icon="circle-dot" class="w-4 mr-2" />
-                            Mark as read
-                        </SkyDropdownItem>
-                        <SkyDropdownItem v-if="!isMuted" @click="client.sendMessage(`/mute ${room.id}`)">
-                            <fa icon="volume-xmark" class="w-4 mr-2" />
-                            Mute room
-                        </SkyDropdownItem>
-                        <SkyDropdownItem v-else @click="client.sendMessage(`/unmute ${room.id}`)">
-                            <fa icon="bell" class="w-4 mr-2" />
-                            Unmute room
-                        </SkyDropdownItem>
-                        <SkyDropdownItem @click="copyRoomId">
-                            <fa icon="copy" class="w-4 mr-2" />
-                            Copy room ID
-                        </SkyDropdownItem>
-                    </template>
-                </SkyDropdown>
-            </div>
-        </div>
-    </HoverCard>
+        <!-- Unread dot -->
+        <span v-if="hasUnread" class="w-2 h-2 rounded-full bg-primary shrink-0" title="Unread messages" />
+
+        <!-- Actions dropdown -->
+        <span @click.stop>
+            <SkyDropdown v-model:open="dropdownOpen">
+                <template #trigger>
+                    <button
+                        class="ml-1 px-1 py-0.5 rounded text-xs transition opacity-0 group-hover:opacity-100"
+                        :class="dropdownOpen ? 'bg-primary/20 text-primary opacity-100' : 'text-white/40 hover:text-white/80'"
+                    >
+                        <fa icon="ellipsis" />
+                    </button>
+                </template>
+
+                <template #default>
+                    <SkyDropdownItem v-if="!selected" @click="joinRoom">
+                        <fa icon="arrow-right-from-bracket" class="w-4 mr-2" />
+                        Join room
+                    </SkyDropdownItem>
+                    <SkyDropdownItem v-if="selected" @click="leaveRoom">
+                        <fa icon="arrow-left" class="w-4 mr-2" />
+                        Leave room
+                    </SkyDropdownItem>
+                    <SkyDropdownItem v-if="hasUnread" @click="markAsRead">
+                        <fa icon="circle-dot" class="w-4 mr-2" />
+                        Mark as read
+                    </SkyDropdownItem>
+                    <SkyDropdownItem v-if="!isMuted" @click="client.sendMessage(`/mute ${room.id}`)">
+                        <fa icon="volume-xmark" class="w-4 mr-2" />
+                        Mute room
+                    </SkyDropdownItem>
+                    <SkyDropdownItem v-else @click="client.sendMessage(`/unmute ${room.id}`)">
+                        <fa icon="bell" class="w-4 mr-2" />
+                        Unmute room
+                    </SkyDropdownItem>
+                    <SkyDropdownItem @click="copyRoomId">
+                        <fa icon="copy" class="w-4 mr-2" />
+                        Copy room ID
+                    </SkyDropdownItem>
+                </template>
+            </SkyDropdown>
+        </span>
+    </div>
 </template>

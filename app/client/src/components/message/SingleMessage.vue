@@ -1,11 +1,8 @@
 <script setup>
-import UserBigAvatar from '@/components/user/UserBigAvatar.vue';
 import UserMiniAvatar from '@/components/user/UserMiniAvatar.vue';
-import UserMiniAvatarCollection from '@/components/user/UserMiniAvatarCollection.vue';
-import ExpandableBlock from '@/components/util/ExpandableBlock.vue';
-import HoverCard from '@/components/util/HoverCard.vue';
-import { useAppStore } from '@/stores/app';
 import { useIsBlacklisted } from '@/composables/useIsBlacklisted';
+import { useUserRight } from '@/composables/useUserRight';
+import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
 import { useEncryptionStore } from '@/stores/encryption';
 import { computed, nextTick, onMounted, ref, watch } from 'vue';
@@ -62,12 +59,7 @@ watch(showCompact, () => {
 
 const isBlacklisted = useIsBlacklisted(() => props.message.user);
 
-// Shown dates
 const formattedDate = computed(() => {
-    // Show "today" if today
-    // Show "yesterday" if yesterday
-    // Show "Month day" if this year
-    // Show "Month day, year" if not this year
     const date = new Date(props.message.createdTimestamp * 1000);
     const today = new Date();
     const yesterday = new Date();
@@ -84,24 +76,17 @@ const formattedDate = computed(() => {
     return date.toLocaleString('default', { month: 'long', day: 'numeric', year: 'numeric' });
 });
 const formattedTime = computed(() => {
-    // Show time as "HH:MM:SS"
     const date = new Date(props.message.createdTimestamp * 1000);
     const hours = date.getHours().toString().padStart(2, '0');
     const minutes = date.getMinutes().toString().padStart(2, '0');
-    const seconds = date.getSeconds().toString().padStart(2, '0');
-    return `${hours}:${minutes}:${seconds}`;
+    return `${hours}:${minutes}`;
 });
 
-// Room name
 const room = computed(() => {
-    const room = client.state.rooms.find((room) => room.id === props.message.room);
-    if (!room) {
-        return null;
-    }
-    return room;
+    const r = client.state.rooms.find((room) => room.id === props.message.room);
+    return r || null;
 });
 
-// Users whose last seen message is this message
 const lastSeenUsers = computed(() => {
     return (client.state.messageIdToLastSeenUsers[props.message.id] || []).slice(0, 6);
 });
@@ -146,15 +131,12 @@ watch(unlockPassphrase, () => {
     }
 });
 
-// listen for events for buttons
 const bindMessageContentEvents = () => {
     if (!content.value) {
         return;
     }
-
     emit('content-size-changed');
 
-    // Images
     const images = Array.from(content.value.getElementsByTagName('img'));
     for (const image of images) {
         image.addEventListener('load', () => {
@@ -162,7 +144,6 @@ const bindMessageContentEvents = () => {
         });
     }
 
-    // Get buttons
     const buttons = Array.from(content.value.getElementsByClassName('skychat-button'));
     for (const button of buttons) {
         button.addEventListener('click', () => {
@@ -177,7 +158,6 @@ const bindMessageContentEvents = () => {
         });
     }
 
-    // Quotes
     const quotes = Array.from(content.value.getElementsByClassName('skychat-quote'));
     for (const quote of quotes) {
         quote.addEventListener('click', () => {
@@ -187,8 +167,6 @@ const bindMessageContentEvents = () => {
 };
 onMounted(() => {
     bindMessageContentEvents();
-
-    // Close action menu when clicking outside
     document.addEventListener('click', (event) => {
         if (showActionMenu.value && actionMenuContainer.value && !actionMenuContainer.value.contains(event.target)) {
             showActionMenu.value = false;
@@ -205,24 +183,20 @@ watch(
     () => nextTick(() => emit('content-size-changed')),
 );
 
-// Check if message supports actions (id = 0 are automated messages)
 const isAutomatedMessage = computed(() => props.message.id === 0);
 
-// Check if user can edit/delete this message
 const canEditMessage = computed(() => {
     if (isAutomatedMessage.value) return false;
     return props.message.user.username.toLowerCase() === client.state.user?.username.toLowerCase();
 });
 
+const canModerate = useUserRight('minRightForUserModeration');
+
 const canDeleteMessage = computed(() => {
     if (isAutomatedMessage.value) return false;
-    // Own message or moderator
-    const threshold = client.state.config?.minRightForUserModeration ?? 'op';
-    const canModerate = threshold === 'op' ? client.state.op : client.state.op || (client.state.user?.right ?? -1) >= threshold;
-    return canEditMessage.value || canModerate;
+    return canEditMessage.value || canModerate.value;
 });
 
-// Action handlers
 const quoteMessage = () => {
     app.setMessage('@' + props.message.id + ' ');
     showActionMenu.value = false;
@@ -250,58 +224,154 @@ const copyMessage = () => {
 const toggleActionMenu = () => {
     showActionMenu.value = !showActionMenu.value;
 };
+
+const userColor = computed(() => props.message.user.data.plugins.custom.color);
 </script>
 
 <template>
-    <ExpandableBlock
-        :force-expand="message.user.username.toLowerCase() === client.state.user?.username.toLowerCase()"
-        @content-size-changed="() => emit('content-size-changed')"
+    <!-- Day separator pill -->
+    <div v-if="showDate && !compact" class="px-4 pt-4 pb-1 flex items-center justify-center gap-2">
+        <div class="h-px flex-1 bg-white/5"></div>
+        <div class="font-mono text-xs uppercase tracking-wider text-white/40 px-2">{{ formattedDate }}</div>
+        <div class="h-px flex-1 bg-white/5"></div>
+    </div>
+
+    <div
+        class="group relative flex transition"
+        :class="[
+            compact ? 'gap-2' : 'gap-3 px-4 py-1',
+            isBlacklisted ? 'opacity-50' : 'hover:bg-white/[.02]',
+            isAutomatedMessage ? 'opacity-60 italic' : '',
+        ]"
     >
-        <HoverCard
-            :border-color="message.user.data.plugins.custom.color"
-            :selectable="selectable"
-            :selected="false"
-            :use-border-radius="false"
-            :class="{
-                blacklisted: isBlacklisted,
-            }"
-            class="group relative flex flex-row"
-        >
-            <div v-if="showDate" class="absolute w-full text-center text-xs">
-                <span class="border px-2 py-1/2 rounded-full">
-                    {{ formattedDate }}
-                </span>
+        <!-- Blacklisted compact view -->
+        <template v-if="isBlacklisted">
+            <UserMiniAvatar :user="message.user" />
+            <a
+                class="text-skygray-lighter cursor-pointer hover:underline text-sm"
+                @click.stop="client.sendMessage('/unblacklist ' + message.user.username)"
+            >
+                Unblacklist {{ message.user.username }} to see his messages
+            </a>
+        </template>
+
+        <template v-else>
+            <!-- Avatar column -->
+            <div
+                v-if="!compact"
+                class="w-7 h-7 shrink-0 mt-[2px] rounded overflow-hidden bg-black border-2"
+                :style="{ borderColor: userColor }"
+                :title="message.user.username"
+            >
+                <img :src="message.user.data.plugins.avatar" :alt="message.user.username" class="h-full w-full object-cover" />
             </div>
 
-            <!-- Hover action buttons -->
+            <div class="flex-1 min-w-0">
+                <!-- Header row -->
+                <div v-if="!compact" class="flex items-baseline gap-2 mb-0.5">
+                    <span class="font-semibold text-sm" :style="{ color: userColor }">
+                        {{ message.user.username }}
+                    </span>
+                    <span v-if="message.user.right > 0" class="font-mono text-xs text-white/30" :title="`Level ${message.user.right}`">
+                        {{ message.user.right }}
+                    </span>
+                    <fa v-if="message.meta.device === 'mobile'" icon="mobile-screen" class="text-xs text-white/40" />
+                    <span class="font-mono text-xs text-white/35">{{ formattedTime }}</span>
+                </div>
+                <div v-else class="flex items-baseline gap-2 mb-0.5">
+                    <span class="font-semibold text-sm" :style="{ color: userColor }">
+                        {{ message.user.username }}
+                    </span>
+                    <span class="font-mono text-xs text-white/35">
+                        {{ formattedTime }}<template v-if="room"> @ {{ room.name }}</template>
+                    </span>
+                </div>
+
+                <!-- Quoted message -->
+                <div
+                    v-if="message.quoted && !compact"
+                    class="my-2 pl-2 border-l-[3px] opacity-75"
+                    :style="{ borderColor: message.quoted.user.data.plugins.custom.color }"
+                >
+                    <SingleMessage :message="message.quoted" :selectable="false" :compact="true" />
+                </div>
+
+                <!-- Encrypted unlock form -->
+                <template v-if="!showCompact && shouldShowUnlockForm">
+                    <div class="text-xs text-primary flex items-center mb-2 italic">
+                        <fa icon="lock" class="mr-2" />
+                        <span>{{ message.meta.encryptionLabel ?? 'Encrypted message' }}</span>
+                    </div>
+                    <div class="mb-3 text-xs">
+                        <div class="flex flex-col gap-2 lg:flex-row">
+                            <input
+                                v-model="unlockPassphrase"
+                                type="password"
+                                class="form-control w-full"
+                                placeholder="Enter passphrase"
+                                @keydown.enter.prevent="unlockEncryptedMessage"
+                            />
+                            <button class="form-control lg:w-32" :disabled="unlocking" @click="unlockEncryptedMessage">
+                                {{ unlocking ? 'Unlocking…' : 'Unlock' }}
+                            </button>
+                        </div>
+                        <p v-if="unlockError" class="text-danger mt-2">{{ unlockError }}</p>
+                    </div>
+                </template>
+
+                <!-- Compact body (used inside quoted nested view) -->
+                <div v-if="showCompact" class="text-skygray-white text-sm truncate">
+                    <template v-if="message.content.length < COMPACT_QUOTES_MAX_LENGTH">
+                        {{ message.content }}
+                    </template>
+                    <template v-else>
+                        {{ message.content.substr(0, COMPACT_QUOTES_MAX_LENGTH) }}
+                        <button class="skychat-button" @click="forceExpand = true">...</button>
+                    </template>
+                </div>
+
+                <!-- Full message body -->
+                <div
+                    v-else-if="!shouldShowUnlockForm"
+                    ref="content"
+                    class="text-base text-white/90 leading-[1.45] whitespace-pre-wrap break-words"
+                    v-html="message.formatted"
+                />
+
+                <!-- Reactions -->
+                <MessageReactions v-if="!compact && message.storage?.reactions" :message="message" />
+            </div>
+
+            <!-- Right column: time + last-seen avatars (non-compact) -->
+            <div v-if="!compact && lastSeenUsers.length > 0" class="shrink-0 flex flex-col items-end gap-1">
+                <div class="flex -space-x-1.5">
+                    <UserMiniAvatar v-for="user in lastSeenUsers" :key="user.username" :user="user" />
+                </div>
+            </div>
+
+            <!-- Hover toolbar -->
             <div
                 v-if="!compact && !isAutomatedMessage"
-                class="absolute right-[80px] top-0 items-center gap-1"
-                :class="anyMenuOpen ? 'flex' : 'hidden group-hover:flex'"
+                class="absolute -top-3 right-6 transition flex items-center gap-0.5 rounded-lg hairline p-0.5 z-20"
+                :class="anyMenuOpen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'"
+                :style="{ background: 'var(--surface-2)' }"
             >
-                <!-- Quote -->
+                <MessageReactionAdd :message-id="message.id" @picker-toggle="reactionPickerOpen = $event" />
                 <button
-                    title="Quote"
-                    class="flex items-center rounded-full px-2 py-1 border border-transparent bg-skygray-dark/50 text-skygray-lightest hover:border-skygray-light/60 hover:-translate-y-0.5 hover:shadow-sm hover:shadow-primary/20 active:translate-y-0 transition text-xs"
+                    title="Reply / quote"
+                    class="w-8 h-8 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/5 rounded-md text-sm"
                     @click="quoteMessage"
                 >
-                    <fa icon="comments" />
+                    <fa icon="reply" />
                 </button>
-
-                <!-- React -->
-                <MessageReactionAdd :message-id="message.id" @picker-toggle="reactionPickerOpen = $event" />
-
-                <!-- More actions menu -->
                 <div ref="actionMenuContainer" class="relative">
                     <button
                         title="More actions"
-                        class="flex items-center rounded-full px-2 py-1 border border-transparent bg-skygray-dark/50 text-skygray-lightest hover:border-skygray-light/60 hover:-translate-y-0.5 hover:shadow-sm hover:shadow-primary/20 active:translate-y-0 transition text-xs"
+                        class="w-8 h-8 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/5 rounded-md text-sm"
                         @click="toggleActionMenu"
                     >
                         <fa icon="ellipsis" />
                     </button>
-
-                    <!-- Dropdown menu -->
                     <div v-show="showActionMenu" class="absolute right-0 top-9 form-control p-1 flex flex-col gap-1 z-50 min-w-max">
                         <button
                             v-if="canEditMessage"
@@ -326,107 +396,6 @@ const toggleActionMenu = () => {
                     </div>
                 </div>
             </div>
-
-            <div v-if="!isBlacklisted" class="py-1 px-3 flex flex-row" :class="{ 'opacity-60 italic': isAutomatedMessage }">
-                <UserBigAvatar v-if="!compact" class="mt-1" :user="message.user" />
-
-                <div class="grow pl-4">
-                    <!-- First row -->
-                    <div class="flex">
-                        <div
-                            class="font-bold"
-                            :style="{
-                                color: message.user.data.plugins.custom.color,
-                            }"
-                        >
-                            {{ message.user.username }}
-                            <sup
-                                v-if="isBlacklisted"
-                                title="This user is blacklisted. Click to remove from blacklist."
-                                @click.stop="client.sendMessage('/unblacklist ' + entry.user.username)"
-                            >
-                                <fa icon="ban" class="text-danger" />
-                            </sup>
-                            <sup v-if="message.meta.device === 'mobile'">
-                                <fa icon="mobile-screen" class="ml-1" />
-                            </sup>
-                        </div>
-                        <div v-if="compact" class="text-skygray-lightest text-xs pt-1 ml-2">
-                            {{ formattedTime }}
-                            <template v-if="room"> @ {{ room.name }} </template>
-                        </div>
-                    </div>
-
-                    <!-- Quoted message -->
-                    <SingleMessage
-                        v-if="message.quoted"
-                        :message="message.quoted"
-                        :selectable="false"
-                        :compact="true"
-                        :force-expand="true"
-                        class="mt-2 mb-4 opacity-75"
-                    />
-
-                    <!-- Message content -->
-                    <template v-if="showCompact">
-                        <div class="text-skygray-white w-0 min-w-full">
-                            <template v-if="message.content.length < COMPACT_QUOTES_MAX_LENGTH">
-                                {{ message.content }}
-                            </template>
-                            <template v-else>
-                                {{ message.content.substr(0, COMPACT_QUOTES_MAX_LENGTH) }}
-                                <button class="skychat-button" @click="forceExpand = true">...</button></template
-                            >
-                        </div>
-                    </template>
-                    <template v-else>
-                        <div v-if="shouldShowUnlockForm" class="text-xs text-primary flex items-center mb-2 italic">
-                            <fa icon="lock" class="mr-2" />
-                            <span>
-                                {{ message.meta.encryptionLabel ?? 'Encrypted message' }}
-                            </span>
-                        </div>
-                        <div v-if="shouldShowUnlockForm" class="mb-3 text-xs">
-                            <div class="flex flex-col gap-2 lg:flex-row">
-                                <input
-                                    v-model="unlockPassphrase"
-                                    type="password"
-                                    class="form-control w-full"
-                                    placeholder="Enter passphrase"
-                                    @keydown.enter.prevent="unlockEncryptedMessage"
-                                />
-                                <button class="form-control lg:w-32" :disabled="unlocking" @click="unlockEncryptedMessage">
-                                    {{ unlocking ? 'Unlocking…' : 'Unlock' }}
-                                </button>
-                            </div>
-                            <p v-if="unlockError" class="text-danger mt-2">{{ unlockError }}</p>
-                        </div>
-                        <div
-                            v-if="!shouldShowUnlockForm"
-                            ref="content"
-                            class="text-skygray-white w-0 min-w-full whitespace-pre-wrap overflow-hidden break-words"
-                            v-html="message.formatted"
-                        />
-                    </template>
-                </div>
-
-                <div v-if="!showCompact" class="basis-16 w-16 flex flex-col text-center">
-                    <span class="grow text-xs text-skygray-lightest">
-                        {{ formattedTime }}
-                    </span>
-                    <UserMiniAvatarCollection :users="lastSeenUsers" class="my-2" />
-                </div>
-            </div>
-            <div v-else class="flex pl-6 items-center">
-                <UserMiniAvatar :user="message.user" class="mr-2" />
-                <div class="text-skygray-lighter">
-                    <a class="cursor-pointer hover:underline" @click.stop="client.sendMessage('/unblacklist ' + message.user.username)">
-                        Unblacklist {{ message.user.username }} to see his messages
-                    </a>
-                </div>
-            </div>
-
-            <MessageReactions v-if="message.storage.reactions && !compact" :message="message" />
-        </HoverCard>
-    </ExpandableBlock>
+        </template>
+    </div>
 </template>

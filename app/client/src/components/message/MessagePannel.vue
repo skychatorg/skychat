@@ -148,52 +148,54 @@ function isMessageFirstOfDay(index) {
 </script>
 
 <template>
-    <div
-        ref="messagePannel"
-        class="overflow-x-hidden overflow-y-auto pl-2 scrollbar"
-        :style="{
-            'scroll-behavior': scrollState.smooth && scrollState.auto ? 'smooth' : 'auto',
-        }"
-        @scroll="onScroll"
-    >
-        <template v-if="client.state.currentRoomReady">
-            <div
-                v-if="isSearchMode && client.messageSearch.query"
-                class="sticky top-0 bg-skygray-lighter/25 backdrop-blur-sm px-4 py-2 text-sm text-center border-b border-skygray-lighter/20 z-10"
-            >
-                <p v-if="!client.messageSearchLoading">
-                    Found {{ displayedMessages.length }} result{{ displayedMessages.length > 1 ? 's' : '' }} for "{{
-                        client.messageSearch.query
-                    }}".
-                </p>
-                <p v-else>Searching for "{{ client.messageSearch.query }}"...</p>
-            </div>
-            <div v-if="client.messageSearchLoading" class="text-center py-6 text-skygray-light">Loading search results...</div>
-            <template v-else-if="isSearchMode">
-                <SingleMessage
-                    v-for="(message, index) in displayedMessages"
-                    :key="message.id"
-                    :message="message"
-                    :show-date="isMessageFirstOfDay(index)"
-                    @content-size-changed="scrollToBottomIfAutoScroll"
-                />
-                <div v-if="displayedMessages.length === 0" class="text-center text-skygray-light py-6">
-                    No messages found for "{{ client.messageSearch.query }}" in this room.
+    <div class="relative h-full min-h-0 flex flex-col">
+        <div
+            ref="messagePannel"
+            class="overflow-x-hidden overflow-y-auto scrollbar grow"
+            :style="{
+                'scroll-behavior': scrollState.smooth && scrollState.auto ? 'smooth' : 'auto',
+            }"
+            @scroll="onScroll"
+        >
+            <template v-if="client.state.currentRoomReady">
+                <div
+                    v-if="isSearchMode && client.messageSearch.query"
+                    class="sticky top-0 bg-skygray-lighter/25 backdrop-blur-sm px-4 py-2 text-sm text-center border-b border-skygray-lighter/20 z-10"
+                >
+                    <p v-if="!client.messageSearchLoading">
+                        Found {{ displayedMessages.length }} result{{ displayedMessages.length > 1 ? 's' : '' }} for "{{
+                            client.messageSearch.query
+                        }}".
+                    </p>
+                    <p v-else>Searching for "{{ client.messageSearch.query }}"...</p>
                 </div>
+                <div v-if="client.messageSearchLoading" class="text-center py-6 text-skygray-light">Loading search results...</div>
+                <template v-else-if="isSearchMode">
+                    <SingleMessage
+                        v-for="(message, index) in displayedMessages"
+                        :key="message.id"
+                        :message="message"
+                        :show-date="isMessageFirstOfDay(index)"
+                        @content-size-changed="scrollToBottomIfAutoScroll"
+                    />
+                    <div v-if="displayedMessages.length === 0" class="text-center text-skygray-light py-6">
+                        No messages found for "{{ client.messageSearch.query }}" in this room.
+                    </div>
+                </template>
+                <template v-else>
+                    <SingleMessage
+                        v-for="(message, index) in displayedMessages"
+                        :key="message.id"
+                        :message="message"
+                        :show-date="isMessageFirstOfDay(index)"
+                        @content-size-changed="scrollToBottomIfAutoScroll"
+                    />
+                </template>
             </template>
             <template v-else>
-                <SingleMessage
-                    v-for="(message, index) in displayedMessages"
-                    :key="message.id"
-                    :message="message"
-                    :show-date="isMessageFirstOfDay(index)"
-                    @content-size-changed="scrollToBottomIfAutoScroll"
-                />
+                <div class="text-center text-gray-500 mt-4">loading...</div>
             </template>
-        </template>
-        <template v-else>
-            <div class="text-center text-gray-500 mt-4">loading...</div>
-        </template>
+        </div>
     </div>
 </template>
 

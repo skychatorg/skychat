@@ -1,10 +1,8 @@
 <script setup>
 import SkyDropdown from '@/components/common/SkyDropdown.vue';
 import SkyDropdownItem from '@/components/common/SkyDropdownItem.vue';
-import SkyTooltip from '@/components/common/SkyTooltip.vue';
-import UserBigAvatar from '@/components/user/UserBigAvatar.vue';
-import HoverCard from '@/components/util/HoverCard.vue';
 import { useIsBlacklisted } from '@/composables/useIsBlacklisted';
+import { useUserRight } from '@/composables/useUserRight';
 import { useClientStore } from '@/stores/client';
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 
@@ -25,17 +23,8 @@ const isSelf = computed(() => {
     return props.entry.user.username.toLowerCase() === client.state.user?.username.toLowerCase();
 });
 
-// Check if current user can moderate
-const canModerate = computed(() => {
-    const threshold = client.state.config?.minRightForUserModeration ?? 'op';
-    if (threshold === 'op') {
-        return client.state.op;
-    }
-    const userRight = client.state.user?.right ?? -1;
-    return client.state.op || userRight >= threshold;
-});
+const canModerate = useUserRight('minRightForUserModeration');
 
-// Actions
 const sendPM = () => {
     client.sendMessage('/pm ' + props.entry.user.username);
 };
@@ -65,7 +54,6 @@ const copyUsername = () => {
     navigator.clipboard.writeText(props.entry.user.username);
 };
 
-// Formatted money
 const formattedMoney = computed(() => {
     return '$' + Math.floor(props.entry.user.money / 1e2);
 });
@@ -81,13 +69,11 @@ onUnmounted(() => {
     clearInterval(nowDateInterval.value);
 });
 
-// Number of minutes since the last message was sent
 const minutesSinceLastMessage = computed(() => {
     const duration = nowDate.value - props.entry.lastInteractionTime;
     return Math.floor(duration / 60);
 });
 
-// Formatted duration since the session is dead
 const formattedDurationSinceDead = computed(() => {
     if (!props.entry.deadSinceTime) {
         return '';
@@ -97,7 +83,7 @@ const formattedDurationSinceDead = computed(() => {
         return Math.round(duration / 60 / 60 / 24) + 'd';
     }
     if (duration > 60 * 60) {
-        return Math.round(duration / 60 / 60) + 'hr';
+        return Math.round(duration / 60 / 60) + 'h';
     }
     if (duration > 60) {
         return Math.round(duration / 60) + 'm';
@@ -105,159 +91,151 @@ const formattedDurationSinceDead = computed(() => {
     return Math.round(duration) + 's';
 });
 
-const borderColor = computed(() => {
-    const sameRoom =
-        props.entry.user.username.toLowerCase() === client.state.user.username.toLowerCase() ||
-        props.entry.rooms.includes(client.state.currentRoomId);
-
-    if (props.entry.deadSinceTime) {
-        return 'transparent';
-    } else if (sameRoom) {
-        return 'rgb(var(--color-primary))';
-    } else {
-        return 'rgb(var(--color-skygray-light))';
+const isInCurrentRoom = computed(() => {
+    if (isSelf.value) {
+        return true;
     }
+    return props.entry.rooms?.includes(client.state.currentRoomId);
 });
+
+const isAfk = computed(() => Boolean(props.entry.deadSinceTime));
+const isDisconnected = computed(() => props.entry.connectionCount === 0);
 </script>
 
 <template>
-    <HoverCard
-        :border-color="borderColor"
-        :use-border-radius="true"
-        :selectable="true"
-        :selected="false"
-        class="group"
-        :class="{
-            'opacity-40': isBlacklisted,
-        }"
+    <div
+        class="group relative flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-white/5 transition select-none"
+        :class="{ 'opacity-40': isBlacklisted }"
     >
-        <div
-            class="py-2 px-3 flex flex-row"
-            :class="{
-                'opacity-50': entry.connectionCount === 0,
-            }"
-        >
-            <UserBigAvatar class="mt-1 cursor-pointer" :user="entry.user" @click="sendPM" />
+        <!-- Avatar -->
+        <button class="relative shrink-0" :title="entry.user.username" @click="sendPM">
+            <div class="w-8 h-8 rounded overflow-hidden bg-black border-2" :style="{ borderColor: entry.user.data.plugins.custom.color }">
+                <img :src="entry.user.data.plugins.avatar" :alt="entry.user.username" class="h-full w-full object-cover" />
+            </div>
+            <div
+                v-if="isInCurrentRoom && !isAfk && !isDisconnected"
+                class="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-400"
+                :style="{ boxShadow: '0 0 0 2px var(--surface)' }"
+            />
+        </button>
 
-            <!-- Right col -->
-            <div class="grow pl-4 pr-1">
-                <!-- First row -->
-                <div class="flex">
-                    <div
-                        class="grow font-bold w-0 overflow-hidden text-ellipsis pr-2 cursor-pointer hover:underline"
-                        :title="entry.user.username"
-                        :style="{
-                            color: entry.user.data.plugins.custom.color,
-                        }"
-                        @click="sendPM"
-                    >
-                        {{ entry.user.username }}
-                        <sup v-if="entry.connectionCount > 1">{{ entry.connectionCount }}</sup>
-                        <span v-if="isBlacklisted" class="text-xs text-danger ml-1">(blocked)</span>
-                    </div>
-                    <div class="text-xs text-right text-skygray-lighter flex justify-end items-center space-x-4 pt-1">
-                        <!-- User actions dropdown -->
-                        <SkyDropdown v-if="!isSelf" v-model:open="dropdownOpen">
-                            <template #trigger>
-                                <button
-                                    class="px-1.5 py-0.5 rounded border border-transparent transition text-xs"
-                                    :class="[
-                                        dropdownOpen
-                                            ? 'bg-primary/20 text-primary border-primary/50'
-                                            : 'text-skygray-lightest hover:bg-skygray-dark/50 hover:border-skygray-light/30',
-                                        dropdownOpen ? '' : 'opacity-0 group-hover:opacity-100',
-                                    ]"
-                                >
-                                    <fa icon="ellipsis" />
-                                </button>
-                            </template>
+        <!-- Middle col -->
+        <div class="flex-1 min-w-0">
+            <!-- First row -->
+            <div class="flex items-center gap-1.5">
+                <button
+                    class="text-sm font-semibold truncate text-left hover:underline"
+                    :title="entry.user.username"
+                    :style="{ color: entry.user.data.plugins.custom.color }"
+                    @click="sendPM"
+                >
+                    {{ entry.user.username }}
+                </button>
+                <sup v-if="entry.connectionCount > 1" class="font-mono text-xs text-white/40">
+                    {{ entry.connectionCount }}
+                </sup>
+                <span v-if="isBlacklisted" class="font-mono text-xs text-danger">blocked</span>
+            </div>
 
-                            <template #default>
-                                <SkyDropdownItem @click="sendPM">
-                                    <fa icon="paper-plane" class="w-4 mr-2" />
-                                    Send PM
-                                </SkyDropdownItem>
-                                <SkyDropdownItem v-if="!isBlacklisted" @click="blacklistUser">
-                                    <fa icon="ban" class="w-4 mr-2" />
-                                    Blacklist
-                                </SkyDropdownItem>
-                                <SkyDropdownItem v-else @click="unblacklistUser">
-                                    <fa icon="ban" class="w-4 mr-2" />
-                                    Unblacklist
-                                </SkyDropdownItem>
-                                <SkyDropdownItem v-if="canModerate" @click="kickUser">
-                                    <fa icon="power-off" class="w-4 mr-2 text-warning" />
-                                    Kick
-                                </SkyDropdownItem>
-                                <SkyDropdownItem v-if="canModerate" @click="banUser">
-                                    <fa icon="ban" class="w-4 mr-2 text-danger" />
-                                    Ban
-                                </SkyDropdownItem>
-                                <SkyDropdownItem @click="copyUsername">
-                                    <fa icon="copy" class="w-4 mr-2" />
-                                    Copy username
-                                </SkyDropdownItem>
-                            </template>
-                        </SkyDropdown>
+            <!-- Second row -->
+            <div class="flex items-center gap-2 font-mono text-xs text-white/40">
+                <!-- Discord -->
+                <span
+                    v-if="client.state.discordPresence?.onlineUserIds?.includes(entry.user.id)"
+                    title="Online on Discord"
+                    class="text-[#5865F2]"
+                >
+                    <fa :icon="['fab', 'discord']" />
+                </span>
 
-                        <span v-show="entry.user.money > 0" :title="(entry.user.money / 100).toFixed(2)" class="text-yellow-300">{{
-                            formattedMoney
-                        }}</span>
-                        <span v-show="entry.user.right > 0" :title="entry.user.right" class="text-primary">{{ entry.user.right }}</span>
-                    </div>
-                </div>
+                <!-- Status -->
+                <template v-if="isDisconnected">
+                    <span class="flex items-center gap-1 text-danger" :title="`Disconnected ${formattedDurationSinceDead} ago`">
+                        <fa icon="link-slash" />
+                        <span>{{ formattedDurationSinceDead }}</span>
+                    </span>
+                </template>
+                <template v-else-if="isAfk">
+                    <span class="flex items-center gap-1" :title="`AFK ${formattedDurationSinceDead}`">
+                        <fa icon="clock" />
+                        <span>{{ formattedDurationSinceDead }}</span>
+                    </span>
+                </template>
+                <template v-else-if="minutesSinceLastMessage > 0">
+                    <span class="flex items-center gap-1" :title="`Last message ${minutesSinceLastMessage}m ago`">
+                        <fa icon="clock" />
+                        <span>{{ minutesSinceLastMessage > 30 ? 'afk' : minutesSinceLastMessage + 'm' }}</span>
+                    </span>
+                </template>
+                <template v-else>
+                    <span class="flex items-center gap-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                        <span>active</span>
+                    </span>
+                </template>
 
-                <!-- Second row -->
-                <div class="flex">
-                    <!-- Status icons -->
-                    <div class="flex flex-row w-20 basis-20 space-x-2">
-                        <!-- Discord online -->
-                        <span
-                            v-if="client.state.discordPresence?.onlineUserIds?.includes(entry.user.id)"
-                            title="Online on Discord"
-                            class="text-[#5865F2]"
-                        >
-                            <fa :icon="['fab', 'discord']" />
-                        </span>
-
-                        <!-- Last activity -->
-                        <span
-                            v-if="entry.connectionCount > 0 && minutesSinceLastMessage > 0"
-                            :title="'Last message sent ' + minutesSinceLastMessage + ' minutes ago'"
-                            class="text-primary whitespace-nowrap"
-                        >
-                            <fa icon="clock" />
-                            {{ minutesSinceLastMessage > 30 ? 'afk' : minutesSinceLastMessage + 'm' }}
-                        </span>
-
-                        <!-- Disconnected -->
-                        <span
-                            v-if="entry.connectionCount === 0"
-                            :title="'User has disconnected ' + formattedDurationSinceDead + ' ago'"
-                            class="text-danger whitespace-nowrap"
-                        >
-                            <fa icon="link-slash" />
-                            {{ formattedDurationSinceDead }}
-                        </span>
-                    </div>
-
-                    <!-- Motto -->
-                    <div v-if="entry.user.data.plugins.motto" class="w-0 grow flex justify-end">
-                        <SkyTooltip trigger-class="w-0 grow">
-                            <template #trigger>
-                                <div
-                                    class="text-right text-skygray-lighter whitespace-nowrap text-ellipsis overflow-hidden"
-                                    :title="entry.user.data.plugins.motto"
-                                >
-                                    {{ entry.user.data.plugins.motto }}
-                                </div>
-                            </template>
-
-                            <p>{{ entry.user.data.plugins.motto }}</p>
-                        </SkyTooltip>
-                    </div>
-                </div>
+                <!-- Motto -->
+                <span v-if="entry.user.data.plugins.motto" class="truncate text-white/35 italic" :title="entry.user.data.plugins.motto">
+                    {{ entry.user.data.plugins.motto }}
+                </span>
             </div>
         </div>
-    </HoverCard>
+
+        <!-- Right col -->
+        <div class="shrink-0 flex items-center gap-2">
+            <span
+                v-show="entry.user.money > 0"
+                :title="(entry.user.money / 100).toFixed(2)"
+                class="font-mono text-xs text-amber-300/80 tabular-nums"
+            >
+                {{ formattedMoney }}
+            </span>
+            <span v-show="entry.user.right > 0" :title="`Level ${entry.user.right}`" class="font-mono text-xs text-primary tabular-nums">
+                {{ entry.user.right }}
+            </span>
+
+            <!-- Actions dropdown -->
+            <SkyDropdown v-if="!isSelf" v-model:open="dropdownOpen">
+                <template #trigger>
+                    <button
+                        class="px-1 py-0.5 rounded text-xs transition"
+                        :class="
+                            dropdownOpen
+                                ? 'bg-primary/20 text-primary opacity-100'
+                                : 'text-white/40 hover:text-white/80 opacity-0 group-hover:opacity-100'
+                        "
+                    >
+                        <fa icon="ellipsis" />
+                    </button>
+                </template>
+
+                <template #default>
+                    <SkyDropdownItem @click="sendPM">
+                        <fa icon="paper-plane" class="w-4 mr-2" />
+                        Send PM
+                    </SkyDropdownItem>
+                    <SkyDropdownItem v-if="!isBlacklisted" @click="blacklistUser">
+                        <fa icon="ban" class="w-4 mr-2" />
+                        Blacklist
+                    </SkyDropdownItem>
+                    <SkyDropdownItem v-else @click="unblacklistUser">
+                        <fa icon="ban" class="w-4 mr-2" />
+                        Unblacklist
+                    </SkyDropdownItem>
+                    <SkyDropdownItem v-if="canModerate" @click="kickUser">
+                        <fa icon="power-off" class="w-4 mr-2 text-warn" />
+                        Kick
+                    </SkyDropdownItem>
+                    <SkyDropdownItem v-if="canModerate" @click="banUser">
+                        <fa icon="ban" class="w-4 mr-2 text-danger" />
+                        Ban
+                    </SkyDropdownItem>
+                    <SkyDropdownItem @click="copyUsername">
+                        <fa icon="copy" class="w-4 mr-2" />
+                        Copy username
+                    </SkyDropdownItem>
+                </template>
+            </SkyDropdown>
+        </div>
+    </div>
 </template>

@@ -1,6 +1,7 @@
 #modals {
     @apply fixed top-0 left-0 w-full h-full mt-[var(--page-header-height)];
     @apply pointer-events-none;
+    z-index: 100;
 }
 
 #modals #modal-container {
@@ -8,8 +9,9 @@
 }
 
 #modals #modal-container:not(:empty) {
-    @apply backdrop-grayscale backdrop-blur-xl;
+    @apply backdrop-blur-xl;
     @apply pointer-events-auto;
+    background: rgba(0, 0, 0, 0.35);
 }
 
 #modals #modal-container .modal {
