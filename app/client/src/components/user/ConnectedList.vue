@@ -10,6 +10,13 @@ import { computed } from 'vue';
 const app = useAppStore();
 const client = useClientStore();
 
+defineProps({
+    compact: {
+        type: Boolean,
+        default: false,
+    },
+});
+
 const presence = computed(() => client.state.discordPresence);
 const showPresence = computed(() => (presence.value?.onlineCount || 0) > 0);
 const hasVoiceActivity = computed(() => (presence.value?.voiceCount || 0) > 0);
@@ -36,8 +43,30 @@ const canManageStickers = useUserRight('minRightForStickerManagement');
 
 <template>
     <div class="flex flex-col h-full min-h-0">
+        <!-- Collapse toggle (desktop only). Collapse button sits toward the chat (left edge), mirroring the left column. -->
+        <div v-if="compact" class="hidden lg:flex shrink-0 px-1 pt-3">
+            <button
+                class="w-full flex items-center justify-center py-2 rounded-lg text-white/40 hover:text-white hover:bg-white/5 transition"
+                title="Expand sidebar"
+                @click="app.toggleRightCollapsed()"
+            >
+                <span class="w-4 text-center text-xs">
+                    <fa icon="chevron-left" />
+                </span>
+            </button>
+        </div>
+        <div v-else class="hidden lg:flex shrink-0 items-center justify-start px-3 pt-3">
+            <button
+                class="w-7 h-7 rounded text-white/40 hover:text-white hover:bg-white/5 transition flex items-center justify-center"
+                title="Collapse sidebar"
+                @click="app.toggleRightCollapsed()"
+            >
+                <fa icon="chevron-right" class="text-xs" />
+            </button>
+        </div>
+
         <!-- Header -->
-        <div class="p-3 pb-1 flex items-center justify-between shrink-0">
+        <div v-if="!compact" class="p-3 pb-1 flex items-center justify-between shrink-0">
             <div class="flex items-center gap-2">
                 <span class="text-xs font-mono uppercase tracking-wider text-white/30">Active now</span>
                 <span class="font-mono text-xs text-white/50 tabular-nums">{{ activeEntries.length }}</span>
@@ -60,7 +89,7 @@ const canManageStickers = useUserRight('minRightForStickerManagement');
         </div>
 
         <!-- Discord presence -->
-        <div v-if="showPresence" class="flex justify-end px-3 mb-2 shrink-0">
+        <div v-if="showPresence && !compact" class="flex justify-end px-3 mb-2 shrink-0">
             <SkyTooltip v-if="!hasVoiceActivity">
                 <template #trigger>
                     <div class="p-1.5 rounded-md bg-indigo-500/15 text-indigo-400 cursor-default">
@@ -87,48 +116,66 @@ const canManageStickers = useUserRight('minRightForStickerManagement');
             </div>
         </div>
 
-        <!-- PresenceRail (Now in rooms) -->
-        <PresenceRail />
+        <!-- PresenceRail (Now in rooms) — low value at 56px, hidden in the rail -->
+        <PresenceRail v-if="!compact" />
 
         <!-- Active/Away user list -->
-        <div class="flex-1 min-h-0 overflow-y-auto scrollbar px-2">
-            <SingleConnectedUser v-for="entry in activeEntries" :key="entry.identifier" :entry="entry" />
+        <div class="flex-1 min-h-0 overflow-y-auto scrollbar" :class="compact ? 'px-1' : 'px-2'">
+            <SingleConnectedUser v-for="entry in activeEntries" :key="entry.identifier" :entry="entry" :compact="compact" />
 
             <template v-if="awayEntries.length > 0">
-                <div class="px-2 pt-3 pb-1 text-xs font-mono uppercase tracking-wider text-white/25">Away</div>
+                <div v-if="!compact" class="px-2 pt-3 pb-1 text-xs font-mono uppercase tracking-wider text-white/25">Away</div>
+                <div v-else class="h-px bg-white/5 mx-2 my-2" aria-hidden="true" />
                 <div class="opacity-50">
-                    <SingleConnectedUser v-for="entry in awayEntries" :key="entry.identifier" :entry="entry" />
+                    <SingleConnectedUser v-for="entry in awayEntries" :key="entry.identifier" :entry="entry" :compact="compact" />
                 </div>
             </template>
         </div>
 
         <!-- Action grid -->
-        <div class="p-3 grid grid-cols-2 gap-2 hairline shrink-0" :style="{ background: 'var(--surface-2)' }">
+        <div
+            class="hairline shrink-0"
+            :class="compact ? 'p-1 flex flex-col gap-2' : 'p-3 grid grid-cols-2 gap-2'"
+            :style="{ background: 'var(--surface-2)' }"
+        >
             <button
                 v-if="client.state.config.galleryEnabled"
-                class="col-span-1 h-10 flex items-center justify-center gap-1.5 rounded-lg hairline bg-white/[.03] hover:bg-white/[.07] text-sm"
-                :class="{ 'text-tertiary': client.state.ongoingConverts.length > 0 }"
+                class="h-10 flex items-center justify-center gap-1.5 rounded-lg hairline bg-white/[.03] hover:bg-white/[.07] text-sm"
+                :class="[compact ? 'w-full' : 'col-span-1', { 'text-tertiary': client.state.ongoingConverts.length > 0 }]"
                 title="Open gallery"
                 @click="app.toggleModal('gallery')"
             >
                 <fa icon="folder-tree" />
-                Gallery
+                <span v-if="!compact">Gallery</span>
             </button>
             <button
-                class="col-span-1 h-10 flex items-center justify-center gap-1.5 rounded-lg hairline bg-white/[.03] hover:bg-white/[.07] text-sm"
+                class="h-10 flex items-center justify-center gap-1.5 rounded-lg hairline bg-white/[.03] hover:bg-white/[.07] text-sm"
+                :class="compact ? 'w-full' : 'col-span-1'"
                 title="Open user settings"
                 @click="app.toggleModal('profile')"
             >
                 <fa icon="gears" />
-                Settings
+                <span v-if="!compact">Settings</span>
+            </button>
+            <button
+                v-if="client.state.config && client.state.config.jellyfinEnabled"
+                class="h-10 flex items-center justify-center gap-1.5 rounded-lg hairline bg-white/[.03] hover:bg-white/[.07] text-sm"
+                :class="compact ? 'w-full' : 'col-span-2'"
+                title="Browse Jellyfin library"
+                @click="app.toggleModal('jellyfin')"
+            >
+                <fa icon="film" />
+                <span v-if="!compact">Jellyfin</span>
             </button>
             <button
                 v-if="canManageStickers"
-                class="col-span-2 h-10 flex items-center justify-center gap-1.5 rounded-lg hairline bg-white/[.03] hover:bg-white/[.07] text-sm"
+                class="h-10 flex items-center justify-center gap-1.5 rounded-lg hairline bg-white/[.03] hover:bg-white/[.07] text-sm"
+                :class="compact ? 'w-full' : 'col-span-2'"
+                title="Manage stickers"
                 @click="app.toggleModal('manageStickers')"
             >
                 <fa icon="image" />
-                Manage stickers
+                <span v-if="!compact">Manage stickers</span>
             </button>
         </div>
     </div>

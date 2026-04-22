@@ -42,6 +42,14 @@ export type SkyChatOptions = {
     autoMessageAck?: boolean;
 };
 
+export type PlayerState = {
+    current: QueuedVideoInfo | null;
+    queue: QueuedVideoInfo[];
+    cursor: number;
+    paused: boolean;
+    streamToken?: string;
+};
+
 export type SkyChatClientState = {
     websocketReadyState: number;
     isConnected: boolean;
@@ -76,7 +84,7 @@ export type SkyChatClientState = {
     currentPlayerChannelId: number | null;
     currentPlayerChannel: SanitizedPlayerChannel | null;
     playerApiSearchResult: { type: string; items: Array<VideoInfo> } | null;
-    player: { current: QueuedVideoInfo | null; queue: QueuedVideoInfo[]; cursor: number };
+    player: PlayerState;
     playerLastUpdate: Date | null;
 };
 
@@ -117,7 +125,7 @@ export declare interface SkyChatClient {
     on(event: 'player-channels', listener: (playerChannels: Array<SanitizedPlayerChannel>) => any): this;
     on(event: 'player-channel', listener: (channelId: number | null) => any): this;
     on(event: 'player-search', listener: (data: { type: string; items: Array<VideoInfo> }) => any): this;
-    on(event: 'player-sync', listener: (data: { current: QueuedVideoInfo | null; queue: QueuedVideoInfo[]; cursor: number }) => any): this;
+    on(event: 'player-sync', listener: (data: PlayerState) => any): this;
 
     on(event: 'update', listener: (state: SkyChatClientState) => any): this;
 
@@ -164,10 +172,11 @@ export class SkyChatClient extends EventEmitter {
     private _currentPlayerChannelId: number | null = null;
     private _currentPlayerChannel: SanitizedPlayerChannel | null = null;
     private _playerApiSearchResult: { type: string; items: Array<VideoInfo> } | null = null;
-    private _player: { current: QueuedVideoInfo | null; queue: QueuedVideoInfo[]; cursor: number } = {
+    private _player: PlayerState = {
         current: null,
         queue: [],
         cursor: 0,
+        paused: false,
     };
     private _playerLastUpdate: Date | null = null;
 
@@ -562,7 +571,7 @@ export class SkyChatClient extends EventEmitter {
         this.emit('update', this.state);
     }
 
-    private _onPlayerSync(player: { current: QueuedVideoInfo | null; queue: QueuedVideoInfo[]; cursor: number }) {
+    private _onPlayerSync(player: PlayerState) {
         this._player = player;
         this._playerLastUpdate = new Date();
         this.emit('update', this.state);

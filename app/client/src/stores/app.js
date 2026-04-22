@@ -11,11 +11,16 @@ const DEFAULT_DOCUMENT_TITLE = '~ SkyChat';
 const NOTIFICATION_SOUND_MP3_PATH = '/assets/sound/notification.mp3';
 
 const CURRENT_VERSION = 5;
-const STORE_SAVED_KEYS = ['playerMode', 'leftCollapsed'];
+const STORE_SAVED_KEYS = ['playerMode', 'leftCollapsed', 'rightCollapsed'];
 
 const applyLeftCollapsedClass = (collapsed) => {
     if (typeof document === 'undefined') return;
     document.documentElement.classList.toggle('left-col-collapsed', !!collapsed);
+};
+
+const applyRightCollapsedClass = (collapsed) => {
+    if (typeof document === 'undefined') return;
+    document.documentElement.classList.toggle('right-col-collapsed', !!collapsed);
 };
 
 const toast = useToast();
@@ -167,6 +172,11 @@ export const useAppStore = defineStore('app', {
         leftCollapsed: false,
 
         /**
+         * Whether the right column (connected users) is collapsed to an icon-only rail on desktop
+         */
+        rightCollapsed: false,
+
+        /**
          * Whether the viewport is at the desktop breakpoint (>= lg, 1024px)
          */
         isDesktop: typeof window !== 'undefined' ? window.innerWidth >= 1024 : true,
@@ -184,6 +194,11 @@ export const useAppStore = defineStore('app', {
              * Modal to navigate in the gallery
              */
             gallery: false,
+
+            /**
+             * Modal to browse the Jellyfin library
+             */
+            jellyfin: false,
 
             /**
              * List on currently converting videos
@@ -223,6 +238,12 @@ export const useAppStore = defineStore('app', {
          * On mobile the left column is full-width and shouldn't render in compact mode.
          */
         effectiveLeftCollapsed: (state) => state.leftCollapsed && state.isDesktop,
+
+        /**
+         * The collapsed flag is only meaningful at the desktop breakpoint.
+         * On mobile the right column is full-width and shouldn't render in compact mode.
+         */
+        effectiveRightCollapsed: (state) => state.rightCollapsed && state.isDesktop,
     },
 
     actions: {
@@ -241,6 +262,7 @@ export const useAppStore = defineStore('app', {
                 document.body.style.height = window.innerHeight + 'px';
                 this.isDesktop = window.innerWidth >= 1024;
                 applyLeftCollapsedClass(this.effectiveLeftCollapsed);
+                applyRightCollapsedClass(this.effectiveRightCollapsed);
             };
             window.addEventListener('resize', resize);
             resize();
@@ -398,6 +420,7 @@ export const useAppStore = defineStore('app', {
                 }
             }
             applyLeftCollapsedClass(this.effectiveLeftCollapsed);
+            applyRightCollapsedClass(this.effectiveRightCollapsed);
         },
 
         savePreferences: function () {
@@ -466,10 +489,15 @@ export const useAppStore = defineStore('app', {
                     md: 'lg',
                     lg: 'lg',
                 }[this.playerMode.size] || 'md';
+            // Largest size doubles as a cinema mode: hide both side columns for max video width.
+            if (this.playerMode.size === 'lg') {
+                this.setColumnsCollapsed(true);
+            }
             this.savePreferences();
         },
 
         shrinkPlayer: function () {
+            const wasLargest = this.playerMode.size === 'lg';
             this.playerMode.size =
                 {
                     lg: 'md',
@@ -477,6 +505,10 @@ export const useAppStore = defineStore('app', {
                     sm: 'xs',
                     xs: 'xs',
                 }[this.playerMode.size] || 'md';
+            // Leaving the largest size brings the side columns back.
+            if (wasLargest) {
+                this.setColumnsCollapsed(false);
+            }
             this.savePreferences();
         },
 
@@ -518,6 +550,26 @@ export const useAppStore = defineStore('app', {
             this.leftCollapsed = !this.leftCollapsed;
             applyLeftCollapsedClass(this.effectiveLeftCollapsed);
             this.savePreferences();
+        },
+
+        /**
+         * Toggle the right column between full width and icon-only rail (desktop only)
+         */
+        toggleRightCollapsed: function () {
+            this.rightCollapsed = !this.rightCollapsed;
+            applyRightCollapsedClass(this.effectiveRightCollapsed);
+            this.savePreferences();
+        },
+
+        /**
+         * Collapse or expand both side columns at once (desktop only). Does not persist on its own;
+         * the caller saves. Used by the player's largest size to free up width for the video.
+         */
+        setColumnsCollapsed: function (collapsed) {
+            this.leftCollapsed = collapsed;
+            this.rightCollapsed = collapsed;
+            applyLeftCollapsedClass(this.effectiveLeftCollapsed);
+            applyRightCollapsedClass(this.effectiveRightCollapsed);
         },
 
         /**

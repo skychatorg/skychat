@@ -3,6 +3,7 @@ import SkyContextMenu from '@/components/common/SkyContextMenu.vue';
 import SkyContextMenuItem from '@/components/common/SkyContextMenuItem.vue';
 import SkyDropdown from '@/components/common/SkyDropdown.vue';
 import SkyDropdownItem from '@/components/common/SkyDropdownItem.vue';
+import SkyTooltip from '@/components/common/SkyTooltip.vue';
 import { useIsBlacklisted } from '@/composables/useIsBlacklisted';
 import { useUserRight } from '@/composables/useUserRight';
 import { useClientStore } from '@/stores/client';
@@ -14,6 +15,10 @@ const props = defineProps({
     entry: {
         type: Object,
         required: true,
+    },
+    compact: {
+        type: Boolean,
+        default: false,
     },
 });
 
@@ -111,7 +116,34 @@ const isDisconnected = computed(() => props.entry.connectionCount === 0);
 <template>
     <SkyContextMenu :disabled="isSelf">
         <template #trigger>
+            <!-- Compact (icon-only rail): avatar + active dot, username on hover -->
+            <SkyTooltip v-if="compact" as-child side="left" :side-offset="12" class="block">
+                <template #trigger>
+                    <div
+                        class="w-full flex items-center justify-center py-1.5 rounded-lg hover:bg-white/5 transition select-none"
+                        :class="{ 'opacity-40': isBlacklisted }"
+                    >
+                        <button class="relative shrink-0" :title="entry.user.username" @click="sendPM">
+                            <div
+                                class="w-8 h-8 rounded overflow-hidden bg-black border-2"
+                                :style="{ borderColor: entry.user.data.plugins.custom.color }"
+                            >
+                                <img :src="entry.user.data.plugins.avatar" :alt="entry.user.username" class="h-full w-full object-cover" />
+                            </div>
+                            <div
+                                v-if="isInCurrentRoom && !isAfk && !isDisconnected"
+                                class="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-400"
+                                :style="{ boxShadow: '0 0 0 2px var(--surface)' }"
+                            />
+                        </button>
+                    </div>
+                </template>
+                {{ entry.user.username }}
+            </SkyTooltip>
+
+            <!-- Full -->
             <div
+                v-else
                 class="group relative flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-white/5 transition select-none"
                 :class="{ 'opacity-40': isBlacklisted }"
             >
