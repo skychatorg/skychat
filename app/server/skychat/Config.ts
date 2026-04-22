@@ -20,6 +20,7 @@ export type Preferences = {
     minRightForGalleryDelete: number | 'op';
     minRightForPlayerAddMedia: number | 'op';
     minRightForPlayerManageSchedule: number | 'op';
+    minRightForJellyfinBrowse: number | 'op';
     maxReplacedImagesPerMessage: number;
     maxReplacedRisiBankStickersPerMessage: number;
     maxReplacedStickersPerMessage: number;
@@ -33,6 +34,7 @@ export type Preferences = {
 
 export type PublicConfig = {
     galleryEnabled: boolean;
+    jellyfinEnabled: boolean;
     minRightForStickerManagement: number | 'op';
     minRightForMessageHistory: number;
 };
@@ -63,6 +65,9 @@ export class Config {
     public static toClient(): PublicConfig {
         return {
             galleryEnabled: Boolean(process.env.ENABLED_PLUGINS?.includes('GalleryPluginGroup')),
+            jellyfinEnabled:
+                Boolean(process.env.ENABLED_PLUGINS?.includes('PlayerPluginGroup')) &&
+                Boolean(process.env.JELLYFIN_API_KEY && process.env.JELLYFIN_API_KEY.trim().length > 0),
             minRightForStickerManagement: Config.PREFERENCES.minRightForStickerManagement,
             minRightForMessageHistory: Config.PREFERENCES.minRightForMessageHistory,
         };
@@ -119,6 +124,7 @@ export class Config {
             'minRightForGalleryWrite',
             'minRightForPlayerAddMedia',
             'minRightForPlayerManageSchedule',
+            'minRightForJellyfinBrowse',
             'maxReplacedImagesPerMessage',
             'maxReplacedStickersPerMessage',
             'maxNewlinesPerMessage',

@@ -16,7 +16,9 @@
         --page-col-left-width-expanded: 280px;
         --page-col-left-width-collapsed: 56px;
         --page-col-left-width: var(--page-col-left-width-expanded);
-        --page-col-right-width: 340px;
+        --page-col-right-width-expanded: 340px;
+        --page-col-right-width-collapsed: 56px;
+        --page-col-right-width: var(--page-col-right-width-expanded);
         --modal-width: 400px;
 
         --color-skygray-white: 244 244 255;
@@ -60,6 +62,10 @@
 
     :root.left-col-collapsed {
         --page-col-left-width: var(--page-col-left-width-collapsed);
+    }
+
+    :root.right-col-collapsed {
+        --page-col-right-width: var(--page-col-right-width-collapsed);
     }
 }
 

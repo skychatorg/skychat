@@ -55,6 +55,8 @@ services:
       DISCORD_EXCLUDED_CHANNEL_IDS: "${DISCORD_EXCLUDED_CHANNEL_IDS}"
       DISCORD_OAUTH_CLIENT_ID: "${DISCORD_OAUTH_CLIENT_ID}"
       DISCORD_OAUTH_CLIENT_SECRET: "${DISCORD_OAUTH_CLIENT_SECRET}"
+      JELLYFIN_INTERNAL_URL: "${JELLYFIN_INTERNAL_URL:-http://skychat_jellyfin:8096}"
+      JELLYFIN_API_KEY: "${JELLYFIN_API_KEY}"
     volumes:
       - ./config:/workdir/config
       - ./backups:/workdir/backups

@@ -2,6 +2,7 @@
 import CursorOverlay from '@/components/cursor/CursorOverlay.vue';
 import AppHeader from '@/components/layout/AppHeader.vue';
 import GalleryModal from '@/components/modal/GalleryModal.vue';
+import JellyfinModal from '@/components/modal/JellyfinModal.vue';
 import ManageRoomsModal from '@/components/modal/ManageRoomsModal.vue';
 import ManageStickersModal from '@/components/modal/ManageStickersModal.vue';
 import OngoingConvertsModal from '@/components/modal/OngoingConvertsModal.vue';
@@ -21,6 +22,7 @@ import CommandPalette from '@/components/palette/CommandPalette.vue';
         <OngoingConvertsModal />
         <VideoConverterModal />
         <GalleryModal />
+        <JellyfinModal />
         <PlayerQueueModal />
         <ManageRoomsModal />
         <ManageStickersModal />

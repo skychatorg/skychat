@@ -1,13 +1,23 @@
 import { Config } from '../../skychat/Config.js';
 import { Connection } from '../../skychat/Connection.js';
+import { Logging } from '../../skychat/Logging.js';
 import { RoomManager } from '../../skychat/RoomManager.js';
 import { Session } from '../../skychat/Session.js';
-import { GlobalPlugin } from '../GlobalPlugin.js';
+import { GlobalPlugin, PluginRoute } from '../GlobalPlugin.js';
 import { PollPlugin } from '../core/global/PollPlugin.js';
 import { SanitizedPlayerChannel } from './PlayerChannel.js';
 import { PlayerChannelManager } from './PlayerChannelManager.js';
 import { GalleryFetcher } from './fetcher/GalleryFetcher.js';
 import { IFrameFetcher } from './fetcher/IFrameFetcher.js';
+import {
+    issueStreamToken,
+    JELLYFIN_ID_REGEX,
+    JellyfinFetcher,
+    mapBrowseItem,
+    PAGE_SIZE,
+    STREAM_TOKEN_TTL_MS,
+} from './fetcher/JellyfinFetcher.js';
+import { buildJellyfinRoutes } from './fetcher/JellyfinRoutes.js';
 import { TwitchFetcher } from './fetcher/TwitchFetcher.js';
 import { VideoFetcher } from './fetcher/VideoFetcher.js';
 import { YoutubeFetcher } from './fetcher/YoutubeFetcher.js';
@@ -21,6 +31,7 @@ export class PlayerPlugin extends GlobalPlugin {
         twitch: new TwitchFetcher(),
         iframe: new IFrameFetcher(),
         galleryadd: new GalleryFetcher(),
+        jellyfin: new JellyfinFetcher(),
     };
 
     static readonly commandName = 'player';
@@ -31,8 +42,11 @@ export class PlayerPlugin extends GlobalPlugin {
         'playersync',
         'playersearch',
         'playerremovevideo',
+        'playerseek',
         'schedule',
         'unschedule',
+        'jellyfinls',
+        'jellyfinsearch',
     ].concat(Object.keys(PlayerPlugin.FETCHERS));
 
     static readonly defaultDataStorageValue: { channel: null | number } = { channel: null };
@@ -42,7 +56,7 @@ export class PlayerPlugin extends GlobalPlugin {
             minCount: 1,
             maxCount: 1,
             maxCallsPer10Seconds: 10,
-            params: [{ name: 'action', pattern: /^(replay30|skip30|list|skip|flush)$/ }],
+            params: [{ name: 'action', pattern: /^(replay30|skip30|list|skip|flush|pause|resume)$/ }],
         },
         playerchannelmanage: {
             minCount: 1,
@@ -86,6 +100,13 @@ export class PlayerPlugin extends GlobalPlugin {
                 { name: 'id', pattern: /./ },
             ],
         },
+        playerseek: {
+            minCount: 1,
+            maxCount: 1,
+            coolDown: 100,
+            maxCallsPer10Seconds: 20,
+            params: [{ name: 'positionMs', pattern: /^\d{1,10}$/ }],
+        },
         schedule: {
             minCount: 2,
             maxCount: 4,
@@ -104,6 +125,22 @@ export class PlayerPlugin extends GlobalPlugin {
             coolDown: 500,
             maxCallsPer10Seconds: 2,
             params: [{ name: 'start', pattern: /^\d+$/ }],
+        },
+        jellyfinls: {
+            // Optional trailing startIndex (page offset) is validated in the handler, not here:
+            // the engine only pattern-checks param 0, so a second numeric token just needs maxCount room.
+            minCount: 0,
+            maxCount: 2,
+            coolDown: 200,
+            maxCallsPer10Seconds: 30,
+            params: [{ name: 'parentId', pattern: JELLYFIN_ID_REGEX }],
+        },
+        jellyfinsearch: {
+            // Free-text term carries spaces, so no params/maxCount (those split on single spaces).
+            // The client always prepends a numeric startIndex, so the first token is unambiguous.
+            minCount: 1,
+            coolDown: 300,
+            maxCallsPer10Seconds: 30,
         },
     };
 
@@ -148,6 +185,9 @@ export class PlayerPlugin extends GlobalPlugin {
     public async run(alias: string, param: string, connection: Connection) {
         // If using a fetcher alias to play a video
         if (typeof PlayerPlugin.FETCHERS[alias] !== 'undefined') {
+            if (alias === 'jellyfin' && !this.canBrowseJellyfin(connection.session)) {
+                throw new Error('You do not have the permission to play Jellyfin content');
+            }
             await this.handlePlayerFetch(alias, param, connection);
             return;
         }
@@ -177,12 +217,24 @@ export class PlayerPlugin extends GlobalPlugin {
                 await this.handlePlayerRemoveVideo(param, connection);
                 break;
 
+            case 'playerseek':
+                await this.handlePlayerSeek(param, connection);
+                break;
+
             case 'schedule':
                 await this.handlePlayerSchedule(param, connection);
                 break;
 
             case 'unschedule':
                 await this.handlePlayerUnschedule(param, connection);
+                break;
+
+            case 'jellyfinls':
+                await this.handleJellyfinLs(param, connection);
+                break;
+
+            case 'jellyfinsearch':
+                await this.handleJellyfinSearch(param, connection);
                 break;
 
             default:
@@ -212,6 +264,103 @@ export class PlayerPlugin extends GlobalPlugin {
             Config.PREFERENCES.minRightForPlayerManageSchedule === 'op' ? Infinity : Config.PREFERENCES.minRightForPlayerManageSchedule;
         const actualRight = session.isOP() ? Infinity : session.user.right;
         return actualRight >= expectedRight;
+    }
+
+    /**
+     * Return whether a session has the right to browse or play Jellyfin content
+     */
+    public canBrowseJellyfin(session: Session) {
+        const expectedRight =
+            Config.PREFERENCES.minRightForJellyfinBrowse === 'op' ? Infinity : Config.PREFERENCES.minRightForJellyfinBrowse;
+        const actualRight = session.isOP() ? Infinity : session.user.right;
+        return actualRight >= expectedRight;
+    }
+
+    /**
+     * List Jellyfin libraries or the children of a given parent item.
+     */
+    private async handleJellyfinLs(param: string, connection: Connection) {
+        if (!this.canBrowseJellyfin(connection.session)) {
+            throw new Error('You do not have the permission to browse Jellyfin');
+        }
+        const fetcher = PlayerPlugin.FETCHERS.jellyfin as JellyfinFetcher;
+        if (!fetcher || !fetcher.enabled) {
+            throw new Error('Jellyfin is not configured on this server');
+        }
+        // parentId stays the first token (keeps the old single-arg contract); startIndex is an
+        // optional trailing numeric for paging.
+        const parts = param.trim().split(' ').filter(Boolean);
+        const parentId = parts[0] ? parts[0].replace(/-/g, '').toLowerCase() : null;
+        const startIndex = parts[1] && /^\d{1,6}$/.test(parts[1]) ? parseInt(parts[1], 10) : 0;
+        // Map upstream failures to a clear, "Jellyfin"-tagged message: the raw axios error would
+        // leak internals and the client only surfaces (and clears its loading state on) errors
+        // mentioning Jellyfin — otherwise the library panel hangs on "Loading…" forever.
+        let items, total;
+        try {
+            await fetcher.client.ensureReady();
+            const userId = await fetcher.client.resolveUserId();
+            ({ items, total } = await fetcher.client.listChildren(userId, parentId, { startIndex, limit: PAGE_SIZE }));
+        } catch (err) {
+            Logging.warn(`Jellyfin browse failed (parentId=${parentId ?? 'root'}): ${(err as Error).message}`);
+            throw new Error('Could not load the Jellyfin library');
+        }
+        connection.send('jellyfin-library', {
+            mode: 'browse',
+            parentId,
+            search: null,
+            startIndex,
+            total,
+            streamToken: issueStreamToken(connection.session.user.id, Date.now() + STREAM_TOKEN_TTL_MS),
+            items: items.map(mapBrowseItem),
+        });
+    }
+
+    /**
+     * Search the whole Jellyfin library (recursive) and reply on the same library event.
+     */
+    private async handleJellyfinSearch(param: string, connection: Connection) {
+        if (!this.canBrowseJellyfin(connection.session)) {
+            throw new Error('You do not have the permission to browse Jellyfin');
+        }
+        const fetcher = PlayerPlugin.FETCHERS.jellyfin as JellyfinFetcher;
+        if (!fetcher || !fetcher.enabled) {
+            throw new Error('Jellyfin is not configured on this server');
+        }
+        // The client always prepends a numeric startIndex, so the first token is the page offset
+        // and the rest (which may contain spaces) is the search term.
+        const trimmed = param.trim();
+        const sp = trimmed.indexOf(' ');
+        const startIndex = sp > 0 ? parseInt(trimmed.slice(0, sp), 10) || 0 : 0;
+        const term = (sp > 0 ? trimmed.slice(sp + 1) : '').trim();
+        if (!term) {
+            throw new Error('Empty Jellyfin search term');
+        }
+        let items, total;
+        try {
+            await fetcher.client.ensureReady();
+            const userId = await fetcher.client.resolveUserId();
+            ({ items, total } = await fetcher.client.searchItems(userId, term, ['Movie', 'Series', 'Episode'], {
+                startIndex,
+                limit: PAGE_SIZE,
+            }));
+        } catch (err) {
+            Logging.warn(`Jellyfin search failed (term=${term}): ${(err as Error).message}`);
+            throw new Error('Could not search the Jellyfin library');
+        }
+        connection.send('jellyfin-library', {
+            mode: 'search',
+            parentId: null,
+            search: term,
+            startIndex,
+            total,
+            streamToken: issueStreamToken(connection.session.user.id, Date.now() + STREAM_TOKEN_TTL_MS),
+            items: items.map(mapBrowseItem),
+        });
+    }
+
+    public getRoutes(): PluginRoute[] {
+        const fetcher = PlayerPlugin.FETCHERS.jellyfin as JellyfinFetcher;
+        return buildJellyfinRoutes(fetcher);
     }
 
     /**
@@ -319,6 +468,9 @@ export class PlayerPlugin extends GlobalPlugin {
         if (typeof PlayerPlugin.FETCHERS[fetcherName] === 'undefined') {
             throw new Error('Invalid fetcher specified');
         }
+        if (fetcherName === 'jellyfin' && !this.canBrowseJellyfin(connection.session)) {
+            throw new Error('You do not have the permission to browse Jellyfin');
+        }
         const fetcher = PlayerPlugin.FETCHERS[fetcherName];
         const type = param.split(' ')[1];
         const search = param.substr(fetcherName.length + 1 + type.length + 1);
@@ -350,6 +502,25 @@ export class PlayerPlugin extends GlobalPlugin {
             throw new Error('You are not allowed to remove this video');
         }
         channel.remove(queueEntry.video);
+    }
+
+    /**
+     * Seek the currently playing media to an absolute position
+     * @param param Absolute position in ms (validated as 1-10 digits by the command rule)
+     * @param connection
+     */
+    private async handlePlayerSeek(param: string, connection: Connection) {
+        const channel = this.channelManager.getSessionChannel(connection.session);
+        if (!channel) {
+            throw new Error('Channel does not exist');
+        }
+        if (channel.locked && !connection.session.isOP()) {
+            throw new Error('Channel is locked');
+        }
+        if (!channel.hasPlayerPermission(connection.session)) {
+            throw new Error('You are not authorized to modify the player right now');
+        }
+        channel.seek(parseInt(param.trim(), 10));
     }
 
     /**
@@ -464,6 +635,20 @@ export class PlayerPlugin extends GlobalPlugin {
                     throw new Error('You are not authorized to modify the player right now');
                 }
                 channel.moveCursor(+30 * 1000);
+                break;
+
+            case 'pause':
+                if (!channel.hasPlayerPermission(connection.session)) {
+                    throw new Error('You are not authorized to modify the player right now');
+                }
+                channel.pause();
+                break;
+
+            case 'resume':
+                if (!channel.hasPlayerPermission(connection.session)) {
+                    throw new Error('You are not authorized to modify the player right now');
+                }
+                channel.resume();
                 break;
 
             case 'skip':

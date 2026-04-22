@@ -96,7 +96,7 @@ const clearSearch = () => {
             :style="{ background: 'var(--surface)' }"
             aria-label="Connected users"
         >
-            <ConnectedList class="flex-grow min-h-0" />
+            <ConnectedList class="flex-grow min-h-0" :compact="app.effectiveRightCollapsed" />
             <div class="p-2 lg:hidden">
                 <button class="form-control mr-2" @click="app.mobileSetView('left')">
                     <fa icon="chevron-left" class="mr-2" />

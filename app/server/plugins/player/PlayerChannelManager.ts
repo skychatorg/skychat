@@ -144,7 +144,7 @@ export class PlayerChannelManager extends EventEmitter {
             // If channel is not deleted
             channel.sessions.splice(channel.sessions.indexOf(session), 1);
         }
-        session.send('player-sync', { current: null, queue: [], cursor: 0 });
+        session.send('player-sync', { current: null, queue: [], cursor: 0, paused: false });
 
         // Notify all connections of this session that the channel changed
         session.send('player-channel', null);

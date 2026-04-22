@@ -4,20 +4,47 @@ import { SanitizedUser, User } from '../../skychat/User.js';
 import { UserController } from '../../skychat/UserController.js';
 import { PlayerChannelManager } from './PlayerChannelManager.js';
 import { PlayerChannelScheduler, SanitizedScheduler } from './PlayerChannelScheduler.js';
+import { issueStreamToken, STREAM_TOKEN_TTL_MS } from './fetcher/JellyfinFetcher.js';
 
 export type QueuedVideoInfo = {
     user: SanitizedUser;
     video: VideoInfo;
 };
 
+export type JellyfinAudioTrack = {
+    index: number;
+    language?: string;
+    label: string;
+    codec: string;
+    isDefault: boolean;
+};
+
+export type JellyfinSubtitleTrack = {
+    index: number;
+    language?: string;
+    label: string;
+    codec: string;
+    isTextBased: boolean;
+    isDefault: boolean;
+    isForced: boolean;
+};
+
+export type JellyfinVideoInfo = {
+    mediaSourceId: string;
+    container: string;
+    videoCodec: string;
+    audioTracks: JellyfinAudioTrack[];
+    subtitleTracks: JellyfinSubtitleTrack[];
+};
+
 export type VideoInfo = {
     /**
-     * Video type (currently only youtube supported)
+     * Video type
      */
-    type: 'youtube' | 'twitch' | 'gallery' | 'iframe';
+    type: 'youtube' | 'twitch' | 'gallery' | 'iframe' | 'jellyfin';
 
     /**
-     * Video data (for youtube, video id)
+     * Video data (for youtube, video id; for jellyfin, item id)
      */
     id: string;
 
@@ -45,6 +72,11 @@ export type VideoInfo = {
      * Video thumbnail image
      */
     thumb?: string;
+
+    /**
+     * Jellyfin-specific metadata (only present when type === 'jellyfin')
+     */
+    jellyfin?: JellyfinVideoInfo;
 };
 
 export type SanitizedPlayerChannel = {
@@ -91,6 +123,12 @@ export class PlayerChannel {
 
     public playNextTimeout: any = null;
 
+    /**
+     * When paused, holds the frozen cursor (ms). null means playing.
+     * Kept in memory only (never persisted), so a restart can't leave a channel stuck paused.
+     */
+    public pausedCursor: number | null = null;
+
     constructor(manager: PlayerChannelManager, id: number, name: string) {
         this.manager = manager;
         this.id = id;
@@ -130,11 +168,13 @@ export class PlayerChannel {
         // If no video left to play
         if (!this.hasNext()) {
             // Remove current video & sync channel
+            this.pausedCursor = null;
             this.currentVideoInfo = null;
             this.sync();
             return;
         }
         // Otherwise, play next video
+        this.pausedCursor = null;
         this.currentVideoInfo = this.queue.shift() as QueuedVideoInfo;
         this.currentVideoInfo.video.startTime = new Date().getTime();
         this.lastPlayedDates[this.currentVideoInfo.user.id] = new Date();
@@ -161,6 +201,9 @@ export class PlayerChannel {
      */
     public getCursor(): number {
         if (this.currentVideoInfo && this.currentVideoInfo.video.startTime) {
+            if (this.pausedCursor !== null) {
+                return this.pausedCursor;
+            }
             return new Date().getTime() - this.currentVideoInfo.video.startTime;
         }
         return 0;
@@ -172,6 +215,10 @@ export class PlayerChannel {
     public armPlayNextTimeout() {
         if (this.playNextTimeout) {
             clearTimeout(this.playNextTimeout);
+        }
+        // While paused, never auto-advance: the timeout stays disarmed until resume re-arms it
+        if (this.pausedCursor !== null) {
+            return;
         }
         // If currently off, but there is a next video to play
         if (!this.currentVideoInfo) {
@@ -197,8 +244,56 @@ export class PlayerChannel {
             throw new Error('No video playing currently');
         }
         this.currentVideoInfo.video.startTime -= delta;
+        // When paused, the frozen cursor is authoritative, so move it too. replay30/skip30 reach
+        // moveCursor without clamping, so keep the frozen cursor inside [0, duration].
+        if (this.pausedCursor !== null) {
+            const duration = this.currentVideoInfo.video.duration;
+            this.pausedCursor += delta;
+            this.pausedCursor = duration > 0 ? Math.min(Math.max(0, this.pausedCursor), duration) : Math.max(0, this.pausedCursor);
+        }
         this.armPlayNextTimeout();
         this.sync();
+    }
+
+    /**
+     * Pause the currently playing media (freezes the cursor for everyone).
+     * No-op when nothing is playing, already paused, or the media is live (duration 0).
+     */
+    public pause() {
+        if (!this.currentVideoInfo || this.pausedCursor !== null) {
+            return;
+        }
+        if (this.currentVideoInfo.video.duration === 0) {
+            return;
+        }
+        this.pausedCursor = this.getCursor();
+        this.armPlayNextTimeout();
+        this.sync();
+    }
+
+    /**
+     * Resume a paused media, rebasing startTime so the cursor continues from where it froze.
+     * No-op when nothing is playing or not currently paused.
+     */
+    public resume() {
+        if (!this.currentVideoInfo || this.pausedCursor === null) {
+            return;
+        }
+        this.currentVideoInfo.video.startTime = new Date().getTime() - this.pausedCursor;
+        this.pausedCursor = null;
+        this.armPlayNextTimeout();
+        this.sync();
+    }
+
+    /**
+     * Seek the currently playing video to an absolute position
+     * @param targetMs Absolute position in ms (clamped to [0, duration] when the duration is known)
+     */
+    public seek(targetMs: number) {
+        const duration = this.currentVideoInfo?.video.duration ?? 0;
+        const clamped = duration > 0 ? Math.min(Math.max(0, targetMs), duration) : Math.max(0, targetMs);
+        // moveCursor re-arms the play-next timeout and syncs, and throws if nothing is playing.
+        this.moveCursor(clamped - this.getCursor());
     }
 
     /**
@@ -318,16 +413,29 @@ export class PlayerChannel {
             current: this.currentVideoInfo,
             queue: this.queue,
             cursor: this.getCursor(),
+            paused: this.pausedCursor !== null,
         };
+    }
+
+    /**
+     * Build the player-sync payload for a specific session. When the current item is
+     * a Jellyfin media, include a signed stream token scoped to that session's user.
+     * Returns the bare payload unchanged for non-Jellyfin content.
+     */
+    private buildSyncPayload(session: Session): ReturnType<PlayerChannel['getPlayerData']> & { streamToken?: string } {
+        const data = this.getPlayerData();
+        if (data.current?.video.type === 'jellyfin' && this.manager.plugin.canBrowseJellyfin(session)) {
+            return { ...data, streamToken: issueStreamToken(session.user.id, Date.now() + STREAM_TOKEN_TTL_MS) };
+        }
+        return data;
     }
 
     /**
      * Sync sessions in this channel
      */
     public sync() {
-        const data = this.getPlayerData();
         for (const session of this.sessions) {
-            session.send('player-sync', data);
+            session.send('player-sync', this.buildSyncPayload(session));
         }
         this.manager.sync();
     }
@@ -375,7 +483,7 @@ export class PlayerChannel {
      */
     public syncConnections(connections: Connection[]) {
         for (const connection of connections) {
-            connection.send('player-sync', this.getPlayerData());
+            connection.send('player-sync', this.buildSyncPayload(connection.session));
         }
     }
 

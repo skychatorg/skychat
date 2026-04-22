@@ -62,7 +62,7 @@ const onlineCount = computed(() => (client.state.connectedList || []).length);
             <div class="flex items-center justify-end gap-3 px-3 lg:w-[var(--page-col-right-width)] lg:shrink-0">
                 <template v-if="connectionStatus === 'connected'">
                     <span
-                        v-if="onlineCount > 0"
+                        v-if="onlineCount > 0 && !app.effectiveRightCollapsed"
                         class="inline-flex items-center gap-1 px-1.5 py-[2px] rounded font-mono text-xs font-medium bg-primary/15 text-primary ring-1 ring-primary/30"
                     >
                         <fa icon="circle" class="text-[6px]" />
@@ -82,10 +82,13 @@ const onlineCount = computed(() => (client.state.connectedList || []).length);
                                 class="h-full w-full object-cover"
                             />
                         </div>
-                        <span class="text-sm">{{ client.state.user.username }}</span>
-                        <span class="font-mono text-xs text-white/40">{{ client.state.user.right }}</span>
+                        <span v-if="!app.effectiveRightCollapsed" class="text-sm">{{ client.state.user.username }}</span>
+                        <span v-if="!app.effectiveRightCollapsed" class="font-mono text-xs text-white/40">
+                            {{ client.state.user.right }}
+                        </span>
                     </button>
                     <button
+                        v-if="!app.effectiveRightCollapsed"
                         class="w-10 h-10 rounded-md flex items-center justify-center text-white/50 hover:text-white hover:bg-white/5 transition"
                         title="Logout"
                         @click="logout"

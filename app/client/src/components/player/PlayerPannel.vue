@@ -1,8 +1,10 @@
 <script setup>
 import MediaPlayer from '@/components/player/MediaPlayer.vue';
+import PlayerSeekBar from '@/components/player/PlayerSeekBar.vue';
 import UserMiniAvatarCollection from '@/components/user/UserMiniAvatarCollection.vue';
 import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
+import { isPausable } from '@/lib/player';
 import { computed } from 'vue';
 
 const app = useAppStore();
@@ -25,8 +27,26 @@ const playerHeightCss = computed(() => {
 });
 
 const currentTitle = computed(() => client.state.player.current?.video?.title ?? '');
+// Jellyfin thumbnails are served through the authenticated proxy, so they need the per-viewer
+// stream token appended. Other video types expose absolute thumb URLs and pass through unchanged.
+const currentThumb = computed(() => {
+    const video = client.state.player.current?.video;
+    if (!video?.thumb) {
+        return null;
+    }
+    if (video.type === 'jellyfin') {
+        const token = client.state.player.streamToken;
+        if (!token) {
+            return null;
+        }
+        return `${video.thumb}&t=${encodeURIComponent(token)}`;
+    }
+    return video.thumb;
+});
 const currentOwner = computed(() => client.state.player.current?.user?.username ?? null);
 const watchers = computed(() => client.state.roomConnectedUsers[client.state.currentRoomId] || []);
+const pausable = computed(() => isPausable(client.state.player.current?.video));
+const togglePause = () => client.sendMessage(client.state.player.paused ? '/player resume' : '/player pause');
 </script>
 
 <template>
@@ -38,11 +58,11 @@ const watchers = computed(() => client.state.roomConnectedUsers[client.state.cur
             <!-- Hidden but something is playing -->
             <div v-else-if="client.state.player.current" class="w-full py-2 flex items-center justify-center gap-2">
                 <div
-                    v-if="client.state.player.current.video.thumb"
+                    v-if="currentThumb"
                     class="w-8 h-8 rounded-md overflow-hidden bg-black flex justify-center"
                     :title="currentTitle"
                 >
-                    <img :src="client.state.player.current.video.thumb" class="h-full object-cover" />
+                    <img :src="currentThumb" class="h-full object-cover" />
                 </div>
                 <span class="text-sm text-white/80">{{ currentTitle }}</span>
             </div>
@@ -94,63 +114,64 @@ const watchers = computed(() => client.state.roomConnectedUsers[client.state.cur
             </div>
         </div>
 
-        <!-- Persistent action strip -->
-        <div class="flex items-center gap-2 px-3 py-2 hairline" :style="{ background: 'var(--surface-2)' }">
-            <button
-                :title="app.playerMode.enabled ? 'Hide player' : 'Show player'"
-                class="px-2 py-1 text-sm rounded-md bg-white/5 hairline hover:bg-white/10 text-white/80"
-                @click="app.setPlayerEnabled(!app.playerMode.enabled)"
-            >
-                <fa :icon="app.playerMode.enabled ? 'toggle-on' : 'toggle-off'" />
-            </button>
+        <!-- Seek bar (only for media with a known duration) -->
+        <PlayerSeekBar v-if="showPlayer" />
 
-            <button
-                v-if="showPlayer"
-                title="Replay 30s"
-                class="px-2 py-1 text-sm rounded-md bg-white/5 hairline hover:bg-white/10 text-white/80"
-                @click="client.sendMessage('/player replay30')"
-            >
-                <fa icon="caret-left" />
-                <fa icon="caret-left" class="-ml-1 mr-1" />
-                <span>30s</span>
-            </button>
-            <button
-                v-if="showPlayer"
-                title="Skip 30s"
-                class="px-2 py-1 text-sm rounded-md bg-white/5 hairline hover:bg-white/10 text-white/80"
-                @click="client.sendMessage('/player skip30')"
-            >
-                <span>30s</span>
-                <fa icon="caret-right" class="ml-1" />
-                <fa icon="caret-right" class="-ml-1" />
-            </button>
-            <button
-                v-if="showPlayer"
-                title="Skip current"
-                class="px-2 py-1 text-sm rounded-md bg-white/5 hairline hover:bg-white/10 text-white/80"
-                @click="client.sendMessage('/player skip')"
-            >
-                <fa icon="forward-step" class="mr-1" />
-                Skip
-            </button>
-            <button
-                title="Add a video"
-                class="px-2 py-1 text-sm rounded-md bg-white/5 hairline hover:bg-white/10 text-white/80"
-                @click="app.toggleModal('youtubeVideoSearcher')"
-            >
-                <fa icon="plus" class="mr-1" />
-                Add
-            </button>
-            <button
-                title="Open queue"
-                class="px-2 py-1 text-sm rounded-md bg-white/5 hairline hover:bg-white/10 text-white/80"
-                :class="{ 'opacity-40 cursor-not-allowed': !client.state.player.queue.length }"
-                :disabled="!client.state.player.queue.length"
-                @click="app.toggleModal('playerQueue')"
-            >
-                <fa icon="list" class="mr-1" />
-                Queue<span v-if="client.state.player.queue.length"> ({{ client.state.player.queue.length }})</span>
-            </button>
+        <!-- Persistent action strip -->
+        <div class="strip px-3 py-2 hairline" :style="{ background: 'var(--surface-2)' }">
+            <!-- Visibility -->
+            <div class="strip-group hairline">
+                <button
+                    class="strip-btn"
+                    :title="app.playerMode.enabled ? 'Hide player' : 'Show player'"
+                    @click="app.setPlayerEnabled(!app.playerMode.enabled)"
+                >
+                    <fa :icon="app.playerMode.enabled ? 'toggle-on' : 'toggle-off'" />
+                </button>
+            </div>
+
+            <!-- Transport (only while the player is shown) -->
+            <div v-if="showPlayer" class="strip-group hairline">
+                <button class="strip-btn" title="Replay 30s" @click="client.sendMessage('/player replay30')">
+                    <fa icon="caret-left" />
+                    <fa icon="caret-left" class="-ml-1" />
+                    <span class="ml-0.5 hidden sm:inline">30s</span>
+                </button>
+                <button v-if="pausable" class="strip-btn" :title="client.state.player.paused ? 'Resume' : 'Pause'" @click="togglePause">
+                    <fa :icon="client.state.player.paused ? 'play' : 'pause'" />
+                </button>
+                <button class="strip-btn" title="Skip 30s" @click="client.sendMessage('/player skip30')">
+                    <span class="mr-0.5 hidden sm:inline">30s</span>
+                    <fa icon="caret-right" />
+                    <fa icon="caret-right" class="-ml-1" />
+                </button>
+                <button class="strip-btn" title="Skip to next" @click="client.sendMessage('/player skip')">
+                    <fa icon="forward-step" />
+                </button>
+            </div>
+
+            <!-- Library -->
+            <div class="strip-group hairline">
+                <button class="strip-btn" title="Add a video" @click="app.toggleModal('youtubeVideoSearcher')">
+                    <fa icon="plus" />
+                    <span class="hidden sm:inline">Add</span>
+                </button>
+                <button
+                    class="strip-btn"
+                    title="Open queue"
+                    :disabled="!client.state.player.queue.length"
+                    @click="app.toggleModal('playerQueue')"
+                >
+                    <fa icon="list" />
+                    <span class="hidden sm:inline">Queue</span>
+                    <span
+                        v-if="client.state.player.queue.length"
+                        class="ml-0.5 px-1.5 rounded-full bg-primary/20 text-primary text-xs font-mono"
+                    >
+                        {{ client.state.player.queue.length }}
+                    </span>
+                </button>
+            </div>
 
             <!-- Sync-watching pill -->
             <div
@@ -159,10 +180,11 @@ const watchers = computed(() => client.state.roomConnectedUsers[client.state.cur
                 :title="`${watchers.length} watching`"
             >
                 <fa icon="circle-play" />
-                <div class="flex -space-x-1.5">
+                <div class="hidden sm:flex -space-x-1.5">
                     <UserMiniAvatarCollection :users="watchers.slice(0, 4)" />
                 </div>
-                <span class="font-mono">{{ watchers.length }} watching</span>
+                <span class="font-mono">{{ watchers.length }}</span>
+                <span class="hidden sm:inline">watching</span>
             </div>
         </div>
     </div>
@@ -171,5 +193,51 @@ const watchers = computed(() => client.state.roomConnectedUsers[client.state.cur
 <style scoped>
 .pannel-content {
     height: v-bind(playerHeightCss);
+}
+
+/* Action strip: a single non-wrapping row of segmented control clusters. */
+.strip {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: nowrap;
+}
+
+/* A cluster of related buttons rendered as one connected segmented control. */
+.strip-group {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 0.375rem;
+    background: rgba(255, 255, 255, 0.05);
+    overflow: hidden;
+}
+
+.strip-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.3rem 0.6rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    color: rgba(255, 255, 255, 0.8);
+    white-space: nowrap;
+    transition:
+        background 0.15s ease,
+        color 0.15s ease;
+}
+
+/* Divider line between buttons within a cluster. */
+.strip-btn + .strip-btn {
+    box-shadow: inset 1px 0 0 rgba(255, 255, 255, 0.07);
+}
+
+.strip-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+}
+
+.strip-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
 }
 </style>
