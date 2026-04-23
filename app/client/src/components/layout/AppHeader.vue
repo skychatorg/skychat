@@ -1,11 +1,13 @@
 <script setup>
 import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
+import { usePaletteStore } from '@/stores/palette';
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 
 const app = useAppStore();
 const client = useClientStore();
+const palette = usePaletteStore();
 const router = useRouter();
 
 const logout = () => {
@@ -41,8 +43,18 @@ const onlineCount = computed(() => (client.state.connectedList || []).length);
                 </a>
             </div>
 
-            <!-- Middle spacer -->
-            <div class="grow"></div>
+            <!-- Middle: command palette trigger, aligned with the middle column -->
+            <div class="grow flex items-center justify-center px-3">
+                <button
+                    class="flex items-center gap-2 px-3 py-1.5 hairline rounded-lg bg-white/[.02] hover:bg-white/[.05] transition text-xs text-white/60"
+                    title="Command palette"
+                    @click="palette.openPalette()"
+                >
+                    <fa icon="magnifying-glass" class="text-[10px]" />
+                    <span>Search or run a command</span>
+                    <span class="font-mono text-[10px] px-1.5 py-0.5 rounded bg-white/5 ml-2">Ctrl K</span>
+                </button>
+            </div>
 
             <!-- Right: status + user pill — aligned with the right column on desktop -->
             <div class="flex items-center justify-end gap-3 px-3 lg:w-[var(--page-col-right-width)] lg:shrink-0">

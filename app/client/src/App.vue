@@ -9,6 +9,7 @@ import PlayerQueueModal from '@/components/modal/PlayerQueueModal.vue';
 import ProfileModal from '@/components/modal/ProfileModal.vue';
 import VideoConverterModal from '@/components/modal/VideoConverterModal.vue';
 import YoutubeVideoSearcherModal from '@/components/modal/YoutubeVideoSearcherModal.vue';
+import CommandPalette from '@/components/palette/CommandPalette.vue';
 </script>
 
 <template>
@@ -23,6 +24,7 @@ import YoutubeVideoSearcherModal from '@/components/modal/YoutubeVideoSearcherMo
         <PlayerQueueModal />
         <ManageRoomsModal />
         <ManageStickersModal />
+        <CommandPalette />
         <RouterView class="grow" />
     </div>
 </template>
