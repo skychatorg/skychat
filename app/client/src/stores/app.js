@@ -4,6 +4,7 @@ import { watch } from 'vue';
 import { useToast } from 'vue-toastification';
 import { useClientStore } from './client';
 import { useEncryptionStore } from './encryption';
+import { usePaletteStore } from './palette';
 
 const DEFAULT_DOCUMENT_TITLE = '~ SkyChat';
 
@@ -336,6 +337,22 @@ export const useAppStore = defineStore('app', {
                 }
                 clientStore.join(clientStore.state.rooms[newRoomIndex].id);
             });
+
+            // Ctrl/Cmd+K: toggle command palette. Bypasses mousetrap because
+            // mousetrap suppresses shortcuts inside input/textarea, which is
+            // exactly where users will be when they want to open the palette.
+            const paletteStore = usePaletteStore();
+            const onPaletteKey = (e) => {
+                if (e.repeat) return;
+                if (!(e.ctrlKey || e.metaKey) || e.altKey || e.shiftKey) return;
+                if (e.key.toLowerCase() !== 'k') return;
+                e.preventDefault();
+                paletteStore.toggle();
+            };
+            document.addEventListener('keydown', onPaletteKey);
+            if (import.meta.hot) {
+                import.meta.hot.dispose(() => document.removeEventListener('keydown', onPaletteKey));
+            }
         },
 
         loadPreferences: function () {

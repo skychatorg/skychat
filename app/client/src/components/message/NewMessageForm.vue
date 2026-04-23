@@ -4,9 +4,10 @@ import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
 import { useEncryptionStore } from '@/stores/encryption';
 import { RisiBank } from 'risibank-web-api';
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { SmartSuggest } from 'vue-smart-suggest';
 import { useClientState } from '../../composables/useClientState';
+import { registerMessageComposer } from '@/composables/useMessageComposer';
 
 const MESSAGE_HISTORY_LENGTH = 500;
 
@@ -345,6 +346,17 @@ watch([encryptionPassphrase, encryptionLabel], () => {
 const toggleEncryptionPanel = () => {
     encryptMessage.value = !encryptMessage.value;
 };
+
+// Expose composer actions to the command palette (and any other caller).
+const releaseComposer = registerMessageComposer({
+    focus: () => message.value?.focus(),
+    openFilePicker: () => fileUploadInput.value?.click(),
+    toggleRecording: () => uploadAudio(),
+    toggleEncryption: toggleEncryptionPanel,
+    recording: recordingAudio,
+    encryptionOpen: encryptMessage,
+});
+onUnmounted(() => releaseComposer());
 </script>
 
 <template>
