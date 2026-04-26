@@ -13,7 +13,9 @@
     :root {
         --page-header-height: 4rem;
         --page-max-width: 1640px;
-        --page-col-left-width: 280px;
+        --page-col-left-width-expanded: 280px;
+        --page-col-left-width-collapsed: 56px;
+        --page-col-left-width: var(--page-col-left-width-expanded);
         --page-col-right-width: 340px;
         --modal-width: 400px;
 
@@ -54,6 +56,10 @@
         --surface-2: rgba(14, 14, 26, 0.78);
         --header: rgba(22, 22, 36, 0.7);
         --app-bg: transparent;
+    }
+
+    :root.left-col-collapsed {
+        --page-col-left-width: var(--page-col-left-width-collapsed);
     }
 }
 

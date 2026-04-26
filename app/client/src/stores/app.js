@@ -11,7 +11,12 @@ const DEFAULT_DOCUMENT_TITLE = '~ SkyChat';
 const NOTIFICATION_SOUND_MP3_PATH = '/assets/sound/notification.mp3';
 
 const CURRENT_VERSION = 5;
-const STORE_SAVED_KEYS = ['playerMode'];
+const STORE_SAVED_KEYS = ['playerMode', 'leftCollapsed'];
+
+const applyLeftCollapsedClass = (collapsed) => {
+    if (typeof document === 'undefined') return;
+    document.documentElement.classList.toggle('left-col-collapsed', !!collapsed);
+};
 
 const toast = useToast();
 
@@ -157,6 +162,16 @@ export const useAppStore = defineStore('app', {
         mobileView: 'middle',
 
         /**
+         * Whether the left column (rooms) is collapsed to an icon-only rail on desktop
+         */
+        leftCollapsed: false,
+
+        /**
+         * Whether the viewport is at the desktop breakpoint (>= lg, 1024px)
+         */
+        isDesktop: typeof window !== 'undefined' ? window.innerWidth >= 1024 : true,
+
+        /**
          * Currently opened modals
          */
         modals: {
@@ -202,6 +217,14 @@ export const useAppStore = defineStore('app', {
         },
     }),
 
+    getters: {
+        /**
+         * The collapsed flag is only meaningful at the desktop breakpoint.
+         * On mobile the left column is full-width and shouldn't render in compact mode.
+         */
+        effectiveLeftCollapsed: (state) => state.leftCollapsed && state.isDesktop,
+    },
+
     actions: {
         init: function () {
             this.loadPreferences();
@@ -213,9 +236,11 @@ export const useAppStore = defineStore('app', {
             initAudio();
             requestNotificationPermission();
 
-            // Handle height on mobile phones
+            // Handle height on mobile phones + track desktop breakpoint
             const resize = () => {
                 document.body.style.height = window.innerHeight + 'px';
+                this.isDesktop = window.innerWidth >= 1024;
+                applyLeftCollapsedClass(this.effectiveLeftCollapsed);
             };
             window.addEventListener('resize', resize);
             resize();
@@ -372,6 +397,7 @@ export const useAppStore = defineStore('app', {
                     this[key] = preferences.values[key];
                 }
             }
+            applyLeftCollapsedClass(this.effectiveLeftCollapsed);
         },
 
         savePreferences: function () {
@@ -483,6 +509,15 @@ export const useAppStore = defineStore('app', {
          */
         mobileSetView: function (view) {
             this.mobileView = view;
+        },
+
+        /**
+         * Toggle the left column between full width and icon-only rail (desktop only)
+         */
+        toggleLeftCollapsed: function () {
+            this.leftCollapsed = !this.leftCollapsed;
+            applyLeftCollapsedClass(this.effectiveLeftCollapsed);
+            this.savePreferences();
         },
 
         /**
