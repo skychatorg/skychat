@@ -4,6 +4,7 @@ import { apiClient, useClientStore } from '@/stores/client';
 import { computed, ref } from 'vue';
 import SkyDropdown from '../common/SkyDropdown.vue';
 import SkyDropdownItem from '../common/SkyDropdownItem.vue';
+import SkyTooltip from '../common/SkyTooltip.vue';
 
 const client = useClientStore();
 
@@ -11,6 +12,10 @@ const props = defineProps({
     room: {
         type: Object,
         required: true,
+    },
+    compact: {
+        type: Boolean,
+        default: false,
     },
 });
 
@@ -79,7 +84,37 @@ const leaveRoom = () => {
 </script>
 
 <template>
+    <!-- Compact (icon-only rail) -->
+    <SkyTooltip v-if="compact" as-child side="right" :side-offset="12" class="block">
+        <template #trigger>
+            <div
+                class="relative w-full flex items-center justify-center py-2 rounded-lg cursor-pointer select-none transition"
+                :class="[
+                    selected
+                        ? 'bg-primary/10 text-white ring-1 ring-primary/30'
+                        : hasUnread
+                        ? 'text-white hover:bg-white/5'
+                        : 'text-white/60 hover:text-white hover:bg-white/5',
+                    isMuted ? 'opacity-50' : '',
+                ]"
+                @click="joinRoom"
+            >
+                <div v-if="selected" class="absolute left-0 top-2 bottom-2 w-[2px] rounded-r bg-primary" />
+                <span class="w-4 text-center text-xs" :class="selected ? 'text-primary' : 'text-white/40'">
+                    <fa v-if="room.isPrivate && isGroup" icon="users" />
+                    <fa v-else-if="room.isPrivate" icon="at" />
+                    <fa v-else-if="isProtected" icon="lock" />
+                    <span v-else class="font-mono">#</span>
+                </span>
+                <span v-if="hasUnread" class="absolute top-1 right-1 w-2 h-2 rounded-full bg-primary" />
+            </div>
+        </template>
+        {{ formattedName }}
+    </SkyTooltip>
+
+    <!-- Full (default) -->
     <div
+        v-else
         class="group relative w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left transition cursor-pointer select-none"
         :class="[
             selected

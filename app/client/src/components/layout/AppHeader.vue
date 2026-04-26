@@ -36,17 +36,19 @@ const onlineCount = computed(() => (client.state.connectedList || []).length);
     <header class="h-16 shrink-0 hairline backdrop-blur-xl" :style="{ background: 'var(--header)' }">
         <div class="h-full w-full max-w-[var(--page-max-width)] mx-auto flex items-stretch">
             <!-- Logo + wordmark — aligned with the left column on desktop -->
-            <div class="flex items-center justify-center gap-2 px-3 select-none lg:w-[var(--page-col-left-width)] lg:shrink-0">
-                <a href="/" class="flex items-center gap-2">
-                    <img src="/assets/logo.png" alt="SkyChat" class="h-7 w-auto" />
-                    <span class="font-semibold text-base tracking-tight">SkyChat</span>
+            <div
+                class="flex items-center justify-center gap-2 px-3 select-none lg:w-[var(--page-col-left-width)] lg:shrink-0 overflow-hidden"
+            >
+                <a href="/" class="flex items-center gap-2 min-w-0">
+                    <img src="/assets/logo.png" alt="SkyChat" class="h-7 w-auto shrink-0" />
+                    <span v-if="!app.effectiveLeftCollapsed" class="font-semibold text-base tracking-tight">SkyChat</span>
                 </a>
             </div>
 
             <!-- Middle: command palette trigger, aligned with the middle column -->
             <div class="grow flex items-center justify-center px-3">
                 <button
-                    class="flex items-center gap-2 px-3 py-1.5 hairline rounded-lg bg-white/[.02] hover:bg-white/[.05] transition text-xs text-white/60"
+                    class="hidden lg:flex items-center gap-2 px-3 py-1.5 hairline rounded-lg bg-white/[.02] hover:bg-white/[.05] transition text-xs text-white/60"
                     title="Command palette"
                     @click="palette.openPalette()"
                 >
@@ -64,7 +66,7 @@ const onlineCount = computed(() => (client.state.connectedList || []).length);
                         class="inline-flex items-center gap-1 px-1.5 py-[2px] rounded font-mono text-xs font-medium bg-primary/15 text-primary ring-1 ring-primary/30"
                     >
                         <fa icon="circle" class="text-[6px]" />
-                        {{ onlineCount }} online
+                        {{ onlineCount }}<span class="hidden lg:inline"> online</span>
                     </span>
                     <button
                         class="flex items-center gap-2 pl-2 pr-2 py-1 hairline rounded-lg bg-white/[.02] hover:bg-white/[.05] transition"

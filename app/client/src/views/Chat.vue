@@ -44,8 +44,8 @@ const clearSearch = () => {
             :style="{ background: 'var(--surface)' }"
             aria-label="Rooms and channels"
         >
-            <RoomList class="flex-grow min-h-0" />
-            <PlayerChannelList />
+            <RoomList class="flex-grow min-h-0" :compact="app.effectiveLeftCollapsed" />
+            <PlayerChannelList :compact="app.effectiveLeftCollapsed" />
             <div class="p-2 text-end lg:hidden">
                 <button class="form-control mr-2" @click="app.mobileSetView('middle')">
                     <fa icon="comments" class="mr-2" />
