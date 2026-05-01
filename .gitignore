@@ -11,3 +11,5 @@ uploads
 /gallery
 
 tsconfig.tsbuildinfo
+
+.playwright-mcp
