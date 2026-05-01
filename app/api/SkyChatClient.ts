@@ -103,6 +103,7 @@ export declare interface SkyChatClient {
     on(event: 'poll', listener: (poll: SanitizedPoll) => any): this;
     on(event: 'cursor', listener: (cursor: { x: number; y: number; user: SanitizedUser }) => any): this;
     on(event: 'roll', listener: (roll: { state: boolean }) => any): this;
+    on(event: 'wizz', listener: (data: { from: SanitizedUser }) => any): this;
 
     on(event: 'error', listener: (message: string) => any): this;
     on(event: 'info', listener: (message: string) => any): this;

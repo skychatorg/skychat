@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 import { useToast } from 'vue-toastification';
 import { SkyChatClient } from '../../../api/index.ts';
 import { WebPush } from '../lib/WebPush.js';
+import { triggerWizz } from '../lib/wizz.js';
 import { useEncryptionStore } from './encryption';
 
 // Connect to SkyChatClient
@@ -142,6 +143,9 @@ export const useClientStore = defineStore('client', {
             });
             client.on('discord-link', (url) => {
                 window.open(url, '_blank', 'width=500,height=800');
+            });
+            client.on('wizz', () => {
+                triggerWizz();
             });
             client.connect();
         },

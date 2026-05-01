@@ -31,6 +31,10 @@ const sendPM = () => {
     client.sendMessage('/pm ' + props.entry.user.username);
 };
 
+const wizzUser = () => {
+    client.sendMessage('/wizz ' + props.entry.user.username);
+};
+
 const blacklistUser = () => {
     client.sendMessage('/blacklist ' + props.entry.user.username);
 };
@@ -229,6 +233,11 @@ const isDisconnected = computed(() => props.entry.connectionCount === 0);
                                 <fa icon="paper-plane" class="w-4 mr-2" />
                                 Send PM
                             </SkyDropdownItem>
+                            <SkyDropdownItem @click="wizzUser">
+                                <fa icon="bolt" class="w-4 mr-2 text-amber-300" />
+                                <span>Wizz</span>
+                                <span class="ml-auto text-white/30 text-xs">$10</span>
+                            </SkyDropdownItem>
                             <SkyDropdownItem v-if="!isBlacklisted" @click="blacklistUser">
                                 <fa icon="ban" class="w-4 mr-2" />
                                 Blacklist
@@ -258,6 +267,11 @@ const isDisconnected = computed(() => props.entry.connectionCount === 0);
         <SkyContextMenuItem @select="sendPM">
             <fa icon="paper-plane" class="w-4 mr-2" />
             Send PM
+        </SkyContextMenuItem>
+        <SkyContextMenuItem @select="wizzUser">
+            <fa icon="bolt" class="w-4 mr-2 text-amber-300" />
+            <span>Wizz</span>
+            <span class="ml-auto text-white/30 text-xs">$10</span>
         </SkyContextMenuItem>
         <SkyContextMenuItem v-if="!isBlacklisted" @select="blacklistUser">
             <fa icon="ban" class="w-4 mr-2" />

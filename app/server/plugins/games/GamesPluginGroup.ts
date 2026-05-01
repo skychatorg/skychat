@@ -5,6 +5,7 @@ import { CursorPlugin } from './global/CursorPlugin.js';
 import { MoneyFarmerPlugin } from './global/MoneyFarmerPlugin.js';
 import { OfferMoneyPlugin } from './global/OfferMoneyPlugin.js';
 import { SandalePlugin } from './global/SandalePlugin.js';
+import { WizzPlugin } from './global/WizzPlugin.js';
 import { DailyRollPlugin } from './room/DailyRollPlugin.js';
 import { GiveMoneyPlugin } from './room/GiveMoneyPlugin.js';
 import { GuessTheNumberPlugin } from './room/GuessTheNumberPlugin.js';
@@ -27,5 +28,14 @@ export class GamesPluginGroup extends PluginGroup {
         StatsPlugin,
     ];
 
-    globalPluginClasses = [AprilFoolsDay, UserPollPlugin, ConfusePlugin, CursorPlugin, MoneyFarmerPlugin, OfferMoneyPlugin, SandalePlugin];
+    globalPluginClasses = [
+        AprilFoolsDay,
+        UserPollPlugin,
+        ConfusePlugin,
+        CursorPlugin,
+        MoneyFarmerPlugin,
+        OfferMoneyPlugin,
+        SandalePlugin,
+        WizzPlugin,
+    ];
 }
