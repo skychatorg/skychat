@@ -12,7 +12,7 @@ export type BlackListData = {
 export class BlacklistPlugin extends GlobalPlugin {
     static readonly defaultDataStorageValue: BlackListData = { users: [], guests: false };
 
-    static readonly MAX_BLACKLIST = 10;
+    static readonly MAX_BLACKLIST = 150;
 
     static readonly commandName = 'blacklist';
 
