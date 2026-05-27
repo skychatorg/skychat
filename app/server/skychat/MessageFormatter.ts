@@ -225,25 +225,25 @@ export class MessageFormatter {
      * @param message
      */
     public replaceStickers(message: string, remove?: boolean): string {
-        for (const code in StickerManager.stickers) {
-            const sticker = StickerManager.stickers[code];
-            if (remove) {
-                message = message.replace(new RegExp(MessageFormatter.escapeRegExp(code), 'g'), '');
-            } else {
-                let replacedCount = 0;
-                message = message.replace(new RegExp(MessageFormatter.escapeRegExp(code), 'g'), () => {
-                    if (replacedCount >= Config.PREFERENCES.maxReplacedStickersPerMessage) {
-                        return code;
-                    }
-                    ++replacedCount;
-                    return `<img class="skychat-sticker" title="${code}" alt="${code}" src="${sticker}">`;
-                });
-                if (replacedCount > Config.PREFERENCES.maxReplacedStickersPerMessage) {
-                    break;
-                }
-            }
+        // Match all codes in a single pass, longest first, so a shorter code (e.g. `:-)`) can never
+        // match inside the HTML already emitted for a longer one (e.g. `:-)))`) and corrupt the tag.
+        const codes = Object.keys(StickerManager.stickers).sort((a, b) => b.length - a.length);
+        if (codes.length === 0) {
+            return message;
         }
-        return message;
+        const regexp = new RegExp(codes.map(MessageFormatter.escapeRegExp).join('|'), 'g');
+        if (remove) {
+            return message.replace(regexp, '');
+        }
+        let replacedCount = 0;
+        return message.replace(regexp, (code) => {
+            if (replacedCount >= Config.PREFERENCES.maxReplacedStickersPerMessage) {
+                return code;
+            }
+            ++replacedCount;
+            const sticker = StickerManager.stickers[code];
+            return `<img class="skychat-sticker" title="${escapeHTML(code)}" alt="${escapeHTML(code)}" src="${escapeHTML(sticker)}">`;
+        });
     }
 
     /**
