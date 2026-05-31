@@ -7,6 +7,7 @@ import { BackupPlugin } from './global/BackupPlugin.js';
 import { BanPlugin } from './global/BanPlugin.js';
 import { BlacklistPlugin } from './global/BlacklistPlugin.js';
 import { ConnectedListPlugin } from './global/ConnectedListPlugin.js';
+import { ExpoPushPlugin } from './global/ExpoPushPlugin.js';
 import { CustomizationPlugin } from './global/CustomizationPlugin.js';
 import { DailySummaryPlugin } from './global/DailySummaryPlugin.js';
 import { DiscordPresencePlugin } from './global/DiscordPresencePlugin.js';
@@ -62,6 +63,7 @@ export class CorePluginGroup extends PluginGroup {
         CustomizationPlugin,
         DailySummaryPlugin,
         DiscordPresencePlugin,
+        ExpoPushPlugin,
         IpPlugin,
         JoinRoomPlugin,
         KickPlugin,
