@@ -410,15 +410,37 @@ export class JellyfinFetcher implements VideoFetcher {
         return client;
     }
 
-    /** @override */
+    /**
+     * @override
+     * Accepts one or more space-separated item ids and queues them in the given order.
+     * A bad id is skipped so one stale selection doesn't sink the whole batch; if every id
+     * fails we surface the first error (keeps the single-id error message intact).
+     */
     async get(_playerPlugin: PlayerPlugin, param: string): Promise<VideoInfo[]> {
-        const id = normalizeId(param.trim());
-        if (!JELLYFIN_ID_REGEX.test(id)) {
+        const ids = param.trim().split(/\s+/).map(normalizeId).filter(Boolean);
+        if (ids.length === 0 || ids.some((id) => !JELLYFIN_ID_REGEX.test(id))) {
             throw new Error('Invalid Jellyfin item id');
         }
         const client = await this.ready();
         const userId = await client.resolveUserId();
 
+        const videos: VideoInfo[] = [];
+        let firstError: Error | null = null;
+        for (const id of ids) {
+            try {
+                videos.push(await this.getOne(client, userId, id));
+            } catch (err) {
+                firstError ??= err as Error;
+                Logging.warn(`Jellyfin queue skipped ${id}: ${(err as Error).message}`);
+            }
+        }
+        if (videos.length === 0) {
+            throw firstError ?? new Error('Unable to fetch items');
+        }
+        return videos;
+    }
+
+    private async getOne(client: JellyfinClient, userId: string, id: string): Promise<VideoInfo> {
         // getItem returns MediaSources + MediaStreams without minting a PlaySessionId.
         // We intentionally do NOT call PlaybackInfo here (that would create a ghost session
         // visible in Jellyfin's dashboard on every queue). The proxy route calls PlaybackInfo
@@ -480,7 +502,7 @@ export class JellyfinFetcher implements VideoFetcher {
                 subtitleTracks,
             },
         };
-        return [video];
+        return video;
     }
 
     /** @override */

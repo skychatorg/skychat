@@ -99,9 +99,9 @@ const deleteSticker = (code) => {
 </script>
 
 <template>
-    <ModalTemplate id="manageStickers" title="Manage stickers">
+    <ModalTemplate id="manageStickers" title="Manage stickers" variant="wide">
         <div v-if="canManageStickers" class="flex flex-col gap-6 pb-6 text-skygray-lightest">
-            <form class="flex flex-col gap-4" @submit.prevent="submitSticker">
+            <form class="flex flex-col gap-4 w-full max-w-md" @submit.prevent="submitSticker">
                 <div>
                     <label class="block text-sm font-semibold text-skygray-white" for="sticker-code-input">Sticker code</label>
                     <input
@@ -144,7 +144,7 @@ const deleteSticker = (code) => {
 
             <div>
                 <h3 class="font-semibold mb-2 text-skygray-white">Existing stickers ({{ stickerEntries.length }})</h3>
-                <div v-if="stickerEntries.length" class="grid gap-4 sm:grid-cols-2">
+                <div v-if="stickerEntries.length" class="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(200px,1fr))]">
                     <div
                         v-for="[code, url] in stickerEntries"
                         :key="code"

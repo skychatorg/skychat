@@ -582,6 +582,12 @@ export const useAppStore = defineStore('app', {
             if (this.modals[name]) {
                 this.modals[name] = false;
             } else {
+                // Only one modal at a time: opening one closes the rest.
+                for (const other of Object.keys(this.modals)) {
+                    if (other !== name) {
+                        this.modals[other] = false;
+                    }
+                }
                 this.modals[name] = data || true;
             }
         },

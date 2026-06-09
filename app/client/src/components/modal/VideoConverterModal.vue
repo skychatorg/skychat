@@ -16,7 +16,7 @@ watch(
         if (!app.modals.videoConverter) {
             return;
         }
-        client.sendMessage(`/convertinfo ${app.modals.videoConverter.filePath}`);
+        client.sendMessage(`/convertinfo ${app.modals.videoConverter?.filePath}`);
     },
 );
 
@@ -53,18 +53,18 @@ const convert = () => {
     if (selectedStreamIndexes.value.length === 0) {
         return;
     }
-    client.sendMessage(`/convert ${app.modals.videoConverter.filePath} ${selectedStreamIndexes.value.join(',')}`);
+    client.sendMessage(`/convert ${app.modals.videoConverter?.filePath} ${selectedStreamIndexes.value.join(',')}`);
     app.toggleModal('ongoingConverts');
 };
 </script>
 
 <template>
-    <ModalTemplate id="videoConverter" title="Video converter">
+    <ModalTemplate id="videoConverter" title="Video converter" variant="dialog">
         <template v-if="!client.state.videoStreamInfo"> loading.. </template>
         <template v-else>
             <div class="text-center">
                 <SectionSubTitle class="mt-5">Source</SectionSubTitle>
-                <p class="mx-4">/{{ app.modals.videoConverter.filePath }}</p>
+                <p class="mx-4">/{{ app.modals.videoConverter?.filePath }}</p>
 
                 <SectionSubTitle class="mt-5">Streams</SectionSubTitle>
                 <HoverCard
