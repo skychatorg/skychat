@@ -7,7 +7,7 @@ const client = useClientStore();
 </script>
 
 <template>
-    <ModalTemplate id="jellyfin" title="Jellyfin">
+    <ModalTemplate id="jellyfin" title="Jellyfin" variant="wide">
         <template v-if="client.state.config && client.state.config.jellyfinEnabled">
             <JellyfinLibraryPannel />
         </template>

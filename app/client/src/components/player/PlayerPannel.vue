@@ -21,8 +21,8 @@ const playerHeightCss = computed(() => {
     return {
         xs: '100px',
         sm: '20vh',
-        md: '35vh',
-        lg: 'calc(100vh - 450px)',
+        md: '40vh',
+        lg: 'calc(100vh - 475px)',
     }[app.playerMode.size];
 });
 

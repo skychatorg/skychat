@@ -7,7 +7,7 @@ const client = useClientStore();
 </script>
 
 <template>
-    <ModalTemplate id="gallery" title="Gallery">
+    <ModalTemplate id="gallery" title="Gallery" variant="dialog">
         <template v-if="client.state.gallery">
             <GalleryPannel />
         </template>
