@@ -5,6 +5,7 @@ export type { MessageSeenEventData } from './plugins/core/room/MessageSeenPlugin
 export type { FolderContent } from './plugins/gallery/Gallery.js';
 export type { OngoingConvert, VideoStreamInfo } from './plugins/gallery/VideoConverterPlugin.js';
 export type { QueuedVideoInfo, SanitizedPlayerChannel, VideoInfo } from './plugins/player/PlayerChannel.js';
+export type { SanitizedVoiceChannel } from './plugins/voice/VoiceTypes.js';
 export type { AuthData } from './skychat/AuthBridge.js';
 export type { PublicConfig } from './skychat/Config.js';
 export type { SanitizedMessage } from './skychat/Message.js';

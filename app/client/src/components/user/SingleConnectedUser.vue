@@ -6,6 +6,7 @@ import SkyDropdownItem from '@/components/common/SkyDropdownItem.vue';
 import SkyTooltip from '@/components/common/SkyTooltip.vue';
 import { useIsBlacklisted } from '@/composables/useIsBlacklisted';
 import { useUserRight } from '@/composables/useUserRight';
+import { useVoice } from '@/composables/useVoice';
 import { useClientStore } from '@/stores/client';
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 
@@ -31,6 +32,21 @@ const isSelf = computed(() => {
 });
 
 const canModerate = useUserRight('minRightForUserModeration');
+
+const voice = useVoice();
+const canModerateVoice = useUserRight('minRightForVoiceModeration');
+const isSpeaking = computed(() => voice.isSpeaking(props.entry.user.id));
+const isLocallyMuted = ref(false);
+
+const toggleLocalMute = () => {
+    isLocallyMuted.value = !isLocallyMuted.value;
+    client.setVoiceUserLocallyMuted(props.entry.user.id, isLocallyMuted.value);
+};
+const setLocalVolume = (e) => {
+    client.setVoiceUserVolume(props.entry.user.id, Number(e.target.value));
+};
+const voiceMuteUser = () => client.sendMessage('/voicemute ' + props.entry.user.username);
+const voiceKickUser = () => client.sendMessage('/voicekick ' + props.entry.user.username);
 
 const sendPM = () => {
     client.sendMessage('/pm ' + props.entry.user.username);
@@ -126,6 +142,7 @@ const isDisconnected = computed(() => props.entry.connectionCount === 0);
                         <button class="relative shrink-0" :title="entry.user.username" @click="sendPM">
                             <div
                                 class="w-8 h-8 rounded overflow-hidden bg-black border-2"
+                                :class="{ 'ring-2 ring-emerald-400 ring-offset-1 ring-offset-black': isSpeaking }"
                                 :style="{ borderColor: entry.user.data.plugins.custom.color }"
                             >
                                 <img :src="entry.user.data.plugins.avatar" :alt="entry.user.username" class="h-full w-full object-cover" />
@@ -151,6 +168,7 @@ const isDisconnected = computed(() => props.entry.connectionCount === 0);
                 <button class="relative shrink-0" :title="entry.user.username" @click="sendPM">
                     <div
                         class="w-8 h-8 rounded overflow-hidden bg-black border-2"
+                        :class="{ 'ring-2 ring-emerald-400 ring-offset-1 ring-offset-black': isSpeaking }"
                         :style="{ borderColor: entry.user.data.plugins.custom.color }"
                     >
                         <img :src="entry.user.data.plugins.avatar" :alt="entry.user.username" class="h-full w-full object-cover" />
@@ -270,6 +288,23 @@ const isDisconnected = computed(() => props.entry.connectionCount === 0);
                                 <span>Wizz</span>
                                 <span class="ml-auto text-white/30 text-xs">$10</span>
                             </SkyDropdownItem>
+                            <template v-if="voice.connected.value">
+                                <SkyDropdownItem @click="toggleLocalMute">
+                                    <fa :icon="isLocallyMuted ? 'volume-xmark' : 'microphone'" class="w-4 mr-2" />
+                                    {{ isLocallyMuted ? 'Unmute (local)' : 'Mute in voice (local)' }}
+                                </SkyDropdownItem>
+                                <div class="px-2 py-1">
+                                    <input type="range" min="0" max="1" step="0.05" value="1" class="w-full" @input="setLocalVolume" />
+                                </div>
+                            </template>
+                            <SkyDropdownItem v-if="canModerateVoice" @click="voiceMuteUser">
+                                <fa icon="microphone-slash" class="w-4 mr-2 text-warn" />
+                                Voice mute
+                            </SkyDropdownItem>
+                            <SkyDropdownItem v-if="canModerateVoice" @click="voiceKickUser">
+                                <fa icon="phone-slash" class="w-4 mr-2 text-danger" />
+                                Voice kick
+                            </SkyDropdownItem>
                             <SkyDropdownItem v-if="!isBlacklisted" @click="blacklistUser">
                                 <fa icon="ban" class="w-4 mr-2" />
                                 Blacklist
@@ -304,6 +339,20 @@ const isDisconnected = computed(() => props.entry.connectionCount === 0);
             <fa icon="bolt" class="w-4 mr-2 text-amber-300" />
             <span>Wizz</span>
             <span class="ml-auto text-white/30 text-xs">$10</span>
+        </SkyContextMenuItem>
+        <template v-if="voice.connected.value">
+            <SkyContextMenuItem @select="toggleLocalMute">
+                <fa :icon="isLocallyMuted ? 'volume-xmark' : 'microphone'" class="w-4 mr-2" />
+                {{ isLocallyMuted ? 'Unmute (local)' : 'Mute in voice (local)' }}
+            </SkyContextMenuItem>
+        </template>
+        <SkyContextMenuItem v-if="canModerateVoice" @select="voiceMuteUser">
+            <fa icon="microphone-slash" class="w-4 mr-2 text-warn" />
+            Voice mute
+        </SkyContextMenuItem>
+        <SkyContextMenuItem v-if="canModerateVoice" @select="voiceKickUser">
+            <fa icon="phone-slash" class="w-4 mr-2 text-danger" />
+            Voice kick
         </SkyContextMenuItem>
         <SkyContextMenuItem v-if="!isBlacklisted" @select="blacklistUser">
             <fa icon="ban" class="w-4 mr-2" />

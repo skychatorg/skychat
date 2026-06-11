@@ -17,6 +17,7 @@ import {
     SanitizedRoom,
     SanitizedSession,
     SanitizedUser,
+    SanitizedVoiceChannel,
     VideoInfo,
     VideoStreamInfo,
 } from '../server/index.js';
@@ -86,6 +87,10 @@ export type SkyChatClientState = {
     playerApiSearchResult: { type: string; items: Array<VideoInfo> } | null;
     player: PlayerState;
     playerLastUpdate: Date | null;
+    voiceChannels: SanitizedVoiceChannel[];
+    currentVoiceChannelId: number | null;
+    voiceChannelUsers: { [channelId: number]: Array<SanitizedUser> };
+    voiceSpeaking: { [userId: number]: boolean };
 };
 
 export declare interface SkyChatClient {
@@ -126,6 +131,17 @@ export declare interface SkyChatClient {
     on(event: 'player-channel', listener: (channelId: number | null) => any): this;
     on(event: 'player-search', listener: (data: { type: string; items: Array<VideoInfo> }) => any): this;
     on(event: 'player-sync', listener: (data: PlayerState) => any): this;
+
+    on(event: 'voice-channels', listener: (voiceChannels: Array<SanitizedVoiceChannel>) => any): this;
+    on(event: 'voice-channel', listener: (channelId: number | null) => any): this;
+    on(event: 'voice-router-caps', listener: (caps: any) => any): this;
+    on(event: 'voice-transport', listener: (params: any) => any): this;
+    on(event: 'voice-connected', listener: (data: { direction: string }) => any): this;
+    on(event: 'voice-producer-id', listener: (data: { id: string }) => any): this;
+    on(event: 'voice-sync', listener: (data: { channelId: number; producers: Array<{ producerId: string; userId: number; username: string }> }) => any): this;
+    on(event: 'voice-consume', listener: (data: any) => any): this;
+    on(event: 'voice-producer-closed', listener: (data: { producerId: string }) => any): this;
+    on(event: 'voice-rtpcaps-ok', listener: (data: { ok: boolean }) => any): this;
 
     on(event: 'update', listener: (state: SkyChatClientState) => any): this;
 
@@ -171,6 +187,10 @@ export class SkyChatClient extends EventEmitter {
     private _playerChannels: Array<SanitizedPlayerChannel> = [];
     private _currentPlayerChannelId: number | null = null;
     private _currentPlayerChannel: SanitizedPlayerChannel | null = null;
+    private _voiceChannels: Array<SanitizedVoiceChannel> = [];
+    private _currentVoiceChannelId: number | null = null;
+    private _voiceChannelUsers: { [channelId: number]: Array<SanitizedUser> } = {};
+    private _voiceSpeaking: { [userId: number]: boolean } = {};
     private _playerApiSearchResult: { type: string; items: Array<VideoInfo> } | null = null;
     private _player: PlayerState = {
         current: null,
@@ -246,6 +266,10 @@ export class SkyChatClient extends EventEmitter {
         this.on('player-channel', this._onPlayerChannel.bind(this));
         this.on('player-search', this._onPlayerApiSearchResults.bind(this));
         this.on('player-sync', this._onPlayerSync.bind(this));
+
+        // Voice (channel + roster only; transport/produce/consume handled by VoiceClient engine)
+        this.on('voice-channels', this._onVoiceChannels.bind(this));
+        this.on('voice-channel', this._onVoiceChannel.bind(this));
 
         // Meta
         this.on('info', this._onInfo.bind(this));
@@ -438,6 +462,24 @@ export class SkyChatClient extends EventEmitter {
         ({ messageIdToLastSeenUsers: this._messageIdToLastSeenUsers } = this._generateMessageIdToLastSeenUsers());
         ({ roomConnectedUsers: this._roomConnectedUsers, playerChannelUsers: this._playerChannelUsers } =
             this._generateRoomConnectedUsersAndPlayerChannelUsers());
+        this._voiceChannelUsers = this._generateVoiceChannelUsers();
+    }
+
+    /**
+     * Bucket voice-channel members from the per-viewer voice roster (voice-channels), mapping
+     * each allowed username to its connected-list user object (for avatars). Server-side
+     * shadowban/blacklist filtering already removed users the viewer must not see.
+     */
+    private _generateVoiceChannelUsers(): { [channelId: number]: Array<SanitizedUser> } {
+        const usersByName: { [username: string]: SanitizedUser } = {};
+        for (const entry of this._connectedList) {
+            usersByName[entry.user.username] = entry.user;
+        }
+        const voiceChannelUsers: { [channelId: number]: Array<SanitizedUser> } = {};
+        for (const channel of this._voiceChannels) {
+            voiceChannelUsers[channel.id] = channel.users.map((username) => usersByName[username]).filter((u): u is SanitizedUser => !!u);
+        }
+        return voiceChannelUsers;
     }
 
     private _onMessage(message: SanitizedMessage) {
@@ -566,6 +608,27 @@ export class SkyChatClient extends EventEmitter {
         this.emit('update', this.state);
     }
 
+    private _onVoiceChannels(voiceChannels: Array<SanitizedVoiceChannel>) {
+        this._voiceChannels = voiceChannels;
+        this._voiceChannelUsers = this._generateVoiceChannelUsers();
+        this.emit('update', this.state);
+    }
+
+    private _onVoiceChannel(currentVoiceChannelId: number | null) {
+        this._currentVoiceChannelId = currentVoiceChannelId;
+        this.emit('update', this.state);
+    }
+
+    /** Called by the store/VoiceClient to flip a user's speaking dot. */
+    public setVoiceSpeaking(userId: number, speaking: boolean) {
+        if (speaking) {
+            this._voiceSpeaking[userId] = true;
+        } else {
+            delete this._voiceSpeaking[userId];
+        }
+        this.emit('update', this.state);
+    }
+
     private _onPlayerApiSearchResults(playerApiSearchResult: { type: string; items: Array<VideoInfo> }) {
         this._playerApiSearchResult = playerApiSearchResult;
         this.emit('update', this.state);
@@ -626,6 +689,10 @@ export class SkyChatClient extends EventEmitter {
             playerApiSearchResult: this._playerApiSearchResult,
             player: this._player,
             playerLastUpdate: this._playerLastUpdate,
+            voiceChannels: this._voiceChannels,
+            currentVoiceChannelId: this._currentVoiceChannelId,
+            voiceChannelUsers: this._voiceChannelUsers,
+            voiceSpeaking: this._voiceSpeaking,
         };
     }
 
