@@ -2,6 +2,7 @@ import { Connection } from '../../skychat/Connection.js';
 import { Room } from '../../skychat/Room.js';
 import { UserController } from '../../skychat/UserController.js';
 import { RoomPlugin } from '../RoomPlugin.js';
+import { triggerVoiceRevalidate } from '../voice/triggerVoiceRevalidate.js';
 
 export class RoomProtectPlugin extends RoomPlugin {
     static readonly commandName = 'roomprotect';
@@ -64,6 +65,9 @@ export class RoomProtectPlugin extends RoomPlugin {
             content: 'Room as a new protection policy: ' + (this.storage === null ? 'No protection' : `Min right: ${this.storage}`),
             user: UserController.getNeutralUser(),
         });
+
+        // Live: members now below the room min-right must be evicted from voice.
+        triggerVoiceRevalidate(this.room.manager);
     }
 
     public async onBeforeConnectionJoinedRoom(connection: Connection): Promise<void> {

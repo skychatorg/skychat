@@ -10,6 +10,7 @@ import { User } from '../../../skychat/User.js';
 import { UserController } from '../../../skychat/UserController.js';
 import { GlobalPlugin } from '../../GlobalPlugin.js';
 import { MessageHistoryPlugin } from '../../core/room/MessageHistoryPlugin.js';
+import { triggerVoiceRevalidate } from '../../voice/triggerVoiceRevalidate.js';
 
 enum BAN_TYPES {
     ACCESS = 0,
@@ -131,6 +132,8 @@ export class BanPlugin extends GlobalPlugin {
             }
         }
         this.syncStorage();
+        // Live: shadowban filters voice consume/roster; access ban already closed the socket.
+        triggerVoiceRevalidate(this.manager);
         await this.handleBanList('', connection);
     }
 
@@ -143,6 +146,7 @@ export class BanPlugin extends GlobalPlugin {
             }
         }
         this.syncStorage();
+        triggerVoiceRevalidate(this.manager);
         await this.handleBanList('', connection);
     }
 

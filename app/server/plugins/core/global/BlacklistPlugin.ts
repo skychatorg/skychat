@@ -3,6 +3,7 @@ import { ConnectedListPlugin } from './ConnectedListPlugin.js';
 import { UserController } from '../../../skychat/UserController.js';
 import { GlobalPlugin } from '../../GlobalPlugin.js';
 import { User } from '../../../skychat/User.js';
+import { triggerVoiceRevalidate } from '../../voice/triggerVoiceRevalidate.js';
 
 export type BlackListData = {
     users: string[];
@@ -115,6 +116,7 @@ export class BlacklistPlugin extends GlobalPlugin {
         connection.session.syncUserData();
         connection.send('message', UserController.createNeutralMessage({ content: 'User added to blacklist', id: 0 }).sanitized());
         (this.manager.getPlugin('connectedlist') as ConnectedListPlugin).sync();
+        triggerVoiceRevalidate(this.manager);
     }
 
     async handleUnblacklist(param: string, connection: Connection) {
@@ -128,6 +130,7 @@ export class BlacklistPlugin extends GlobalPlugin {
         connection.session.syncUserData();
         connection.send('message', UserController.createNeutralMessage({ content: 'User removed from blacklist', id: 0 }).sanitized());
         (this.manager.getPlugin('connectedlist') as ConnectedListPlugin).sync();
+        triggerVoiceRevalidate(this.manager);
     }
 
     async handleBlacklistGuests(connection: Connection) {
@@ -140,6 +143,7 @@ export class BlacklistPlugin extends GlobalPlugin {
         connection.session.syncUserData();
         connection.send('message', UserController.createNeutralMessage({ content: 'All guests are now blacklisted', id: 0 }).sanitized());
         (this.manager.getPlugin('connectedlist') as ConnectedListPlugin).sync();
+        triggerVoiceRevalidate(this.manager);
     }
 
     async handleUnblacklistGuests(connection: Connection) {
@@ -152,5 +156,6 @@ export class BlacklistPlugin extends GlobalPlugin {
         connection.session.syncUserData();
         connection.send('message', UserController.createNeutralMessage({ content: 'Guests are no longer blacklisted', id: 0 }).sanitized());
         (this.manager.getPlugin('connectedlist') as ConnectedListPlugin).sync();
+        triggerVoiceRevalidate(this.manager);
     }
 }

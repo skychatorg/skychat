@@ -3,6 +3,7 @@ import { globalPluginGroup } from '../plugins/GlobalPluginGroup.js';
 import { RoomPlugin } from '../plugins/RoomPlugin.js';
 import { BlacklistPlugin } from '../plugins/core/global/BlacklistPlugin.js';
 import { RoomProtectPlugin } from '../plugins/security_extra/RoomProtectPlugin.js';
+import { triggerVoiceRevalidate } from '../plugins/voice/triggerVoiceRevalidate.js';
 import { Config } from './Config.js';
 import { Connection } from './Connection.js';
 import { DatabaseHelper } from './DatabaseHelper.js';
@@ -214,6 +215,8 @@ export class Room implements IBroadcaster {
         }
         this.whitelist.splice(index, 1);
         this.dirty = true;
+        // Live: a de-whitelisted user must be evicted from voice in this room.
+        triggerVoiceRevalidate(this.manager);
         return true;
     }
 
