@@ -17,17 +17,28 @@ relay is a dumb packet forwarder and can't read it.
 
 ## On the relay VPS
 
-Copy `app/script/voice-relay.sh` to the VPS and run it as root:
+One-liner (once this script is on the repo's `master`):
 
 ```bash
-# install + start, reboot-safe (default media port 44444)
-sudo ./voice-relay.sh up <ORIGIN_IP> [MEDIA_PORT]
+curl -fsSL https://raw.githubusercontent.com/skychatorg/skychat/master/app/script/voice-relay.sh \
+  | sudo bash -s -- up <ORIGIN_IP>
+```
 
-# show config + live rules + this relay's public IP
-sudo ./voice-relay.sh status
+The script re-downloads itself to `/usr/local/sbin/voice-relay.sh` and installs a systemd unit,
+so it survives reboots. To run it from a different branch/fork, point both the URL and
+`VOICE_RELAY_URL` (used for the reboot-persistence copy) at the same place:
 
-# stop + uninstall completely
-sudo ./voice-relay.sh down
+```bash
+URL=https://raw.githubusercontent.com/<owner>/skychat/<branch>/app/script/voice-relay.sh
+curl -fsSL "$URL" | sudo VOICE_RELAY_URL="$URL" bash -s -- up <ORIGIN_IP>
+```
+
+Or copy `app/script/voice-relay.sh` to the VPS and run it directly:
+
+```bash
+sudo ./voice-relay.sh up <ORIGIN_IP> [MEDIA_PORT]   # install + start, reboot-safe (default port 44444)
+sudo ./voice-relay.sh status                        # config + live rules + this relay's public IP
+sudo ./voice-relay.sh down                          # stop + uninstall completely
 ```
 
 It installs only iptables NAT rules (DNAT + MASQUERADE) plus a small systemd unit for

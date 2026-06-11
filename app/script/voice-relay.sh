@@ -22,6 +22,11 @@ SELF_DST=/usr/local/sbin/voice-relay.sh
 UNIT=/etc/systemd/system/voice-relay.service
 SYSCTL=/etc/sysctl.d/99-voice-relay.conf
 
+# Canonical location of THIS script, used to re-fetch itself for reboot persistence when run
+# via `curl ... | bash` (piped, so $0 is "bash" and there's no file to copy). Override with
+# VOICE_RELAY_URL=... if you host it elsewhere (e.g. a fork or a different branch).
+RAW_URL="${VOICE_RELAY_URL:-https://raw.githubusercontent.com/skychatorg/skychat/master/app/script/voice-relay.sh}"
+
 NAT_PRE=VOICE_RELAY_PRE
 NAT_POST=VOICE_RELAY_POST
 FWD=VOICE_RELAY_FWD
@@ -29,6 +34,25 @@ FWD=VOICE_RELAY_FWD
 die() { echo "voice-relay: $*" >&2; exit 1; }
 need_root() { [ "$(id -u)" = 0 ] || die "must run as root"; }
 have_systemd() { [ -d /run/systemd/system ]; }
+
+fetch() { # <url> <dest>
+    if command -v curl >/dev/null 2>&1; then curl -fsSL "$1" -o "$2"
+    elif command -v wget >/dev/null 2>&1; then wget -qO "$2" "$1"
+    else return 1; fi
+}
+
+# Put a copy of this script at $SELF_DST so the systemd unit can re-apply on boot. When run
+# from a real file (local checkout) we copy it; when piped via curl|bash we re-download it.
+install_self() {
+    if [ -f "$0" ] && grep -q 'VOICE_RELAY_PRE' "$0" 2>/dev/null; then
+        install -m 0755 "$0" "$SELF_DST"
+    else
+        echo "voice-relay: fetching script for reboot persistence from $RAW_URL"
+        fetch "$RAW_URL" "$SELF_DST" || die "could not download $RAW_URL (set VOICE_RELAY_URL to a reachable raw URL)"
+        chmod 0755 "$SELF_DST"
+        grep -q 'VOICE_RELAY_PRE' "$SELF_DST" || die "downloaded file does not look like voice-relay.sh"
+    fi
+}
 
 ensure_iptables() {
     command -v iptables >/dev/null 2>&1 && return 0
@@ -97,7 +121,7 @@ cmd_up() {
 
     # Persist config + this script + ip_forward, then install a reboot-safe systemd unit.
     printf 'ORIGIN_IP=%s\nMEDIA_PORT=%s\n' "$origin" "$port" > "$CONF"
-    if ! [ "$0" -ef "$SELF_DST" ]; then install -m 0755 "$0" "$SELF_DST"; fi
+    install_self
     printf 'net.ipv4.ip_forward=1\n' > "$SYSCTL"
 
     cat > "$UNIT" <<EOF
