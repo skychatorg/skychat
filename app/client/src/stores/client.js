@@ -3,12 +3,17 @@ import { useToast } from 'vue-toastification';
 import { SkyChatClient } from '../../../api/index.ts';
 import { WebPush } from '../lib/WebPush.js';
 import { triggerWizz } from '../lib/wizz.js';
+import { VoiceClient } from '../lib/voice/VoiceClient.js';
 import { useEncryptionStore } from './encryption';
 
 // Connect to SkyChatClient
 const protocol = document.location.protocol === 'http:' ? 'ws' : 'wss';
 const url = protocol + '://' + document.location.host + '/api/ws';
 const client = new SkyChatClient(url);
+
+// The voice engine holds non-reactive mediasoup objects; keep it at module scope (like `client`)
+// so Pinia never proxies it.
+let voiceClient = null;
 
 export { client as apiClient };
 
@@ -37,6 +42,17 @@ export const useClientStore = defineStore('client', {
          * Whether a message search is in progress
          */
         messageSearchLoading: false,
+
+        /**
+         * Local-only voice UI state (mirrors VoiceClient internals for the template).
+         */
+        voice: {
+            connected: false,
+            muted: false,
+            deafened: false,
+            pushToTalk: false,
+            inputDeviceId: null,
+        },
     }),
 
     getters: {
@@ -147,7 +163,69 @@ export const useClientStore = defineStore('client', {
             client.on('wizz', () => {
                 triggerWizz();
             });
+
+            // Voice: start/stop the engine when our channel changes.
+            let lastVoiceChannelId = null;
+            client.on('update', () => {
+                const id = client.state.currentVoiceChannelId;
+                if (id === lastVoiceChannelId) {
+                    return;
+                }
+                lastVoiceChannelId = id;
+                if (id !== null && !voiceClient) {
+                    voiceClient = new VoiceClient(client, {
+                        onSpeaking: (userId, speaking) => client.setVoiceSpeaking(userId, speaking),
+                        onStateChange: () => {
+                            this.voice.muted = voiceClient?.muted ?? false;
+                            this.voice.deafened = voiceClient?.deafened ?? false;
+                            this.voice.pushToTalk = voiceClient?.pushToTalk ?? false;
+                        },
+                        onError: (msg) => useToast().error(msg),
+                    });
+                    this.voice.connected = true;
+                } else if (id === null && voiceClient) {
+                    voiceClient.stop();
+                    voiceClient = null;
+                    this.voice = { connected: false, muted: false, deafened: false, pushToTalk: false, inputDeviceId: null };
+                }
+            });
+
             client.connect();
+        },
+
+        // ---- Voice actions (components never reach into voiceClient directly) ----
+        joinVoice(channelId) {
+            client.sendMessage(`/voicechannel join ${channelId}`);
+        },
+        leaveVoice() {
+            if (this.state.currentVoiceChannelId !== null) {
+                client.sendMessage(`/voicechannel leave ${this.state.currentVoiceChannelId}`);
+            }
+        },
+        async voiceStartMic() {
+            await voiceClient?.startMic();
+        },
+        setVoiceMuted(m) {
+            voiceClient?.setMuted(m);
+        },
+        setVoiceDeafened(d) {
+            voiceClient?.setDeafened(d);
+        },
+        setVoicePushToTalk(p) {
+            voiceClient?.setPushToTalk(p);
+        },
+        setVoiceTalkKey(down) {
+            voiceClient?.setTalkKey(down);
+        },
+        async setVoiceInputDevice(id) {
+            this.voice.inputDeviceId = id;
+            await voiceClient?.setInputDevice(id);
+        },
+        setVoiceUserVolume(userId, vol) {
+            voiceClient?.setUserVolume(userId, vol);
+        },
+        setVoiceUserLocallyMuted(userId, muted) {
+            voiceClient?.setUserLocallyMuted(userId, muted);
         },
 
         /**

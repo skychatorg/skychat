@@ -3,6 +3,8 @@ import MessagePannel from '@/components/message/MessagePannel.vue';
 import NewMessageForm from '@/components/message/NewMessageForm.vue';
 import PlayerPannel from '@/components/player/PlayerPannel.vue';
 import PlayerChannelList from '@/components/playerchannel/PlayerChannelList.vue';
+import VoiceChannelList from '@/components/voice/VoiceChannelList.vue';
+import VoicePanel from '@/components/voice/VoicePanel.vue';
 import PollList from '@/components/poll/PollList.vue';
 import RoomHeader from '@/components/room/RoomHeader.vue';
 import RoomList from '@/components/room/RoomList.vue';
@@ -46,6 +48,7 @@ const clearSearch = () => {
         >
             <RoomList class="flex-grow min-h-0" :compact="app.effectiveLeftCollapsed" />
             <PlayerChannelList :compact="app.effectiveLeftCollapsed" />
+            <VoiceChannelList :compact="app.effectiveLeftCollapsed" />
             <div class="p-2 text-end lg:hidden">
                 <button class="form-control mr-2" @click="app.mobileSetView('middle')">
                     <fa icon="comments" class="mr-2" />
@@ -65,6 +68,7 @@ const clearSearch = () => {
             :style="{ background: 'rgba(8, 8, 18, 0.35)' }"
         >
             <PlayerPannel v-if="client.state.currentPlayerChannel" />
+            <VoicePanel v-if="client.state.currentVoiceChannelId !== null" />
             <RoomHeader v-if="client.state.currentRoom" :room="client.state.currentRoom" />
             <PollList />
             <div v-if="canSearchMessages" class="px-3 py-1 flex justify-end">

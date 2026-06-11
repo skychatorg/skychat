@@ -15,6 +15,11 @@ export default defineConfig({
         },
     },
     envPrefix: ['VAPID_PUBLIC_', 'VITE_'],
+    optimizeDeps: {
+        // mediasoup-client ships a CJS/ESM interop quirk (bowser.getParser is not a function)
+        // that breaks under Vite's dep pre-bundle unless force-included.
+        include: ['mediasoup-client'],
+    },
     server: {
         port: 80,
         host: '0.0.0.0',
