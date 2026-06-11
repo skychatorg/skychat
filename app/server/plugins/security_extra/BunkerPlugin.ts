@@ -3,6 +3,7 @@ import { Message } from '../../skychat/Message.js';
 import { RoomManager } from '../../skychat/RoomManager.js';
 import { UserController } from '../../skychat/UserController.js';
 import { GlobalPlugin } from '../GlobalPlugin.js';
+import { triggerVoiceRevalidate } from '../voice/triggerVoiceRevalidate.js';
 
 export class BunkerPlugin extends GlobalPlugin {
     static readonly commandName = 'bunker';
@@ -44,6 +45,9 @@ export class BunkerPlugin extends GlobalPlugin {
     async handleBunker(param: string, connection: Connection) {
         this.storage = param === 'on';
         this.syncStorage();
+
+        // Live revoke/restore guest voice producers on toggle.
+        triggerVoiceRevalidate(this.manager);
 
         connection.send(
             'message',

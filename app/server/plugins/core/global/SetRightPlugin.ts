@@ -6,6 +6,7 @@ import { GlobalPlugin } from '../../GlobalPlugin.js';
 import { Config } from '../../../skychat/Config.js';
 import lodash from 'lodash';
 import { Connection } from '../../../skychat/Connection.js';
+import { triggerVoiceRevalidate } from '../../voice/triggerVoiceRevalidate.js';
 
 export class SetRightPlugin extends GlobalPlugin {
     static readonly commandName = 'setright';
@@ -51,5 +52,7 @@ export class SetRightPlugin extends GlobalPlugin {
         user.right = right;
         await UserController.sync(user);
         (this.manager.getPlugin('connectedlist') as ConnectedListPlugin).sync();
+        // Live: a lowered right may downgrade/evict the user from voice.
+        triggerVoiceRevalidate(this.manager);
     }
 }
