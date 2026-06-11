@@ -155,12 +155,15 @@ EOF
     echo "Next, on the SkyChat ORIGIN (${origin}):"
     echo "  1. .env:   VOICE_ANNOUNCED_IP=${rip}"
     echo "  2. restart: docker compose up -d --force-recreate skychat_backend"
-    echo "  3. lock the media port to this relay only, e.g.:"
-    echo "       ufw allow from ${rip} to any port ${port} proto udp"
-    echo "       ufw allow from ${rip} to any port ${port} proto tcp"
-    echo "       ufw deny ${port}"
+    echo "  3. lock the media port to THIS relay only. The port is published by Docker, which"
+    echo "     BYPASSES ufw — so filter it in the DOCKER-USER chain (relay masquerades, so the"
+    echo "     origin sees traffic from this relay's IP):"
+    echo "       iptables -I DOCKER-USER -p udp --dport ${port} ! -s ${rip} -j DROP"
+    echo "       iptables -I DOCKER-USER -p tcp --dport ${port} ! -s ${rip} -j DROP"
+    echo "       apt-get install -y iptables-persistent && netfilter-persistent save   # persist"
     echo
-    echo "Also open ${port}/udp and ${port}/tcp INBOUND on THIS relay's firewall / provider security group."
+    echo "Open ${port}/udp and ${port}/tcp INBOUND on THIS relay's cloud provider security group"
+    echo "(the relay's own ufw INPUT does not apply — DNAT happens before INPUT)."
 }
 
 cmd_down() {

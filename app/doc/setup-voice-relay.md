@@ -45,12 +45,11 @@ It installs only iptables NAT rules (DNAT + MASQUERADE) plus a small systemd uni
 reboot persistence — no daemon, no mediasoup, no coturn. A nano VPS handles 5–20 audio
 users (~32 kbps/speaker) easily.
 
-Open the media port **inbound** on the relay's own firewall / provider security group:
-
-```bash
-sudo ufw allow 44444/udp
-sudo ufw allow 44444/tcp
-```
+Open the media port **inbound** on the relay's **cloud provider security group** (the thing
+that actually gates it). The relay's own OS firewall (ufw `INPUT`) does **not** apply here —
+the packet is DNAT'd in `PREROUTING` and routed to `FORWARD` before `INPUT` ever runs, and the
+script already allows that `FORWARD` flow. So if media doesn't connect, it's almost always the
+provider security group still blocking `44444/udp`+`44444/tcp`.
 
 ## On the SkyChat origin
 
@@ -63,11 +62,15 @@ sudo ufw allow 44444/tcp
    docker compose up -d --force-recreate skychat_backend
    ```
 3. Lock the media port so only the relay can reach the origin (don't leave it open to the
-   internet, or scanners could fingerprint the origin):
+   internet, or scanners could fingerprint the origin). The port is published by Docker, and
+   **Docker bypasses ufw** — published ports are DNAT'd before ufw's `INPUT` chain runs, so
+   `ufw deny 44444` does nothing. Filter it in the `DOCKER-USER` chain instead (the relay
+   masquerades, so the origin sees traffic *from* the relay's IP):
    ```bash
-   sudo ufw allow from <RELAY_PUBLIC_IP> to any port 44444 proto udp
-   sudo ufw allow from <RELAY_PUBLIC_IP> to any port 44444 proto tcp
-   sudo ufw deny 44444
+   sudo iptables -I DOCKER-USER -p udp --dport 44444 ! -s <RELAY_PUBLIC_IP> -j DROP
+   sudo iptables -I DOCKER-USER -p tcp --dport 44444 ! -s <RELAY_PUBLIC_IP> -j DROP
+   # persist across reboots:
+   sudo apt-get install -y iptables-persistent && sudo netfilter-persistent save
    ```
 
 That's it. Clients reach `RELAY:44444` → relay forwards to origin → origin replies to relay →
