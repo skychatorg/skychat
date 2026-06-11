@@ -167,6 +167,8 @@ async function captureWsFrames(page) {
     console.log('A stats:', JSON.stringify(statsA, null, 0));
     console.log('B stats:', JSON.stringify(statsB, null, 0));
     console.log('A voice frame count:', framesA.length);
+    console.log('A voice-sync frames:', framesA.filter((f) => f.includes('voice-sync')));
+    console.log('A voice-consume frames:', framesA.filter((f) => f.includes('voice-consume')).length);
     console.log('frames with srflx/relay/sdp/candidate (should be 0):', badFrames.length);
 
     const aRecv = statsA.inbound.reduce((s, r) => s + r.packetsReceived, 0);

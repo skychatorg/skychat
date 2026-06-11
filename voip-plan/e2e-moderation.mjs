@@ -159,6 +159,7 @@ function check(name, cond, detail) {
     bH = await heard(B);
     check('voicemute: A stops hearing B', aH === 0, `(A=${aH})`);
     check('voicemute: B still hears A', bH >= 1, `(B=${bH})`);
+    await cmd(A, '/voicemute silva'); // toggle OFF so the persistent mute doesn't leak to other tests
 
     // --- M9 voicekick: A kicks silva from voice only (stays in room/text) ---
     console.log('\nM9 /voicekick silva');
