@@ -78,8 +78,10 @@ export class VoiceClient {
 
         transport.on('connect', ({ dtlsParameters }, callback, errback) => {
             try {
-                const idArg = this._dtlsIds[direction] ? ` ${this._dtlsIds[direction]}` : '';
-                this.client.sendMessage(`/voiceconnect ${direction} ${JSON.stringify(dtlsParameters)}${idArg}`);
+                // Send dtlsParameters (+ optional dtlsId) as one JSON object so the server never
+                // has to split a space-containing payload.
+                const payload = { dtlsParameters, dtlsId: this._dtlsIds[direction] ?? undefined };
+                this.client.sendMessage(`/voiceconnect ${direction} ${JSON.stringify(payload)}`);
                 // No per-call ack; resolve optimistically. A server rejection closes the transport.
                 callback();
             } catch (err) {
