@@ -183,6 +183,8 @@ export const useClientStore = defineStore('client', {
                         onError: (msg) => useToast().error(msg),
                     });
                     this.voice.connected = true;
+                    // Join is listen-only until the user clicks unmute (the first mic gesture).
+                    this.voice.muted = true;
                 } else if (id === null && voiceClient) {
                     voiceClient.stop();
                     voiceClient = null;

@@ -65,16 +65,18 @@ export class VoicePlugin extends GlobalPlugin {
             maxCallsPer10Seconds: 10,
             params: [{ name: 'direction', pattern: /^(send|recv)$/ }],
         },
+        // No maxCount on JSON-carrying commands: mediasoup payloads can contain spaces inside
+        // quoted values, which the space-based param counter would otherwise reject. The handler
+        // extracts the JSON as the trailing substring, so token count does not matter.
         voiceconnect: {
             minCount: 2,
-            maxCount: 3,
             maxCallsPer10Seconds: 10,
             params: [
                 { name: 'direction', pattern: /^(send|recv)$/ },
                 { name: 'json', pattern: /./ },
             ],
         },
-        voiceproduce: { minCount: 1, maxCount: 1, maxCallsPer10Seconds: 5, params: [{ name: 'json', pattern: /./ }] },
+        voiceproduce: { minCount: 1, maxCallsPer10Seconds: 5, params: [{ name: 'json', pattern: /./ }] },
         voiceconsume: { minCount: 1, maxCount: 1, maxCallsPer10Seconds: 60, params: [{ name: 'producerId', pattern: /^[a-z0-9-]+$/i }] },
         voicemute: { minCount: 1, maxCount: 1, params: [{ name: 'username', pattern: User.USERNAME_REGEXP }] },
         voicekick: { minCount: 1, maxCount: 1, params: [{ name: 'username', pattern: User.USERNAME_REGEXP }] },
@@ -215,8 +217,9 @@ export class VoicePlugin extends GlobalPlugin {
             if (error instanceof VoiceError) {
                 throw error; // known-safe static message
             }
-            // Raw library/mediasoup error: log the real one, send a generic one.
-            Logging.error('Voice handler error', error);
+            // Raw library/mediasoup error: log the real one (message + stack), send a generic one.
+            const err = error as Error;
+            Logging.error(`Voice handler error (${alias}): ${err?.stack ?? err?.message ?? String(error)}`);
             throw new Error('Voice error');
         }
     }
@@ -344,17 +347,16 @@ export class VoicePlugin extends GlobalPlugin {
 
     private async handleConnect(param: string, connection: Connection) {
         const channel = this.requireChannel(connection);
-        const parts = param.split(' ');
-        const direction = parts[0];
+        const direction = param.split(' ')[0];
         if (direction !== 'send' && direction !== 'recv') {
             throw new VoiceError('Invalid direction');
         }
-        const json = parts[1];
-        const dtlsId = parts[2];
+        // Everything after the direction is one JSON object (may contain spaces).
+        const json = param.substr(direction.length + 1).trim();
         if (!json) {
             throw new VoiceError('Missing dtlsParameters');
         }
-        const { dtlsParameters } = this.parseJson<{ dtlsParameters: DtlsParameters }>(json);
+        const { dtlsParameters, dtlsId } = this.parseJson<{ dtlsParameters: DtlsParameters; dtlsId?: string }>(json);
         await channel.connectTransport(connection, direction, dtlsParameters, dtlsId);
         connection.send('voice-connected', { direction });
     }
