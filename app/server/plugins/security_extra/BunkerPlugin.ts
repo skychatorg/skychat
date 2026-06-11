@@ -24,6 +24,13 @@ export class BunkerPlugin extends GlobalPlugin {
 
     protected storage: boolean = false;
 
+    /**
+     * Whether bunker mode is currently on. Used by the voice plugin to suppress guest producers.
+     */
+    public isOn(): boolean {
+        return this.storage;
+    }
+
     constructor(manager: RoomManager) {
         super(manager);
 

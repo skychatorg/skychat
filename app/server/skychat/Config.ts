@@ -21,6 +21,9 @@ export type Preferences = {
     minRightForPlayerAddMedia: number | 'op';
     minRightForPlayerManageSchedule: number | 'op';
     minRightForJellyfinBrowse: number | 'op';
+    minRightForVoiceJoin: number | 'op';
+    minRightForVoiceSpeak: number | 'op';
+    minRightForVoiceModeration: number | 'op';
     maxReplacedImagesPerMessage: number;
     maxReplacedRisiBankStickersPerMessage: number;
     maxReplacedStickersPerMessage: number;
@@ -125,6 +128,9 @@ export class Config {
             'minRightForPlayerAddMedia',
             'minRightForPlayerManageSchedule',
             'minRightForJellyfinBrowse',
+            'minRightForVoiceJoin',
+            'minRightForVoiceSpeak',
+            'minRightForVoiceModeration',
             'maxReplacedImagesPerMessage',
             'maxReplacedStickersPerMessage',
             'maxNewlinesPerMessage',
