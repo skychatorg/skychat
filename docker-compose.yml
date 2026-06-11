@@ -35,9 +35,12 @@ services:
         DOCKER_GID: "${DOCKER_GID}"
         DOCKER_TZ: "${DOCKER_TZ}"
     # Voice media port (WebRTC Opus/SRTP), UDP primary + TCP ICE fallback. Bypasses traefik.
+    # Must be PUBLICLY reachable (clients/relay connect to it directly), so it does NOT follow
+    # BIND_INTERFACE (which is 127.0.0.1 on reverse-proxy setups). Defaults to 0.0.0.0; lock it
+    # with a host firewall / DOCKER-USER rule. Override via VOICE_BIND_INTERFACE if needed.
     ports:
-      - "${BIND_INTERFACE}:${VOICE_MEDIA_PORT}:${VOICE_MEDIA_PORT}/udp"
-      - "${BIND_INTERFACE}:${VOICE_MEDIA_PORT}:${VOICE_MEDIA_PORT}/tcp"
+      - "${VOICE_BIND_INTERFACE:-0.0.0.0}:${VOICE_MEDIA_PORT}:${VOICE_MEDIA_PORT}/udp"
+      - "${VOICE_BIND_INTERFACE:-0.0.0.0}:${VOICE_MEDIA_PORT}:${VOICE_MEDIA_PORT}/tcp"
     environment:
       POSTGRES_USER: "${POSTGRES_USER}"
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
