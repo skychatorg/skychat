@@ -34,6 +34,10 @@ services:
         DOCKER_UID: "${DOCKER_UID}"
         DOCKER_GID: "${DOCKER_GID}"
         DOCKER_TZ: "${DOCKER_TZ}"
+    # Voice media port (WebRTC Opus/SRTP), UDP primary + TCP ICE fallback. Bypasses traefik.
+    ports:
+      - "${BIND_INTERFACE}:${VOICE_MEDIA_PORT}:${VOICE_MEDIA_PORT}/udp"
+      - "${BIND_INTERFACE}:${VOICE_MEDIA_PORT}:${VOICE_MEDIA_PORT}/tcp"
     environment:
       POSTGRES_USER: "${POSTGRES_USER}"
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
@@ -57,6 +61,9 @@ services:
       DISCORD_OAUTH_CLIENT_SECRET: "${DISCORD_OAUTH_CLIENT_SECRET}"
       JELLYFIN_INTERNAL_URL: "${JELLYFIN_INTERNAL_URL:-http://skychat_jellyfin:8096}"
       JELLYFIN_API_KEY: "${JELLYFIN_API_KEY}"
+      VOICE_MEDIA_PORT: "${VOICE_MEDIA_PORT}"
+      VOICE_ANNOUNCED_IP: "${VOICE_ANNOUNCED_IP}"
+      VOICE_MAX_BITRATE: "${VOICE_MAX_BITRATE}"
     volumes:
       - ./config:/workdir/config
       - ./backups:/workdir/backups
