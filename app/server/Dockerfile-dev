@@ -1,4 +1,5 @@
-FROM alpine:latest
+# Pin Node 22 (mediasoup requires >= 22) and add the C++ toolchain, same as the prod file.
+FROM node:22-alpine
 CMD npx nodemon --watch app/api/ --watch app/server/ -e js,ts,json,vue --exec "sh -c 'npm run build && sh app/script/start-server.sh'"
 EXPOSE 80
 
@@ -17,9 +18,11 @@ ENV NODE_OPTIONS="--max-old-space-size=8192"
 # Set timezone, create user, install dependencies
 RUN ln -snf "/usr/share/zoneinfo/${DOCKER_TZ}" /etc/localtime && \
     echo "${DOCKER_TZ}" > /etc/timezone && \
+    (deluser node 2>/dev/null || true) && \
+    (delgroup node 2>/dev/null || true) && \
     addgroup -g "${DOCKER_GID}" "${DOCKER_USER}" && \
     adduser -u "${DOCKER_UID}" -G "${DOCKER_USER}" -D "${DOCKER_USER}" && \
-    apk add --no-cache --update ffmpeg nodejs npm zip
+    apk add --no-cache --update ffmpeg zip python3 py3-pip make g++ linux-headers
 
 # Copy package files and configs
 COPY ["package.json", "package-lock.json", "*config.*", "./"]
@@ -30,5 +33,7 @@ RUN chown "${DOCKER_UID}:${DOCKER_GID}" /workdir
 # Switch to non-root user
 USER ${DOCKER_UID}:${DOCKER_GID}
 
-# Install dependencies
-RUN npm ci --ignore-scripts
+# Install dependencies. --ignore-scripts skips mediasoup's postinstall worker build,
+# so build it explicitly.
+RUN npm ci --ignore-scripts && \
+    npm rebuild mediasoup
