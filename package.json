@@ -90,6 +90,7 @@
         "pg": "^8.12.0",
         "pinia": "^2.1.7",
         "pino-pretty": "^11.2.1",
+        "playwright-core": "^1.60.0",
         "postcss": "^8.4.39",
         "risibank-web-api": "^1.1.1",
         "sha256": "^0.2.0",
