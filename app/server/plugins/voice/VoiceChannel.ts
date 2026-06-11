@@ -169,30 +169,16 @@ export class VoiceChannel {
                 peer.producer = null;
             }
         });
-        this.announceProducer(connection, producer);
+        // Reconcile every peer against the full (filtered) producer list. Idempotent, so a
+        // missed/misordered incremental announce can't leave a peer permanently un-consumed.
+        this.broadcastProducers();
         return producer;
     }
 
-    /** Tell every other session about this producer, skipping blacklist-pair / shadowbanned. */
-    private announceProducer(owner: Connection, producer: Producer) {
-        const ownerSession = owner.session;
-        // Shadowbanned producers are never announced.
-        if (this.plugin.isShadowBanned(owner)) {
-            return;
-        }
-        const info: VoiceProducerInfo = {
-            producerId: producer.id,
-            userId: ownerSession.user.id,
-            username: ownerSession.user.username,
-        };
+    /** Push the current filtered producer list to every session in the channel. */
+    public broadcastProducers() {
         for (const session of this.sessions) {
-            if (session === ownerSession) {
-                continue;
-            }
-            if (this.plugin.isPairBlocked(ownerSession, session)) {
-                continue;
-            }
-            session.send('voice-sync', { channelId: this.id, producers: [info] });
+            this.syncProducersToSession(session);
         }
     }
 

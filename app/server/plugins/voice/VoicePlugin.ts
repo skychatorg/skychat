@@ -343,6 +343,13 @@ export class VoicePlugin extends GlobalPlugin {
             dtlsParameters: transport.dtlsParameters,
             dtlsId,
         });
+
+        // Once the recv transport exists, hand the client the current producer list so it
+        // consumes speakers that were already producing before it was ready (avoids a race
+        // where an earlier one-shot announce was dropped). New producers still arrive via announce.
+        if (direction === 'recv') {
+            channel.syncProducersTo(connection);
+        }
     }
 
     private async handleConnect(param: string, connection: Connection) {
