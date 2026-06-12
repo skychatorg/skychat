@@ -1,5 +1,6 @@
 <script setup>
-import { watch, ref } from 'vue';
+import { watch, ref, computed, onUnmounted } from 'vue';
+import hark from 'hark';
 import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
 import ModalTemplate from '@/components/modal/ModalTemplate.vue';
@@ -14,6 +15,50 @@ const voiceModes = [
     { value: 'vad', label: 'Voice activity' },
     { value: 'ptt', label: 'Push-to-talk' },
 ];
+
+// Live mic-level meter (preview), so the threshold can be set by eye. Self-contained: its own
+// getUserMedia + hark, independent of being in a call. dB (~ -100..0) -> 0..1 bar position.
+const MIC_TEST_CONSTRAINTS = {
+    audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1, sampleRate: 48000 },
+    video: false,
+};
+const micLevel = ref(0); // 0..1
+const micTesting = ref(false);
+let previewStream = null;
+let previewHark = null;
+const dbToPos = (db) => Math.max(0, Math.min(1, (db + 100) / 100));
+const thresholdPos = computed(() => dbToPos(app.voiceSettings.vadThreshold));
+const aboveThreshold = computed(() => micLevel.value >= thresholdPos.value);
+
+const stopMicTest = () => {
+    previewHark?.stop();
+    previewStream?.getTracks().forEach((t) => t.stop());
+    previewHark = null;
+    previewStream = null;
+    micLevel.value = 0;
+    micTesting.value = false;
+};
+const startMicTest = async () => {
+    if (micTesting.value) return;
+    try {
+        previewStream = await navigator.mediaDevices.getUserMedia(MIC_TEST_CONSTRAINTS);
+        previewHark = hark(previewStream, { interval: 80, threshold: app.voiceSettings.vadThreshold });
+        previewHark.on('volume_change', (db) => (micLevel.value = dbToPos(db)));
+        micTesting.value = true;
+    } catch {
+        stopMicTest();
+    }
+};
+const toggleMicTest = () => (micTesting.value ? stopMicTest() : startMicTest());
+
+// Stop the preview when the drawer closes or the component unmounts.
+watch(
+    () => app.modals.profile,
+    (open) => {
+        if (!open) stopMicTest();
+    },
+);
+onUnmounted(stopMicTest);
 
 // Avatar
 const uploadAvatar = async (event) => {
@@ -97,6 +142,24 @@ watch(
             />
             <p class="text-xs text-white/40 mt-1">
                 Lower = more sensitive. In “Voice activity” mode your mic only transmits above this level.
+            </p>
+
+            <!-- Live input-level meter: watch your level vs the threshold marker while you talk -->
+            <div class="mt-2 flex items-center gap-2">
+                <button class="form-control text-xs shrink-0" @click="toggleMicTest">
+                    {{ micTesting ? 'Stop test' : 'Test mic' }}
+                </button>
+                <div class="relative grow h-2.5 rounded bg-white/10 overflow-hidden">
+                    <div
+                        class="h-full transition-[width] duration-75"
+                        :class="aboveThreshold ? 'bg-emerald-400' : 'bg-white/30'"
+                        :style="{ width: micLevel * 100 + '%' }"
+                    />
+                    <div class="absolute top-0 bottom-0 w-[2px] bg-white" :style="{ left: thresholdPos * 100 + '%' }" title="Threshold" />
+                </div>
+            </div>
+            <p v-if="micTesting" class="text-xs text-white/40 mt-1">
+                Set the marker just above your background level — the bar turns green (transmitting) only when you speak.
             </p>
         </template>
 
