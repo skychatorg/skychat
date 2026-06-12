@@ -1,10 +1,12 @@
 <script setup>
 import { useVoice } from '@/composables/useVoice';
+import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
 import { VoiceClient } from '@/lib/voice/VoiceClient.js';
 import { onMounted, onUnmounted, ref } from 'vue';
 
 const client = useClientStore();
+const app = useAppStore();
 const voice = useVoice();
 
 const devices = ref([]);
@@ -76,10 +78,10 @@ onUnmounted(() => {
             </button>
             <button
                 class="strip-btn"
-                :title="voice.pushToTalk.value ? 'Push-to-talk: on (hold Space)' : 'Push-to-talk: off'"
-                @click="client.setVoicePushToTalk(!voice.pushToTalk.value)"
+                :title="app.voiceSettings.inputMode === 'ptt' ? 'Push-to-talk: on (hold Space)' : 'Push-to-talk: off'"
+                @click="app.setVoiceInputMode(app.voiceSettings.inputMode === 'ptt' ? 'open' : 'ptt')"
             >
-                <fa :icon="voice.pushToTalk.value ? 'toggle-on' : 'toggle-off'" />
+                <fa :icon="app.voiceSettings.inputMode === 'ptt' ? 'toggle-on' : 'toggle-off'" />
                 <span class="hidden sm:inline">PTT</span>
             </button>
         </div>

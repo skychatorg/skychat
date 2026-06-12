@@ -8,6 +8,13 @@ import SectionSubTitle from '@/components/util/SectionSubTitle.vue';
 const app = useAppStore();
 const client = useClientStore();
 
+// Voice input mode options
+const voiceModes = [
+    { value: 'open', label: 'Open mic' },
+    { value: 'vad', label: 'Voice activity' },
+    { value: 'ptt', label: 'Push-to-talk' },
+];
+
 // Avatar
 const uploadAvatar = async (event) => {
     for (const file of event.target.files) {
@@ -61,5 +68,51 @@ watch(
                 @click="client.sendMessage(`/custom use color:${color.id}`)"
             ></div>
         </div>
+
+        <!-- Voice input mode -->
+        <SectionSubTitle class="mt-6">Voice input mode</SectionSubTitle>
+        <div class="flex gap-2">
+            <button
+                v-for="m in voiceModes"
+                :key="m.value"
+                class="form-control grow"
+                :class="app.voiceSettings.inputMode === m.value ? 'ring-1 ring-primary text-white' : 'text-white/50'"
+                @click="app.setVoiceInputMode(m.value)"
+            >
+                {{ m.label }}
+            </button>
+        </div>
+
+        <!-- Mic sensitivity / VAD threshold (irrelevant in push-to-talk) -->
+        <template v-if="app.voiceSettings.inputMode !== 'ptt'">
+            <SectionSubTitle class="mt-6">Mic sensitivity ({{ app.voiceSettings.vadThreshold }} dB)</SectionSubTitle>
+            <input
+                type="range"
+                min="-80"
+                max="-30"
+                step="1"
+                :value="app.voiceSettings.vadThreshold"
+                @input="app.setVoiceVadThreshold(Number($event.target.value))"
+                class="w-full"
+            />
+            <p class="text-xs text-white/40 mt-1">
+                Lower = more sensitive. In “Voice activity” mode your mic only transmits above this level.
+            </p>
+        </template>
+
+        <!-- Gate hold time (only meaningful with the noise gate on) -->
+        <template v-if="app.voiceSettings.inputMode === 'vad'">
+            <SectionSubTitle class="mt-6">Gate hold time ({{ app.voiceSettings.noiseGateHold }} ms)</SectionSubTitle>
+            <input
+                type="range"
+                min="0"
+                max="1000"
+                step="50"
+                :value="app.voiceSettings.noiseGateHold"
+                @input="app.setVoiceNoiseGateHold(Number($event.target.value))"
+                class="w-full"
+            />
+            <p class="text-xs text-white/40 mt-1">How long the mic stays open after you stop talking, so word endings aren’t cut off.</p>
+        </template>
     </ModalTemplate>
 </template>

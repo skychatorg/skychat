@@ -11,7 +11,7 @@ const DEFAULT_DOCUMENT_TITLE = '~ SkyChat';
 const NOTIFICATION_SOUND_MP3_PATH = '/assets/sound/notification.mp3';
 
 const CURRENT_VERSION = 5;
-const STORE_SAVED_KEYS = ['playerMode', 'leftCollapsed', 'rightCollapsed'];
+const STORE_SAVED_KEYS = ['playerMode', 'leftCollapsed', 'rightCollapsed', 'voiceSettings'];
 
 const applyLeftCollapsedClass = (collapsed) => {
     if (typeof document === 'undefined') return;
@@ -175,6 +175,18 @@ export const useAppStore = defineStore('app', {
          * Whether the right column (connected users) is collapsed to an icon-only rail on desktop
          */
         rightCollapsed: false,
+
+        /**
+         * Local voice capture preferences (persisted).
+         * inputMode: 'open' (always on) | 'vad' (voice activity / noise gate) | 'ptt' (push-to-talk)
+         * vadThreshold: dBFS speaking threshold (mic sensitivity), drives the gate + own speaking dot
+         * noiseGateHold: ms the mic stays open after speech stops (so word tails aren't clipped)
+         */
+        voiceSettings: {
+            inputMode: 'open',
+            vadThreshold: -65,
+            noiseGateHold: 250,
+        },
 
         /**
          * Whether the viewport is at the desktop breakpoint (>= lg, 1024px)
@@ -436,6 +448,23 @@ export const useAppStore = defineStore('app', {
                     values: Object.fromEntries(STORE_SAVED_KEYS.map((key) => [key, this[key]])),
                 }),
             );
+        },
+
+        // ---- Voice capture preferences (persist + push to the live engine) ----
+        setVoiceInputMode: function (mode) {
+            this.voiceSettings.inputMode = mode;
+            this.savePreferences();
+            useClientStore().applyVoiceInputMode(mode);
+        },
+        setVoiceVadThreshold: function (db) {
+            this.voiceSettings.vadThreshold = db;
+            this.savePreferences();
+            useClientStore().applyVoiceVadThreshold(db);
+        },
+        setVoiceNoiseGateHold: function (ms) {
+            this.voiceSettings.noiseGateHold = ms;
+            this.savePreferences();
+            useClientStore().applyVoiceNoiseGateHold(ms);
         },
 
         setMessage: function (message) {
