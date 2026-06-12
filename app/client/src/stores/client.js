@@ -4,6 +4,7 @@ import { SkyChatClient } from '../../../api/index.ts';
 import { WebPush } from '../lib/WebPush.js';
 import { triggerWizz } from '../lib/wizz.js';
 import { VoiceClient } from '../lib/voice/VoiceClient.js';
+import { useAppStore } from './app';
 import { useEncryptionStore } from './encryption';
 
 // Connect to SkyChatClient
@@ -173,6 +174,7 @@ export const useClientStore = defineStore('client', {
                 }
                 lastVoiceChannelId = id;
                 if (id !== null && !voiceClient) {
+                    const voiceSettings = useAppStore().voiceSettings;
                     voiceClient = new VoiceClient(client, {
                         onSpeaking: (userId, speaking) => client.setVoiceSpeaking(userId, speaking),
                         onStateChange: () => {
@@ -181,8 +183,14 @@ export const useClientStore = defineStore('client', {
                             this.voice.pushToTalk = voiceClient?.pushToTalk ?? false;
                         },
                         onError: (msg) => useToast().error(msg),
+                        // Seed the engine from persisted voice settings.
+                        vadThreshold: voiceSettings.vadThreshold,
+                        noiseGate: voiceSettings.inputMode === 'vad',
+                        noiseGateHold: voiceSettings.noiseGateHold,
                     });
+                    voiceClient.setPushToTalk(voiceSettings.inputMode === 'ptt');
                     this.voice.connected = true;
+                    this.voice.pushToTalk = voiceSettings.inputMode === 'ptt';
                     // Join is listen-only until the user clicks unmute (the first mic gesture).
                     this.voice.muted = true;
                 } else if (id === null && voiceClient) {
@@ -218,6 +226,18 @@ export const useClientStore = defineStore('client', {
         },
         setVoiceTalkKey(down) {
             voiceClient?.setTalkKey(down);
+        },
+        // Apply persisted voice settings to the live engine (called from the app store).
+        applyVoiceInputMode(mode) {
+            voiceClient?.setPushToTalk(mode === 'ptt');
+            voiceClient?.setNoiseGate(mode === 'vad');
+            this.voice.pushToTalk = mode === 'ptt';
+        },
+        applyVoiceVadThreshold(db) {
+            voiceClient?.setVadThreshold(db);
+        },
+        applyVoiceNoiseGateHold(ms) {
+            voiceClient?.setNoiseGateHold(ms);
         },
         async setVoiceInputDevice(id) {
             this.voice.inputDeviceId = id;

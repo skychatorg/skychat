@@ -41,6 +41,13 @@ export class VoiceClient {
         this.locallyMuted = new Set(); // userIds
         this.inputDeviceId = null;
 
+        // VAD / noise-gate config (local mic only). Seeded from persisted settings via hooks.
+        this.vadThreshold = hooks.vadThreshold ?? -65; // dBFS, drives localHark + gate
+        this.noiseGate = hooks.noiseGate ?? false; // when true, only transmit while speaking
+        this.noiseGateHold = hooks.noiseGateHold ?? 250; // ms tail after stopped_speaking
+        this._vadSpeaking = false; // current localHark speaking state
+        this._gateReleaseTimer = null; // pending gate-close timer (hold/release)
+
         this._produceWhenReady = false;
         this._onceProducerId = null;
         this._dtlsIds = { send: null, recv: null };
@@ -120,9 +127,18 @@ export class VoiceClient {
             return;
         }
         this.micStream = await navigator.mediaDevices.getUserMedia(this._micConstraints());
-        this.localHark = hark(this.micStream, { interval: 100, threshold: -65 });
-        this.localHark.on('speaking', () => this.hooks.onSpeaking?.(this._selfId(), true));
-        this.localHark.on('stopped_speaking', () => this.hooks.onSpeaking?.(this._selfId(), false));
+        this.localHark = hark(this.micStream, { interval: 100, threshold: this.vadThreshold });
+        this.localHark.on('speaking', () => {
+            this._vadSpeaking = true;
+            this._clearGateReleaseTimer(); // talking again -> cancel any pending close
+            this.hooks.onSpeaking?.(this._selfId(), true);
+            this._applyMicGate();
+        });
+        this.localHark.on('stopped_speaking', () => {
+            this._vadSpeaking = false;
+            this.hooks.onSpeaking?.(this._selfId(), false);
+            this._scheduleGateRelease(); // close after the hold, not immediately (tail protection)
+        });
         if (!this.sendTransport) {
             this._produceWhenReady = true;
             this.client.sendMessage('/voicetransport send');
@@ -270,12 +286,68 @@ export class VoiceClient {
         this._applyMicGate();
     }
 
+    // ---- VAD threshold + noise gate (local mic only) --------------------
+
+    /** Live-update the VAD threshold (mic sensitivity); drives both the dot and the gate. */
+    setVadThreshold(db) {
+        this.vadThreshold = db;
+        this.localHark?.setThreshold(db); // hark applies it on its next interval
+        this._applyMicGate();
+    }
+
+    /** Enable/disable the noise gate (only transmit while speaking). */
+    setNoiseGate(enabled) {
+        this.noiseGate = enabled;
+        if (!enabled) {
+            this._clearGateReleaseTimer();
+        }
+        this._applyMicGate();
+    }
+
+    /** Hold (ms) the mic stays open after speech stops, so word tails aren't clipped. */
+    setNoiseGateHold(ms) {
+        this.noiseGateHold = ms;
+    }
+
+    _scheduleGateRelease() {
+        if (!this.noiseGate) {
+            this._applyMicGate();
+            return;
+        }
+        this._clearGateReleaseTimer();
+        this._gateReleaseTimer = setTimeout(() => {
+            this._gateReleaseTimer = null;
+            this._applyMicGate(); // hold elapsed + not speaking -> gate may close
+        }, this.noiseGateHold);
+    }
+
+    _clearGateReleaseTimer() {
+        if (this._gateReleaseTimer) {
+            clearTimeout(this._gateReleaseTimer);
+            this._gateReleaseTimer = null;
+        }
+    }
+
+    /** Whether the noise gate currently permits transmission. */
+    _gateOpen() {
+        if (!this.noiseGate) {
+            return true; // gate off -> never blocks
+        }
+        if (this._vadSpeaking) {
+            return true; // above threshold
+        }
+        if (this._gateReleaseTimer) {
+            return true; // within the hold/release tail
+        }
+        return false; // below threshold, hold elapsed
+    }
+
     /** Decide whether the mic producer is paused right now. */
     _applyMicGate() {
         if (!this.micProducer) {
             return;
         }
-        const open = !this.muted && (!this.pushToTalk || this.talkKeyDown);
+        const open = !this.muted && (!this.pushToTalk || this.talkKeyDown) && this._gateOpen();
         if (open && this.micProducer.paused) {
             this.micProducer.resume();
         }
@@ -305,6 +377,8 @@ export class VoiceClient {
 
     stop() {
         this._unbindEvents();
+        this._clearGateReleaseTimer();
+        this._vadSpeaking = false;
         this.localHark?.stop();
         for (const pid of [...this.consumers.keys()]) {
             this.removeConsumer(pid);
