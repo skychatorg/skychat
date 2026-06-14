@@ -124,6 +124,9 @@ export class PlayerChannelManager extends EventEmitter {
 
         // Notify all connections of this session that the channel changed
         session.send('player-channel', id);
+
+        // Rebroadcast the channel list so everyone's watcher count/avatars update
+        this.sync();
     }
 
     /**
@@ -148,6 +151,9 @@ export class PlayerChannelManager extends EventEmitter {
 
         // Notify all connections of this session that the channel changed
         session.send('player-channel', null);
+
+        // Rebroadcast the channel list so everyone's watcher count/avatars update
+        this.sync();
     }
 
     /**

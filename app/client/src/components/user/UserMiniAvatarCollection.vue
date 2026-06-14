@@ -11,7 +11,7 @@ const props = defineProps({
 
 <template>
     <div class="flex justify-center -space-x-1.5">
-        <UserMiniAvatar v-for="user in users" :key="user.identifier" :user="user" class="transition transition-all hover:-translate-y-0.5 hover:scale-125" />
+        <UserMiniAvatar v-for="user in users" :key="user.username" :user="user" class="transition transition-all hover:-translate-y-0.5 hover:scale-125" />
     </div>
 </template>
 
