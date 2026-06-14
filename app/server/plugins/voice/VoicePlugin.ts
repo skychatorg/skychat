@@ -410,6 +410,8 @@ export class VoicePlugin extends GlobalPlugin {
             const channel = this.channelManager.getSessionChannel(target);
             channel?.closeSendSideForSession(target);
         }
+        // Re-broadcast the roster so clients reflect the new mute state (e.g. the mute/unmute toggle label).
+        this.channelManager.sync();
     }
 
     private async handleVoiceKick(param: string, connection: Connection) {

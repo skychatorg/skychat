@@ -10,6 +10,8 @@ export type SanitizedVoiceChannel = {
     id: number;
     name: string;
     users: string[];
+    /** Subset of `users` who are server-side voice-muted by a moderator. */
+    mutedUsers: string[];
 };
 
 /** Direction of a mediasoup transport from the client's point of view. */

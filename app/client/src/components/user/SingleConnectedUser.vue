@@ -38,6 +38,10 @@ const canModerateVoice = useUserRight('minRightForVoiceModeration');
 const isSpeaking = computed(() => voice.isSpeaking(props.entry.user.id));
 const isLocallyMuted = ref(false);
 
+// Voice moderation only applies to someone actually in a voice channel; mute state drives the toggle label.
+const isInVoice = computed(() => client.state.voiceChannels.some((c) => c.users.includes(props.entry.user.username)));
+const isVoiceMuted = computed(() => client.state.voiceChannels.some((c) => c.mutedUsers?.includes(props.entry.user.username)));
+
 const toggleLocalMute = () => {
     isLocallyMuted.value = !isLocallyMuted.value;
     client.setVoiceUserLocallyMuted(props.entry.user.id, isLocallyMuted.value);
@@ -297,11 +301,11 @@ const isDisconnected = computed(() => props.entry.connectionCount === 0);
                                     <input type="range" min="0" max="1" step="0.05" value="1" class="w-full" @input="setLocalVolume" />
                                 </div>
                             </template>
-                            <SkyDropdownItem v-if="canModerateVoice" @click="voiceMuteUser">
-                                <fa icon="microphone-slash" class="w-4 mr-2 text-warn" />
-                                Voice mute
+                            <SkyDropdownItem v-if="canModerateVoice && isInVoice" @click="voiceMuteUser">
+                                <fa :icon="isVoiceMuted ? 'microphone' : 'microphone-slash'" class="w-4 mr-2 text-warn" />
+                                {{ isVoiceMuted ? 'Voice unmute' : 'Voice mute' }}
                             </SkyDropdownItem>
-                            <SkyDropdownItem v-if="canModerateVoice" @click="voiceKickUser">
+                            <SkyDropdownItem v-if="canModerateVoice && isInVoice" @click="voiceKickUser">
                                 <fa icon="phone-slash" class="w-4 mr-2 text-danger" />
                                 Voice kick
                             </SkyDropdownItem>
@@ -346,11 +350,11 @@ const isDisconnected = computed(() => props.entry.connectionCount === 0);
                 {{ isLocallyMuted ? 'Unmute (local)' : 'Mute in voice (local)' }}
             </SkyContextMenuItem>
         </template>
-        <SkyContextMenuItem v-if="canModerateVoice" @select="voiceMuteUser">
-            <fa icon="microphone-slash" class="w-4 mr-2 text-warn" />
-            Voice mute
+        <SkyContextMenuItem v-if="canModerateVoice && isInVoice" @select="voiceMuteUser">
+            <fa :icon="isVoiceMuted ? 'microphone' : 'microphone-slash'" class="w-4 mr-2 text-warn" />
+            {{ isVoiceMuted ? 'Voice unmute' : 'Voice mute' }}
         </SkyContextMenuItem>
-        <SkyContextMenuItem v-if="canModerateVoice" @select="voiceKickUser">
+        <SkyContextMenuItem v-if="canModerateVoice && isInVoice" @select="voiceKickUser">
             <fa icon="phone-slash" class="w-4 mr-2 text-danger" />
             Voice kick
         </SkyContextMenuItem>
