@@ -127,7 +127,20 @@ export class VoiceClient {
             return;
         }
         this.micStream = await navigator.mediaDevices.getUserMedia(this._micConstraints());
-        this.localHark = hark(this.micStream, { interval: 100, threshold: this.vadThreshold });
+        this._attachHark(this.micStream);
+        if (!this.sendTransport) {
+            this._produceWhenReady = true;
+            this.client.sendMessage('/voicetransport send');
+        } else {
+            await this._produce();
+        }
+    }
+
+    // Wire voice-activity detection to a mic stream. Re-run whenever the stream changes (device switch)
+    // so the VAD/noise gate and speaking indicator track the live stream, not a stopped one.
+    _attachHark(stream) {
+        this.localHark?.stop();
+        this.localHark = hark(stream, { interval: 100, threshold: this.vadThreshold });
         this.localHark.on('speaking', () => {
             this._vadSpeaking = true;
             this._clearGateReleaseTimer(); // talking again -> cancel any pending close
@@ -139,12 +152,6 @@ export class VoiceClient {
             this.hooks.onSpeaking?.(this._selfId(), false);
             this._scheduleGateRelease(); // close after the hold, not immediately (tail protection)
         });
-        if (!this.sendTransport) {
-            this._produceWhenReady = true;
-            this.client.sendMessage('/voicetransport send');
-        } else {
-            await this._produce();
-        }
     }
 
     async _produce() {
@@ -366,11 +373,14 @@ export class VoiceClient {
         await this.micProducer.replaceTrack({ track });
         this.micStream.getTracks().forEach((t) => t.stop());
         this.micStream = stream;
+        this._attachHark(stream); // old hark watched the now-stopped stream; rebind to the new one
     }
 
     static async listInputDevices() {
         const devices = await navigator.mediaDevices.enumerateDevices();
-        return devices.filter((d) => d.kind === 'audioinput');
+        // Before mic permission is granted, browsers return phantom audioinput entries with a blank
+        // deviceId and label. Drop them so the picker only lists real, selectable mics.
+        return devices.filter((d) => d.kind === 'audioinput' && d.deviceId);
     }
 
     // ---- teardown ------------------------------------------------------
