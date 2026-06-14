@@ -57,7 +57,7 @@ defineProps({
         }"
     >
         <div class="colored-border"></div>
-        <div class="content grow" :class="{ 'hover:bg-skygray-white/10': selectable }">
+        <div class="content grow min-w-0" :class="{ 'hover:bg-skygray-white/10': selectable }">
             <slot />
         </div>
     </div>
