@@ -83,6 +83,8 @@ export type SanitizedPlayerChannel = {
     id: number;
     name: string;
     playing: boolean;
+    paused: boolean;
+    queueLength: number;
     currentMedia:
         | {
               owner: string;
@@ -496,6 +498,8 @@ export class PlayerChannel {
             id: this.id,
             name: this.name,
             playing: this.isPlaying(),
+            paused: this.pausedCursor !== null,
+            queueLength: this.queue.length,
             currentMedia: this.currentVideoInfo
                 ? {
                       owner: this.currentVideoInfo.user.username,

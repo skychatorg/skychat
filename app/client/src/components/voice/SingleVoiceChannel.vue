@@ -14,6 +14,15 @@ const props = defineProps({
 const users = computed(() => client.state.voiceChannelUsers[props.voiceChannel.id] || []);
 const isCurrent = computed(() => client.state.currentVoiceChannelId === props.voiceChannel.id);
 const anySpeaking = computed(() => users.value.some((u) => client.state.voiceSpeaking[u.id]));
+const isEmpty = computed(() => users.value.length === 0);
+
+// Colored when someone's in the channel, gray when empty.
+const iconClass = computed(() => {
+    if (isEmpty.value) {
+        return 'bg-white/[.05] text-white/30';
+    }
+    return 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white';
+});
 
 const onClick = () => {
     if (isCurrent.value) {
@@ -37,10 +46,10 @@ const onClick = () => {
             >
                 <div v-if="isCurrent" class="absolute left-0 top-2 bottom-2 w-[2px] rounded-r bg-primary" />
                 <div
-                    class="w-7 h-7 rounded flex items-center justify-center bg-gradient-to-br from-emerald-500 to-teal-600"
-                    :class="{ 'ring-2 ring-emerald-400 animate-pulse': anySpeaking }"
+                    class="w-7 h-7 rounded flex items-center justify-center transition-colors"
+                    :class="[iconClass, { 'ring-2 ring-emerald-400 animate-pulse': anySpeaking }]"
                 >
-                    <fa icon="microphone" class="text-white" />
+                    <fa icon="microphone" />
                 </div>
             </button>
         </template>
@@ -56,13 +65,13 @@ const onClick = () => {
     >
         <div v-if="isCurrent" class="absolute left-0 top-2 bottom-2 w-[2px] rounded-r bg-primary" />
         <div
-            class="w-7 h-7 rounded shrink-0 flex items-center justify-center bg-gradient-to-br from-emerald-500 to-teal-600"
-            :class="{ 'ring-2 ring-emerald-400 animate-pulse': anySpeaking }"
+            class="w-7 h-7 rounded shrink-0 flex items-center justify-center transition-colors"
+            :class="[iconClass, { 'ring-2 ring-emerald-400 animate-pulse': anySpeaking }]"
         >
-            <fa icon="microphone" class="text-white" />
+            <fa icon="microphone" />
         </div>
         <div class="flex-1 min-w-0">
-            <div class="text-sm truncate">{{ voiceChannel.name }}</div>
+            <div class="text-sm truncate" :class="isEmpty ? 'text-white/50' : ''">{{ voiceChannel.name }}</div>
             <div class="font-mono text-xs text-white/40 truncate">
                 {{ users.length ? users.length + ' in voice' : 'empty' }}
             </div>
