@@ -25,6 +25,7 @@ const toggleMute = async () => {
     if (voice.muted.value) {
         await client.voiceStartMic(); // idempotent; opens send transport + capture on first call
         client.setVoiceMuted(false);
+        refreshDevices(); // labels/deviceIds only become available once permission is granted
     } else {
         client.setVoiceMuted(true);
     }
@@ -45,10 +46,12 @@ const onKeyUp = (e) => {
 
 onMounted(() => {
     refreshDevices();
+    navigator.mediaDevices?.addEventListener('devicechange', refreshDevices);
     window.addEventListener('keydown', onKeyDown);
     window.addEventListener('keyup', onKeyUp);
 });
 onUnmounted(() => {
+    navigator.mediaDevices?.removeEventListener('devicechange', refreshDevices);
     window.removeEventListener('keydown', onKeyDown);
     window.removeEventListener('keyup', onKeyUp);
 });
@@ -97,11 +100,11 @@ onUnmounted(() => {
         <div class="strip-group hairline ml-auto">
             <select
                 class="strip-btn bg-transparent outline-none"
-                :value="client.voice.inputDeviceId"
+                :value="client.voice.inputDeviceId ?? ''"
                 @focus="refreshDevices"
                 @change="client.setVoiceInputDevice($event.target.value || null)"
             >
-                <option :value="null">Default mic</option>
+                <option value="">Default mic</option>
                 <option v-for="d in devices" :key="d.deviceId" :value="d.deviceId">
                     {{ d.label || 'Microphone' }}
                 </option>
@@ -153,5 +156,17 @@ onUnmounted(() => {
 .strip-btn:disabled {
     opacity: 0.4;
     cursor: not-allowed;
+}
+
+/* The device picker is a native <select>. Its dropdown popup inherits the transparent
+   background and light text, which renders the options unreadable (light-on-white) when opened.
+   color-scheme: dark makes the browser paint the native popup with a dark theme; the explicit
+   option colors are a fallback for engines that ignore color-scheme. */
+select {
+    color-scheme: dark;
+}
+select option {
+    background-color: rgb(var(--color-skygray-darker));
+    color: rgb(var(--color-skygray-white));
 }
 </style>
