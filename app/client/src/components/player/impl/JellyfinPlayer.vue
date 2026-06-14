@@ -158,7 +158,7 @@ watch(resolvedSubIndex, () => nextTick(applySubtitleSelection));
 //
 // The <video> element's native seek bar will not work (no known duration on a live ffmpeg
 // stream). Seeking is a room-level operation via /player skip30 / /player replay30.
-const applyStream = () => {
+const applyStream = (force = false) => {
     if (!currentVideo.value) return;
     if (!runCodecProbe()) return;
 
@@ -169,7 +169,9 @@ const applyStream = () => {
 
     const desiredCursor = roomCursor();
     const localAbs = currentAbsoluteMs();
-    const seekDetected = hash === prevHash && Math.abs(desiredCursor - localAbs) > SEEK_DRIFT_MS;
+    // `force` is the manual "Synchronize" button: reload at the room cursor regardless of drift.
+    // Automatic syncs still respect SEEK_DRIFT_MS to avoid reload loops during transcode startup.
+    const seekDetected = force || (hash === prevHash && Math.abs(desiredCursor - localAbs) > SEEK_DRIFT_MS);
 
     if (hash === prevHash && !seekDetected) {
         return; // continuous playback
@@ -216,11 +218,18 @@ const onVideoError = () => {
     decodeError.value = 'Playback error. The browser could not play this stream.';
 };
 
-watch(() => currentVideo.value && currentVideo.value.id, applyStream);
-watch(resolvedAudioIndex, applyStream);
-watch(streamToken, applyStream);
-// Watch room cursor updates (fire on every player-sync); applyStream ignores drift < SEEK_DRIFT_MS.
-watch(() => client.state.playerLastUpdate, applyStream);
+watch(
+    () => currentVideo.value && currentVideo.value.id,
+    () => applyStream(),
+);
+watch(resolvedAudioIndex, () => applyStream());
+watch(streamToken, () => applyStream());
+// Fire on every player-sync. Automatic syncs ignore drift < SEEK_DRIFT_MS; a manual "Synchronize"
+// (player.forced) forces a reload at the room cursor.
+watch(
+    () => client.state.playerLastUpdate,
+    () => applyStream(!!client.state.player.forced),
+);
 
 // Drive the <video> from the shared paused flag. On resume, applyStream (fired by the same sync's
 // playerLastUpdate change) reloads at the room cursor if a seek happened while paused.

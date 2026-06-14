@@ -49,6 +49,9 @@ export type PlayerState = {
     cursor: number;
     paused: boolean;
     streamToken?: string;
+    // Set only on a manual "Synchronize" request (transient, overwritten by the next sync). Tells
+    // players to reload at the room cursor regardless of their drift threshold.
+    forced?: boolean;
 };
 
 export type SkyChatClientState = {

@@ -451,7 +451,7 @@ export class PlayerPlugin extends GlobalPlugin {
         if (!channel) {
             return;
         }
-        channel.syncConnections([connection]);
+        channel.syncConnections([connection], { forced: true });
     }
 
     /**

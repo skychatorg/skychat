@@ -487,10 +487,13 @@ export class PlayerChannel {
     /**
      * Sync a given list of connections
      * @param connections
+     * @param options `forced: true` marks the sync as a manual "Synchronize" request, telling the
+     *                client to reload at the room cursor regardless of its drift threshold.
      */
-    public syncConnections(connections: Connection[]) {
+    public syncConnections(connections: Connection[], options?: { forced?: boolean }) {
         for (const connection of connections) {
-            connection.send('player-sync', this.buildSyncPayload(connection.session));
+            const payload = this.buildSyncPayload(connection.session);
+            connection.send('player-sync', options?.forced ? { ...payload, forced: true } : payload);
         }
     }
 
