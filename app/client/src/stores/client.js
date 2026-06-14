@@ -191,8 +191,21 @@ export const useClientStore = defineStore('client', {
                     voiceClient.setPushToTalk(voiceSettings.inputMode === 'ptt');
                     this.voice.connected = true;
                     this.voice.pushToTalk = voiceSettings.inputMode === 'ptt';
-                    // Join is listen-only until the user clicks unmute (the first mic gesture).
+                    // Default to unmuted on join. We can only open the mic without a click if the browser
+                    // already granted mic access (returning users), so probe the permission first; otherwise
+                    // stay listen-only to avoid firing a permission prompt just for joining.
                     this.voice.muted = true;
+                    navigator.permissions
+                        ?.query({ name: 'microphone' })
+                        .then(async (status) => {
+                            // Bail if the user left (or hopped channels) during the async probe.
+                            if (status.state !== 'granted' || !voiceClient || this.state.currentVoiceChannelId !== id) {
+                                return;
+                            }
+                            await this.voiceStartMic();
+                            this.setVoiceMuted(false);
+                        })
+                        .catch(() => {});
                 } else if (id === null && voiceClient) {
                     voiceClient.stop();
                     voiceClient = null;
