@@ -85,6 +85,11 @@ export type SanitizedPlayerChannel = {
     playing: boolean;
     paused: boolean;
     queueLength: number;
+    /**
+     * Users currently in the channel (i.e. watching the synced player). Built from the live
+     * session list, so it includes guests, unlike the persisted per-user `data.plugins.player`.
+     */
+    users: SanitizedUser[];
     currentMedia:
         | {
               owner: string;
@@ -500,6 +505,7 @@ export class PlayerChannel {
             playing: this.isPlaying(),
             paused: this.pausedCursor !== null,
             queueLength: this.queue.length,
+            users: this.sessions.map((session) => session.user.sanitized()),
             currentMedia: this.currentVideoInfo
                 ? {
                       owner: this.currentVideoInfo.user.username,

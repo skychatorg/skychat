@@ -65,7 +65,6 @@ export type SkyChatClientState = {
     discordPresence: DiscordPresence;
     messageIdToLastSeenUsers: { [id: number]: Array<SanitizedUser> };
     roomConnectedUsers: { [roomId: number]: Array<SanitizedUser> };
-    playerChannelUsers: { [roomId: number]: Array<SanitizedUser> };
     rooms: SanitizedRoom[];
     currentRoomId: number | null;
     currentRoomReady: boolean;
@@ -169,7 +168,6 @@ export class SkyChatClient extends EventEmitter {
     private _discordPresence: DiscordPresence = null;
     private _messageIdToLastSeenUsers: { [id: number]: Array<SanitizedUser> } = {};
     private _roomConnectedUsers: { [roomId: number]: Array<SanitizedUser> } = {};
-    private _playerChannelUsers: { [roomId: number]: Array<SanitizedUser> } = {};
     private _rooms: Array<SanitizedRoom> = [];
     private _currentRoomId: number | null = null;
     private _currentRoomReady: boolean = false;
@@ -426,29 +424,19 @@ export class SkyChatClient extends EventEmitter {
     }
 
     /**
-     * Update list of connected users / rooms and player channels
+     * Update list of connected users per room
      */
-    private _generateRoomConnectedUsersAndPlayerChannelUsers() {
+    private _generateRoomConnectedUsers() {
         const roomConnectedUsers: { [id: number]: Array<SanitizedUser> } = {};
-        const playerChannelUsers: { [id: number]: Array<SanitizedUser> } = {};
         for (const entry of this._connectedList) {
-            // Update room entries
             for (const roomId of entry.rooms) {
                 if (typeof roomConnectedUsers[roomId] === 'undefined') {
                     roomConnectedUsers[roomId] = [];
                 }
                 roomConnectedUsers[roomId].push(entry.user);
             }
-            // Update player channel entries
-            const playerChannelId = entry.user.data.plugins.player;
-            if (playerChannelId !== null) {
-                if (typeof playerChannelUsers[playerChannelId] === 'undefined') {
-                    playerChannelUsers[playerChannelId] = [];
-                }
-                playerChannelUsers[playerChannelId].push(entry.user);
-            }
         }
-        return { roomConnectedUsers, playerChannelUsers };
+        return { roomConnectedUsers };
     }
 
     private _updateConnectedListMeta() {
@@ -460,8 +448,7 @@ export class SkyChatClient extends EventEmitter {
             ownEntry.user = this._user;
         }
         ({ messageIdToLastSeenUsers: this._messageIdToLastSeenUsers } = this._generateMessageIdToLastSeenUsers());
-        ({ roomConnectedUsers: this._roomConnectedUsers, playerChannelUsers: this._playerChannelUsers } =
-            this._generateRoomConnectedUsersAndPlayerChannelUsers());
+        ({ roomConnectedUsers: this._roomConnectedUsers } = this._generateRoomConnectedUsers());
         this._voiceChannelUsers = this._generateVoiceChannelUsers();
     }
 
@@ -667,7 +654,6 @@ export class SkyChatClient extends EventEmitter {
             discordPresence: this._discordPresence,
             messageIdToLastSeenUsers: this._messageIdToLastSeenUsers,
             roomConnectedUsers: this._roomConnectedUsers,
-            playerChannelUsers: this._playerChannelUsers,
             rooms: this._rooms,
             currentRoomId: this._currentRoomId,
             currentRoomReady: this._currentRoomReady,

@@ -44,7 +44,13 @@ const currentThumb = computed(() => {
     return video.thumb;
 });
 const currentOwner = computed(() => client.state.player.current?.user?.username ?? null);
-const watchers = computed(() => client.state.roomConnectedUsers[client.state.currentRoomId] || []);
+// Watchers are the users in the current player channel (not the chat room — the two are
+// independent). Read from the live `playerChannels` array rather than the cached
+// `currentPlayerChannel` reference, which can go stale after a channel-list update.
+const watchers = computed(() => {
+    const channel = client.state.playerChannels.find((c) => c.id === client.state.currentPlayerChannelId);
+    return channel?.users ?? [];
+});
 const pausable = computed(() => isPausable(client.state.player.current?.video));
 const togglePause = () => client.sendMessage(client.state.player.paused ? '/player resume' : '/player pause');
 </script>

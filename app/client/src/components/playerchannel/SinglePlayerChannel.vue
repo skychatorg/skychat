@@ -17,9 +17,8 @@ const props = defineProps({
     },
 });
 
-const users = computed(() => {
-    return client.state.playerChannelUsers[props.playerChannel.id] || [];
-});
+// Channel-provided list (built server-side from live sessions), so guests are included.
+const users = computed(() => props.playerChannel.users ?? []);
 
 const isCurrent = computed(() => client.state.currentPlayerChannelId === props.playerChannel.id);
 
