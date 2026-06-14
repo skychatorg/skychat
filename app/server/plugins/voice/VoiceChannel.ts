@@ -367,6 +367,7 @@ export class VoiceChannel {
      */
     public sanitizedFor(viewer: Session): SanitizedVoiceChannel {
         const usernames = new Set<string>();
+        const mutedUsers = new Set<string>();
         for (const member of this.sessions) {
             if (member !== viewer) {
                 if (this.plugin.isSessionShadowBanned(member)) {
@@ -377,7 +378,10 @@ export class VoiceChannel {
                 }
             }
             usernames.add(member.user.username);
+            if (this.plugin.isVoiceMuted(member)) {
+                mutedUsers.add(member.user.username);
+            }
         }
-        return { id: this.id, name: this.name, users: [...usernames] };
+        return { id: this.id, name: this.name, users: [...usernames], mutedUsers: [...mutedUsers] };
     }
 }
