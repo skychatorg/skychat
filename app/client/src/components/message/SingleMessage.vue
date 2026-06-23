@@ -3,6 +3,7 @@ import SkyContextMenu from '@/components/common/SkyContextMenu.vue';
 import SkyContextMenuItem from '@/components/common/SkyContextMenuItem.vue';
 import UserMiniAvatar from '@/components/user/UserMiniAvatar.vue';
 import { useIsBlacklisted } from '@/composables/useIsBlacklisted';
+import { useMessageComposer } from '@/composables/useMessageComposer';
 import { useUserRight } from '@/composables/useUserRight';
 import { wrapHighlights } from '@/lib/highlight';
 import { triggerHighlightBurst } from '@/lib/highlightBurst';
@@ -16,6 +17,7 @@ import MessageReactions from './MessageReactions.vue';
 const app = useAppStore();
 const client = useClientStore();
 const encryptionStore = useEncryptionStore();
+const composer = useMessageComposer();
 
 const COMPACT_QUOTES_MAX_LENGTH = 30;
 
@@ -223,12 +225,16 @@ const canDeleteMessage = computed(() => {
 const quoteMessage = () => {
     app.setMessage('@' + props.message.id + ' ');
     showActionMenu.value = false;
+    // Delay focus past Radix Vue's RAF-based focus restoration on context menu close
+    setTimeout(() => composer.value?.focus(), 0);
 };
 
 const editMessage = () => {
     if (!canEditMessage.value) return;
     app.setMessage('/edit ' + props.message.id + ' ' + props.message.content);
     showActionMenu.value = false;
+    // Delay focus past Radix Vue's RAF-based focus restoration on context menu close
+    setTimeout(() => composer.value?.focus(), 0);
 };
 
 const deleteMessage = () => {
