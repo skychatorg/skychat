@@ -42,11 +42,11 @@
         "web-push": "^3.6.7"
     },
     "devDependencies": {
-        "@babel/cli": "^7.24.7",
-        "@babel/core": "^7.24.7",
-        "@babel/node": "^7.24.7",
-        "@babel/preset-env": "^7.24.7",
-        "@babel/preset-typescript": "^7.24.7",
+        "@babel/cli": "^8.0.1",
+        "@babel/core": "^8.0.1",
+        "@babel/node": "^8.0.1",
+        "@babel/preset-env": "^8.0.2",
+        "@babel/preset-typescript": "^8.0.1",
         "@fortawesome/fontawesome-svg-core": "^6.5.2",
         "@fortawesome/free-regular-svg-icons": "^6.5.2",
         "@fortawesome/free-solid-svg-icons": "^6.5.2",
