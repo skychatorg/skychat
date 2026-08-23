@@ -10,6 +10,7 @@ import { ConnectedListPlugin } from './global/ConnectedListPlugin.js';
 import { CustomizationPlugin } from './global/CustomizationPlugin.js';
 import { DailySummaryPlugin } from './global/DailySummaryPlugin.js';
 import { DiscordPresencePlugin } from './global/DiscordPresencePlugin.js';
+import { HighlightPlugin } from './global/HighlightPlugin.js';
 import { IpPlugin } from './global/IpPlugin.js';
 import { JoinRoomPlugin } from './global/JoinRoomPlugin.js';
 import { KickPlugin } from './global/KickPlugin.js';
@@ -62,6 +63,7 @@ export class CorePluginGroup extends PluginGroup {
         CustomizationPlugin,
         DailySummaryPlugin,
         DiscordPresencePlugin,
+        HighlightPlugin,
         IpPlugin,
         JoinRoomPlugin,
         KickPlugin,

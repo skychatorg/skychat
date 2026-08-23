@@ -148,7 +148,7 @@ function isMessageFirstOfDay(index) {
 </script>
 
 <template>
-    <div class="relative h-full min-h-0 flex flex-col">
+    <div class="skychat-burst-host relative h-full min-h-0 flex flex-col">
         <div
             ref="messagePannel"
             class="overflow-x-hidden overflow-y-auto scrollbar grow"

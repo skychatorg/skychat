@@ -12,6 +12,7 @@
     "minRightForConnectedList": -1,
     "minRightForPolls": -1,
     "minRightForStickerManagement": "op",
+    "minRightForHighlightManagement": "op",
     "minRightForGalleryRead": 0,
     "minRightForGalleryWrite": "op",
     "minRightForGalleryDelete": "op",

@@ -158,15 +158,4 @@ onUnmounted(() => {
     cursor: not-allowed;
 }
 
-/* The device picker is a native <select>. Its dropdown popup inherits the transparent
-   background and light text, which renders the options unreadable (light-on-white) when opened.
-   color-scheme: dark makes the browser paint the native popup with a dark theme; the explicit
-   option colors are a fallback for engines that ignore color-scheme. */
-select {
-    color-scheme: dark;
-}
-select option {
-    background-color: rgb(var(--color-skygray-darker));
-    color: rgb(var(--color-skygray-white));
-}
 </style>
