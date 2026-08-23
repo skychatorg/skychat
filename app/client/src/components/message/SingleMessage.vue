@@ -218,6 +218,10 @@ const deleteMessage = () => {
     showActionMenu.value = false;
 };
 
+const openAvatar = () => {
+    window.open(props.message.user.data.plugins.avatar, '_blank', 'noopener');
+};
+
 const copyMessage = () => {
     navigator.clipboard.writeText(props.message.content);
     showActionMenu.value = false;
@@ -419,6 +423,10 @@ const userColor = computed(() => props.message.user.data.plugins.custom.color);
         <SkyContextMenuItem v-if="canDeleteMessage" class="text-danger" @select="deleteMessage">
             <fa icon="trash" class="w-4 mr-2" />
             Delete
+        </SkyContextMenuItem>
+        <SkyContextMenuItem @select="openAvatar">
+            <fa icon="image" class="w-4 mr-2" />
+            Open avatar
         </SkyContextMenuItem>
         <SkyContextMenuItem @select="copyMessage">
             <fa icon="copy" class="w-4 mr-2" />
