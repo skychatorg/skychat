@@ -73,8 +73,10 @@ services:
       - ./storage:/workdir/storage
       - ./gallery:/workdir/gallery
       - ./uploads:/workdir/uploads
+    restart: always
     depends_on:
-      - skychat_db
+      skychat_db:
+        condition: service_healthy
 
   skychat_frontend:
     container_name: skychat_frontend
@@ -102,6 +104,11 @@ services:
     container_name: skychat_db
     restart: always
     shm_size: 1gb
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
+      interval: 5s
+      timeout: 5s
+      retries: 24
     build:
       context: ./app/database
       args:
