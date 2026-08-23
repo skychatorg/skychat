@@ -101,6 +101,9 @@ services:
   skychat_db:
     container_name: skychat_db
     restart: always
+    # Docker defaults /dev/shm to 64MB, which is too small for postgres parallel
+    # workers (VACUUM, index builds) on the messages table.
+    shm_size: 1gb
     build:
       context: ./app/database
       args:
