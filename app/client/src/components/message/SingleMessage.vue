@@ -351,7 +351,7 @@ const userColor = computed(() => props.message.user.data.plugins.custom.color);
                     </div>
 
                     <!-- Right column: time + last-seen avatars (non-compact) -->
-                    <div v-if="!compact && lastSeenUsers.length > 0" class="shrink-0 flex flex-col items-end gap-1">
+                    <div v-if="!compact" class="shrink-0 w-[66px] flex flex-col items-end gap-1">
                         <div class="flex -space-x-1.5">
                             <UserMiniAvatar v-for="user in lastSeenUsers" :key="user.username" :user="user" />
                         </div>
