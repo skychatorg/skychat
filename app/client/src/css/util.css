@@ -1,4 +1,15 @@
 
+/* Native <select> popups inherit our light text onto the browser's white popup, making options
+   unreadable. color-scheme: dark makes the browser paint the popup dark; the explicit option
+   colors are a fallback for engines that ignore color-scheme. */
+select {
+    color-scheme: dark;
+}
+select option {
+    background-color: rgb(var(--color-skygray-darker));
+    color: rgb(var(--color-skygray-white));
+}
+
 /* Form element */
 .form-control {
     @apply inline-block rounded-2xl bg-skygray-darker/50 hover:bg-skygray-casual/25 px-4 py-2 placeholder-skygray-lighter text-skygray-white;

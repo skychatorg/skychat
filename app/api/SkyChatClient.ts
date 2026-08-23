@@ -62,6 +62,7 @@ export type SkyChatClientState = {
     user: SanitizedUser;
     config: PublicConfig | null;
     stickers: Record<string, string>;
+    highlights: Record<string, string> | null;
     custom: CustomizationElements;
     token: AuthToken | null;
     connectedList: Array<SanitizedSession>;
@@ -100,6 +101,7 @@ export declare interface SkyChatClient {
 
     on(event: 'config', listener: (config: PublicConfig) => any): this;
     on(event: 'sticker-list', listener: (stickers: Record<string, string>) => any): this;
+    on(event: 'highlight-list', listener: (highlights: Record<string, string>) => any): this;
     on(event: 'custom', listener: (custom: CustomizationElements) => any): this;
     on(event: 'set-user', listener: (user: SanitizedUser) => any): this;
     on(event: 'auth-token', listener: (token: AuthToken | null) => any): this;
@@ -140,7 +142,10 @@ export declare interface SkyChatClient {
     on(event: 'voice-transport', listener: (params: any) => any): this;
     on(event: 'voice-connected', listener: (data: { direction: string }) => any): this;
     on(event: 'voice-producer-id', listener: (data: { id: string }) => any): this;
-    on(event: 'voice-sync', listener: (data: { channelId: number; producers: Array<{ producerId: string; userId: number; username: string }> }) => any): this;
+    on(
+        event: 'voice-sync',
+        listener: (data: { channelId: number; producers: Array<{ producerId: string; userId: number; username: string }> }) => any,
+    ): this;
     on(event: 'voice-consume', listener: (data: any) => any): this;
     on(event: 'voice-producer-closed', listener: (data: { producerId: string }) => any): this;
     on(event: 'voice-rtpcaps-ok', listener: (data: { ok: boolean }) => any): this;
@@ -165,6 +170,7 @@ export class SkyChatClient extends EventEmitter {
     private _user: SanitizedUser = defaultUser;
     private _config: PublicConfig | null = null;
     private _stickers: Record<string, string> = {};
+    private _highlights: Record<string, string> | null = null;
     private _custom: CustomizationElements = {};
     private _token: AuthToken | null = null;
     private _connectedList: Array<SanitizedSession> = [];
@@ -229,6 +235,7 @@ export class SkyChatClient extends EventEmitter {
         // Auth & Config
         this.on('config', this._onConfig.bind(this));
         this.on('sticker-list', this._onStickerList.bind(this));
+        this.on('highlight-list', this._onHighlightList.bind(this));
         this.on('custom', this._onCustom.bind(this));
         this.on('set-user', this._onUser.bind(this));
         this.on('auth-token', this._onToken.bind(this));
@@ -365,6 +372,11 @@ export class SkyChatClient extends EventEmitter {
 
     private _onStickerList(stickers: Record<string, string>) {
         this._stickers = stickers;
+        this.emit('update', this.state);
+    }
+
+    private _onHighlightList(highlights: Record<string, string>) {
+        this._highlights = highlights;
         this.emit('update', this.state);
     }
 
@@ -651,6 +663,7 @@ export class SkyChatClient extends EventEmitter {
             user: this._user,
             config: this._config,
             stickers: this._stickers,
+            highlights: this._highlights,
             custom: this._custom,
             token: this._token,
             connectedList: this._connectedList,

@@ -15,6 +15,7 @@ export type Preferences = {
     minRightForConnectedList: number;
     minRightForPolls: number;
     minRightForStickerManagement: number | 'op';
+    minRightForHighlightManagement?: number | 'op';
     minRightForGalleryRead: number | 'op';
     minRightForGalleryWrite: number | 'op';
     minRightForGalleryDelete: number | 'op';
@@ -39,6 +40,7 @@ export type PublicConfig = {
     galleryEnabled: boolean;
     jellyfinEnabled: boolean;
     minRightForStickerManagement: number | 'op';
+    minRightForHighlightManagement: number | 'op';
     minRightForMessageHistory: number;
 };
 
@@ -72,6 +74,7 @@ export class Config {
                 Boolean(process.env.ENABLED_PLUGINS?.includes('PlayerPluginGroup')) &&
                 Boolean(process.env.JELLYFIN_API_KEY && process.env.JELLYFIN_API_KEY.trim().length > 0),
             minRightForStickerManagement: Config.PREFERENCES.minRightForStickerManagement,
+            minRightForHighlightManagement: Config.PREFERENCES.minRightForHighlightManagement ?? 'op',
             minRightForMessageHistory: Config.PREFERENCES.minRightForMessageHistory,
         };
     }

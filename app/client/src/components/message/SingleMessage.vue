@@ -4,6 +4,8 @@ import SkyContextMenuItem from '@/components/common/SkyContextMenuItem.vue';
 import UserMiniAvatar from '@/components/user/UserMiniAvatar.vue';
 import { useIsBlacklisted } from '@/composables/useIsBlacklisted';
 import { useUserRight } from '@/composables/useUserRight';
+import { wrapHighlights } from '@/lib/highlight';
+import { triggerHighlightBurst } from '@/lib/highlightBurst';
 import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
 import { useEncryptionStore } from '@/stores/encryption';
@@ -60,6 +62,8 @@ watch(showCompact, () => {
 });
 
 const isBlacklisted = useIsBlacklisted(() => props.message.user);
+
+const formattedContent = computed(() => wrapHighlights(props.message.formatted, client.state.highlights));
 
 const formattedDate = computed(() => {
     const date = new Date(props.message.createdTimestamp * 1000);
@@ -166,6 +170,26 @@ const bindMessageContentEvents = () => {
             app.setMessage('@' + quote.dataset.username + ' ');
         });
     }
+
+    const highlightedWords = Array.from(content.value.getElementsByClassName('skychat-highlight'));
+    for (const word of highlightedWords) {
+        if (word.dataset.burstBound) {
+            continue;
+        }
+        word.dataset.burstBound = 'true';
+        const burst = (force) => {
+            const stickerUrl = client.state.stickers[word.dataset.sticker];
+            triggerHighlightBurst(stickerUrl, content.value?.closest('.skychat-burst-host'), force);
+        };
+        word.addEventListener('mouseenter', () => burst(false));
+        word.addEventListener('click', () => {
+            // Remove + reflow restarts the pop animation on rapid clicks
+            word.classList.remove('skychat-highlight-pop');
+            void word.offsetWidth;
+            word.classList.add('skychat-highlight-pop');
+            burst(true);
+        });
+    }
 };
 onMounted(() => {
     bindMessageContentEvents();
@@ -175,10 +199,7 @@ onMounted(() => {
         }
     });
 });
-watch(
-    () => props.message.formatted,
-    () => nextTick(bindMessageContentEvents),
-);
+watch(formattedContent, () => nextTick(bindMessageContentEvents));
 
 watch(
     () => props.message.storage?.reactions,
@@ -347,7 +368,7 @@ const userColor = computed(() => props.message.user.data.plugins.custom.color);
                             v-else-if="!shouldShowUnlockForm"
                             ref="content"
                             class="text-base text-white/90 leading-[1.45] whitespace-pre-wrap break-words"
-                            v-html="message.formatted"
+                            v-html="formattedContent"
                         />
 
                         <!-- Reactions -->

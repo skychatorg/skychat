@@ -241,6 +241,11 @@ export const useAppStore = defineStore('app', {
              * Sticker management modal
              */
             manageStickers: false,
+
+            /**
+             * Highlighted words management modal
+             */
+            manageHighlights: false,
         },
     }),
 
