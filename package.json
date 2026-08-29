@@ -84,6 +84,7 @@
         "express-fileupload": "^1.5.0",
         "geoip-lite": "^1.4.10",
         "googleapis": "^140.0.1",
+        "hls.js": "^1.7.1",
         "lodash": "^4.17.21",
         "mousetrap": "^1.6.5",
         "nodemon": "^3.1.4",
