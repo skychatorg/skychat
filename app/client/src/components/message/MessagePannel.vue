@@ -101,6 +101,18 @@ watch(
     },
 );
 
+// `lastMessage` only changes when a message arrives at the bottom, so history loaded by scrolling up
+// never triggers this. While pinned to the bottom the trimmed messages are off-screen; while scrolled
+// up they are exactly what is being read, so leave the list alone.
+watch(
+    () => client.lastMessage,
+    () => {
+        if (scrollState.auto && !isSearchMode.value) {
+            client.trimMessages();
+        }
+    },
+);
+
 // When entering search mode, scroll to bottom to show latest results
 watch(isSearchMode, (inSearchMode) => {
     if (inSearchMode) {
