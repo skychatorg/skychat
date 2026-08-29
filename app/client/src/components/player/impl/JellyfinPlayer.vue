@@ -8,20 +8,19 @@ const client = useClientStore();
 
 const player = ref(null);
 const srcOnLoad = ref('');
-const previousVideoHash = ref(null);
+// Safari: play the playlist through the element itself rather than MSE.
+const nativeHlsOnly = ref(false);
 const decodeError = ref('');
-// Absolute ms offset of where the current stream URL was requested to start.
-// The <video> element's currentTime is relative to this — to get absolute file
-// position, add `loadedStartMs + currentTime*1000`.
-const loadedStartMs = ref(0);
-// Threshold: above this much drift between room cursor and local playback,
-// we treat the cursor change as a seek and reload the stream at the new position.
-// Must stay ABOVE Jellyfin's ffmpeg transcode-startup latency (a few seconds): while
-// the stream spins up, the <video> sits at its start while the wall-clock room cursor
-// keeps ticking, so a too-low threshold reads that startup lag as a seek and reloads in
-// a loop — the media never plays, it just teleports. The only real seeks are skip30/
-// replay30 (±30s), so 10s cleanly separates startup lag from an intentional jump.
-const SEEK_DRIFT_MS = 10_000;
+// How far the local <video> may drift from the room cursor before we correct it. HLS gives us a
+// real seekable timeline, so correcting is a cheap `currentTime` assignment rather than restarting
+// the stream — no transcode-startup lag to leave headroom for, hence seconds instead of tens.
+const SEEK_DRIFT_MS = 2_000;
+
+// How much video hls.js keeps buffered ahead. This is the whole point of using HLS: the previous
+// progressive stream was non-seekable with no Content-Length, so the browser held barely two
+// seconds no matter the bitrate, and any hiccup (entering fullscreen, say) drained it into a
+// visible freeze.
+const MAX_BUFFER_SECONDS = 60;
 
 // Per-viewer preferences (persisted). 'off' = no subtitles, 'default' = pick server default/forced.
 // Owned by the composable so the picker, which now lives in the control strip, shares them
@@ -75,9 +74,8 @@ const resolvedSubIndex = computed(() => {
     return tracks.length > 0 ? tracks[0].index : null;
 });
 
-// Stream URL is a function of (itemId, mediaSourceId, audioStreamIndex, startTimeMs, token).
-// Jellyfin transcodes the live ffmpeg output starting at startTimeTicks, so every URL rebuild
-// is effectively a seek (cheap — video stream is copied, only audio is re-encoded).
+// The HLS media playlist covers the entire file, so the URL depends only on which media and which
+// audio track — never on position. Seeking is `currentTime`, not a new URL.
 const streamUrl = computed(() => {
     if (!currentVideo.value || !jf.value || !streamToken.value) return '';
     const params = new URLSearchParams({
@@ -87,25 +85,17 @@ const streamUrl = computed(() => {
     if (resolvedAudioIndex.value !== null) {
         params.set('audioStreamIndex', String(resolvedAudioIndex.value));
     }
-    if (loadedStartMs.value > 0) {
-        params.set('startTimeMs', String(loadedStartMs.value));
-    }
-    return `/api/plugin/player/jellyfin/stream/${currentVideo.value.id}?${params.toString()}`;
+    return `/api/plugin/player/jellyfin/hls/${currentVideo.value.id}/main.m3u8?${params.toString()}`;
 });
 
 const subtitleUrl = (index) => {
     const video = currentVideo.value;
     if (!video || !jf.value || !streamToken.value) return '';
-    // Cues are rebased to startTimeMs on the server, so subtitles must request the SAME offset as
-    // the video stream (loadedStartMs) or they drift from the picture after a seek. Match streamUrl:
-    // only append when > 0.
-    let url = `/api/plugin/player/jellyfin/subtitle/${video.id}/${jf.value.mediaSourceId}/${index}.vtt?t=${encodeURIComponent(
+    // HLS keeps one monotonic timeline for the whole file, so cues need no rebasing and the URL is
+    // stable across seeks — which also means the <track> nodes no longer have to be replaced.
+    return `/api/plugin/player/jellyfin/subtitle/${video.id}/${jf.value.mediaSourceId}/${index}.vtt?t=${encodeURIComponent(
         streamToken.value,
     )}`;
-    if (loadedStartMs.value > 0) {
-        url += `&startTimeMs=${loadedStartMs.value}`;
-    }
-    return url;
 };
 
 // HEVC pre-flight. If codec is hevc and <video> can't decode it, bail out with a clear message.
@@ -128,10 +118,11 @@ const runCodecProbe = () => {
 // Room cursor (absolute ms since the video's start). Shared helper freezes it while paused.
 const roomCursor = () => roomCursorMs(client.state.player, client.state.playerLastUpdate);
 
-// Absolute ms position the <video> element is currently showing.
+// Absolute ms position the <video> element is currently showing. With HLS this is simply the
+// element's own time, since the playlist starts at the beginning of the file.
 const currentAbsoluteMs = () => {
-    if (!player.value) return loadedStartMs.value;
-    return loadedStartMs.value + (player.value.currentTime || 0) * 1000;
+    if (!player.value) return 0;
+    return (player.value.currentTime || 0) * 1000;
 };
 
 // Apply selected subtitle track without reloading the <video>.
@@ -147,65 +138,93 @@ const applySubtitleSelection = () => {
 };
 watch(resolvedSubIndex, () => nextTick(applySubtitleSelection));
 
-// Decide when to reload the <video>:
-//   - new video queued: reload at room cursor
-//   - audio track changed: reload at CURRENT position (don't restart the movie)
-//   - room cursor jumped far from local playback (skip30 / replay30 from another viewer,
-//     or big drift after pause/refresh): reload at new room cursor
-//   - otherwise: continuous playback, do nothing
-//
-// The <video> element's native seek bar will not work (no known duration on a live ffmpeg
-// stream). Seeking is a room-level operation via /player skip30 / /player replay30.
+// hls.js owns the media element once attached. Kept in a plain variable, not a ref: it holds
+// large internal buffers we never want Vue to make reactive.
+let hls = null;
+let retriedAfterNetworkError = false;
+// What the attached playlist represents. Deliberately NOT the URL: the server mints a fresh stream
+// token on every player-sync, so comparing URLs would re-attach several times a minute. Only the
+// media and the audio track actually change which playlist we need.
+let hlsLoadedKey = '';
+
+// Attach (or re-attach) the playlist. Only needed when the playlist itself changes — a different
+// video, or a different audio track, since the audio index is baked into the URL. Position is NOT
+// part of it any more.
+const attachPlaylist = async (url) => {
+    if (!player.value || !url) return;
+
+    // Safari plays HLS natively and does it better than MSE would.
+    if (!nativeHlsOnly.value) {
+        const { default: Hls } = await import('hls.js');
+        if (!Hls.isSupported()) {
+            nativeHlsOnly.value = true;
+        } else {
+            if (!hls) {
+                hls = new Hls({
+                    maxBufferLength: MAX_BUFFER_SECONDS,
+                    backBufferLength: 30,
+                    // The production CSP allows blob: workers, but degrade rather than break if a
+                    // deployment forgets it.
+                    enableWorker: true,
+                });
+                hls.on(Hls.Events.ERROR, (_event, data) => {
+                    if (!data?.fatal) return;
+                    // Stream tokens expire after a couple of hours, which a long film can outlive.
+                    // The URL is rebuilt from the latest token, so one retry recovers that case.
+                    if (data.type === Hls.ErrorTypes.NETWORK_ERROR && !retriedAfterNetworkError) {
+                        retriedAfterNetworkError = true;
+                        hls.loadSource(streamUrl.value);
+                        return;
+                    }
+                    decodeError.value = 'Playback error. The browser could not play this stream.';
+                });
+                hls.attachMedia(player.value);
+            }
+            hls.loadSource(url);
+            return;
+        }
+    }
+    srcOnLoad.value = url;
+};
+
+// Bring local playback back in line with the room. A plain seek now — the old code had to rebuild
+// the stream URL and reload the element, because a live progressive stream has no seekable range.
+const syncToRoomCursor = (force = false) => {
+    if (!player.value) return;
+    const desired = roomCursor();
+    if (!force && Math.abs(desired - currentAbsoluteMs()) <= SEEK_DRIFT_MS) return;
+    try {
+        player.value.currentTime = desired / 1000;
+    } catch {
+        // Seeking before the manifest is parsed throws; the ManifestParsed handler retries.
+    }
+};
+
 const applyStream = (force = false) => {
     if (!currentVideo.value) return;
     if (!runCodecProbe()) return;
 
-    const newVideoId = currentVideo.value.id;
-    const hash = `${newVideoId}|${resolvedAudioIndex.value}|${streamToken.value.slice(0, 16)}`;
-    const prevHash = previousVideoHash.value;
-    const isNewVideo = !prevHash || !prevHash.startsWith(newVideoId + '|');
+    const url = streamUrl.value;
+    if (!url) return;
 
-    const desiredCursor = roomCursor();
-    const localAbs = currentAbsoluteMs();
-    // `force` is the manual "Synchronize" button: reload at the room cursor regardless of drift.
-    // Automatic syncs still respect SEEK_DRIFT_MS to avoid reload loops during transcode startup.
-    const seekDetected = force || (hash === prevHash && Math.abs(desiredCursor - localAbs) > SEEK_DRIFT_MS);
-
-    if (hash === prevHash && !seekDetected) {
-        return; // continuous playback
-    }
-
-    // Pick the ms we want Jellyfin to start ffmpeg at.
-    //   - new video or big room-cursor drift (seek) -> use room cursor
-    //   - same video, audio changed -> keep playing from our current position
-    let nextStartMs;
-    if (isNewVideo || seekDetected) {
-        nextStartMs = desiredCursor;
-    } else {
-        nextStartMs = Math.max(0, Math.floor(localAbs));
-    }
-
-    previousVideoHash.value = hash;
-    loadedStartMs.value = Math.max(0, Math.floor(nextStartMs));
-
-    // streamUrl computed updates via loadedStartMs reactivity.
-    nextTick(() => {
-        if (!player.value) return;
-        srcOnLoad.value = streamUrl.value;
-        nextTick(() => {
-            if (!player.value) return;
-            player.value.load();
+    const key = `${currentVideo.value.id}|${resolvedAudioIndex.value}`;
+    const isNewPlaylist = key !== hlsLoadedKey;
+    if (isNewPlaylist) {
+        hlsLoadedKey = key;
+        attachPlaylist(url).then(() => {
+            // Land at the room position once the media is ready to accept a seek.
             const onReady = () => {
-                player.value.removeEventListener('loadedmetadata', onReady);
+                player.value?.removeEventListener('loadedmetadata', onReady);
+                syncToRoomCursor(true);
                 applySubtitleSelection();
-                // A reload (e.g. seek-while-paused) autoplays; re-assert the room's paused state.
-                if (client.state.player.paused) {
-                    player.value.pause();
-                }
+                if (client.state.player.paused) player.value?.pause();
             };
-            player.value.addEventListener('loadedmetadata', onReady);
+            player.value?.addEventListener('loadedmetadata', onReady);
         });
-    });
+        return;
+    }
+
+    syncToRoomCursor(force);
 };
 
 // Poll room cursor — triggers applyStream which will reload only if drift is big.
@@ -251,6 +270,9 @@ const onNativePlay = (event) => {
 };
 
 onMounted(() => {
+    // Safari reports 'maybe'/'probably' and handles HLS natively; everything else goes through MSE.
+    const el = document.createElement('video');
+    nativeHlsOnly.value = !window.MediaSource && !!el.canPlayType('application/vnd.apple.mpegurl');
     applyStream();
     // Also poll periodically — catches cases where local playback pauses or stalls
     // and drifts silently from the room cursor.
@@ -259,6 +281,11 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
     if (cursorPollTimer) clearInterval(cursorPollTimer);
+    if (hls) {
+        hls.destroy();
+        hls = null;
+    }
+    hlsLoadedKey = '';
     if (player.value) {
         player.value.removeAttribute('src');
         player.value.load();
@@ -282,19 +309,18 @@ onBeforeUnmount(() => {
             playsinline
             webkit-playsinline
             crossorigin="anonymous"
-            :src="srcOnLoad"
+            :src="nativeHlsOnly ? srcOnLoad : undefined"
             @error="onVideoError"
             @play="onNativePlay"
         >
             <!--
-                Key includes loadedStartMs so a seek replaces the <track> node: changing an existing
-                track's src does not reliably refetch cues across browsers. The id stays the stream
-                index, so applySubtitleSelection (keyed on track.id) still works after the swap.
+                Subtitle URLs are stable now that HLS keeps one timeline for the whole file, so the
+                nodes survive seeks and cues no longer need refetching.
             -->
             <track
                 v-for="sub in textSubtitles"
                 :id="String(sub.index)"
-                :key="sub.index + ':' + loadedStartMs"
+                :key="sub.index"
                 kind="subtitles"
                 :src="subtitleUrl(sub.index)"
                 :srclang="sub.language || 'und'"
