@@ -497,8 +497,13 @@ export class SkyChatClient extends EventEmitter {
         this.notifySeenMessage(message.id);
     }
 
-    private _onMessages() {
+    private _onMessages(messages: Array<SanitizedMessage>) {
+        // History of a room we already left (rapid switching): it is not what we are waiting for
+        if (messages.length > 0 && messages[0].room !== this._currentRoomId) {
+            return;
+        }
         this._currentRoomReady = true;
+        this.emit('update', this.state);
     }
 
     private _onRoomList(rooms: Array<SanitizedRoom>) {
@@ -507,15 +512,15 @@ export class SkyChatClient extends EventEmitter {
     }
 
     private _onJoinRoom(currentRoomId: number | null) {
-        this._currentRoomId = currentRoomId;
+        // Authoritative: also used to correct an optimistic join the server rejected
+        if (currentRoomId !== this._currentRoomId) {
+            this._currentRoomReady = false;
+            this._currentRoomId = currentRoomId;
+        }
         if (typeof localStorage !== 'undefined' && currentRoomId !== null) {
             localStorage.setItem(SkyChatClient.LOCAL_STORAGE_ROOM_ID, currentRoomId.toString());
         }
         this.emit('update', this.state);
-        // Ask for message history if joined a room
-        if (currentRoomId !== null) {
-            this.sendMessage('/messagehistory');
-        }
     }
 
     private _onTypingList(typingList: Array<SanitizedUser>) {

@@ -72,7 +72,7 @@ export const useClientStore = defineStore('client', {
             // On global client state changed
             client.on('update', () => {
                 // Room id changed
-                if (this.state.roomId !== client.state.roomId) {
+                if (this.state.currentRoomId !== client.state.currentRoomId) {
                     // Clear messages
                     this.messages = [];
                     this.messageSearch = { query: '', roomId: null, results: [] };
@@ -109,6 +109,10 @@ export const useClientStore = defineStore('client', {
 
             // On new messages
             client.on('messages', async (messages) => {
+                // Drop history of a room we already left (rapid switching)
+                if (messages.length > 0 && messages[0].room !== client.state.currentRoomId) {
+                    return;
+                }
                 // Filter messages we already have, if any
                 messages = messages.filter((message) => message.id === 0 || !this.messages.find((m) => m.id === message.id));
                 // Prepend new messages (we always get previous messages in this event)
@@ -323,7 +327,7 @@ export const useClientStore = defineStore('client', {
             this.messageSearchLoading = true;
             this.messageSearch = {
                 query: sanitizedQuery,
-                roomId: this.state.roomId,
+                roomId: this.state.currentRoomId,
                 results: [],
             };
             client.sendMessage(`/messagesearch ${sanitizedQuery}`);
