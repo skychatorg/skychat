@@ -10,6 +10,7 @@ import RoomHeader from '@/components/room/RoomHeader.vue';
 import RoomList from '@/components/room/RoomList.vue';
 import ConnectedList from '@/components/user/ConnectedList.vue';
 import { useUserRight } from '@/composables/useUserRight';
+import { roomName } from '@/lib/roomName.js';
 import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
 import { computed, ref } from 'vue';
@@ -21,7 +22,7 @@ const query = ref('');
 
 const canSearchMessages = useUserRight('minRightForMessageHistory', -1);
 
-const currentRoomName = computed(() => client.state.currentRoom?.name ?? 'this room');
+const currentRoomName = computed(() => roomName(client.state.currentRoom, client.state.user.username) || 'this room');
 
 const runSearch = () => {
     const sanitizedQuery = query.value.trim();

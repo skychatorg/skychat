@@ -1,5 +1,6 @@
 <script setup>
 import { AudioRecorder } from '@/lib/AudioRecorder';
+import { roomName } from '@/lib/roomName.js';
 import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
 import { useEncryptionStore } from '@/stores/encryption';
@@ -64,7 +65,7 @@ const textAreaPlaceholder = computed(() => {
     if (!client.state.currentRoom) {
         return '❌ Disconnected';
     }
-    let placeholder = `New message / ${client.state.currentRoom.name}`;
+    let placeholder = `New message / ${roomName(client.state.currentRoom, client.state.user.username)}`;
     if (client.state.currentRoom.plugins.messagelimiter) {
         placeholder += ` (char limit: ${client.state.currentRoom.plugins.messagelimiter})`;
     }

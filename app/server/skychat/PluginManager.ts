@@ -31,7 +31,13 @@ export class PluginManager {
      */
     async onConnectionCreated(connection: Connection, event: ConnectionAcceptedEvent): Promise<void> {
         connection.on('binary-message', this.onConnectionBinary.bind(this, connection));
-        connection.on('message', this.onConnectionMessage.bind(this, connection));
+
+        // Commands from one connection must run one at a time: handling is async, so two /join in
+        // flight would otherwise settle in whichever order they happen to finish.
+        let queue: Promise<void> = Promise.resolve();
+        connection.on('message', (payload: string) => {
+            queue = queue.then(() => this.onConnectionMessage(connection, payload));
+        });
 
         await this.executeNewConnectionHook(connection, event);
         connection.webSocket.on('close', () => {

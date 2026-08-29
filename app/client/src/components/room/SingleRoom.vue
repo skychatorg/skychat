@@ -1,5 +1,6 @@
 <script setup>
 import { useClientState } from '@/composables/useClientState.js';
+import { roomName } from '@/lib/roomName.js';
 import { apiClient, useClientStore } from '@/stores/client';
 import { computed, ref } from 'vue';
 import SkyContextMenu from '../common/SkyContextMenu.vue';
@@ -44,19 +45,7 @@ const isGroup = computed(() => {
     return props.room.isPrivate && (props.room.whitelist?.length ?? 0) > 2;
 });
 
-const formattedName = computed(() => {
-    if (props.room.isPrivate) {
-        if (props.room.name) {
-            return props.room.name;
-        }
-        const otherUsernames = props.room.whitelist.filter((identifier) => client.state.user.username.toLowerCase() !== identifier);
-        if (otherUsernames.length === 0) {
-            return `Archive: ${props.room.name}`;
-        }
-        return `@${otherUsernames.join(', @')}`;
-    }
-    return props.room.name;
-});
+const formattedName = computed(() => roomName(props.room, client.state.user.username));
 
 const userCount = computed(() => (client.state.roomConnectedUsers[props.room.id] || []).length);
 
@@ -77,10 +66,18 @@ const copyRoomId = () => {
     navigator.clipboard.writeText(props.room.id.toString());
 };
 
+// Public rooms can not be left, only switched away from
 const leaveRoom = () => {
     const otherRoom = client.state.rooms.find((r) => r.id !== props.room.id && client.hasAccessToRoom(r.id));
     if (otherRoom) {
         client.join(otherRoom.id);
+    }
+};
+
+// Private rooms are left for good, and do not need to be joined first
+const leaveConversation = () => {
+    if (confirm(`Leave ${formattedName.value}?`)) {
+        client.sendMessage(`/pmleave ${props.room.id}`);
     }
 };
 </script>
@@ -178,7 +175,11 @@ const leaveRoom = () => {
                                 <fa icon="arrow-right-from-bracket" class="w-4 mr-2" />
                                 Join room
                             </SkyDropdownItem>
-                            <SkyDropdownItem v-if="selected" @click="leaveRoom">
+                            <SkyDropdownItem v-if="room.isPrivate" @click="leaveConversation">
+                                <fa icon="arrow-left" class="w-4 mr-2" />
+                                Leave conversation
+                            </SkyDropdownItem>
+                            <SkyDropdownItem v-else-if="selected" @click="leaveRoom">
                                 <fa icon="arrow-left" class="w-4 mr-2" />
                                 Leave room
                             </SkyDropdownItem>
@@ -208,7 +209,11 @@ const leaveRoom = () => {
             <fa icon="arrow-right-from-bracket" class="w-4 mr-2" />
             Join room
         </SkyContextMenuItem>
-        <SkyContextMenuItem v-if="selected" @select="leaveRoom">
+        <SkyContextMenuItem v-if="room.isPrivate" @select="leaveConversation">
+            <fa icon="arrow-left" class="w-4 mr-2" />
+            Leave conversation
+        </SkyContextMenuItem>
+        <SkyContextMenuItem v-else-if="selected" @select="leaveRoom">
             <fa icon="arrow-left" class="w-4 mr-2" />
             Leave room
         </SkyContextMenuItem>

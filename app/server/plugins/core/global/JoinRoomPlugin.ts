@@ -1,6 +1,7 @@
 import { ConnectionAcceptedEvent } from '../../../skychat/AuthBridge.js';
 import { Connection } from '../../../skychat/Connection.js';
 import { GlobalPlugin } from '../../GlobalPlugin.js';
+import { MessageHistoryPlugin } from '../room/MessageHistoryPlugin.js';
 
 export class JoinRoomPlugin extends GlobalPlugin {
     static readonly CHANGE_USERNAME_PRICE = 2000;
@@ -13,38 +14,29 @@ export class JoinRoomPlugin extends GlobalPlugin {
         join: {
             minCount: 1,
             maxCount: 1,
-            maxCallsPer10Seconds: 10,
+            // Limit is per IP, and clicking through a room list burns it fast
+            maxCallsPer10Seconds: 40,
             params: [{ name: 'roomId', pattern: /^(\d+)$/ }],
         },
     };
 
-    async run(_alias: string, param: string, connection: Connection): Promise<void> {
+    /**
+     * The client switches rooms optimistically and drops the messages it was showing, so any rejected
+     * /join (rate limit, missing right, unknown room) must restore both the room it is actually in and
+     * that room's history. `check()` throws before `run()`, hence the resync lives here, not in run().
+     */
+    async execute(alias: string, param: string, connection: Connection): Promise<void> {
         try {
-            // Validate the room id
-            const roomId = parseInt(param, 10);
-            if (typeof roomId !== 'number') {
-                throw new Error('Invalid room specified');
-            }
-
-            // Ensure room exists
-            const room = this.manager.getRoomById(roomId);
-            if (!room) {
-                throw new Error('Invalid room specified');
-            }
-
-            // Ensure user is allowed to join the room
-            if (room.isPrivate) {
-                if (!room.whitelist.includes(connection.session.identifier)) {
-                    throw new Error('You are not allowed to join this room');
-                }
-            }
-
-            // Join the room
-            await room.attachConnection(connection);
+            await super.execute(alias, param, connection);
         } catch (error) {
-            connection.send('join-room', connection.room?.id ?? null);
+            connection.send('join-room', connection.roomId);
+            connection.room?.getPlugin<MessageHistoryPlugin>(MessageHistoryPlugin.commandName)?.sendInitialHistory(connection);
             throw error;
         }
+    }
+
+    async run(_alias: string, param: string, connection: Connection): Promise<void> {
+        await this.joinRoom(connection, parseInt(param, 10));
     }
 
     async joinRoom(connection: Connection, roomId: number) {

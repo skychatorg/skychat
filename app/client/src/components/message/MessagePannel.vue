@@ -1,9 +1,12 @@
 <script setup>
 import SingleMessage from '@/components/message/SingleMessage.vue';
+import { roomName } from '@/lib/roomName.js';
 import { useClientStore } from '@/stores/client';
 import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue';
 
 const client = useClientStore();
+
+const currentRoomName = computed(() => roomName(client.state.currentRoom, client.state.user.username));
 
 const isSearchMode = computed(() => {
     const hasQuery = client.messageSearch.roomId === client.state.currentRoomId && client.messageSearch.query;
@@ -190,10 +193,13 @@ function isMessageFirstOfDay(index) {
                         :show-date="isMessageFirstOfDay(index)"
                         @content-size-changed="scrollToBottomIfAutoScroll"
                     />
+                    <div v-if="displayedMessages.length === 0" class="text-center text-skygray-light py-6">
+                        No messages yet in {{ currentRoomName }}. Say hi!
+                    </div>
                 </template>
             </template>
             <template v-else>
-                <div class="text-center text-gray-500 mt-4">loading...</div>
+                <div class="text-center text-skygray-light mt-4">Loading {{ currentRoomName || 'messages' }}...</div>
             </template>
         </div>
     </div>
