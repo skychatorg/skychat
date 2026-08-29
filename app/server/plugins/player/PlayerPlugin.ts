@@ -40,7 +40,7 @@ export class PlayerPlugin extends GlobalPlugin {
      */
     static readonly RESYNC_COUNTDOWN_MS = 5 * 1000;
 
-    static readonly RESYNC_COOLDOWN_MS = 15 * 1000;
+    static readonly RESYNC_COOLDOWN_MS = 10 * 1000;
 
     static readonly commandName = 'player';
 
@@ -63,7 +63,10 @@ export class PlayerPlugin extends GlobalPlugin {
         player: {
             minCount: 1,
             maxCount: 1,
-            maxCallsPer10Seconds: 10,
+            // Transport is cheap (an in-memory cursor move plus one broadcast) and gets tapped in
+            // bursts, e.g. skip30 several times to scrub forward. The limit is also per IP, so
+            // viewers sharing a connection share the budget.
+            maxCallsPer10Seconds: 60,
             params: [{ name: 'action', pattern: /^(replay30|skip30|list|skip|flush|pause|resume)$/ }],
         },
         playerchannelmanage: {
@@ -86,7 +89,7 @@ export class PlayerPlugin extends GlobalPlugin {
         playersync: {
             minCount: 0,
             maxCount: 1,
-            maxCallsPer10Seconds: 10,
+            maxCallsPer10Seconds: 30,
             params: [{ name: 'all', pattern: /^all$/ }],
         },
         playersearch: {
@@ -113,7 +116,7 @@ export class PlayerPlugin extends GlobalPlugin {
             minCount: 1,
             maxCount: 1,
             coolDown: 100,
-            maxCallsPer10Seconds: 20,
+            maxCallsPer10Seconds: 60,
             params: [{ name: 'positionMs', pattern: /^\d{1,10}$/ }],
         },
         schedule: {

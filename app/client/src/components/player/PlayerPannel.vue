@@ -130,7 +130,7 @@ const syncSelf = () => client.sendMessage('/playersync');
                     :title="app.playerMode.enabled ? 'Hide player' : 'Show player'"
                     @click="app.setPlayerEnabled(!app.playerMode.enabled)"
                 >
-                    <fa :icon="app.playerMode.enabled ? 'toggle-on' : 'toggle-off'" />
+                    <fa :icon="app.playerMode.enabled ? 'toggle-on' : 'toggle-off'" fixed-width />
                 </button>
             </div>
 
@@ -142,7 +142,9 @@ const syncSelf = () => client.sendMessage('/playersync');
                     <span class="ml-0.5 strip-label">30s</span>
                 </button>
                 <button v-if="pausable" class="strip-btn" :title="client.state.player.paused ? 'Resume' : 'Pause'" @click="togglePause">
-                    <fa :icon="client.state.player.paused ? 'play' : 'pause'" />
+                    <!-- fixed-width: play and pause are different widths, and the swap would shift
+                         every control after it on each toggle -->
+                    <fa :icon="client.state.player.paused ? 'play' : 'pause'" fixed-width />
                 </button>
                 <button class="strip-btn" title="Skip 30s" @click="client.sendMessage('/player skip30')">
                     <span class="mr-0.5 strip-label">30s</span>
@@ -151,29 +153,6 @@ const syncSelf = () => client.sendMessage('/playersync');
                 </button>
                 <button class="strip-btn" title="Skip to next" @click="client.sendMessage('/player skip')">
                     <fa icon="forward-step" />
-                </button>
-            </div>
-
-            <!-- Library -->
-            <div class="strip-group hairline">
-                <button class="strip-btn" title="Add a video" @click="app.toggleModal('youtubeVideoSearcher')">
-                    <fa icon="plus" />
-                    <span class="strip-label">Add</span>
-                </button>
-                <button
-                    class="strip-btn"
-                    title="Open queue"
-                    :disabled="!client.state.player.queue.length"
-                    @click="app.toggleModal('playerQueue')"
-                >
-                    <fa icon="list" />
-                    <span class="strip-label">Queue</span>
-                    <span
-                        v-if="client.state.player.queue.length"
-                        class="ml-0.5 px-1.5 rounded-full bg-primary/20 text-primary text-xs font-mono"
-                    >
-                        {{ client.state.player.queue.length }}
-                    </span>
                 </button>
             </div>
 
@@ -234,9 +213,33 @@ const syncSelf = () => client.sendMessage('/playersync');
                     <template #trigger>
                         <span class="strip-btn" title="More player options">
                             <fa icon="ellipsis" />
+                            <!-- The queue count used to be visible in the bar; keep it surfaced here -->
+                            <span
+                                v-if="client.state.player.queue.length"
+                                class="ml-0.5 px-1.5 rounded-full bg-primary/20 text-primary text-xs font-mono"
+                            >
+                                {{ client.state.player.queue.length }}
+                            </span>
                         </span>
                     </template>
                     <template #default>
+                        <SkyDropdownItem @click="app.toggleModal('youtubeVideoSearcher')">
+                            <fa icon="plus" class="w-4 mr-2" />
+                            Add a video
+                        </SkyDropdownItem>
+                        <SkyDropdownItem
+                            :disabled="!client.state.player.queue.length"
+                            @click="client.state.player.queue.length && app.toggleModal('playerQueue')"
+                        >
+                            <fa icon="list" class="w-4 mr-2" />
+                            Queue
+                            <span
+                                v-if="client.state.player.queue.length"
+                                class="ml-1 px-1.5 rounded-full bg-primary/20 text-primary text-xs font-mono"
+                            >
+                                {{ client.state.player.queue.length }}
+                            </span>
+                        </SkyDropdownItem>
                         <SkyDropdownItem v-if="showPlayer" @click="syncSelf">
                             <fa icon="rotate" class="w-4 mr-2" />
                             Sync just me
