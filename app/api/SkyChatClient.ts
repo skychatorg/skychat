@@ -230,6 +230,7 @@ export class SkyChatClient extends EventEmitter {
     private _reconnectTimer: ReturnType<typeof setTimeout> | null = null;
     private _lastReceivedDate: number = Date.now();
     private _livenessTimer: ReturnType<typeof setInterval> | null = null;
+    private _shouldReconnect: boolean = true;
     private _messageQueue: Array<{ type: 'raw' | 'event'; data: any; eventName?: string }> = [];
     private _maxQueueSize: number = 100;
     private _isReconnecting: boolean = false;
@@ -378,6 +379,15 @@ export class SkyChatClient extends EventEmitter {
      * the browser can take minutes to fail a half-open TCP connection.
      */
     private _checkConnectionLiveness() {
+        // Kicked: the server does not want us back
+        if (!this._shouldReconnect) {
+            return;
+        }
+        // A handshake still in flight is not a dead connection. On a slow network it can legitimately
+        // take a while, and dropping it here would leave the client unable to connect at all.
+        if (this._websocket && this._websocket.readyState === WebSocket.CONNECTING) {
+            return;
+        }
         if (!this._websocket || this._websocket.readyState !== WebSocket.OPEN) {
             // Not connected: the close handler owns the reconnection, except when nothing is scheduled
             if (!this._reconnectTimer && !this._isReconnecting) {
@@ -772,6 +782,7 @@ export class SkyChatClient extends EventEmitter {
      * Connect to the server
      */
     connect() {
+        this._shouldReconnect = true;
         const socket = new WebSocket(this.url);
         this._websocket = socket;
         // Ignore anything coming from a socket we have already replaced, otherwise a discarded one
@@ -1098,6 +1109,7 @@ export class SkyChatClient extends EventEmitter {
         this.emit('update', this.state);
         // If kicked, do not try to auto re-connect
         if (event.code === 4403) {
+            this._shouldReconnect = false;
             return;
         }
         // Use exponential backoff for reconnection
