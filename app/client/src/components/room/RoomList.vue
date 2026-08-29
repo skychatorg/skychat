@@ -2,7 +2,8 @@
 import SingleRoom from '@/components/room/SingleRoom.vue';
 import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
-import { computed, ref, watch } from 'vue';
+import { useClientState } from '@/composables/useClientState.js';
+import { computed, ref } from 'vue';
 
 const app = useAppStore();
 const client = useClientStore();
@@ -16,10 +17,9 @@ defineProps({
 
 // Manage unread messages
 const hasUnread = ref(client.hasUnreadMessages());
-const updateHandler = () => {
+useClientState(() => {
     hasUnread.value = client.hasUnreadMessages();
-};
-watch(() => client.state, updateHandler, { deep: true });
+});
 
 const publicRooms = computed(() => (client.state.rooms || []).filter((r) => !r.isPrivate));
 const directRooms = computed(() => (client.state.rooms || []).filter((r) => r.isPrivate));

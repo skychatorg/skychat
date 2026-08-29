@@ -462,6 +462,9 @@ export class SkyChatClient extends EventEmitter {
         if (ownEntry) {
             ownEntry.user = this._user;
         }
+        // `connected-list-patch` and `message-seen` mutate the list in place; hand out a new array so
+        // consumers can tell it changed without deep-comparing it.
+        this._connectedList = [...this._connectedList];
         ({ messageIdToLastSeenUsers: this._messageIdToLastSeenUsers } = this._generateMessageIdToLastSeenUsers());
         ({ roomConnectedUsers: this._roomConnectedUsers } = this._generateRoomConnectedUsers());
         this._voiceChannelUsers = this._generateVoiceChannelUsers();
@@ -544,11 +547,12 @@ export class SkyChatClient extends EventEmitter {
     }
 
     private _onPoll(poll: SanitizedPoll) {
-        this._polls[poll.id] = poll;
+        this._polls = { ...this._polls, [poll.id]: poll };
         this.emit('update', this.state);
         if (poll.state === 'finished') {
             setTimeout(() => {
-                delete this._polls[poll.id];
+                const { [poll.id]: _removed, ...rest } = this._polls;
+                this._polls = rest;
                 this.emit('update', this.state);
             }, 10 * 1000);
         }
@@ -556,7 +560,7 @@ export class SkyChatClient extends EventEmitter {
 
     private _onCursor(cursor: { x: number; y: number; user: SanitizedUser }) {
         const identifier = cursor.user.username.toLowerCase();
-        this._cursors[identifier] = { date: new Date(), cursor };
+        this._cursors = { ...this._cursors, [identifier]: { date: new Date(), cursor } };
         // Clean up the cursors
         if (Math.random() < 0.05) {
             for (const identifier in this._cursors) {
@@ -629,9 +633,10 @@ export class SkyChatClient extends EventEmitter {
     /** Called by the store/VoiceClient to flip a user's speaking dot. */
     public setVoiceSpeaking(userId: number, speaking: boolean) {
         if (speaking) {
-            this._voiceSpeaking[userId] = true;
+            this._voiceSpeaking = { ...this._voiceSpeaking, [userId]: true };
         } else {
-            delete this._voiceSpeaking[userId];
+            const { [userId]: _removed, ...rest } = this._voiceSpeaking;
+            this._voiceSpeaking = rest;
         }
         this.emit('update', this.state);
     }

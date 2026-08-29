@@ -78,7 +78,14 @@ export const useClientStore = defineStore('client', {
                     this.messageSearch = { query: '', roomId: null, results: [] };
                     this.messageSearchLoading = false;
                 }
-                this.state = client.state;
+                // Copy field by field, and let Vue skip the fields whose value did not actually
+                // change. `client.state` is a fresh object on every server event, so assigning it
+                // wholesale would re-render every component reading any part of it, several times a
+                // second (one cursor move from one user is enough).
+                const next = client.state;
+                for (const key in next) {
+                    this.state[key] = next[key];
+                }
             });
 
             // Audio received
