@@ -12,6 +12,13 @@ const protocol = document.location.protocol === 'http:' ? 'ws' : 'wss';
 const url = protocol + '://' + document.location.host + '/api/ws';
 const client = new SkyChatClient(url);
 
+/**
+ * How many messages are kept rendered. A tab left open in a busy room accumulates them for hours and
+ * every one stays mounted, so the cost of rendering the room grows all session. Scrolling back up
+ * re-fetches older ones from the server.
+ */
+const MAX_RENDERED_MESSAGES = 100;
+
 // The voice engine holds non-reactive mediasoup objects; keep it at module scope (like `client`)
 // so Pinia never proxies it.
 let voiceClient = null;
@@ -281,6 +288,16 @@ export const useClientStore = defineStore('client', {
         join: function (roomId) {
             this.messages = [];
             client.join(roomId);
+        },
+
+        /**
+         * Drop the oldest messages. Only safe to call while the pannel is scrolled to the bottom,
+         * where the dropped ones are off-screen.
+         */
+        trimMessages: function () {
+            if (this.messages.length > MAX_RENDERED_MESSAGES) {
+                this.messages = this.messages.slice(-MAX_RENDERED_MESSAGES);
+            }
         },
 
         /**
