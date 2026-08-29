@@ -136,6 +136,21 @@ export class PlayerChannel {
      */
     public pausedCursor: number | null = null;
 
+    /**
+     * While a countdown resync is running, the wall-clock date (ms) at which everyone resumes.
+     * Broadcast to clients so they can count down against an absolute instant rather than ticks,
+     * which keeps the countdown immune to network latency. In memory only, like `pausedCursor`.
+     */
+    public resyncAt: number | null = null;
+
+    private resyncTimeout: ReturnType<typeof setTimeout> | null = null;
+
+    /**
+     * Last countdown resync, to rate limit it per channel. The generic command limiter keys on the
+     * caller's IP, which does not stop several people from interrupting the same channel in turn.
+     */
+    private lastResyncDate: Date | null = null;
+
     constructor(manager: PlayerChannelManager, id: number, name: string) {
         this.manager = manager;
         this.id = id;
@@ -167,6 +182,7 @@ export class PlayerChannel {
      * Play next video if possible
      */
     public playNext() {
+        this.cancelResync();
         // Save current media to history
         if (this.currentVideoInfo) {
             this.history.push(this.currentVideoInfo);
@@ -250,6 +266,7 @@ export class PlayerChannel {
         if (!this.currentVideoInfo || !this.currentVideoInfo.video.startTime) {
             throw new Error('No video playing currently');
         }
+        this.cancelResync();
         this.currentVideoInfo.video.startTime -= delta;
         // When paused, the frozen cursor is authoritative, so move it too. replay30/skip30 reach
         // moveCursor without clamping, so keep the frozen cursor inside [0, duration].
@@ -273,6 +290,7 @@ export class PlayerChannel {
         if (this.currentVideoInfo.video.duration === 0) {
             return;
         }
+        this.cancelResync();
         this.pausedCursor = this.getCursor();
         this.armPlayNextTimeout();
         this.sync();
@@ -286,10 +304,89 @@ export class PlayerChannel {
         if (!this.currentVideoInfo || this.pausedCursor === null) {
             return;
         }
+        this.cancelResync();
         this.currentVideoInfo.video.startTime = new Date().getTime() - this.pausedCursor;
         this.pausedCursor = null;
         this.armPlayNextTimeout();
         this.sync();
+    }
+
+    /**
+     * Abort a pending countdown resync. Called from every path that moves the player itself, so a
+     * scheduled resume can never fire after someone has seeked, skipped or paused in the meantime.
+     */
+    private cancelResync() {
+        if (this.resyncTimeout) {
+            clearTimeout(this.resyncTimeout);
+            this.resyncTimeout = null;
+        }
+        this.resyncAt = null;
+    }
+
+    /**
+     * Pause everyone, count down, then resume everyone together.
+     *
+     * The countdown is the point: it gives every client a window to seek and buffer before playback
+     * resumes, which is what makes the resync land. Jellyfin especially needs it, since it cannot
+     * seek and has to restart its transcode (see SEEK_DRIFT_MS in JellyfinPlayer.vue).
+     *
+     * Live media has no cursor to converge on, and `pause()` is a no-op for it, so it just gets an
+     * immediate forced sync instead of a countdown that would do nothing.
+     *
+     * @param durationMs How long to count down for
+     */
+    public startCountdownResync(durationMs: number) {
+        if (!this.currentVideoInfo) {
+            throw new Error('Nothing is playing');
+        }
+        this.lastResyncDate = new Date();
+
+        if (this.currentVideoInfo.video.duration === 0) {
+            this.forcedSync();
+            return;
+        }
+
+        // pause() cancels any running countdown and syncs the frozen cursor
+        this.pause();
+        this.resyncAt = Date.now() + durationMs;
+        this.resyncTimeout = setTimeout(() => {
+            this.resyncTimeout = null;
+            this.resyncAt = null;
+            this.resume();
+        }, durationMs);
+        // Tell everyone to reload/seek at the frozen cursor now, so they buffer during the countdown
+        this.forcedSync();
+    }
+
+    /**
+     * Whether a countdown resync may start right now
+     */
+    public canResync(cooldownMs: number): boolean {
+        return !this.lastResyncDate || Date.now() - this.lastResyncDate.getTime() >= cooldownMs;
+    }
+
+    /**
+     * Broadcast a forced sync to every connection in this channel. Goes through `syncConnections`
+     * rather than `sync()` because `forced` has to reach every tab, and because the payload is built
+     * per session (Jellyfin stream tokens are scoped to a user).
+     */
+    public forcedSync() {
+        this.syncConnections(
+            this.sessions.flatMap((session) => session.connections),
+            { forced: true },
+        );
+    }
+
+    /**
+     * Release resources held by this channel
+     */
+    public destroy() {
+        this.cancelResync();
+        if (this.playNextTimeout) {
+            clearTimeout(this.playNextTimeout);
+            this.playNextTimeout = null;
+        }
+        this.scheduler.destroy();
     }
 
     /**
@@ -421,6 +518,7 @@ export class PlayerChannel {
             queue: this.queue,
             cursor: this.getCursor(),
             paused: this.pausedCursor !== null,
+            resyncAt: this.resyncAt,
         };
     }
 
