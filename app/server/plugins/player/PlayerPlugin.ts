@@ -34,6 +34,14 @@ export class PlayerPlugin extends GlobalPlugin {
         jellyfin: new JellyfinFetcher(),
     };
 
+    /**
+     * How long everyone is paused before a countdown resync resumes them, and how often the channel
+     * will accept one.
+     */
+    static readonly RESYNC_COUNTDOWN_MS = 5 * 1000;
+
+    static readonly RESYNC_COOLDOWN_MS = 15 * 1000;
+
     static readonly commandName = 'player';
 
     static readonly commandAliases = [
@@ -77,8 +85,9 @@ export class PlayerPlugin extends GlobalPlugin {
         },
         playersync: {
             minCount: 0,
-            maxCount: 0,
+            maxCount: 1,
             maxCallsPer10Seconds: 10,
+            params: [{ name: 'all', pattern: /^all$/ }],
         },
         playersearch: {
             minCount: 2,
@@ -451,7 +460,26 @@ export class PlayerPlugin extends GlobalPlugin {
         if (!channel) {
             return;
         }
-        channel.syncConnections([connection], { forced: true });
+
+        // Plain `/playersync` only re-syncs the caller, so it stays open to anyone: it is the escape
+        // hatch for a viewer who has drifted but does not own the media.
+        if (param.trim() !== 'all') {
+            channel.syncConnections([connection], { forced: true });
+            return;
+        }
+
+        // `/playersync all` interrupts playback for the whole channel, so it takes the same
+        // permission as pausing or seeking.
+        if (channel.locked && !connection.session.isOP()) {
+            throw new Error('Channel is locked');
+        }
+        if (!channel.hasPlayerPermission(connection.session)) {
+            throw new Error('You are not authorized to modify the player right now');
+        }
+        if (!channel.canResync(PlayerPlugin.RESYNC_COOLDOWN_MS)) {
+            throw new Error('Everyone was just re-synchronized, please wait a moment');
+        }
+        channel.startCountdownResync(PlayerPlugin.RESYNC_COUNTDOWN_MS);
     }
 
     /**

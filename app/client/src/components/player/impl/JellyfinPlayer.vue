@@ -2,7 +2,7 @@
 import { computed, ref, watch, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import { useClientStore } from '@/stores/client';
 import { roomCursorMs } from '@/lib/player';
-import JellyfinTrackPicker from '@/components/player/impl/JellyfinTrackPicker.vue';
+import { useJellyfinTracks } from '@/composables/useJellyfinTracks.js';
 
 const client = useClientStore();
 
@@ -24,10 +24,8 @@ const loadedStartMs = ref(0);
 const SEEK_DRIFT_MS = 10_000;
 
 // Per-viewer preferences (persisted). 'off' = no subtitles, 'default' = pick server default/forced.
-const preferredSubLang = ref(localStorage.getItem('jf.subLang') || 'default');
-const preferredAudioLang = ref(localStorage.getItem('jf.audLang') || 'default');
-watch(preferredSubLang, (v) => localStorage.setItem('jf.subLang', v));
-watch(preferredAudioLang, (v) => localStorage.setItem('jf.audLang', v));
+// Owned by the composable so the picker, which now lives in the control strip, shares them
+const { preferredAudioLang, preferredSubLang } = useJellyfinTracks();
 
 const jf = computed(() => client.state.player.current?.video?.jellyfin || null);
 const currentVideo = computed(() => client.state.player.current?.video || null);
@@ -304,13 +302,6 @@ onBeforeUnmount(() => {
                 :default="sub.index === resolvedSubIndex"
             />
         </video>
-        <JellyfinTrackPicker
-            v-if="jf && !decodeError"
-            v-model:audio="preferredAudioLang"
-            v-model:sub="preferredSubLang"
-            :audio-tracks="jf.audioTracks"
-            :subtitle-tracks="jf.subtitleTracks"
-        />
     </div>
 </template>
 

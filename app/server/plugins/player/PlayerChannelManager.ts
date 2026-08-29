@@ -75,6 +75,7 @@ export class PlayerChannelManager extends EventEmitter {
             this.leaveChannel(session);
         }
 
+        channel.destroy();
         this.channels.splice(this.channels.indexOf(channel), 1);
         this.emit('channels-changed', this.channels);
     }

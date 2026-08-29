@@ -52,6 +52,9 @@ export type PlayerState = {
     // Set only on a manual "Synchronize" request (transient, overwritten by the next sync). Tells
     // players to reload at the room cursor regardless of their drift threshold.
     forced?: boolean;
+    // While a countdown resync is running, the absolute date (ms) at which everyone resumes. Clients
+    // count down towards it, so the countdown does not drift with network latency.
+    resyncAt?: number | null;
 };
 
 export type SkyChatClientState = {
