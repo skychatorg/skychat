@@ -95,8 +95,12 @@ const room = computed(() => {
     return r || null;
 });
 
+// Shared instance: the lastSeen map is rebuilt on every connected-list patch, and returning a fresh
+// array here would re-render every message in the room each time.
+const NO_USERS = [];
 const lastSeenUsers = computed(() => {
-    return (client.state.messageIdToLastSeenUsers[props.message.id] || []).slice(0, 6);
+    const users = client.state.messageIdToLastSeenUsers[props.message.id];
+    return users ? users.slice(0, 6) : NO_USERS;
 });
 
 const shouldShowUnlockForm = computed(() => {
