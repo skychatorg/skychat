@@ -162,6 +162,24 @@ export declare interface SkyChatClient {
 export class SkyChatClient extends EventEmitter {
     static readonly CURSOR_DECAY_DELAY = 10 * 1e3;
 
+    /**
+     * The server pings every 30s. If nothing at all arrives within this window the socket is dead,
+     * whatever `readyState` claims: a phone whose radio slept, or a network that changed under us,
+     * leaves a half-open socket that still reports OPEN.
+     */
+    static readonly CONNECTION_TIMEOUT = 45 * 1e3;
+
+    /**
+     * How often to check the above.
+     */
+    static readonly LIVENESS_CHECK_INTERVAL = 5 * 1e3;
+
+    /**
+     * Cap on the reconnection backoff. Kept short: the delay is dead time the user stares at after
+     * the network is already back.
+     */
+    static readonly MAX_RECONNECT_DELAY = 10 * 1e3;
+
     static readonly LOCAL_STORAGE_TOKEN_KEY = 'skychat-token';
     static readonly LOCAL_STORAGE_ROOM_ID = 'skychat-room-id';
 
@@ -210,6 +228,8 @@ export class SkyChatClient extends EventEmitter {
     // Connection resilience properties
     private _reconnectAttempts: number = 0;
     private _reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+    private _lastReceivedDate: number = Date.now();
+    private _livenessTimer: ReturnType<typeof setInterval> | null = null;
     private _messageQueue: Array<{ type: 'raw' | 'event'; data: any; eventName?: string }> = [];
     private _maxQueueSize: number = 100;
     private _isReconnecting: boolean = false;
@@ -246,6 +266,9 @@ export class SkyChatClient extends EventEmitter {
         // Messages
         this.on('message', this._onMessage.bind(this));
         this.on('messages', this._onMessages.bind(this));
+
+        // The server accepts commands only once the connection is authenticated
+        this.on('connection-accepted', this._replayMessageQueue.bind(this));
 
         // Room
         this.on('room-list', this._onRoomList.bind(this));
@@ -307,7 +330,7 @@ export class SkyChatClient extends EventEmitter {
         // Handle network online/offline events
         window.addEventListener('online', () => {
             console.info('Network online detected, attempting reconnection');
-            this._attemptReconnect(true);
+            this._forceReconnect();
         });
 
         window.addEventListener('offline', () => {
@@ -322,14 +345,51 @@ export class SkyChatClient extends EventEmitter {
         if (typeof document.addEventListener === 'function') {
             document.addEventListener('visibilitychange', () => {
                 if (document.visibilityState === 'visible') {
-                    // Check if we need to reconnect when page becomes visible
-                    if (!this._websocket || this._websocket.readyState !== WebSocket.OPEN) {
-                        console.info('Page visible with closed connection, attempting reconnection');
-                        this._attemptReconnect(true);
-                    }
+                    // Coming back to a backgrounded tab is exactly when the socket is likely to be
+                    // half-open, so check liveness rather than believing `readyState`.
+                    this._checkConnectionLiveness();
                 }
             });
         }
+
+        this._livenessTimer = setInterval(() => this._checkConnectionLiveness(), SkyChatClient.LIVENESS_CHECK_INTERVAL);
+    }
+
+    /**
+     * Drop the socket and reconnect straight away, whatever state it claims to be in.
+     */
+    private _forceReconnect() {
+        const socket = this._websocket;
+        if (socket) {
+            // Clear it first: its handlers check that it is still the current socket, so this stops
+            // the close we are about to cause from scheduling a second, delayed attempt.
+            this._websocket = null;
+            try {
+                socket.close();
+            } catch {
+                // Already gone, nothing to do
+            }
+        }
+        this._attemptReconnect(true);
+    }
+
+    /**
+     * A socket with nothing coming down it is dead even when it reports OPEN. Nothing else notices:
+     * the browser can take minutes to fail a half-open TCP connection.
+     */
+    private _checkConnectionLiveness() {
+        if (!this._websocket || this._websocket.readyState !== WebSocket.OPEN) {
+            // Not connected: the close handler owns the reconnection, except when nothing is scheduled
+            if (!this._reconnectTimer && !this._isReconnecting) {
+                this._forceReconnect();
+            }
+            return;
+        }
+        if (Date.now() - this._lastReceivedDate < SkyChatClient.CONNECTION_TIMEOUT) {
+            return;
+        }
+        console.warn('No data received from the server, assuming the connection is dead');
+        this._forceReconnect();
     }
 
     /**
@@ -347,8 +407,8 @@ export class SkyChatClient extends EventEmitter {
             return;
         }
 
-        // Exponential backoff with jitter: 1s, 2s, 4s, 8s, 16s, 30s max
-        const baseDelay = Math.min(1000 * Math.pow(2, this._reconnectAttempts), 30000);
+        // Exponential backoff with jitter: 1s, 2s, 4s, 8s, then capped
+        const baseDelay = Math.min(1000 * Math.pow(2, this._reconnectAttempts), SkyChatClient.MAX_RECONNECT_DELAY);
         const jitter = Math.random() * 1000; // Add up to 1s jitter
         const delay = baseDelay + jitter;
 
@@ -712,11 +772,19 @@ export class SkyChatClient extends EventEmitter {
      * Connect to the server
      */
     connect() {
-        this._websocket = new WebSocket(this.url);
-        this._websocket.addEventListener('open', this._onWebSocketConnect.bind(this));
-        this._websocket.addEventListener('message', this._onWebSocketMessage.bind(this));
-        this._websocket.addEventListener('close', this._onWebSocketClose.bind(this));
-        this._websocket.addEventListener('error', this._onWebSocketError.bind(this));
+        const socket = new WebSocket(this.url);
+        this._websocket = socket;
+        // Ignore anything coming from a socket we have already replaced, otherwise a discarded one
+        // closing late schedules a second reconnect and we end up with two live connections.
+        const ifCurrent = (handler: (event: any) => void) => (event: any) => {
+            if (this._websocket === socket) {
+                handler(event);
+            }
+        };
+        socket.addEventListener('open', ifCurrent(this._onWebSocketConnect.bind(this)));
+        socket.addEventListener('message', ifCurrent(this._onWebSocketMessage.bind(this)));
+        socket.addEventListener('close', ifCurrent(this._onWebSocketClose.bind(this)));
+        socket.addEventListener('error', ifCurrent(this._onWebSocketError.bind(this)));
         this.emit('update', this.state);
     }
 
@@ -922,6 +990,7 @@ export class SkyChatClient extends EventEmitter {
      */
     private _onWebSocketConnect() {
         // Reset reconnection state
+        this._lastReceivedDate = Date.now();
         const wasReconnecting = this._isReconnecting;
         this._reconnectAttempts = 0;
         this._isReconnecting = false;
@@ -941,9 +1010,9 @@ export class SkyChatClient extends EventEmitter {
             this.emit('reconnected');
         }
 
-        // Replay queued messages
-        this._replayMessageQueue();
-
+        // Queued messages are replayed on `connection-accepted`, not here: the server only starts
+        // reading commands once the socket is authenticated, so anything sent right after the auth
+        // frame is dropped on the floor.
         this.emit('update', this.state);
     }
 
@@ -973,6 +1042,8 @@ export class SkyChatClient extends EventEmitter {
      * @param message
      */
     private async _onWebSocketMessage(message: any) {
+        // Any frame proves the socket is alive, including the server's periodic ping
+        this._lastReceivedDate = Date.now();
         let messageData = message.data;
         if (typeof Buffer !== 'undefined' && message.data.constructor === Buffer) {
             messageData = new Blob([message.data]);
@@ -1034,7 +1105,9 @@ export class SkyChatClient extends EventEmitter {
     }
 
     private _onWebSocketError(event: WebSocket.ErrorEvent) {
-        console.warn(`WebSocket error: ${event.message}`);
-        this.emit('error', event.message);
+        // Browsers fire a bare Event here with no `message`, so this used to surface one empty red
+        // toast per failed attempt. The close that follows drives the reconnect, and the connection
+        // state is already in the header, so there is nothing to tell the user here.
+        console.warn('WebSocket error', event?.message ?? '');
     }
 }

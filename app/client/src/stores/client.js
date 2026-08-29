@@ -168,12 +168,16 @@ export const useClientStore = defineStore('client', {
             });
 
             client.on('info', (info) => {
-                const toast = useToast();
-                toast.info(info);
+                if (String(info ?? '').trim()) {
+                    useToast().info(info);
+                }
             });
             client.on('error', (error) => {
-                const toast = useToast();
-                toast.error(error);
+                // Never render an empty toast: a red box with no text tells the user nothing
+                const message = typeof error === 'string' ? error : error?.message ?? '';
+                if (message.trim()) {
+                    useToast().error(message);
+                }
                 this.messageSearchLoading = false;
             });
             client.on('discord-link', (url) => {
