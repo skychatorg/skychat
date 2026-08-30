@@ -21,6 +21,15 @@ jobs:
                   cache: 'npm'
             - run: npm ci --ignore-scripts
             - run: npm run setup
-            - run: echo $USER; id -u $USER; id -g $USER
-            - run: cp .github/workflows/.env.github .env
+            # The containers bind-mount directories `npm run setup` created as the runner user, but
+            # .env.github hard-codes uid/gid 1000 and the runner is 1001. Postgres then cannot chown
+            # its data directory and exits during initdb. Take the uid/gid from the runner instead.
+            - run: |
+                  cp .github/workflows/.env.github .env
+                  sed -i "s/^DOCKER_UID=.*/DOCKER_UID=\"$(id -u)\"/" .env
+                  sed -i "s/^DOCKER_GID=.*/DOCKER_GID=\"$(id -g)\"/" .env
+                  grep -E '^DOCKER_(UID|GID)=' .env
             - run: docker compose up -d
+            - name: Show container state on failure
+              if: failure()
+              run: docker compose ps -a && docker compose logs --tail=50
