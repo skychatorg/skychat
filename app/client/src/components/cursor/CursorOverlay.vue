@@ -1,9 +1,17 @@
 <script setup>
 import UserMiniAvatar from '@/components/user/UserMiniAvatar.vue';
+import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
 import { computed, onMounted, ref } from 'vue';
 
+const app = useAppStore();
 const client = useClientStore();
+
+// In cinema mode the video is the point, and other people's cursors drifting across it are just
+// noise. We keep sending our own position, so viewers who are not in cinema mode still see us.
+const hideCursors = computed(
+    () => app.playerMode.enabled && app.playerMode.size === 'cinema' && app.isDesktop && Boolean(client.state.player.current),
+);
 
 const CURSOR_POSITION_DELAY_MS = 150;
 
@@ -86,7 +94,7 @@ const isChristmas = computed(() => {
 </script>
 
 <template>
-    <div class="pointer-events-none fixed opacity-25 z-10">
+    <div v-if="!hideCursors" class="pointer-events-none fixed opacity-25 z-10">
         <div
             v-for="entry in cursorList"
             :key="entry.cursor.user.id"

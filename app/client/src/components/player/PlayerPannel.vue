@@ -18,8 +18,15 @@ const showPlayer = computed(() => {
     return client.state.player.current && app.playerMode.enabled;
 });
 
+const cinema = computed(() => app.playerMode.size === 'cinema' && app.isDesktop);
+
 const playerHeightCss = computed(() => {
     if (!showPlayer.value) {
+        return 'auto';
+    }
+    // Cinema mode owns the whole window, so the video simply takes whatever the flex row leaves
+    // after the control strip — no magic reservation for chat chrome that is not on screen.
+    if (cinema.value) {
         return 'auto';
     }
     return {
@@ -80,9 +87,9 @@ const syncSelf = () => client.sendMessage('/playersync');
 </script>
 
 <template>
-    <div class="strip-host group relative w-full flex flex-col">
+    <div class="strip-host group relative w-full flex flex-col" :class="cinema ? 'h-full min-h-0' : ''">
         <!-- Player content -->
-        <div class="pannel-content relative w-full overflow-hidden bg-black">
+        <div class="pannel-content relative w-full overflow-hidden bg-black" :class="cinema ? 'flex-1 min-h-0' : ''">
             <MediaPlayer v-if="showPlayer" class="player w-full h-full" />
 
             <!-- Hidden but something is playing -->
@@ -199,10 +206,20 @@ const syncSelf = () => client.sendMessage('/playersync');
             <!-- Player size. These used to float over the video, where they covered the embed's own
                  controls (YouTube's quality/subtitle gear, its fullscreen button). -->
             <div v-if="showPlayer" class="strip-group hairline">
-                <button class="strip-btn" title="Shrink player" :disabled="app.playerMode.size === 'xs'" @click="app.shrinkPlayer">
+                <button
+                    class="strip-btn"
+                    :title="app.playerMode.size === 'cinema' ? 'Leave cinema mode' : 'Shrink player'"
+                    :disabled="app.playerMode.size === 'xs'"
+                    @click="app.shrinkPlayer"
+                >
                     <fa icon="compress" />
                 </button>
-                <button class="strip-btn" title="Expand player" :disabled="app.playerMode.size === 'lg'" @click="app.expandPlayer">
+                <button
+                    class="strip-btn"
+                    :title="app.playerMode.size === 'lg' && app.isDesktop ? 'Enter cinema mode' : 'Expand player'"
+                    :disabled="app.playerMode.size === 'cinema' || (app.playerMode.size === 'lg' && !app.isDesktop)"
+                    @click="app.expandPlayer"
+                >
                     <fa icon="expand" />
                 </button>
             </div>

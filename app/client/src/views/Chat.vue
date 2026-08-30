@@ -24,6 +24,12 @@ const canSearchMessages = useUserRight('minRightForMessageHistory', -1);
 
 const currentRoomName = computed(() => roomName(client.state.currentRoom, client.state.user.username) || 'this room');
 
+// Cinema mode is a layout, not a size: the video takes the window and chat is reduced to a narrow
+// column of messages beside it. Everything else (rooms, users, search, polls) is dropped.
+const cinema = computed(
+    () => app.playerMode.size === 'cinema' && app.playerMode.enabled && app.isDesktop && Boolean(client.state.player.current),
+);
+
 const runSearch = () => {
     const sanitizedQuery = query.value.trim();
     if (!sanitizedQuery) {
@@ -39,7 +45,27 @@ const clearSearch = () => {
 </script>
 
 <template>
-    <div class="chat-view relative h-0 flex flex-row grow">
+    <!-- Cinema mode: a full-window layout of its own. Deliberately not native fullscreen — dropdowns,
+         tooltips and toasts portal to <body> and would not render inside a fullscreened element. -->
+    <div v-if="cinema" class="cinema fixed inset-0 z-40 flex flex-row bg-black">
+        <div class="group relative flex-1 min-w-0 flex flex-col justify-center bg-black">
+            <PlayerPannel />
+            <button
+                class="absolute top-3 right-3 z-10 px-3 py-1.5 rounded-lg text-sm text-white/80 bg-black/50 hover:bg-black/70 opacity-0 group-hover:opacity-100 transition"
+                title="Leave cinema mode (Esc)"
+                @click="app.exitCinemaMode()"
+            >
+                <fa icon="compress" class="mr-1.5" />
+                Exit
+            </button>
+        </div>
+        <aside class="cinema-chat h-full flex flex-col shrink-0 hairline" :style="{ background: 'var(--surface)' }">
+            <MessagePannel class="grow min-h-0" />
+            <NewMessageForm />
+        </aside>
+    </div>
+
+    <div v-else class="chat-view relative h-0 flex flex-row grow">
         <!-- Left column -->
         <aside
             class="h-full flex flex-col w-full lg:flex lg:w-[var(--page-col-left-width)] hairline backdrop-blur-xl"
@@ -117,6 +143,11 @@ const clearSearch = () => {
 </template>
 
 <style scoped>
+/* Cinema only renders on desktop (>= 1024px), so one fixed width is enough. */
+.cinema-chat {
+    width: 320px;
+}
+
 .chat-view {
     width: 100%;
     max-width: var(--page-max-width);

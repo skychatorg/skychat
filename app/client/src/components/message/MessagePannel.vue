@@ -2,7 +2,7 @@
 import SingleMessage from '@/components/message/SingleMessage.vue';
 import { roomName } from '@/lib/roomName.js';
 import { useClientStore } from '@/stores/client';
-import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue';
+import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 
 const client = useClientStore();
 
@@ -23,8 +23,15 @@ const scrollState = reactive({
     scrolling: false,
 });
 
+// Returns null when the pannel is gone: the scroll helpers run from nextTick and from a
+// ResizeObserver, both of which can fire after the component was torn down (switching in or out of
+// cinema mode swaps the whole layout).
 const distanceToBottom = function () {
-    return messagePannel.value.scrollHeight - messagePannel.value.offsetHeight - messagePannel.value.scrollTop;
+    const el = messagePannel.value;
+    if (!el) {
+        return null;
+    }
+    return el.scrollHeight - el.offsetHeight - el.scrollTop;
 };
 
 const scrollToBottomIfAutoScroll = function () {
@@ -34,13 +41,23 @@ const scrollToBottomIfAutoScroll = function () {
     }
     // We need to wait 1 tick for the message to be rendered
     nextTick(() => {
-        scrollToBottom(distanceToBottom() > 200);
+        const distance = distanceToBottom();
+        if (distance === null) {
+            return;
+        }
+        scrollToBottom(distance > 200);
     });
 };
 
 // Detect when the pannel size changes to scroll to bottom
+let resizeObserver = null;
 onMounted(() => {
-    new ResizeObserver(scrollToBottomIfAutoScroll).observe(messagePannel.value);
+    resizeObserver = new ResizeObserver(scrollToBottomIfAutoScroll);
+    resizeObserver.observe(messagePannel.value);
+});
+onUnmounted(() => {
+    resizeObserver?.disconnect();
+    resizeObserver = null;
 });
 
 const scrollToBottom = (immediate) => {
@@ -48,7 +65,8 @@ const scrollToBottom = (immediate) => {
     if (scrollState.scrolling) {
         return;
     }
-    if (distanceToBottom() <= 0) {
+    const distance = distanceToBottom();
+    if (distance === null || distance <= 0) {
         return;
     }
     // Set scrolling state to true
@@ -59,6 +77,11 @@ const scrollToBottom = (immediate) => {
         scrollState.smooth = false;
         // Wait for smooth scroll to be disabled
         nextTick(() => {
+            if (!messagePannel.value) {
+                scrollState.smooth = true;
+                scrollState.scrolling = false;
+                return;
+            }
             // Scroll directly to bottom
             messagePannel.value.scrollTop = messagePannel.value.scrollHeight;
             // Re-enable smooth scroll
@@ -69,13 +92,14 @@ const scrollToBottom = (immediate) => {
     } else {
         // Smoothly scroll to bottom
         messagePannel.value.scrollTop = messagePannel.value.scrollHeight;
+
         // In a few ms, check if still need to scroll
         setTimeout(() => {
             // Update state
             scrollState.scrolling = false;
             // If still need to scroll
             const distance = distanceToBottom();
-            if (distance > 1) {
+            if (distance !== null && distance > 1) {
                 scrollToBottom(distance > 200);
             }
         }, 100);
@@ -90,9 +114,12 @@ watch(
             return;
         }
         scrollToBottomIfAutoScroll();
-        if (!scrollState.auto && messagePannel.value.scrollTop === 0 && !isSearchMode.value) {
+        if (!scrollState.auto && messagePannel.value?.scrollTop === 0 && !isSearchMode.value) {
             const previousScrollHeight = messagePannel.value.scrollHeight;
             nextTick(() => {
+                if (!messagePannel.value) {
+                    return;
+                }
                 const newElementsHeight = messagePannel.value.scrollHeight - previousScrollHeight;
                 // Set scroll position back to where it was before appending elements
                 messagePannel.value.scrollTop = newElementsHeight;
