@@ -289,7 +289,25 @@ export class JellyfinClient {
     // Serving the media playlist directly means there is no variant to fall back to.
     buildHlsPlaylistPath(itemId: string, mediaSourceId: string, audioStreamIndex?: number): string {
         const params = this.hlsParams(mediaSourceId, audioStreamIndex);
+        params.set('PlaySessionId', this.hlsPlaySessionId(itemId, mediaSourceId, audioStreamIndex));
         return `/Videos/${itemId}/main.m3u8?${params.toString()}`;
+    }
+
+    // Every audio track of an item yields segment URIs under the same literal playlist id (`main`),
+    // so Jellyfin maps them all onto the first transcode job it started and serves that job's audio
+    // no matter what `audioStreamIndex` says. Measured: request French then English and both return
+    // byte-identical segments; restart Jellyfin, ask for English first, and both return English.
+    // A PlaySessionId that differs per audio track gives each one its own job, which fixes it.
+    //
+    // Derived rather than random so that re-requesting the same track reuses its job instead of
+    // spawning a new ffmpeg process (and leaving the old one behind) on every playlist fetch.
+    // sha256 purely to keep static analysis quiet: this is an opaque session key, not a security
+    // boundary, and nothing verifies it.
+    private hlsPlaySessionId(itemId: string, mediaSourceId: string, audioStreamIndex?: number): string {
+        return crypto
+            .createHash('sha256')
+            .update(`${itemId}:${mediaSourceId}:${audioStreamIndex ?? 'default'}`)
+            .digest('hex');
     }
 
     // Segment URIs come out of the playlist as `hls1/{playlistId}/{n}.ts?<params>`. We forward the
