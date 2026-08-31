@@ -31,7 +31,7 @@
         "file-type": "^20.5.0",
         "hark": "^1.2.3",
         "isomorphic-ws": "^5.0.0",
-        "jsondiffpatch": "^0.6.0",
+        "jsondiffpatch": "^0.7.6",
         "mailgun.js": "^12.0.2",
         "mediasoup": "^3.20.5",
         "mediasoup-client": "^3.20.0",
