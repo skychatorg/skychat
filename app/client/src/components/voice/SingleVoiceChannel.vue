@@ -39,9 +39,10 @@ const onClick = () => {
         <template #trigger>
             <button
                 class="relative w-full flex items-center justify-center py-2 rounded-lg cursor-pointer transition"
-                :class="
-                    isCurrent ? 'bg-primary/15 ring-1 ring-primary/40 hover:bg-primary/20' : 'bg-white/[.03] hairline hover:bg-white/[.06]'
-                "
+                :class="[
+                    isCurrent ? 'bg-primary/15 ring-1 ring-primary/40 hover:bg-primary/20' : 'bg-white/[.03] hairline hover:bg-white/[.06]',
+                    isEmpty ? '' : 'live-sweep live-sweep-voice',
+                ]"
                 @click="onClick"
             >
                 <div v-if="isCurrent" class="absolute left-0 top-2 bottom-2 w-[2px] rounded-r bg-primary" />
@@ -60,7 +61,10 @@ const onClick = () => {
     <button
         v-else
         class="relative w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left transition cursor-pointer"
-        :class="isCurrent ? 'bg-primary/15 ring-1 ring-primary/40 hover:bg-primary/20' : 'bg-white/[.03] hairline hover:bg-white/[.06]'"
+        :class="[
+            isCurrent ? 'bg-primary/15 ring-1 ring-primary/40 hover:bg-primary/20' : 'bg-white/[.03] hairline hover:bg-white/[.06]',
+            isEmpty ? '' : 'live-sweep live-sweep-voice',
+        ]"
         @click="onClick"
     >
         <div v-if="isCurrent" class="absolute left-0 top-2 bottom-2 w-[2px] rounded-r bg-primary" />
