@@ -28,14 +28,14 @@ const selected = computed(() => {
     return client.state.currentRoomId === props.room.id;
 });
 
-const hasUnread = computed(() => {
-    return !selected.value && client.hasAccessToRoom(props.room.id) && client.hasUnreadMessages(props.room.id);
-});
-
+const unread = ref(false);
 const isMuted = ref(false);
 useClientState(() => {
+    unread.value = client.hasAccessToRoom(props.room.id) && client.hasUnreadMessages(props.room.id);
     isMuted.value = apiClient.plugins.mute.isRoomMuted(props.room.id);
 });
+
+const hasUnread = computed(() => !selected.value && unread.value);
 
 const isProtected = computed(() => {
     return Boolean(props.room.plugins?.roomprotect);
@@ -58,7 +58,7 @@ const joinRoom = () => {
 const markAsRead = () => {
     const lastMessageId = props.room.lastReceivedMessageId;
     if (lastMessageId) {
-        client.sendMessage(`/lastseen ${lastMessageId}`);
+        client.notifySeenMessage(lastMessageId, props.room.id);
     }
 };
 

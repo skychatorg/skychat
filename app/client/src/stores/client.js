@@ -338,8 +338,8 @@ export const useClientStore = defineStore('client', {
         sendCursorPosition: (x, y) => {
             client.sendCursorPosition(x, y);
         },
-        notifySeenMessage(messageId) {
-            client.notifySeenMessage(messageId);
+        notifySeenMessage(messageId, roomId) {
+            client.notifySeenMessage(messageId, roomId);
         },
         hasAccessToRoom(roomId) {
             return client.hasAccessToRoom(roomId);
