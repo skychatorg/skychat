@@ -275,6 +275,62 @@ export class JellyfinClient {
         return `/Videos/${itemId}/stream.mp4?${params.toString()}`;
     }
 
+    // The HLS variant of the above, and the reason it exists: `stream.mp4` is a live progressive
+    // response with no Content-Length and no range support, so the browser refuses to buffer more
+    // than a couple of seconds of it. At 70+ Mbps that is under 3 seconds of runway, and any hiccup
+    // (entering fullscreen, say) drains it into a visible freeze. Jellyfin's HLS output is a VOD
+    // playlist with every segment enumerated, which lets the player buffer as far ahead as we ask.
+    //
+    // Same codec params as the remux above, so the CPU cost is identical.
+    //
+    // We request `main.m3u8` (the media playlist) rather than `master.m3u8` deliberately: master
+    // advertises both an HEVC stream-copy and an H.264 transcode, and with no hardware acceleration
+    // on the server a viewer silently falling back to H.264 would start a software 4K transcode.
+    // Serving the media playlist directly means there is no variant to fall back to.
+    buildHlsPlaylistPath(itemId: string, mediaSourceId: string, audioStreamIndex?: number): string {
+        const params = this.hlsParams(mediaSourceId, audioStreamIndex);
+        params.set('PlaySessionId', this.hlsPlaySessionId(itemId, mediaSourceId, audioStreamIndex));
+        return `/Videos/${itemId}/main.m3u8?${params.toString()}`;
+    }
+
+    // Every audio track of an item yields segment URIs under the same literal playlist id (`main`),
+    // so Jellyfin maps them all onto the first transcode job it started and serves that job's audio
+    // no matter what `audioStreamIndex` says. Measured: request French then English and both return
+    // byte-identical segments; restart Jellyfin, ask for English first, and both return English.
+    // A PlaySessionId that differs per audio track gives each one its own job, which fixes it.
+    //
+    // Derived rather than random so that re-requesting the same track reuses its job instead of
+    // spawning a new ffmpeg process (and leaving the old one behind) on every playlist fetch.
+    // sha256 purely to keep static analysis quiet: this is an opaque session key, not a security
+    // boundary, and nothing verifies it.
+    private hlsPlaySessionId(itemId: string, mediaSourceId: string, audioStreamIndex?: number): string {
+        return crypto
+            .createHash('sha256')
+            .update(`${itemId}:${mediaSourceId}:${audioStreamIndex ?? 'default'}`)
+            .digest('hex');
+    }
+
+    // Segment URIs come out of the playlist as `hls1/{playlistId}/{n}.ts?<params>`. We forward the
+    // playlist's own query verbatim rather than rebuilding it: it carries runtimeTicks and
+    // actualSegmentLengthTicks, which identify the segment.
+    buildHlsSegmentPath(itemId: string, playlistId: string, segment: string, query: string): string {
+        return `/Videos/${itemId}/hls1/${playlistId}/${segment}${query ? `?${query}` : ''}`;
+    }
+
+    private hlsParams(mediaSourceId: string, audioStreamIndex?: number): URLSearchParams {
+        const params = new URLSearchParams({
+            mediaSourceId,
+            videoCodec: 'copy',
+            audioCodec: 'aac',
+            audioChannels: '2',
+            audioBitRate: '192000',
+        });
+        if (typeof audioStreamIndex === 'number') {
+            params.set('audioStreamIndex', String(audioStreamIndex));
+        }
+        return params;
+    }
+
     buildSubtitleVttPath(itemId: string, mediaSourceId: string, streamIndex: number, startTimeTicks?: number): string {
         // /Videos/{itemId}/{mediaSourceId}/Subtitles/{streamIndex}/{startPositionTicks}/Stream.vtt
         // Jellyfin rebases cue timestamps to startPositionTicks (relative to that origin), so this

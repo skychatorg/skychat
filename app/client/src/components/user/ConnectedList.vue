@@ -39,6 +39,7 @@ const activeEntries = computed(() => (client.state.connectedList || []).filter((
 const awayEntries = computed(() => (client.state.connectedList || []).filter((entry) => Boolean(entry.deadSinceTime)));
 
 const canManageStickers = useUserRight('minRightForStickerManagement');
+const canManageHighlights = useUserRight('minRightForHighlightManagement');
 </script>
 
 <template>
@@ -176,6 +177,16 @@ const canManageStickers = useUserRight('minRightForStickerManagement');
             >
                 <fa icon="image" />
                 <span v-if="!compact">Manage stickers</span>
+            </button>
+            <button
+                v-if="canManageHighlights && client.state.highlights !== null"
+                class="h-10 flex items-center justify-center gap-1.5 rounded-lg hairline bg-white/[.03] hover:bg-white/[.07] text-sm"
+                :class="compact ? 'w-full' : 'col-span-2'"
+                title="Manage highlighted words"
+                @click="app.toggleModal('manageHighlights')"
+            >
+                <fa icon="highlighter" />
+                <span v-if="!compact">Highlighted words</span>
             </button>
         </div>
     </div>

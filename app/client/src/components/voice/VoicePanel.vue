@@ -58,12 +58,12 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="strip px-3 py-2 hairline" :style="{ background: 'var(--surface-2)' }">
+    <div class="strip strip-host px-3 py-2 hairline" :style="{ background: 'var(--surface-2)' }">
         <!-- Leave -->
         <div class="strip-group hairline">
             <button class="strip-btn text-danger" title="Leave voice" @click="voice.leave()">
                 <fa icon="phone-slash" />
-                <span class="hidden sm:inline">Leave</span>
+                <span class="strip-label">Leave</span>
             </button>
         </div>
 
@@ -85,7 +85,7 @@ onUnmounted(() => {
                 @click="app.setVoiceInputMode(app.voiceSettings.inputMode === 'ptt' ? 'open' : 'ptt')"
             >
                 <fa :icon="app.voiceSettings.inputMode === 'ptt' ? 'toggle-on' : 'toggle-off'" />
-                <span class="hidden sm:inline">PTT</span>
+                <span class="strip-label">PTT</span>
             </button>
         </div>
 
@@ -113,60 +113,4 @@ onUnmounted(() => {
     </div>
 </template>
 
-<style scoped>
-/* Action strip: a single non-wrapping row of segmented control clusters (copied from PlayerPannel). */
-.strip {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    flex-wrap: nowrap;
-}
-
-.strip-group {
-    display: inline-flex;
-    align-items: center;
-    border-radius: 0.375rem;
-    background: rgba(255, 255, 255, 0.05);
-    overflow: hidden;
-}
-
-.strip-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    padding: 0.3rem 0.6rem;
-    font-size: 0.875rem;
-    line-height: 1.25rem;
-    color: rgba(255, 255, 255, 0.8);
-    white-space: nowrap;
-    transition:
-        background 0.15s ease,
-        color 0.15s ease;
-}
-
-.strip-btn + .strip-btn {
-    box-shadow: inset 1px 0 0 rgba(255, 255, 255, 0.07);
-}
-
-.strip-btn:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.08);
-    color: #fff;
-}
-
-.strip-btn:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-}
-
-/* The device picker is a native <select>. Its dropdown popup inherits the transparent
-   background and light text, which renders the options unreadable (light-on-white) when opened.
-   color-scheme: dark makes the browser paint the native popup with a dark theme; the explicit
-   option colors are a fallback for engines that ignore color-scheme. */
-select {
-    color-scheme: dark;
-}
-select option {
-    background-color: rgb(var(--color-skygray-darker));
-    color: rgb(var(--color-skygray-white));
-}
-</style>
+<style scoped></style>

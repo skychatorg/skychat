@@ -3,6 +3,7 @@
 @import './skychat.css';
 @import './util.css';
 @import './lib.css';
+@import './strip.css';
 
 @tailwind base;
 @tailwind components;

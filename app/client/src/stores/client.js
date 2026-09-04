@@ -12,6 +12,13 @@ const protocol = document.location.protocol === 'http:' ? 'ws' : 'wss';
 const url = protocol + '://' + document.location.host + '/api/ws';
 const client = new SkyChatClient(url);
 
+/**
+ * How many messages are kept rendered. A tab left open in a busy room accumulates them for hours and
+ * every one stays mounted, so the cost of rendering the room grows all session. Scrolling back up
+ * re-fetches older ones from the server.
+ */
+const MAX_RENDERED_MESSAGES = 100;
+
 // The voice engine holds non-reactive mediasoup objects; keep it at module scope (like `client`)
 // so Pinia never proxies it.
 let voiceClient = null;
@@ -72,13 +79,20 @@ export const useClientStore = defineStore('client', {
             // On global client state changed
             client.on('update', () => {
                 // Room id changed
-                if (this.state.roomId !== client.state.roomId) {
+                if (this.state.currentRoomId !== client.state.currentRoomId) {
                     // Clear messages
                     this.messages = [];
                     this.messageSearch = { query: '', roomId: null, results: [] };
                     this.messageSearchLoading = false;
                 }
-                this.state = client.state;
+                // Copy field by field, and let Vue skip the fields whose value did not actually
+                // change. `client.state` is a fresh object on every server event, so assigning it
+                // wholesale would re-render every component reading any part of it, several times a
+                // second (one cursor move from one user is enough).
+                const next = client.state;
+                for (const key in next) {
+                    this.state[key] = next[key];
+                }
             });
 
             // Audio received
@@ -109,6 +123,10 @@ export const useClientStore = defineStore('client', {
 
             // On new messages
             client.on('messages', async (messages) => {
+                // Drop history of a room we already left (rapid switching)
+                if (messages.length > 0 && messages[0].room !== client.state.currentRoomId) {
+                    return;
+                }
                 // Filter messages we already have, if any
                 messages = messages.filter((message) => message.id === 0 || !this.messages.find((m) => m.id === message.id));
                 // Prepend new messages (we always get previous messages in this event)
@@ -150,12 +168,16 @@ export const useClientStore = defineStore('client', {
             });
 
             client.on('info', (info) => {
-                const toast = useToast();
-                toast.info(info);
+                if (String(info ?? '').trim()) {
+                    useToast().info(info);
+                }
             });
             client.on('error', (error) => {
-                const toast = useToast();
-                toast.error(error);
+                // Never render an empty toast: a red box with no text tells the user nothing
+                const message = typeof error === 'string' ? error : error?.message ?? '';
+                if (message.trim()) {
+                    useToast().error(message);
+                }
                 this.messageSearchLoading = false;
             });
             client.on('discord-link', (url) => {
@@ -273,6 +295,16 @@ export const useClientStore = defineStore('client', {
         },
 
         /**
+         * Drop the oldest messages. Only safe to call while the pannel is scrolled to the bottom,
+         * where the dropped ones are off-screen.
+         */
+        trimMessages: function () {
+            if (this.messages.length > MAX_RENDERED_MESSAGES) {
+                this.messages = this.messages.slice(-MAX_RENDERED_MESSAGES);
+            }
+        },
+
+        /**
          * Load previous messages
          */
         loadPreviousMessages: function () {
@@ -306,8 +338,8 @@ export const useClientStore = defineStore('client', {
         sendCursorPosition: (x, y) => {
             client.sendCursorPosition(x, y);
         },
-        notifySeenMessage(messageId) {
-            client.notifySeenMessage(messageId);
+        notifySeenMessage(messageId, roomId) {
+            client.notifySeenMessage(messageId, roomId);
         },
         hasAccessToRoom(roomId) {
             return client.hasAccessToRoom(roomId);
@@ -323,7 +355,7 @@ export const useClientStore = defineStore('client', {
             this.messageSearchLoading = true;
             this.messageSearch = {
                 query: sanitizedQuery,
-                roomId: this.state.roomId,
+                roomId: this.state.currentRoomId,
                 results: [],
             };
             client.sendMessage(`/messagesearch ${sanitizedQuery}`);

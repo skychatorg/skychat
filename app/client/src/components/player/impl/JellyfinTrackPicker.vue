@@ -41,16 +41,11 @@ const subtitleOptions = computed(() => {
 </script>
 
 <template>
-    <!--
-        Sits inline with (just left of) the player's top-right icon row, and fades in on hover to
-        match it. right-40 clears the icon cluster (up to 4 × w-8 buttons + p-3 padding); max-w caps
-        each select so long track labels don't sprawl across the video.
-    -->
-    <div
-        class="absolute top-3 right-40 flex gap-2 text-xs opacity-0 transition pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto"
-    >
+    <!-- Rendered inside the player's control strip, never over the video: floating it there used to
+         cover the embed's own controls, and forced a hand-tuned offset to dodge the icon row. -->
+    <div class="strip-group hairline">
         <select
-            class="bg-black/60 text-white rounded px-2 py-1 outline-none max-w-40 truncate"
+            class="strip-btn bg-transparent outline-none max-w-32 truncate"
             :value="audio"
             title="Audio track"
             @change="emit('update:audio', $event.target.value)"
@@ -58,7 +53,7 @@ const subtitleOptions = computed(() => {
             <option v-for="opt in audioOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
         </select>
         <select
-            class="bg-black/60 text-white rounded px-2 py-1 outline-none max-w-40 truncate"
+            class="strip-btn bg-transparent outline-none max-w-32 truncate"
             :value="sub"
             title="Subtitle track"
             @change="emit('update:sub', $event.target.value)"

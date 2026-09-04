@@ -34,6 +34,14 @@ export class PlayerPlugin extends GlobalPlugin {
         jellyfin: new JellyfinFetcher(),
     };
 
+    /**
+     * How long everyone is paused before a countdown resync resumes them, and how often the channel
+     * will accept one.
+     */
+    static readonly RESYNC_COUNTDOWN_MS = 5 * 1000;
+
+    static readonly RESYNC_COOLDOWN_MS = 10 * 1000;
+
     static readonly commandName = 'player';
 
     static readonly commandAliases = [
@@ -55,7 +63,10 @@ export class PlayerPlugin extends GlobalPlugin {
         player: {
             minCount: 1,
             maxCount: 1,
-            maxCallsPer10Seconds: 10,
+            // Transport is cheap (an in-memory cursor move plus one broadcast) and gets tapped in
+            // bursts, e.g. skip30 several times to scrub forward. The limit is also per IP, so
+            // viewers sharing a connection share the budget.
+            maxCallsPer10Seconds: 60,
             params: [{ name: 'action', pattern: /^(replay30|skip30|list|skip|flush|pause|resume)$/ }],
         },
         playerchannelmanage: {
@@ -77,8 +88,9 @@ export class PlayerPlugin extends GlobalPlugin {
         },
         playersync: {
             minCount: 0,
-            maxCount: 0,
-            maxCallsPer10Seconds: 10,
+            maxCount: 1,
+            maxCallsPer10Seconds: 30,
+            params: [{ name: 'all', pattern: /^all$/ }],
         },
         playersearch: {
             minCount: 2,
@@ -104,7 +116,7 @@ export class PlayerPlugin extends GlobalPlugin {
             minCount: 1,
             maxCount: 1,
             coolDown: 100,
-            maxCallsPer10Seconds: 20,
+            maxCallsPer10Seconds: 60,
             params: [{ name: 'positionMs', pattern: /^\d{1,10}$/ }],
         },
         schedule: {
@@ -451,7 +463,26 @@ export class PlayerPlugin extends GlobalPlugin {
         if (!channel) {
             return;
         }
-        channel.syncConnections([connection]);
+
+        // Plain `/playersync` only re-syncs the caller, so it stays open to anyone: it is the escape
+        // hatch for a viewer who has drifted but does not own the media.
+        if (param.trim() !== 'all') {
+            channel.syncConnections([connection], { forced: true });
+            return;
+        }
+
+        // `/playersync all` interrupts playback for the whole channel, so it takes the same
+        // permission as pausing or seeking.
+        if (channel.locked && !connection.session.isOP()) {
+            throw new Error('Channel is locked');
+        }
+        if (!channel.hasPlayerPermission(connection.session)) {
+            throw new Error('You are not authorized to modify the player right now');
+        }
+        if (!channel.canResync(PlayerPlugin.RESYNC_COOLDOWN_MS)) {
+            throw new Error('Everyone was just re-synchronized, please wait a moment');
+        }
+        channel.startCountdownResync(PlayerPlugin.RESYNC_COUNTDOWN_MS);
     }
 
     /**

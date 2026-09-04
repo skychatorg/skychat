@@ -41,6 +41,7 @@ export const labels = {
     openProfile: () => 'Open profile',
     openGallery: () => 'Open gallery',
     manageStickers: () => 'Manage stickers',
+    manageHighlights: () => 'Manage highlighted words',
     changeMotto: () => 'Change motto…',
     changeColor: () => 'Change color…',
     pickColor: (name) => `Use color: ${name}`,

@@ -81,6 +81,10 @@ const banUser = () => {
     }
 };
 
+const openAvatar = () => {
+    window.open(props.entry.user.data.plugins.avatar, '_blank', 'noopener');
+};
+
 const copyUsername = () => {
     navigator.clipboard.writeText(props.entry.user.username);
 };
@@ -325,6 +329,10 @@ const isDisconnected = computed(() => props.entry.connectionCount === 0);
                                 <fa icon="ban" class="w-4 mr-2 text-danger" />
                                 Ban
                             </SkyDropdownItem>
+                            <SkyDropdownItem @click="openAvatar">
+                                <fa icon="image" class="w-4 mr-2" />
+                                Open avatar
+                            </SkyDropdownItem>
                             <SkyDropdownItem @click="copyUsername">
                                 <fa icon="copy" class="w-4 mr-2" />
                                 Copy username
@@ -373,6 +381,10 @@ const isDisconnected = computed(() => props.entry.connectionCount === 0);
         <SkyContextMenuItem v-if="canModerate" @select="banUser">
             <fa icon="ban" class="w-4 mr-2 text-danger" />
             Ban
+        </SkyContextMenuItem>
+        <SkyContextMenuItem @select="openAvatar">
+            <fa icon="image" class="w-4 mr-2" />
+            Open avatar
         </SkyContextMenuItem>
         <SkyContextMenuItem @select="copyUsername">
             <fa icon="copy" class="w-4 mr-2" />
