@@ -257,7 +257,7 @@ const onFileInputChange = async () => {
 /**
  * Whether the user has unread messages in any other rooms
  */
-const hasUnread = ref(client.hasUnreadMessages());
+const hasUnread = ref(false);
 useClientState(() => {
     hasUnread.value = client.hasUnreadMessages();
 });

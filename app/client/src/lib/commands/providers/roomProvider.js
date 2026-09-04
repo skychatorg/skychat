@@ -48,7 +48,7 @@ export function useRoomCommands() {
                     icon: 'circle-dot',
                     category: 'Rooms',
                     keywords: ['seen', 'unread'],
-                    run: () => client.sendMessage(`/lastseen ${room.lastReceivedMessageId}`),
+                    run: () => client.notifySeenMessage(room.lastReceivedMessageId, room.id),
                 });
             }
 

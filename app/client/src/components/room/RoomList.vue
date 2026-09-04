@@ -16,7 +16,7 @@ defineProps({
 });
 
 // Manage unread messages
-const hasUnread = ref(client.hasUnreadMessages());
+const hasUnread = ref(false);
 useClientState(() => {
     hasUnread.value = client.hasUnreadMessages();
 });

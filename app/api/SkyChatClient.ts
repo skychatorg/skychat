@@ -610,6 +610,9 @@ export class SkyChatClient extends EventEmitter {
             return;
         }
         entry.user.data.plugins.lastseen = messageSeen.data;
+        if (messageSeen.user === this._user.id) {
+            this._user = { ...this._user };
+        }
         this._updateConnectedListMeta();
         this.emit('update', this.state);
     }
@@ -810,11 +813,11 @@ export class SkyChatClient extends EventEmitter {
     }
 
     /**
-     * Send a last message seen notification
-     * @param messageId
+     * Send a last message seen notification. `roomId` is only needed to mark a room we are not
+     * currently in as read.
      */
-    notifySeenMessage(messageId: number) {
-        this.sendMessage(`/lastseen ${messageId}`);
+    notifySeenMessage(messageId: number, roomId?: number) {
+        this.sendMessage(`/lastseen ${messageId}` + (typeof roomId === 'number' ? ` ${roomId}` : ''));
     }
 
     /**
