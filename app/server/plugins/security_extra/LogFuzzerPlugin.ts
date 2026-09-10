@@ -10,6 +10,13 @@ export class LogFuzzerPlugin extends GlobalPlugin {
 
     static readonly FUZZ_COOLDOWN = Math.min(LogFuzzerPlugin.DURATION_BEFORE_FUZZ, 7 * 24 * 60 * 60 * 1000);
 
+    static readonly BATCH_SIZE = 5000;
+
+    /**
+     * Delay before the first tick, so a restart does not postpone fuzzing by a full cooldown
+     */
+    static readonly FIRST_TICK_DELAY = 60 * 1000;
+
     static readonly commandName = 'logfuzzer';
 
     readonly callable = false;
@@ -27,25 +34,18 @@ export class LogFuzzerPlugin extends GlobalPlugin {
         super(manager);
 
         this.loadStorage();
-        this.armTick(LogFuzzerPlugin.FUZZ_COOLDOWN);
+        this.armTick(LogFuzzerPlugin.FIRST_TICK_DELAY);
     }
 
     async run(): Promise<void> {
         throw new Error('Not implemented');
     }
 
+    /**
+     * Replace every letter and digit with a/A, keeping length, case and punctuation intact
+     */
     private fuzzContent(content: string) {
-        return content.replace(/(^| |,|\/|.)([a-z0-9àâçéèêëîïôûùüÿñæœ-]+)/gi, (m0, m1, m2) => {
-            let newStr = '';
-            for (const char of m2) {
-                if (char === char.toUpperCase()) {
-                    newStr += 'A';
-                } else {
-                    newStr += 'a';
-                }
-            }
-            return m1 + newStr;
-        });
+        return content.replace(/[\p{L}\p{N}]/gu, (char) => (char === char.toUpperCase() ? 'A' : 'a'));
     }
 
     private armTick(duration: number) {
@@ -54,21 +54,36 @@ export class LogFuzzerPlugin extends GlobalPlugin {
     }
 
     async tick(): Promise<void> {
-        const limitTimestamp = Math.floor(new Date().getTime() - LogFuzzerPlugin.DURATION_BEFORE_FUZZ);
-        Logging.info('Fuzzing messages before', new Date(limitTimestamp).toISOString());
-        const sqlQuery = SQL`select id, content from messages where id > ${this.storage.lastId} and date <= ${new Date(
-            limitTimestamp,
-        ).toISOString()} limit 5000`;
+        const limitDate = new Date(new Date().getTime() - LogFuzzerPlugin.DURATION_BEFORE_FUZZ).toISOString();
+        Logging.info('Fuzzing messages before', limitDate);
+        try {
+            let total = 0;
+            let count = 0;
+            do {
+                count = await this.fuzzBatch(limitDate);
+                total += count;
+            } while (count === LogFuzzerPlugin.BATCH_SIZE);
+            Logging.info('Fuzzed', total, 'messages');
+        } catch (error) {
+            Logging.error('Log fuzzing failed', error);
+        } finally {
+            this.armTick(LogFuzzerPlugin.FUZZ_COOLDOWN);
+        }
+    }
+
+    /**
+     * Fuzz a single batch of messages, moving the cursor forward. Returns the number of fuzzed messages.
+     */
+    private async fuzzBatch(limitDate: string): Promise<number> {
+        const sqlQuery = SQL`select id, content from messages where id > ${this.storage.lastId} and date <= ${limitDate} order by id limit ${LogFuzzerPlugin.BATCH_SIZE}`;
         const messages: { content: string; id: number }[] = (await DatabaseHelper.db.query(sqlQuery)).rows;
         for (const { id, content } of messages) {
-            const sqlQuery = SQL`update messages set content=${this.fuzzContent(content)} where id=${id}`;
-            await DatabaseHelper.db.query(sqlQuery);
+            await DatabaseHelper.db.query(SQL`update messages set content=${this.fuzzContent(content)} where id=${id}`);
         }
         if (messages.length > 0) {
-            const maxId = Math.max(...messages.map((message) => message.id));
-            this.storage.lastId = maxId;
+            this.storage.lastId = messages[messages.length - 1].id;
             this.syncStorage();
         }
-        this.armTick(LogFuzzerPlugin.FUZZ_COOLDOWN);
+        return messages.length;
     }
 }

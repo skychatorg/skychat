@@ -75,6 +75,7 @@ export class PlayerChannelManager extends EventEmitter {
             this.leaveChannel(session);
         }
 
+        channel.destroy();
         this.channels.splice(this.channels.indexOf(channel), 1);
         this.emit('channels-changed', this.channels);
     }
@@ -124,6 +125,9 @@ export class PlayerChannelManager extends EventEmitter {
 
         // Notify all connections of this session that the channel changed
         session.send('player-channel', id);
+
+        // Rebroadcast the channel list so everyone's watcher count/avatars update
+        this.sync();
     }
 
     /**
@@ -148,6 +152,9 @@ export class PlayerChannelManager extends EventEmitter {
 
         // Notify all connections of this session that the channel changed
         session.send('player-channel', null);
+
+        // Rebroadcast the channel list so everyone's watcher count/avatars update
+        this.sync();
     }
 
     /**

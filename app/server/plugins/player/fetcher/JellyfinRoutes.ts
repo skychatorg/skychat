@@ -15,6 +15,9 @@ const lightLimiter = new RateLimiterMemory({ points: 15, duration: 1 });
 // Posters get their own, roomier budget: a scroll through the library fires many at once, and
 // they should not contend with subtitle fetches on the shared light limiter.
 const imageLimiter = new RateLimiterMemory({ points: 40, duration: 1 });
+// Segments are ~6s of video each, so steady state is well under 1/s, but seeking makes the player
+// burst-fetch to refill its buffer. Give HLS its own budget rather than sharing the stream one.
+const hlsLimiter = new RateLimiterMemory({ points: 120, duration: 1 });
 
 function sanitizeError(err: unknown): { status: number; message: string } {
     Logging.warn(`Jellyfin proxy upstream error: ${(err as Error)?.message ?? String(err)}`);
@@ -171,6 +174,112 @@ export function buildJellyfinRoutes(fetcher: JellyfinFetcher): PluginRoute[] {
         await streamUpstream(req, res, client, upstreamPath);
     };
 
+    // The HLS media playlist. This is the one route that cannot use streamUpstream: the segment URIs
+    // inside are relative and carry no auth, so they have to be rewritten to keep our `?t=` token.
+    // The body is a few hundred KB of text at most, so buffering it is fine.
+    const handleHlsPlaylist: PluginRoute['handler'] = async (req, res) => {
+        if (!fetcher.enabled) {
+            res.status(503).json({ message: 'Jellyfin not configured' });
+            return;
+        }
+        const auth = authenticate(req);
+        if (!auth) {
+            res.status(401).end();
+            return;
+        }
+        if (!(await rateLimit(hlsLimiter, auth.userId, res))) return;
+
+        const { itemId } = req.params;
+        const mediaSourceId = typeof req.query.mediaSourceId === 'string' ? req.query.mediaSourceId : '';
+        const audioStreamIndex = typeof req.query.audioStreamIndex === 'string' ? req.query.audioStreamIndex : undefined;
+
+        if (!JELLYFIN_ID_REGEX.test(itemId) || !JELLYFIN_ID_REGEX.test(mediaSourceId)) {
+            res.status(400).end();
+            return;
+        }
+        if (audioStreamIndex !== undefined && !INT_RE.test(audioStreamIndex)) {
+            res.status(400).end();
+            return;
+        }
+
+        const token = typeof req.query.t === 'string' ? req.query.t : '';
+        const upstreamPath = fetcher.client.buildHlsPlaylistPath(
+            itemId,
+            mediaSourceId,
+            audioStreamIndex !== undefined ? parseInt(audioStreamIndex, 10) : undefined,
+        );
+
+        try {
+            const upstream = await fetcher.client.rawHttp.get(upstreamPath, {
+                responseType: 'text',
+                validateStatus: () => true,
+                transformResponse: (body) => body,
+            });
+            if (upstream.status >= 400) {
+                const sanitized = sanitizeError(new Error(`upstream ${upstream.status}`));
+                res.status(sanitized.status).json(sanitized);
+                return;
+            }
+
+            // Every non-comment, non-blank line is a segment URI relative to this playlist. The
+            // browser will resolve it against our route, so it lands back on the segment handler —
+            // it just needs the token appending.
+            const rewritten = String(upstream.data)
+                .split('\n')
+                .map((line) => {
+                    const trimmed = line.trim();
+                    if (!trimmed || trimmed.startsWith('#')) {
+                        return line;
+                    }
+                    return `${trimmed}${trimmed.includes('?') ? '&' : '?'}t=${encodeURIComponent(token)}`;
+                })
+                .join('\n');
+
+            // Deliberately no content-length/etag from upstream: the body is not what it sent.
+            res.writeHead(200, {
+                'content-type': 'application/vnd.apple.mpegurl',
+                'cache-control': 'no-store',
+            });
+            res.end(rewritten);
+        } catch (err) {
+            const sanitized = sanitizeError(err);
+            if (!res.headersSent) {
+                res.status(sanitized.status).json(sanitized);
+            } else {
+                res.end();
+            }
+        }
+    };
+
+    // Segments are opaque bytes — straight pass-through, same as the progressive stream.
+    const handleHlsSegment: PluginRoute['handler'] = async (req, res) => {
+        if (!fetcher.enabled) {
+            res.status(503).json({ message: 'Jellyfin not configured' });
+            return;
+        }
+        const auth = authenticate(req);
+        if (!auth) {
+            res.status(401).end();
+            return;
+        }
+        if (!(await rateLimit(hlsLimiter, auth.userId, res))) return;
+
+        const { itemId, playlistId, segment } = req.params;
+        if (!JELLYFIN_ID_REGEX.test(itemId) || !/^[a-zA-Z0-9_-]{1,64}$/.test(playlistId) || !/^\d{1,6}\.(ts|mp4|m4s)$/.test(segment)) {
+            res.status(400).end();
+            return;
+        }
+
+        // Forward the playlist's own query (runtimeTicks etc.), minus our token.
+        const query = new URLSearchParams();
+        for (const [key, value] of Object.entries(req.query)) {
+            if (key === 't' || typeof value !== 'string') continue;
+            query.set(key, value);
+        }
+        const upstreamPath = fetcher.client.buildHlsSegmentPath(itemId, playlistId, segment, query.toString());
+        await streamUpstream(req, res, fetcher.client, upstreamPath);
+    };
+
     const handleImage: PluginRoute['handler'] = async (req, res) => {
         if (!fetcher.enabled) {
             res.status(503).json({ message: 'Jellyfin not configured' });
@@ -201,6 +310,8 @@ export function buildJellyfinRoutes(fetcher: JellyfinFetcher): PluginRoute[] {
 
     return [
         { method: 'get', path: 'jellyfin/stream/:itemId', handler: handleStream },
+        { method: 'get', path: 'jellyfin/hls/:itemId/main.m3u8', handler: handleHlsPlaylist },
+        { method: 'get', path: 'jellyfin/hls/:itemId/hls1/:playlistId/:segment', handler: handleHlsSegment },
         { method: 'get', path: 'jellyfin/subtitle/:itemId/:mediaSourceId/:index.vtt', handler: handleSubtitle },
         { method: 'get', path: 'jellyfin/image/:itemId/:type', handler: handleImage },
     ];

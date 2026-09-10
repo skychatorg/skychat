@@ -139,15 +139,9 @@ export const useAppStore = defineStore('app', {
 
             /**
              * Current player size
-             * @type {'xs'|'sm'|'md'|'lg'}
+             * @type {'xs'|'sm'|'md'|'lg'|'cinema'}
              */
             size: 'md',
-
-            /**
-             * Whether currently in cinema mode
-             * @type {Boolean}
-             */
-            cinemaMode: false,
         },
 
         /**
@@ -241,6 +235,11 @@ export const useAppStore = defineStore('app', {
              * Sticker management modal
              */
             manageStickers: false,
+
+            /**
+             * Highlighted words management modal
+             */
+            manageHighlights: false,
         },
     }),
 
@@ -409,8 +408,29 @@ export const useAppStore = defineStore('app', {
                 paletteStore.toggle();
             };
             document.addEventListener('keydown', onPaletteKey);
+
+            // Escape leaves cinema mode, but only when it is not already meaning something else:
+            // the message input uses it to cancel an edit, and radix menus/dialogs use it to close.
+            const onCinemaEscape = (e) => {
+                if (e.key !== 'Escape' || this.playerMode.size !== 'cinema') {
+                    return;
+                }
+                const target = e.target;
+                if (target?.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target?.tagName)) {
+                    return;
+                }
+                if (document.querySelector('[data-radix-popper-content-wrapper], [role="dialog"]')) {
+                    return;
+                }
+                this.exitCinemaMode();
+            };
+            document.addEventListener('keydown', onCinemaEscape);
+
             if (import.meta.hot) {
-                import.meta.hot.dispose(() => document.removeEventListener('keydown', onPaletteKey));
+                import.meta.hot.dispose(() => {
+                    document.removeEventListener('keydown', onPaletteKey);
+                    document.removeEventListener('keydown', onCinemaEscape);
+                });
             }
         },
 
@@ -516,28 +536,44 @@ export const useAppStore = defineStore('app', {
                     xs: 'sm',
                     sm: 'md',
                     md: 'lg',
-                    lg: 'lg',
+                    // Cinema puts a fixed-width chat column beside the video, which only leaves a
+                    // usable picture on a wide screen. On narrow ones `lg` stays the ceiling.
+                    lg: this.isDesktop ? 'cinema' : 'lg',
+                    cinema: 'cinema',
                 }[this.playerMode.size] || 'md';
-            // Largest size doubles as a cinema mode: hide both side columns for max video width.
-            if (this.playerMode.size === 'lg') {
+            // `lg` hides the side columns to give the video the full width of the chat layout.
+            // `cinema` goes further and replaces the layout entirely (see Chat.vue).
+            if (this.playerMode.size === 'lg' || this.playerMode.size === 'cinema') {
                 this.setColumnsCollapsed(true);
             }
             this.savePreferences();
         },
 
         shrinkPlayer: function () {
-            const wasLargest = this.playerMode.size === 'lg';
+            const wasLarge = this.playerMode.size === 'lg' || this.playerMode.size === 'cinema';
             this.playerMode.size =
                 {
+                    cinema: 'lg',
                     lg: 'md',
                     md: 'sm',
                     sm: 'xs',
                     xs: 'xs',
                 }[this.playerMode.size] || 'md';
-            // Leaving the largest size brings the side columns back.
-            if (wasLargest) {
+            // Leaving the large sizes brings the side columns back.
+            if (wasLarge && this.playerMode.size !== 'lg' && this.playerMode.size !== 'cinema') {
                 this.setColumnsCollapsed(false);
             }
+            this.savePreferences();
+        },
+
+        /**
+         * Leave cinema mode in one step, from anywhere. Bound to Escape and the on-hover exit button.
+         */
+        exitCinemaMode: function () {
+            if (this.playerMode.size !== 'cinema') {
+                return;
+            }
+            this.playerMode.size = 'lg';
             this.savePreferences();
         },
 

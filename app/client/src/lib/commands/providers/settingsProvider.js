@@ -8,6 +8,7 @@ export function useSettingsCommands() {
     const app = useAppStore();
     const client = useClientStore();
     const canManageStickers = useUserRight('minRightForStickerManagement');
+    const canManageHighlights = useUserRight('minRightForHighlightManagement');
 
     return computed(() => {
         /** @type {import('../types.js').Command[]} */
@@ -40,6 +41,17 @@ export function useSettingsCommands() {
                 category: 'Settings',
                 keywords: ['emoji', 'custom'],
                 run: () => app.toggleModal('manageStickers'),
+            });
+        }
+
+        if (canManageHighlights.value && client.state.highlights !== null) {
+            out.push({
+                id: 'settings.highlights',
+                title: labels.manageHighlights(),
+                icon: 'highlighter',
+                category: 'Settings',
+                keywords: ['words', 'effects', 'burst'],
+                run: () => app.toggleModal('manageHighlights'),
             });
         }
 

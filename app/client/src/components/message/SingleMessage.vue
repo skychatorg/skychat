@@ -3,7 +3,10 @@ import SkyContextMenu from '@/components/common/SkyContextMenu.vue';
 import SkyContextMenuItem from '@/components/common/SkyContextMenuItem.vue';
 import UserMiniAvatar from '@/components/user/UserMiniAvatar.vue';
 import { useIsBlacklisted } from '@/composables/useIsBlacklisted';
+import { useMessageComposer } from '@/composables/useMessageComposer';
 import { useUserRight } from '@/composables/useUserRight';
+import { wrapHighlights } from '@/lib/highlight';
+import { triggerHighlightBurst } from '@/lib/highlightBurst';
 import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
 import { useEncryptionStore } from '@/stores/encryption';
@@ -14,6 +17,7 @@ import MessageReactions from './MessageReactions.vue';
 const app = useAppStore();
 const client = useClientStore();
 const encryptionStore = useEncryptionStore();
+const composer = useMessageComposer();
 
 const COMPACT_QUOTES_MAX_LENGTH = 30;
 
@@ -61,6 +65,8 @@ watch(showCompact, () => {
 
 const isBlacklisted = useIsBlacklisted(() => props.message.user);
 
+const formattedContent = computed(() => wrapHighlights(props.message.formatted, client.state.highlights));
+
 const formattedDate = computed(() => {
     const date = new Date(props.message.createdTimestamp * 1000);
     const today = new Date();
@@ -89,8 +95,12 @@ const room = computed(() => {
     return r || null;
 });
 
+// Shared instance: the lastSeen map is rebuilt on every connected-list patch, and returning a fresh
+// array here would re-render every message in the room each time.
+const NO_USERS = [];
 const lastSeenUsers = computed(() => {
-    return (client.state.messageIdToLastSeenUsers[props.message.id] || []).slice(0, 6);
+    const users = client.state.messageIdToLastSeenUsers[props.message.id];
+    return users ? users.slice(0, 6) : NO_USERS;
 });
 
 const shouldShowUnlockForm = computed(() => {
@@ -166,6 +176,26 @@ const bindMessageContentEvents = () => {
             app.setMessage('@' + quote.dataset.username + ' ');
         });
     }
+
+    const highlightedWords = Array.from(content.value.getElementsByClassName('skychat-highlight'));
+    for (const word of highlightedWords) {
+        if (word.dataset.burstBound) {
+            continue;
+        }
+        word.dataset.burstBound = 'true';
+        const burst = (force) => {
+            const stickerUrl = client.state.stickers[word.dataset.sticker];
+            triggerHighlightBurst(stickerUrl, content.value?.closest('.skychat-burst-host'), force);
+        };
+        word.addEventListener('mouseenter', () => burst(false));
+        word.addEventListener('click', () => {
+            // Remove + reflow restarts the pop animation on rapid clicks
+            word.classList.remove('skychat-highlight-pop');
+            void word.offsetWidth;
+            word.classList.add('skychat-highlight-pop');
+            burst(true);
+        });
+    }
 };
 onMounted(() => {
     bindMessageContentEvents();
@@ -175,10 +205,7 @@ onMounted(() => {
         }
     });
 });
-watch(
-    () => props.message.formatted,
-    () => nextTick(bindMessageContentEvents),
-);
+watch(formattedContent, () => nextTick(bindMessageContentEvents));
 
 watch(
     () => props.message.storage?.reactions,
@@ -202,12 +229,16 @@ const canDeleteMessage = computed(() => {
 const quoteMessage = () => {
     app.setMessage('@' + props.message.id + ' ');
     showActionMenu.value = false;
+    // Delay focus past Radix Vue's RAF-based focus restoration on context menu close
+    setTimeout(() => composer.value?.focus(), 0);
 };
 
 const editMessage = () => {
     if (!canEditMessage.value) return;
     app.setMessage('/edit ' + props.message.id + ' ' + props.message.content);
     showActionMenu.value = false;
+    // Delay focus past Radix Vue's RAF-based focus restoration on context menu close
+    setTimeout(() => composer.value?.focus(), 0);
 };
 
 const deleteMessage = () => {
@@ -216,6 +247,10 @@ const deleteMessage = () => {
         client.sendMessage('/delete ' + props.message.id);
     }
     showActionMenu.value = false;
+};
+
+const openAvatar = () => {
+    window.open(props.message.user.data.plugins.avatar, '_blank', 'noopener');
 };
 
 const copyMessage = () => {
@@ -343,7 +378,7 @@ const userColor = computed(() => props.message.user.data.plugins.custom.color);
                             v-else-if="!shouldShowUnlockForm"
                             ref="content"
                             class="text-base text-white/90 leading-[1.45] whitespace-pre-wrap break-words"
-                            v-html="message.formatted"
+                            v-html="formattedContent"
                         />
 
                         <!-- Reactions -->
@@ -351,7 +386,7 @@ const userColor = computed(() => props.message.user.data.plugins.custom.color);
                     </div>
 
                     <!-- Right column: time + last-seen avatars (non-compact) -->
-                    <div v-if="!compact && lastSeenUsers.length > 0" class="shrink-0 flex flex-col items-end gap-1">
+                    <div v-if="!compact" class="shrink-0 w-[66px] flex flex-col items-end gap-1">
                         <div class="flex -space-x-1.5">
                             <UserMiniAvatar v-for="user in lastSeenUsers" :key="user.username" :user="user" />
                         </div>
@@ -419,6 +454,10 @@ const userColor = computed(() => props.message.user.data.plugins.custom.color);
         <SkyContextMenuItem v-if="canDeleteMessage" class="text-danger" @select="deleteMessage">
             <fa icon="trash" class="w-4 mr-2" />
             Delete
+        </SkyContextMenuItem>
+        <SkyContextMenuItem @select="openAvatar">
+            <fa icon="image" class="w-4 mr-2" />
+            Open avatar
         </SkyContextMenuItem>
         <SkyContextMenuItem @select="copyMessage">
             <fa icon="copy" class="w-4 mr-2" />

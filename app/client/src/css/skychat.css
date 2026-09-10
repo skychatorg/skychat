@@ -78,6 +78,77 @@
     background-color: #5865f2;
 }
 
+/* Highlighted words */
+.skychat-highlight {
+    display: inline-block;
+    font-weight: 600;
+    cursor: pointer;
+    background-image: linear-gradient(90deg, #ff5e5e, #ffb347, #f8e71c, #4cd964, #4aa8ff, #b96bff, #ff5e5e);
+    background-size: 400% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    border-bottom: 2px dotted rgba(255, 255, 255, 0.35);
+    animation: skychat-highlight-rainbow 3s linear infinite;
+}
+.skychat-highlight-pop {
+    animation:
+        skychat-highlight-pop 0.3s ease-out,
+        skychat-highlight-rainbow 3s linear infinite;
+}
+@keyframes skychat-highlight-rainbow {
+    to {
+        background-position: 400% 0;
+    }
+}
+@keyframes skychat-highlight-pop {
+    30% {
+        transform: scale(1.25) rotate(-3deg);
+    }
+    60% {
+        transform: scale(0.95) rotate(2deg);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .skychat-highlight,
+    .skychat-highlight-pop {
+        animation: none;
+    }
+}
+
+.skychat-highlight-burst {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 30;
+}
+.skychat-highlight-burst > img {
+    position: absolute;
+    bottom: -70px;
+    width: 60px;
+    height: 60px;
+    object-fit: scale-down;
+    opacity: 0;
+    animation: skychat-highlight-burst-float ease-out forwards;
+}
+@keyframes skychat-highlight-burst-float {
+    0% {
+        transform: translateY(0) scale(0.6) rotate(-8deg);
+        opacity: 0;
+    }
+    15% {
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(calc(-100vh + 70px)) scale(1.1) rotate(8deg);
+        opacity: 0;
+    }
+}
+
 /* Wizz */
 @keyframes wizz-shake {
     0%,
@@ -117,4 +188,40 @@
 }
 .wizz-shake {
     animation: wizz-shake 1s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+
+/* Reusable "this thing is live" background: gradient bands drifting left to right.
+   Use `.live-sweep` plus a tint (`.live-sweep-voice`, `.live-sweep-media`), or set
+   --live-a / --live-b inline for any other color. */
+.live-sweep {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+}
+.live-sweep::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-image: linear-gradient(90deg, var(--live-a), var(--live-b), var(--live-a), var(--live-b), var(--live-a));
+    background-size: 400% 100%;
+    animation: live-sweep var(--live-speed, 26s) linear infinite;
+}
+.live-sweep-voice {
+    --live-a: rgba(16, 185, 129, 0.04);
+    --live-b: rgba(45, 212, 191, 0.38);
+}
+.live-sweep-media {
+    --live-a: rgba(244, 63, 94, 0.04);
+    --live-b: rgba(217, 70, 239, 0.4);
+}
+@keyframes live-sweep {
+    to {
+        background-position: -400% 0;
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .live-sweep::before {
+        animation: none;
+    }
 }

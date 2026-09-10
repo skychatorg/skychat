@@ -21,8 +21,9 @@ const updateSrc = () => {
     const currentTime = parseInt(roomCursorMs(client.state.player, client.state.playerLastUpdate) / 1000);
     const videoHash = JSON.stringify(client.state.player.current.video.id);
     if (videoHash === previousVideoHash.value) {
-        // If player is too far un-synchronized, we force re-sync cursor
-        if (Math.abs(currentTime - player.value.currentTime) > 10) {
+        // If player is too far un-synchronized, we force re-sync cursor. A manual "Synchronize"
+        // (player.forced) snaps to the room cursor regardless of how small the drift is.
+        if (client.state.player.forced || Math.abs(currentTime - player.value.currentTime) > 10) {
             player.value.currentTime = currentTime;
         }
         return;

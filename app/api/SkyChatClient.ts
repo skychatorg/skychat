@@ -49,6 +49,12 @@ export type PlayerState = {
     cursor: number;
     paused: boolean;
     streamToken?: string;
+    // Set only on a manual "Synchronize" request (transient, overwritten by the next sync). Tells
+    // players to reload at the room cursor regardless of their drift threshold.
+    forced?: boolean;
+    // While a countdown resync is running, the absolute date (ms) at which everyone resumes. Clients
+    // count down towards it, so the countdown does not drift with network latency.
+    resyncAt?: number | null;
 };
 
 export type SkyChatClientState = {
@@ -59,13 +65,13 @@ export type SkyChatClientState = {
     user: SanitizedUser;
     config: PublicConfig | null;
     stickers: Record<string, string>;
+    highlights: Record<string, string> | null;
     custom: CustomizationElements;
     token: AuthToken | null;
     connectedList: Array<SanitizedSession>;
     discordPresence: DiscordPresence;
     messageIdToLastSeenUsers: { [id: number]: Array<SanitizedUser> };
     roomConnectedUsers: { [roomId: number]: Array<SanitizedUser> };
-    playerChannelUsers: { [roomId: number]: Array<SanitizedUser> };
     rooms: SanitizedRoom[];
     currentRoomId: number | null;
     currentRoomReady: boolean;
@@ -98,6 +104,7 @@ export declare interface SkyChatClient {
 
     on(event: 'config', listener: (config: PublicConfig) => any): this;
     on(event: 'sticker-list', listener: (stickers: Record<string, string>) => any): this;
+    on(event: 'highlight-list', listener: (highlights: Record<string, string>) => any): this;
     on(event: 'custom', listener: (custom: CustomizationElements) => any): this;
     on(event: 'set-user', listener: (user: SanitizedUser) => any): this;
     on(event: 'auth-token', listener: (token: AuthToken | null) => any): this;
@@ -138,7 +145,10 @@ export declare interface SkyChatClient {
     on(event: 'voice-transport', listener: (params: any) => any): this;
     on(event: 'voice-connected', listener: (data: { direction: string }) => any): this;
     on(event: 'voice-producer-id', listener: (data: { id: string }) => any): this;
-    on(event: 'voice-sync', listener: (data: { channelId: number; producers: Array<{ producerId: string; userId: number; username: string }> }) => any): this;
+    on(
+        event: 'voice-sync',
+        listener: (data: { channelId: number; producers: Array<{ producerId: string; userId: number; username: string }> }) => any,
+    ): this;
     on(event: 'voice-consume', listener: (data: any) => any): this;
     on(event: 'voice-producer-closed', listener: (data: { producerId: string }) => any): this;
     on(event: 'voice-rtpcaps-ok', listener: (data: { ok: boolean }) => any): this;
@@ -155,6 +165,24 @@ export declare interface SkyChatClient {
 export class SkyChatClient extends EventEmitter {
     static readonly CURSOR_DECAY_DELAY = 10 * 1e3;
 
+    /**
+     * The server pings every 30s. If nothing at all arrives within this window the socket is dead,
+     * whatever `readyState` claims: a phone whose radio slept, or a network that changed under us,
+     * leaves a half-open socket that still reports OPEN.
+     */
+    static readonly CONNECTION_TIMEOUT = 45 * 1e3;
+
+    /**
+     * How often to check the above.
+     */
+    static readonly LIVENESS_CHECK_INTERVAL = 5 * 1e3;
+
+    /**
+     * Cap on the reconnection backoff. Kept short: the delay is dead time the user stares at after
+     * the network is already back.
+     */
+    static readonly MAX_RECONNECT_DELAY = 10 * 1e3;
+
     static readonly LOCAL_STORAGE_TOKEN_KEY = 'skychat-token';
     static readonly LOCAL_STORAGE_ROOM_ID = 'skychat-room-id';
 
@@ -163,13 +191,13 @@ export class SkyChatClient extends EventEmitter {
     private _user: SanitizedUser = defaultUser;
     private _config: PublicConfig | null = null;
     private _stickers: Record<string, string> = {};
+    private _highlights: Record<string, string> | null = null;
     private _custom: CustomizationElements = {};
     private _token: AuthToken | null = null;
     private _connectedList: Array<SanitizedSession> = [];
     private _discordPresence: DiscordPresence = null;
     private _messageIdToLastSeenUsers: { [id: number]: Array<SanitizedUser> } = {};
     private _roomConnectedUsers: { [roomId: number]: Array<SanitizedUser> } = {};
-    private _playerChannelUsers: { [roomId: number]: Array<SanitizedUser> } = {};
     private _rooms: Array<SanitizedRoom> = [];
     private _currentRoomId: number | null = null;
     private _currentRoomReady: boolean = false;
@@ -203,6 +231,9 @@ export class SkyChatClient extends EventEmitter {
     // Connection resilience properties
     private _reconnectAttempts: number = 0;
     private _reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+    private _lastReceivedDate: number = Date.now();
+    private _livenessTimer: ReturnType<typeof setInterval> | null = null;
+    private _shouldReconnect: boolean = true;
     private _messageQueue: Array<{ type: 'raw' | 'event'; data: any; eventName?: string }> = [];
     private _maxQueueSize: number = 100;
     private _isReconnecting: boolean = false;
@@ -228,6 +259,7 @@ export class SkyChatClient extends EventEmitter {
         // Auth & Config
         this.on('config', this._onConfig.bind(this));
         this.on('sticker-list', this._onStickerList.bind(this));
+        this.on('highlight-list', this._onHighlightList.bind(this));
         this.on('custom', this._onCustom.bind(this));
         this.on('set-user', this._onUser.bind(this));
         this.on('auth-token', this._onToken.bind(this));
@@ -238,6 +270,9 @@ export class SkyChatClient extends EventEmitter {
         // Messages
         this.on('message', this._onMessage.bind(this));
         this.on('messages', this._onMessages.bind(this));
+
+        // The server accepts commands only once the connection is authenticated
+        this.on('connection-accepted', this._replayMessageQueue.bind(this));
 
         // Room
         this.on('room-list', this._onRoomList.bind(this));
@@ -299,7 +334,7 @@ export class SkyChatClient extends EventEmitter {
         // Handle network online/offline events
         window.addEventListener('online', () => {
             console.info('Network online detected, attempting reconnection');
-            this._attemptReconnect(true);
+            this._forceReconnect();
         });
 
         window.addEventListener('offline', () => {
@@ -314,14 +349,60 @@ export class SkyChatClient extends EventEmitter {
         if (typeof document.addEventListener === 'function') {
             document.addEventListener('visibilitychange', () => {
                 if (document.visibilityState === 'visible') {
-                    // Check if we need to reconnect when page becomes visible
-                    if (!this._websocket || this._websocket.readyState !== WebSocket.OPEN) {
-                        console.info('Page visible with closed connection, attempting reconnection');
-                        this._attemptReconnect(true);
-                    }
+                    // Coming back to a backgrounded tab is exactly when the socket is likely to be
+                    // half-open, so check liveness rather than believing `readyState`.
+                    this._checkConnectionLiveness();
                 }
             });
         }
+
+        this._livenessTimer = setInterval(() => this._checkConnectionLiveness(), SkyChatClient.LIVENESS_CHECK_INTERVAL);
+    }
+
+    /**
+     * Drop the socket and reconnect straight away, whatever state it claims to be in.
+     */
+    private _forceReconnect() {
+        const socket = this._websocket;
+        if (socket) {
+            // Clear it first: its handlers check that it is still the current socket, so this stops
+            // the close we are about to cause from scheduling a second, delayed attempt.
+            this._websocket = null;
+            try {
+                socket.close();
+            } catch {
+                // Already gone, nothing to do
+            }
+        }
+        this._attemptReconnect(true);
+    }
+
+    /**
+     * A socket with nothing coming down it is dead even when it reports OPEN. Nothing else notices:
+     * the browser can take minutes to fail a half-open TCP connection.
+     */
+    private _checkConnectionLiveness() {
+        // Kicked: the server does not want us back
+        if (!this._shouldReconnect) {
+            return;
+        }
+        // A handshake still in flight is not a dead connection. On a slow network it can legitimately
+        // take a while, and dropping it here would leave the client unable to connect at all.
+        if (this._websocket && this._websocket.readyState === WebSocket.CONNECTING) {
+            return;
+        }
+        if (!this._websocket || this._websocket.readyState !== WebSocket.OPEN) {
+            // Not connected: the close handler owns the reconnection, except when nothing is scheduled
+            if (!this._reconnectTimer && !this._isReconnecting) {
+                this._forceReconnect();
+            }
+            return;
+        }
+        if (Date.now() - this._lastReceivedDate < SkyChatClient.CONNECTION_TIMEOUT) {
+            return;
+        }
+        console.warn('No data received from the server, assuming the connection is dead');
+        this._forceReconnect();
     }
 
     /**
@@ -339,8 +420,8 @@ export class SkyChatClient extends EventEmitter {
             return;
         }
 
-        // Exponential backoff with jitter: 1s, 2s, 4s, 8s, 16s, 30s max
-        const baseDelay = Math.min(1000 * Math.pow(2, this._reconnectAttempts), 30000);
+        // Exponential backoff with jitter: 1s, 2s, 4s, 8s, then capped
+        const baseDelay = Math.min(1000 * Math.pow(2, this._reconnectAttempts), SkyChatClient.MAX_RECONNECT_DELAY);
         const jitter = Math.random() * 1000; // Add up to 1s jitter
         const delay = baseDelay + jitter;
 
@@ -364,6 +445,11 @@ export class SkyChatClient extends EventEmitter {
 
     private _onStickerList(stickers: Record<string, string>) {
         this._stickers = stickers;
+        this.emit('update', this.state);
+    }
+
+    private _onHighlightList(highlights: Record<string, string>) {
+        this._highlights = highlights;
         this.emit('update', this.state);
     }
 
@@ -426,29 +512,19 @@ export class SkyChatClient extends EventEmitter {
     }
 
     /**
-     * Update list of connected users / rooms and player channels
+     * Update list of connected users per room
      */
-    private _generateRoomConnectedUsersAndPlayerChannelUsers() {
+    private _generateRoomConnectedUsers() {
         const roomConnectedUsers: { [id: number]: Array<SanitizedUser> } = {};
-        const playerChannelUsers: { [id: number]: Array<SanitizedUser> } = {};
         for (const entry of this._connectedList) {
-            // Update room entries
             for (const roomId of entry.rooms) {
                 if (typeof roomConnectedUsers[roomId] === 'undefined') {
                     roomConnectedUsers[roomId] = [];
                 }
                 roomConnectedUsers[roomId].push(entry.user);
             }
-            // Update player channel entries
-            const playerChannelId = entry.user.data.plugins.player;
-            if (playerChannelId !== null) {
-                if (typeof playerChannelUsers[playerChannelId] === 'undefined') {
-                    playerChannelUsers[playerChannelId] = [];
-                }
-                playerChannelUsers[playerChannelId].push(entry.user);
-            }
         }
-        return { roomConnectedUsers, playerChannelUsers };
+        return { roomConnectedUsers };
     }
 
     private _updateConnectedListMeta() {
@@ -459,9 +535,11 @@ export class SkyChatClient extends EventEmitter {
         if (ownEntry) {
             ownEntry.user = this._user;
         }
+        // `connected-list-patch` and `message-seen` mutate the list in place; hand out a new array so
+        // consumers can tell it changed without deep-comparing it.
+        this._connectedList = [...this._connectedList];
         ({ messageIdToLastSeenUsers: this._messageIdToLastSeenUsers } = this._generateMessageIdToLastSeenUsers());
-        ({ roomConnectedUsers: this._roomConnectedUsers, playerChannelUsers: this._playerChannelUsers } =
-            this._generateRoomConnectedUsersAndPlayerChannelUsers());
+        ({ roomConnectedUsers: this._roomConnectedUsers } = this._generateRoomConnectedUsers());
         this._voiceChannelUsers = this._generateVoiceChannelUsers();
     }
 
@@ -495,8 +573,13 @@ export class SkyChatClient extends EventEmitter {
         this.notifySeenMessage(message.id);
     }
 
-    private _onMessages() {
+    private _onMessages(messages: Array<SanitizedMessage>) {
+        // History of a room we already left (rapid switching): it is not what we are waiting for
+        if (messages.length > 0 && messages[0].room !== this._currentRoomId) {
+            return;
+        }
         this._currentRoomReady = true;
+        this.emit('update', this.state);
     }
 
     private _onRoomList(rooms: Array<SanitizedRoom>) {
@@ -505,15 +588,15 @@ export class SkyChatClient extends EventEmitter {
     }
 
     private _onJoinRoom(currentRoomId: number | null) {
-        this._currentRoomId = currentRoomId;
+        // Authoritative: also used to correct an optimistic join the server rejected
+        if (currentRoomId !== this._currentRoomId) {
+            this._currentRoomReady = false;
+            this._currentRoomId = currentRoomId;
+        }
         if (typeof localStorage !== 'undefined' && currentRoomId !== null) {
             localStorage.setItem(SkyChatClient.LOCAL_STORAGE_ROOM_ID, currentRoomId.toString());
         }
         this.emit('update', this.state);
-        // Ask for message history if joined a room
-        if (currentRoomId !== null) {
-            this.sendMessage('/messagehistory');
-        }
     }
 
     private _onTypingList(typingList: Array<SanitizedUser>) {
@@ -527,6 +610,9 @@ export class SkyChatClient extends EventEmitter {
             return;
         }
         entry.user.data.plugins.lastseen = messageSeen.data;
+        if (messageSeen.user === this._user.id) {
+            this._user = { ...this._user };
+        }
         this._updateConnectedListMeta();
         this.emit('update', this.state);
     }
@@ -537,11 +623,12 @@ export class SkyChatClient extends EventEmitter {
     }
 
     private _onPoll(poll: SanitizedPoll) {
-        this._polls[poll.id] = poll;
+        this._polls = { ...this._polls, [poll.id]: poll };
         this.emit('update', this.state);
         if (poll.state === 'finished') {
             setTimeout(() => {
-                delete this._polls[poll.id];
+                const { [poll.id]: _removed, ...rest } = this._polls;
+                this._polls = rest;
                 this.emit('update', this.state);
             }, 10 * 1000);
         }
@@ -549,7 +636,7 @@ export class SkyChatClient extends EventEmitter {
 
     private _onCursor(cursor: { x: number; y: number; user: SanitizedUser }) {
         const identifier = cursor.user.username.toLowerCase();
-        this._cursors[identifier] = { date: new Date(), cursor };
+        this._cursors = { ...this._cursors, [identifier]: { date: new Date(), cursor } };
         // Clean up the cursors
         if (Math.random() < 0.05) {
             for (const identifier in this._cursors) {
@@ -622,9 +709,10 @@ export class SkyChatClient extends EventEmitter {
     /** Called by the store/VoiceClient to flip a user's speaking dot. */
     public setVoiceSpeaking(userId: number, speaking: boolean) {
         if (speaking) {
-            this._voiceSpeaking[userId] = true;
+            this._voiceSpeaking = { ...this._voiceSpeaking, [userId]: true };
         } else {
-            delete this._voiceSpeaking[userId];
+            const { [userId]: _removed, ...rest } = this._voiceSpeaking;
+            this._voiceSpeaking = rest;
         }
         this.emit('update', this.state);
     }
@@ -661,13 +749,13 @@ export class SkyChatClient extends EventEmitter {
             user: this._user,
             config: this._config,
             stickers: this._stickers,
+            highlights: this._highlights,
             custom: this._custom,
             token: this._token,
             connectedList: this._connectedList,
             discordPresence: this._discordPresence,
             messageIdToLastSeenUsers: this._messageIdToLastSeenUsers,
             roomConnectedUsers: this._roomConnectedUsers,
-            playerChannelUsers: this._playerChannelUsers,
             rooms: this._rooms,
             currentRoomId: this._currentRoomId,
             currentRoomReady: this._currentRoomReady,
@@ -700,11 +788,20 @@ export class SkyChatClient extends EventEmitter {
      * Connect to the server
      */
     connect() {
-        this._websocket = new WebSocket(this.url);
-        this._websocket.addEventListener('open', this._onWebSocketConnect.bind(this));
-        this._websocket.addEventListener('message', this._onWebSocketMessage.bind(this));
-        this._websocket.addEventListener('close', this._onWebSocketClose.bind(this));
-        this._websocket.addEventListener('error', this._onWebSocketError.bind(this));
+        this._shouldReconnect = true;
+        const socket = new WebSocket(this.url);
+        this._websocket = socket;
+        // Ignore anything coming from a socket we have already replaced, otherwise a discarded one
+        // closing late schedules a second reconnect and we end up with two live connections.
+        const ifCurrent = (handler: (event: any) => void) => (event: any) => {
+            if (this._websocket === socket) {
+                handler(event);
+            }
+        };
+        socket.addEventListener('open', ifCurrent(this._onWebSocketConnect.bind(this)));
+        socket.addEventListener('message', ifCurrent(this._onWebSocketMessage.bind(this)));
+        socket.addEventListener('close', ifCurrent(this._onWebSocketClose.bind(this)));
+        socket.addEventListener('error', ifCurrent(this._onWebSocketError.bind(this)));
         this.emit('update', this.state);
     }
 
@@ -716,11 +813,11 @@ export class SkyChatClient extends EventEmitter {
     }
 
     /**
-     * Send a last message seen notification
-     * @param messageId
+     * Send a last message seen notification. `roomId` is only needed to mark a room we are not
+     * currently in as read.
      */
-    notifySeenMessage(messageId: number) {
-        this.sendMessage(`/lastseen ${messageId}`);
+    notifySeenMessage(messageId: number, roomId?: number) {
+        this.sendMessage(`/lastseen ${messageId}` + (typeof roomId === 'number' ? ` ${roomId}` : ''));
     }
 
     /**
@@ -910,6 +1007,7 @@ export class SkyChatClient extends EventEmitter {
      */
     private _onWebSocketConnect() {
         // Reset reconnection state
+        this._lastReceivedDate = Date.now();
         const wasReconnecting = this._isReconnecting;
         this._reconnectAttempts = 0;
         this._isReconnecting = false;
@@ -929,9 +1027,9 @@ export class SkyChatClient extends EventEmitter {
             this.emit('reconnected');
         }
 
-        // Replay queued messages
-        this._replayMessageQueue();
-
+        // Queued messages are replayed on `connection-accepted`, not here: the server only starts
+        // reading commands once the socket is authenticated, so anything sent right after the auth
+        // frame is dropped on the floor.
         this.emit('update', this.state);
     }
 
@@ -961,6 +1059,8 @@ export class SkyChatClient extends EventEmitter {
      * @param message
      */
     private async _onWebSocketMessage(message: any) {
+        // Any frame proves the socket is alive, including the server's periodic ping
+        this._lastReceivedDate = Date.now();
         let messageData = message.data;
         if (typeof Buffer !== 'undefined' && message.data.constructor === Buffer) {
             messageData = new Blob([message.data]);
@@ -1015,6 +1115,7 @@ export class SkyChatClient extends EventEmitter {
         this.emit('update', this.state);
         // If kicked, do not try to auto re-connect
         if (event.code === 4403) {
+            this._shouldReconnect = false;
             return;
         }
         // Use exponential backoff for reconnection
@@ -1022,7 +1123,9 @@ export class SkyChatClient extends EventEmitter {
     }
 
     private _onWebSocketError(event: WebSocket.ErrorEvent) {
-        console.warn(`WebSocket error: ${event.message}`);
-        this.emit('error', event.message);
+        // Browsers fire a bare Event here with no `message`, so this used to surface one empty red
+        // toast per failed attempt. The close that follows drives the reconnect, and the connection
+        // state is already in the header, so there is nothing to tell the user here.
+        console.warn('WebSocket error', event?.message ?? '');
     }
 }

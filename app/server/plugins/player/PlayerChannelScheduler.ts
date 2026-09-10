@@ -36,10 +36,22 @@ export class PlayerChannelScheduler {
      */
     public readonly playerChannel: PlayerChannel;
 
+    private tickInterval: ReturnType<typeof setInterval> | null = null;
+
     constructor(playerChannel: PlayerChannel) {
         this.playerChannel = playerChannel;
 
-        setInterval(this.tick.bind(this), 5 * 1000);
+        this.tickInterval = setInterval(this.tick.bind(this), 5 * 1000);
+    }
+
+    /**
+     * Stop ticking. Without this the interval outlives a deleted channel and keeps it alive.
+     */
+    public destroy() {
+        if (this.tickInterval) {
+            clearInterval(this.tickInterval);
+            this.tickInterval = null;
+        }
     }
 
     /**

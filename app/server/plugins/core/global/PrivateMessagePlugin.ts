@@ -18,7 +18,7 @@ export class PrivateMessagePlugin extends GlobalPlugin {
         pm: {
             minCount: 1,
             maxCount: 100,
-            maxCallsPer10Seconds: 1,
+            maxCallsPer10Seconds: 10,
             params: [{ name: 'username', pattern: /./ }],
         },
         pmadd: {
@@ -27,7 +27,11 @@ export class PrivateMessagePlugin extends GlobalPlugin {
             maxCallsPer10Seconds: 10,
             params: [{ name: 'username', pattern: User.USERNAME_REGEXP }],
         },
-        pmleave: { minCount: 0 },
+        pmleave: {
+            minCount: 0,
+            maxCount: 1,
+            params: [{ name: 'roomId', pattern: /^\d+$/ }],
+        },
         pmremove: {
             minCount: 1,
             maxCount: 1,
@@ -55,6 +59,14 @@ export class PrivateMessagePlugin extends GlobalPlugin {
     ): Promise<void> {
         // Remove user from room
         room.unallow(userIdentifier);
+
+        // Move the removed user out: their connections would otherwise sit in a room they can no longer see
+        for (const connection of room.connections.filter((c) => c.session.identifier === userIdentifier)) {
+            const fallbackRoom = room.manager.findSuitableRoom(connection);
+            if (fallbackRoom) {
+                await fallbackRoom.attachConnection(connection);
+            }
+        }
 
         // Send notification message to the room
         room.sendMessage({
@@ -127,14 +139,8 @@ export class PrivateMessagePlugin extends GlobalPlugin {
         }
 
         const usernames = [connection.session.user.username, ...sessions.map((s) => s.user.username)];
-        const privateRoom = this.manager.findPrivateRoom(usernames);
-        if (privateRoom) {
-            // Make user join this room
-            await privateRoom.attachConnection(connection);
-            return;
-        }
-
-        await this.manager.createPrivateRoom(usernames);
+        const room = this.manager.findPrivateRoom(usernames) ?? (await this.manager.createPrivateRoom(usernames));
+        await room.attachConnection(connection);
     }
 
     async handlePMAdd(param: string, connection: Connection): Promise<void> {
@@ -172,10 +178,11 @@ export class PrivateMessagePlugin extends GlobalPlugin {
             .forEach((session) => room.manager.sendRoomList(session as Session));
     }
 
-    async handlePMLeave(_param: string, connection: Connection): Promise<void> {
-        const room = connection.room;
+    async handlePMLeave(param: string, connection: Connection): Promise<void> {
+        // Without an explicit room id, leave the room we are currently in
+        const room = param ? this.manager.getRoomById(parseInt(param, 10)) : connection.room;
         if (!room) {
-            throw new Error('You are not in a room');
+            throw new Error(param ? 'Invalid room specified' : 'You are not in a room');
         }
         if (!room.isPrivate) {
             throw new Error('You can not leave a public room');

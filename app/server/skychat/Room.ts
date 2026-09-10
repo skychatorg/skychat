@@ -343,9 +343,8 @@ export class Room implements IBroadcaster {
             })
             .map((message) => message.sanitized());
 
-        if (messages.length > 0) {
-            connection.send('messages', messages);
-        }
+        // Always send, even when empty: the client waits for this event to consider the room loaded.
+        connection.send('messages', messages);
     }
 
     /**
