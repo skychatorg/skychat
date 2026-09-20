@@ -59,37 +59,41 @@ export class CursorPlugin extends GlobalPlugin {
 
     /**
      * Send a cursor position to all users
-     * @param user
-     * @param x
-     * @param y
      */
     async sendCursorPosition(user: User, x: number, y: number, identifierIgnoreList?: string[]): Promise<void> {
-        // For every connection in the room
-        for (const conn of Session.connections) {
-            // Do not send cursors on users on mobile
-            if (conn && conn.device === 'mobile') {
-                continue;
-            }
-
-            // If the user has cursors disabled, don't send
-            if (!UserController.getUserPluginData(conn.session.user, this.commandName)) {
-                continue;
-            }
-            // If target user has blacklister the sender
-            if (BlacklistPlugin.isBlockedBy(conn.session.user, user)) {
-                continue;
-            }
-            // If identifier is to be ignored
-            if (identifierIgnoreList && identifierIgnoreList.includes(conn.session.identifier)) {
-                continue;
-            }
-            const buffer = Buffer.alloc(14);
-            buffer.writeUInt16LE(BinaryMessageTypes.CURSOR, 0);
-            buffer.writeUInt32LE(user.id, 2);
-            buffer.writeFloatLE(x, 6);
-            buffer.writeFloatLE(y, 10);
+        const buffer = Buffer.alloc(14);
+        buffer.writeUInt16LE(BinaryMessageTypes.CURSOR, 0);
+        buffer.writeUInt32LE(user.id, 2);
+        buffer.writeFloatLE(x, 6);
+        buffer.writeFloatLE(y, 10);
+        for (const conn of this.getCursorRecipients(user, identifierIgnoreList)) {
             conn.webSocket.send(buffer);
         }
+    }
+
+    /**
+     * Send the cursor of a virtual user (game objects). The binary packet only carries a user id that clients
+     * resolve against the connected list, so virtual users go as JSON with the whole user instead.
+     */
+    sendVirtualCursorPosition(user: User, x: number, y: number): void {
+        const payload = { x, y, user: user.sanitized() };
+        for (const conn of this.getCursorRecipients(user)) {
+            conn.send('cursor', payload);
+        }
+    }
+
+    private getCursorRecipients(user: User, identifierIgnoreList?: string[]): Connection[] {
+        return Session.connections.filter(
+            (conn) =>
+                conn &&
+                // Do not send cursors to users on mobile
+                conn.device !== 'mobile' &&
+                // If the user has cursors disabled, don't send
+                UserController.getUserPluginData(conn.session.user, this.commandName) &&
+                // If target user has blacklisted the sender
+                !BlacklistPlugin.isBlockedBy(conn.session.user, user) &&
+                !identifierIgnoreList?.includes(conn.session.identifier),
+        );
     }
 
     /**
