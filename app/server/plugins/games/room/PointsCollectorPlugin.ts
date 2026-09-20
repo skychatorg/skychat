@@ -58,8 +58,10 @@ export class PointsCollectorPlugin extends RoomPlugin {
             throw new Error('A round is already in progress');
         }
 
-        // Get a reference to the cursor plugin
-        const cursorPlugin = this.room.manager.getPlugin('cursor') as CursorPlugin;
+        const cursorPlugin = this.room.manager.getPlugin(CursorPlugin.commandName) as CursorPlugin | null;
+        if (!cursorPlugin) {
+            throw new Error('Cursor plugin is not enabled');
+        }
 
         // Initialize game object
         this.currentGame = {
@@ -117,7 +119,7 @@ export class PointsCollectorPlugin extends RoomPlugin {
             RandomGenerator.random(8) * (1 - PointsCollectorPlugin.POINT_COLLISION_RADIUS * 2);
     }
 
-    private async tick(delta: number, cursorPlugin: CursorPlugin): Promise<void> {
+    private tick(delta: number, cursorPlugin: CursorPlugin): void {
         if (!this.currentGame) {
             return;
         }
@@ -190,14 +192,14 @@ export class PointsCollectorPlugin extends RoomPlugin {
         }
 
         // Send ball
-        cursorPlugin.sendCursorPosition(
+        cursorPlugin.sendVirtualCursorPosition(
             UserController.getNeutralUser(`$${this.commandName}_ball`),
             this.currentGame.ball.pos.x,
             this.currentGame.ball.pos.y,
         );
 
         // Send point
-        cursorPlugin.sendCursorPosition(
+        cursorPlugin.sendVirtualCursorPosition(
             UserController.getNeutralUser(`$${this.commandName}_point`),
             this.currentGame.point.x,
             this.currentGame.point.y,
