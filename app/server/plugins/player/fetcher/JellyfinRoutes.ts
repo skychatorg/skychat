@@ -91,6 +91,39 @@ async function streamUpstream(req: express.Request, res: express.Response, clien
     }
 }
 
+// For small text responses we need to modify (playlists, subtitles), so buffering them is fine.
+async function sendRewrittenText(
+    res: express.Response,
+    client: JellyfinClient,
+    relativeUrl: string,
+    contentType: string,
+    // eslint-disable-next-line no-unused-vars
+    rewrite: (body: string) => string,
+): Promise<void> {
+    try {
+        const upstream = await client.rawHttp.get(relativeUrl, {
+            responseType: 'text',
+            validateStatus: () => true,
+            transformResponse: (body) => body,
+        });
+        if (upstream.status >= 400) {
+            const sanitized = sanitizeError(new Error(`upstream ${upstream.status}`));
+            res.status(sanitized.status).json(sanitized);
+            return;
+        }
+        // Deliberately no content-length/etag from upstream: the body is not what it sent.
+        res.writeHead(200, { 'content-type': contentType, 'cache-control': 'no-store' });
+        res.end(rewrite(String(upstream.data)));
+    } catch (err) {
+        const sanitized = sanitizeError(err);
+        if (!res.headersSent) {
+            res.status(sanitized.status).json(sanitized);
+        } else {
+            res.end();
+        }
+    }
+}
+
 export function buildJellyfinRoutes(fetcher: JellyfinFetcher): PluginRoute[] {
     const handleStream: PluginRoute['handler'] = async (req, res) => {
         if (!fetcher.enabled) {
@@ -171,12 +204,15 @@ export function buildJellyfinRoutes(fetcher: JellyfinFetcher): PluginRoute[] {
         const startTimeTicks = startTimeMsStr !== undefined ? msToTicks(parseInt(startTimeMsStr, 10)) : undefined;
         const client = fetcher.client;
         const upstreamPath = client.buildSubtitleVttPath(itemId, mediaSourceId, parseInt(index, 10), startTimeTicks);
-        await streamUpstream(req, res, client, upstreamPath);
+        // Jellyfin pins every cue with `line:90%`, which puts the top of the cue at 90% of the video
+        // height, so any 2-line cue runs off the bottom. Without settings the browser places it itself.
+        await sendRewrittenText(res, client, upstreamPath, 'text/vtt; charset=utf-8', (body) =>
+            body.replace(/^Region:.*\r?\n/gm, '').replace(/^(\S+ --> \S+)[^\r\n]*/gm, '$1'),
+        );
     };
 
-    // The HLS media playlist. This is the one route that cannot use streamUpstream: the segment URIs
-    // inside are relative and carry no auth, so they have to be rewritten to keep our `?t=` token.
-    // The body is a few hundred KB of text at most, so buffering it is fine.
+    // The HLS media playlist. This route cannot use streamUpstream: the segment URIs inside are
+    // relative and carry no auth, so they have to be rewritten to keep our `?t=` token.
     const handleHlsPlaylist: PluginRoute['handler'] = async (req, res) => {
         if (!fetcher.enabled) {
             res.status(503).json({ message: 'Jellyfin not configured' });
@@ -209,22 +245,11 @@ export function buildJellyfinRoutes(fetcher: JellyfinFetcher): PluginRoute[] {
             audioStreamIndex !== undefined ? parseInt(audioStreamIndex, 10) : undefined,
         );
 
-        try {
-            const upstream = await fetcher.client.rawHttp.get(upstreamPath, {
-                responseType: 'text',
-                validateStatus: () => true,
-                transformResponse: (body) => body,
-            });
-            if (upstream.status >= 400) {
-                const sanitized = sanitizeError(new Error(`upstream ${upstream.status}`));
-                res.status(sanitized.status).json(sanitized);
-                return;
-            }
-
-            // Every non-comment, non-blank line is a segment URI relative to this playlist. The
-            // browser will resolve it against our route, so it lands back on the segment handler —
-            // it just needs the token appending.
-            const rewritten = String(upstream.data)
+        // Every non-comment, non-blank line is a segment URI relative to this playlist. The
+        // browser will resolve it against our route, so it lands back on the segment handler —
+        // it just needs the token appending.
+        await sendRewrittenText(res, fetcher.client, upstreamPath, 'application/vnd.apple.mpegurl', (body) =>
+            body
                 .split('\n')
                 .map((line) => {
                     const trimmed = line.trim();
@@ -233,22 +258,8 @@ export function buildJellyfinRoutes(fetcher: JellyfinFetcher): PluginRoute[] {
                     }
                     return `${trimmed}${trimmed.includes('?') ? '&' : '?'}t=${encodeURIComponent(token)}`;
                 })
-                .join('\n');
-
-            // Deliberately no content-length/etag from upstream: the body is not what it sent.
-            res.writeHead(200, {
-                'content-type': 'application/vnd.apple.mpegurl',
-                'cache-control': 'no-store',
-            });
-            res.end(rewritten);
-        } catch (err) {
-            const sanitized = sanitizeError(err);
-            if (!res.headersSent) {
-                res.status(sanitized.status).json(sanitized);
-            } else {
-                res.end();
-            }
-        }
+                .join('\n'),
+        );
     };
 
     // Segments are opaque bytes — straight pass-through, same as the progressive stream.
