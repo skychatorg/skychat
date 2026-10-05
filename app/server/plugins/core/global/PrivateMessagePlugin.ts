@@ -8,9 +8,11 @@ import { GlobalPlugin } from '../../GlobalPlugin.js';
 import { BlacklistPlugin } from './BlacklistPlugin.js';
 
 export class PrivateMessagePlugin extends GlobalPlugin {
+    static readonly MAX_PRIVATE_ROOMS_PER_USER: number = 50;
+
     static readonly commandName = 'pm';
 
-    static readonly commandAliases = ['pmadd', 'pmleave', 'pmremove'];
+    static readonly commandAliases = ['pmnew', 'pmadd', 'pmleave', 'pmremove'];
 
     readonly minRight = Config.PREFERENCES.minRightForPrivateMessages;
 
@@ -19,6 +21,12 @@ export class PrivateMessagePlugin extends GlobalPlugin {
             minCount: 1,
             maxCount: 100,
             maxCallsPer10Seconds: 10,
+            params: [{ name: 'username', pattern: /./ }],
+        },
+        pmnew: {
+            minCount: 1,
+            maxCount: 100,
+            maxCallsPer10Seconds: 2,
             params: [{ name: 'username', pattern: /./ }],
         },
         pmadd: {
@@ -97,7 +105,11 @@ export class PrivateMessagePlugin extends GlobalPlugin {
     async run(alias: string, param: string, connection: Connection): Promise<void> {
         switch (alias) {
             case 'pm':
-                await this.handlePM(param, connection);
+                await this.handlePM(param, connection, false);
+                break;
+
+            case 'pmnew':
+                await this.handlePM(param, connection, true);
                 break;
 
             case 'pmadd':
@@ -114,7 +126,7 @@ export class PrivateMessagePlugin extends GlobalPlugin {
         }
     }
 
-    async handlePM(param: string, connection: Connection): Promise<void> {
+    async handlePM(param: string, connection: Connection, forceNew: boolean): Promise<void> {
         const rawUsernames = param.split(' ');
         const sessions: Session[] = [];
         for (const username of rawUsernames) {
@@ -139,8 +151,19 @@ export class PrivateMessagePlugin extends GlobalPlugin {
         }
 
         const usernames = [connection.session.user.username, ...sessions.map((s) => s.user.username)];
-        const room = this.manager.findPrivateRoom(usernames) ?? (await this.manager.createPrivateRoom(usernames));
+        let room = forceNew ? null : this.manager.findPrivateRoom(usernames);
+        if (!room) {
+            usernames.forEach((username) => this.assertPrivateRoomCapacity(username.toLowerCase()));
+            room = await this.manager.createPrivateRoom(usernames);
+        }
         await room.attachConnection(connection);
+    }
+
+    private assertPrivateRoomCapacity(identifier: string): void {
+        const count = this.manager.rooms.filter((r) => r.isPrivate && r.whitelist.includes(identifier)).length;
+        if (count >= PrivateMessagePlugin.MAX_PRIVATE_ROOMS_PER_USER) {
+            throw new Error(`${identifier} is already in ${PrivateMessagePlugin.MAX_PRIVATE_ROOMS_PER_USER} private rooms`);
+        }
     }
 
     async handlePMAdd(param: string, connection: Connection): Promise<void> {
@@ -167,6 +190,7 @@ export class PrivateMessagePlugin extends GlobalPlugin {
         if (room.whitelist.indexOf(session.identifier) !== -1) {
             throw new Error(`User ${param} is already in this private room`);
         }
+        this.assertPrivateRoomCapacity(session.identifier);
         room.allow(session.identifier);
         room.sendMessage({
             user: UserController.getNeutralUser(),
