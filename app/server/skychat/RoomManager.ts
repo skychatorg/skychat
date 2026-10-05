@@ -239,23 +239,12 @@ export class RoomManager {
      * Try to find a private room with the exact give participant usernames
      */
     findPrivateRoom(usernames: string[]): Room | null {
-        usernames = usernames.sort().map((username) => username.toLowerCase());
-        return (
-            this.rooms.find((room) => {
-                if (!room.isPrivate) {
-                    return false;
-                }
-                if (room.whitelist.length !== usernames.length) {
-                    return false;
-                }
-                for (let i = 0; i < usernames.length; ++i) {
-                    if (usernames[i] !== room.whitelist[i]) {
-                        return false;
-                    }
-                }
-                return true;
-            }) || null
-        );
+        // Compare sorted copies: /pmadd appends to the whitelist, so it is not guaranteed to be sorted
+        const key = usernames
+            .map((username) => username.toLowerCase())
+            .sort()
+            .join(' ');
+        return this.rooms.find((room) => room.isPrivate && [...room.whitelist].sort().join(' ') === key) ?? null;
     }
 
     /**
