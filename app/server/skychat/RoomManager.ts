@@ -242,9 +242,11 @@ export class RoomManager {
         // Compare sorted copies: /pmadd appends to the whitelist, so it is not guaranteed to be sorted
         const key = usernames
             .map((username) => username.toLowerCase())
-            .sort()
+            .sort((a, b) => a.localeCompare(b))
             .join(' ');
-        return this.rooms.find((room) => room.isPrivate && [...room.whitelist].sort().join(' ') === key) ?? null;
+        return (
+            this.rooms.find((room) => room.isPrivate && [...room.whitelist].sort((a, b) => a.localeCompare(b)).join(' ') === key) ?? null
+        );
     }
 
     /**
