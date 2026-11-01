@@ -122,9 +122,8 @@ describe('/pointscollector (71af048)', () => {
         expect(cursors[0].user.username).toMatch(/^\$pointscollector_(ball|point)$/);
     });
 
-    // BUG: the round runs inside the command handler for 30s, and commands from one connection run one at a time
-    // (6177abc), so whoever starts a round cannot chat, join a room or do anything else until it ends
-    it.fails('lets the player keep chatting during a round', async () => {
+    // The round used to run inside the command, and commands from one connection run one at a time (6177abc)
+    it('lets the player keep chatting during a round', async () => {
         const room = await server.roomManager.createRoom('Game 2');
         const alice = await server.connect(name('alice'));
         await alice.send(`/join ${room.id}`);
