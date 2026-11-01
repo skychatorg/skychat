@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, nextTick, ref, watch } from 'vue';
+import { ref, watch } from 'vue';
 import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
 import HoverCard from '@/components/util/HoverCard.vue';

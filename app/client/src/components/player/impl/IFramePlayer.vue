@@ -1,9 +1,7 @@
 <script setup>
 import { ref, watch, onMounted } from 'vue';
-import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
 
-const app = useAppStore();
 const client = useClientStore();
 
 const src = ref('');
