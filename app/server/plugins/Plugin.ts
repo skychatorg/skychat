@@ -188,6 +188,28 @@ export abstract class Plugin {
             throw new Error('This command needs to be executed in a room');
         }
 
+        // Validate before the rate limits, so a typo doesn't cost the cooldown
+        if (this.rules && typeof this.rules[alias] === 'object') {
+            const splitParams = param.length === 0 ? [] : param.split(' ');
+            const entryPointRule = this.rules[alias];
+            const params = entryPointRule.params || [];
+            const minParamCount = entryPointRule.minCount || 0;
+            // ?? so that maxCount: 0 (no parameters) is enforced
+            const maxParamCount = entryPointRule.maxCount ?? Infinity;
+
+            if (splitParams.length < minParamCount) {
+                throw new Error('Expected at least ' + minParamCount + ' parameters. Got ' + splitParams.length);
+            } else if (splitParams.length > maxParamCount) {
+                throw new Error('Expected at most ' + maxParamCount + ' parameters. Got ' + splitParams.length);
+            }
+            // Check parameter format
+            for (let i = 0; i < Math.min(params.length, splitParams.length); ++i) {
+                if (!params[i].pattern.exec(splitParams[i])) {
+                    throw new Error('Invalid format for ' + params[i].name);
+                }
+            }
+        }
+
         if (!connection.session.isOP()) {
             // Check user right
             if (connection.session.user.right < this.minRight) {
@@ -251,28 +273,6 @@ export abstract class Plugin {
                     } catch (error) {
                         throw new Error(`You must wait before using this command again (${alias})`);
                     }
-                }
-            }
-        }
-
-        // Check parameter count and format
-        if (this.rules && typeof this.rules[alias] === 'object') {
-            const splitParams = param.length === 0 ? [] : param.split(' ');
-            const entryPointRule = this.rules[alias];
-            const params = entryPointRule.params || [];
-            const minParamCount = entryPointRule.minCount || 0;
-            // ?? so that maxCount: 0 (no parameters) is enforced
-            const maxParamCount = entryPointRule.maxCount ?? Infinity;
-
-            if (splitParams.length < minParamCount) {
-                throw new Error('Expected at least ' + minParamCount + ' parameters. Got ' + splitParams.length);
-            } else if (splitParams.length > maxParamCount) {
-                throw new Error('Expected at most ' + maxParamCount + ' parameters. Got ' + splitParams.length);
-            }
-            // Check parameter format
-            for (let i = 0; i < Math.min(params.length, splitParams.length); ++i) {
-                if (!params[i].pattern.exec(splitParams[i])) {
-                    throw new Error('Invalid format for ' + params[i].name);
                 }
             }
         }

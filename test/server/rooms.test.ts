@@ -145,6 +145,21 @@ describe('/pointscollector (71af048)', () => {
         expect(alice.errors()).toEqual(['Expected at most 0 parameters. Got 1']);
     });
 
+    it('does not use up the cooldown on a typo', async () => {
+        const room = await server.roomManager.createRoom('Game 5');
+        const alice = await server.connect(name('alice'));
+        await alice.send(`/join ${room.id}`);
+
+        await alice.send('/pointscollector now');
+        expect(alice.errors()).toEqual(['Expected at most 0 parameters. Got 1']);
+        alice.clear();
+        alice.connection.emit('message', '/pointscollector');
+        await settle(150);
+
+        expect(alice.errors()).toEqual([]);
+        expect(alice.events('cursor').length).toBeGreaterThan(0);
+    });
+
     it('does not use up the cooldown when a round is already running', async () => {
         const room = await server.roomManager.createRoom('Game 3');
         const alice = await server.connect(name('alice'));
