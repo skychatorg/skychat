@@ -3,6 +3,7 @@ import { Connection } from '../../../skychat/Connection.js';
 import { DatabaseHelper } from '../../../skychat/DatabaseHelper.js';
 import { RoomPlugin } from '../../RoomPlugin.js';
 import { MessageLimiterPlugin } from '../../security_extra/MessageLimiterPlugin.js';
+import { MessagePlugin } from './MessagePlugin.js';
 
 export class MessageEditPlugin extends RoomPlugin {
     static readonly commandName = 'edit';
@@ -46,6 +47,7 @@ export class MessageEditPlugin extends RoomPlugin {
         // Edit message
         if (alias === 'edit') {
             const content = param.split(' ').slice(1).join(' ');
+            MessagePlugin.assertCanShareAudio(content, connection);
             if (!this.room.getPlugin<MessageLimiterPlugin>(MessageLimiterPlugin.commandName)?.allowMessageEdit(message, content)) {
                 throw new Error(MessageLimiterPlugin.errorMessage);
             }

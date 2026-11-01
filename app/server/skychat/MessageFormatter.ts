@@ -7,6 +7,9 @@ import escapeHTML from 'escape-html';
  * Singleton helper to format messages
  */
 export class MessageFormatter {
+    // Uploaded voice notes, told apart from videos by their extension
+    public static readonly VOICE_NOTE_PATTERN = '/uploads/all/[-\\/._a-zA-Z0-9]+\\.(weba|ogg|m4a)';
+
     public static readonly QUOTE_REGEXP: RegExp = /(^|[ \n]|<br>)@(\*?[a-zA-Z0-9-_]{2,30})/gi;
 
     public static readonly LINK_REGEXP: RegExp =
@@ -206,7 +209,7 @@ export class MessageFormatter {
      * Replace uploaded voice notes with an audio player
      */
     public replaceAudio(message: string, remove?: boolean): string {
-        return message.replace(new RegExp(Config.LOCATION + '/uploads/all/[-\\/._a-zA-Z0-9]+\\.(weba|ogg|m4a)', 'g'), (url) =>
+        return message.replace(new RegExp(Config.LOCATION + MessageFormatter.VOICE_NOTE_PATTERN, 'g'), (url) =>
             remove ? '' : `<audio class="skychat-audio-tag" controls preload="metadata" src="${url}"></audio>`,
         );
     }

@@ -5,6 +5,7 @@ import { Connection } from '../../../skychat/Connection.js';
 import { DatabaseHelper } from '../../../skychat/DatabaseHelper.js';
 import { Message, MessageStorage } from '../../../skychat/Message.js';
 import { MessageController } from '../../../skychat/MessageController.js';
+import { MessageFormatter } from '../../../skychat/MessageFormatter.js';
 import { PluginCommandAllRules } from '../../Plugin.js';
 import { RoomPlugin } from '../../RoomPlugin.js';
 import { MessageLimiterPlugin } from '../../security_extra/MessageLimiterPlugin.js';
@@ -30,7 +31,15 @@ export class MessagePlugin extends RoomPlugin {
 
     static readonly ENCRYPTED_PLACEHOLDER_FORMATTED = '<i>🔒 Encrypted message</i>';
 
+    static assertCanShareAudio(content: string, connection: Connection) {
+        const hasVoiceNote = new RegExp(MessageFormatter.VOICE_NOTE_PATTERN).test(content);
+        if (hasVoiceNote && connection.session.user.right < Config.PREFERENCES.minRightForAudioRecording) {
+            throw new Error('You do not have the permission to share audio recordings');
+        }
+    }
+
     async run(alias: string, param: string, connection: Connection): Promise<void> {
+        MessagePlugin.assertCanShareAudio(param, connection);
         let content = param;
         let quoted: Message | null = null;
         let storage: MessageStorage | undefined;
