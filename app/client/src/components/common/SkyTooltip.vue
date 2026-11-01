@@ -13,6 +13,7 @@ const props = withDefaults(
         asChild?: boolean;
     }>(),
     {
+        triggerClass: '',
         side: 'left',
         sideOffset: 0,
         asChild: false,
