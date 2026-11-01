@@ -32,6 +32,9 @@ const leaveFolder = () => {
     refresh();
 };
 
+// Not while loading, when there is no folder content yet
+const isEmpty = computed(() => client.state.gallery && !client.state.gallery.folders.length && !client.state.gallery.files.length);
+
 // Selected files
 const selectedFiles = ref([]);
 const addableSelectedFiles = computed(() => selectedFiles.value.filter((file) => gallery.isFileTypeAddable(file.type)));
@@ -83,7 +86,7 @@ const addSelectedFiles = () => {
         <!-- Folder & Files -->
         <div class="px-2 grow overflow-y-auto scrollbar flex flex-col">
             <div class="mb-2 flex flex-col">
-                <HoverCard :selectable="true" :border-color="'rgb(var(--color-skygray-light))'">
+                <HoverCard v-if="folderList.length > 0" :selectable="true" :border-color="'rgb(var(--color-skygray-light))'">
                     <div @click="leaveFolder()" class="cursor-pointer select-none px-4 py-2">
                         <fa icon="arrow-left" class="mr-2" />
                     </div>
@@ -99,6 +102,7 @@ const addSelectedFiles = () => {
                     </div>
                 </HoverCard>
             </div>
+            <p v-if="isEmpty" class="py-4 text-center text-sm text-white/40">This folder is empty</p>
             <div class="flex flex-col">
                 <HoverCard v-for="file in client.state.gallery.files" :key="file" :selectable="true" :selected="isFileSelected(file)" :border-color="gallery.getFileColor(file)">
                     <div @click="toggleSelectFile(file)" class="group cursor-pointer select-none px-4 py-2 flex flex-nowrap">
