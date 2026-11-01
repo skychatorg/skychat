@@ -1,4 +1,5 @@
 <script setup>
+import { roomName } from '@/lib/roomName.js';
 import { useClientStore } from '@/stores/client';
 import { computed } from 'vue';
 
@@ -20,8 +21,8 @@ const items = computed(() => {
         <div class="text-xs font-mono uppercase tracking-wider text-white/30 mb-1.5 px-1">Now in rooms</div>
         <div class="flex flex-col gap-1">
             <div v-for="it in items" :key="it.room.id" class="flex items-center gap-2 px-2 py-1 rounded-md hairline bg-white/[.02] text-sm">
-                <fa icon="hashtag" class="text-primary" />
-                <span class="text-white/70 truncate">{{ it.room.name }}</span>
+                <fa :icon="it.room.isPrivate ? 'at' : 'hashtag'" class="text-primary" />
+                <span class="text-white/70 truncate">{{ roomName(it.room, client.state.user.username) }}</span>
                 <span class="ml-auto font-mono text-xs text-white/40 tabular-nums">{{ it.users.length }}</span>
                 <div class="flex -space-x-1.5">
                     <div
