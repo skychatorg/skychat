@@ -73,7 +73,7 @@ export function scoreCommands(commands, rawQuery) {
         const catScore = scoreString(norm(cmd.category), query) * 0.5;
         const total = titleScore + kwScore + subScore + catScore;
         if (total > 0) {
-            scored.push({ cmd, total, titleLen: cmd.title.length });
+            scored.push({ cmd, total: total + (cmd.boost ?? 0), titleLen: cmd.title.length });
         }
     }
     scored.sort((a, b) => b.total - a.total || a.titleLen - b.titleLen);
