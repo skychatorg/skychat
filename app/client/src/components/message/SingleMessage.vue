@@ -382,12 +382,14 @@ const userColor = computed(() => props.message.user.data.plugins.custom.color);
                         </div>
 
                         <!-- Full message body -->
+                        <!-- eslint-disable vue/no-v-html -- built from escaped text: by MessageFormatter on the server, by formatPlaintext for decrypted messages -->
                         <div
                             v-else-if="!shouldShowUnlockForm"
                             ref="content"
                             class="text-base text-white/90 leading-[1.45] whitespace-pre-wrap break-words"
                             v-html="formattedContent"
                         />
+                        <!-- eslint-enable vue/no-v-html -->
 
                         <!-- Reactions -->
                         <MessageReactions v-if="!compact && message.storage?.reactions" :message="message" />
