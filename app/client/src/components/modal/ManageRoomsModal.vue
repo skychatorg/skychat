@@ -29,9 +29,10 @@ function onMoved() {
     <ModalTemplate id="manageRooms" title="Manage rooms">
         Manage rooms
 
+        <!-- Each item is wrapped in a div: vuedraggable marks the item's root element as draggable, and SingleRoom's root renders no element of its own -->
         <draggable v-model="sortedRooms" group="rooms" item-key="id" @end="onMoved">
             <template #item="{ element }">
-                <SingleRoom :room="element">{{ element.name }}</SingleRoom>
+                <div><SingleRoom :room="element" /></div>
             </template>
         </draggable>
     </ModalTemplate>
