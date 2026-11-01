@@ -27,7 +27,7 @@ function onMoved() {
 
 <template>
     <ModalTemplate id="manageRooms" title="Manage rooms">
-        Manage rooms
+        <p class="mb-2 text-sm text-white/40">Drag rooms to change their order</p>
 
         <!-- Each item is wrapped in a div: vuedraggable marks the item's root element as draggable, and SingleRoom's root renders no element of its own -->
         <draggable v-model="sortedRooms" group="rooms" item-key="id" @end="onMoved">
