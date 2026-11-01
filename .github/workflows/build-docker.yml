@@ -20,7 +20,7 @@ jobs:
             # Boot from the .env that setup builds out of the template, exactly like a fresh install
             - run: npm run setup
             - run: docker compose up -d
-            - run: node test/smoke/boot.mjs http://localhost:8081
+            - run: node test/smoke/boot.mjs
             - name: Show container state on failure
               if: failure()
               run: docker compose ps -a && docker compose logs --tail=50
