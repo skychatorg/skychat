@@ -53,7 +53,8 @@ export class MessagePlugin extends RoomPlugin {
                 quoted = await this.loadQuotedMessage(encryptedPayload.quotedId, connection);
             }
         } else {
-            const quoteMatch = content.match(/^@([0-9]+)/);
+            // The space after the id only separates it from the text
+            const quoteMatch = content.match(/^@([0-9]+) ?/);
             if (quoteMatch && quoteMatch[1] && canQuote) {
                 const quoteId = parseInt(quoteMatch[1]);
                 quoted = await this.loadQuotedMessage(quoteId, connection);

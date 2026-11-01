@@ -66,6 +66,22 @@ describe('/join (6177abc)', () => {
     });
 });
 
+describe('quotes', () => {
+    it('drops the quote prefix and the space after it', async () => {
+        const room = await server.roomManager.createRoom('Quotes');
+        const alice = await server.connect(name('alice'));
+        const bob = await server.connect(name('bob'));
+        await alice.send(`/join ${room.id}`);
+        await bob.send(`/join ${room.id}`);
+        await alice.send('original');
+        const quotedId = alice.last('message').id;
+
+        await bob.send(`@${quotedId} reply`);
+
+        expect(bob.last('message')).toMatchObject({ content: 'reply', quoted: { id: quotedId } });
+    });
+});
+
 describe('/lastseen (5ad3a5e)', () => {
     const postIn = async (roomId: number) => {
         const bob = await server.connect(name('bob'));
