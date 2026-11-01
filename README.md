@@ -82,7 +82,6 @@ The `config/preferences.json` file specifies application preferences. The availa
 | minRightForEncryptedMessages          | number               | 0            | Min. right to send end-to-end encrypted messages                                                                 |
 | minRightForUserModeration             | number               | 'op'         | Min. right to ban, kick and access user ips                                                                      |
 | minRightForSetRight                   | number               | 'op'         | Min. right to set user right                                                                                     |
-| minRightForAudioRecording             | number               | -1           | Min. right to share and play audio recordings                                                                    |
 | minRightForConnectedList              | number               | -1           | Min. right to access the list of currently active users                                                          |
 | minRightForPolls                      | number               | -1           | Min. right to create polls                                                                                       |
 | minRightForStickerManagement          | number \| 'op'       | 'op'         | Min. right to add or delete stickers

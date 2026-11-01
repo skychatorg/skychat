@@ -31,11 +31,17 @@ export class FileManager {
             'video/mp4': 'mp4',
             'video/mkv': 'mkv',
             'video/webm': 'webm',
+            // Distinct extensions so the formatter can tell voice notes from videos
+            'audio/webm': 'weba',
+            'audio/ogg': 'ogg',
+            'audio/mp4': 'm4a',
         };
-        if (typeof mimeTypes[file.mimetype] === 'undefined') {
+        // MediaRecorder types carry a codec, like audio/webm;codecs=opus
+        const mimetype = file.mimetype.split(';')[0];
+        if (typeof mimeTypes[mimetype] === 'undefined') {
             throw new Error('Invalid mimetype');
         }
-        const extension = mimeTypes[file.mimetype];
+        const extension = mimeTypes[mimetype];
         const filePath = FileManager.getNewFileLocation(extension);
         file.mv(filePath);
         return filePath;
@@ -46,7 +52,7 @@ export class FileManager {
             new RegExp(
                 '^' +
                     MessageFormatter.escapeRegExp(Config.LOCATION + '/uploads/all/') +
-                    '([0-9a-zA-Z/-]+)\\.(jpg|jpeg|png|webp|gif|pdf|mp4|mkv|webm)$',
+                    '([0-9a-zA-Z/-]+)\\.(jpg|jpeg|png|webp|gif|pdf|mp4|mkv|webm|weba|ogg|m4a)$',
             ),
         );
     }

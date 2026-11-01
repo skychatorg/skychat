@@ -872,21 +872,13 @@ export class SkyChatClient extends EventEmitter {
      */
     _sendRaw(data: any) {
         if (!this._websocket || this._websocket.readyState !== WebSocket.OPEN) {
-            // Queue message for replay when reconnected (skip binary data like audio/cursor)
+            // Queue message for replay when reconnected (skip binary data like cursors)
             if (typeof data === 'string' && this._messageQueue.length < this._maxQueueSize) {
                 this._messageQueue.push({ type: 'raw', data });
             }
             return;
         }
         this._websocket.send(data);
-    }
-
-    /**
-     * Send an audio file
-     * @param blob
-     */
-    sendAudio(blob: Blob) {
-        this._sendRaw(new Blob([new Uint16Array([BinaryMessageTypes.AUDIO]), blob]));
     }
 
     /**
@@ -1065,18 +1057,14 @@ export class SkyChatClient extends EventEmitter {
         if (typeof Buffer !== 'undefined' && message.data.constructor === Buffer) {
             messageData = new Blob([message.data]);
         }
-        // If raw audio received
+        // If binary data received
         if ((messageData && messageData.constructor === Blob) || (typeof Buffer !== 'undefined' && messageData.constructor === Buffer)) {
             // Read message type, which is the first 2 bytes (UInt16)
             const buffer = await messageData.arrayBuffer();
             const view = new DataView(buffer);
             const messageType = view.getUint16(0, true);
 
-            if (messageType === BinaryMessageTypes.AUDIO) {
-                const messageId = view.getUint32(2, true);
-                const audioBlob = messageData.slice(6);
-                this.emit('audio', { id: messageId, blob: audioBlob });
-            } else if (messageType === BinaryMessageTypes.CURSOR) {
+            if (messageType === BinaryMessageTypes.CURSOR) {
                 const id = view.getUint32(2, true);
                 const x = view.getFloat32(6, true);
                 const y = view.getFloat32(10, true);

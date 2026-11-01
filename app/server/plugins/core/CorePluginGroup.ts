@@ -1,7 +1,6 @@
 import { PluginGroup } from '../PluginGroup.js';
 import { AccountPlugin } from './global/AccountPlugin.js';
 import { AdminConfigPlugin } from './global/AdminConfigPlugin.js';
-import { AudioRecorderPlugin } from './global/AudioRecorderPlugin.js';
 import { AvatarPlugin } from './global/AvatarPlugin.js';
 import { BackupPlugin } from './global/BackupPlugin.js';
 import { BanPlugin } from './global/BanPlugin.js';
@@ -54,7 +53,6 @@ export class CorePluginGroup extends PluginGroup {
     globalPluginClasses = [
         AccountPlugin,
         AdminConfigPlugin,
-        AudioRecorderPlugin,
         AvatarPlugin,
         BackupPlugin,
         BanPlugin,

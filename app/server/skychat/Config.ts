@@ -11,7 +11,6 @@ export type Preferences = {
     minRightForEncryptedMessages: number;
     minRightForUserModeration: number | 'op';
     minRightForSetRight: number | 'op';
-    minRightForAudioRecording: number;
     minRightForConnectedList: number;
     minRightForPolls: number;
     minRightForStickerManagement: number | 'op';
@@ -122,7 +121,6 @@ export class Config {
             'minRightForEncryptedMessages',
             'minRightForUserModeration',
             'minRightForSetRight',
-            'minRightForAudioRecording',
             'minRightForConnectedList',
             'minRightForPolls',
             'minRightForStickerManagement',
