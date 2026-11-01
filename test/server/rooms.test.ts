@@ -134,4 +134,21 @@ describe('/pointscollector (71af048)', () => {
 
         expect(alice.events('message').map((m) => m.content)).toContain('still here');
     });
+
+    it('does not use up the cooldown when a round is already running', async () => {
+        const room = await server.roomManager.createRoom('Game 3');
+        const alice = await server.connect(name('alice'));
+        const bob = await server.connect(name('bob'));
+        await alice.send(`/join ${room.id}`);
+        await bob.send(`/join ${room.id}`);
+        alice.connection.emit('message', '/pointscollector');
+        await settle(150);
+
+        await bob.send('/pointscollector');
+        expect(bob.errors()).toEqual(['A round is already in progress']);
+        bob.clear();
+        await bob.send('/pointscollector');
+
+        expect(bob.errors()).toEqual(['A round is already in progress']);
+    });
 });

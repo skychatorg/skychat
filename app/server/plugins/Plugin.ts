@@ -285,7 +285,15 @@ export abstract class Plugin {
      */
     public async execute(alias: string, param: string, connection: Connection) {
         await this.check(alias, param, connection);
-        await this.run(alias, param, connection, connection.session, connection.session.user, connection.room);
+        try {
+            await this.run(alias, param, connection, connection.session, connection.session.user, connection.room);
+        } catch (error) {
+            // A refused command shouldn't cost its cooldown, like /pointscollector while a round is running
+            if (!connection.session.isOP()) {
+                await this.limiters[alias]?.cooldown?.reward(connection.ip, 1);
+            }
+            throw error;
+        }
     }
 
     /**
