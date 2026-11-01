@@ -33,7 +33,7 @@ export class MessagePlugin extends RoomPlugin {
 
     static assertCanShareAudio(content: string, connection: Connection) {
         const hasVoiceNote = new RegExp(MessageFormatter.VOICE_NOTE_PATTERN).test(content);
-        if (hasVoiceNote && connection.session.user.right < Config.PREFERENCES.minRightForAudioRecording) {
+        if (hasVoiceNote && !connection.session.isOP() && connection.session.user.right < Config.PREFERENCES.minRightForAudioRecording) {
             throw new Error('You do not have the permission to share audio recordings');
         }
     }

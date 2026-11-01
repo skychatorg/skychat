@@ -2,12 +2,14 @@ import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { useClientStore } from '@/stores/client';
 import { useMessageComposer } from '@/composables/useMessageComposer';
+import { useUserRight } from '@/composables/useUserRight';
 import { labels } from '../labels';
 
 export function useChatCommands() {
     const client = useClientStore();
     const composerRef = useMessageComposer();
     const route = useRoute();
+    const canRecordAudio = useUserRight('minRightForAudioRecording', -1);
 
     return computed(() => {
         /** @type {import('../types.js').Command[]} */
@@ -32,14 +34,16 @@ export function useChatCommands() {
                 keywords: ['attach', 'file'],
                 run: () => composer.openFilePicker(),
             });
-            out.push({
-                id: 'chat.audio',
-                title: labels.toggleRecording(composer.recording?.value ?? false),
-                icon: 'microphone',
-                category: 'Chat',
-                keywords: ['voice message', 'record'],
-                run: () => composer.toggleRecording(),
-            });
+            if (canRecordAudio.value) {
+                out.push({
+                    id: 'chat.audio',
+                    title: labels.toggleRecording(composer.recording?.value ?? false),
+                    icon: 'microphone',
+                    category: 'Chat',
+                    keywords: ['voice message', 'record'],
+                    run: () => composer.toggleRecording(),
+                });
+            }
             out.push({
                 id: 'chat.encrypt',
                 title: labels.toggleEncryption(),

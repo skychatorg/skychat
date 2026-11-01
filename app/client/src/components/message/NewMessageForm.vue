@@ -8,12 +8,14 @@ import { RisiBank } from 'risibank-web-api';
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { SmartSuggest } from 'vue-smart-suggest';
 import { useClientState } from '../../composables/useClientState';
+import { useUserRight } from '@/composables/useUserRight';
 import { registerMessageComposer } from '@/composables/useMessageComposer';
 
 const MESSAGE_HISTORY_LENGTH = 500;
 
 const app = useAppStore();
 const client = useClientStore();
+const canRecordAudio = useUserRight('minRightForAudioRecording', -1);
 const encryption = useEncryptionStore();
 
 const message = ref(null);
@@ -503,6 +505,7 @@ onUnmounted(() => releaseComposer());
 
                 <!-- Audio -->
                 <button
+                    v-if="canRecordAudio"
                     class="w-8 h-8 rounded-lg flex items-center justify-center transition"
                     :class="
                         recordingAudio

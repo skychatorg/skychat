@@ -42,6 +42,7 @@ export type PublicConfig = {
     minRightForStickerManagement: number | 'op';
     minRightForHighlightManagement: number | 'op';
     minRightForMessageHistory: number;
+    minRightForAudioRecording: number;
 };
 
 export class Config {
@@ -76,6 +77,7 @@ export class Config {
             minRightForStickerManagement: Config.PREFERENCES.minRightForStickerManagement,
             minRightForHighlightManagement: Config.PREFERENCES.minRightForHighlightManagement ?? 'op',
             minRightForMessageHistory: Config.PREFERENCES.minRightForMessageHistory,
+            minRightForAudioRecording: Config.PREFERENCES.minRightForAudioRecording,
         };
     }
 
