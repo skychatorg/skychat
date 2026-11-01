@@ -85,7 +85,9 @@ export class RoomManagerPlugin extends RoomPlugin {
 
             case 'main': {
                 if (value !== 'true') {
-                    throw new Error('Use /roomset main true to set this room as main. To change main room, run this command in another room.');
+                    throw new Error(
+                        'Use /roomset main true to set this room as main. To change main room, run this command in another room.',
+                    );
                 }
 
                 // Validate: must be a public room

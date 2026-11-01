@@ -26,11 +26,11 @@ const client = useClientStore();
             </div>
             <!-- Vote -->
             <div v-if="poll.opVote === undefined && (poll.state === 'pending' || poll.state === 'started')">
-                <button title="Vote yes" @click="client.sendMessage(`/vote ${poll.id} y`)" class="form-control !text-primary mr-2">
+                <button title="Vote yes" class="form-control !text-primary mr-2" @click="client.sendMessage(`/vote ${poll.id} y`)">
                     <template v-if="poll.yesCount">{{ poll.yesCount }}</template>
                     <fa icon="thumbs-up" :class="{ 'ml-2': poll.yesCount }" />
                 </button>
-                <button title="Vote no" @click="client.sendMessage(`/vote ${poll.id} n`)" class="form-control !text-tertiary">
+                <button title="Vote no" class="form-control !text-tertiary" @click="client.sendMessage(`/vote ${poll.id} n`)">
                     <template v-if="poll.noCount">{{ poll.noCount }}</template>
                     <fa icon="thumbs-down" :class="{ 'ml-2': poll.noCount }" />
                 </button>
@@ -38,9 +38,13 @@ const client = useClientStore();
             <!-- Results -->
             <div v-if="poll.opVote === undefined && poll.state === 'finished'">
                 <p>
-                    <button v-if="poll.result === true" class="form-control !text-primary">Decision made<fa icon="thumbs-up" class="ml-2" /></button>
+                    <button v-if="poll.result === true" class="form-control !text-primary">
+                        Decision made<fa icon="thumbs-up" class="ml-2" />
+                    </button>
                     <button v-if="poll.result === undefined" class="form-control !text-secondary">Unable to decide 🤷‍♂️</button>
-                    <button v-if="poll.result === false" class="form-control !text-tertiary">Decision made<fa icon="thumbs-down" class="ml-2" /></button>
+                    <button v-if="poll.result === false" class="form-control !text-tertiary">
+                        Decision made<fa icon="thumbs-down" class="ml-2" />
+                    </button>
                 </p>
             </div>
         </div>

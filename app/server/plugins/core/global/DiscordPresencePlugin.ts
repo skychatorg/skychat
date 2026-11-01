@@ -293,7 +293,10 @@ export class DiscordPresencePlugin extends GlobalPlugin {
 
             // Count users in voice channels, excluding private/hidden channels
             const excludedChannelIds = new Set(
-                (process.env.DISCORD_EXCLUDED_CHANNEL_IDS || '').split(',').map((id: string) => id.trim()).filter(Boolean),
+                (process.env.DISCORD_EXCLUDED_CHANNEL_IDS || '')
+                    .split(',')
+                    .map((id: string) => id.trim())
+                    .filter(Boolean),
             );
             const voiceCount = data.members.filter(
                 (member: any) => Boolean(member.channel_id) && !excludedChannelIds.has(member.channel_id),

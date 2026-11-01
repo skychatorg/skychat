@@ -206,7 +206,12 @@ onBeforeUnmount(() => {
                     <!-- Poster / thumb -->
                     <div
                         class="relative w-full overflow-hidden rounded bg-skygray-dark/40 ring-2 ring-inset transition-colors"
-                        :class="[posterAspect(item), isSelected(item) ? 'ring-[rgb(var(--color-primary))]' : 'ring-transparent group-hover:ring-[rgb(var(--color-primary))]']"
+                        :class="[
+                            posterAspect(item),
+                            isSelected(item)
+                                ? 'ring-[rgb(var(--color-primary))]'
+                                : 'ring-transparent group-hover:ring-[rgb(var(--color-primary))]',
+                        ]"
                     >
                         <img
                             v-if="showPoster(item)"
@@ -262,11 +267,15 @@ onBeforeUnmount(() => {
             <div class="flex items-center gap-2 mb-2 text-sm">
                 <span class="opacity-70">{{ selected.length }} selected · drag to reorder</span>
                 <button class="ml-auto form-control px-3 py-1 text-xs" @click="clearSelection">Clear</button>
-                <button class="form-control px-3 py-1 text-xs text-primary" @click="submitSelection">Add {{ selected.length }} to queue</button>
+                <button class="form-control px-3 py-1 text-xs text-primary" @click="submitSelection">
+                    Add {{ selected.length }} to queue
+                </button>
             </div>
             <draggable v-model="selected" item-key="id" :animation="150" class="flex gap-2 overflow-x-auto pb-1 scrollbar">
                 <template #item="{ element, index }">
-                    <div class="shrink-0 flex items-center gap-2 bg-skygray-dark/60 rounded-lg pl-1 pr-2 py-1 cursor-grab active:cursor-grabbing">
+                    <div
+                        class="shrink-0 flex items-center gap-2 bg-skygray-dark/60 rounded-lg pl-1 pr-2 py-1 cursor-grab active:cursor-grabbing"
+                    >
                         <img v-if="showPoster(element)" :src="posterUrl(element)" class="h-8 w-8 object-cover rounded" />
                         <span class="text-xs opacity-50 w-4 text-center">{{ index + 1 }}</span>
                         <span class="truncate max-w-[160px] text-sm" :title="element.name">{{ element.name }}</span>

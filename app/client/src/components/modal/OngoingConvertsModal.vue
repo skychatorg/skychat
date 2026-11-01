@@ -12,9 +12,14 @@ const app = useAppStore();
 <template>
     <ModalTemplate id="ongoingConverts" title="Ongoing converts">
         <div class="text-center">
-            <button @click="client.sendMessage('/convertlist')" class="form-control mb-4">Update</button>
+            <button class="form-control mb-4" @click="client.sendMessage('/convertlist')">Update</button>
             <div>
-                <HoverCard v-for="ongoingConvert in client.state.ongoingConverts" :key="ongoingConvert.target" :selectable="false" :selected="false">
+                <HoverCard
+                    v-for="ongoingConvert in client.state.ongoingConverts"
+                    :key="ongoingConvert.target"
+                    :selectable="false"
+                    :selected="false"
+                >
                     <div class="px-3 py-1 text-center flex flex-col">
                         <div>
                             {{ ongoingConvert.source.split('/').pop() }}

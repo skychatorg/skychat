@@ -89,14 +89,14 @@ watch(
         <!-- Avatar -->
         <SectionSubTitle class="mt-2">Avatar</SectionSubTitle>
         <div class="flex justify-center gap-4">
-            <input @change="uploadAvatar" type="file" class="grow form-control" placeholder="Avatar" accept="image/png, image/jpeg" />
+            <input type="file" class="grow form-control" placeholder="Avatar" accept="image/png, image/jpeg" @change="uploadAvatar" />
         </div>
 
         <!-- Motto -->
         <SectionSubTitle class="mt-6">Motto</SectionSubTitle>
         <div class="flex justify-center gap-4">
             <input v-model="newMotto" class="grow form-control" placeholder="What drives you?" />
-            <button @click="saveNewMotto" class="form-control">Save</button>
+            <button class="form-control" @click="saveNewMotto">Save</button>
         </div>
 
         <!-- Color -->
@@ -137,8 +137,8 @@ watch(
                 max="-30"
                 step="1"
                 :value="app.voiceSettings.vadThreshold"
-                @input="app.setVoiceVadThreshold(Number($event.target.value))"
                 class="w-full"
+                @input="app.setVoiceVadThreshold(Number($event.target.value))"
             />
             <p class="text-xs text-white/40 mt-1">
                 Lower = more sensitive. In “Voice activity” mode your mic only transmits above this level.
@@ -172,8 +172,8 @@ watch(
                 max="1000"
                 step="50"
                 :value="app.voiceSettings.noiseGateHold"
-                @input="app.setVoiceNoiseGateHold(Number($event.target.value))"
                 class="w-full"
+                @input="app.setVoiceNoiseGateHold(Number($event.target.value))"
             />
             <p class="text-xs text-white/40 mt-1">How long the mic stays open after you stop talking, so word endings aren’t cut off.</p>
         </template>

@@ -28,7 +28,7 @@ defineProps({
             <DialogOverlay class="modal-overlay" />
             <DialogContent :class="['modal-surface', `modal-${variant}`]" @open-auto-focus.prevent>
                 <div class="relative shrink-0">
-                    <button @click="app.closeModal(id)" class="absolute top-0 left-2" aria-label="Close">
+                    <button class="absolute top-0 left-2" aria-label="Close" @click="app.closeModal(id)">
                         <fa icon="times" />
                     </button>
                     <DialogTitle as-child>
