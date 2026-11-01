@@ -153,13 +153,9 @@ export class Room implements IBroadcaster {
     static async create(manager: RoomManager, data: StoredRoom, id: number, createdAt: Date = new Date()): Promise<Room> {
         const room = new Room(manager, data, id, createdAt);
 
-        // Validate private room whitelist
-        if (room.isPrivate) {
-            if (room.whitelist.length === 0) {
-                throw new Error(`Room ${id} is private but has no whitelist entry`);
-            } else if (room.whitelist.length === 1) {
-                throw new Error(`Room ${id} is private but has only one whitelist entry ${room.whitelist[0]}`);
-            }
+        // One member is fine: that's what /pmleave and /pmremove leave behind in a 2-person room
+        if (room.isPrivate && room.whitelist.length === 0) {
+            throw new Error(`Room ${id} is private but has no whitelist entry`);
         }
 
         // Start periodic save
