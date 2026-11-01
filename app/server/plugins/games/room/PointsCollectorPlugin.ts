@@ -6,6 +6,7 @@ import { RandomGenerator } from '../../../skychat/RandomGenerator.js';
 import { Session } from '../../../skychat/Session.js';
 import { Message } from '../../../skychat/Message.js';
 import { Timing } from '../../../skychat/Timing.js';
+import { Logging } from '../../../skychat/Logging.js';
 import { CursorPlugin } from '../global/CursorPlugin.js';
 
 type GameObject = {
@@ -80,7 +81,13 @@ export class PointsCollectorPlugin extends RoomPlugin {
         this.currentGame.gameMessage = await this.room.sendMessage({ content: '...', user: UserController.getNeutralUser() });
         this.updateGameMessage();
 
-        // Start game
+        // Not awaited: commands from one connection run one at a time, so awaiting would block the player for the whole round
+        this.playRound(this.currentGame, cursorPlugin)
+            .catch((error) => Logging.error('Points collector round failed', error))
+            .finally(() => (this.currentGame = null));
+    }
+
+    private async playRound(game: GameObject, cursorPlugin: CursorPlugin): Promise<void> {
         const gameStartDate = new Date();
         let lastTick = new Date();
         while (new Date().getTime() - gameStartDate.getTime() < PointsCollectorPlugin.GAME_DURATION) {
@@ -93,18 +100,15 @@ export class PointsCollectorPlugin extends RoomPlugin {
         }
 
         // Finalize game
-        this.currentGame.ball.pos.x = 1;
-        this.currentGame.ball.pos.y = 1;
-        this.currentGame.point.x = 1;
-        this.currentGame.point.y = 1;
+        game.ball.pos.x = 1;
+        game.ball.pos.y = 1;
+        game.point.x = 1;
+        game.point.y = 1;
         this.updatePositions(cursorPlugin);
 
         // Send recap message
-        this.currentGame.gameMessage.edit(`Finished! You collected ${this.currentGame.collectedPoints} points`);
-        this.room.send('message-edit', this.currentGame.gameMessage.sanitized());
-
-        // End game
-        this.currentGame = null;
+        game.gameMessage!.edit(`Finished! You collected ${game.collectedPoints} points`);
+        this.room.send('message-edit', game.gameMessage!.sanitized());
     }
 
     private movePoint(): void {
