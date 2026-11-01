@@ -5,7 +5,7 @@ if [ ! -e backups ]; then
     mkdir backups;
 fi
 if [ ! -e uploads ]; then
-    mkdir -p uploads/{all,avatars,stickers};
+    mkdir -p uploads/all uploads/avatars uploads/stickers;
 fi
 if [ ! -e gallery ]; then
     mkdir -p gallery;
@@ -34,14 +34,19 @@ fi
 if [ ! -e .env ]; then
     cp app/template/.env.template .env;
 
-    DOCKER_USER="$USER"
-    sed -i "0,/\$DOCKER_USER/{s/\$DOCKER_USER/$DOCKER_USER/}" .env
-
-    DOCKER_UID="$(id -u)"
-    sed -i "0,/\$DOCKER_UID/{s/\$DOCKER_UID/$DOCKER_UID/}" .env
-
-    DOCKER_GID="$(id -g)"
-    sed -i "0,/\$DOCKER_GID/{s/\$DOCKER_GID/$DOCKER_GID/}" .env
+    # Replace a $NAME placeholder from the template
+    fill() {
+        sed -i "s/\$$1/$2/" .env
+    }
+    secret() {
+        LC_ALL=C tr -dc 'A-Za-z0-9' </dev/urandom | head -c 32
+    }
+    fill DOCKER_USER "$USER"
+    fill DOCKER_UID "$(id -u)"
+    fill DOCKER_GID "$(id -g)"
+    fill USERS_PASSWORD_SALT "$(secret)"
+    fill USERS_TOKEN_SALT "$(secret)"
+    fill POSTGRES_PASSWORD "$(secret)"
 fi
 
 # Create config directory if it does not exist
