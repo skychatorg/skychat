@@ -173,9 +173,8 @@ describe('/pmremove and /pmleave (6177abc)', () => {
         expect(room.whitelist).not.toContain(alice.session.identifier);
     });
 
-    // BUG: leaving a 2-person room leaves a 1-entry whitelist, which Room.create refuses, so the room
-    // (and the remaining member's history) is dropped with an error on the next server start
-    it.fails('a 2-person room someone left still loads after a restart', async () => {
+    // Room.create used to refuse a 1-entry whitelist, so the remaining member lost the room on the next start
+    it('a 2-person room someone left still loads after a restart', async () => {
         const alice = await server.connect(name('alice'));
         const bob = await server.connect(name('bob'));
         await alice.send(`/pm ${bob.session.user.username}`);
