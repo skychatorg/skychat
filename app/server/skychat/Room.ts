@@ -275,6 +275,14 @@ export class Room implements IBroadcaster {
         this.messages = (await MessageController.getMessages(['room_id', '=', this.id], 'id DESC', Room.MESSAGE_HISTORY_LENGTH)).sort(
             (m1, m2) => m1.id - m2.id,
         );
+        // The DB only stores the quoted message's id, attach the message itself like live messages have it
+        for (const message of this.messages) {
+            const quotedId = message.meta._quoted_message_id;
+            if (typeof quotedId === 'number') {
+                message.quoted =
+                    this.getMessageById(quotedId) ?? (await MessageController.getMessageById(quotedId, false).catch(() => null));
+            }
+        }
     }
 
     /**
