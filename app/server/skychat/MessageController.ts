@@ -57,7 +57,8 @@ export class MessageController {
         const userMap = await UserController.getUsersByIds(userIds);
         for (const messageRow of messageRows) {
             const user = messageRow.user_id ? userMap.get(messageRow.user_id) : undefined;
-            const resolvedUser = user || UserController.getNeutralUser('Guest');
+            // Server messages are saved with the neutral user's id (-1), which has no users row
+            const resolvedUser = messageRow.user_id < 0 ? UserController.getNeutralUser() : user || UserController.getNeutralUser('Guest');
             let storage: MessageStorage | undefined;
             try {
                 storage = JSON.parse(messageRow.storage);
