@@ -10,6 +10,9 @@ const client = useClientStore();
 const palette = usePaletteStore();
 const router = useRouter();
 
+// Before login the client holds a placeholder user, with no avatar and nothing to log out of
+const onLoginPage = computed(() => router.currentRoute.value.name === 'home');
+
 const logout = () => {
     if (client.state.user.id > 0) {
         client.logout();
@@ -69,6 +72,7 @@ const onlineCount = computed(() => (client.state.connectedList || []).length);
                         {{ onlineCount }}<span class="hidden lg:inline"> online</span>
                     </span>
                     <button
+                        v-if="!onLoginPage"
                         class="flex items-center gap-2 pl-2 pr-2 py-1 hairline rounded-lg bg-white/[.02] hover:bg-white/[.05] transition"
                         @click="app.toggleModal('profile')"
                     >
@@ -88,7 +92,7 @@ const onlineCount = computed(() => (client.state.connectedList || []).length);
                         </span>
                     </button>
                     <button
-                        v-if="!app.effectiveRightCollapsed"
+                        v-if="!onLoginPage && !app.effectiveRightCollapsed"
                         class="w-10 h-10 rounded-md flex items-center justify-center text-white/50 hover:text-white hover:bg-white/5 transition"
                         title="Logout"
                         @click="logout"
