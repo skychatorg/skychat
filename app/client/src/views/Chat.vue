@@ -77,11 +77,11 @@ const clearSearch = () => {
             <PlayerChannelList :compact="app.effectiveLeftCollapsed" />
             <VoiceChannelList :compact="app.effectiveLeftCollapsed" />
             <div class="p-2 text-end lg:hidden">
-                <button class="form-control mr-2" @click="app.mobileSetView('middle')">
+                <button class="form-control mr-2" title="Chat" @click="app.mobileSetView('middle')">
                     <fa icon="comments" class="mr-2" />
                     <fa icon="chevron-right" />
                 </button>
-                <button class="form-control" @click="app.mobileSetView('right')">
+                <button class="form-control" title="Users" @click="app.mobileSetView('right')">
                     <fa icon="users" class="mr-2" />
                     <fa icon="chevron-right" />
                 </button>
@@ -129,11 +129,11 @@ const clearSearch = () => {
         >
             <ConnectedList class="flex-grow min-h-0" :compact="app.effectiveRightCollapsed" />
             <div class="p-2 lg:hidden">
-                <button class="form-control mr-2" @click="app.mobileSetView('left')">
+                <button class="form-control mr-2" title="Rooms" @click="app.mobileSetView('left')">
                     <fa icon="chevron-left" class="mr-2" />
-                    <fa icon="gears" />
+                    <fa icon="hashtag" />
                 </button>
-                <button class="form-control" @click="app.mobileSetView('middle')">
+                <button class="form-control" title="Chat" @click="app.mobileSetView('middle')">
                     <fa icon="chevron-left" class="mr-2" />
                     <fa icon="comments" />
                 </button>
