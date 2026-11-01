@@ -227,7 +227,8 @@ const canDeleteMessage = computed(() => {
 });
 
 const quoteMessage = () => {
-    app.setMessage('@' + props.message.id + ' ');
+    // Keep what was already typed, replacing any previous quote
+    app.setMessage(`@${props.message.id} ` + app.newMessage.replace(/^@\d+ /, ''));
     showActionMenu.value = false;
     // Delay focus past Radix Vue's RAF-based focus restoration on context menu close
     setTimeout(() => composer.value?.focus(), 0);
