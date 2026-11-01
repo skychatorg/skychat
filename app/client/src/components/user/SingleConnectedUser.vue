@@ -1,4 +1,5 @@
 <script setup>
+import { copyText } from '@/lib/copyText.js';
 import SkyContextMenu from '@/components/common/SkyContextMenu.vue';
 import SkyContextMenuItem from '@/components/common/SkyContextMenuItem.vue';
 import SkyDropdown from '@/components/common/SkyDropdown.vue';
@@ -86,7 +87,7 @@ const openAvatar = () => {
 };
 
 const copyUsername = () => {
-    navigator.clipboard.writeText(props.entry.user.username);
+    copyText(props.entry.user.username);
 };
 
 const formattedMoney = computed(() => {

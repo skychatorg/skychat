@@ -1,3 +1,4 @@
+import { copyText } from '@/lib/copyText.js';
 import { computed } from 'vue';
 import { useAppStore } from '@/stores/app';
 import { apiClient, useClientStore } from '@/stores/client';
@@ -68,7 +69,7 @@ export function useRoomCommands() {
                 subtitle,
                 icon: 'copy',
                 category: 'Rooms',
-                run: () => navigator.clipboard.writeText(room.id.toString()),
+                run: () => copyText(room.id.toString()),
             });
         }
 
