@@ -1,7 +1,13 @@
 #!/bin/sh
 
-# Refuse to start if enabled but without http auth (ADMIN_FILEBROWSER_AUTH is empty)
-if [ -n "$ADMIN_FILEBROWSER_ENABLED" ] && [ -z "$ADMIN_FILEBROWSER_AUTH" ]; then
+# Same check as the traefik routing in dynamic.yml
+if [ "$ADMIN_FILEBROWSER_ENABLED" != "true" ]; then
+    echo "Filebrowser is disabled."
+    exit 0
+fi
+
+# Refuse to start without http auth
+if [ -z "$ADMIN_FILEBROWSER_AUTH" ]; then
     echo "⚠️ Filebrowser is enabled but no authentication method is set. Please set ADMIN_FILEBROWSER_AUTH."
     exit 1
 fi
