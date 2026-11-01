@@ -127,7 +127,13 @@ export const useClientStore = defineStore('client', {
                     return;
                 }
                 const decrypted = await encryptionStore.decryptIncomingMessage(message);
-                this.messages[messageIndex] = decrypted;
+                // A message merged with a newer one would otherwise stay above local-only messages (id 0, like /help), out of sight
+                if (this.messages.slice(messageIndex + 1).every((m) => m.id === 0)) {
+                    this.messages.splice(messageIndex, 1);
+                    this.messages.push(decrypted);
+                } else {
+                    this.messages[messageIndex] = decrypted;
+                }
             });
 
             // Ask for push notification permission on user login
