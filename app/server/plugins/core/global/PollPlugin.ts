@@ -51,7 +51,7 @@ export class PollPlugin extends GlobalPlugin {
      * @param connection
      */
     private async handlePoll(param: string, connection: Connection) {
-        await this.poll(`${connection.session.user.username} asks:`, param, {
+        await this.poll(`${connection.session.user.username} asks`, param, {
             audience: connection.room ? connection.room : '*',
             defaultValue: undefined,
             timeout: PollPlugin.POLL_TIMEOUT,
