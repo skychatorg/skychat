@@ -3,6 +3,7 @@ import { Plugin } from '../../Plugin.js';
 import { Poll, PollOptions } from './Poll.js';
 import { Config } from '../../../skychat/Config.js';
 import { GlobalPlugin } from '../../GlobalPlugin.js';
+import { Logging } from '../../../skychat/Logging.js';
 
 export class PollPlugin extends GlobalPlugin {
     public static readonly POLL_CREATION_COOL_DOWN: number = 60 * 1000;
@@ -51,11 +52,12 @@ export class PollPlugin extends GlobalPlugin {
      * @param connection
      */
     private async handlePoll(param: string, connection: Connection) {
-        await this.poll(`${connection.session.user.username} asks`, param, {
+        // Not awaited: commands from one connection run one at a time, so the creator couldn't vote or chat until it ended
+        this.poll(`${connection.session.user.username} asks`, param, {
             audience: connection.room ? connection.room : '*',
             defaultValue: undefined,
             timeout: PollPlugin.POLL_TIMEOUT,
-        });
+        }).catch((error) => Logging.error('Poll failed', error));
     }
 
     /**

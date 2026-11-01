@@ -694,19 +694,20 @@ export class PlayerPlugin extends GlobalPlugin {
                 }
                 // Vote skip
                 if (this.manager.getPlugin('poll') && channel.getPlayerData().current) {
-                    const poll = await (this.manager.getPlugin('poll') as PollPlugin).poll(
-                        `${channel.name}: Skip media?`,
-                        `${connection.session.identifier} wants to skip ${channel.getPlayerData().current?.video.title}. Skip media?`,
-                        {
-                            audience: channel.sessions,
-                            defaultValue: false,
-                            timeout: 10 * 1000,
-                            minVotes: 2,
-                        },
-                    );
-                    if (poll.getResult()) {
-                        channel.skip();
-                    }
+                    // Not awaited, so the requester can still vote and chat while the vote runs
+                    (this.manager.getPlugin('poll') as PollPlugin)
+                        .poll(
+                            `${channel.name}: Skip media?`,
+                            `${connection.session.identifier} wants to skip ${channel.getPlayerData().current?.video.title}. Skip media?`,
+                            {
+                                audience: channel.sessions,
+                                defaultValue: false,
+                                timeout: 10 * 1000,
+                                minVotes: 2,
+                            },
+                        )
+                        .then((poll) => poll.getResult() && channel.skip())
+                        .catch((error) => Logging.error('Skip vote failed', error));
                     return;
                 }
                 throw new Error('You are not authorized to modify the player right now');
