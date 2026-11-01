@@ -54,6 +54,7 @@ export class MessageFormatter {
         message = this.replaceNewlines(message, remove, trusted);
         message = this.replaceButtons(message, remove, trusted);
         message = this.replaceImages(message, remove, trusted);
+        message = this.replaceAudio(message, remove);
         message = this.replaceRisiBankStickers(message, remove);
         message = this.replaceStickers(message, remove);
         message = this.replaceLinks(message, remove);
@@ -199,6 +200,15 @@ export class MessageFormatter {
             }
         }
         return message;
+    }
+
+    /**
+     * Replace uploaded voice notes with an audio player
+     */
+    public replaceAudio(message: string, remove?: boolean): string {
+        return message.replace(new RegExp(Config.LOCATION + '/uploads/all/[-\\/._a-zA-Z0-9]+\\.(weba|ogg|m4a)', 'g'), (url) =>
+            remove ? '' : `<audio class="skychat-audio-tag" controls preload="metadata" src="${url}"></audio>`,
+        );
     }
 
     /**

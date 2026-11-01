@@ -95,26 +95,6 @@ export const useClientStore = defineStore('client', {
                 }
             });
 
-            // Audio received
-            client.on('audio', ({ id, blob }) => {
-                // Try and find the message that corresponds to the audio
-                const message = this.messages.find((message) => message.id === id);
-                if (!message) {
-                    console.warn(`Could not find message with id ${id}, audio will be played directly.`);
-                    // Play audio blob directly
-                    const audio = new Audio(URL.createObjectURL(blob));
-                    audio.play();
-                    return;
-                }
-                // Update the message with the audio blob
-                message.formatted = `
-                    <audio class="skychat-audio-tag" controls autoplay>
-                        <source src="${URL.createObjectURL(blob)}" type="audio/wav">
-                        Your browser does not support the audio element.
-                    </audio>
-                `;
-            });
-
             // On new message
             client.on('message', async (message) => {
                 const decrypted = await encryptionStore.decryptIncomingMessage(message);
@@ -331,9 +311,6 @@ export const useClientStore = defineStore('client', {
         },
         sendMessage: (message) => {
             client.sendMessage(message);
-        },
-        sendAudio: (blob) => {
-            client.sendAudio(blob);
         },
         sendCursorPosition: (x, y) => {
             client.sendCursorPosition(x, y);

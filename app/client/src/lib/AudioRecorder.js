@@ -14,7 +14,8 @@ export class AudioRecorder {
             return new Promise((resolve) => {
                 // Create the blob/uri/audio once the recording actually stops
                 mediaRecorder.addEventListener('stop', () => {
-                    const blob = new Blob(chunks);
+                    // The upload needs the type to accept the file
+                    const blob = new Blob(chunks, { type: mediaRecorder.mimeType });
                     const uri = URL.createObjectURL(blob);
                     const audio = new Audio(uri);
                     mediaStream.getTracks().forEach((t) => t.stop());
