@@ -1,10 +1,10 @@
 // Checks that a running stack really serves chat: connects to the backend through traefik as a guest and waits for
 // the events a client needs. A 200 on the home page is not enough, since frontend and static answer while the backend crashloops.
-// Usage: node test/smoke/boot.mjs [baseUrl] [timeoutSec]
+// Usage: node test/smoke/boot.mjs [timeoutSec]
 import WebSocket from 'ws';
 
-const base = process.argv[2] ?? 'http://localhost:8081';
-const deadline = Date.now() + Number(process.argv[3] ?? 300) * 1000;
+const base = 'http://localhost:8081';
+const deadline = Date.now() + Number(process.argv[2] ?? 300) * 1000;
 const expected = ['connection-accepted', 'config', 'room-list', 'join-room', 'messages'];
 
 function attempt() {
