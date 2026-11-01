@@ -1,3 +1,5 @@
 node_modules
 dist
 build
+# Written by the Jellyfin container at runtime
+app/jellyfin/config

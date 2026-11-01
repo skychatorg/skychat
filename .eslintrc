@@ -15,7 +15,22 @@
         "plugin:vue/vue3-recommended",
         "prettier"
     ],
-    "plugins": ["prettier"],
+    "plugins": ["prettier", "@typescript-eslint"],
+    "overrides": [
+        // The core rule flags names in TypeScript signatures, interfaces and enums
+        {
+            "files": ["*.ts"],
+            "rules": {
+                "no-unused-vars": "off",
+                "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }]
+            }
+        },
+        // Route views are single words by design
+        {
+            "files": ["app/client/src/views/*.vue"],
+            "rules": { "vue/multi-word-component-names": "off" }
+        }
+    ],
     "rules": {
         "prettier/prettier": [
             "error",
