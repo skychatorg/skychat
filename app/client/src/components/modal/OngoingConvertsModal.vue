@@ -1,12 +1,9 @@
 <script setup>
-import { watch, ref } from 'vue';
-import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
 import ModalTemplate from '@/components/modal/ModalTemplate.vue';
 import HoverCard from '@/components/util/HoverCard.vue';
 
 const client = useClientStore();
-const app = useAppStore();
 </script>
 
 <template>

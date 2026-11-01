@@ -1,7 +1,7 @@
 <script setup>
 import UserMiniAvatar from '@/components/user/UserMiniAvatar.vue';
 
-const props = defineProps({
+defineProps({
     users: {
         type: Array,
         required: true,
