@@ -8,6 +8,7 @@
     "minRightForEncryptedMessages": 0,
     "minRightForUserModeration": "op",
     "minRightForSetRight": "op",
+    "minRightForAudioRecording": -1,
     "minRightForConnectedList": -1,
     "minRightForPolls": -1,
     "minRightForStickerManagement": "op",

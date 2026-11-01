@@ -1,7 +1,8 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Config } from '../../app/server/skychat/Config.js';
 import { FileManager } from '../../app/server/skychat/FileManager.js';
 import { MessageFormatter } from '../../app/server/skychat/MessageFormatter.js';
+import { TestServer } from './harness.js';
 
 const upload = (mimetype: string) => FileManager.saveFile({ mimetype, mv: vi.fn() } as never);
 
@@ -28,5 +29,32 @@ describe('voice notes', () => {
     it('does not render a video upload as audio', () => {
         const url = FileManager.getFileUrlFromLocalPath(upload('video/webm'));
         expect(MessageFormatter.getInstance().format(url)).not.toContain('<audio');
+    });
+
+    describe('minRightForAudioRecording', () => {
+        const defaultRight = Config.PREFERENCES.minRightForAudioRecording;
+        afterEach(() => {
+            Config.PREFERENCES.minRightForAudioRecording = defaultRight;
+        });
+
+        it('refuses voice notes, sent or edited in, below the right', async () => {
+            Config.PREFERENCES.minRightForAudioRecording = 5;
+            const server = await new TestServer().start();
+            const url = FileManager.getFileUrlFromLocalPath(upload('audio/webm'));
+            const low = await server.connect('audiolow', 0);
+            const high = await server.connect('audiohigh', 5);
+
+            await low.send(url);
+            await low.send('plain text');
+            await low.send(`/edit ${low.last('message').id} ${url}`);
+            await high.send(url);
+
+            expect(low.errors()).toEqual([
+                'You do not have the permission to share audio recordings',
+                'You do not have the permission to share audio recordings',
+            ]);
+            expect(high.errors()).toEqual([]);
+            expect(high.last('message').formatted).toContain('<audio');
+        });
     });
 });
