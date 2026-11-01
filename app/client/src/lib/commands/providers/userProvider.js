@@ -48,6 +48,8 @@ export function useUserCommands() {
                 icon: 'paper-plane',
                 category: 'Users',
                 keywords: ['private message', 'dm'],
+                // Typing a username and pressing Enter should start a PM, not the earlier-matching Copy, Kick or Ban
+                boost: 100,
                 run: () => client.sendMessage(`/pm ${u}`),
             });
 

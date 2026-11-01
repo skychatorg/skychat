@@ -9,6 +9,7 @@
  * @property {CommandCategory} category  Group header
  * @property {string[]} [keywords]       Extra terms the fuzzy matcher considers
  * @property {string} [shortcut]         Display-only hint (e.g. 'Alt+↓')
+ * @property {number} [boost]            Added to the match score, to rank the expected action first among similar ones
  *
  * Exactly one of `run` / `expand` must be set.
  * @property {() => void} [run]           Atomic action (closes the palette after firing)
