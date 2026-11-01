@@ -261,7 +261,8 @@ export abstract class Plugin {
             const entryPointRule = this.rules[alias];
             const params = entryPointRule.params || [];
             const minParamCount = entryPointRule.minCount || 0;
-            const maxParamCount = entryPointRule.maxCount || Infinity;
+            // ?? so that maxCount: 0 (no parameters) is enforced
+            const maxParamCount = entryPointRule.maxCount ?? Infinity;
 
             if (splitParams.length < minParamCount) {
                 throw new Error('Expected at least ' + minParamCount + ' parameters. Got ' + splitParams.length);
