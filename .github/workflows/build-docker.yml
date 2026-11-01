@@ -9,27 +9,18 @@ on:
 jobs:
     build:
         runs-on: ubuntu-latest
-        strategy:
-            matrix:
-                node-version: [14.x, 16.x, 18.x]
         steps:
             - uses: actions/checkout@v3
-            - name: Use Node.js ${{ matrix.node-version }}
+            - name: Use Node.js 22.x
               uses: actions/setup-node@v3
               with:
-                  node-version: ${{ matrix.node-version }}
+                  node-version: 22.x
                   cache: 'npm'
             - run: npm ci --ignore-scripts
+            # Boot from the .env that setup builds out of the template, exactly like a fresh install
             - run: npm run setup
-            # The containers bind-mount directories `npm run setup` created as the runner user, but
-            # .env.github hard-codes uid/gid 1000 and the runner is 1001. Postgres then cannot chown
-            # its data directory and exits during initdb. Take the uid/gid from the runner instead.
-            - run: |
-                  cp .github/workflows/.env.github .env
-                  sed -i "s/^DOCKER_UID=.*/DOCKER_UID=\"$(id -u)\"/" .env
-                  sed -i "s/^DOCKER_GID=.*/DOCKER_GID=\"$(id -g)\"/" .env
-                  grep -E '^DOCKER_(UID|GID)=' .env
             - run: docker compose up -d
+            - run: node test/smoke/boot.mjs http://localhost:8081
             - name: Show container state on failure
               if: failure()
               run: docker compose ps -a && docker compose logs --tail=50
