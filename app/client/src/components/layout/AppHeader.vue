@@ -41,7 +41,7 @@ const onlineCount = computed(() => (client.state.connectedList || []).length);
             >
                 <a href="/" class="flex items-center gap-2 min-w-0">
                     <img src="/assets/logo.png" alt="SkyChat" class="h-7 w-auto shrink-0" />
-                    <span v-if="!app.effectiveLeftCollapsed" class="font-semibold text-base tracking-tight">SkyChat</span>
+                    <span v-if="!app.effectiveLeftCollapsed" class="hidden sm:inline font-semibold text-base tracking-tight">SkyChat</span>
                 </a>
             </div>
 
