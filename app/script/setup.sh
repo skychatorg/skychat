@@ -41,7 +41,7 @@ if [ ! -e .env ]; then
     secret() {
         LC_ALL=C tr -dc 'A-Za-z0-9' </dev/urandom | head -c 32
     }
-    fill DOCKER_USER "$USER"
+    fill DOCKER_USER "${USER:-$(id -un)}"
     fill DOCKER_UID "$(id -u)"
     fill DOCKER_GID "$(id -g)"
     fill USERS_PASSWORD_SALT "$(secret)"
