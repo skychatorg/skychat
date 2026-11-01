@@ -99,5 +99,4 @@ export class ReactionPlugin extends GlobalPlugin {
             }
         });
     }
-
 }

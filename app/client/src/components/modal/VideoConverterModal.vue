@@ -85,7 +85,7 @@ const convert = () => {
 
                 <template v-if="selectedStreamIndexes.length > 0">
                     <SectionSubTitle class="mt-5">Convert to MP4</SectionSubTitle>
-                    <button @click="convert" class="form-control w-2/3 mx-auto">Convert</button>
+                    <button class="form-control w-2/3 mx-auto" @click="convert">Convert</button>
                 </template>
             </div>
         </template>

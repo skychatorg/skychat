@@ -71,12 +71,16 @@ const addSelectedFiles = () => {
     <div class="flex flex-col h-full">
         <!-- Current location -->
         <div class="flex gap-4 mb-2">
-            <button v-if="client.state.ongoingConverts.length" @click="app.toggleModal('ongoingConverts')" class="form-control text-tertiary">
+            <button
+                v-if="client.state.ongoingConverts.length"
+                class="form-control text-tertiary"
+                @click="app.toggleModal('ongoingConverts')"
+            >
                 <fa icon="file-video" class="mr-2"></fa>
                 {{ client.state.ongoingConverts.length }}
             </button>
             <input class="h-10 grow mousetrap form-control" type="text" :value="`/${folderList.join('/')}`" disabled />
-            <div class="h-10" v-if="client.state.gallery.thumb">
+            <div v-if="client.state.gallery.thumb" class="h-10">
                 <a :href="client.state.gallery.thumb" target="_blank">
                     <img :src="client.state.gallery.thumb" class="h-full fit-content" />
                 </a>
@@ -87,12 +91,17 @@ const addSelectedFiles = () => {
         <div class="px-2 grow overflow-y-auto scrollbar flex flex-col">
             <div class="mb-2 flex flex-col">
                 <HoverCard v-if="folderList.length > 0" :selectable="true" :border-color="'rgb(var(--color-skygray-light))'">
-                    <div @click="leaveFolder()" class="cursor-pointer select-none px-4 py-2">
+                    <div class="cursor-pointer select-none px-4 py-2" @click="leaveFolder()">
                         <fa icon="arrow-left" class="mr-2" />
                     </div>
                 </HoverCard>
-                <HoverCard v-for="folderName in client.state.gallery.folders" :key="folderName" :selectable="true" :border-color="'rgb(var(--color-skygray-light))'">
-                    <div @click="enterFolder(folderName)" class="cursor-pointer select-none px-4 py-2 flex flex-nowrap">
+                <HoverCard
+                    v-for="folderName in client.state.gallery.folders"
+                    :key="folderName"
+                    :selectable="true"
+                    :border-color="'rgb(var(--color-skygray-light))'"
+                >
+                    <div class="cursor-pointer select-none px-4 py-2 flex flex-nowrap" @click="enterFolder(folderName)">
                         <div class="basis-7">
                             <fa icon="folder" class="mr-2" />
                         </div>
@@ -104,8 +113,14 @@ const addSelectedFiles = () => {
             </div>
             <p v-if="isEmpty" class="py-4 text-center text-sm text-white/40">This folder is empty</p>
             <div class="flex flex-col">
-                <HoverCard v-for="file in client.state.gallery.files" :key="file" :selectable="true" :selected="isFileSelected(file)" :border-color="gallery.getFileColor(file)">
-                    <div @click="toggleSelectFile(file)" class="group cursor-pointer select-none px-4 py-2 flex flex-nowrap">
+                <HoverCard
+                    v-for="file in client.state.gallery.files"
+                    :key="file"
+                    :selectable="true"
+                    :selected="isFileSelected(file)"
+                    :border-color="gallery.getFileColor(file)"
+                >
+                    <div class="group cursor-pointer select-none px-4 py-2 flex flex-nowrap" @click="toggleSelectFile(file)">
                         <div class="basis-7">
                             <fa :icon="gallery.getFileIcon(file)" class="mr-2" />
                         </div>
@@ -125,10 +140,12 @@ const addSelectedFiles = () => {
             <span class="lg:col-span-2 flex flex-col justify-center text-center text-sm">
                 {{ selectedFiles.length }} file{{ selectedFiles.length > 1 ? 's' : '' }} /
                 <template v-if="addableSelectedFiles.length === 0"> no playable file selected </template>
-                <template v-else> {{ addableSelectedFiles.length }} playable file{{ addableSelectedFiles.length > 1 ? 's' : '' }} selected </template>
+                <template v-else>
+                    {{ addableSelectedFiles.length }} playable file{{ addableSelectedFiles.length > 1 ? 's' : '' }} selected
+                </template>
             </span>
-            <button v-show="selectedFiles.length > 0" @click="clearSelectedFiles" class="form-control px-2 text-sm">Clear selected</button>
-            <button v-show="addableSelectedFiles.length > 0" @click="addSelectedFiles" class="form-control px-2 text-sm">
+            <button v-show="selectedFiles.length > 0" class="form-control px-2 text-sm" @click="clearSelectedFiles">Clear selected</button>
+            <button v-show="addableSelectedFiles.length > 0" class="form-control px-2 text-sm" @click="addSelectedFiles">
                 Add {{ addableSelectedFiles.length }} file{{ addableSelectedFiles.length > 1 ? 's' : '' }}
             </button>
         </div>

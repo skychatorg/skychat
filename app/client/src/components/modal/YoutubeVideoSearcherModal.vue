@@ -51,11 +51,24 @@ const addToQueue = (item) => {
     <ModalTemplate id="youtubeVideoSearcher" title="Add from Youtube" variant="dialog">
         <div class="h-full w-full py-2">
             <!-- Search input -->
-            <input v-model="searchInput" ref="searchInputEl" type="text" placeholder="Search" class="form-control w-full" @keyup.enter.stop="search()" />
+            <input
+                ref="searchInputEl"
+                v-model="searchInput"
+                type="text"
+                placeholder="Search"
+                class="form-control w-full"
+                @keyup.enter.stop="search()"
+            />
 
             <!-- Search type -->
             <div class="btn-group mt-2">
-                <button v-for="type in searchTypes" :key="type.id" @click="searchType = type.id" class="btn" :class="type.id === searchType ? 'active' : ''">
+                <button
+                    v-for="type in searchTypes"
+                    :key="type.id"
+                    class="btn"
+                    :class="type.id === searchType ? 'active' : ''"
+                    @click="searchType = type.id"
+                >
                     {{ type.name }}
                 </button>
             </div>
@@ -66,8 +79,8 @@ const addToQueue = (item) => {
                     v-for="item in client.state.playerApiSearchResult.items"
                     :key="item.id"
                     :selectable="true"
-                    @click="addToQueue(item), app.closeModal('youtubeVideoSearcher')"
                     class="cursor-pointer m-2"
+                    @click="addToQueue(item), app.closeModal('youtubeVideoSearcher')"
                 >
                     <div class="flex p-2">
                         <!-- thumb -->

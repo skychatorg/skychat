@@ -95,12 +95,7 @@ defineProps({
     background-color: rgb(var(--color-skygray-light));
 }
 .hover-card.main > .colored-border {
-    background-image: linear-gradient(
-        120deg,
-        rgb(var(--color-primary)),
-        rgb(var(--color-tertiary)),
-        rgb(var(--color-secondary))
-    );
+    background-image: linear-gradient(120deg, rgb(var(--color-primary)), rgb(var(--color-tertiary)), rgb(var(--color-secondary)));
     background-size: 300% 300%;
     animation: hover-card-main 2.5s linear infinite;
     box-shadow: 0 0 6px rgba(var(--color-primary), 0.6);

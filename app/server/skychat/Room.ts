@@ -337,10 +337,7 @@ export class Room implements IBroadcaster {
             .slice(startFromIndex, startFromIndex + count)
             .filter((message) => {
                 // Do not send messages from blacklisted users
-                if (
-                    Config.PREFERENCES.invertedBlacklist &&
-                    BlacklistPlugin.isBlockedBy(message.user, connection.session.user)
-                ) {
+                if (Config.PREFERENCES.invertedBlacklist && BlacklistPlugin.isBlockedBy(message.user, connection.session.user)) {
                     return false;
                 }
                 return true;
