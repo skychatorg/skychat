@@ -23,6 +23,7 @@ const COMPACT_QUOTES_MAX_LENGTH = 30;
 
 // Action menu state
 const showActionMenu = ref(false);
+const actionMenuUp = ref(false);
 const actionMenuContainer = ref(null);
 const reactionPickerOpen = ref(false);
 
@@ -261,6 +262,11 @@ const copyMessage = () => {
 
 const toggleActionMenu = () => {
     showActionMenu.value = !showActionMenu.value;
+    // Near the bottom of the message list the menu would open under the composer, so open it upward there
+    const list = actionMenuContainer.value?.closest('.overflow-y-auto');
+    if (showActionMenu.value && list) {
+        actionMenuUp.value = list.getBoundingClientRect().bottom - actionMenuContainer.value.getBoundingClientRect().bottom < 150;
+    }
 };
 
 const userColor = computed(() => props.message.user.data.plugins.custom.color);
@@ -396,8 +402,8 @@ const userColor = computed(() => props.message.user.data.plugins.custom.color);
                     <!-- Hover toolbar -->
                     <div
                         v-if="!compact && !isAutomatedMessage"
-                        class="absolute -top-3 right-6 transition flex items-center gap-0.5 rounded-lg hairline p-0.5 z-20"
-                        :class="anyMenuOpen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'"
+                        class="absolute -top-3 right-6 transition flex items-center gap-0.5 rounded-lg hairline p-0.5"
+                        :class="anyMenuOpen ? 'opacity-100 z-30' : 'opacity-0 group-hover:opacity-100 z-20'"
                         :style="{ background: 'var(--surface-2)' }"
                     >
                         <MessageReactionAdd :message-id="message.id" @picker-toggle="reactionPickerOpen = $event" />
@@ -416,7 +422,11 @@ const userColor = computed(() => props.message.user.data.plugins.custom.color);
                             >
                                 <fa icon="ellipsis" />
                             </button>
-                            <div v-show="showActionMenu" class="absolute right-0 top-9 form-control p-1 flex flex-col gap-1 z-50 min-w-max">
+                            <div
+                                v-show="showActionMenu"
+                                class="absolute right-0 form-control p-1 flex flex-col gap-1 z-50 min-w-max"
+                                :class="actionMenuUp ? 'bottom-9' : 'top-9'"
+                            >
                                 <button
                                     v-if="canEditMessage"
                                     class="form-control w-full h-8 flex items-center gap-2 px-3 text-sm"
