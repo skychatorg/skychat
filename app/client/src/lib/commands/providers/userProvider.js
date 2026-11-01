@@ -1,3 +1,4 @@
+import { copyText } from '@/lib/copyText.js';
 import { computed } from 'vue';
 import { useClientStore } from '@/stores/client';
 import { useUserRight } from '@/composables/useUserRight';
@@ -121,7 +122,7 @@ export function useUserCommands() {
                 subtitle,
                 icon: 'copy',
                 category: 'Users',
-                run: () => navigator.clipboard.writeText(u),
+                run: () => copyText(u),
             });
         }
 

@@ -1,4 +1,5 @@
 <script setup>
+import { copyText } from '@/lib/copyText.js';
 import { useClientState } from '@/composables/useClientState.js';
 import { roomName } from '@/lib/roomName.js';
 import { apiClient, useClientStore } from '@/stores/client';
@@ -63,7 +64,7 @@ const markAsRead = () => {
 };
 
 const copyRoomId = () => {
-    navigator.clipboard.writeText(props.room.id.toString());
+    copyText(props.room.id.toString());
 };
 
 // Public rooms can not be left, only switched away from

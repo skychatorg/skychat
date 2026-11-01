@@ -1,4 +1,5 @@
 <script setup>
+import { copyText } from '@/lib/copyText.js';
 import SkyContextMenu from '@/components/common/SkyContextMenu.vue';
 import SkyContextMenuItem from '@/components/common/SkyContextMenuItem.vue';
 import UserMiniAvatar from '@/components/user/UserMiniAvatar.vue';
@@ -256,7 +257,7 @@ const openAvatar = () => {
 };
 
 const copyMessage = () => {
-    navigator.clipboard.writeText(props.message.content);
+    copyText(props.message.content);
     showActionMenu.value = false;
 };
 
