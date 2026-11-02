@@ -103,7 +103,7 @@
         "typescript": "^5.5.2",
         "ua-parser-js": "^1.0.38",
         "vite": "^6.4.4",
-        "vitest": "^3.2.7",
+        "vitest": "^4.1.11",
         "vue": "^3.4.31",
         "vue-eslint-parser": "^9.4.3",
         "vue-router": "^4.4.0",
