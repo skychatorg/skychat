@@ -75,7 +75,8 @@ watch(
         <div class="cards">
             <PlayingCard v-for="(card, index) in cards" :key="index" :card="card" :deal-delay-ms="cardDelay(index)" />
         </div>
-        <div v-if="result" class="result" :class="tone">{{ result }}</div>
+        <!-- Always there, even empty, so the hand keeps its height when the first total shows -->
+        <div class="result" :class="tone">{{ result || '\u00a0' }}</div>
 
         <!-- Effects only: they never take clicks -->
         <template v-if="celebrate && net > 0">
@@ -151,6 +152,9 @@ watch(
         monospace;
     color: #f6ecd8;
     white-space: nowrap;
+    /* Room for "21 · stand" from the start, so the hand doesn't widen and push its neighbours */
+    min-width: 10ch;
+    text-align: center;
 }
 .good {
     color: #9be7b4;

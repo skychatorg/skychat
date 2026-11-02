@@ -182,7 +182,14 @@ const play = (action) => client.sendMessage(`/casino ${action}`);
                 >
                     <fa icon="users" /> +{{ otherSeats.length }}
                 </span>
-                <p v-if="!table.seats.length" class="empty">Seats are open, up to {{ table.maxSeats }} players</p>
+                <!-- An empty seat, the same size as a hand, so the table doesn't jump when the first bet lands -->
+                <CasinoHand
+                    v-if="!table.seats.length"
+                    class="open-seat"
+                    name="Open seat"
+                    :result="`up to ${table.maxSeats} players`"
+                    tone="muted"
+                />
             </div>
 
             <div class="actions">
@@ -232,6 +239,7 @@ const play = (action) => client.sendMessage(`/casino ${action}`);
 }
 .felt {
     --card-h: clamp(30px, 15cqh, 150px);
+    --chip: clamp(34px, 8.5cqh, 64px);
     position: relative;
     isolation: isolate;
     height: 100%;
@@ -350,6 +358,11 @@ const play = (action) => client.sendMessage(`/casino ${action}`);
     gap: clamp(4px, 1.5cqw, 14px);
     min-height: 0;
     overflow-y: auto;
+    /* Still scrolls with many seats, but flying cards and coins poke out for a moment and must not flash a scrollbar */
+    scrollbar-width: none;
+}
+.seats::-webkit-scrollbar {
+    display: none;
 }
 /* Stands in for the other seats when the player is too small to show their cards */
 .others {
@@ -359,11 +372,8 @@ const play = (action) => client.sendMessage(`/casino ${action}`);
     white-space: nowrap;
     color: rgba(246, 236, 216, 0.6);
 }
-.empty {
-    margin: auto;
-    font:
-        italic 14px Georgia,
-        serif;
+.open-seat {
+    border: 1px dashed rgba(240, 196, 108, 0.35);
     color: rgba(246, 236, 216, 0.6);
 }
 .actions {
@@ -373,6 +383,8 @@ const play = (action) => client.sendMessage(`/casino ${action}`);
     gap: clamp(6px, 1.5cqw, 14px);
     justify-content: center;
     align-items: center;
+    /* As tall as the chips whatever it holds (chips, buttons or a hint), so the table never jumps between phases */
+    min-height: var(--chip);
 }
 button {
     font-family: inherit;
@@ -411,7 +423,6 @@ button:active:not(:disabled) {
 }
 /* Clay casino chips: a colored disc with a dashed white edge */
 .chip {
-    --chip: clamp(34px, 8.5cqh, 64px);
     width: var(--chip);
     height: var(--chip);
     border-radius: 50%;
@@ -524,14 +535,14 @@ button:active:not(:disabled) {
     .title,
     .limits,
     .printed,
-    .empty,
     .banner {
         display: none;
     }
+    /* A fixed width, so the dealer and the seats don't slide sideways when the status text changes */
     .status {
         white-space: normal;
         text-align: left;
-        max-width: 18ch;
+        width: 18ch;
     }
     /* One row: seats line up and scroll sideways when there are many */
     .seats {
@@ -546,8 +557,11 @@ button:active:not(:disabled) {
         gap: 4px;
         justify-content: end;
     }
-    .chip {
+    .felt {
         --chip: clamp(30px, 22cqh, 40px);
+    }
+    .actions {
+        min-height: 0;
     }
 }
 
@@ -568,14 +582,14 @@ button:active:not(:disabled) {
         padding-inline: 6px;
     }
     .status {
-        max-width: 9ch;
+        width: 9ch;
         font-size: 11px;
     }
     .action {
         padding: 4px 8px;
         font-size: 12px;
     }
-    .chip {
+    .felt {
         --chip: 32px;
     }
 }
