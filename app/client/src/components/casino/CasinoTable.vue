@@ -169,8 +169,10 @@ const play = (action) => client.sendMessage(`/casino ${action}`);
                     :active="seat === mySeat && myTurn"
                     :name="seat.user.username"
                     :color="seat.user.data.plugins.custom.color"
+                    :user="seat.user"
                     :cards="seat.cards"
                     :card-delay="cardDelay(slot)"
+                    :money="seat.user.money"
                     :bet="seat.bet"
                     v-bind="seatProps(seat)"
                 />
@@ -194,9 +196,11 @@ const play = (action) => client.sendMessage(`/casino ${action}`);
 
             <div class="actions">
                 <template v-if="myTurn">
-                    <button class="action" @click="play('hit')">Hit</button>
-                    <button class="action" @click="play('stand')">Stand</button>
-                    <button class="action" :disabled="!canDouble" @click="play('double')">Double</button>
+                    <button class="action" title="Hit" @click="play('hit')"><fa icon="plus" /><span class="label">Hit</span></button>
+                    <button class="action" title="Stand" @click="play('stand')"><fa icon="hand" /><span class="label">Stand</span></button>
+                    <button class="action" title="Double" :disabled="!canDouble" @click="play('double')">
+                        <fa icon="angles-up" /><span class="label">Double</span>
+                    </button>
                 </template>
                 <template v-else-if="showChips">
                     <span v-if="!me.id" class="hint">Log in to play</span>
@@ -240,6 +244,7 @@ const play = (action) => client.sendMessage(`/casino ${action}`);
 .felt {
     --card-h: clamp(30px, 15cqh, 150px);
     --chip: clamp(34px, 8.5cqh, 64px);
+    --hand-w: calc(var(--card-h) * 1.9 + 64px);
     position: relative;
     isolation: isolate;
     height: 100%;
@@ -338,6 +343,13 @@ const play = (action) => client.sendMessage(`/casino ${action}`);
         background: #e0623f;
     }
 }
+.dealer {
+    justify-self: center;
+}
+/* The dealer has no balance or bet */
+.dealer :deep(.purse) {
+    display: none;
+}
 .printed {
     position: relative;
     justify-self: center;
@@ -417,6 +429,9 @@ button:active:not(:disabled) {
     background: linear-gradient(180deg, #f6dfa8, #d8a955);
     border-radius: 999px;
     padding: 0.4em 1.2em;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
     box-shadow:
         0 3px 0 #8a5d22,
         0 5px 12px rgba(0, 0, 0, 0.35);
@@ -514,6 +529,17 @@ button:active:not(:disabled) {
     }
 }
 
+/* Shorter players: tighter hands so the seats keep their cards on screen */
+@container (max-height: 300px) {
+    .printed {
+        display: none;
+    }
+    .felt :deep(.hand) {
+        gap: 1px;
+        padding-block: 2px;
+    }
+}
+
 /* Short players (the smallest size): one row with the status, the dealer, your hand and your buttons */
 @container (max-height: 180px) {
     .casino {
@@ -521,9 +547,11 @@ button:active:not(:disabled) {
     }
     .felt {
         --card-h: clamp(24px, 34cqh, 52px);
+        --chip: clamp(30px, 22cqh, 40px);
         grid-template-rows: minmax(0, 1fr);
         grid-auto-flow: column;
-        grid-template-columns: minmax(0, auto) auto minmax(0, auto) minmax(0, 1fr);
+        /* The buttons keep their width and the seats give way, so they never slide over a hand */
+        grid-template-columns: minmax(0, auto) auto minmax(0, 1fr) auto;
         align-items: center;
         padding-block: 4px;
         border-radius: 0;
@@ -534,7 +562,6 @@ button:active:not(:disabled) {
     }
     .title,
     .limits,
-    .printed,
     .banner {
         display: none;
     }
@@ -556,12 +583,14 @@ button:active:not(:disabled) {
         grid-template-columns: repeat(2, auto);
         gap: 4px;
         justify-content: end;
-    }
-    .felt {
-        --chip: clamp(30px, 22cqh, 40px);
-    }
-    .actions {
         min-height: 0;
+    }
+    /* Icons only, the title names them */
+    .action {
+        padding: 0.45em 0.7em;
+    }
+    .action .label {
+        display: none;
     }
 }
 
@@ -574,23 +603,24 @@ button:active:not(:disabled) {
     .others {
         display: block;
     }
-    /* The buttons keep their width and the seats give way, so they never slide over a hand */
     .felt {
         --card-h: clamp(22px, 30cqh, 34px);
-        grid-template-columns: minmax(0, auto) auto minmax(0, 1fr) auto;
+        --chip: 32px;
+        --hand-w: calc(var(--card-h) * 2.4 + 32px);
         column-gap: 6px;
         padding-inline: 6px;
+    }
+    /* The dealer has no name or balance to show, its cards are enough */
+    .dealer {
+        --hand-w: calc(var(--card-h) * 2 + 20px);
+        padding-inline: 0;
     }
     .status {
         width: 9ch;
         font-size: 11px;
     }
     .action {
-        padding: 4px 8px;
-        font-size: 12px;
-    }
-    .felt {
-        --chip: 32px;
+        font-size: 13px;
     }
 }
 
@@ -606,12 +636,11 @@ button:active:not(:disabled) {
         letter-spacing: 0.5px;
         font-size: 9px;
     }
-    /* Three seats per row, cards fanned over each other like on a real table */
-    .seat {
-        max-width: 32%;
-    }
-    .seat :deep(.playing-card + .playing-card) {
-        margin-left: calc(var(--card-h) * -0.35);
+}
+/* Tall phones: three seats per row */
+@container (max-width: 480px) and (min-height: 181px) {
+    .felt {
+        --hand-w: 30cqw;
     }
 }
 </style>

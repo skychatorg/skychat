@@ -1,5 +1,6 @@
 <script setup>
 import PlayingCard from '@/components/casino/PlayingCard.vue';
+import UserMiniAvatar from '@/components/user/UserMiniAvatar.vue';
 import { formatMoney } from '../../../../api/money.ts';
 import { ref, watch } from 'vue';
 
@@ -11,6 +12,11 @@ const props = defineProps({
     color: {
         type: String,
         default: 'inherit',
+    },
+    // The seated player, for the avatar
+    user: {
+        type: Object,
+        default: null,
     },
     cards: {
         type: Array,
@@ -30,6 +36,11 @@ const props = defineProps({
         type: String,
         default: '',
         validator: (tone) => ['', 'good', 'bad', 'muted'].includes(tone),
+    },
+    // The player's balance, under the name
+    money: {
+        type: Number,
+        default: null,
     },
     bet: {
         type: Number,
@@ -69,10 +80,15 @@ watch(
 <template>
     <div class="hand" :class="[{ mine, active, celebrate }, outcome && `outcome-${outcome}`]">
         <div class="who">
+            <UserMiniAvatar v-if="user" :user="user" class="avatar" />
             <span class="name" :style="{ color }">{{ name }}</span>
+        </div>
+        <!-- Always there, even empty, so every hand has the same height -->
+        <div class="purse">
+            <span v-if="money !== null" class="money">{{ formatMoney(money) }}</span>
             <span v-if="bet !== null" class="bet">{{ formatMoney(bet) }}</span>
         </div>
-        <div class="cards">
+        <div class="cards" :style="{ '--n': cards.length }">
             <PlayingCard v-for="(card, index) in cards" :key="index" :card="card" :deal-delay-ms="cardDelay(index)" />
         </div>
         <!-- Always there, even empty, so the hand keeps its height when the first total shows -->
@@ -90,6 +106,9 @@ watch(
 
 <style scoped>
 .hand {
+    /* Every hand has the table's width, whatever the name or the number of cards */
+    width: var(--hand-w, auto);
+    flex: none;
     position: relative;
     display: flex;
     flex-direction: column;
@@ -97,7 +116,6 @@ watch(
     gap: 4px;
     padding: 6px 8px;
     border-radius: 12px;
-    min-width: 0;
     transition:
         box-shadow 0.4s,
         background 0.4s,
@@ -108,10 +126,18 @@ watch(
     box-shadow: inset 0 0 0 1px rgba(232, 182, 92, 0.45);
 }
 .who {
+    --avatar: clamp(16px, calc(var(--card-h, 48px) * 0.32), 32px);
     display: flex;
     gap: 6px;
     align-items: center;
     max-width: 100%;
+    /* As tall as an avatar, so the open seat and the dealer line up with the players */
+    min-height: var(--avatar);
+}
+.avatar {
+    width: var(--avatar);
+    height: var(--avatar);
+    flex: none;
 }
 .name {
     font-weight: 700;
@@ -121,19 +147,34 @@ watch(
     white-space: nowrap;
 }
 /* The stake, as a little chip */
+.purse {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    max-width: 100%;
+    min-height: 1lh;
+    font:
+        600 clamp(11px, calc(var(--card-h, 48px) * 0.12), 16px) ui-monospace,
+        monospace;
+    line-height: 1.2;
+}
+.money {
+    color: rgba(246, 236, 216, 0.75);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
 .bet {
     display: inline-flex;
+    flex: none;
     align-items: center;
     gap: 4px;
-    font:
-        600 11px ui-monospace,
-        monospace;
     color: #f0c46c;
 }
 .bet::before {
     content: '';
-    width: 9px;
-    height: 9px;
+    width: 0.8em;
+    height: 0.8em;
     border-radius: 50%;
     background: #c9452f;
     box-shadow:
@@ -142,9 +183,12 @@ watch(
 }
 .cards {
     display: flex;
-    gap: 4px;
     min-height: var(--card-h, 48px);
     justify-content: center;
+}
+/* Cards overlap as much as needed to stay inside the hand */
+.cards > .playing-card + .playing-card {
+    margin-left: min(4px, calc((var(--hand-w) - 16px - var(--n) * var(--card-h, 48px) * 0.7) / (var(--n) - 1)));
 }
 .result {
     font:
@@ -152,8 +196,9 @@ watch(
         monospace;
     color: #f6ecd8;
     white-space: nowrap;
-    /* Room for "21 · stand" from the start, so the hand doesn't widen and push its neighbours */
-    min-width: 10ch;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
     text-align: center;
 }
 .good {

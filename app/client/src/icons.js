@@ -1,6 +1,7 @@
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faDiscord } from '@fortawesome/free-brands-svg-icons';
 import {
+    faAnglesUp,
     faArrowLeft,
     faArrowPointer,
     faArrowRightFromBracket,
@@ -38,6 +39,7 @@ import {
     faGear,
     faGears,
     faGlobe,
+    faHand,
     faHashtag,
     faHeadphones,
     faHighlighter,
@@ -86,6 +88,7 @@ import {
 
 library.add(
     faDiscord,
+    faAnglesUp,
     faArrowLeft,
     faArrowPointer,
     faArrowRightFromBracket,
@@ -123,6 +126,7 @@ library.add(
     faGear,
     faGears,
     faGlobe,
+    faHand,
     faHashtag,
     faHeadphones,
     faHighlighter,

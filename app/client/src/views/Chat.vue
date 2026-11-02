@@ -49,7 +49,7 @@ const clearSearch = () => {
         <div class="group relative flex-1 min-w-0 flex flex-col justify-center bg-black">
             <PlayerPannel />
             <button
-                class="absolute top-3 right-3 z-10 px-3 py-1.5 rounded-lg text-sm text-white/80 bg-black/50 hover:bg-black/70 opacity-0 group-hover:opacity-100 transition"
+                class="absolute top-3 left-3 z-10 px-3 py-1.5 rounded-lg text-sm text-white/80 bg-black/50 hover:bg-black/70 opacity-0 group-hover:opacity-100 transition"
                 title="Leave cinema mode (Esc)"
                 @click="app.exitCinemaMode()"
             >
