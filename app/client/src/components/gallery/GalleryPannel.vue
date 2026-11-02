@@ -91,7 +91,14 @@ const addSelectedFiles = () => {
         <div class="px-2 grow overflow-y-auto scrollbar flex flex-col">
             <div class="mb-2 flex flex-col">
                 <HoverCard v-if="folderList.length > 0" :selectable="true" :border-color="'rgb(var(--color-skygray-light))'">
-                    <div class="cursor-pointer select-none px-4 py-2" @click="leaveFolder()">
+                    <div
+                        class="cursor-pointer select-none px-4 py-2"
+                        role="button"
+                        tabindex="0"
+                        aria-label="Parent folder"
+                        @click="leaveFolder()"
+                        @keydown.enter="leaveFolder()"
+                    >
                         <fa icon="arrow-left" class="mr-2" />
                     </div>
                 </HoverCard>
@@ -101,7 +108,13 @@ const addSelectedFiles = () => {
                     :selectable="true"
                     :border-color="'rgb(var(--color-skygray-light))'"
                 >
-                    <div class="cursor-pointer select-none px-4 py-2 flex flex-nowrap" @click="enterFolder(folderName)">
+                    <div
+                        class="cursor-pointer select-none px-4 py-2 flex flex-nowrap"
+                        role="button"
+                        tabindex="0"
+                        @click="enterFolder(folderName)"
+                        @keydown.enter="enterFolder(folderName)"
+                    >
                         <div class="basis-7">
                             <fa icon="folder" class="mr-2" />
                         </div>
@@ -120,7 +133,13 @@ const addSelectedFiles = () => {
                     :selected="isFileSelected(file)"
                     :border-color="gallery.getFileColor(file)"
                 >
-                    <div class="group cursor-pointer select-none px-4 py-2 flex flex-nowrap" @click="toggleSelectFile(file)">
+                    <div
+                        class="group cursor-pointer select-none px-4 py-2 flex flex-nowrap"
+                        role="button"
+                        tabindex="0"
+                        @click="toggleSelectFile(file)"
+                        @keydown.enter="toggleSelectFile(file)"
+                    >
                         <div class="basis-7">
                             <fa :icon="gallery.getFileIcon(file)" class="mr-2" />
                         </div>
