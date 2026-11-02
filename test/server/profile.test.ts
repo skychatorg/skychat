@@ -19,4 +19,15 @@ describe('profile changes', () => {
         expect(alice.last('set-user').data.plugins.motto).toBe('living dangerously');
         expect(JSON.stringify(bob.events('connected-list-patch'))).toContain('living dangerously');
     });
+
+    it('shows money a user receives on their own screen right away', async () => {
+        const admin = await server.connect('profileadmin', 0);
+        admin.session.setOP(true);
+        const carol = await server.connect('profilecarol', 0);
+        carol.clear();
+
+        await admin.send('/offermoney profilecarol 2500');
+
+        expect(carol.last('set-user').money).toBe(2500);
+    });
 });

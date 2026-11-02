@@ -42,6 +42,8 @@ export class PlayerPlugin extends GlobalPlugin {
 
     static readonly RESYNC_COOLDOWN_MS = 10 * 1000;
 
+    static readonly CHANNEL_NAME_MAX_LENGTH = 32;
+
     static readonly commandName = 'player';
 
     static readonly commandAliases = [
@@ -70,10 +72,10 @@ export class PlayerPlugin extends GlobalPlugin {
             params: [{ name: 'action', pattern: /^(replay30|skip30|list|skip|flush|pause|resume)$/ }],
         },
         playerchannelmanage: {
-            minCount: 1,
+            minCount: 2,
             maxCallsPer10Seconds: 14,
             params: [
-                { name: 'action', pattern: /^(create|delete|rename)$/ },
+                { name: 'action', pattern: /^(create|rename|delete|reorder)$/ },
                 { name: 'param', pattern: /./ },
             ],
         },
@@ -156,7 +158,7 @@ export class PlayerPlugin extends GlobalPlugin {
         },
     };
 
-    protected storage: { channels: SanitizedPlayerChannel[] } = {
+    protected storage: { channels: SanitizedPlayerChannel[]; lastChannelId?: number } = {
         channels: [],
     };
 
@@ -177,8 +179,15 @@ export class PlayerPlugin extends GlobalPlugin {
         this.loadStorage();
 
         this.channelManager = new PlayerChannelManager(this);
+        this.channelManager.lastChannelId = this.storage.lastChannelId ?? 0;
         for (const channelData of this.storage.channels) {
-            const channel = this.channelManager.createChannel(channelData.id, channelData.name);
+            // Channels saved before casinos existed have no kind
+            const channel = this.channelManager.createChannel(
+                channelData.id,
+                channelData.name,
+                channelData.kind ?? 'media',
+                channelData.casino,
+            );
             for (const event of channelData.schedule.events) {
                 channel.schedule(event.media, event.start, event.duration);
             }
@@ -187,6 +196,7 @@ export class PlayerPlugin extends GlobalPlugin {
         // Bind events
         this.channelManager.on('channels-changed', () => {
             this.storage.channels = this.channelManager.sanitized();
+            this.storage.lastChannelId = this.channelManager.lastChannelId;
             this.syncStorage();
         });
     }
@@ -376,47 +386,61 @@ export class PlayerPlugin extends GlobalPlugin {
     }
 
     /**
-     * Manage channels (Only for OP)
-     * @param param
-     * @param connection
-     * @returns
+     * Manage channels (Only for OP):
+     * create media <name> | create casino <minBet> <maxBet> <name> | rename <id> <name> | delete <id> | reorder <id,id,…>
+     * Bets are in cents, like user money.
      */
     private async handlePlayerChannelManage(param: string, connection: Connection) {
         if (!connection.session.isOP()) {
             throw new Error('Command only for OP');
         }
 
-        const action = param.split(' ')[0];
-        const value = param.substr(action.length + 1);
-
-        // Create a new channel
-        if (action === 'create') {
-            const newId = this.channelManager.getNextChannelId();
-            this.channelManager.createChannel(newId, `Channel ${newId}`);
-            return;
-        }
-
-        // Delete a channel
-        if (action === 'delete') {
-            const channel = this.channelManager.getSessionChannel(connection.session);
+        const [action, ...args] = param.split(' ');
+        const channelFromArg = () => {
+            const channel = this.channelManager.getChannelById(Number(args[0]));
             if (!channel) {
-                throw new Error('Not in a channel');
+                throw new Error('This channel does not exist');
             }
-            this.channelManager.deleteChannel(channel.id);
-            return;
-        }
+            return channel;
+        };
 
-        // Rename a channel
-        if (action === 'rename') {
-            const channel = this.channelManager.getSessionChannel(connection.session);
-            if (!channel) {
-                throw new Error('Not in a channel');
+        switch (action) {
+            case 'create': {
+                const kind = args.shift();
+                if (kind === 'media') {
+                    this.channelManager.createChannel(this.channelManager.getNextChannelId(), PlayerPlugin.channelName(args.join(' ')));
+                    return;
+                }
+                if (kind === 'casino') {
+                    const [minBet, maxBet] = args.splice(0, 2).map(Number);
+                    if (!Number.isInteger(minBet) || !Number.isInteger(maxBet) || minBet < 1 || maxBet < minBet || maxBet > 10_000_000) {
+                        throw new Error('Bets need a positive minimum, and a maximum at least as high');
+                    }
+                    const name = PlayerPlugin.channelName(args.join(' '));
+                    this.channelManager.createChannel(this.channelManager.getNextChannelId(), name, 'casino', { minBet, maxBet });
+                    return;
+                }
+                throw new Error('A channel is either media or casino');
             }
-            this.channelManager.renameChannel(channel.id, value);
-            return;
+            case 'rename':
+                this.channelManager.renameChannel(channelFromArg().id, PlayerPlugin.channelName(args.slice(1).join(' ')));
+                return;
+            case 'delete':
+                this.channelManager.deleteChannel(channelFromArg().id);
+                return;
+            case 'reorder':
+                this.channelManager.reorderChannels(args[0].split(',').map(Number));
+                return;
         }
-
         throw new Error('Unsupported action');
+    }
+
+    private static channelName(raw: string): string {
+        const name = raw.trim();
+        if (!name || name.length > PlayerPlugin.CHANNEL_NAME_MAX_LENGTH) {
+            throw new Error(`Channel names are 1 to ${PlayerPlugin.CHANNEL_NAME_MAX_LENGTH} characters`);
+        }
+        return name;
     }
 
     /**
@@ -460,7 +484,8 @@ export class PlayerPlugin extends GlobalPlugin {
      */
     private async handlePlayerSync(param: string, connection: Connection) {
         const channel = this.channelManager.getSessionChannel(connection.session);
-        if (!channel) {
+        // Nothing to sync outside a media channel
+        if (channel?.kind !== 'media') {
             return;
         }
 
@@ -518,10 +543,7 @@ export class PlayerPlugin extends GlobalPlugin {
         if (!this.canAddMedia(connection.session)) {
             throw new Error('Unable to perform this action');
         }
-        const channel = this.channelManager.getSessionChannel(connection.session);
-        if (!channel) {
-            throw new Error('Join a channel to manage medias');
-        }
+        const channel = this.channelManager.getSessionMediaChannel(connection.session);
         const mediaType = param.split(' ')[0];
         const mediaId = param.split(' ')[1];
         const queueEntry = channel.getQueueEntry(mediaType, mediaId);
@@ -541,10 +563,7 @@ export class PlayerPlugin extends GlobalPlugin {
      * @param connection
      */
     private async handlePlayerSeek(param: string, connection: Connection) {
-        const channel = this.channelManager.getSessionChannel(connection.session);
-        if (!channel) {
-            throw new Error('Channel does not exist');
-        }
+        const channel = this.channelManager.getSessionMediaChannel(connection.session);
         if (channel.locked && !connection.session.isOP()) {
             throw new Error('Channel is locked');
         }
@@ -564,10 +583,7 @@ export class PlayerPlugin extends GlobalPlugin {
         if (!this.canSchedule(connection.session)) {
             throw new Error('You do not have the permission to schedule medias');
         }
-        const channel = this.channelManager.getSessionChannel(connection.session);
-        if (!channel) {
-            throw new Error('Join a channel to add videos');
-        }
+        const channel = this.channelManager.getSessionMediaChannel(connection.session);
         // Get & verify params
         const [fetcherName, id, rawStart, rawDuration] = param.split(' ');
         const fetcher = PlayerPlugin.FETCHERS[fetcherName];
@@ -598,10 +614,7 @@ export class PlayerPlugin extends GlobalPlugin {
         if (!this.canSchedule(connection.session)) {
             throw new Error('Unable to perform this action');
         }
-        const channel = this.channelManager.getSessionChannel(connection.session);
-        if (!channel) {
-            throw new Error('Join a channel to add videos');
-        }
+        const channel = this.channelManager.getSessionMediaChannel(connection.session);
         // Get & verify params
         const start = parseInt(param.split(' ')[0]);
         if (!start) {
@@ -620,10 +633,7 @@ export class PlayerPlugin extends GlobalPlugin {
         if (!this.canAddMedia(connection.session)) {
             throw new Error('Unable to perform this action');
         }
-        const channel = this.channelManager.getSessionChannel(connection.session);
-        if (!channel) {
-            throw new Error('Join a channel to add videos');
-        }
+        const channel = this.channelManager.getSessionMediaChannel(connection.session);
         if (channel.locked && !connection.session.isOP()) {
             throw new Error('Channel is locked');
         }
@@ -645,10 +655,7 @@ export class PlayerPlugin extends GlobalPlugin {
      * @returns
      */
     private async handlePlayer(param: string, connection: Connection) {
-        const channel = this.channelManager.getSessionChannel(connection.session);
-        if (!channel) {
-            throw new Error('Channel does not exist');
-        }
+        const channel = this.channelManager.getSessionMediaChannel(connection.session);
         if (channel.locked && !connection.session.isOP()) {
             throw new Error('Channel is locked');
         }
