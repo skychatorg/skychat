@@ -54,6 +54,9 @@ function chipsFor(bet) {
 const status = computed(() => {
     switch (phase.value) {
         case 'waiting':
+            if (me.value.id && me.value.money < table.value.minBet) {
+                return `You need ${formatMoney(table.value.minBet)} to play`;
+            }
             return table.value.seats.length ? 'Bet to deal the next hand' : 'Place a bet to deal a hand';
         case 'betting':
             return `Bets close in ${secondsLeft.value}s`;
@@ -203,7 +206,7 @@ const play = (action) => client.sendMessage(`/casino ${action}`);
                     v-if="!table.seats.length"
                     class="open-seat"
                     name="Open seat"
-                    :result="`up to ${table.maxSeats} players`"
+                    :result="`${table.maxSeats} seats`"
                     tone="muted"
                 />
             </div>
