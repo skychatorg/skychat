@@ -95,7 +95,7 @@ export class GuessTheNumberPlugin extends RoomPlugin {
             });
             // Refund users
             for (const session of this.currentGame.participants) {
-                await UserController.giveMoney(session.user, GuessTheNumberPlugin.ENTRY_COST);
+                await UserController.giveMoney(session.user, GuessTheNumberPlugin.ENTRY_COST, 'Guess the number refund');
             }
             this.currentGame = null;
             return;
@@ -150,7 +150,7 @@ export class GuessTheNumberPlugin extends RoomPlugin {
                 if (!session) {
                     continue;
                 }
-                await UserController.giveMoney(session.user, jackpot);
+                await UserController.giveMoney(session.user, jackpot, 'Guess the number win');
             }
             await this.room.sendMessage({
                 content: `${currentWinners.join(', ')} won this round :) ${currentWinners.length > 1 ? 'They' : 'He'} earned $${
@@ -179,7 +179,7 @@ export class GuessTheNumberPlugin extends RoomPlugin {
         if (this.currentGame.participants.indexOf(connection.session) >= 0) {
             throw new Error('You are already in this round');
         }
-        await UserController.buy(connection.session.user, GuessTheNumberPlugin.ENTRY_COST);
+        await UserController.buy(connection.session.user, GuessTheNumberPlugin.ENTRY_COST, 'Guess the number entry');
         this.currentGame.participants.push(connection.session);
         this.currentGame.participantListMessage.append('- ' + connection.session.user.username);
         this.room.send('message-edit', this.currentGame.participantListMessage.sanitized());

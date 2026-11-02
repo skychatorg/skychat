@@ -77,7 +77,7 @@ export class SandalePlugin extends GlobalPlugin {
             throw new Error('User ' + identifier + ' is already sandaled');
         }
 
-        await UserController.buy(connection.session.user, SandalePlugin.COST);
+        await UserController.buy(connection.session.user, SandalePlugin.COST, 'Sandale');
 
         // Notify everyone but the user who is sandalized
         const messageContent = `${connection.session.identifier} sandaled ${identifier} 🤯 (cost: $${SandalePlugin.COST / 100}) 👞`;

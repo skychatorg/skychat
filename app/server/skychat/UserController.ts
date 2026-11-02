@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import sha256 from 'sha256';
 import SQL from 'sql-template-strings';
+import { MoneyChange } from '../../api/money.js';
 import { globalPluginGroup } from '../plugins/GlobalPluginGroup.js';
 import { Config } from './Config.js';
 import { DatabaseHelper } from './DatabaseHelper.js';
@@ -9,6 +10,8 @@ import { Session } from './Session.js';
 import { AuthToken, User } from './User.js';
 
 export class UserController {
+    static readonly MONEY_HISTORY_SIZE = 20;
+
     /**
      * Validity of the auth token in seconds
      */
@@ -208,11 +211,12 @@ export class UserController {
     /**
      * Remove money from an user account
      */
-    public static async buy(user: User, amount: number): Promise<void> {
+    public static async buy(user: User, amount: number, reason: string): Promise<void> {
         if (amount > user.money) {
             throw new Error('User has not enough money to buy this amount');
         }
         user.money -= amount;
+        UserController.logMoney(user, -amount, reason);
         await UserController.sync(user);
         UserController.syncSessionUser(user);
     }
@@ -220,13 +224,22 @@ export class UserController {
     /**
      * Give money to an user
      */
-    public static async giveMoney(user: User, amount: number): Promise<void> {
+    public static async giveMoney(user: User, amount: number, reason: string): Promise<void> {
         if (amount < 0) {
             throw new Error("Can't give negative amount");
         }
         user.money += amount;
+        UserController.logMoney(user, amount, reason);
         await UserController.sync(user);
         UserController.syncSessionUser(user);
+    }
+
+    /**
+     * Keep the last few money changes in the user's storage, so they can see where their money went
+     */
+    private static logMoney(user: User, amount: number, reason: string): void {
+        const history: MoneyChange[] = user.storage.moneyHistory ?? [];
+        user.storage.moneyHistory = [{ date: Date.now(), amount, reason }, ...history].slice(0, UserController.MONEY_HISTORY_SIZE);
     }
 
     /**

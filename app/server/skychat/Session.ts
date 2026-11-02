@@ -221,7 +221,7 @@ export class Session implements IBroadcaster {
         // If this session was marked as dead, mark it as alive
         this.deadSince = null;
 
-        connection.send('set-user', this.user.sanitized());
+        this.sendUserData(connection);
         connection.send('set-op', this.op);
     }
 
@@ -251,7 +251,15 @@ export class Session implements IBroadcaster {
         if (!this.user) {
             return;
         }
-        this.connections.forEach((connection) => connection.send('set-user', this.user.sanitized()));
+        this.connections.forEach((connection) => this.sendUserData(connection));
+    }
+
+    /**
+     * The user as others see it, plus what only they see
+     */
+    private sendUserData(connection: Connection): void {
+        connection.send('set-user', this.user.sanitized());
+        connection.send('money-history', this.user.storage.moneyHistory ?? []);
     }
 
     /**

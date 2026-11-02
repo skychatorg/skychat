@@ -136,7 +136,7 @@ export class BlackjackTable {
             this.schedule(this.timings.betMs, () => this.deal());
         }
         this.seats.push({ session, bet: amount, doubled: false, cards: [], done: false, outcome: null, payout: null });
-        await this.charge(session, amount);
+        await this.charge(session, amount, 'Blackjack bet');
 
         // No need to wait out the clock once everyone watching has bet, just a beat so the last chip lands before the cards
         if (this.channel.sessions.every((s) => this.seatOf(s))) {
@@ -172,7 +172,7 @@ export class BlackjackTable {
         seat.doubled = true;
         seat.cards.push(this.draw());
         seat.done = true;
-        await this.charge(session, extra);
+        await this.charge(session, extra, 'Blackjack double');
         this.afterAction();
     }
 
@@ -313,7 +313,9 @@ export class BlackjackTable {
             this.clearTimer();
             this.broadcast();
         });
-        await Promise.all(this.seats.filter((seat) => seat.payout).map((seat) => this.pay(seat.session, seat.payout as number)));
+        await Promise.all(
+            this.seats.filter((seat) => seat.payout).map((seat) => this.pay(seat.session, seat.payout as number, 'Blackjack payout')),
+        );
         this.broadcast();
     }
 
@@ -358,18 +360,18 @@ export class BlackjackTable {
         this.dealer = [];
     }
 
-    private async charge(session: Session, amount: number): Promise<void> {
-        await UserController.buy(session.user, amount);
+    private async charge(session: Session, amount: number, reason: string): Promise<void> {
+        await UserController.buy(session.user, amount, reason);
         this.syncUserList();
     }
 
-    private async pay(session: Session, amount: number): Promise<void> {
-        await UserController.giveMoney(session.user, amount);
+    private async pay(session: Session, amount: number, reason: string): Promise<void> {
+        await UserController.giveMoney(session.user, amount, reason);
         this.syncUserList();
     }
 
     private async refund(seat: Seat): Promise<void> {
-        await this.pay(seat.session, seat.bet);
+        await this.pay(seat.session, seat.bet, 'Blackjack refund');
     }
 
     /** Everyone's user list shows the new balance right away (UserController already updates the player's own screen) */

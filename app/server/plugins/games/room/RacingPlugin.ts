@@ -160,7 +160,7 @@ export class RacingPlugin extends RoomPlugin {
             const amount = RacingPlugin.ENTRY_COST * this.currentGame.cars.length;
             for (const winner of winners) {
                 content += `- ${winner.identifier} (+ $${amount / 100})<br>`;
-                UserController.giveMoney(winner.user, amount);
+                UserController.giveMoney(winner.user, amount, 'Racing win');
             }
         } else {
             content += 'Nobody won :)';
@@ -224,7 +224,7 @@ export class RacingPlugin extends RoomPlugin {
         }
         if (this.currentGame.participants.indexOf(connection.session) === -1) {
             // If first vote, pay the price
-            await UserController.buy(connection.session.user, RacingPlugin.ENTRY_COST);
+            await UserController.buy(connection.session.user, RacingPlugin.ENTRY_COST, 'Racing bet');
             this.currentGame.participants.push(connection.session);
         }
         this.currentGame.bets[connection.session.identifier] = bet;

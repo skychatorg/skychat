@@ -1,3 +1,6 @@
+/** One line of a user's money history: amount is negative when money is spent */
+export type MoneyChange = { date: number; amount: number; reason: string };
+
 /**
  * User money is stored in cents. Whole amounts show without decimals: $10, $2.59
  */

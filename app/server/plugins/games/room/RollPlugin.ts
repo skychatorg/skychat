@@ -181,7 +181,7 @@ export class RollPlugin extends RoomPlugin {
             const bet = this.currentGame.bets[identifier];
             const won = bet === this.currentGame.ballPosition;
             if (won) {
-                await UserController.giveMoney(session.user, this.storage.currentJackpot);
+                await UserController.giveMoney(session.user, this.storage.currentJackpot, 'Roll jackpot');
                 content += `- ${identifier} won $${this.storage.currentJackpot / 100}\n`;
                 winnerCount++;
             } else {
@@ -279,7 +279,7 @@ export class RollPlugin extends RoomPlugin {
         if (bet < 0 || bet > 10) {
             throw new Error('Number should be between 0 and 1000');
         }
-        await UserController.buy(connection.session.user, RollPlugin.ENTRY_COST);
+        await UserController.buy(connection.session.user, RollPlugin.ENTRY_COST, 'Roll entry');
         this.currentGame.participants.push(connection.session);
         this.currentGame.bets[connection.session.identifier] = bet;
         this.updateGameMessage();

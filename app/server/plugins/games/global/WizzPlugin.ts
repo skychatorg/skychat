@@ -43,7 +43,7 @@ export class WizzPlugin extends GlobalPlugin {
             throw new Error('User ' + identifier + ' is not connected');
         }
 
-        await UserController.buy(sender, WizzPlugin.COST);
+        await UserController.buy(sender, WizzPlugin.COST, 'Wizz');
 
         target.send('wizz', { from: sender.sanitized() });
     }
