@@ -258,9 +258,11 @@ const play = (action) => client.sendMessage(`/casino ${action}`);
     background: linear-gradient(180deg, #7a4d2a, #4a2c17 55%, #2f1b0e);
 }
 .felt {
-    --card-h: clamp(30px, 15cqh, 150px);
+    /* Two rows of hands (dealer and seats) plus the buttons always fit: about 270px of the height isn't cards */
+    --card-h: clamp(30px, min(15cqh, (100cqh - 270px) / 2), 150px);
     --chip: clamp(34px, 8.5cqh, 64px);
-    --hand-w: calc(var(--card-h) * 1.9 + 64px);
+    /* Three seats side by side at least */
+    --hand-w: min(calc(var(--card-h) * 1.9 + 64px), 30cqw);
     position: relative;
     isolation: isolate;
     height: 100%;
@@ -544,8 +546,8 @@ button:active:not(:disabled) {
     }
 }
 
-/* Short players (the smallest size): one row with the status, the dealer, your hand and your buttons */
-@container (max-height: 180px) {
+/* Short players (the smallest size, or short and wide): one row with the status, the dealer, your hand and your buttons */
+@container (max-height: 180px), (max-height: 250px) and (min-width: 521px) {
     .casino {
         padding: 0;
     }
