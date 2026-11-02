@@ -481,7 +481,8 @@ export class SkyChatClient extends EventEmitter {
     }
 
     private _onConnectedListPatch(patch: any) {
-        this.diffPatcher.patch(this._connectedList, patch);
+        // Patch a copy: the client store skips fields whose reference did not change, so an in-place patch never re-renders
+        this._connectedList = this.diffPatcher.patch(this.diffPatcher.clone(this._connectedList), patch) as Array<SanitizedSession>;
         this._updateConnectedListMeta();
         this.emit('update', this.state);
     }
