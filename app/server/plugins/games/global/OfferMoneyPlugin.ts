@@ -32,7 +32,7 @@ export class OfferMoneyPlugin extends GlobalPlugin {
         }
 
         const amount = parseInt(param.split(' ')[1]);
-        await UserController.giveMoney(session.user, amount);
+        await UserController.giveMoney(session.user, amount, 'Gift');
         session.send(
             'message',
             UserController.createNeutralMessage({

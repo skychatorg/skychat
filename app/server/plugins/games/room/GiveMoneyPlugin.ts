@@ -46,8 +46,8 @@ export class GiveMoneyPlugin extends RoomPlugin {
         }
 
         // Actually transfer the money
-        await UserController.buy(senderSession.user, totalAmount);
-        await UserController.giveMoney(receiverSession.user, givenAmount);
+        await UserController.buy(senderSession.user, totalAmount, `Gave to ${receiverSession.user.username}`);
+        await UserController.giveMoney(receiverSession.user, givenAmount, `From ${senderSession.user.username}`);
 
         // Notify the receiver & sender
         this.room.send('give', {

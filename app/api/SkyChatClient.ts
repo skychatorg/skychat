@@ -24,6 +24,7 @@ import {
 } from '../server/index.js';
 import { BinaryMessageTypes } from './BinaryMessageTypes.js';
 import { MutePluginHelper } from './plugins/MutePluginHelper.js';
+import { MoneyChange } from './money.js';
 
 const defaultUser: SanitizedUser = {
     id: 0,
@@ -83,6 +84,7 @@ export type SkyChatClientState = {
     cursors: { [identifier: string]: { date: Date; cursor: { x: number; y: number; user: SanitizedUser } } };
     roll: { state: boolean };
     op: boolean;
+    moneyHistory: MoneyChange[];
     files: string[];
     file: { filePath: string; content: string } | null;
     gallery: FolderContent | null;
@@ -132,6 +134,7 @@ export declare interface SkyChatClient {
     on(event: 'info', listener: (message: string) => any): this;
 
     on(event: 'set-op', listener: (op: boolean) => any): this;
+    on(event: 'money-history', listener: (history: MoneyChange[]) => any): this;
 
     on(event: 'gallery', listener: (data: FolderContent) => any): this;
     on(event: 'convert-info', listener: (data: VideoStreamInfo) => any): this;
@@ -211,6 +214,7 @@ export class SkyChatClient extends EventEmitter {
     private _cursors: { [identifier: string]: { date: Date; cursor: { x: number; y: number; user: SanitizedUser } } } = {};
     private _roll: { state: boolean } = { state: false };
     private _op = false;
+    private _moneyHistory: MoneyChange[] = [];
     private _files: Array<string> = [];
     private _file: { filePath: string; content: string } | null = null;
     private _gallery: FolderContent | null = null;
@@ -295,6 +299,7 @@ export class SkyChatClient extends EventEmitter {
 
         // Admin
         this.on('set-op', this._onSetOP.bind(this));
+        this.on('money-history', this._onMoneyHistory.bind(this));
 
         // Gallery
         this.on('gallery', this._onGallery.bind(this));
@@ -666,6 +671,11 @@ export class SkyChatClient extends EventEmitter {
         this.emit('update', this.state);
     }
 
+    private _onMoneyHistory(history: MoneyChange[]) {
+        this._moneyHistory = history;
+        this.emit('update', this.state);
+    }
+
     private _onGallery(gallery: FolderContent) {
         this._gallery = gallery;
         this.emit('update', this.state);
@@ -778,6 +788,7 @@ export class SkyChatClient extends EventEmitter {
             cursors: this._cursors,
             roll: this._roll,
             op: this._op,
+            moneyHistory: this._moneyHistory,
             files: this._files,
             file: this._file,
             gallery: this._gallery,

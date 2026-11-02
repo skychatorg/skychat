@@ -11,7 +11,7 @@ const DEFAULT_DOCUMENT_TITLE = '~ SkyChat';
 const NOTIFICATION_SOUND_MP3_PATH = '/assets/sound/notification.mp3';
 
 const CURRENT_VERSION = 5;
-const STORE_SAVED_KEYS = ['playerMode', 'leftCollapsed', 'rightCollapsed', 'voiceSettings'];
+const STORE_SAVED_KEYS = ['playerMode', 'leftCollapsed', 'rightCollapsed', 'voiceSettings', 'casinoSound'];
 
 const applyLeftCollapsedClass = (collapsed) => {
     if (typeof document === 'undefined') return;
@@ -169,6 +169,11 @@ export const useAppStore = defineStore('app', {
          * Whether the right column (connected users) is collapsed to an icon-only rail on desktop
          */
         rightCollapsed: false,
+
+        /**
+         * Whether the casino table plays sounds
+         */
+        casinoSound: true,
 
         /**
          * Local voice capture preferences (persisted).
@@ -480,6 +485,11 @@ export const useAppStore = defineStore('app', {
                     values: Object.fromEntries(STORE_SAVED_KEYS.map((key) => [key, this[key]])),
                 }),
             );
+        },
+
+        toggleCasinoSound: function () {
+            this.casinoSound = !this.casinoSound;
+            this.savePreferences();
         },
 
         // ---- Voice capture preferences (persist + push to the live engine) ----

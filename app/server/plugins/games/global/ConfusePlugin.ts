@@ -77,7 +77,7 @@ export class ConfusePlugin extends GlobalPlugin {
             throw new Error('User ' + identifier + ' is already confused');
         }
 
-        await UserController.buy(connection.session.user, ConfusePlugin.COST);
+        await UserController.buy(connection.session.user, ConfusePlugin.COST, 'Confuse');
 
         // Notify everyone but the user who is sandalized
         const messageContent = `${connection.session.identifier} confused ${identifier} 🤯 (cost: $${ConfusePlugin.COST / 100})`;

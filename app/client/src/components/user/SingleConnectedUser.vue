@@ -82,6 +82,14 @@ const banUser = () => {
     }
 };
 
+// The server takes the commission and says how much arrived, in the chat
+const giveMoney = () => {
+    const dollars = Number(prompt(`How much do you give to ${props.entry.user.username}? (in $)`)?.replace(',', '.'));
+    if (dollars > 0) {
+        client.sendMessage(`/give ${props.entry.user.username} ${Math.round(dollars * 100)}`);
+    }
+};
+
 const openAvatar = () => {
     window.open(props.entry.user.data.plugins.avatar, '_blank', 'noopener');
 };
@@ -257,13 +265,15 @@ const isDisconnected = computed(() => props.entry.connectionCount === 0);
 
                 <!-- Right col -->
                 <div class="shrink-0 flex items-center gap-2">
-                    <span
+                    <button
                         v-show="entry.user.money > 0"
-                        :title="(entry.user.money / 100).toFixed(2)"
-                        class="font-mono text-xs text-amber-300/80 tabular-nums"
+                        :title="isSelf ? (entry.user.money / 100).toFixed(2) : `Give money to ${entry.user.username}`"
+                        :disabled="isSelf"
+                        class="font-mono text-xs text-amber-300/80 tabular-nums enabled:hover:text-amber-200 enabled:hover:underline"
+                        @click="giveMoney"
                     >
                         {{ formattedMoney }}
-                    </span>
+                    </button>
                     <span
                         v-show="entry.user.right > 0"
                         :title="`Level ${entry.user.right}`"
@@ -313,6 +323,10 @@ const isDisconnected = computed(() => props.entry.connectionCount === 0);
                             <SkyDropdownItem v-if="canModerateVoice && isInVoice" @click="voiceKickUser">
                                 <fa icon="phone-slash" class="w-4 mr-2 text-danger" />
                                 Voice kick
+                            </SkyDropdownItem>
+                            <SkyDropdownItem @click="giveMoney">
+                                <fa icon="coins" class="w-4 mr-2 text-amber-300" />
+                                Give money
                             </SkyDropdownItem>
                             <SkyDropdownItem v-if="!isBlacklisted" @click="blacklistUser">
                                 <fa icon="ban" class="w-4 mr-2" />
@@ -366,6 +380,10 @@ const isDisconnected = computed(() => props.entry.connectionCount === 0);
         <SkyContextMenuItem v-if="canModerateVoice && isInVoice" @select="voiceKickUser">
             <fa icon="phone-slash" class="w-4 mr-2 text-danger" />
             Voice kick
+        </SkyContextMenuItem>
+        <SkyContextMenuItem @select="giveMoney">
+            <fa icon="coins" class="w-4 mr-2 text-amber-300" />
+            Give money
         </SkyContextMenuItem>
         <SkyContextMenuItem v-if="!isBlacklisted" @select="blacklistUser">
             <fa icon="ban" class="w-4 mr-2" />

@@ -147,10 +147,13 @@ export const useClientStore = defineStore('client', {
             });
 
             // Ask for push notification permission on user login
+            // set-user arrives on every change to your user (money, avatar…), asking for push once per login is enough
+            let pushRegisteredFor = null;
             client.on('set-user', async (user) => {
-                if (!user.id) {
+                if (!user.id || user.id === pushRegisteredFor) {
                     return;
                 }
+                pushRegisteredFor = user.id;
 
                 try {
                     const subscription = await WebPush.register(import.meta.env.VAPID_PUBLIC_KEY);

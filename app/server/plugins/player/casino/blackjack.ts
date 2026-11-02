@@ -1,3 +1,5 @@
+import { randomInt } from 'node:crypto';
+
 /**
  * Blackjack rules, with no state, timers or I/O so they can be tested on fixed hands.
  * One deck, reshuffled every hand. The dealer stands on all 17s. Blackjack pays 3 to 2.
@@ -11,12 +13,12 @@ export type Card = { rank: (typeof RANKS)[number]; suit: (typeof SUITS)[number] 
 export type Outcome = 'blackjack' | 'win' | 'push' | 'lose' | 'bust';
 
 /**
- * A freshly shuffled deck. Cards are drawn with pop().
+ * A freshly shuffled deck. Cards are drawn with pop(). Crypto random, so past cards can't predict the next ones
  */
-export function createShoe(random: () => number = Math.random): Card[] {
+export function createShoe(): Card[] {
     const shoe: Card[] = SUITS.flatMap((suit) => RANKS.map((rank) => ({ rank, suit })));
     for (let i = shoe.length - 1; i > 0; i--) {
-        const j = Math.floor(random() * (i + 1));
+        const j = randomInt(i + 1);
         [shoe[i], shoe[j]] = [shoe[j], shoe[i]];
     }
     return shoe;

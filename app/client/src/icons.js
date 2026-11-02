@@ -1,6 +1,7 @@
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faDiscord } from '@fortawesome/free-brands-svg-icons';
 import {
+    faAnglesUp,
     faArrowLeft,
     faArrowPointer,
     faArrowRightFromBracket,
@@ -22,6 +23,7 @@ import {
     faClosedCaptioning,
     faComments,
     faCompress,
+    faCoins,
     faCopy,
     faDice,
     faDownLeftAndUpRightToCenter,
@@ -38,6 +40,7 @@ import {
     faGear,
     faGears,
     faGlobe,
+    faHand,
     faHashtag,
     faHeadphones,
     faHighlighter,
@@ -78,6 +81,7 @@ import {
     faUsers,
     faUserSlash,
     faVideo,
+    faVolumeHigh,
     faVolumeXmark,
     faWaveSquare,
     faXmark,
@@ -85,6 +89,7 @@ import {
 
 library.add(
     faDiscord,
+    faAnglesUp,
     faArrowLeft,
     faArrowPointer,
     faArrowRightFromBracket,
@@ -106,6 +111,7 @@ library.add(
     faClosedCaptioning,
     faComments,
     faCompress,
+    faCoins,
     faCopy,
     faDice,
     faDownLeftAndUpRightToCenter,
@@ -122,6 +128,7 @@ library.add(
     faGear,
     faGears,
     faGlobe,
+    faHand,
     faHashtag,
     faHeadphones,
     faHighlighter,
@@ -162,6 +169,7 @@ library.add(
     faUsers,
     faUserSlash,
     faVideo,
+    faVolumeHigh,
     faVolumeXmark,
     faWaveSquare,
     faXmark,

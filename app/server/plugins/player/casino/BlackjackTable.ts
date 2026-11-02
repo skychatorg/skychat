@@ -11,9 +11,10 @@ import { Card, createShoe, dealerShouldHit, handValue, isBlackjack, isBust, Outc
 export type CasinoOptions = { game: 'blackjack'; minBet: number; maxBet: number };
 
 /**
- * waiting: no hand running, the last results stay on the table and the next bet opens a new hand
+ * - results: the hand is settled and bets are closed for a moment, so everyone sees how it ended
+ * - waiting: no hand running, the last results stay on the table and the next bet opens a new hand
  */
-export type TablePhase = 'waiting' | 'betting' | 'playing' | 'dealer';
+export type TablePhase = 'betting' | 'playing' | 'dealer' | 'results' | 'waiting';
 
 type Seat = {
     session: Session;
@@ -51,6 +52,13 @@ export type SanitizedBlackjackTable = {
 };
 
 /**
+ * Money moves hit the DB and can fail: log it, since an unhandled rejection stops the server
+ */
+export const logFailure = (work: Promise<unknown>): void => {
+    work.catch((error) => Logging.error('Blackjack table', error));
+};
+
+/**
  * One shared blackjack table: everyone plays their own hand against the dealer, at the same time.
  * Phases are driven by timers here, never inside a command, so a running hand never holds a player's command queue.
  */
@@ -61,7 +69,7 @@ export class BlackjackTable {
     static readonly DEFAULT_OPTIONS: CasinoOptions = { game: 'blackjack', minBet: 1000, maxBet: 10000 };
 
     /** Instance values, so tests can shorten them */
-    public timings = { betMs: 15_000, turnMs: 20_000, dealerStepMs: 900 };
+    public timings = { betMs: 15_000, dealBeatMs: 700, turnMs: 20_000, dealerStepMs: 1300, resultsMs: 8000 };
 
     /** Overridable for tests: the shoe for the next hand, drawn with pop() */
     public shuffle: () => Card[] = () => createShoe();
@@ -77,6 +85,9 @@ export class BlackjackTable {
     private seats: Seat[] = [];
 
     private dealer: Card[] = [];
+
+    /** The dealer flips the hole card one beat into its turn, so the players' last cards land first */
+    private holeRevealed = false;
 
     private shoe: Card[] = [];
 
@@ -97,6 +108,9 @@ export class BlackjackTable {
         if (session.user.isGuest()) {
             throw new Error('Log in to play at the casino');
         }
+        if (this.phase === 'results') {
+            throw new Error('The next hand opens in a moment');
+        }
         if (this.phase !== 'waiting' && this.phase !== 'betting') {
             throw new Error('Wait for the next hand');
         }
@@ -116,19 +130,19 @@ export class BlackjackTable {
         if (this.phase === 'waiting') {
             this.seats = [];
             this.dealer = [];
+            this.holeRevealed = false;
             this.phase = 'betting';
             this.handId++;
             this.schedule(this.timings.betMs, () => this.deal());
         }
         this.seats.push({ session, bet: amount, doubled: false, cards: [], done: false, outcome: null, payout: null });
-        await this.charge(session, amount);
+        await this.charge(session, amount, 'Blackjack bet');
 
-        // No need to wait out the clock once everyone watching has bet
+        // No need to wait out the clock once everyone watching has bet, just a beat so the last chip lands before the cards
         if (this.channel.sessions.every((s) => this.seatOf(s))) {
-            this.deal();
-        } else {
-            this.broadcast();
+            this.schedule(this.timings.dealBeatMs, () => this.deal());
         }
+        this.broadcast();
     }
 
     public hit(session: Session): void {
@@ -158,7 +172,7 @@ export class BlackjackTable {
         seat.doubled = true;
         seat.cards.push(this.draw());
         seat.done = true;
-        await this.charge(session, extra);
+        await this.charge(session, extra, 'Blackjack double');
         this.afterAction();
     }
 
@@ -190,14 +204,15 @@ export class BlackjackTable {
      */
     public async destroy(): Promise<void> {
         this.clearTimer();
-        if (this.phase !== 'waiting') {
+        // Settled hands were already paid
+        if (this.phase !== 'results' && this.phase !== 'waiting') {
             await Promise.all(this.seats.map((seat) => this.refund(seat)));
         }
         this.reset();
     }
 
     public sanitized(): SanitizedBlackjackTable {
-        const holeHidden = this.phase === 'betting' || this.phase === 'playing';
+        const holeHidden = !this.holeRevealed;
         const visibleDealer = holeHidden ? this.dealer.slice(0, 1) : this.dealer;
         return {
             channelId: this.channel.id,
@@ -277,7 +292,12 @@ export class BlackjackTable {
                 return this.settleAll();
             }
         };
-        this.schedule(this.timings.dealerStepMs, step, false);
+        const reveal = () => {
+            this.holeRevealed = true;
+            this.broadcast();
+            this.schedule(this.timings.dealerStepMs, step, false);
+        };
+        this.schedule(this.timings.dealerStepMs, reveal, false);
     }
 
     private async settleAll(): Promise<void> {
@@ -287,9 +307,15 @@ export class BlackjackTable {
             seat.outcome = outcome;
             seat.payout = payout;
         }
-        this.phase = 'waiting';
-        this.deadline = null;
-        await Promise.all(this.seats.filter((seat) => seat.payout).map((seat) => this.pay(seat.session, seat.payout as number)));
+        this.phase = 'results';
+        this.schedule(this.timings.resultsMs, () => {
+            this.phase = 'waiting';
+            this.clearTimer();
+            this.broadcast();
+        });
+        await Promise.all(
+            this.seats.filter((seat) => seat.payout).map((seat) => this.pay(seat.session, seat.payout as number, 'Blackjack payout')),
+        );
         this.broadcast();
     }
 
@@ -316,17 +342,11 @@ export class BlackjackTable {
     private schedule(ms: number, fn: () => void | Promise<void>, withDeadline = true): void {
         this.clearTimer();
         this.deadline = withDeadline ? Date.now() + ms : null;
-        // A failure in a timer would otherwise be an unhandled rejection, which stops the server
-        this.timer = setTimeout(
-            () =>
-                Promise.resolve()
-                    .then(fn)
-                    .catch((error) => Logging.error('Blackjack table', error)),
-            ms,
-        );
+        this.timer = setTimeout(() => logFailure(Promise.resolve().then(fn)), ms);
     }
 
     private clearTimer(): void {
+        this.deadline = null;
         if (this.timer) {
             clearTimeout(this.timer);
             this.timer = null;
@@ -336,23 +356,22 @@ export class BlackjackTable {
     private reset(): void {
         this.clearTimer();
         this.phase = 'waiting';
-        this.deadline = null;
         this.seats = [];
         this.dealer = [];
     }
 
-    private async charge(session: Session, amount: number): Promise<void> {
-        await UserController.buy(session.user, amount);
+    private async charge(session: Session, amount: number, reason: string): Promise<void> {
+        await UserController.buy(session.user, amount, reason);
         this.syncUserList();
     }
 
-    private async pay(session: Session, amount: number): Promise<void> {
-        await UserController.giveMoney(session.user, amount);
+    private async pay(session: Session, amount: number, reason: string): Promise<void> {
+        await UserController.giveMoney(session.user, amount, reason);
         this.syncUserList();
     }
 
     private async refund(seat: Seat): Promise<void> {
-        await this.pay(seat.session, seat.bet);
+        await this.pay(seat.session, seat.bet, 'Blackjack refund');
     }
 
     /** Everyone's user list shows the new balance right away (UserController already updates the player's own screen) */

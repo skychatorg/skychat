@@ -194,7 +194,7 @@ export class DailyRollPlugin extends RoomPlugin {
             const card = this.currentGame.cards[chosenCardId];
             card.state = 'shown';
             if (card.content > 0) {
-                await UserController.giveMoney(session.user, card.content);
+                await UserController.giveMoney(session.user, card.content, 'Daily roll');
             }
             this.updateGameMessage();
             await Timing.sleep(500);
