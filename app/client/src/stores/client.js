@@ -68,6 +68,16 @@ export const useClientStore = defineStore('client', {
          * Track only the last received message. Useful to be used in a watcher.
          */
         lastMessage: (state) => state.messages[state.messages.length - 1] || null,
+
+        /**
+         * The channel you are in, from the live list (state.currentPlayerChannel can lag behind a list update)
+         */
+        currentChannel: (state) => state.state.playerChannels.find((channel) => channel.id === state.state.currentPlayerChannelId) ?? null,
+
+        /**
+         * Whether the player panel has something to show: a media playing, or a casino table
+         */
+        channelHasContent: (state) => Boolean(state.state.player.current || state.state.casino),
     },
 
     actions: {

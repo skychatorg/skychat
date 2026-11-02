@@ -9,9 +9,7 @@ const client = useClientStore();
 
 // In cinema mode the video is the point, and other people's cursors drifting across it are just
 // noise. We keep sending our own position, so viewers who are not in cinema mode still see us.
-const hideCursors = computed(
-    () => app.playerMode.enabled && app.playerMode.size === 'cinema' && app.isDesktop && Boolean(client.state.player.current),
-);
+const hideCursors = computed(() => app.cinemaActive);
 
 const CURSOR_POSITION_DELAY_MS = 150;
 

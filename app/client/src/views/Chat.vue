@@ -26,9 +26,7 @@ const currentRoomName = computed(() => roomName(client.state.currentRoom, client
 
 // Cinema mode is a layout, not a size: the video takes the window and chat is reduced to a narrow
 // column of messages beside it. Everything else (rooms, users, search, polls) is dropped.
-const cinema = computed(
-    () => app.playerMode.size === 'cinema' && app.playerMode.enabled && app.isDesktop && Boolean(client.state.player.current),
-);
+const cinema = computed(() => app.cinemaActive);
 
 const runSearch = () => {
     const sanitizedQuery = query.value.trim();
