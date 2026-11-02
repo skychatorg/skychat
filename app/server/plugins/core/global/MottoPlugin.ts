@@ -31,5 +31,6 @@ export class MottoPlugin extends GlobalPlugin {
         }
         await UserController.savePluginData(connection.session.user, this.commandName, param);
         (this.manager.getPlugin('connectedlist') as ConnectedListPlugin).sync();
+        connection.session.syncUserData();
     }
 }
