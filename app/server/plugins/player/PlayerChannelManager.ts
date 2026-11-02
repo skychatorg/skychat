@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events';
 import { Connection } from '../../skychat/Connection.js';
 import { Session } from '../../skychat/Session.js';
-import { CasinoOptions } from './casino/BlackjackTable.js';
+import { CasinoOptions, logFailure } from './casino/BlackjackTable.js';
 import { ChannelKind, PlayerChannel, SanitizedPlayerChannel } from './PlayerChannel.js';
 import { PlayerPlugin } from './PlayerPlugin.js';
 
@@ -173,7 +173,9 @@ export class PlayerChannelManager extends EventEmitter {
         this.sessionChannels.delete(session);
         if (channel?.sessions.includes(session)) {
             channel.sessions.splice(channel.sessions.indexOf(session), 1);
-            void channel.table?.onSessionLeft(session);
+            if (channel.table) {
+                logFailure(channel.table.onSessionLeft(session));
+            }
         }
         session.send('player-sync', { current: null, queue: [], cursor: 0, paused: false });
         session.send('casino-table', null);

@@ -54,6 +54,13 @@ export type SanitizedBlackjackTable = {
  * One shared blackjack table: everyone plays their own hand against the dealer, at the same time.
  * Phases are driven by timers here, never inside a command, so a running hand never holds a player's command queue.
  */
+/**
+ * Money moves hit the DB and can fail: log it, since an unhandled rejection stops the server
+ */
+export const logFailure = (work: Promise<unknown>): void => {
+    work.catch((error) => Logging.error('Blackjack table', error));
+};
+
 export class BlackjackTable {
     static readonly MAX_SEATS = 5;
 
@@ -316,14 +323,7 @@ export class BlackjackTable {
     private schedule(ms: number, fn: () => void | Promise<void>, withDeadline = true): void {
         this.clearTimer();
         this.deadline = withDeadline ? Date.now() + ms : null;
-        // A failure in a timer would otherwise be an unhandled rejection, which stops the server
-        this.timer = setTimeout(
-            () =>
-                Promise.resolve()
-                    .then(fn)
-                    .catch((error) => Logging.error('Blackjack table', error)),
-            ms,
-        );
+        this.timer = setTimeout(() => logFailure(Promise.resolve().then(fn)), ms);
     }
 
     private clearTimer(): void {
