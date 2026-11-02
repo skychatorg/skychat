@@ -69,7 +69,7 @@ export class BlackjackTable {
     static readonly DEFAULT_OPTIONS: CasinoOptions = { game: 'blackjack', minBet: 1000, maxBet: 10000 };
 
     /** Instance values, so tests can shorten them */
-    public timings = { betMs: 15_000, dealBeatMs: 700, turnMs: 20_000, dealerStepMs: 1100, resultsMs: 6000 };
+    public timings = { betMs: 15_000, dealBeatMs: 700, turnMs: 20_000, dealerStepMs: 1300, resultsMs: 8000 };
 
     /** Overridable for tests: the shoe for the next hand, drawn with pop() */
     public shuffle: () => Card[] = () => createShoe();
@@ -85,6 +85,9 @@ export class BlackjackTable {
     private seats: Seat[] = [];
 
     private dealer: Card[] = [];
+
+    /** The dealer flips the hole card one beat into its turn, so the players' last cards land first */
+    private holeRevealed = false;
 
     private shoe: Card[] = [];
 
@@ -127,6 +130,7 @@ export class BlackjackTable {
         if (this.phase === 'waiting') {
             this.seats = [];
             this.dealer = [];
+            this.holeRevealed = false;
             this.phase = 'betting';
             this.handId++;
             this.schedule(this.timings.betMs, () => this.deal());
@@ -208,7 +212,7 @@ export class BlackjackTable {
     }
 
     public sanitized(): SanitizedBlackjackTable {
-        const holeHidden = this.phase === 'betting' || this.phase === 'playing';
+        const holeHidden = !this.holeRevealed;
         const visibleDealer = holeHidden ? this.dealer.slice(0, 1) : this.dealer;
         return {
             channelId: this.channel.id,
@@ -288,7 +292,12 @@ export class BlackjackTable {
                 return this.settleAll();
             }
         };
-        this.schedule(this.timings.dealerStepMs, step, false);
+        const reveal = () => {
+            this.holeRevealed = true;
+            this.broadcast();
+            this.schedule(this.timings.dealerStepMs, step, false);
+        };
+        this.schedule(this.timings.dealerStepMs, reveal, false);
     }
 
     private async settleAll(): Promise<void> {

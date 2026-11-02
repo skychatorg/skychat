@@ -95,6 +95,9 @@ describe('casino table', () => {
         const dealerTurn = alice.events('casino-table').filter((p: { phase: string }) => p.phase === 'dealer');
         expect(dealerTurn.length).toBeGreaterThan(0);
         expect(dealerTurn.every((p: { deadline: number | null }) => p.deadline === null)).toBe(true);
+        // The dealer's turn opens with the hole card still down, and flips it on the next beat
+        expect(dealerTurn[0].dealer.cards[1]).toBeNull();
+        expect(dealerTurn[1].dealer.cards[1]).toEqual(hand('7♦')[0]);
         expect(final.dealer).toEqual({ cards: hand('10♣ 7♦'), total: 17 });
         expect(final.seats.map((s: { outcome: string; payout: number }) => [s.outcome, s.payout])).toEqual([
             ['win', 4000],
