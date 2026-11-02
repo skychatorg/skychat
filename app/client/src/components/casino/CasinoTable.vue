@@ -1,4 +1,5 @@
 <script setup>
+import CasinoChip from '@/components/casino/CasinoChip.vue';
 import CasinoHand from '@/components/casino/CasinoHand.vue';
 import { useCasinoSounds } from '@/composables/useCasinoSounds';
 import { useNow } from '@/composables/useNow';
@@ -37,6 +38,18 @@ const betChoices = computed(() => {
     const { minBet, maxBet } = table.value;
     return [...new Set([minBet, minBet * 2, minBet * 5, maxBet].map((bet) => Math.min(bet, maxBet)))].sort((a, b) => a - b);
 });
+const chipColor = (value) => CHIP_COLORS[betChoices.value.indexOf(value) % CHIP_COLORS.length];
+
+// A bet as the chips on the felt, biggest first: what was clicked, two of them once doubled
+function chipsFor(bet) {
+    const chips = [];
+    for (const value of [...betChoices.value].reverse()) {
+        for (; bet >= value; bet -= value) {
+            chips.push({ value, color: chipColor(value) });
+        }
+    }
+    return chips.slice(0, 5);
+}
 
 const status = computed(() => {
     switch (phase.value) {
@@ -174,6 +187,7 @@ const play = (action) => client.sendMessage(`/casino ${action}`);
                     :card-delay="cardDelay(slot)"
                     :money="seat.user.money"
                     :bet="seat.bet"
+                    :chips="chipsFor(seat.bet)"
                     v-bind="seatProps(seat)"
                 />
                 <span
@@ -206,15 +220,14 @@ const play = (action) => client.sendMessage(`/casino ${action}`);
                     <span v-if="!me.id" class="hint">Log in to play</span>
                     <template v-else>
                         <button
-                            v-for="(bet, index) in betChoices"
+                            v-for="bet in betChoices"
                             :key="bet"
                             class="chip"
-                            :style="{ '--chip-color': CHIP_COLORS[index % CHIP_COLORS.length] }"
                             :disabled="phase === 'results' || me.money < bet"
                             :title="`Bet ${formatMoney(bet)}`"
                             @click="play(`bet ${bet}`)"
                         >
-                            {{ formatMoney(bet) }}
+                            <CasinoChip :value="bet" :color="chipColor(bet)" />
                         </button>
                     </template>
                 </template>
@@ -436,21 +449,9 @@ button:active:not(:disabled) {
         0 3px 0 #8a5d22,
         0 5px 12px rgba(0, 0, 0, 0.35);
 }
-/* Clay casino chips: a colored disc with a dashed white edge */
 .chip {
     width: var(--chip);
-    height: var(--chip);
     border-radius: 50%;
-    font-weight: 800;
-    font-size: max(10px, calc(var(--chip) * 0.25));
-    color: #fff8ea;
-    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
-    background: radial-gradient(circle, var(--chip-color) 52%, transparent 53%),
-        repeating-conic-gradient(#fff3dc 0 15deg, var(--chip-color) 15deg 45deg);
-    box-shadow:
-        inset 0 0 0 calc(var(--chip) * 0.05) var(--chip-color),
-        0 3px 0 rgba(0, 0, 0, 0.45),
-        0 5px 10px rgba(0, 0, 0, 0.3);
 }
 .hint {
     font:
@@ -584,6 +585,12 @@ button:active:not(:disabled) {
         gap: 4px;
         justify-content: end;
         min-height: 0;
+    }
+    /* Wraps instead of pushing into the seats */
+    .hint {
+        font-size: 12px;
+        max-width: 12ch;
+        text-align: right;
     }
     /* Icons only, the title names them */
     .action {

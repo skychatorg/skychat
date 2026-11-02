@@ -1,4 +1,5 @@
 <script setup>
+import CasinoChip from '@/components/casino/CasinoChip.vue';
 import PlayingCard from '@/components/casino/PlayingCard.vue';
 import UserMiniAvatar from '@/components/user/UserMiniAvatar.vue';
 import { formatMoney } from '../../../../api/money.ts';
@@ -46,6 +47,11 @@ const props = defineProps({
         type: Number,
         default: null,
     },
+    // The bet as chips: { value, color }
+    chips: {
+        type: Array,
+        default: () => [],
+    },
     // Once the hand is settled: blackjack, win, push, lose or bust, and the money won or lost
     outcome: {
         type: String,
@@ -86,9 +92,11 @@ watch(
         <!-- Always there, even empty, so every hand has the same height -->
         <div class="purse">
             <span v-if="money !== null" class="money">{{ formatMoney(money) }}</span>
-            <span v-if="bet !== null" class="bet">{{ formatMoney(bet) }}</span>
         </div>
-        <div class="cards" :style="{ '--n': cards.length }">
+        <div class="cards" :style="{ '--n': cards.length, '--stake': chips.length ? 1 : 0 }">
+            <span v-if="chips.length" class="stake" :title="`Bet ${formatMoney(bet)}`">
+                <CasinoChip v-for="(chip, index) in chips" :key="index" :value="chip.value" :color="chip.color" />
+            </span>
             <PlayingCard v-for="(card, index) in cards" :key="index" :card="card" :deal-delay-ms="cardDelay(index)" />
         </div>
         <!-- Always there, even empty, so the hand keeps its height when the first total shows -->
@@ -146,7 +154,6 @@ watch(
     text-overflow: ellipsis;
     white-space: nowrap;
 }
-/* The stake, as a little chip */
 .purse {
     display: flex;
     gap: 8px;
@@ -164,22 +171,18 @@ watch(
     text-overflow: ellipsis;
     white-space: nowrap;
 }
-.bet {
-    display: inline-flex;
+/* The bet, as a stack of chips next to the cards */
+.stake {
+    --stake-w: calc(var(--card-h, 48px) * 0.6);
+    display: flex;
+    flex-direction: column-reverse;
     flex: none;
-    align-items: center;
-    gap: 4px;
-    color: #f0c46c;
+    align-self: center;
+    width: var(--stake-w);
+    margin-right: 6px;
 }
-.bet::before {
-    content: '';
-    width: 0.8em;
-    height: 0.8em;
-    border-radius: 50%;
-    background: #c9452f;
-    box-shadow:
-        inset 0 0 0 2px #c9452f,
-        inset 0 0 0 3px #fff3dc;
+.stake > * + * {
+    margin-bottom: -82%;
 }
 .cards {
     display: flex;
@@ -188,7 +191,13 @@ watch(
 }
 /* Cards overlap as much as needed to stay inside the hand */
 .cards > .playing-card + .playing-card {
-    margin-left: min(4px, calc((var(--hand-w) - 16px - var(--n) * var(--card-h, 48px) * 0.7) / (var(--n) - 1)));
+    margin-left: min(
+        4px,
+        calc(
+            (var(--hand-w) - 16px - var(--stake) * (var(--card-h, 48px) * 0.6 + 6px) - var(--n) * var(--card-h, 48px) * 0.7) /
+                (var(--n) - 1)
+        )
+    );
 }
 .result {
     font:
