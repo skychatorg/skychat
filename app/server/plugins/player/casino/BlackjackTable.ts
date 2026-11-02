@@ -301,7 +301,7 @@ export class BlackjackTable {
         this.phase = 'results';
         this.schedule(this.timings.resultsMs, () => {
             this.phase = 'waiting';
-            this.deadline = null;
+            this.clearTimer();
             this.broadcast();
         });
         await Promise.all(this.seats.filter((seat) => seat.payout).map((seat) => this.pay(seat.session, seat.payout as number)));
@@ -335,6 +335,7 @@ export class BlackjackTable {
     }
 
     private clearTimer(): void {
+        this.deadline = null;
         if (this.timer) {
             clearTimeout(this.timer);
             this.timer = null;
@@ -344,7 +345,6 @@ export class BlackjackTable {
     private reset(): void {
         this.clearTimer();
         this.phase = 'waiting';
-        this.deadline = null;
         this.seats = [];
         this.dealer = [];
     }

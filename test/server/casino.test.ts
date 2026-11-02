@@ -91,6 +91,10 @@ describe('casino table', () => {
 
         const final = alice.last('casino-table');
         expect(final.phase).toBe('results');
+        // The dealer has no clock, so no update during its turn may carry the players' old deadline
+        const dealerTurn = alice.events('casino-table').filter((p: { phase: string }) => p.phase === 'dealer');
+        expect(dealerTurn.length).toBeGreaterThan(0);
+        expect(dealerTurn.every((p: { deadline: number | null }) => p.deadline === null)).toBe(true);
         expect(final.dealer).toEqual({ cards: hand('10♣ 7♦'), total: 17 });
         expect(final.seats.map((s: { outcome: string; payout: number }) => [s.outcome, s.payout])).toEqual([
             ['win', 4000],
