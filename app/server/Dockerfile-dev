@@ -22,7 +22,7 @@ RUN ln -snf "/usr/share/zoneinfo/${DOCKER_TZ}" /etc/localtime && \
     (delgroup node 2>/dev/null || true) && \
     addgroup -g "${DOCKER_GID}" "${DOCKER_USER}" && \
     adduser -u "${DOCKER_UID}" -G "${DOCKER_USER}" -D "${DOCKER_USER}" && \
-    apk add --no-cache --update ffmpeg zip python3 py3-pip make g++ linux-headers
+    apk add --no-cache --update ffmpeg zip imagemagick python3 py3-pip make g++ linux-headers
 
 # Copy package files and configs
 COPY ["package.json", "package-lock.json", "*config.*", "./"]
