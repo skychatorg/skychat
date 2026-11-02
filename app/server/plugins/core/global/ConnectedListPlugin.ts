@@ -66,9 +66,10 @@ export class ConnectedListPlugin extends GlobalPlugin {
     }
 
     private getConnectedList() {
+        // Copied: sanitized users share their live data object, so a change to it would also land in the last snapshot and never show in the diff
         return Object.values(Session.sessions)
             .sort(this._sessionSortFunction)
-            .map((sess) => sess.sanitized());
+            .map((sess) => structuredClone(sess.sanitized()));
     }
 
     private _patchClients() {

@@ -96,5 +96,6 @@ export class AvatarPlugin extends GlobalPlugin {
         await UserController.savePluginData(connection.session.user, this.commandName, avatarNewUrl);
 
         (this.manager.getPlugin('connectedlist') as ConnectedListPlugin).sync();
+        connection.session.syncUserData();
     }
 }

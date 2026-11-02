@@ -125,6 +125,7 @@ export class CustomizationPlugin extends GlobalPlugin {
         data[type] = item.value;
         this.saveUserData(connection.session.user, data);
         (this.manager.getPlugin('connectedlist') as ConnectedListPlugin).sync();
+        connection.session.syncUserData();
     }
 
     /**
