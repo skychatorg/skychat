@@ -214,6 +214,7 @@ export class UserController {
         }
         user.money -= amount;
         await UserController.sync(user);
+        UserController.syncSessionUser(user);
     }
 
     /**
@@ -225,6 +226,14 @@ export class UserController {
         }
         user.money += amount;
         await UserController.sync(user);
+        UserController.syncSessionUser(user);
+    }
+
+    /**
+     * Show a balance change on the user's own screens right away
+     */
+    private static syncSessionUser(user: User): void {
+        Session.getSessionByIdentifier(user.username.toLowerCase())?.syncUserData();
     }
 
     /**
