@@ -232,6 +232,11 @@ export const useAppStore = defineStore('app', {
             manageRooms: false,
 
             /**
+             * Player channel management modal
+             */
+            manageChannels: false,
+
+            /**
              * Sticker management modal
              */
             manageStickers: false,
@@ -244,6 +249,13 @@ export const useAppStore = defineStore('app', {
     }),
 
     getters: {
+        /**
+         * The window is given to the player panel, with the chat beside it
+         */
+        cinemaActive() {
+            return this.playerMode.size === 'cinema' && this.playerMode.enabled && this.isDesktop && useClientStore().channelHasContent;
+        },
+
         /**
          * The collapsed flag is only meaningful at the desktop breakpoint.
          * On mobile the left column is full-width and shouldn't render in compact mode.

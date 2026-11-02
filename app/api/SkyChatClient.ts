@@ -11,6 +11,7 @@ import {
     OngoingConvert,
     PublicConfig,
     QueuedVideoInfo,
+    SanitizedBlackjackTable,
     SanitizedMessage,
     SanitizedPlayerChannel,
     SanitizedPoll,
@@ -93,6 +94,8 @@ export type SkyChatClientState = {
     playerApiSearchResult: { type: string; items: Array<VideoInfo> } | null;
     player: PlayerState;
     playerLastUpdate: Date | null;
+    /** The table of the casino channel you are in, null elsewhere */
+    casino: SanitizedBlackjackTable | null;
     voiceChannels: SanitizedVoiceChannel[];
     currentVoiceChannelId: number | null;
     voiceChannelUsers: { [channelId: number]: Array<SanitizedUser> };
@@ -138,6 +141,7 @@ export declare interface SkyChatClient {
     on(event: 'player-channel', listener: (channelId: number | null) => any): this;
     on(event: 'player-search', listener: (data: { type: string; items: Array<VideoInfo> }) => any): this;
     on(event: 'player-sync', listener: (data: PlayerState) => any): this;
+    on(event: 'casino-table', listener: (table: SanitizedBlackjackTable | null) => any): this;
 
     on(event: 'voice-channels', listener: (voiceChannels: Array<SanitizedVoiceChannel>) => any): this;
     on(event: 'voice-channel', listener: (channelId: number | null) => any): this;
@@ -227,6 +231,7 @@ export class SkyChatClient extends EventEmitter {
         paused: false,
     };
     private _playerLastUpdate: Date | null = null;
+    private _casino: SanitizedBlackjackTable | null = null;
 
     // Connection resilience properties
     private _reconnectAttempts: number = 0;
@@ -301,6 +306,7 @@ export class SkyChatClient extends EventEmitter {
         this.on('player-channel', this._onPlayerChannel.bind(this));
         this.on('player-search', this._onPlayerApiSearchResults.bind(this));
         this.on('player-sync', this._onPlayerSync.bind(this));
+        this.on('casino-table', this._onCasinoTable.bind(this));
 
         // Voice (channel + roster only; transport/produce/consume handled by VoiceClient engine)
         this.on('voice-channels', this._onVoiceChannels.bind(this));
@@ -723,6 +729,11 @@ export class SkyChatClient extends EventEmitter {
         this.emit('update', this.state);
     }
 
+    private _onCasinoTable(table: SanitizedBlackjackTable | null) {
+        this._casino = table;
+        this.emit('update', this.state);
+    }
+
     private _onPlayerSync(player: PlayerState) {
         this._player = player;
         this._playerLastUpdate = new Date();
@@ -778,6 +789,7 @@ export class SkyChatClient extends EventEmitter {
             playerApiSearchResult: this._playerApiSearchResult,
             player: this._player,
             playerLastUpdate: this._playerLastUpdate,
+            casino: this._casino,
             voiceChannels: this._voiceChannels,
             currentVoiceChannelId: this._currentVoiceChannelId,
             voiceChannelUsers: this._voiceChannelUsers,

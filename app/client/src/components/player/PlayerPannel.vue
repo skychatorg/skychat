@@ -1,4 +1,5 @@
 <script setup>
+import CasinoTable from '@/components/casino/CasinoTable.vue';
 import MediaPlayer from '@/components/player/MediaPlayer.vue';
 import PlayerSeekBar from '@/components/player/PlayerSeekBar.vue';
 import UserMiniAvatarCollection from '@/components/user/UserMiniAvatarCollection.vue';
@@ -8,15 +9,15 @@ import JellyfinTrackPicker from '@/components/player/impl/JellyfinTrackPicker.vu
 import SkyDropdown from '@/components/common/SkyDropdown.vue';
 import SkyDropdownItem from '@/components/common/SkyDropdownItem.vue';
 import { useJellyfinTracks } from '@/composables/useJellyfinTracks.js';
+import { useNow } from '@/composables/useNow';
 import { isPausable } from '@/lib/player';
-import { computed, onUnmounted, ref } from 'vue';
+import { computed } from 'vue';
 
 const app = useAppStore();
 const client = useClientStore();
 
-const showPlayer = computed(() => {
-    return client.state.player.current && app.playerMode.enabled;
-});
+const isCasino = computed(() => Boolean(client.state.casino));
+const showPlayer = computed(() => client.channelHasContent && app.playerMode.enabled);
 
 const cinema = computed(() => app.playerMode.size === 'cinema' && app.isDesktop);
 
@@ -37,7 +38,7 @@ const playerHeightCss = computed(() => {
     }[app.playerMode.size];
 });
 
-const currentTitle = computed(() => client.state.player.current?.video?.title ?? '');
+const currentTitle = computed(() => (isCasino.value ? client.currentChannel?.name : client.state.player.current?.video?.title) ?? '');
 // Jellyfin thumbnails are served through the authenticated proxy, so they need the per-viewer
 // stream token appended. Other video types expose absolute thumb URLs and pass through unchanged.
 const currentThumb = computed(() => {
@@ -55,21 +56,14 @@ const currentThumb = computed(() => {
     return video.thumb;
 });
 const currentOwner = computed(() => client.state.player.current?.user?.username ?? null);
-// Watchers are the users in the current player channel (not the chat room — the two are
-// independent). Read from the live `playerChannels` array rather than the cached
-// `currentPlayerChannel` reference, which can go stale after a channel-list update.
-const watchers = computed(() => {
-    const channel = client.state.playerChannels.find((c) => c.id === client.state.currentPlayerChannelId);
-    return channel?.users ?? [];
-});
+// Watchers are the users in the current player channel (not the chat room — the two are independent)
+const watchers = computed(() => client.currentChannel?.users ?? []);
 const pausable = computed(() => isPausable(client.state.player.current?.video));
 const togglePause = () => client.sendMessage(client.state.player.paused ? '/player resume' : '/player pause');
 
 // Countdown resync. The server sends the absolute instant everyone resumes at; we just tick towards
 // it locally, so latency cannot skew what each viewer sees.
-const now = ref(Date.now());
-const nowTimer = setInterval(() => (now.value = Date.now()), 250);
-onUnmounted(() => clearInterval(nowTimer));
+const now = useNow();
 
 const resyncSecondsLeft = computed(() => {
     const at = client.state.player.resyncAt;
@@ -90,10 +84,11 @@ const syncSelf = () => client.sendMessage('/playersync');
     <div class="strip-host group relative w-full flex flex-col" :class="cinema ? 'h-full min-h-0' : ''">
         <!-- Player content -->
         <div class="pannel-content relative w-full overflow-hidden bg-black" :class="cinema ? 'flex-1 min-h-0' : ''">
-            <MediaPlayer v-if="showPlayer" class="player w-full h-full" />
+            <CasinoTable v-if="showPlayer && isCasino" />
+            <MediaPlayer v-else-if="showPlayer" class="player w-full h-full" />
 
             <!-- Hidden but something is playing -->
-            <div v-else-if="client.state.player.current" class="w-full py-2 flex items-center justify-center gap-2">
+            <div v-else-if="client.channelHasContent" class="w-full py-2 flex items-center justify-center gap-2">
                 <div v-if="currentThumb" class="w-8 h-8 rounded-md overflow-hidden bg-black flex justify-center" :title="currentTitle">
                     <img :src="currentThumb" class="h-full object-cover" />
                 </div>
@@ -102,7 +97,7 @@ const syncSelf = () => client.sendMessage('/playersync');
 
             <!-- Top overlay -->
             <div
-                v-if="showPlayer"
+                v-if="showPlayer && !isCasino"
                 class="absolute top-0 left-0 right-0 p-3 flex items-start gap-3 z-10 pointer-events-none opacity-0 group-hover:opacity-100 transition"
                 :style="{ background: 'linear-gradient(to bottom, rgba(0,0,0,.55), transparent)' }"
             >
@@ -141,8 +136,8 @@ const syncSelf = () => client.sendMessage('/playersync');
                 </button>
             </div>
 
-            <!-- Transport (only while the player is shown) -->
-            <div v-if="showPlayer" class="strip-group hairline">
+            <!-- Transport (only while a media is shown) -->
+            <div v-if="showPlayer && !isCasino" class="strip-group hairline">
                 <button class="strip-btn" title="Replay 30s" @click="client.sendMessage('/player replay30')">
                     <fa icon="caret-left" />
                     <fa icon="caret-left" class="-ml-1" />
@@ -173,7 +168,7 @@ const syncSelf = () => client.sendMessage('/playersync');
             />
 
             <!-- Re-sync everyone -->
-            <div v-if="showPlayer" class="strip-group hairline ml-auto">
+            <div v-if="showPlayer && !isCasino" class="strip-group hairline ml-auto">
                 <button
                     class="strip-btn"
                     :title="
@@ -193,6 +188,7 @@ const syncSelf = () => client.sendMessage('/playersync');
             <div
                 v-if="watchers.length > 0 && showPlayer"
                 class="flex items-center gap-1.5 px-2 py-1 rounded-md bg-primary/10 ring-1 ring-primary/30 text-primary text-sm"
+                :class="{ 'ml-auto': isCasino }"
                 :title="`${watchers.length} watching`"
             >
                 <fa icon="circle-play" />
@@ -240,11 +236,12 @@ const syncSelf = () => client.sendMessage('/playersync');
                         </span>
                     </template>
                     <template #default>
-                        <SkyDropdownItem @click="app.toggleModal('youtubeVideoSearcher')">
+                        <SkyDropdownItem v-if="!isCasino" @click="app.toggleModal('youtubeVideoSearcher')">
                             <fa icon="plus" class="w-4 mr-2" />
                             Add a video
                         </SkyDropdownItem>
                         <SkyDropdownItem
+                            v-if="!isCasino"
                             :disabled="!client.state.player.queue.length"
                             @click="client.state.player.queue.length && app.toggleModal('playerQueue')"
                         >
@@ -257,7 +254,7 @@ const syncSelf = () => client.sendMessage('/playersync');
                                 {{ client.state.player.queue.length }}
                             </span>
                         </SkyDropdownItem>
-                        <SkyDropdownItem v-if="showPlayer" @click="syncSelf">
+                        <SkyDropdownItem v-if="showPlayer && !isCasino" @click="syncSelf">
                             <fa icon="rotate" class="w-4 mr-2" />
                             Sync just me
                         </SkyDropdownItem>
