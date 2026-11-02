@@ -1,8 +1,9 @@
 <script setup>
 import PlayingCard from '@/components/casino/PlayingCard.vue';
 import { formatMoney } from '../../../../api/money.ts';
+import { ref, watch } from 'vue';
 
-defineProps({
+const props = defineProps({
     name: {
         type: String,
         required: true,
@@ -14,6 +15,11 @@ defineProps({
     cards: {
         type: Array,
         default: () => [],
+    },
+    // When each card slides in, by its index in the hand
+    cardDelay: {
+        type: Function,
+        default: () => 0,
     },
     // What sits under the cards: a total, an outcome, "Waiting for cards"
     result: {
@@ -29,45 +35,81 @@ defineProps({
         type: Number,
         default: null,
     },
+    // Once the hand is settled: blackjack, win, push, lose or bust, and the money won or lost
+    outcome: {
+        type: String,
+        default: null,
+    },
+    net: {
+        type: Number,
+        default: 0,
+    },
     // Highlights your own seat
     mine: {
         type: Boolean,
         default: false,
     },
+    // Your turn to play this hand
+    active: {
+        type: Boolean,
+        default: false,
+    },
 });
+
+const COINS = 10;
+
+// Celebrate an outcome that lands while you watch, not one found on mount
+const celebrate = ref(false);
+watch(
+    () => props.outcome,
+    (outcome) => (celebrate.value = !!outcome),
+);
 </script>
 
 <template>
-    <div class="hand" :class="{ mine }">
+    <div class="hand" :class="[{ mine, active, celebrate }, outcome && `outcome-${outcome}`]">
         <div class="who">
             <span class="name" :style="{ color }">{{ name }}</span>
             <span v-if="bet !== null" class="bet">{{ formatMoney(bet) }}</span>
         </div>
         <div class="cards">
-            <PlayingCard v-for="(card, index) in cards" :key="index" :card="card" />
+            <PlayingCard v-for="(card, index) in cards" :key="index" :card="card" :deal-delay-ms="cardDelay(index)" />
         </div>
         <div v-if="result" class="result" :class="tone">{{ result }}</div>
+
+        <!-- Effects only: they never take clicks -->
+        <template v-if="celebrate && net > 0">
+            <span class="pop" aria-hidden="true">+{{ formatMoney(net) }}</span>
+            <span class="coins" aria-hidden="true">
+                <span v-for="i in outcome === 'blackjack' ? COINS * 2 : COINS" :key="i" class="coin" :style="{ '--i': i }"></span>
+            </span>
+        </template>
     </div>
 </template>
 
 <style scoped>
 .hand {
+    position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 4px;
     padding: 6px 8px;
-    border-radius: 10px;
+    border-radius: 12px;
     min-width: 0;
+    transition:
+        box-shadow 0.4s,
+        background 0.4s,
+        opacity 0.4s;
 }
 .mine {
-    background: rgba(226, 176, 74, 0.1);
-    box-shadow: inset 0 0 0 1px rgba(226, 176, 74, 0.5);
+    background: rgba(255, 214, 150, 0.08);
+    box-shadow: inset 0 0 0 1px rgba(232, 182, 92, 0.45);
 }
 .who {
     display: flex;
     gap: 6px;
-    align-items: baseline;
+    align-items: center;
     max-width: 100%;
 }
 .name {
@@ -77,11 +119,25 @@ defineProps({
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+/* The stake, as a little chip */
 .bet {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
     font:
         600 11px ui-monospace,
         monospace;
-    color: #e2b04a;
+    color: #f0c46c;
+}
+.bet::before {
+    content: '';
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #c9452f;
+    box-shadow:
+        inset 0 0 0 2px #c9452f,
+        inset 0 0 0 3px #fff3dc;
 }
 .cards {
     display: flex;
@@ -93,16 +149,141 @@ defineProps({
     font:
         700 clamp(12px, calc(var(--card-h, 48px) * 0.15), 18px) ui-monospace,
         monospace;
-    color: #e7f1ec;
+    color: #f6ecd8;
     white-space: nowrap;
 }
 .good {
-    color: #6be0b0;
+    color: #9be7b4;
 }
 .bad {
-    color: #ff8c84;
+    color: #ff9a8a;
 }
 .muted {
-    color: rgba(231, 241, 236, 0.6);
+    color: rgba(246, 236, 216, 0.6);
+}
+
+/* Settled hands */
+.outcome-win,
+.outcome-blackjack {
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 210, 120, 0.8),
+        0 0 24px rgba(255, 190, 90, 0.35);
+}
+.outcome-lose .cards,
+.outcome-bust .cards {
+    opacity: 0.6;
+    filter: saturate(0.6);
+    transition:
+        opacity 0.5s,
+        filter 0.5s;
+}
+
+.pop,
+.coins {
+    position: absolute;
+    left: 50%;
+    top: 45%;
+    pointer-events: none;
+}
+.pop {
+    transform: translate(-50%, -50%);
+    font:
+        800 clamp(14px, calc(var(--card-h, 48px) * 0.26), 30px) Georgia,
+        serif;
+    color: #ffd98a;
+    text-shadow:
+        0 0 12px rgba(255, 180, 60, 0.8),
+        0 2px 0 rgba(60, 30, 0, 0.6);
+    opacity: 0;
+}
+.coin {
+    position: absolute;
+    width: calc(var(--card-h, 48px) * 0.14);
+    height: calc(var(--card-h, 48px) * 0.14);
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #fff2c0, #e9b23c 55%, #a86f12);
+    opacity: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .active {
+        animation: breathe 1.8s ease-in-out infinite;
+    }
+    @keyframes breathe {
+        50% {
+            box-shadow:
+                inset 0 0 0 1px rgba(255, 210, 120, 0.9),
+                0 0 22px rgba(255, 190, 90, 0.4);
+        }
+    }
+    .celebrate.outcome-bust {
+        animation: shake 0.45s ease-in-out;
+    }
+    @keyframes shake {
+        25% {
+            transform: translateX(-4px) rotate(-1deg);
+        }
+        50% {
+            transform: translateX(4px) rotate(1deg);
+        }
+        75% {
+            transform: translateX(-2px);
+        }
+    }
+    .celebrate.outcome-blackjack .cards {
+        animation: shine 1.2s ease-out 0.2s;
+    }
+    @keyframes shine {
+        40% {
+            filter: drop-shadow(0 0 10px #ffd27a) brightness(1.15);
+            transform: translateY(-3px);
+        }
+    }
+    .pop {
+        animation: pop 2.2s ease-out 0.3s forwards;
+    }
+    @keyframes pop {
+        0% {
+            opacity: 0;
+            transform: translate(-50%, -20%) scale(0.6);
+        }
+        20% {
+            opacity: 1;
+            transform: translate(-50%, -60%) scale(1.15);
+        }
+        70% {
+            opacity: 1;
+            transform: translate(-50%, -110%) scale(1);
+        }
+        100% {
+            opacity: 0;
+            transform: translate(-50%, -150%) scale(1);
+        }
+    }
+    /* Each coin flies out on its own angle, then falls a little */
+    .coin {
+        animation: coin 1.1s cubic-bezier(0.15, 0.7, 0.4, 1) calc(0.25s + var(--i) * 0.02s) forwards;
+    }
+    @keyframes coin {
+        0% {
+            opacity: 1;
+            transform: rotate(calc(var(--i) * 37deg)) translateY(0);
+        }
+        70% {
+            opacity: 1;
+        }
+        100% {
+            opacity: 0;
+            transform: rotate(calc(var(--i) * 37deg)) translateY(calc(var(--card-h, 48px) * -1.1)) rotate(calc(var(--i) * -37deg))
+                translateY(12px);
+        }
+    }
+}
+/* Without motion, the winnings still show, just without flying */
+@media (prefers-reduced-motion: reduce) {
+    .pop {
+        opacity: 1;
+        top: 0;
+    }
 }
 </style>
