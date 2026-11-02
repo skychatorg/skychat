@@ -8,6 +8,7 @@ export const labels = {
     nextRoom: () => 'Next room',
     previousRoom: () => 'Previous room',
     manageRooms: () => 'Manage rooms',
+    manageChannels: () => 'Manage channels',
 
     // Users
     sendPm: (username) => `Send PM to ${username}`,

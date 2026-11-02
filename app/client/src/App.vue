@@ -5,6 +5,7 @@ import GalleryModal from '@/components/modal/GalleryModal.vue';
 import JellyfinModal from '@/components/modal/JellyfinModal.vue';
 import ManageHighlightsModal from '@/components/modal/ManageHighlightsModal.vue';
 import ManageRoomsModal from '@/components/modal/ManageRoomsModal.vue';
+import ManageChannelsModal from '@/components/modal/ManageChannelsModal.vue';
 import ManageStickersModal from '@/components/modal/ManageStickersModal.vue';
 import OngoingConvertsModal from '@/components/modal/OngoingConvertsModal.vue';
 import PlayerQueueModal from '@/components/modal/PlayerQueueModal.vue';
@@ -26,6 +27,7 @@ import CommandPalette from '@/components/palette/CommandPalette.vue';
         <JellyfinModal />
         <PlayerQueueModal />
         <ManageRoomsModal />
+        <ManageChannelsModal />
         <ManageStickersModal />
         <ManageHighlightsModal />
         <CommandPalette />

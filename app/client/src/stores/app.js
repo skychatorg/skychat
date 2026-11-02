@@ -232,6 +232,11 @@ export const useAppStore = defineStore('app', {
             manageRooms: false,
 
             /**
+             * Player channel management modal
+             */
+            manageChannels: false,
+
+            /**
              * Sticker management modal
              */
             manageStickers: false,
