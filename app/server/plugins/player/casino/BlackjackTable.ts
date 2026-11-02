@@ -11,9 +11,10 @@ import { Card, createShoe, dealerShouldHit, handValue, isBlackjack, isBust, Outc
 export type CasinoOptions = { game: 'blackjack'; minBet: number; maxBet: number };
 
 /**
- * waiting: no hand running, the last results stay on the table and the next bet opens a new hand
+ * - results: the hand is settled and bets are closed for a moment, so everyone sees how it ended
+ * - waiting: no hand running, the last results stay on the table and the next bet opens a new hand
  */
-export type TablePhase = 'waiting' | 'betting' | 'playing' | 'dealer';
+export type TablePhase = 'betting' | 'playing' | 'dealer' | 'results' | 'waiting';
 
 type Seat = {
     session: Session;
@@ -51,16 +52,16 @@ export type SanitizedBlackjackTable = {
 };
 
 /**
- * One shared blackjack table: everyone plays their own hand against the dealer, at the same time.
- * Phases are driven by timers here, never inside a command, so a running hand never holds a player's command queue.
- */
-/**
  * Money moves hit the DB and can fail: log it, since an unhandled rejection stops the server
  */
 export const logFailure = (work: Promise<unknown>): void => {
     work.catch((error) => Logging.error('Blackjack table', error));
 };
 
+/**
+ * One shared blackjack table: everyone plays their own hand against the dealer, at the same time.
+ * Phases are driven by timers here, never inside a command, so a running hand never holds a player's command queue.
+ */
 export class BlackjackTable {
     static readonly MAX_SEATS = 5;
 
@@ -68,7 +69,7 @@ export class BlackjackTable {
     static readonly DEFAULT_OPTIONS: CasinoOptions = { game: 'blackjack', minBet: 1000, maxBet: 10000 };
 
     /** Instance values, so tests can shorten them */
-    public timings = { betMs: 15_000, turnMs: 20_000, dealerStepMs: 900 };
+    public timings = { betMs: 15_000, dealBeatMs: 700, turnMs: 20_000, dealerStepMs: 1100, resultsMs: 6000 };
 
     /** Overridable for tests: the shoe for the next hand, drawn with pop() */
     public shuffle: () => Card[] = () => createShoe();
@@ -104,6 +105,9 @@ export class BlackjackTable {
         if (session.user.isGuest()) {
             throw new Error('Log in to play at the casino');
         }
+        if (this.phase === 'results') {
+            throw new Error('The next hand opens in a moment');
+        }
         if (this.phase !== 'waiting' && this.phase !== 'betting') {
             throw new Error('Wait for the next hand');
         }
@@ -130,12 +134,11 @@ export class BlackjackTable {
         this.seats.push({ session, bet: amount, doubled: false, cards: [], done: false, outcome: null, payout: null });
         await this.charge(session, amount);
 
-        // No need to wait out the clock once everyone watching has bet
+        // No need to wait out the clock once everyone watching has bet, just a beat so the last chip lands before the cards
         if (this.channel.sessions.every((s) => this.seatOf(s))) {
-            this.deal();
-        } else {
-            this.broadcast();
+            this.schedule(this.timings.dealBeatMs, () => this.deal());
         }
+        this.broadcast();
     }
 
     public hit(session: Session): void {
@@ -197,7 +200,8 @@ export class BlackjackTable {
      */
     public async destroy(): Promise<void> {
         this.clearTimer();
-        if (this.phase !== 'waiting') {
+        // Settled hands were already paid
+        if (this.phase !== 'results' && this.phase !== 'waiting') {
             await Promise.all(this.seats.map((seat) => this.refund(seat)));
         }
         this.reset();
@@ -294,8 +298,12 @@ export class BlackjackTable {
             seat.outcome = outcome;
             seat.payout = payout;
         }
-        this.phase = 'waiting';
-        this.deadline = null;
+        this.phase = 'results';
+        this.schedule(this.timings.resultsMs, () => {
+            this.phase = 'waiting';
+            this.deadline = null;
+            this.broadcast();
+        });
         await Promise.all(this.seats.filter((seat) => seat.payout).map((seat) => this.pay(seat.session, seat.payout as number)));
         this.broadcast();
     }

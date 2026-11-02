@@ -27,7 +27,7 @@ async function casino(players = 2) {
     await admin.send('/playerchannelmanage create casino 1000 10000 High rollers');
     const channel = player().channelManager.channels.at(-1) as PlayerChannel;
     const table = channel.table!;
-    table.timings = { betMs: 80, turnMs: 150, dealerStepMs: 5 };
+    table.timings = { betMs: 80, dealBeatMs: 10, turnMs: 150, dealerStepMs: 5, resultsMs: 1000 };
     const clients = [];
     for (let i = 0; i < players; i++) {
         const client = await server.connect(name('gambler'));
@@ -52,6 +52,7 @@ describe('casino table', () => {
         expect(alice.last('casino-table')).toMatchObject({ phase: 'betting', seats: [{ bet: 2000, cards: [] }] });
 
         await bob.send('/casino bet 3000');
+        await settle();
         expect(table.sanitized().phase).toBe('playing');
         expect(bob.last('casino-table').seats.map((s: { cards: unknown[] }) => s.cards.length)).toEqual([2, 2]);
     });
@@ -62,6 +63,7 @@ describe('casino table', () => {
         const [alice] = clients;
 
         await alice.send('/casino bet 2000');
+        await settle();
 
         const payload = alice.last('casino-table');
         expect(payload.phase).toBe('playing');
@@ -81,13 +83,14 @@ describe('casino table', () => {
         const [alice, bob] = clients;
         await alice.send('/casino bet 2000');
         await bob.send('/casino bet 2000');
+        await settle();
 
         await bob.send('/casino hit');
         await alice.send('/casino stand');
         await settle(60);
 
         const final = alice.last('casino-table');
-        expect(final.phase).toBe('waiting');
+        expect(final.phase).toBe('results');
         expect(final.dealer).toEqual({ cards: hand('10♣ 7♦'), total: 17 });
         expect(final.seats.map((s: { outcome: string; payout: number }) => [s.outcome, s.payout])).toEqual([
             ['win', 4000],
@@ -102,6 +105,7 @@ describe('casino table', () => {
         table.shuffle = stack('5♠ 10♣ 6♥ 8♦ 10♥');
         const [alice] = clients;
         await alice.send('/casino bet 2000');
+        await settle();
 
         await alice.send('/casino double');
         await settle(60);
@@ -117,9 +121,9 @@ describe('casino table', () => {
         const [alice] = clients;
         await alice.send('/casino bet 2000');
 
-        await settle(220);
+        await settle(250);
 
-        expect(alice.last('casino-table')).toMatchObject({ phase: 'waiting', seats: [{ total: 18, outcome: 'lose' }] });
+        expect(alice.last('casino-table')).toMatchObject({ phase: 'results', seats: [{ total: 18, outcome: 'lose' }] });
         expect(alice.session.user.money).toBe(18000);
     });
 
@@ -143,6 +147,36 @@ describe('casino table', () => {
         await admin.send(`/playerchannelmanage delete ${channel.id}`);
 
         expect(alice.session.user.money).toBe(20000);
+    });
+
+    it('pauses on the results before the next hand, and never pays a settled hand twice', async () => {
+        const { admin, channel, table, clients } = await casino(1);
+        table.timings.resultsMs = 100;
+        table.shuffle = stack('10♠ 9♣ Q♠ 7♦');
+        const [alice] = clients;
+        await alice.send('/casino bet 2000');
+        await settle();
+        await alice.send('/casino stand');
+        await settle(40);
+
+        expect(alice.last('casino-table')).toMatchObject({ phase: 'results', seats: [{ outcome: 'win' }] });
+        expect(alice.last('casino-table').deadline).toBeGreaterThan(Date.now());
+        await alice.send('/casino bet 2000');
+        expect(alice.errors()).toEqual(['The next hand opens in a moment']);
+
+        await settle(100);
+        expect(alice.last('casino-table').phase).toBe('waiting');
+        await alice.send('/casino bet 2000');
+        expect(alice.errors()).toEqual(['The next hand opens in a moment']);
+        expect(alice.last('casino-table').handId).toBe(2);
+
+        // Deleting during the results must not refund the hand that was just paid
+        await settle();
+        await alice.send('/casino stand');
+        await settle(40);
+        const before = alice.session.user.money;
+        await admin.send(`/playerchannelmanage delete ${channel.id}`);
+        expect(alice.session.user.money).toBe(before);
     });
 
     it('refuses guests, bets out of the limits and bets you cannot afford', async () => {
