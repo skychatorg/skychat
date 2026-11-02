@@ -1,0 +1,361 @@
+import { Connection } from '../../../skychat/Connection.js';
+import { Logging } from '../../../skychat/Logging.js';
+import { Session } from '../../../skychat/Session.js';
+import { SanitizedUser } from '../../../skychat/User.js';
+import { UserController } from '../../../skychat/UserController.js';
+import { ConnectedListPlugin } from '../../core/global/ConnectedListPlugin.js';
+import type { PlayerChannel } from '../PlayerChannel.js';
+import { Card, createShoe, dealerShouldHit, handValue, isBlackjack, isBust, Outcome, settle } from './blackjack.js';
+
+export type CasinoOptions = { game: 'blackjack'; minBet: number; maxBet: number };
+
+/**
+ * waiting: no hand running, the last results stay on the table and the next bet opens a new hand
+ */
+export type TablePhase = 'waiting' | 'betting' | 'playing' | 'dealer';
+
+type Seat = {
+    session: Session;
+    bet: number;
+    doubled: boolean;
+    cards: Card[];
+    done: boolean;
+    outcome: Outcome | null;
+    payout: number | null;
+};
+
+export type SanitizedSeat = {
+    user: SanitizedUser;
+    bet: number;
+    doubled: boolean;
+    cards: Card[];
+    total: number;
+    done: boolean;
+    outcome: Outcome | null;
+    payout: number | null;
+};
+
+export type SanitizedBlackjackTable = {
+    channelId: number;
+    phase: TablePhase;
+    handId: number;
+    /** Wall-clock ms at which the current phase times out, so clients count down without drift */
+    deadline: number | null;
+    minBet: number;
+    maxBet: number;
+    maxSeats: number;
+    /** A hidden hole card is null */
+    dealer: { cards: (Card | null)[]; total: number | null };
+    seats: SanitizedSeat[];
+};
+
+/**
+ * One shared blackjack table: everyone plays their own hand against the dealer, at the same time.
+ * Phases are driven by timers here, never inside a command, so a running hand never holds a player's command queue.
+ */
+export class BlackjackTable {
+    static readonly MAX_SEATS = 5;
+
+    static readonly DEFAULT_OPTIONS: CasinoOptions = { game: 'blackjack', minBet: 10, maxBet: 100 };
+
+    /** Instance values, so tests can shorten them */
+    public timings = { betMs: 15_000, turnMs: 20_000, dealerStepMs: 900 };
+
+    /** Overridable for tests: the shoe for the next hand, drawn with pop() */
+    public shuffle: () => Card[] = () => createShoe();
+
+    public readonly options: CasinoOptions;
+
+    private phase: TablePhase = 'waiting';
+
+    private handId = 0;
+
+    private deadline: number | null = null;
+
+    private seats: Seat[] = [];
+
+    private dealer: Card[] = [];
+
+    private shoe: Card[] = [];
+
+    private timer: ReturnType<typeof setTimeout> | null = null;
+
+    constructor(
+        private readonly channel: PlayerChannel,
+        options: Partial<CasinoOptions> = {},
+    ) {
+        this.options = { ...BlackjackTable.DEFAULT_OPTIONS, ...options };
+    }
+
+    public get seatedCount(): number {
+        return this.phase === 'waiting' ? 0 : this.seats.length;
+    }
+
+    public async bet(session: Session, amount: number): Promise<void> {
+        if (session.user.isGuest()) {
+            throw new Error('Log in to play at the casino');
+        }
+        if (this.phase !== 'waiting' && this.phase !== 'betting') {
+            throw new Error('Wait for the next hand');
+        }
+        if (!Number.isInteger(amount) || amount < this.options.minBet || amount > this.options.maxBet) {
+            throw new Error(`Bets are between $${this.options.minBet} and $${this.options.maxBet}`);
+        }
+        if (this.phase === 'betting' && this.seatOf(session)) {
+            throw new Error('You already placed a bet');
+        }
+        if (this.phase === 'betting' && this.seats.length >= BlackjackTable.MAX_SEATS) {
+            throw new Error('The table is full');
+        }
+        if (session.user.money < amount) {
+            throw new Error('Not enough money for this bet');
+        }
+
+        if (this.phase === 'waiting') {
+            this.seats = [];
+            this.dealer = [];
+            this.phase = 'betting';
+            this.handId++;
+            this.schedule(this.timings.betMs, () => this.deal());
+        }
+        this.seats.push({ session, bet: amount, doubled: false, cards: [], done: false, outcome: null, payout: null });
+        await this.charge(session, amount);
+
+        // No need to wait out the clock once everyone watching has bet
+        if (this.channel.sessions.every((s) => this.seatOf(s))) {
+            this.deal();
+        } else {
+            this.broadcast();
+        }
+    }
+
+    public hit(session: Session): void {
+        const seat = this.activeSeat(session);
+        seat.cards.push(this.draw());
+        if (handValue(seat.cards).total >= 21) {
+            seat.done = true;
+        }
+        this.afterAction();
+    }
+
+    public stand(session: Session): void {
+        this.activeSeat(session).done = true;
+        this.afterAction();
+    }
+
+    public async double(session: Session): Promise<void> {
+        const seat = this.activeSeat(session);
+        if (seat.cards.length !== 2) {
+            throw new Error('You can only double on your first two cards');
+        }
+        if (session.user.money < seat.bet) {
+            throw new Error('Not enough money to double');
+        }
+        const extra = seat.bet;
+        seat.bet += extra;
+        seat.doubled = true;
+        seat.cards.push(this.draw());
+        seat.done = true;
+        await this.charge(session, extra);
+        this.afterAction();
+    }
+
+    /**
+     * A player who leaves gets the bet back before the deal, and stands if the hand already started
+     */
+    public async onSessionLeft(session: Session): Promise<void> {
+        const seat = this.seatOf(session);
+        if (!seat) {
+            return;
+        }
+        if (this.phase === 'betting') {
+            this.seats.splice(this.seats.indexOf(seat), 1);
+            await this.refund(seat);
+            if (!this.seats.length) {
+                this.reset();
+            }
+            this.broadcast();
+            return;
+        }
+        if (this.phase === 'playing' && !seat.done) {
+            seat.done = true;
+            this.afterAction();
+        }
+    }
+
+    /**
+     * Called when the channel is deleted: unfinished hands are refunded
+     */
+    public async destroy(): Promise<void> {
+        this.clearTimer();
+        if (this.phase !== 'waiting') {
+            await Promise.all(this.seats.map((seat) => this.refund(seat)));
+        }
+        this.reset();
+    }
+
+    public sanitized(): SanitizedBlackjackTable {
+        const holeHidden = this.phase === 'betting' || this.phase === 'playing';
+        const visibleDealer = holeHidden ? this.dealer.slice(0, 1) : this.dealer;
+        return {
+            channelId: this.channel.id,
+            phase: this.phase,
+            handId: this.handId,
+            deadline: this.deadline,
+            minBet: this.options.minBet,
+            maxBet: this.options.maxBet,
+            maxSeats: BlackjackTable.MAX_SEATS,
+            dealer: {
+                cards: holeHidden && this.dealer.length > 1 ? [this.dealer[0], null] : [...this.dealer],
+                total: visibleDealer.length ? handValue(visibleDealer).total : null,
+            },
+            seats: this.seats.map((seat) => ({
+                user: seat.session.user.sanitized(),
+                bet: seat.bet,
+                doubled: seat.doubled,
+                cards: [...seat.cards],
+                total: handValue(seat.cards).total,
+                done: seat.done,
+                outcome: seat.outcome,
+                payout: seat.payout,
+            })),
+        };
+    }
+
+    public syncConnections(connections: Connection[]): void {
+        const payload = this.sanitized();
+        connections.forEach((connection) => connection.send('casino-table', payload));
+    }
+
+    private broadcast(): void {
+        const payload = this.sanitized();
+        this.channel.sessions.forEach((session) => session.send('casino-table', payload));
+        // The channel list shows how many are seated
+        this.channel.manager.sync();
+    }
+
+    private deal(): void {
+        if (this.phase !== 'betting') {
+            return;
+        }
+        this.shoe = this.shuffle();
+        for (let round = 0; round < 2; round++) {
+            this.seats.forEach((seat) => seat.cards.push(this.draw()));
+            this.dealer.push(this.draw());
+        }
+        this.seats.forEach((seat) => (seat.done = isBlackjack(seat.cards)));
+        this.phase = 'playing';
+        this.schedule(this.timings.turnMs, () => {
+            this.seats.forEach((seat) => (seat.done = true));
+            this.afterAction();
+        });
+        this.afterAction();
+    }
+
+    private afterAction(): void {
+        if (this.phase === 'playing' && this.seats.every((seat) => seat.done)) {
+            this.playDealer();
+            return;
+        }
+        this.broadcast();
+    }
+
+    private playDealer(): void {
+        this.phase = 'dealer';
+        this.clearTimer();
+        this.broadcast();
+        // The dealer only draws if someone can still beat it
+        const contested = this.seats.some((seat) => !isBust(seat.cards) && !isBlackjack(seat.cards));
+        const step = () => {
+            if (contested && dealerShouldHit(this.dealer)) {
+                this.dealer.push(this.draw());
+                this.broadcast();
+                this.schedule(this.timings.dealerStepMs, step, false);
+            } else {
+                return this.settleAll();
+            }
+        };
+        this.schedule(this.timings.dealerStepMs, step, false);
+    }
+
+    private async settleAll(): Promise<void> {
+        this.clearTimer();
+        for (const seat of this.seats) {
+            const { outcome, payout } = settle(seat.cards, this.dealer, seat.bet);
+            seat.outcome = outcome;
+            seat.payout = payout;
+        }
+        this.phase = 'waiting';
+        this.deadline = null;
+        await Promise.all(this.seats.filter((seat) => seat.payout).map((seat) => this.pay(seat.session, seat.payout as number)));
+        this.broadcast();
+    }
+
+    private draw(): Card {
+        // Never fail a hand on an empty shoe, start a fresh deck instead
+        if (!this.shoe.length) {
+            this.shoe = createShoe();
+        }
+        return this.shoe.pop() as Card;
+    }
+
+    private seatOf(session: Session): Seat | undefined {
+        return this.seats.find((seat) => seat.session === session);
+    }
+
+    private activeSeat(session: Session): Seat {
+        const seat = this.phase === 'playing' ? this.seatOf(session) : undefined;
+        if (!seat || seat.done) {
+            throw new Error('It is not your turn to play');
+        }
+        return seat;
+    }
+
+    private schedule(ms: number, fn: () => void | Promise<void>, withDeadline = true): void {
+        this.clearTimer();
+        this.deadline = withDeadline ? Date.now() + ms : null;
+        // A failure in a timer would otherwise be an unhandled rejection, which stops the server
+        this.timer = setTimeout(
+            () =>
+                Promise.resolve()
+                    .then(fn)
+                    .catch((error) => Logging.error('Blackjack table', error)),
+            ms,
+        );
+    }
+
+    private clearTimer(): void {
+        if (this.timer) {
+            clearTimeout(this.timer);
+            this.timer = null;
+        }
+    }
+
+    private reset(): void {
+        this.clearTimer();
+        this.phase = 'waiting';
+        this.deadline = null;
+        this.seats = [];
+        this.dealer = [];
+    }
+
+    private async charge(session: Session, amount: number): Promise<void> {
+        await UserController.buy(session.user, amount);
+        this.syncMoney(session);
+    }
+
+    private async pay(session: Session, amount: number): Promise<void> {
+        await UserController.giveMoney(session.user, amount);
+        this.syncMoney(session);
+    }
+
+    private async refund(seat: Seat): Promise<void> {
+        await this.pay(seat.session, seat.bet);
+    }
+
+    /** The header and everyone's user list show the new balance right away */
+    private syncMoney(session: Session): void {
+        session.syncUserData();
+        (this.channel.manager.plugin.manager.getPlugin('connectedlist') as ConnectedListPlugin | null)?.sync();
+    }
+}

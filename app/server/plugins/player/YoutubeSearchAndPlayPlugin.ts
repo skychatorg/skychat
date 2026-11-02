@@ -26,10 +26,7 @@ export class YoutubeSearchAndPlayPlugin extends GlobalPlugin {
         const playerPlugin = this.manager.getPlugin('player') as PlayerPlugin;
         const channelManager = playerPlugin.channelManager;
         const youtubeFetcher = PlayerPlugin.FETCHERS['yt'] as YoutubeFetcher;
-        const channel = channelManager.getSessionChannel(connection.session);
-        if (!channel) {
-            throw new Error('Not in a player channel');
-        }
+        const channel = channelManager.getSessionMediaChannel(connection.session);
 
         // Search video
         const items = await youtubeFetcher.search(playerPlugin, 'video', param, 1);

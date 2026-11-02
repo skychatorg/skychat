@@ -1,7 +1,8 @@
 import { EventEmitter } from 'events';
 import { Connection } from '../../skychat/Connection.js';
 import { Session } from '../../skychat/Session.js';
-import { PlayerChannel, SanitizedPlayerChannel } from './PlayerChannel.js';
+import { CasinoOptions } from './casino/BlackjackTable.js';
+import { ChannelKind, PlayerChannel, SanitizedPlayerChannel } from './PlayerChannel.js';
 import { PlayerPlugin } from './PlayerPlugin.js';
 
 export class PlayerChannelManager extends EventEmitter {
@@ -31,15 +32,13 @@ export class PlayerChannelManager extends EventEmitter {
 
     /**
      * Create a new channel with the given name
-     * @param id
-     * @param name
      */
-    public createChannel(id: number, name: string): PlayerChannel {
+    public createChannel(id: number, name: string, kind: ChannelKind = 'media', casino?: Partial<CasinoOptions>): PlayerChannel {
         if (this.getChannelById(id)) {
             throw new Error(`Unable to create existing channel ${id}`);
         }
 
-        const channel = new PlayerChannel(this, id, name);
+        const channel = new PlayerChannel(this, id, name, kind, casino);
         this.channels.push(channel);
         this.emit('channels-changed', this.channels);
         return channel;
@@ -57,6 +56,15 @@ export class PlayerChannelManager extends EventEmitter {
         }
 
         channel.name = name;
+        this.emit('channels-changed', this.channels);
+    }
+
+    /**
+     * Put the channels in the given order. Channels missing from the list keep their place at the end.
+     */
+    public reorderChannels(ids: number[]) {
+        const rank = (channel: PlayerChannel) => (ids.includes(channel.id) ? ids.indexOf(channel.id) : ids.length);
+        this.channels.sort((a, b) => rank(a) - rank(b));
         this.emit('channels-changed', this.channels);
     }
 
@@ -91,6 +99,20 @@ export class PlayerChannelManager extends EventEmitter {
             return this.getChannelById(channelId) || null;
         }
         return null;
+    }
+
+    /**
+     * The session's channel, for commands that only make sense with media
+     */
+    public getSessionMediaChannel(session: Session): PlayerChannel {
+        const channel = this.getSessionChannel(session);
+        if (!channel) {
+            throw new Error('Join a media channel first');
+        }
+        if (channel.kind !== 'media') {
+            throw new Error('This channel is a casino, it has no media');
+        }
+        return channel;
     }
 
     /**
@@ -147,8 +169,10 @@ export class PlayerChannelManager extends EventEmitter {
         if (channel) {
             // If channel is not deleted
             channel.sessions.splice(channel.sessions.indexOf(session), 1);
+            void channel.table?.onSessionLeft(session);
         }
         session.send('player-sync', { current: null, queue: [], cursor: 0, paused: false });
+        session.send('casino-table', null);
 
         // Notify all connections of this session that the channel changed
         session.send('player-channel', null);
