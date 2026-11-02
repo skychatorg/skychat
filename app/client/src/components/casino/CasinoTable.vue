@@ -74,7 +74,8 @@ const play = (action) => client.sendMessage(`/casino ${action}`);
         <div class="felt">
             <div class="top">
                 <span class="title">Blackjack</span>
-                <span class="status" role="status">{{ status }}</span>
+                <!-- Not a live region: the countdown would be read out every second -->
+                <span class="status">{{ status }}</span>
                 <span class="limits">{{ betLimits(table) }}</span>
             </div>
 
@@ -101,6 +102,14 @@ const play = (action) => client.sendMessage(`/casino ${action}`);
                     :bet="seat.bet"
                     v-bind="seatResult(seat)"
                 />
+                <span
+                    v-if="otherSeats.length"
+                    class="others"
+                    :title="otherSeats.map((seat) => seat.user.username).join(', ')"
+                    :aria-label="`${otherSeats.length} more at the table`"
+                >
+                    <fa icon="users" /> +{{ otherSeats.length }}
+                </span>
                 <p v-if="!table.seats.length" class="empty">Seats are open, up to {{ table.maxSeats }} players</p>
             </div>
 
@@ -192,6 +201,14 @@ const play = (action) => client.sendMessage(`/casino ${action}`);
     min-height: 0;
     overflow-y: auto;
 }
+/* Stands in for the other seats when the player is too small to show their cards */
+.others {
+    display: none;
+    align-self: center;
+    font-size: 12px;
+    white-space: nowrap;
+    color: rgba(241, 236, 224, 0.6);
+}
 .empty {
     margin: auto;
     font-size: 13px;
@@ -251,7 +268,6 @@ const play = (action) => client.sendMessage(`/casino ${action}`);
     }
     .title,
     .limits,
-    .seat.other,
     .empty {
         display: none;
     }
@@ -260,8 +276,11 @@ const play = (action) => client.sendMessage(`/casino ${action}`);
         text-align: left;
         max-width: 18ch;
     }
+    /* One row: seats line up and scroll sideways when there are many */
     .seats {
-        overflow: visible;
+        flex-wrap: nowrap;
+        justify-content: flex-start;
+        overflow: auto hidden;
     }
     .actions {
         justify-content: flex-end;
@@ -270,8 +289,16 @@ const play = (action) => client.sendMessage(`/casino ${action}`);
 
 /* Short and narrow (the smallest player on a phone): tighter, so everything still fits on one row */
 @container (max-height: 180px) and (max-width: 520px) {
+    .seat.other {
+        display: none;
+    }
+    .others {
+        display: block;
+    }
+    /* The buttons keep their width and the seats give way, so they never slide over a hand */
     .felt {
         --card-h: clamp(22px, 30cqh, 34px);
+        grid-template-columns: minmax(0, auto) auto minmax(0, 1fr) auto;
         column-gap: 6px;
         padding-inline: 6px;
     }
@@ -280,7 +307,8 @@ const play = (action) => client.sendMessage(`/casino ${action}`);
         font-size: 11px;
     }
     .actions {
-        flex-wrap: nowrap;
+        display: grid;
+        grid-template-columns: repeat(2, auto);
         gap: 4px;
     }
     .action {
