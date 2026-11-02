@@ -3,7 +3,7 @@ import { GlobalPlugin } from '../GlobalPlugin.js';
 import { PlayerPlugin } from './PlayerPlugin.js';
 
 /**
- * Actions at the casino table of the channel you are in: /casino bet 25, /casino hit, /casino stand, /casino double
+ * Actions at the casino table of the channel you are in: /casino bet 2500 (cents), /casino hit, /casino stand, /casino double
  */
 export class CasinoPlugin extends GlobalPlugin {
     static readonly commandName = 'casino';
@@ -18,7 +18,7 @@ export class CasinoPlugin extends GlobalPlugin {
             maxCallsPer10Seconds: 30,
             params: [
                 { name: 'action', pattern: /^(bet|hit|stand|double)$/ },
-                { name: 'amount', pattern: /^\d{1,7}$/ },
+                { name: 'amount', pattern: /^\d{1,9}$/ },
             ],
         },
     };

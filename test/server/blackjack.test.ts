@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createShoe, dealerShouldHit, handValue, settle } from '../../app/server/plugins/player/casino/blackjack.js';
+import { formatMoney } from '../../app/api/money.js';
 import { hand } from './cards.js';
 
 describe('blackjack rules', () => {
@@ -39,5 +40,9 @@ describe('blackjack rules', () => {
     it('shuffles a full deck of 52 distinct cards', () => {
         const shoe = createShoe();
         expect(new Set(shoe.map((c) => c.rank + c.suit)).size).toBe(52);
+    });
+
+    it('formats money stored in cents', () => {
+        expect([formatMoney(1000), formatMoney(259), formatMoney(-2500), formatMoney(0)]).toEqual(['$10', '$2.59', '−$25', '$0']);
     });
 });

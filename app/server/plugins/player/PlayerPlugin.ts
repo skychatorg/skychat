@@ -386,6 +386,7 @@ export class PlayerPlugin extends GlobalPlugin {
     /**
      * Manage channels (Only for OP):
      * create media <name> | create casino <minBet> <maxBet> <name> | rename <id> <name> | delete <id> | reorder <id,id,…>
+     * Bets are in cents, like user money.
      */
     private async handlePlayerChannelManage(param: string, connection: Connection) {
         if (!connection.session.isOP()) {
@@ -410,8 +411,8 @@ export class PlayerPlugin extends GlobalPlugin {
                 }
                 if (kind === 'casino') {
                     const [minBet, maxBet] = args.splice(0, 2).map(Number);
-                    if (!Number.isInteger(minBet) || !Number.isInteger(maxBet) || minBet < 1 || maxBet < minBet || maxBet > 1_000_000) {
-                        throw new Error('Bets need a minimum of at least $1 and a maximum at least as high');
+                    if (!Number.isInteger(minBet) || !Number.isInteger(maxBet) || minBet < 1 || maxBet < minBet || maxBet > 10_000_000) {
+                        throw new Error('Bets need a positive minimum, and a maximum at least as high');
                     }
                     const name = PlayerPlugin.channelName(args.join(' '));
                     this.channelManager.createChannel(this.channelManager.getNextChannelId(), name, 'casino', { minBet, maxBet });

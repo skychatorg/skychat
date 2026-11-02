@@ -1,3 +1,4 @@
+import { formatMoney } from '../../../../api/money.js';
 import { Connection } from '../../../skychat/Connection.js';
 import { Logging } from '../../../skychat/Logging.js';
 import { Session } from '../../../skychat/Session.js';
@@ -56,7 +57,8 @@ export type SanitizedBlackjackTable = {
 export class BlackjackTable {
     static readonly MAX_SEATS = 5;
 
-    static readonly DEFAULT_OPTIONS: CasinoOptions = { game: 'blackjack', minBet: 10, maxBet: 100 };
+    /** Amounts are in cents, like user money */
+    static readonly DEFAULT_OPTIONS: CasinoOptions = { game: 'blackjack', minBet: 1000, maxBet: 10000 };
 
     /** Instance values, so tests can shorten them */
     public timings = { betMs: 15_000, turnMs: 20_000, dealerStepMs: 900 };
@@ -99,7 +101,7 @@ export class BlackjackTable {
             throw new Error('Wait for the next hand');
         }
         if (!Number.isInteger(amount) || amount < this.options.minBet || amount > this.options.maxBet) {
-            throw new Error(`Bets are between $${this.options.minBet} and $${this.options.maxBet}`);
+            throw new Error(`Bets are between ${formatMoney(this.options.minBet)} and ${formatMoney(this.options.maxBet)}`);
         }
         if (this.phase === 'betting' && this.seatOf(session)) {
             throw new Error('You already placed a bet');
@@ -341,21 +343,20 @@ export class BlackjackTable {
 
     private async charge(session: Session, amount: number): Promise<void> {
         await UserController.buy(session.user, amount);
-        this.syncMoney(session);
+        this.syncUserList();
     }
 
     private async pay(session: Session, amount: number): Promise<void> {
         await UserController.giveMoney(session.user, amount);
-        this.syncMoney(session);
+        this.syncUserList();
     }
 
     private async refund(seat: Seat): Promise<void> {
         await this.pay(seat.session, seat.bet);
     }
 
-    /** The header and everyone's user list show the new balance right away */
-    private syncMoney(session: Session): void {
-        session.syncUserData();
+    /** Everyone's user list shows the new balance right away (UserController already updates the player's own screen) */
+    private syncUserList(): void {
         (this.channel.manager.plugin.manager.getPlugin('connectedlist') as ConnectedListPlugin | null)?.sync();
     }
 }
