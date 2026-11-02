@@ -23,11 +23,16 @@ export class PlayerChannelManager extends EventEmitter {
     }
 
     /**
-     * Get the next available channel id
-     * @returns
+     * Highest id ever given out, saved with the channels so a deleted channel's id is never reused
+     */
+    public lastChannelId = 0;
+
+    /**
+     * Users rejoin their last channel by id, so a reused id would drop them into an unrelated channel
      */
     public getNextChannelId(): number {
-        return this.channels.length === 0 ? 1 : Math.max(...this.channels.map((channel) => channel.id)) + 1;
+        this.lastChannelId = Math.max(this.lastChannelId, ...this.channels.map((channel) => channel.id)) + 1;
+        return this.lastChannelId;
     }
 
     /**
@@ -78,8 +83,8 @@ export class PlayerChannelManager extends EventEmitter {
             throw new Error(`Unable to delete non-existant channel ${id}`);
         }
 
-        // Remove all sessions from this channel
-        for (const session of channel.sessions) {
+        // Remove all sessions from this channel. A copy: leaving removes the session from this very list
+        for (const session of [...channel.sessions]) {
             this.leaveChannel(session);
         }
 
@@ -166,8 +171,7 @@ export class PlayerChannelManager extends EventEmitter {
         // Update mappings and session list
         const channel = this.getChannelById(channelId);
         this.sessionChannels.delete(session);
-        if (channel) {
-            // If channel is not deleted
+        if (channel?.sessions.includes(session)) {
             channel.sessions.splice(channel.sessions.indexOf(session), 1);
             void channel.table?.onSessionLeft(session);
         }

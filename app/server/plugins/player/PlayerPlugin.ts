@@ -158,7 +158,7 @@ export class PlayerPlugin extends GlobalPlugin {
         },
     };
 
-    protected storage: { channels: SanitizedPlayerChannel[] } = {
+    protected storage: { channels: SanitizedPlayerChannel[]; lastChannelId?: number } = {
         channels: [],
     };
 
@@ -179,6 +179,7 @@ export class PlayerPlugin extends GlobalPlugin {
         this.loadStorage();
 
         this.channelManager = new PlayerChannelManager(this);
+        this.channelManager.lastChannelId = this.storage.lastChannelId ?? 0;
         for (const channelData of this.storage.channels) {
             // Channels saved before casinos existed have no kind
             const channel = this.channelManager.createChannel(
@@ -195,6 +196,7 @@ export class PlayerPlugin extends GlobalPlugin {
         // Bind events
         this.channelManager.on('channels-changed', () => {
             this.storage.channels = this.channelManager.sanitized();
+            this.storage.lastChannelId = this.channelManager.lastChannelId;
             this.syncStorage();
         });
     }

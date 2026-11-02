@@ -222,4 +222,20 @@ describe('managing channels', () => {
         ]);
         expect(user.errors()).toEqual(['Command only for OP']);
     });
+
+    it('removes everyone from a deleted channel and never reuses its id', async () => {
+        const admin = await op();
+        await admin.send('/playerchannelmanage create media Doomed');
+        const doomed = player().channelManager.channels.at(-1) as PlayerChannel;
+        const watchers = [await server.connect(name('viewer')), await server.connect(name('viewer')), await server.connect(name('viewer'))];
+        for (const watcher of watchers) await watcher.send(`/playerchannel join ${doomed.id}`);
+
+        await admin.send(`/playerchannelmanage delete ${doomed.id}`);
+        await admin.send('/playerchannelmanage create media Fresh');
+
+        const fresh = player().channelManager.channels.at(-1) as PlayerChannel;
+        expect(watchers.map((w) => player().channelManager.getSessionChannel(w.session))).toEqual([null, null, null]);
+        expect(fresh.id).toBeGreaterThan(doomed.id);
+        expect(saved().length).toBeGreaterThan(0);
+    });
 });
