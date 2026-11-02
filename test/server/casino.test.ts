@@ -159,7 +159,8 @@ describe('casino table', () => {
     it('pauses on the results before the next hand, and never pays a settled hand twice', async () => {
         const { admin, channel, table, clients } = await casino(1);
         table.timings.resultsMs = 100;
-        table.shuffle = stack('10♠ 9♣ Q♠ 7♦');
+        // The dealer draws to 16 + 10, a bust, so the hand is always a win
+        table.shuffle = stack('10♠ 9♣ Q♠ 7♦ 10♥');
         const [alice] = clients;
         await alice.send('/casino bet 2000');
         await settle();
