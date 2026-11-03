@@ -401,17 +401,8 @@ export const useAppStore = defineStore('app', {
             mousetrap.bind('shift+up', () => this.shrinkPlayer());
 
             // ARROW + ALT + UP/DOWN: Switch rooms
-            mousetrap.bind('alt+down', () => {
-                const newRoomIndex = (clientStore.state.rooms.indexOf(clientStore.state.currentRoom) + 1) % clientStore.state.rooms.length;
-                clientStore.join(clientStore.state.rooms[newRoomIndex].id);
-            });
-            mousetrap.bind('alt+up', () => {
-                let newRoomIndex = clientStore.state.rooms.indexOf(clientStore.state.currentRoom) - 1;
-                if (newRoomIndex < 0) {
-                    newRoomIndex = clientStore.state.rooms.length - 1;
-                }
-                clientStore.join(clientStore.state.rooms[newRoomIndex].id);
-            });
+            mousetrap.bind('alt+down', () => clientStore.joinAdjacentRoom(1));
+            mousetrap.bind('alt+up', () => clientStore.joinAdjacentRoom(-1));
 
             // Ctrl/Cmd+K: toggle command palette. Bypasses mousetrap because
             // mousetrap suppresses shortcuts inside input/textarea, which is

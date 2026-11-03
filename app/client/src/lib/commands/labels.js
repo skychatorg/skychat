@@ -39,7 +39,7 @@ export const labels = {
     toggleEncryption: () => 'Toggle message encryption',
 
     // Settings
-    openProfile: () => 'Open profile',
+    openProfile: () => 'Open preferences',
     openGallery: () => 'Open gallery',
     manageStickers: () => 'Manage stickers',
     manageHighlights: () => 'Manage highlighted words',
@@ -53,8 +53,6 @@ export const labels = {
     mobileShowLeft: () => 'Show left column (rooms)',
     mobileShowMiddle: () => 'Show middle column (chat)',
     mobileShowRight: () => 'Show right column (users)',
-    goToChat: () => 'Go to chat',
-    goToHome: () => 'Go to home',
 
     // Session
     logout: () => 'Log out',

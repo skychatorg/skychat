@@ -53,6 +53,12 @@ export class JoinRoomPlugin extends GlobalPlugin {
             }
         }
 
+        // Already there: still answer, the client counts one join-room per /join
+        if (connection.room === room) {
+            connection.send('join-room', room.id);
+            return;
+        }
+
         // Join the room
         await room.attachConnection(connection);
     }

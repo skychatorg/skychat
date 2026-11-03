@@ -34,6 +34,17 @@ describe('/join (6177abc)', () => {
         expect(alice.events('messages')).toHaveLength(1);
     });
 
+    it('answers a join to the room you are already in, so the client can count its answers', async () => {
+        const alice = await server.connect(name('alice'));
+        const current = alice.connection.room!;
+        alice.clear();
+
+        await alice.send(`/join ${current.id}`);
+
+        expect(alice.events('join-room')).toEqual([current.id]);
+        expect(alice.errors()).toEqual([]);
+    });
+
     it('rejects a private room the user is not invited to', async () => {
         const alice = await server.connect(name('alice'));
         const bob = await server.connect(name('bob'));
