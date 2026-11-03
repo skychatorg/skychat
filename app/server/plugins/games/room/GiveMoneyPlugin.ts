@@ -64,6 +64,6 @@ export class GiveMoneyPlugin extends RoomPlugin {
             content: message,
             user: UserController.getNeutralUser(),
         });
-        (this.room.getPlugin('connectedlist') as unknown as ConnectedListPlugin).sync();
+        (this.room.manager.getPlugin('connectedlist') as ConnectedListPlugin).sync();
     }
 }
