@@ -8,6 +8,24 @@ import { computed, ref, watch } from 'vue';
 
 const SIZE_LABELS = { xs: 'xs', md: 'md', lg: 'lg', golden: 'golden' };
 const MALUS_WORDS = { xs: 'mild', md: 'medium', lg: 'nasty' };
+// A popped balloon has room for a word or two: the feed has the full text
+const MALUS_TAGS = {
+    wizz: 'wizzed',
+    scramble: 'scrambled',
+    butterfingers: 'butterfingers',
+    sandale: '👞 sandaled',
+    grounded: 'grounded',
+    storm: 'wizz storm',
+    'grounded-sandale': 'grounded + 👞',
+};
+const tag = (result) =>
+    result.malus
+        ? MALUS_TAGS[result.malus]
+        : result.kind === 'lose'
+        ? result.amount
+            ? formatMoney(result.amount)
+            : 'face pop'
+        : result.label;
 
 const app = useAppStore();
 const client = useClientStore();
@@ -19,17 +37,16 @@ const secondsLeft = computed(() => Math.max(0, Math.ceil((sky.value.deadline - n
 const cooldown = computed(() => Math.max(0, Math.ceil((sky.value.you.nextPopAt - now.value) / 1000)));
 const left = computed(() => sky.value.balloons.filter((b) => !b.popped).length);
 
+// The round's time always shows, your own limit after it
 const status = computed(() => {
-    if (isGuest.value) {
-        return 'Log in to pop';
-    }
-    if (sky.value.you.grounded) {
-        return 'Grounded until the next round';
-    }
-    if (cooldown.value) {
-        return `Next pop in ${cooldown.value}s`;
-    }
-    return `${left.value} left · ${secondsLeft.value}s`;
+    const you = isGuest.value
+        ? 'log in to pop'
+        : sky.value.you.grounded
+        ? 'grounded'
+        : cooldown.value
+        ? `next pop in ${cooldown.value}s`
+        : null;
+    return [`${secondsLeft.value}s left`, `${left.value} balloons`, you].filter(Boolean).join(' · ');
 });
 
 const oddsLine = (size, { chance, kind, amount }) => {
@@ -161,7 +178,7 @@ watch(
                             :style="{ left: balloon.spot.left, top: balloon.spot.top, '--i': balloon.id }"
                         >
                             <span class="who">{{ balloon.result?.username }}</span>
-                            {{ balloon.result?.label }}
+                            {{ tag(balloon.result) }}
                         </span>
                     </template>
                 </div>
@@ -340,7 +357,9 @@ watch(
 .result {
     position: absolute;
     transform: translate(-50%, -50%);
-    max-width: 30%;
+    /* One spot wide, so neighbours never overlap */
+    max-width: 15%;
+    overflow-wrap: anywhere;
     padding: 3px 7px;
     border-radius: 8px;
     background: rgb(0 0 0 / 0.55);

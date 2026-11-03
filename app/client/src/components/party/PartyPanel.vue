@@ -1,13 +1,12 @@
 <script setup>
 import CasinoTable from '@/components/casino/CasinoTable.vue';
 import LuckyPop from '@/components/party/LuckyPop.vue';
-import { useNow } from '@/composables/useNow';
+import { useCountdown } from '@/composables/useCountdown';
 import { betLimits, PARTY_GAMES } from '@/lib/channel';
 import { useClientStore } from '@/stores/client';
 import { computed } from 'vue';
 
 const client = useClientStore();
-const now = useNow();
 
 const party = computed(() => client.state.party);
 const isGuest = computed(() => !client.state.user.id);
@@ -18,7 +17,7 @@ const meta = (game) => (game === 'blackjack' ? (limits.value ? `bets ${betLimits
 const lobbyGames = computed(() => Object.entries(PARTY_GAMES).map(([id, game]) => ({ id, ...game, meta: meta(id) })));
 const pick = (game) => client.sendMessage(`/party pick ${game}`);
 
-const secondsLeft = computed(() => (party.value.deadline ? Math.max(0, Math.ceil((party.value.deadline - now.value) / 1000)) : 0));
+const { seconds: voteSeconds, fraction: voteFraction } = useCountdown(() => party.value.deadline);
 // The game just played first, as "Again"
 const voteGames = computed(() =>
     Object.keys(PARTY_GAMES)
@@ -49,10 +48,10 @@ const vote = (game) => client.sendMessage(`/party vote ${game}`);
         <section v-else-if="party.phase === 'vote'" class="screen" aria-labelledby="party-vote-title">
             <header class="head">
                 <h2 id="party-vote-title" class="title">Next game?</h2>
-                <span class="count" aria-hidden="true">{{ secondsLeft }}s</span>
+                <span class="count" aria-hidden="true">{{ voteSeconds }}s</span>
             </header>
             <div class="bar" aria-hidden="true">
-                <span :key="party.deadline" :style="{ '--ms': `${Math.max(0, party.deadline - Date.now())}ms` }"></span>
+                <span :style="{ transform: `scaleX(${voteFraction})` }"></span>
             </div>
             <div class="games">
                 <button
@@ -148,12 +147,7 @@ const vote = (game) => client.sendMessage(`/party vote ${game}`);
     height: 100%;
     background: #f0c46c;
     transform-origin: left;
-    animation: drain var(--ms) linear forwards;
-}
-@keyframes drain {
-    to {
-        transform: scaleX(0);
-    }
+    transition: transform 0.25s linear;
 }
 .games {
     display: grid;
@@ -205,8 +199,8 @@ const vote = (game) => client.sendMessage(`/party vote ${game}`);
     color: #f4f4ff;
 }
 @media (prefers-reduced-motion: reduce) {
-    .bar {
-        display: none;
+    .bar span {
+        transition: none;
     }
 }
 

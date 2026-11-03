@@ -9,6 +9,7 @@ import JellyfinTrackPicker from '@/components/player/impl/JellyfinTrackPicker.vu
 import SkyDropdown from '@/components/common/SkyDropdown.vue';
 import SkyDropdownItem from '@/components/common/SkyDropdownItem.vue';
 import { useJellyfinTracks } from '@/composables/useJellyfinTracks.js';
+import { useCountdown } from '@/composables/useCountdown';
 import { useNow } from '@/composables/useNow';
 import { isPausable } from '@/lib/player';
 import { computed } from 'vue';
@@ -18,6 +19,23 @@ const client = useClientStore();
 
 const isParty = computed(() => Boolean(client.state.party));
 const showPlayer = computed(() => client.channelHasContent && app.playerMode.enabled);
+
+// How far the party's round has gone: games show their own turns, not when the round ends
+const { seconds: popSeconds } = useCountdown(() => client.state.luckyPop?.deadline);
+const { seconds: idleSeconds } = useCountdown(() => client.state.casino?.round?.idleEndsAt);
+const partyRound = computed(() => {
+    if (client.state.party?.phase !== 'playing') {
+        return null;
+    }
+    if (client.state.luckyPop) {
+        return `Round ends in ${popSeconds.value}s`;
+    }
+    const round = client.state.casino?.round;
+    if (!round) {
+        return null;
+    }
+    return round.idleEndsAt ? `Round ends in ${idleSeconds.value}s if nobody bets` : `Hand ${round.hand} of ${round.hands}`;
+});
 
 const cinema = computed(() => app.playerMode.size === 'cinema' && app.isDesktop);
 
@@ -134,6 +152,11 @@ const syncSelf = () => client.sendMessage('/playersync');
                 >
                     <fa :icon="app.playerMode.enabled ? 'toggle-on' : 'toggle-off'" fixed-width />
                 </button>
+            </div>
+
+            <!-- A party round's progress -->
+            <div v-if="showPlayer && partyRound" class="party-round font-mono text-sm text-white/70 truncate min-w-0">
+                {{ partyRound }}
             </div>
 
             <!-- Transport (only while a media is shown) -->

@@ -48,6 +48,8 @@ export type SanitizedBlackjackTable = {
     /** A hidden hole card is null */
     dealer: { cards: (Card | null)[]; total: number | null };
     seats: SanitizedSeat[];
+    /** In a party: which hand of the round this is, and when the round ends if nobody bets */
+    round: { hand: number; hands: number; idleEndsAt: number | null } | null;
 };
 
 /**
@@ -96,6 +98,8 @@ export class BlackjackTable {
     private timer: ReturnType<typeof setTimeout> | null = null;
 
     private handsPlayed = 0;
+
+    private idleEndsAt: number | null = null;
 
     constructor(
         private readonly channel: PlayerChannel,
@@ -249,6 +253,13 @@ export class BlackjackTable {
                 outcome: seat.outcome,
                 payout: seat.payout,
             })),
+            round: this.onRoundEnd
+                ? {
+                      hand: Math.min(this.handsPlayed + 1, BlackjackTable.ROUND_HANDS),
+                      hands: BlackjackTable.ROUND_HANDS,
+                      idleEndsAt: this.idleEndsAt,
+                  }
+                : null,
         };
     }
 
@@ -325,8 +336,9 @@ export class BlackjackTable {
             this.phase = 'waiting';
             this.handsPlayed++;
             this.clearTimer();
-            this.broadcast();
-            this.idle();
+            if (!this.idle()) {
+                this.broadcast();
+            }
         });
         await Promise.all(
             this.seats
@@ -363,21 +375,26 @@ export class BlackjackTable {
     }
 
     /**
-     * In a party, the round ends after a few hands, or when nobody bets for a while. Only ever from waiting, so no bet is in play
+     * In a party, the round ends after a few hands, or when nobody bets for a while. Only ever from waiting, so no bet is in play.
+     * Says whether the round is over, and the table gone
      */
-    private idle(): void {
+    private idle(): boolean {
         if (!this.onRoundEnd) {
-            return;
+            return false;
         }
         if (this.handsPlayed >= BlackjackTable.ROUND_HANDS) {
-            return this.onRoundEnd();
+            this.onRoundEnd();
+            return true;
         }
-        // No deadline: the table shows no countdown while nobody plays
+        // No deadline: the table's own countdown is for bets and turns, the party shows this one
         this.schedule(this.timings.idleMs, this.onRoundEnd, false);
+        this.idleEndsAt = Date.now() + this.timings.idleMs;
+        return false;
     }
 
     private clearTimer(): void {
         this.deadline = null;
+        this.idleEndsAt = null;
         if (this.timer) {
             clearTimeout(this.timer);
             this.timer = null;

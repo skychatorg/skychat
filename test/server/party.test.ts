@@ -112,7 +112,10 @@ describe('party cycle', () => {
 
         for (let i = 0; i < BlackjackTable.ROUND_HANDS; i++) {
             expect(party.sanitized().phase).toBe('playing');
+            // Between hands the round shows its hand and when it ends without a bet, during a hand only the hand
+            expect(party.table!.sanitized().round).toMatchObject({ hand: i + 1, hands: 5, idleEndsAt: expect.any(Number) });
             await alice.send('/casino bet 1000');
+            expect(party.table!.sanitized().round).toMatchObject({ hand: i + 1, idleEndsAt: null });
             // Bet, deal, the turn times out, the dealer plays and the results show
             await settle(160);
         }
