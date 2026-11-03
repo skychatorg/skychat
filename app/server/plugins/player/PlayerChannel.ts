@@ -6,8 +6,9 @@ import { PlayerChannelManager } from './PlayerChannelManager.js';
 import { PlayerChannelScheduler, SanitizedScheduler } from './PlayerChannelScheduler.js';
 import { issueStreamToken, STREAM_TOKEN_TTL_MS } from './fetcher/JellyfinFetcher.js';
 import { BlackjackTable, CasinoOptions, logFailure } from './casino/BlackjackTable.js';
+import { Party, PartyGameId } from './party/Party.js';
 
-export type ChannelKind = 'media' | 'casino';
+export type ChannelKind = 'media' | 'party';
 
 export type QueuedVideoInfo = {
     user: SanitizedUser;
@@ -86,8 +87,8 @@ export type SanitizedPlayerChannel = {
     id: number;
     name: string;
     kind: ChannelKind;
-    /** Casino channels only: the table's limits and how many are seated */
-    casino?: CasinoOptions & { seated: number };
+    /** Party channels only: the blackjack limits, the game on, and how many are seated at blackjack */
+    party?: Omit<CasinoOptions, 'game'> & { seated: number; game: PartyGameId | null };
     playing: boolean;
     paused: boolean;
     queueLength: number;
@@ -114,8 +115,8 @@ export class PlayerChannel {
 
     public readonly kind: ChannelKind;
 
-    /** The game played in a casino channel, null for media channels */
-    public readonly table: BlackjackTable | null;
+    /** The games of a party channel, null for media channels */
+    public readonly party: Party | null;
 
     public readonly manager: PlayerChannelManager;
 
@@ -167,7 +168,7 @@ export class PlayerChannel {
         this.id = id;
         this.name = name;
         this.kind = kind;
-        this.table = kind === 'casino' ? new BlackjackTable(this, casino) : null;
+        this.party = kind === 'party' ? new Party(this, { ...BlackjackTable.DEFAULT_OPTIONS, ...casino }) : null;
         this.scheduler = new PlayerChannelScheduler(this);
     }
 
@@ -394,8 +395,8 @@ export class PlayerChannel {
      * Release resources held by this channel
      */
     public destroy() {
-        if (this.table) {
-            logFailure(this.table.destroy());
+        if (this.party) {
+            logFailure(this.party.destroy());
         }
         this.cancelResync();
         if (this.playNextTimeout) {
@@ -609,7 +610,7 @@ export class PlayerChannel {
             const payload = this.buildSyncPayload(connection.session);
             connection.send('player-sync', options?.forced ? { ...payload, forced: true } : payload);
         }
-        this.table?.syncConnections(connections);
+        this.party?.syncConnections(connections);
     }
 
     /**
@@ -621,7 +622,9 @@ export class PlayerChannel {
             id: this.id,
             name: this.name,
             kind: this.kind,
-            casino: this.table ? { ...this.table.options, seated: this.table.seatedCount } : undefined,
+            party: this.party
+                ? { ...this.party.options, seated: this.party.table?.seatedCount ?? 0, game: this.party.sanitized().game }
+                : undefined,
             playing: this.isPlaying(),
             paused: this.pausedCursor !== null,
             queueLength: this.queue.length,

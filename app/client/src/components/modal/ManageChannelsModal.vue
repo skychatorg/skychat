@@ -40,7 +40,7 @@ function remove(channel) {
 
 const KINDS = [
     { kind: 'media', label: 'Media', icon: 'music', description: 'A shared queue of videos and music' },
-    { kind: 'casino', label: 'Casino', icon: 'dice', description: 'A blackjack table played with SkyChat money' },
+    { kind: 'party', label: 'Party', icon: 'dice', description: 'Mini-games played with SkyChat money: blackjack, Lucky Pop' },
 ];
 const form = reactive({ name: '', kind: 'media', minBet: 10, maxBet: 100 });
 function create() {
@@ -50,7 +50,7 @@ function create() {
     }
     // The form is in dollars, the server counts cents like all user money
     const cents = (dollars) => Math.round(dollars * 100);
-    manage(form.kind === 'casino' ? `create casino ${cents(form.minBet)} ${cents(form.maxBet)} ${name}` : `create media ${name}`);
+    manage(form.kind === 'party' ? `create party ${cents(form.minBet)} ${cents(form.maxBet)} ${name}` : `create media ${name}`);
     form.name = '';
 }
 </script>
@@ -68,7 +68,7 @@ function create() {
                             <span class="grip px-1 text-white/40 cursor-grab" title="Drag to reorder"><fa icon="ellipsis-vertical" /></span>
                             <span
                                 class="w-7 h-7 shrink-0 rounded flex items-center justify-center"
-                                :class="element.kind === 'casino' ? 'bg-amber-400/15 text-amber-300' : 'bg-primary/15 text-primary'"
+                                :class="element.kind === 'party' ? 'bg-amber-400/15 text-amber-300' : 'bg-primary/15 text-primary'"
                             >
                                 <fa :icon="channelIcon(element)" />
                             </span>
@@ -82,7 +82,7 @@ function create() {
                                     @keydown.enter="$event.target.blur()"
                                 />
                                 <span class="px-1.5 font-mono text-xs text-white/40">
-                                    {{ element.kind === 'casino' ? `casino · blackjack ${betLimits(element.casino)}` : 'media' }}
+                                    {{ element.kind === 'party' ? `party · blackjack ${betLimits(element.party)}` : 'media' }}
                                 </span>
                             </div>
                             <button
@@ -109,7 +109,7 @@ function create() {
                         v-model="form.name"
                         maxlength="32"
                         required
-                        :placeholder="form.kind === 'casino' ? 'High rollers' : 'Movie night'"
+                        :placeholder="form.kind === 'party' ? 'Game night' : 'Movie night'"
                         class="form-control normal-case tracking-normal font-sans text-sm text-white"
                     />
                 </label>
@@ -127,9 +127,9 @@ function create() {
                         <span class="text-xs text-white/50">{{ option.description }}</span>
                     </button>
                 </div>
-                <div v-if="form.kind === 'casino'" class="grid grid-cols-2 gap-2">
+                <div v-if="form.kind === 'party'" class="grid grid-cols-2 gap-2">
                     <label class="flex flex-col gap-1 text-xs font-mono uppercase tracking-wider text-white/50">
-                        Min bet $
+                        Blackjack min bet $
                         <input
                             id="newChannelMinBet"
                             v-model.number="form.minBet"
@@ -139,7 +139,7 @@ function create() {
                         />
                     </label>
                     <label class="flex flex-col gap-1 text-xs font-mono uppercase tracking-wider text-white/50">
-                        Max bet $
+                        Blackjack max bet $
                         <input
                             id="newChannelMaxBet"
                             v-model.number="form.maxBet"

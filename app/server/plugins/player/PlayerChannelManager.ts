@@ -115,7 +115,7 @@ export class PlayerChannelManager extends EventEmitter {
             throw new Error('Join a media channel first');
         }
         if (channel.kind !== 'media') {
-            throw new Error('This channel is a casino, it has no media');
+            throw new Error('This channel is for games, it has no media');
         }
         return channel;
     }
@@ -173,12 +173,14 @@ export class PlayerChannelManager extends EventEmitter {
         this.sessionChannels.delete(session);
         if (channel?.sessions.includes(session)) {
             channel.sessions.splice(channel.sessions.indexOf(session), 1);
-            if (channel.table) {
-                logFailure(channel.table.onSessionLeft(session));
+            if (channel.party) {
+                logFailure(channel.party.onSessionLeft(session));
             }
         }
         session.send('player-sync', { current: null, queue: [], cursor: 0, paused: false });
+        session.send('party', null);
         session.send('casino-table', null);
+        session.send('lucky-pop', null);
 
         // Notify all connections of this session that the channel changed
         session.send('player-channel', null);

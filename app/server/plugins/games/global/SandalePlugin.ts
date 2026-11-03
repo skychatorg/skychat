@@ -95,6 +95,13 @@ export class SandalePlugin extends GlobalPlugin {
     }
 
     /**
+     * Hit the user's next message, for games that hand this out as a malus
+     */
+    public flag(username: string): void {
+        this.setSandaled(username, true);
+    }
+
+    /**
      * Intercept all messages and sandale them if necessary
      * @param message
      * @param connection

@@ -85,6 +85,10 @@ const SOUNDS = {
     },
     // A wooden tick for the last seconds of your turn
     tick: (ctx, at) => tone(ctx, at, 900, 0.04, { type: 'sine', gain: 0.12 }),
+    pop: (ctx, at) => {
+        swish(ctx, at, 0.05, { from: 1200, to: 300, gain: 0.5 });
+        tone(ctx, at, 160, 0.08, { type: 'sine', gain: 0.25, slideTo: 60 });
+    },
 };
 
 /**

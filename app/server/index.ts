@@ -7,6 +7,8 @@ export type { OngoingConvert, VideoStreamInfo } from './plugins/gallery/VideoCon
 export type { QueuedVideoInfo, SanitizedPlayerChannel, VideoInfo } from './plugins/player/PlayerChannel.js';
 export type { SanitizedBlackjackTable } from './plugins/player/casino/BlackjackTable.js';
 export type { Card } from './plugins/player/casino/blackjack.js';
+export type { PartyGameId, SanitizedParty } from './plugins/player/party/Party.js';
+export type { BalloonResult, BalloonSize, SanitizedLuckyPop } from './plugins/player/party/LuckyPop.js';
 export type { SanitizedVoiceChannel } from './plugins/voice/VoiceTypes.js';
 export type { AuthData } from './skychat/AuthBridge.js';
 export type { PublicConfig } from './skychat/Config.js';
