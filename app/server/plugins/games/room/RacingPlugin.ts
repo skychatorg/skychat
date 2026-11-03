@@ -1,3 +1,4 @@
+import { formatMoney } from '../../../../api/money.js';
 import { Connection } from '../../../skychat/Connection.js';
 import { RoomPlugin } from '../../RoomPlugin.js';
 import { UserController } from '../../../skychat/UserController.js';
@@ -106,7 +107,7 @@ export class RacingPlugin extends RoomPlugin {
 
         // Let users the time to participate
         for (let i = 0; i < 15 + 1; ++i) {
-            this.currentGame.titleMessage = `Choose your car (${15 - i}s left) - Entry cost: $${RacingPlugin.ENTRY_COST / 100}`;
+            this.currentGame.titleMessage = `Choose your car (${15 - i}s left) - Entry cost: ${formatMoney(RacingPlugin.ENTRY_COST)}`;
             this.updateGameMessage();
             await waitTimeout(1000);
         }
@@ -159,7 +160,7 @@ export class RacingPlugin extends RoomPlugin {
             content += 'Winners:<br>';
             const amount = RacingPlugin.ENTRY_COST * this.currentGame.cars.length;
             for (const winner of winners) {
-                content += `- ${winner.identifier} (+ $${amount / 100})<br>`;
+                content += `- ${winner.identifier} (+ ${formatMoney(amount)})<br>`;
                 UserController.giveMoney(winner.user, amount, 'Racing win');
             }
         } else {

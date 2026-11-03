@@ -1,3 +1,4 @@
+import { formatMoney } from '../../../../api/money.js';
 import { Connection } from '../../../skychat/Connection.js';
 import { RoomPlugin } from '../../RoomPlugin.js';
 import { Session } from '../../../skychat/Session.js';
@@ -56,9 +57,9 @@ export class GiveMoneyPlugin extends RoomPlugin {
             givenAmount,
             commission,
         });
-        let message = senderSession.user.username + ' sent $' + givenAmount / 100 + ' to ' + receiverSession.user.username;
+        let message = `${senderSession.user.username} sent ${formatMoney(givenAmount)} to ${receiverSession.user.username}`;
         if (commission > 0) {
-            message += ' (- $' + commission / 100 + ' commission)';
+            message += ` (- ${formatMoney(commission)} commission)`;
         }
         await this.room.sendMessage({
             content: message,
