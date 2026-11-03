@@ -12,6 +12,9 @@ import { AuthToken, User } from './User.js';
 export class UserController {
     static readonly MONEY_HISTORY_SIZE = 20;
 
+    /** Set by the user list, so every balance change shows there right away without each game asking */
+    static onMoneyChange: () => void = () => {};
+
     /**
      * Validity of the auth token in seconds
      */
@@ -215,10 +218,7 @@ export class UserController {
         if (amount > user.money) {
             throw new Error('User has not enough money to buy this amount');
         }
-        user.money -= amount;
-        UserController.logMoney(user, -amount, reason);
-        await UserController.sync(user);
-        UserController.syncSessionUser(user);
+        await UserController.changeMoney(user, -amount, reason);
     }
 
     /**
@@ -228,10 +228,15 @@ export class UserController {
         if (amount < 0) {
             throw new Error("Can't give negative amount");
         }
+        await UserController.changeMoney(user, amount, reason);
+    }
+
+    private static async changeMoney(user: User, amount: number, reason: string): Promise<void> {
         user.money += amount;
         UserController.logMoney(user, amount, reason);
         await UserController.sync(user);
         UserController.syncSessionUser(user);
+        UserController.onMoneyChange();
     }
 
     /**

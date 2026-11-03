@@ -3,7 +3,6 @@ import { Connection } from '../../../skychat/Connection.js';
 import { GlobalPlugin } from '../../GlobalPlugin.js';
 import { Session } from '../../../skychat/Session.js';
 import { User } from '../../../skychat/User.js';
-import { ConnectedListPlugin } from '../../core/global/ConnectedListPlugin.js';
 import { UserController } from '../../../skychat/UserController.js';
 
 export class OfferMoneyPlugin extends GlobalPlugin {
@@ -42,6 +41,5 @@ export class OfferMoneyPlugin extends GlobalPlugin {
                 id: 0,
             }).sanitized(),
         );
-        (this.manager.getPlugin('connectedlist') as ConnectedListPlugin).sync();
     }
 }

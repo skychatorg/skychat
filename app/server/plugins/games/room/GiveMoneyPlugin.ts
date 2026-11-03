@@ -3,7 +3,6 @@ import { Connection } from '../../../skychat/Connection.js';
 import { RoomPlugin } from '../../RoomPlugin.js';
 import { Session } from '../../../skychat/Session.js';
 import { User } from '../../../skychat/User.js';
-import { ConnectedListPlugin } from '../../core/global/ConnectedListPlugin.js';
 import { UserController } from '../../../skychat/UserController.js';
 
 export class GiveMoneyPlugin extends RoomPlugin {
@@ -65,6 +64,5 @@ export class GiveMoneyPlugin extends RoomPlugin {
             content: message,
             user: UserController.getNeutralUser(),
         });
-        (this.room.manager.getPlugin('connectedlist') as ConnectedListPlugin).sync();
     }
 }
