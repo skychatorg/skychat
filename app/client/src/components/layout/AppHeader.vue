@@ -14,10 +14,8 @@ const router = useRouter();
 const onLoginPage = computed(() => router.currentRoute.value.name === 'home');
 
 const logout = () => {
-    if (client.state.user.id > 0) {
-        client.logout();
-    }
-    router.push({ name: 'home', params: {} });
+    client.logout();
+    router.push({ name: 'home' });
 };
 
 const connectionStatus = computed(() => {
@@ -42,10 +40,10 @@ const onlineCount = computed(() => (client.state.connectedList || []).length);
             <div
                 class="flex items-center justify-center gap-2 px-3 select-none lg:w-[var(--page-col-left-width)] lg:shrink-0 overflow-hidden"
             >
-                <a href="/" class="flex items-center gap-2 min-w-0">
+                <RouterLink :to="{ name: 'home' }" class="flex items-center gap-2 min-w-0">
                     <img src="/assets/logo.png" alt="SkyChat" class="h-7 w-auto shrink-0" />
                     <span v-if="!app.effectiveLeftCollapsed" class="hidden sm:inline font-semibold text-base tracking-tight">SkyChat</span>
-                </a>
+                </RouterLink>
             </div>
 
             <!-- Middle: command palette trigger, aligned with the middle column -->

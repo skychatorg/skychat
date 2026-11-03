@@ -52,6 +52,11 @@ export const useClientStore = defineStore('client', {
         messageSearchLoading: false,
 
         /**
+         * The saved login was refused (expired, revoked): the chat can't open until the user logs in again
+         */
+        authRefused: false,
+
+        /**
          * Local-only voice UI state (mirrors VoiceClient internals for the template).
          */
         voice: {
@@ -171,6 +176,9 @@ export const useClientStore = defineStore('client', {
                     useToast().info(info);
                 }
             });
+            client.on('auth-refused', () => (this.authRefused = true));
+            client.on('connection-accepted', () => (this.authRefused = false));
+
             client.on('error', (error) => {
                 // Never render an empty toast: a red box with no text tells the user nothing
                 const message = typeof error === 'string' ? error : error?.message ?? '';
@@ -282,6 +290,31 @@ export const useClientStore = defineStore('client', {
         },
         setVoiceUserLocallyMuted(userId, muted) {
             voiceClient?.setUserLocallyMuted(userId, muted);
+        },
+
+        /**
+         * Ask how much, then send it. The server takes the commission and says in the chat how much arrived
+         */
+        giveMoney: function (username) {
+            const dollars = Number(prompt(`How much do you give to ${username}? (in $)`)?.replace(',', '.'));
+            if (!(dollars > 0)) {
+                return false;
+            }
+            client.sendMessage(`/give ${username} ${Math.round(dollars * 100)}`);
+            return true;
+        },
+
+        /**
+         * Join the next (step 1) or previous (step -1) room you have access to
+         */
+        joinAdjacentRoom: function (step) {
+            const rooms = this.state.rooms.filter((room) => client.hasAccessToRoom(room.id));
+            const index = rooms.findIndex((room) => room.id === this.state.currentRoomId);
+            // Current room not listed yet (a new conversation): start from either end
+            const next = index === -1 ? rooms.at(step > 0 ? 0 : -1) : rooms[(index + step + rooms.length) % rooms.length];
+            if (next && next.id !== this.state.currentRoomId) {
+                this.join(next.id);
+            }
         },
 
         /**

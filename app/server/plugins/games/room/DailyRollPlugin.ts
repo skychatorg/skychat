@@ -1,3 +1,4 @@
+import { formatMoney } from '../../../../api/money.js';
 import { Connection } from '../../../skychat/Connection.js';
 import { RoomPlugin } from '../../RoomPlugin.js';
 import { UserController } from '../../../skychat/UserController.js';
@@ -224,7 +225,7 @@ export class DailyRollPlugin extends RoomPlugin {
             const card = this.currentGame.cards[chosenCardId];
             content += `- ${session.identifier} chose a card.`;
             if (card.state === 'shown') {
-                content += ` he earns $${card.content / 100}`;
+                content += ` he earns ${formatMoney(card.content)}`;
             }
             content += '<br>';
         }

@@ -105,6 +105,8 @@ describe('casino table', () => {
         ]);
         expect([alice.session.user.money, bob.session.user.money]).toEqual([22000, 22000]);
         expect(alice.last('set-user').money).toBe(22000);
+        // Everyone's user list too, not only the player's own screen
+        expect(JSON.stringify(bob.events('connected-list-patch'))).toContain('22000');
     });
 
     it('doubles the bet for exactly one more card', async () => {
@@ -146,7 +148,9 @@ describe('casino table', () => {
     });
 
     it('refunds an unfinished hand when the channel is deleted', async () => {
-        const { admin, channel, clients } = await casino(1);
+        const { admin, channel, table, clients } = await casino(1);
+        // No blackjack: a natural would settle the hand before the delete, leaving nothing to refund
+        table.shuffle = stack('10♠ 9♣ 6♠ 7♦');
         const [alice] = clients;
         await alice.send('/casino bet 5000');
         expect(alice.session.user.money).toBe(15000);

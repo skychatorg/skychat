@@ -76,6 +76,7 @@ export type SkyChatClientState = {
     roomConnectedUsers: { [roomId: number]: Array<SanitizedUser> };
     rooms: SanitizedRoom[];
     currentRoomId: number | null;
+    joinRefused: boolean;
     currentRoomReady: boolean;
     currentRoom: SanitizedRoom | null;
     lastMention: { roomId: number; identifier: string; messageId: number } | null;
@@ -106,6 +107,7 @@ export type SkyChatClientState = {
 
 export declare interface SkyChatClient {
     on(event: 'connection-accepted', listener: () => unknown): this;
+    on(event: 'auth-refused', listener: () => unknown): this;
 
     on(event: 'config', listener: (config: PublicConfig) => any): this;
     on(event: 'sticker-list', listener: (stickers: Record<string, string>) => any): this;
@@ -207,6 +209,15 @@ export class SkyChatClient extends EventEmitter {
     private _roomConnectedUsers: { [roomId: number]: Array<SanitizedUser> } = {};
     private _rooms: Array<SanitizedRoom> = [];
     private _currentRoomId: number | null = null;
+
+    // The server answers every /join with one join-room. While newer joins are on their way, an answer is stale: applying it would flip back to a room already left
+    private _pendingJoins = 0;
+
+    // The last answer refused the room this client asked for
+    private _joinRefused = false;
+
+    // This tab's room, kept across reconnections. localStorage is shared by all tabs, so it only serves a cold start
+    private _lastRoomId: number | null = null;
     private _currentRoomReady: boolean = false;
     private _lastMention: { roomId: number; identifier: string; messageId: number } | null = null;
     private _typingList: Array<SanitizedUser> = [];
@@ -600,6 +611,12 @@ export class SkyChatClient extends EventEmitter {
     }
 
     private _onJoinRoom(currentRoomId: number | null) {
+        const answersJoin = this._pendingJoins > 0;
+        if (answersJoin && --this._pendingJoins > 0) {
+            return;
+        }
+        this._joinRefused = answersJoin && currentRoomId !== this._currentRoomId;
+        this._lastRoomId = currentRoomId ?? this._lastRoomId;
         // Authoritative: also used to correct an optimistic join the server rejected
         if (currentRoomId !== this._currentRoomId) {
             this._currentRoomReady = false;
@@ -780,6 +797,7 @@ export class SkyChatClient extends EventEmitter {
             roomConnectedUsers: this._roomConnectedUsers,
             rooms: this._rooms,
             currentRoomId: this._currentRoomId,
+            joinRefused: this._joinRefused,
             currentRoomReady: this._currentRoomReady,
             currentRoom: this._rooms.find((room) => room.id === this._currentRoomId) || null,
             lastMention: this._lastMention,
@@ -921,7 +939,16 @@ export class SkyChatClient extends EventEmitter {
      * Join a specific room
      */
     join(roomId: number) {
-        // Client-side prediction
+        // Client-side prediction. Also the room to ask for if the socket drops before the answer
+        this._lastRoomId = roomId;
+        // Not in a room (connecting, reconnecting): commands are not read yet. The login carries the room instead
+        if (this._currentRoomId === null || !this.state.isConnected) {
+            this._currentRoomId = roomId;
+            this.emit('update', this.state);
+            return;
+        }
+        this._pendingJoins++;
+        this._joinRefused = false;
         this._currentRoomReady = false;
         this._currentRoomId = roomId;
         this.emit('update', this.state);
@@ -946,6 +973,10 @@ export class SkyChatClient extends EventEmitter {
         if (typeof localStorage !== 'undefined') {
             localStorage.removeItem(SkyChatClient.LOCAL_STORAGE_TOKEN_KEY);
         }
+        // Out of the room right away, not when the socket finishes closing, so the app can leave the chat now
+        this._currentRoomId = null;
+        this._lastRoomId = null;
+        this.emit('update', this.state);
         if (this._websocket) {
             this._websocket.close();
         }
@@ -958,6 +989,7 @@ export class SkyChatClient extends EventEmitter {
                 password,
                 register: true,
             },
+            roomId: this.getPreferredRoomId(),
         });
     }
 
@@ -1008,9 +1040,12 @@ export class SkyChatClient extends EventEmitter {
     }
 
     /**
-     * Get preferred room ID from local storage
+     * The room to (re)connect to: this tab's last room, else the last one saved
      */
     private getPreferredRoomId() {
+        if (this._lastRoomId !== null) {
+            return this._lastRoomId;
+        }
         if (typeof localStorage === 'undefined') {
             return undefined;
         }
@@ -1034,6 +1069,17 @@ export class SkyChatClient extends EventEmitter {
                 this.authenticate({
                     token: JSON.parse(authToken),
                     roomId: this.getPreferredRoomId(),
+                }).catch((error) => {
+                    // Only a bad token is forgotten. Anything else (rate limit, server busy) keeps it for the next reconnection
+                    if (!/Invalid token|Token expired|User does not exist/.test(String(error))) {
+                        return;
+                    }
+                    localStorage.removeItem(SkyChatClient.LOCAL_STORAGE_TOKEN_KEY);
+                    // Out of any room picked while reconnecting, or the app would keep showing the chat
+                    this._currentRoomId = null;
+                    this._lastRoomId = null;
+                    this.emit('update', this.state);
+                    this.emit('auth-refused');
                 });
             }
         }
@@ -1117,6 +1163,7 @@ export class SkyChatClient extends EventEmitter {
         console.warn(`WebSocket closed: ${event.code} - ${event.reason}`);
         // Reset some (not all) values
         this._currentRoomId = null;
+        this._pendingJoins = 0;
         this._typingList = [];
         this._polls = {};
         this._cursors = {};

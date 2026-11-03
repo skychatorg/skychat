@@ -1,3 +1,4 @@
+import { formatMoney } from '../../../../api/money.js';
 import { Connection } from '../../../skychat/Connection.js';
 import { RoomManager } from '../../../skychat/RoomManager.js';
 import { Session } from '../../../skychat/Session.js';
@@ -80,7 +81,7 @@ export class SandalePlugin extends GlobalPlugin {
         await UserController.buy(connection.session.user, SandalePlugin.COST, 'Sandale');
 
         // Notify everyone but the user who is sandalized
-        const messageContent = `${connection.session.identifier} sandaled ${identifier} 🤯 (cost: $${SandalePlugin.COST / 100}) 👞`;
+        const messageContent = `${connection.session.identifier} sandaled ${identifier} 🤯 (cost: ${formatMoney(SandalePlugin.COST)}) 👞`;
         const message = UserController.createNeutralMessage({ id: 0, content: messageContent });
         if (connection.room) {
             connection.room.connections.forEach((c) => {

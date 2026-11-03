@@ -80,11 +80,7 @@ export function useRoomCommands() {
                 icon: 'chevron-down',
                 category: 'Rooms',
                 shortcut: 'Alt+↓',
-                run: () => {
-                    const idx = rooms.findIndex((r) => r.id === currentId);
-                    const next = rooms[(idx + 1) % rooms.length];
-                    if (next) client.join(next.id);
-                },
+                run: () => client.joinAdjacentRoom(1),
             });
             out.push({
                 id: 'room.prev',
@@ -92,11 +88,7 @@ export function useRoomCommands() {
                 icon: 'chevron-up',
                 category: 'Rooms',
                 shortcut: 'Alt+↑',
-                run: () => {
-                    const idx = rooms.findIndex((r) => r.id === currentId);
-                    const prev = rooms[(idx - 1 + rooms.length) % rooms.length];
-                    if (prev) client.join(prev.id);
-                },
+                run: () => client.joinAdjacentRoom(-1),
             });
         }
 
