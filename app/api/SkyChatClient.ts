@@ -13,6 +13,7 @@ import {
     QueuedVideoInfo,
     SanitizedBlackjackTable,
     SanitizedLuckyPop,
+    SanitizedCrash,
     SanitizedParty,
     SanitizedMessage,
     SanitizedPlayerChannel,
@@ -105,6 +106,8 @@ export type SkyChatClientState = {
     party: SanitizedParty | null;
     /** The Lucky Pop sky of your party channel, null when another game is on */
     luckyPop: SanitizedLuckyPop | null;
+    /** The Crash flight of your party channel, null when another game is on */
+    crash: SanitizedCrash | null;
     voiceChannels: SanitizedVoiceChannel[];
     currentVoiceChannelId: number | null;
     voiceChannelUsers: { [channelId: number]: Array<SanitizedUser> };
@@ -155,6 +158,7 @@ export declare interface SkyChatClient {
     on(event: 'casino-table', listener: (table: SanitizedBlackjackTable | null) => any): this;
     on(event: 'party', listener: (party: SanitizedParty | null) => any): this;
     on(event: 'lucky-pop', listener: (luckyPop: SanitizedLuckyPop | null) => any): this;
+    on(event: 'crash', listener: (crash: SanitizedCrash | null) => any): this;
 
     on(event: 'voice-channels', listener: (voiceChannels: Array<SanitizedVoiceChannel>) => any): this;
     on(event: 'voice-channel', listener: (channelId: number | null) => any): this;
@@ -260,6 +264,8 @@ export class SkyChatClient extends EventEmitter {
 
     private _luckyPop: SanitizedLuckyPop | null = null;
 
+    private _crash: SanitizedCrash | null = null;
+
     // Connection resilience properties
     private _reconnectAttempts: number = 0;
     private _reconnectTimer: ReturnType<typeof setTimeout> | null = null;
@@ -341,6 +347,10 @@ export class SkyChatClient extends EventEmitter {
         });
         this.on('lucky-pop', (luckyPop) => {
             this._luckyPop = luckyPop;
+            this.emit('update', this.state);
+        });
+        this.on('crash', (crash) => {
+            this._crash = crash;
             this.emit('update', this.state);
         });
 
@@ -841,6 +851,7 @@ export class SkyChatClient extends EventEmitter {
             casino: this._casino,
             party: this._party,
             luckyPop: this._luckyPop,
+            crash: this._crash,
             voiceChannels: this._voiceChannels,
             currentVoiceChannelId: this._currentVoiceChannelId,
             voiceChannelUsers: this._voiceChannelUsers,

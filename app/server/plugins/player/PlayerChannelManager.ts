@@ -181,6 +181,7 @@ export class PlayerChannelManager extends EventEmitter {
         session.send('party', null);
         session.send('casino-table', null);
         session.send('lucky-pop', null);
+        session.send('crash', null);
 
         // Notify all connections of this session that the channel changed
         session.send('player-channel', null);

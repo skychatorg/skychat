@@ -30,6 +30,9 @@ const partyRound = computed(() => {
     if (client.state.luckyPop) {
         return `Round ends in ${popSeconds.value}s`;
     }
+    if (client.state.crash) {
+        return `Flight ${client.state.crash.flight} of ${client.state.crash.flights}`;
+    }
     const round = client.state.casino?.round;
     if (!round) {
         return null;

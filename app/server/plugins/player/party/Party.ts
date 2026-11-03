@@ -2,9 +2,10 @@ import { Connection } from '../../../skychat/Connection.js';
 import { Session } from '../../../skychat/Session.js';
 import { BlackjackTable, CasinoOptions, logFailure } from '../casino/BlackjackTable.js';
 import type { PlayerChannel } from '../PlayerChannel.js';
+import { Crash } from './Crash.js';
 import { LuckyPop } from './LuckyPop.js';
 
-export const PARTY_GAMES = { blackjack: 'Blackjack', luckypop: 'Lucky Pop' } as const;
+export const PARTY_GAMES = { blackjack: 'Blackjack', luckypop: 'Lucky Pop', crash: 'Crash' } as const;
 
 export type PartyGameId = keyof typeof PARTY_GAMES;
 
@@ -35,10 +36,10 @@ export class Party {
     /** Instance values, so tests can shorten them */
     public timings = { voteMs: 10_000, stormEveryMs: 6000 };
 
-    public game: BlackjackTable | LuckyPop | null = null;
+    public game: BlackjackTable | LuckyPop | Crash | null = null;
 
     /** For tests: shorten a new game's timers or fix its luck before it starts */
-    public onGameCreated?: (game: BlackjackTable | LuckyPop) => void;
+    public onGameCreated?: (game: BlackjackTable | LuckyPop | Crash) => void;
 
     private gameId: PartyGameId | null = null;
 
@@ -66,6 +67,10 @@ export class Party {
 
     public get luckyPop(): LuckyPop | null {
         return this.game instanceof LuckyPop ? this.game : null;
+    }
+
+    public get crash(): Crash | null {
+        return this.game instanceof Crash ? this.game : null;
     }
 
     public pick(session: Session, game: string): void {
@@ -156,7 +161,11 @@ export class Party {
         this.phase = 'playing';
         this.gameId = game;
         const onRoundEnd = () => this.endRound();
-        this.game = game === 'blackjack' ? new BlackjackTable(this.channel, this.options, onRoundEnd) : new LuckyPop(this, onRoundEnd);
+        this.game = {
+            blackjack: () => new BlackjackTable(this.channel, this.options, onRoundEnd),
+            luckypop: () => new LuckyPop(this, onRoundEnd),
+            crash: () => new Crash(this, onRoundEnd),
+        }[game]();
         this.onGameCreated?.(this.game);
         this.game.start();
         this.broadcast();
@@ -173,7 +182,8 @@ export class Party {
         this.gameId = null;
         logFailure(game.destroy());
         // Clears the game from everyone's screen
-        this.channel.sessions.forEach((session) => session.send(game instanceof BlackjackTable ? 'casino-table' : 'lucky-pop', null));
+        const event = game instanceof BlackjackTable ? 'casino-table' : game instanceof LuckyPop ? 'lucky-pop' : 'crash';
+        this.channel.sessions.forEach((session) => session.send(event, null));
         // Nobody left to vote: straight back to the lobby, no timer running in an empty channel
         if (!this.channel.sessions.length) {
             this.lobby();
