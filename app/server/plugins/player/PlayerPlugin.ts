@@ -7,6 +7,7 @@ import { GlobalPlugin, PluginRoute } from '../GlobalPlugin.js';
 import { PollPlugin } from '../core/global/PollPlugin.js';
 import { SanitizedPlayerChannel } from './PlayerChannel.js';
 import { PlayerChannelManager } from './PlayerChannelManager.js';
+import { CasinoOptions } from './casino/BlackjackTable.js';
 import { GalleryFetcher } from './fetcher/GalleryFetcher.js';
 import { IFrameFetcher } from './fetcher/IFrameFetcher.js';
 import {
@@ -181,12 +182,14 @@ export class PlayerPlugin extends GlobalPlugin {
         this.channelManager = new PlayerChannelManager(this);
         this.channelManager.lastChannelId = this.storage.lastChannelId ?? 0;
         for (const channelData of this.storage.channels) {
-            // Channels saved before casinos existed have no kind
+            // Channels saved before games existed have no kind, and party channels were casinos holding only blackjack
+            const legacy = channelData as { kind?: string; casino?: CasinoOptions };
+            const limits = channelData.party ?? legacy.casino;
             const channel = this.channelManager.createChannel(
                 channelData.id,
                 channelData.name,
-                channelData.kind ?? 'media',
-                channelData.casino,
+                legacy.kind === 'casino' ? 'party' : channelData.kind ?? 'media',
+                limits && { minBet: limits.minBet, maxBet: limits.maxBet },
             );
             for (const event of channelData.schedule.events) {
                 channel.schedule(event.media, event.start, event.duration);
@@ -387,7 +390,7 @@ export class PlayerPlugin extends GlobalPlugin {
 
     /**
      * Manage channels (Only for OP):
-     * create media <name> | create casino <minBet> <maxBet> <name> | rename <id> <name> | delete <id> | reorder <id,id,…>
+     * create media <name> | create party <minBet> <maxBet> <name> | rename <id> <name> | delete <id> | reorder <id,id,…>
      * Bets are in cents, like user money.
      */
     private async handlePlayerChannelManage(param: string, connection: Connection) {
@@ -411,16 +414,16 @@ export class PlayerPlugin extends GlobalPlugin {
                     this.channelManager.createChannel(this.channelManager.getNextChannelId(), PlayerPlugin.channelName(args.join(' ')));
                     return;
                 }
-                if (kind === 'casino') {
+                if (kind === 'party') {
                     const [minBet, maxBet] = args.splice(0, 2).map(Number);
                     if (!Number.isInteger(minBet) || !Number.isInteger(maxBet) || minBet < 1 || maxBet < minBet || maxBet > 10_000_000) {
                         throw new Error('Bets need a positive minimum, and a maximum at least as high');
                     }
                     const name = PlayerPlugin.channelName(args.join(' '));
-                    this.channelManager.createChannel(this.channelManager.getNextChannelId(), name, 'casino', { minBet, maxBet });
+                    this.channelManager.createChannel(this.channelManager.getNextChannelId(), name, 'party', { minBet, maxBet });
                     return;
                 }
-                throw new Error('A channel is either media or casino');
+                throw new Error('A channel is either media or party');
             }
             case 'rename':
                 this.channelManager.renameChannel(channelFromArg().id, PlayerPlugin.channelName(args.slice(1).join(' ')));

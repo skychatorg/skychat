@@ -139,7 +139,7 @@ const play = (action) => client.sendMessage(`/casino ${action}`);
 
 <template>
     <div class="casino">
-        <div class="felt">
+        <div class="felt" :style="{ '--seats': Math.max(1, table.seats.length) }">
             <div class="top">
                 <span class="title">Blackjack</span>
                 <!-- Not a live region: the countdown would be read out every second -->
@@ -258,11 +258,12 @@ const play = (action) => client.sendMessage(`/casino ${action}`);
     background: linear-gradient(180deg, #7a4d2a, #4a2c17 55%, #2f1b0e);
 }
 .felt {
-    /* Two rows of hands (dealer and seats) plus the buttons always fit: about 270px of the height isn't cards */
-    --card-h: clamp(30px, min(15cqh, (100cqh - 270px) / 2), 150px);
+    /* Every seat on one row, however many sit: a second row would only show by scrolling */
+    --fit-w: calc((92cqw - (var(--seats) - 1) * 1.5cqw) / var(--seats));
+    /* Two rows of hands (dealer and seats) plus the buttons always fit: about 270px of the height isn't cards. And the cards stay small enough to read side by side in a hand that wide */
+    --card-h: clamp(30px, min(15cqh, (100cqh - 270px) / 2, (var(--fit-w) - 22px) / 1.8), 150px);
     --chip: clamp(34px, 8.5cqh, 64px);
-    /* Three seats side by side at least */
-    --hand-w: min(calc(var(--card-h) * 1.9 + 64px), 30cqw);
+    --hand-w: min(calc(var(--card-h) * 1.9 + 64px), 30cqw, var(--fit-w));
     position: relative;
     isolation: isolate;
     height: 100%;
@@ -652,7 +653,7 @@ button:active:not(:disabled) {
 /* Tall phones: three seats per row */
 @container (max-width: 480px) and (min-height: 181px) {
     .felt {
-        --hand-w: 30cqw;
+        --hand-w: min(30cqw, var(--fit-w));
     }
 }
 </style>

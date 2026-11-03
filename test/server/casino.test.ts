@@ -1,4 +1,5 @@
 import { beforeAll, describe, expect, it } from 'vitest';
+import { BlackjackTable } from '../../app/server/plugins/player/casino/BlackjackTable.js';
 import { PlayerChannel } from '../../app/server/plugins/player/PlayerChannel.js';
 import { PlayerPlugin } from '../../app/server/plugins/player/PlayerPlugin.js';
 import { hand } from './cards.js';
@@ -24,18 +25,25 @@ async function op() {
  */
 async function casino(players = 2) {
     const admin = await op();
-    await admin.send('/playerchannelmanage create casino 1000 10000 High rollers');
+    await admin.send('/playerchannelmanage create party 1000 10000 High rollers');
     const channel = player().channelManager.channels.at(-1) as PlayerChannel;
-    const table = channel.table!;
-    table.timings = { betMs: 80, dealBeatMs: 10, turnMs: 150, dealerStepMs: 5, resultsMs: 1000 };
+    const party = channel.party!;
+    // Long enough that no round ends in a test unless it says so
+    party.onGameCreated = (game) => {
+        if (game instanceof BlackjackTable) {
+            game.timings = { betMs: 80, dealBeatMs: 10, turnMs: 150, dealerStepMs: 5, resultsMs: 1000, idleMs: 60_000 };
+        }
+    };
     const clients = [];
     for (let i = 0; i < players; i++) {
         const client = await server.connect(name('gambler'));
         client.session.user.money = 20000;
         await client.send(`/playerchannel join ${channel.id}`);
-        client.clear();
         clients.push(client);
     }
+    await clients[0].send('/party pick blackjack');
+    clients.forEach((client) => client.clear());
+    const table = party.table!;
     return { admin, channel, table, clients };
 }
 
@@ -211,7 +219,7 @@ describe('casino table', () => {
         const { clients } = await casino(1);
         const [alice] = clients;
         await alice.send('/player skip');
-        expect(alice.errors()).toEqual(['This channel is a casino, it has no media']);
+        expect(alice.errors()).toEqual(['This channel is for games, it has no media']);
 
         const admin = await op();
         await admin.send('/playerchannelmanage create media Music');
@@ -219,7 +227,7 @@ describe('casino table', () => {
         await alice.send(`/playerchannel join ${media.id}`);
         alice.clear();
         await alice.send('/casino bet 2000');
-        expect(alice.errors()).toEqual(['Join a casino channel first']);
+        expect(alice.errors()).toEqual(['No blackjack table here']);
     });
 });
 
@@ -229,11 +237,11 @@ describe('managing channels', () => {
     it('creates, renames, reorders and deletes channels by id, and saves their kind', async () => {
         const admin = await op();
         await admin.send('/playerchannelmanage create media Movie night');
-        await admin.send('/playerchannelmanage create casino 500 5000 Back room');
+        await admin.send('/playerchannelmanage create party 500 5000 Back room');
         const [movie, backRoom] = player().channelManager.channels.slice(-2);
-        expect([movie.kind, backRoom.kind, backRoom.table?.options]).toEqual([
+        expect([movie.kind, backRoom.kind, backRoom.party?.options]).toEqual([
             'media',
-            'casino',
+            'party',
             { game: 'blackjack', minBet: 500, maxBet: 5000 },
         ]);
 
@@ -244,7 +252,7 @@ describe('managing channels', () => {
                 .slice(0, 2)
                 .map((c) => [c.name, c.kind]),
         ).toEqual([
-            ['Back room', 'casino'],
+            ['Back room', 'party'],
             ['Film club', 'media'],
         ]);
 
@@ -255,7 +263,7 @@ describe('managing channels', () => {
 
     it('rejects bad names and bet limits, and non-OPs', async () => {
         const admin = await op();
-        await admin.send('/playerchannelmanage create casino 5000 1000 Upside down');
+        await admin.send('/playerchannelmanage create party 5000 1000 Upside down');
         await admin.send('/playerchannelmanage create arcade Nope');
         await admin.send(`/playerchannelmanage create media ${'x'.repeat(40)}`);
         const user = await server.connect(name('user'));
@@ -263,7 +271,7 @@ describe('managing channels', () => {
 
         expect(admin.errors()).toEqual([
             'Bets need a positive minimum, and a maximum at least as high',
-            'A channel is either media or casino',
+            'A channel is either media or party',
             'Channel names are 1 to 32 characters',
         ]);
         expect(user.errors()).toEqual(['Command only for OP']);

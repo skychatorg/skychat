@@ -1,5 +1,5 @@
 <script setup>
-import CasinoTable from '@/components/casino/CasinoTable.vue';
+import PartyPanel from '@/components/party/PartyPanel.vue';
 import MediaPlayer from '@/components/player/MediaPlayer.vue';
 import PlayerSeekBar from '@/components/player/PlayerSeekBar.vue';
 import UserMiniAvatarCollection from '@/components/user/UserMiniAvatarCollection.vue';
@@ -9,6 +9,7 @@ import JellyfinTrackPicker from '@/components/player/impl/JellyfinTrackPicker.vu
 import SkyDropdown from '@/components/common/SkyDropdown.vue';
 import SkyDropdownItem from '@/components/common/SkyDropdownItem.vue';
 import { useJellyfinTracks } from '@/composables/useJellyfinTracks.js';
+import { useCountdown } from '@/composables/useCountdown';
 import { useNow } from '@/composables/useNow';
 import { isPausable } from '@/lib/player';
 import { computed } from 'vue';
@@ -16,8 +17,25 @@ import { computed } from 'vue';
 const app = useAppStore();
 const client = useClientStore();
 
-const isCasino = computed(() => Boolean(client.state.casino));
+const isParty = computed(() => Boolean(client.state.party));
 const showPlayer = computed(() => client.channelHasContent && app.playerMode.enabled);
+
+// How far the party's round has gone: games show their own turns, not when the round ends
+const { seconds: popSeconds } = useCountdown(() => client.state.luckyPop?.deadline);
+const { seconds: idleSeconds } = useCountdown(() => client.state.casino?.round?.idleEndsAt);
+const partyRound = computed(() => {
+    if (client.state.party?.phase !== 'playing') {
+        return null;
+    }
+    if (client.state.luckyPop) {
+        return `Round ends in ${popSeconds.value}s`;
+    }
+    const round = client.state.casino?.round;
+    if (!round) {
+        return null;
+    }
+    return round.idleEndsAt ? `Round ends in ${idleSeconds.value}s if nobody bets` : `Hand ${round.hand} of ${round.hands}`;
+});
 
 const cinema = computed(() => app.playerMode.size === 'cinema' && app.isDesktop);
 
@@ -38,7 +56,7 @@ const playerHeightCss = computed(() => {
     }[app.playerMode.size];
 });
 
-const currentTitle = computed(() => (isCasino.value ? client.currentChannel?.name : client.state.player.current?.video?.title) ?? '');
+const currentTitle = computed(() => (isParty.value ? client.currentChannel?.name : client.state.player.current?.video?.title) ?? '');
 // Jellyfin thumbnails are served through the authenticated proxy, so they need the per-viewer
 // stream token appended. Other video types expose absolute thumb URLs and pass through unchanged.
 const currentThumb = computed(() => {
@@ -84,7 +102,7 @@ const syncSelf = () => client.sendMessage('/playersync');
     <div class="strip-host group relative w-full flex flex-col" :class="cinema ? 'h-full min-h-0' : ''">
         <!-- Player content -->
         <div class="pannel-content relative w-full overflow-hidden bg-black" :class="cinema ? 'flex-1 min-h-0' : ''">
-            <CasinoTable v-if="showPlayer && isCasino" />
+            <PartyPanel v-if="showPlayer && isParty" />
             <MediaPlayer v-else-if="showPlayer" class="player w-full h-full" />
 
             <!-- Hidden but something is playing -->
@@ -97,7 +115,7 @@ const syncSelf = () => client.sendMessage('/playersync');
 
             <!-- Top overlay -->
             <div
-                v-if="showPlayer && !isCasino"
+                v-if="showPlayer && !isParty"
                 class="absolute top-0 left-0 right-0 p-3 flex items-start gap-3 z-10 pointer-events-none opacity-0 group-hover:opacity-100 transition"
                 :style="{ background: 'linear-gradient(to bottom, rgba(0,0,0,.55), transparent)' }"
             >
@@ -136,8 +154,13 @@ const syncSelf = () => client.sendMessage('/playersync');
                 </button>
             </div>
 
+            <!-- A party round's progress -->
+            <div v-if="showPlayer && partyRound" class="party-round font-mono text-sm text-white/70 truncate min-w-0">
+                {{ partyRound }}
+            </div>
+
             <!-- Transport (only while a media is shown) -->
-            <div v-if="showPlayer && !isCasino" class="strip-group hairline">
+            <div v-if="showPlayer && !isParty" class="strip-group hairline">
                 <button class="strip-btn" title="Replay 30s" @click="client.sendMessage('/player replay30')">
                     <fa icon="caret-left" />
                     <fa icon="caret-left" class="-ml-1" />
@@ -168,7 +191,7 @@ const syncSelf = () => client.sendMessage('/playersync');
             />
 
             <!-- Re-sync everyone -->
-            <div v-if="showPlayer && !isCasino" class="strip-group hairline ml-auto">
+            <div v-if="showPlayer && !isParty" class="strip-group hairline ml-auto">
                 <button
                     class="strip-btn"
                     :title="
@@ -188,7 +211,7 @@ const syncSelf = () => client.sendMessage('/playersync');
             <div
                 v-if="watchers.length > 0 && showPlayer"
                 class="flex items-center gap-1.5 px-2 py-1 rounded-md bg-primary/10 ring-1 ring-primary/30 text-primary text-sm"
-                :class="{ 'ml-auto': isCasino }"
+                :class="{ 'ml-auto': isParty }"
                 :title="`${watchers.length} watching`"
             >
                 <fa icon="circle-play" />
@@ -236,12 +259,12 @@ const syncSelf = () => client.sendMessage('/playersync');
                         </span>
                     </template>
                     <template #default>
-                        <SkyDropdownItem v-if="!isCasino" @click="app.toggleModal('youtubeVideoSearcher')">
+                        <SkyDropdownItem v-if="!isParty" @click="app.toggleModal('youtubeVideoSearcher')">
                             <fa icon="plus" class="w-4 mr-2" />
                             Add a video
                         </SkyDropdownItem>
                         <SkyDropdownItem
-                            v-if="!isCasino"
+                            v-if="!isParty"
                             :disabled="!client.state.player.queue.length"
                             @click="client.state.player.queue.length && app.toggleModal('playerQueue')"
                         >
@@ -254,7 +277,7 @@ const syncSelf = () => client.sendMessage('/playersync');
                                 {{ client.state.player.queue.length }}
                             </span>
                         </SkyDropdownItem>
-                        <SkyDropdownItem v-if="showPlayer && !isCasino" @click="syncSelf">
+                        <SkyDropdownItem v-if="showPlayer && !isParty" @click="syncSelf">
                             <fa icon="rotate" class="w-4 mr-2" />
                             Sync just me
                         </SkyDropdownItem>

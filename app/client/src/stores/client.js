@@ -80,9 +80,9 @@ export const useClientStore = defineStore('client', {
         currentChannel: (state) => state.state.playerChannels.find((channel) => channel.id === state.state.currentPlayerChannelId) ?? null,
 
         /**
-         * Whether the player panel has something to show: a media playing, or a casino table
+         * Whether the player panel has something to show: a media playing, or a party
          */
-        channelHasContent: (state) => Boolean(state.state.player.current || state.state.casino),
+        channelHasContent: (state) => Boolean(state.state.player.current || state.state.party),
     },
 
     actions: {

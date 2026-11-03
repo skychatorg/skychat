@@ -1,7 +1,7 @@
 <script setup>
 import SkyTooltip from '@/components/common/SkyTooltip.vue';
 import UserMiniAvatarCollection from '@/components/user/UserMiniAvatarCollection.vue';
-import { betLimits, channelIcon } from '@/lib/channel';
+import { channelIcon, PARTY_GAMES } from '@/lib/channel';
 import { useClientStore } from '@/stores/client';
 import { computed } from 'vue';
 
@@ -29,10 +29,9 @@ const currentOwner = computed(() => props.playerChannel.currentMedia?.owner ?? n
 
 // Activity state. `playing` from the server is true whenever a media is loaded (even paused),
 // so split it out: actively playing vs paused vs only-something-queued vs empty.
-const isCasino = computed(() => props.playerChannel.kind === 'casino');
-const seated = computed(() => props.playerChannel.casino?.seated ?? 0);
-// A casino is "live" while a hand is being played
-const isPlaying = computed(() => (isCasino.value ? seated.value > 0 : props.playerChannel.playing && !props.playerChannel.paused));
+const party = computed(() => props.playerChannel.party);
+// A party is "live" while a game is on
+const isPlaying = computed(() => (party.value ? Boolean(party.value.game) : props.playerChannel.playing && !props.playerChannel.paused));
 const isPaused = computed(() => Boolean(props.playerChannel.paused));
 const hasQueue = computed(() => (props.playerChannel.queueLength ?? 0) > 0);
 // "Something is going on here" — loaded media (playing or paused) or a non-empty queue.
@@ -50,8 +49,12 @@ const iconClass = computed(() => {
 });
 
 const statusText = computed(() => {
-    if (isCasino.value) {
-        return seated.value ? `${seated.value} playing` : betLimits(props.playerChannel.casino);
+    if (party.value) {
+        const { game, seated } = party.value;
+        if (!game) {
+            return 'lobby';
+        }
+        return PARTY_GAMES[game].name + (seated ? ` · ${seated} playing` : '');
     }
     if (isPlaying.value) {
         return 'live';

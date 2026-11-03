@@ -26,9 +26,9 @@ export class CasinoPlugin extends GlobalPlugin {
     async run(_alias: string, param: string, connection: Connection): Promise<void> {
         const table = (this.manager.getPlugin(PlayerPlugin.commandName) as PlayerPlugin).channelManager.getSessionChannel(
             connection.session,
-        )?.table;
+        )?.party?.table;
         if (!table) {
-            throw new Error('Join a casino channel first');
+            throw new Error('No blackjack table here');
         }
 
         const [action, amount] = param.split(' ');
