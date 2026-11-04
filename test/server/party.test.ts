@@ -5,6 +5,7 @@ import { BlackjackTable } from '../../app/server/plugins/player/casino/Blackjack
 import { PlayerChannel } from '../../app/server/plugins/player/PlayerChannel.js';
 import { PlayerPlugin } from '../../app/server/plugins/player/PlayerPlugin.js';
 import { BALLOONS, LuckyPop } from '../../app/server/plugins/player/party/LuckyPop.js';
+import { Crash } from '../../app/server/plugins/player/party/Crash.js';
 import { Party } from '../../app/server/plugins/player/party/Party.js';
 import { UserController } from '../../app/server/skychat/UserController.js';
 import { hand } from './cards.js';
@@ -52,8 +53,12 @@ async function partyChannel(players = 2, { idleMs = 100 } = {}) {
             game.timings = { betMs: 40, dealBeatMs: 5, turnMs: 60, dealerStepMs: 2, resultsMs: 20, idleMs };
             // Never a natural: every hand is played out
             game.shuffle = () => hand('10♠ 9♣ 6♠ 7♦ 10♥ 10♦ 10♣').reverse();
-        } else {
+        } else if (game instanceof LuckyPop) {
             game.timings = { roundMs: 400, cooldownMs: 60, butterfingersMs: 300, lastPopBeatMs: 20 };
+            game.random = scripted([]);
+        } else {
+            // ×2 every 100 ms
+            game.timings = { betMs: 80, beatMs: 10, doubleMs: 100, crashedMs: 40 };
             game.random = scripted([]);
         }
     };
@@ -417,5 +422,190 @@ describe('lucky pop', () => {
             ).toBe(100);
             expect(back, size).toBeGreaterThan(price);
         }
+    });
+});
+
+describe('crash', () => {
+    /** Crash points for the next flights: the roll that gives ×x is 1e6 - 0.99e6 / x */
+    const crashAt = (party: Party, ...multipliers: number[]) =>
+        (party.crash!.random = scripted(multipliers.map((x) => Math.ceil(1e6 - (0.99e6 * 100) / x))));
+    const phase = (party: Party, wanted: string) => until(() => party.crash?.sanitized().phase === wanted);
+
+    it('draws crash points where every target is worth 99% of the bet', () => {
+        const game = new Crash({} as Party, () => {});
+        game.random = scripted([0, 19802, 500000, 999999]);
+        expect([game.drawCrashPoint(), game.drawCrashPoint(), game.drawCrashPoint(), game.drawCrashPoint()]).toEqual([
+            100, 101, 198, 10000,
+        ]);
+
+        const real = new Crash({} as Party, () => {});
+        const draws = Array.from({ length: 40000 }, () => real.drawCrashPoint());
+        // Reaching ×1.01 is a 98% chance, ×2 is 49.5%, ×10 is 9.9%: 99% of the bet back whatever the target
+        expect(draws.filter((p) => p >= 101).length / draws.length).toBeCloseTo(0.98, 2);
+        expect(draws.filter((p) => p >= 200).length / draws.length).toBeCloseTo(0.495, 1);
+        expect(draws.filter((p) => p >= 1000).length / draws.length).toBeCloseTo(0.099, 1);
+    });
+
+    it('pays the multiplier at the moment you cash out, and nothing to those still in at the crash', async () => {
+        const { party, clients } = await partyChannel(2);
+        const [alice, bob] = clients;
+        await alice.send('/party pick crash');
+        crashAt(party, 400);
+
+        await alice.send('/party bet 2000');
+        await bob.send('/party bet 1000');
+        await phase(party, 'flying');
+        // About ×2 after 100 ms
+        await settle(70);
+        await alice.send('/party cashout');
+        await phase(party, 'crashed');
+
+        const [aliceBet, bobBet] = party.crash!.sanitized().bets;
+        expect(aliceBet.cashedAt).toBeGreaterThanOrEqual(150);
+        expect(aliceBet.cashedAt).toBeLessThan(400);
+        expect(aliceBet.payout).toBe(Math.floor((2000 * aliceBet.cashedAt!) / 100));
+        expect(alice.session.user.money).toBe(20000 - 2000 + aliceBet.payout!);
+        expect(bobBet).toMatchObject({ cashedAt: null, payout: 0 });
+        expect(bob.session.user.money).toBe(19000);
+        expect(party.crash!.sanitized()).toMatchObject({ crashedAt: 400, history: [400] });
+        await bob.send('/party cashout');
+        expect(bob.errors()).toEqual(['Nothing to cash out']);
+    });
+
+    it('refuses a cash-out that arrives once the multiplier has passed the crash point', async () => {
+        const { party, clients } = await partyChannel(1);
+        const [alice] = clients;
+        await alice.send('/party pick crash');
+        crashAt(party, 200);
+        await alice.send('/party bet 1000');
+        await phase(party, 'flying');
+
+        // ×2 is reached after 100 ms: the crash timer hasn't fired yet, the cash-out comes in just past it
+        vi.spyOn(Date, 'now').mockReturnValue(party.crash!.sanitized().startedAt! + 101);
+        await alice.send('/party cashout');
+
+        expect(alice.errors()).toEqual(['Too late, it crashed']);
+        expect(alice.session.user.money).toBe(19000);
+    });
+
+    it('refuses a cash-out below ×1.25, where winning is near certain', async () => {
+        const { party, clients } = await partyChannel(1);
+        const [alice] = clients;
+        await alice.send('/party pick crash');
+        crashAt(party, 10000);
+        await alice.send('/party bet 1000');
+        await phase(party, 'flying');
+
+        vi.spyOn(Date, 'now').mockReturnValue(party.crash!.sanitized().startedAt! + 30);
+        await alice.send('/party cashout');
+
+        expect(alice.errors()).toEqual(['Cash out opens at ×1.25']);
+        expect(party.crash!.sanitized().bets[0].cashedAt).toBeNull();
+    });
+
+    it('pays once when two cash-outs land together', async () => {
+        const { party, clients } = await partyChannel(1);
+        const [alice] = clients;
+        await alice.send('/party pick crash');
+        crashAt(party, 1000);
+        await alice.send('/party bet 1000');
+        await phase(party, 'flying');
+
+        // Past ×1.25, where cash-outs open
+        await settle(40);
+
+        const results = await Promise.allSettled([party.crash!.cashOut(alice.session), party.crash!.cashOut(alice.session)]);
+
+        expect(results.map((r) => r.status)).toEqual(['fulfilled', 'rejected']);
+        const { payout } = party.crash!.sanitized().bets[0];
+        expect(alice.session.user.money).toBe(19000 + payout!);
+    });
+
+    it('refuses guests, bets out of limits, a second bet, and bets during a flight', async () => {
+        const { party, clients } = await partyChannel(2);
+        const [alice, bob] = clients;
+        const guest = await server.connect(null);
+        await guest.send(`/playerchannel join ${party.channel.id}`);
+        await alice.send('/party pick crash');
+        party.crash!.timings.betMs = 60_000;
+        crashAt(party, 10000, 10000);
+        party.crash!['openBets']();
+
+        await guest.send('/party bet 1000');
+        await alice.send('/party bet 500');
+        await alice.send('/party bet 1000');
+        await alice.send('/party bet 1000');
+        party.crash!['takeOff']();
+        await bob.send('/party bet 1000');
+
+        expect(guest.errors()).toEqual(['Log in to play']);
+        expect(alice.errors()).toEqual(['Bets are between $10 and $100', 'You already bet on this flight']);
+        expect(bob.errors()).toEqual(['Wait for the next flight']);
+    });
+
+    it('takes off once every logged in player has bet, guests do not hold it', async () => {
+        const { party, clients } = await partyChannel(1);
+        const [alice] = clients;
+        const guest = await server.connect(null);
+        await guest.send(`/playerchannel join ${party.channel.id}`);
+        await alice.send('/party pick crash');
+        party.crash!.timings.betMs = 60_000;
+        crashAt(party, 10000, 10000);
+        party.crash!['openBets']();
+
+        await alice.send('/party bet 1000');
+        await phase(party, 'flying');
+        expect(guest.last('crash').phase).toBe('flying');
+    });
+
+    it('takes off as soon as everyone watching has bet, and refunds a bet taken back by leaving before take-off', async () => {
+        const { party, clients } = await partyChannel(2);
+        const [alice, bob] = clients;
+        await alice.send('/party pick crash');
+        party.crash!.timings.betMs = 60_000;
+        crashAt(party, 10000, 10000);
+        party.crash!['openBets']();
+
+        await alice.send('/party bet 3000');
+        await alice.send('/playerchannel leave');
+        expect(alice.session.user.money).toBe(20000);
+
+        await bob.send('/party bet 1000');
+        await phase(party, 'flying');
+        expect(party.crash!.sanitized().bets.map((b) => b.user.username)).toEqual([bob.session.user.username]);
+    });
+
+    it('ends the round when a betting window gets no bet, or after 5 flights', async () => {
+        const { party, clients } = await partyChannel(1);
+        const [alice] = clients;
+        await alice.send('/party pick crash');
+        await until(() => party.sanitized().phase === 'vote');
+        expect(alice.last('crash')).toBeNull();
+
+        await alice.send('/party vote crash');
+        await until(() => party.sanitized().game === 'crash');
+        crashAt(party, 101, 101, 101, 101, 101);
+        for (let i = 1; i <= Crash.FLIGHTS; i++) {
+            await until(() => party.crash?.sanitized().phase === 'betting' && party.crash.sanitized().flight === i);
+            await alice.send('/party bet 1000');
+            await until(() => party.crash?.sanitized().phase !== 'betting' || party.sanitized().phase !== 'playing');
+        }
+        await until(() => party.sanitized().phase === 'vote');
+        expect(party.sanitized().lastGame).toBe('crash');
+        expect(alice.session.user.money).toBe(20000 - 5 * 1000);
+    });
+
+    it('refunds the bets still riding when the channel is deleted mid-flight', async () => {
+        const { admin, party, clients } = await partyChannel(1);
+        const [alice] = clients;
+        await alice.send('/party pick crash');
+        crashAt(party, 10000);
+        await alice.send('/party bet 4000');
+        await phase(party, 'flying');
+
+        await admin.send(`/playerchannelmanage delete ${party.channel.id}`);
+        await settle(30);
+
+        expect(alice.session.user.money).toBe(20000);
     });
 });

@@ -3,7 +3,8 @@ import { GlobalPlugin } from '../GlobalPlugin.js';
 import { PlayerPlugin } from './PlayerPlugin.js';
 
 /**
- * Party channel actions: /party pick <game> in the lobby, /party vote <game> after a round, /party pop <balloon> at Lucky Pop
+ * Party channel actions: /party pick <game> in the lobby, /party vote <game> after a round, /party pop <balloon> at Lucky Pop,
+ * /party bet <cents> and /party cashout at Crash
  */
 export class PartyPlugin extends GlobalPlugin {
     static readonly commandName = 'party';
@@ -13,11 +14,11 @@ export class PartyPlugin extends GlobalPlugin {
 
     readonly rules = {
         party: {
-            minCount: 2,
+            minCount: 1,
             maxCount: 2,
             maxCallsPer10Seconds: 30,
             params: [
-                { name: 'action', pattern: /^(pick|vote|pop)$/ },
+                { name: 'action', pattern: /^(pick|vote|pop|bet|cashout)$/ },
                 { name: 'value', pattern: /^[a-z0-9]{1,20}$/ },
             ],
         },
@@ -43,6 +44,14 @@ export class PartyPlugin extends GlobalPlugin {
                     throw new Error('No balloons here');
                 }
                 return luckyPop.pop(connection.session, Number(value));
+            }
+            case 'bet':
+            case 'cashout': {
+                const crash = party.crash;
+                if (!crash) {
+                    throw new Error('No crash game here');
+                }
+                return action === 'bet' ? crash.bet(connection.session, Number(value)) : crash.cashOut(connection.session);
             }
         }
     }

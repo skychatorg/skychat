@@ -1,5 +1,6 @@
 <script setup>
 import CasinoTable from '@/components/casino/CasinoTable.vue';
+import CrashGame from '@/components/party/CrashGame.vue';
 import LuckyPop from '@/components/party/LuckyPop.vue';
 import { useCountdown } from '@/composables/useCountdown';
 import { betLimits, PARTY_GAMES } from '@/lib/channel';
@@ -12,7 +13,12 @@ const party = computed(() => client.state.party);
 const isGuest = computed(() => !client.state.user.id);
 const limits = computed(() => client.currentChannel?.party);
 
-const meta = (game) => (game === 'blackjack' ? (limits.value ? `bets ${betLimits(limits.value)}` : '') : '$1 to $20 a balloon');
+const meta = (game) =>
+    ({
+        blackjack: limits.value && `bets ${betLimits(limits.value)}`,
+        crash: limits.value && `bets ${betLimits(limits.value)} · up to ×100`,
+        luckypop: '$1 to $20 a balloon',
+    })[game] ?? '';
 
 const lobbyGames = computed(() => Object.entries(PARTY_GAMES).map(([id, game]) => ({ id, ...game, meta: meta(id) })));
 const pick = (game) => client.sendMessage(`/party pick ${game}`);
@@ -43,6 +49,7 @@ const vote = (game) => client.sendMessage(`/party vote ${game}`);
         <template v-if="party.phase === 'playing'">
             <CasinoTable v-if="party.game === 'blackjack' && client.state.casino" />
             <LuckyPop v-else-if="party.game === 'luckypop' && client.state.luckyPop" />
+            <CrashGame v-else-if="party.game === 'crash' && client.state.crash" />
         </template>
 
         <section v-else-if="party.phase === 'vote'" class="screen" aria-labelledby="party-vote-title">
@@ -151,7 +158,7 @@ const vote = (game) => client.sendMessage(`/party vote ${game}`);
 }
 .games {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
     gap: clamp(6px, 2cqw, 16px);
 }
 .game {
@@ -223,14 +230,31 @@ const vote = (game) => client.sendMessage(`/party vote ${game}`);
     .bar {
         display: none;
     }
+    .name {
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
     .games {
         flex: 1;
         min-width: 0;
+        /* Every game on the one row */
+        grid-template-columns: none;
+        grid-auto-flow: column;
+        grid-auto-columns: minmax(0, 1fr);
     }
     .game {
         justify-content: center;
         padding: 6px 10px;
         border-radius: 10px;
+    }
+}
+/* Short and narrow: names only, the lead goes */
+@container (max-height: 200px) and (max-width: 520px) {
+    .sub,
+    .lead {
+        display: none;
     }
 }
 /* Narrow: the cards stack */
