@@ -472,29 +472,6 @@ describe('crash', () => {
         expect(bob.errors()).toEqual(['Nothing to cash out']);
     });
 
-    it('cashes out on its own at the auto target, only if the flight gets past it', async () => {
-        const { party, clients } = await partyChannel(3);
-        const [alice, bob, carol] = clients;
-        await alice.send('/party pick crash');
-        // Takes off once all three bet
-        party.crash!.timings.betMs = 60_000;
-        crashAt(party, 300);
-        party.crash!['openBets']();
-
-        await alice.send('/party bet 1000 150');
-        await bob.send('/party bet 1000 500');
-        // Right at the crash point is too late
-        await carol.send('/party bet 1000 300');
-        await phase(party, 'crashed');
-
-        expect(party.crash!.sanitized().bets.map((b) => [b.cashedAt, b.payout])).toEqual([
-            [150, 1500],
-            [null, 0],
-            [null, 0],
-        ]);
-        expect([alice.session.user.money, bob.session.user.money, carol.session.user.money]).toEqual([20500, 19000, 19000]);
-    });
-
     it('refuses a cash-out that arrives once the multiplier has passed the crash point', async () => {
         const { party, clients } = await partyChannel(1);
         const [alice] = clients;
@@ -511,7 +488,22 @@ describe('crash', () => {
         expect(alice.session.user.money).toBe(19000);
     });
 
-    it('pays once when a click and an auto cash-out land together', async () => {
+    it('refuses a cash-out below ×1.25, where winning is near certain', async () => {
+        const { party, clients } = await partyChannel(1);
+        const [alice] = clients;
+        await alice.send('/party pick crash');
+        crashAt(party, 10000);
+        await alice.send('/party bet 1000');
+        await phase(party, 'flying');
+
+        vi.spyOn(Date, 'now').mockReturnValue(party.crash!.sanitized().startedAt! + 30);
+        await alice.send('/party cashout');
+
+        expect(alice.errors()).toEqual(['Cash out opens at ×1.25']);
+        expect(party.crash!.sanitized().bets[0].cashedAt).toBeNull();
+    });
+
+    it('pays once when two cash-outs land together', async () => {
         const { party, clients } = await partyChannel(1);
         const [alice] = clients;
         await alice.send('/party pick crash');
@@ -519,17 +511,17 @@ describe('crash', () => {
         await alice.send('/party bet 1000');
         await phase(party, 'flying');
 
-        const seat = party.crash!['bets'][0];
+        // Past ×1.25, where cash-outs open
+        await settle(40);
 
-        await Promise.all([party.crash!.cashOut(alice.session), party.crash!['pay'](seat, 150)]);
-        await alice.send('/party cashout');
+        const results = await Promise.allSettled([party.crash!.cashOut(alice.session), party.crash!.cashOut(alice.session)]);
 
-        expect(alice.errors()).toEqual(['You already cashed out']);
+        expect(results.map((r) => r.status)).toEqual(['fulfilled', 'rejected']);
         const { payout } = party.crash!.sanitized().bets[0];
         expect(alice.session.user.money).toBe(19000 + payout!);
     });
 
-    it('refuses guests, bets out of limits, bad auto targets, a second bet, and bets during a flight', async () => {
+    it('refuses guests, bets out of limits, a second bet, and bets during a flight', async () => {
         const { party, clients } = await partyChannel(2);
         const [alice, bob] = clients;
         const guest = await server.connect(null);
@@ -541,18 +533,13 @@ describe('crash', () => {
 
         await guest.send('/party bet 1000');
         await alice.send('/party bet 500');
-        await alice.send('/party bet 1000 100');
         await alice.send('/party bet 1000');
         await alice.send('/party bet 1000');
         party.crash!['takeOff']();
         await bob.send('/party bet 1000');
 
         expect(guest.errors()).toEqual(['Log in to play']);
-        expect(alice.errors()).toEqual([
-            'Bets are between $10 and $100',
-            'Auto cash-out is between ×1.01 and ×100',
-            'You already bet on this flight',
-        ]);
+        expect(alice.errors()).toEqual(['Bets are between $10 and $100', 'You already bet on this flight']);
         expect(bob.errors()).toEqual(['Wait for the next flight']);
     });
 

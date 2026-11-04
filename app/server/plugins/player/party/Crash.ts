@@ -14,7 +14,7 @@ import type { Party } from './Party.js';
  */
 export type CrashPhase = 'betting' | 'flying' | 'crashed';
 
-type Bet = { session: Session; bet: number; auto: number | null; cashedAt: number | null; payout: number | null };
+type Bet = { session: Session; bet: number; cashedAt: number | null; payout: number | null };
 
 export type SanitizedCrash = {
     channelId: number;
@@ -33,7 +33,9 @@ export type SanitizedCrash = {
     crashedAt: number | null;
     minBet: number;
     maxBet: number;
-    bets: { user: SanitizedUser; bet: number; auto: number | null; cashedAt: number | null; payout: number | null }[];
+    bets: { user: SanitizedUser; bet: number; cashedAt: number | null; payout: number | null }[];
+    /** In hundredths, cash-outs below it are refused */
+    minCashOut: number;
     /** The last crash points, newest first, in hundredths */
     history: number[];
 };
@@ -49,6 +51,9 @@ export class Crash {
     static readonly HOUSE_EDGE = 0.01;
 
     static readonly MAX_MULTIPLIER = 10000;
+
+    /** Below this a cash-out wins nearly every flight, and the game turns into free money */
+    static readonly MIN_CASHOUT = 125;
 
     /** Instance values, so tests can shorten them */
     public timings = { betMs: 12_000, beatMs: 1000, doubleMs: 8000, crashedMs: 4000 };
@@ -100,7 +105,7 @@ export class Crash {
         return Math.floor(100 * 2 ** (elapsedMs / this.timings.doubleMs));
     }
 
-    public async bet(session: Session, amount: number, auto: number | null): Promise<void> {
+    public async bet(session: Session, amount: number): Promise<void> {
         if (session.user.isGuest()) {
             throw new Error('Log in to play');
         }
@@ -111,9 +116,6 @@ export class Crash {
         if (!Number.isInteger(amount) || amount < minBet || amount > maxBet) {
             throw new Error(`Bets are between ${formatMoney(minBet)} and ${formatMoney(maxBet)}`);
         }
-        if (auto !== null && (!Number.isInteger(auto) || auto < 101 || auto > Crash.MAX_MULTIPLIER)) {
-            throw new Error('Auto cash-out is between ×1.01 and ×100');
-        }
         if (this.bets.some((b) => b.session === session)) {
             throw new Error('You already bet on this flight');
         }
@@ -121,7 +123,7 @@ export class Crash {
             throw new Error('Not enough money for this bet');
         }
         // Seated before paying: a second bet in the same instant must not go through
-        const seat: Bet = { session, bet: amount, auto, cashedAt: null, payout: null };
+        const seat: Bet = { session, bet: amount, cashedAt: null, payout: null };
         this.bets.push(seat);
         try {
             await UserController.buy(session.user, amount, 'Crash bet');
@@ -146,11 +148,18 @@ export class Crash {
         if (multiplier >= this.crashPoint) {
             throw new Error('Too late, it crashed');
         }
-        await this.pay(seat, multiplier);
+        if (multiplier < Crash.MIN_CASHOUT) {
+            throw new Error('Cash out opens at ×1.25');
+        }
+        // Marked before paying: a second click in the same instant pays once
+        seat.cashedAt = multiplier;
+        seat.payout = Math.floor((seat.bet * multiplier) / 100);
+        this.broadcast();
+        await UserController.giveMoney(session.user, seat.payout, 'Crash win');
     }
 
     public async onSessionLeft(session: Session): Promise<void> {
-        // Before take-off the bet comes back. In flight it rides on, with its auto cash-out if it has one
+        // Before take-off the bet comes back. In flight it rides on
         const seat = this.bets.find((b) => b.session === session);
         if (seat && this.phase === 'betting') {
             this.bets.splice(this.bets.indexOf(seat), 1);
@@ -191,10 +200,10 @@ export class Crash {
             crashedAt: this.crashedAt,
             minBet: this.party.options.minBet,
             maxBet: this.party.options.maxBet,
-            bets: this.bets.map(({ session, bet, auto, cashedAt, payout }) => ({
+            minCashOut: Crash.MIN_CASHOUT,
+            bets: this.bets.map(({ session, bet, cashedAt, payout }) => ({
                 user: session.user.sanitized(),
                 bet,
-                auto,
                 cashedAt,
                 payout,
             })),
@@ -223,25 +232,8 @@ export class Crash {
         this.deadline = null;
         this.crashPoint = this.drawCrashPoint();
         this.startedAt = Date.now();
-        const timeTo = (multiplier: number) => Math.ceil(Math.log2(multiplier / 100) * this.timings.doubleMs);
-        for (const seat of this.bets) {
-            if (seat.auto !== null && seat.auto < this.crashPoint) {
-                this.timers.push(setTimeout(() => logFailure(this.pay(seat, seat.auto as number)), timeTo(seat.auto)));
-            }
-        }
-        this.timers.push(setTimeout(() => this.crash(), timeTo(this.crashPoint)));
+        this.timers.push(setTimeout(() => this.crash(), Math.ceil(Math.log2(this.crashPoint / 100) * this.timings.doubleMs)));
         this.broadcast();
-    }
-
-    private async pay(seat: Bet, multiplier: number): Promise<void> {
-        if (seat.cashedAt !== null || this.phase !== 'flying') {
-            return;
-        }
-        // Marked before paying: a click and an auto cash-out in the same instant pay once
-        seat.cashedAt = multiplier;
-        seat.payout = Math.floor((seat.bet * multiplier) / 100);
-        this.broadcast();
-        await UserController.giveMoney(seat.session.user, seat.payout, 'Crash win');
     }
 
     private crash(): void {

@@ -6,9 +6,6 @@ import { useClientStore } from '@/stores/client';
 import { formatMoney } from '../../../../api/money.ts';
 import { computed, onUnmounted, ref, watch } from 'vue';
 
-// Auto cash-out targets, in hundredths like the server
-const AUTOS = [null, 150, 200, 300, 500, 1000];
-
 const app = useAppStore();
 const client = useClientStore();
 
@@ -84,9 +81,8 @@ const choices = computed(() => {
     const { minBet, maxBet } = game.value;
     return [...new Set([minBet, minBet * 2, minBet * 5, maxBet].map((bet) => Math.min(bet, maxBet)))].sort((a, b) => a - b);
 });
-const auto = ref(null);
 const canBet = computed(() => me.value.id && game.value.phase === 'betting' && !myBet.value);
-const bet = (amount) => client.sendMessage(`/party bet ${amount}${auto.value ? ' ' + auto.value : ''}`);
+const bet = (amount) => client.sendMessage(`/party bet ${amount}`);
 const cashOut = () => client.sendMessage('/party cashout');
 const cashable = computed(() => game.value.phase === 'flying' && myBet.value && myBet.value.cashedAt === null);
 
@@ -104,7 +100,7 @@ const hint = computed(() => {
     if (game.value.phase === 'crashed') {
         return `Lost ${formatMoney(mine.bet)}`;
     }
-    return `Your bet ${formatMoney(mine.bet)}${mine.auto ? ` · auto ${times(mine.auto)}` : ''}`;
+    return `Your bet ${formatMoney(mine.bet)}`;
 });
 
 const tone = (hundredths) => (hundredths >= 1000 ? 'gold' : hundredths >= 200 ? 'good' : 'bad');
@@ -164,8 +160,10 @@ watch(
 
                 <div class="side">
                     <div class="controls">
-                        <button v-if="cashable" class="cashout" @click="cashOut">
-                            Cash out {{ formatMoney(Math.floor((myBet.bet * multiplier) / 100)) }}
+                        <button v-if="cashable" class="cashout" :disabled="multiplier < game.minCashOut" @click="cashOut">
+                            <template v-if="multiplier < game.minCashOut">Opens at {{ times(game.minCashOut) }}</template>
+                            <!-- Always two decimals with tabular digits, so the label keeps its width while it climbs -->
+                            <template v-else>Cash out ${{ (Math.floor((myBet.bet * multiplier) / 100) / 100).toFixed(2) }}</template>
                         </button>
                         <template v-else-if="canBet">
                             <div class="chips" role="group" aria-label="Bet">
@@ -179,14 +177,6 @@ watch(
                                     {{ formatMoney(choice) }}
                                 </button>
                             </div>
-                            <label class="auto">
-                                Auto cash-out
-                                <select v-model="auto">
-                                    <option v-for="target in AUTOS" :key="target ?? 'off'" :value="target">
-                                        {{ target ? times(target) : 'off' }}
-                                    </option>
-                                </select>
-                            </label>
                         </template>
                         <p v-if="hint" class="hint">{{ hint }}</p>
                     </div>
@@ -196,7 +186,7 @@ watch(
                             <span class="amount">{{ formatMoney(entry.bet) }}</span>
                             <span v-if="entry.cashedAt" class="good">{{ times(entry.cashedAt) }} +{{ formatMoney(entry.payout) }}</span>
                             <span v-else-if="game.phase === 'crashed'" class="bad">lost</span>
-                            <span v-else class="muted">{{ entry.auto ? `auto ${times(entry.auto)}` : 'riding' }}</span>
+                            <span v-else class="muted">riding</span>
                         </li>
                         <li v-if="!game.bets.length" class="muted">No bets yet</li>
                     </ol>
@@ -373,28 +363,19 @@ watch(
 .cashout {
     min-height: 52px;
     font-size: 17px;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
     color: #111;
     background: #7bd88f;
     box-shadow: 0 0 18px rgb(123 216 143 / 0.45);
 }
-.cashout:hover {
+.cashout:disabled {
+    opacity: 0.5;
+    box-shadow: none;
+    cursor: not-allowed;
+}
+.cashout:hover:not(:disabled) {
     background: #96e6a6;
-}
-.auto {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    font-size: 13px;
-    color: rgb(255 255 255 / 0.7);
-}
-.auto select {
-    min-height: 32px;
-    padding: 0 6px;
-    border-radius: 8px;
-    background: #1d1d26;
-    border: 1px solid rgb(255 255 255 / 0.18);
-    color: #f4f4ff;
 }
 .hint {
     margin: 0;
@@ -435,7 +416,6 @@ watch(
 @container (max-height: 220px) {
     .history,
     .bets,
-    .auto,
     .mute {
         display: none;
     }
