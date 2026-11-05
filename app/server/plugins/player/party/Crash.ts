@@ -34,8 +34,6 @@ export type SanitizedCrash = {
     minBet: number;
     maxBet: number;
     bets: { user: SanitizedUser; bet: number; cashedAt: number | null; payout: number | null }[];
-    /** In hundredths, cash-outs below it are refused */
-    minCashOut: number;
     /** The last crash points, newest first, in hundredths */
     history: number[];
 };
@@ -51,9 +49,6 @@ export class Crash {
     static readonly HOUSE_EDGE = 0.01;
 
     static readonly MAX_MULTIPLIER = 10000;
-
-    /** Below this a cash-out wins nearly every flight, and the game turns into free money */
-    static readonly MIN_CASHOUT = 125;
 
     /** Instance values, so tests can shorten them */
     public timings = { betMs: 12_000, beatMs: 1000, doubleMs: 8000, crashedMs: 4000 };
@@ -148,9 +143,6 @@ export class Crash {
         if (multiplier >= this.crashPoint) {
             throw new Error('Too late, it crashed');
         }
-        if (multiplier < Crash.MIN_CASHOUT) {
-            throw new Error('Cash out opens at ×1.25');
-        }
         // Marked before paying: a second click in the same instant pays once
         seat.cashedAt = multiplier;
         seat.payout = Math.floor((seat.bet * multiplier) / 100);
@@ -200,7 +192,6 @@ export class Crash {
             crashedAt: this.crashedAt,
             minBet: this.party.options.minBet,
             maxBet: this.party.options.maxBet,
-            minCashOut: Crash.MIN_CASHOUT,
             bets: this.bets.map(({ session, bet, cashedAt, payout }) => ({
                 user: session.user.sanitized(),
                 bet,

@@ -488,21 +488,6 @@ describe('crash', () => {
         expect(alice.session.user.money).toBe(19000);
     });
 
-    it('refuses a cash-out below ×1.25, where winning is near certain', async () => {
-        const { party, clients } = await partyChannel(1);
-        const [alice] = clients;
-        await alice.send('/party pick crash');
-        crashAt(party, 10000);
-        await alice.send('/party bet 1000');
-        await phase(party, 'flying');
-
-        vi.spyOn(Date, 'now').mockReturnValue(party.crash!.sanitized().startedAt! + 30);
-        await alice.send('/party cashout');
-
-        expect(alice.errors()).toEqual(['Cash out opens at ×1.25']);
-        expect(party.crash!.sanitized().bets[0].cashedAt).toBeNull();
-    });
-
     it('pays once when two cash-outs land together', async () => {
         const { party, clients } = await partyChannel(1);
         const [alice] = clients;
@@ -510,9 +495,6 @@ describe('crash', () => {
         crashAt(party, 1000);
         await alice.send('/party bet 1000');
         await phase(party, 'flying');
-
-        // Past ×1.25, where cash-outs open
-        await settle(40);
 
         const results = await Promise.allSettled([party.crash!.cashOut(alice.session), party.crash!.cashOut(alice.session)]);
 

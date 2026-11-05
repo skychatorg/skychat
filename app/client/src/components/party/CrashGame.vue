@@ -160,10 +160,9 @@ watch(
 
                 <div class="side">
                     <div class="controls">
-                        <button v-if="cashable" class="cashout" :disabled="multiplier < game.minCashOut" @click="cashOut">
-                            <template v-if="multiplier < game.minCashOut">Opens at {{ times(game.minCashOut) }}</template>
+                        <button v-if="cashable" class="cashout" @click="cashOut">
                             <!-- Always two decimals with tabular digits, so the label keeps its width while it climbs -->
-                            <template v-else>Cash out ${{ (Math.floor((myBet.bet * multiplier) / 100) / 100).toFixed(2) }}</template>
+                            Cash out ${{ (Math.floor((myBet.bet * multiplier) / 100) / 100).toFixed(2) }}
                         </button>
                         <template v-else-if="canBet">
                             <div class="chips" role="group" aria-label="Bet">
@@ -369,12 +368,7 @@ watch(
     background: #7bd88f;
     box-shadow: 0 0 18px rgb(123 216 143 / 0.45);
 }
-.cashout:disabled {
-    opacity: 0.5;
-    box-shadow: none;
-    cursor: not-allowed;
-}
-.cashout:hover:not(:disabled) {
+.cashout:hover {
     background: #96e6a6;
 }
 .hint {

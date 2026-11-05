@@ -24,9 +24,9 @@ export const BALLOONS: { [size in BalloonSize]: { price: number; prizes: Prize[]
     xs: {
         price: 100,
         prizes: [
-            { chance: 50, kind: 'money', amount: 150 },
+            { chance: 55, kind: 'money', amount: 150 },
             { chance: 15, kind: 'money', amount: 300 },
-            { chance: 15, kind: 'empty', amount: 0 },
+            { chance: 10, kind: 'empty', amount: 0 },
             { chance: 20, kind: 'malus', amount: 0 },
         ],
         maluses: ['wizz', 'scramble', 'butterfingers'],
@@ -34,7 +34,7 @@ export const BALLOONS: { [size in BalloonSize]: { price: number; prizes: Prize[]
     md: {
         price: 500,
         prizes: [
-            { chance: 40, kind: 'money', amount: 800 },
+            { chance: 40, kind: 'money', amount: 900 },
             { chance: 12, kind: 'money', amount: 2000 },
             { chance: 18, kind: 'empty', amount: 0 },
             { chance: 30, kind: 'malus', amount: 0 },
@@ -44,7 +44,7 @@ export const BALLOONS: { [size in BalloonSize]: { price: number; prizes: Prize[]
     lg: {
         price: 2000,
         prizes: [
-            { chance: 30, kind: 'money', amount: 4000 },
+            { chance: 30, kind: 'money', amount: 4500 },
             { chance: 8, kind: 'money', amount: 12000 },
             { chance: 22, kind: 'empty', amount: 0 },
             { chance: 30, kind: 'malus', amount: 0 },
