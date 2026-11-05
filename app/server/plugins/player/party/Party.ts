@@ -3,11 +3,17 @@ import { Session } from '../../../skychat/Session.js';
 import { BlackjackTable, CasinoOptions, logFailure } from '../casino/BlackjackTable.js';
 import type { PlayerChannel } from '../PlayerChannel.js';
 import { Crash } from './Crash.js';
+import { DailyRoll } from './DailyRoll.js';
 import { LuckyPop } from './LuckyPop.js';
 
-export const PARTY_GAMES = { blackjack: 'Blackjack', luckypop: 'Lucky Pop', crash: 'Crash' } as const;
+export const PARTY_GAMES = { blackjack: 'Blackjack', luckypop: 'Lucky Pop', crash: 'Crash', dailyroll: 'Daily Roll' } as const;
 
 export type PartyGameId = keyof typeof PARTY_GAMES;
+
+type PartyGame = BlackjackTable | LuckyPop | Crash | DailyRoll;
+
+/** What each game sends its state as, null clears it */
+const GAME_EVENTS = { blackjack: 'casino-table', luckypop: 'lucky-pop', crash: 'crash', dailyroll: 'daily-roll' } as const;
 
 /**
  * - lobby: no game, the first pick starts one
@@ -26,6 +32,8 @@ export type SanitizedParty = {
     deadline: number | null;
     /** Usernames that voted, by game */
     votes: { [game: string]: string[] };
+    /** Wall-clock ms at which Daily Roll can be played again, 0 when it can */
+    dailyRollAt: number;
 };
 
 /**
@@ -36,10 +44,10 @@ export class Party {
     /** Instance values, so tests can shorten them */
     public timings = { voteMs: 10_000, stormEveryMs: 6000 };
 
-    public game: BlackjackTable | LuckyPop | Crash | null = null;
+    public game: PartyGame | null = null;
 
     /** For tests: shorten a new game's timers or fix its luck before it starts */
-    public onGameCreated?: (game: BlackjackTable | LuckyPop | Crash) => void;
+    public onGameCreated?: (game: PartyGame) => void;
 
     private gameId: PartyGameId | null = null;
 
@@ -48,6 +56,9 @@ export class Party {
     private lastGame: PartyGameId | null = null;
 
     private deadline: number | null = null;
+
+    /** Locks the whole channel, in memory: a restart unlocks it */
+    private dailyRollAt = 0;
 
     private timer: ReturnType<typeof setTimeout> | null = null;
 
@@ -73,6 +84,10 @@ export class Party {
         return this.game instanceof Crash ? this.game : null;
     }
 
+    public get dailyRoll(): DailyRoll | null {
+        return this.game instanceof DailyRoll ? this.game : null;
+    }
+
     public pick(session: Session, game: string): void {
         if (session.user.isGuest()) {
             throw new Error('Log in to start a game');
@@ -80,7 +95,7 @@ export class Party {
         if (this.phase !== 'lobby') {
             throw new Error('A game is already on');
         }
-        this.start(Party.gameId(game));
+        this.start(this.playable(game));
     }
 
     public vote(session: Session, game: string): void {
@@ -90,7 +105,7 @@ export class Party {
         if (this.phase !== 'vote') {
             throw new Error('There is no vote right now');
         }
-        this.votes.set(session, Party.gameId(game));
+        this.votes.set(session, this.playable(game));
         this.broadcast();
     }
 
@@ -146,12 +161,16 @@ export class Party {
             lastGame: this.lastGame,
             deadline: this.deadline,
             votes,
+            dailyRollAt: this.dailyRollAt > Date.now() ? this.dailyRollAt : 0,
         };
     }
 
-    private static gameId(game: string): PartyGameId {
+    private playable(game: string): PartyGameId {
         if (!(game in PARTY_GAMES)) {
             throw new Error('Unknown game');
+        }
+        if (game === 'dailyroll' && this.dailyRollAt > Date.now()) {
+            throw new Error('Daily Roll is back at 10 PM');
         }
         return game as PartyGameId;
     }
@@ -165,7 +184,11 @@ export class Party {
             blackjack: () => new BlackjackTable(this.channel, this.options, onRoundEnd),
             luckypop: () => new LuckyPop(this, onRoundEnd),
             crash: () => new Crash(this, onRoundEnd),
+            dailyroll: () => new DailyRoll(this, onRoundEnd),
         }[game]();
+        if (game === 'dailyroll') {
+            this.dailyRollAt = DailyRoll.nextReset(Date.now());
+        }
         this.onGameCreated?.(this.game);
         this.game.start();
         this.broadcast();
@@ -177,12 +200,12 @@ export class Party {
         if (!game) {
             return;
         }
+        const event = GAME_EVENTS[this.gameId!];
         this.lastGame = this.gameId;
         this.game = null;
         this.gameId = null;
         logFailure(game.destroy());
         // Clears the game from everyone's screen
-        const event = game instanceof BlackjackTable ? 'casino-table' : game instanceof LuckyPop ? 'lucky-pop' : 'crash';
         this.channel.sessions.forEach((session) => session.send(event, null));
         // Nobody left to vote: straight back to the lobby, no timer running in an empty channel
         if (!this.channel.sessions.length) {

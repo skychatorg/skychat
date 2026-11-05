@@ -14,6 +14,7 @@ import {
     SanitizedBlackjackTable,
     SanitizedLuckyPop,
     SanitizedCrash,
+    SanitizedDailyRoll,
     SanitizedParty,
     SanitizedMessage,
     SanitizedPlayerChannel,
@@ -108,6 +109,8 @@ export type SkyChatClientState = {
     luckyPop: SanitizedLuckyPop | null;
     /** The Crash flight of your party channel, null when another game is on */
     crash: SanitizedCrash | null;
+    /** The Daily Roll board of your party channel, null when another game is on */
+    dailyRoll: SanitizedDailyRoll | null;
     voiceChannels: SanitizedVoiceChannel[];
     currentVoiceChannelId: number | null;
     voiceChannelUsers: { [channelId: number]: Array<SanitizedUser> };
@@ -159,6 +162,7 @@ export declare interface SkyChatClient {
     on(event: 'party', listener: (party: SanitizedParty | null) => any): this;
     on(event: 'lucky-pop', listener: (luckyPop: SanitizedLuckyPop | null) => any): this;
     on(event: 'crash', listener: (crash: SanitizedCrash | null) => any): this;
+    on(event: 'daily-roll', listener: (dailyRoll: SanitizedDailyRoll | null) => any): this;
 
     on(event: 'voice-channels', listener: (voiceChannels: Array<SanitizedVoiceChannel>) => any): this;
     on(event: 'voice-channel', listener: (channelId: number | null) => any): this;
@@ -266,6 +270,8 @@ export class SkyChatClient extends EventEmitter {
 
     private _crash: SanitizedCrash | null = null;
 
+    private _dailyRoll: SanitizedDailyRoll | null = null;
+
     // Connection resilience properties
     private _reconnectAttempts: number = 0;
     private _reconnectTimer: ReturnType<typeof setTimeout> | null = null;
@@ -351,6 +357,10 @@ export class SkyChatClient extends EventEmitter {
         });
         this.on('crash', (crash) => {
             this._crash = crash;
+            this.emit('update', this.state);
+        });
+        this.on('daily-roll', (dailyRoll) => {
+            this._dailyRoll = dailyRoll;
             this.emit('update', this.state);
         });
 
@@ -852,6 +862,7 @@ export class SkyChatClient extends EventEmitter {
             party: this._party,
             luckyPop: this._luckyPop,
             crash: this._crash,
+            dailyRoll: this._dailyRoll,
             voiceChannels: this._voiceChannels,
             currentVoiceChannelId: this._currentVoiceChannelId,
             voiceChannelUsers: this._voiceChannelUsers,

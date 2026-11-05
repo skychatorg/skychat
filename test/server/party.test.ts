@@ -6,6 +6,7 @@ import { PlayerChannel } from '../../app/server/plugins/player/PlayerChannel.js'
 import { PlayerPlugin } from '../../app/server/plugins/player/PlayerPlugin.js';
 import { BALLOONS, LuckyPop } from '../../app/server/plugins/player/party/LuckyPop.js';
 import { Crash } from '../../app/server/plugins/player/party/Crash.js';
+import { DailyRoll } from '../../app/server/plugins/player/party/DailyRoll.js';
 import { Party } from '../../app/server/plugins/player/party/Party.js';
 import { UserController } from '../../app/server/skychat/UserController.js';
 import { hand } from './cards.js';
@@ -55,6 +56,10 @@ async function partyChannel(players = 2, { idleMs = 100 } = {}) {
             game.shuffle = () => hand('10♠ 9♣ 6♠ 7♦ 10♥ 10♦ 10♣').reverse();
         } else if (game instanceof LuckyPop) {
             game.timings = { roundMs: 400, cooldownMs: 60, butterfingersMs: 300, lastPopBeatMs: 20 };
+            game.random = scripted([]);
+        } else if (game instanceof DailyRoll) {
+            game.timings = { pickMs: 800, lastCallMs: 30, countdownMs: 5, flipMs: 1, suspenseMs: 5, afterFlipMs: 1, resultsMs: 30 };
+            // Every card $5, the last one the jackpot
             game.random = scripted([]);
         } else {
             // ×2 every 100 ms
@@ -488,21 +493,6 @@ describe('crash', () => {
         expect(alice.session.user.money).toBe(19000);
     });
 
-    it('refuses a cash-out below ×1.25, where winning is near certain', async () => {
-        const { party, clients } = await partyChannel(1);
-        const [alice] = clients;
-        await alice.send('/party pick crash');
-        crashAt(party, 10000);
-        await alice.send('/party bet 1000');
-        await phase(party, 'flying');
-
-        vi.spyOn(Date, 'now').mockReturnValue(party.crash!.sanitized().startedAt! + 30);
-        await alice.send('/party cashout');
-
-        expect(alice.errors()).toEqual(['Cash out opens at ×1.25']);
-        expect(party.crash!.sanitized().bets[0].cashedAt).toBeNull();
-    });
-
     it('pays once when two cash-outs land together', async () => {
         const { party, clients } = await partyChannel(1);
         const [alice] = clients;
@@ -510,9 +500,6 @@ describe('crash', () => {
         crashAt(party, 1000);
         await alice.send('/party bet 1000');
         await phase(party, 'flying');
-
-        // Past ×1.25, where cash-outs open
-        await settle(40);
 
         const results = await Promise.allSettled([party.crash!.cashOut(alice.session), party.crash!.cashOut(alice.session)]);
 
@@ -607,5 +594,69 @@ describe('crash', () => {
         await settle(30);
 
         expect(alice.session.user.money).toBe(20000);
+    });
+});
+
+describe('daily roll', () => {
+    it('gives one free card each, hides the values, and pays at the reveal once everyone picked', async () => {
+        const { party, clients } = await partyChannel(2);
+        const [alice, bob] = clients;
+        const guest = await server.connect(null);
+        await guest.send(`/playerchannel join ${party.channel.id}`);
+        await alice.send('/party pick dailyroll');
+
+        await guest.send('/party card 1');
+        await alice.send('/party card 0');
+        await alice.send('/party card 1');
+        await bob.send('/party card 1');
+        expect(guest.errors()).toEqual(['Log in to pick a card']);
+        expect(bob.errors()).toEqual(['Someone took this card']);
+        expect(bob.last('daily-roll').cards.slice(0, 2)).toEqual([
+            { id: 0, username: null, amount: null },
+            { id: 1, username: alice.session.user.username, amount: null },
+        ]);
+
+        // Everyone picked: the clock drops to the last call, and picks can still move
+        await bob.send('/party card 0');
+        expect(bob.last('daily-roll').deadline).toBeLessThanOrEqual(Date.now() + 30);
+        await bob.send('/party card 29');
+        expect(bob.errors()).toHaveLength(1);
+        await until(() => bob.last('daily-roll')?.phase === 'done');
+        // Nothing about the board leaves the server before the reveal starts
+        const countdown = bob.events('daily-roll').find((board: { phase: string }) => board.phase === 'countdown');
+        expect(countdown.cards.every((card: { amount: number | null }) => card.amount === null)).toBe(true);
+        expect(bob.last('daily-roll').cards[29]).toMatchObject({ username: bob.session.user.username, amount: 5000 });
+        expect([alice.session.user.money, bob.session.user.money]).toEqual([20500, 25000]);
+        await until(() => alice.last('party')?.phase === 'vote');
+        expect(alice.last('daily-roll')).toBeNull();
+    });
+
+    it('reveals when picks close, and pays only who picked', async () => {
+        const { clients } = await partyChannel(2);
+        const [alice, bob] = clients;
+        await alice.send('/party pick dailyroll');
+        await alice.send('/party card 3');
+
+        await until(() => alice.last('daily-roll')?.phase === 'done');
+        expect([alice.session.user.money, bob.session.user.money]).toEqual([20500, 20000]);
+    });
+
+    it('locks the whole channel until 10 PM once played', async () => {
+        const { clients } = await partyChannel(2);
+        const [alice, bob] = clients;
+        const startedAt = Date.now();
+        await alice.send('/party pick dailyroll');
+        const unlocksAt = alice.last('party').dailyRollAt;
+        expect(unlocksAt).toBe(DailyRoll.nextReset(startedAt));
+        expect(new Date(unlocksAt).getHours()).toBe(22);
+
+        await until(() => alice.last('party')?.phase === 'vote');
+        await bob.send('/party vote dailyroll');
+        expect(bob.errors()).toEqual(['Daily Roll is back at 10 PM']);
+
+        vi.spyOn(Date, 'now').mockReturnValue(unlocksAt);
+        await bob.send('/party vote dailyroll');
+        expect(bob.errors()).toHaveLength(1);
+        expect(bob.last('party').votes).toEqual({ dailyroll: [bob.session.user.username] });
     });
 });

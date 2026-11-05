@@ -6,7 +6,6 @@ import { MoneyFarmerPlugin } from './global/MoneyFarmerPlugin.js';
 import { OfferMoneyPlugin } from './global/OfferMoneyPlugin.js';
 import { SandalePlugin } from './global/SandalePlugin.js';
 import { WizzPlugin } from './global/WizzPlugin.js';
-import { DailyRollPlugin } from './room/DailyRollPlugin.js';
 import { GiveMoneyPlugin } from './room/GiveMoneyPlugin.js';
 import { GuessTheNumberPlugin } from './room/GuessTheNumberPlugin.js';
 import { PointsCollectorPlugin } from './room/PointsCollectorPlugin.js';
@@ -18,7 +17,6 @@ import { UserPollPlugin } from './room/UserPollPlugin.js';
 
 export class GamesPluginGroup extends PluginGroup {
     roomPluginClasses = [
-        DailyRollPlugin,
         GuessTheNumberPlugin,
         GiveMoneyPlugin,
         PointsCollectorPlugin,
