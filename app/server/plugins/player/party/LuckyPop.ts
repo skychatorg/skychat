@@ -105,7 +105,7 @@ export class LuckyPop {
     ) as SanitizedLuckyPop['sizes'];
 
     /** Instance values, so tests can shorten them */
-    public timings = { roundMs: 90_000, cooldownMs: 5000, butterfingersMs: 30_000, lastPopBeatMs: 2000 };
+    public timings = { roundMs: 90_000, cooldownMs: 2000, butterfingersMs: 30_000, lastPopBeatMs: 2000 };
 
     /** Overridable for tests: a whole number in [0, max) */
     public random: (max: number) => number = (max) => randomInt(max);

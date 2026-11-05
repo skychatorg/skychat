@@ -1,8 +1,10 @@
 <script setup>
 import CasinoTable from '@/components/casino/CasinoTable.vue';
 import CrashGame from '@/components/party/CrashGame.vue';
+import DailyRoll from '@/components/party/DailyRoll.vue';
 import LuckyPop from '@/components/party/LuckyPop.vue';
 import { useCountdown } from '@/composables/useCountdown';
+import { useNow } from '@/composables/useNow';
 import { betLimits, PARTY_GAMES } from '@/lib/channel';
 import { useClientStore } from '@/stores/client';
 import { computed } from 'vue';
@@ -18,9 +20,23 @@ const meta = (game) =>
         blackjack: limits.value && `bets ${betLimits(limits.value)}`,
         crash: limits.value && `bets ${betLimits(limits.value)} · up to ×100`,
         luckypop: '$1 to $20 a balloon',
+        dailyroll: 'free · once a day',
     })[game] ?? '';
 
-const lobbyGames = computed(() => Object.entries(PARTY_GAMES).map(([id, game]) => ({ id, ...game, meta: meta(id) })));
+// Daily Roll is locked for the whole channel until 10 PM once played
+const now = useNow();
+const lockLabel = (id) => {
+    const ms = id === 'dailyroll' ? party.value.dailyRollAt - now.value : 0;
+    if (ms <= 0) {
+        return null;
+    }
+    const minutes = Math.ceil(ms / 60_000);
+    return `back in ${minutes >= 60 ? `${Math.floor(minutes / 60)}h ${minutes % 60}m` : `${minutes}m`}`;
+};
+
+const lobbyGames = computed(() =>
+    Object.entries(PARTY_GAMES).map(([id, game]) => ({ id, ...game, meta: meta(id), locked: lockLabel(id) })),
+);
 const pick = (game) => client.sendMessage(`/party pick ${game}`);
 
 const { seconds: voteSeconds, fraction: voteFraction } = useCountdown(() => party.value.deadline);
@@ -34,6 +50,7 @@ const voteGames = computed(() =>
                 id,
                 name: PARTY_GAMES[id].name,
                 again: id === party.value.lastGame,
+                locked: lockLabel(id),
                 voters,
                 mine: voters.includes(client.state.user.username),
             };
@@ -50,6 +67,7 @@ const vote = (game) => client.sendMessage(`/party vote ${game}`);
             <CasinoTable v-if="party.game === 'blackjack' && client.state.casino" />
             <LuckyPop v-else-if="party.game === 'luckypop' && client.state.luckyPop" />
             <CrashGame v-else-if="party.game === 'crash' && client.state.crash" />
+            <DailyRoll v-else-if="party.game === 'dailyroll' && client.state.dailyRoll" />
         </template>
 
         <section v-else-if="party.phase === 'vote'" class="screen" aria-labelledby="party-vote-title">
@@ -67,11 +85,12 @@ const vote = (game) => client.sendMessage(`/party vote ${game}`);
                     class="game"
                     :class="{ mine: game.mine }"
                     :aria-pressed="game.mine"
-                    :disabled="isGuest"
+                    :disabled="isGuest || Boolean(game.locked)"
                     @click="vote(game.id)"
                 >
                     <span class="name">{{ game.again ? `Again: ${game.name}` : game.name }}</span>
-                    <span class="sub">
+                    <span v-if="game.locked" class="sub">{{ game.locked }}</span>
+                    <span v-else class="sub">
                         {{ game.voters.length }} vote{{ game.voters.length === 1 ? '' : 's'
                         }}<template v-if="game.voters.length"> · {{ game.voters.join(', ') }}</template>
                     </span>
@@ -89,10 +108,16 @@ const vote = (game) => client.sendMessage(`/party vote ${game}`);
                 <span class="lead">{{ isGuest ? 'Log in to start a game.' : 'It starts for everyone here.' }}</span>
             </header>
             <div class="games">
-                <button v-for="game in lobbyGames" :key="game.id" class="game" :disabled="isGuest" @click="pick(game.id)">
+                <button
+                    v-for="game in lobbyGames"
+                    :key="game.id"
+                    class="game"
+                    :disabled="isGuest || Boolean(game.locked)"
+                    @click="pick(game.id)"
+                >
                     <span class="name">{{ game.name }}</span>
                     <span class="pitch">{{ game.pitch }}</span>
-                    <span class="sub">{{ game.meta }}</span>
+                    <span class="sub">{{ game.locked ?? game.meta }}</span>
                 </button>
             </div>
         </section>
@@ -158,7 +183,8 @@ const vote = (game) => client.sendMessage(`/party vote ${game}`);
 }
 .games {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+    /* Two by two when there is room, the short and narrow rules below take over otherwise */
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: clamp(6px, 2cqw, 16px);
 }
 .game {

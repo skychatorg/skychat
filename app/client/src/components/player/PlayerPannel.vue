@@ -22,6 +22,7 @@ const showPlayer = computed(() => client.channelHasContent && app.playerMode.ena
 
 // How far the party's round has gone: games show their own turns, not when the round ends
 const { seconds: popSeconds } = useCountdown(() => client.state.luckyPop?.deadline);
+const { seconds: pickSeconds } = useCountdown(() => client.state.dailyRoll?.deadline);
 const { seconds: idleSeconds } = useCountdown(() => client.state.casino?.round?.idleEndsAt);
 const partyRound = computed(() => {
     if (client.state.party?.phase !== 'playing') {
@@ -29,6 +30,14 @@ const partyRound = computed(() => {
     }
     if (client.state.luckyPop) {
         return `Round ends in ${popSeconds.value}s`;
+    }
+    if (client.state.dailyRoll) {
+        return {
+            picking: `Picks close in ${pickSeconds.value}s`,
+            countdown: 'Revealing…',
+            revealing: 'Revealing…',
+            done: 'Cards revealed',
+        }[client.state.dailyRoll.phase];
     }
     if (client.state.crash) {
         return `Flight ${client.state.crash.flight} of ${client.state.crash.flights}`;
