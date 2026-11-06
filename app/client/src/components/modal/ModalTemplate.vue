@@ -2,10 +2,13 @@
 import { DialogContent, DialogOverlay, DialogPortal, DialogRoot, DialogTitle } from 'radix-vue';
 import SectionTitle from '@/components/util/SectionTitle.vue';
 import { useAppStore } from '@/stores/app';
+import { computed } from 'vue';
 
 const app = useAppStore();
 
-defineProps({
+const emit = defineEmits(['close']);
+
+const props = defineProps({
     id: {
         type: String,
         required: true,
@@ -19,20 +22,36 @@ defineProps({
         type: String,
         default: 'drawer',
     },
+    // A modal driven by something else than the store (the URL): it says when it is open, and handles @close
+    open: {
+        type: Boolean,
+        default: null,
+    },
 });
+
+const isOpen = computed(() => props.open ?? !!app.modals[props.id]);
+const close = () => (props.open === null ? app.closeModal(props.id) : emit('close'));
+
+// Focus the dialog itself, not its first field: Tab then stays inside, and no phone keyboard pops up on open
+const focusDialog = (event) => {
+    event.preventDefault();
+    event.target.focus();
+};
 </script>
 
 <template>
-    <DialogRoot :open="!!app.modals[id]" @update:open="(v) => !v && app.closeModal(id)">
+    <DialogRoot :open="isOpen" @update:open="(v) => !v && close()">
         <DialogPortal>
             <DialogOverlay class="modal-overlay" />
-            <DialogContent :class="['modal-surface', `modal-${variant}`]" @open-auto-focus.prevent>
+            <DialogContent :class="['modal-surface', `modal-${variant}`]" @open-auto-focus="focusDialog">
                 <div class="relative shrink-0">
-                    <button class="absolute top-0 left-2" aria-label="Close" @click="app.closeModal(id)">
+                    <button class="absolute -top-2.5 -left-1 w-11 h-11 flex items-center justify-center" aria-label="Close" @click="close">
                         <fa icon="times" />
                     </button>
                     <DialogTitle as-child>
-                        <SectionTitle>{{ title }}</SectionTitle>
+                        <SectionTitle
+                            ><slot name="title">{{ title }}</slot></SectionTitle
+                        >
                     </DialogTitle>
                     <hr class="my-4 border-skygray-light" />
                 </div>
@@ -64,6 +83,10 @@ defineProps({
     color: rgb(var(--color-skygray-white));
     background: rgb(var(--color-secondary) / 0.1);
     backdrop-filter: blur(40px);
+}
+/* Focused on open so Tab stays inside; the box itself needs no ring, its buttons keep theirs */
+.modal-surface:focus {
+    outline: none;
 }
 
 /* Drawer: pinned to the right, below the header. On ultrawide it hugs the centered content track, matching the old layout. */

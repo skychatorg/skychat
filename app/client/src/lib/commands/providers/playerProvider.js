@@ -90,6 +90,17 @@ export function usePlayerCommands() {
             run: () => app.toggleModal('youtubeVideoSearcher'),
         });
 
+        if (client.state.op) {
+            out.push({
+                id: 'player.manageChannels',
+                title: labels.manageChannels(),
+                icon: 'gears',
+                category: 'Player',
+                keywords: ['admin', 'create channel', 'party', 'casino', 'games', 'media'],
+                run: () => app.toggleModal('manageChannels'),
+            });
+        }
+
         return out;
     });
 }

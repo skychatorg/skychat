@@ -6,12 +6,14 @@ import SkyDropdown from '@/components/common/SkyDropdown.vue';
 import SkyDropdownItem from '@/components/common/SkyDropdownItem.vue';
 import SkyTooltip from '@/components/common/SkyTooltip.vue';
 import { useIsBlacklisted } from '@/composables/useIsBlacklisted';
+import { useUserProfile } from '@/composables/useUserProfile';
 import { useUserRight } from '@/composables/useUserRight';
 import { useVoice } from '@/composables/useVoice';
 import { useClientStore } from '@/stores/client';
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 
 const client = useClientStore();
+const { openProfile } = useUserProfile();
 
 const props = defineProps({
     entry: {
@@ -53,6 +55,8 @@ const setLocalVolume = (e) => {
 const voiceMuteUser = () => client.sendMessage('/voicemute ' + props.entry.user.username);
 const voiceKickUser = () => client.sendMessage('/voicekick ' + props.entry.user.username);
 
+const showProfile = () => openProfile(props.entry.user.username);
+
 const sendPM = () => {
     client.sendMessage('/pm ' + props.entry.user.username);
 };
@@ -81,6 +85,8 @@ const banUser = () => {
         client.sendMessage(`/ban ${props.entry.user.username} access ${duration}`);
     }
 };
+
+const giveMoney = () => client.giveMoney(props.entry.user.username);
 
 const openAvatar = () => {
     window.open(props.entry.user.data.plugins.avatar, '_blank', 'noopener');
@@ -148,7 +154,7 @@ const isDisconnected = computed(() => props.entry.connectionCount === 0);
                         class="w-full flex items-center justify-center py-1.5 rounded-lg hover:bg-white/5 transition select-none"
                         :class="{ 'opacity-40': isBlacklisted }"
                     >
-                        <button class="relative shrink-0" :title="entry.user.username" @click="sendPM">
+                        <button class="relative shrink-0" :title="`${entry.user.username}’s profile`" @click="showProfile">
                             <div
                                 class="w-8 h-8 rounded overflow-hidden bg-black border-2"
                                 :class="{ 'ring-2 ring-emerald-400 ring-offset-1 ring-offset-black': isSpeaking }"
@@ -174,7 +180,7 @@ const isDisconnected = computed(() => props.entry.connectionCount === 0);
                 :class="{ 'opacity-40': isBlacklisted }"
             >
                 <!-- Avatar -->
-                <button class="relative shrink-0" :title="entry.user.username" @click="sendPM">
+                <button class="relative shrink-0" :title="`${entry.user.username}’s profile`" @click="showProfile">
                     <div
                         class="w-8 h-8 rounded overflow-hidden bg-black border-2"
                         :class="{ 'ring-2 ring-emerald-400 ring-offset-1 ring-offset-black': isSpeaking }"
@@ -195,9 +201,9 @@ const isDisconnected = computed(() => props.entry.connectionCount === 0);
                     <div class="flex items-center gap-1.5">
                         <button
                             class="text-sm font-semibold truncate text-left hover:underline"
-                            :title="entry.user.username"
+                            :title="`${entry.user.username}’s profile`"
                             :style="{ color: entry.user.data.plugins.custom.color }"
-                            @click="sendPM"
+                            @click="showProfile"
                         >
                             {{ entry.user.username }}
                         </button>
@@ -257,13 +263,15 @@ const isDisconnected = computed(() => props.entry.connectionCount === 0);
 
                 <!-- Right col -->
                 <div class="shrink-0 flex items-center gap-2">
-                    <span
+                    <button
                         v-show="entry.user.money > 0"
-                        :title="(entry.user.money / 100).toFixed(2)"
-                        class="font-mono text-xs text-amber-300/80 tabular-nums"
+                        :title="isSelf ? (entry.user.money / 100).toFixed(2) : `Give money to ${entry.user.username}`"
+                        :disabled="isSelf"
+                        class="font-mono text-xs text-amber-300/80 tabular-nums enabled:hover:text-amber-200 enabled:hover:underline"
+                        @click="giveMoney"
                     >
                         {{ formattedMoney }}
-                    </span>
+                    </button>
                     <span
                         v-show="entry.user.right > 0"
                         :title="`Level ${entry.user.right}`"
@@ -288,6 +296,10 @@ const isDisconnected = computed(() => props.entry.connectionCount === 0);
                         </template>
 
                         <template #default>
+                            <SkyDropdownItem @click="showProfile">
+                                <fa icon="user" class="w-4 mr-2" />
+                                Profile
+                            </SkyDropdownItem>
                             <SkyDropdownItem @click="sendPM">
                                 <fa icon="paper-plane" class="w-4 mr-2" />
                                 Send PM
@@ -313,6 +325,10 @@ const isDisconnected = computed(() => props.entry.connectionCount === 0);
                             <SkyDropdownItem v-if="canModerateVoice && isInVoice" @click="voiceKickUser">
                                 <fa icon="phone-slash" class="w-4 mr-2 text-danger" />
                                 Voice kick
+                            </SkyDropdownItem>
+                            <SkyDropdownItem @click="giveMoney">
+                                <fa icon="coins" class="w-4 mr-2 text-amber-300" />
+                                Give money
                             </SkyDropdownItem>
                             <SkyDropdownItem v-if="!isBlacklisted" @click="blacklistUser">
                                 <fa icon="ban" class="w-4 mr-2" />
@@ -344,6 +360,10 @@ const isDisconnected = computed(() => props.entry.connectionCount === 0);
             </div>
         </template>
 
+        <SkyContextMenuItem @select="showProfile">
+            <fa icon="user" class="w-4 mr-2" />
+            Profile
+        </SkyContextMenuItem>
         <SkyContextMenuItem @select="sendPM">
             <fa icon="paper-plane" class="w-4 mr-2" />
             Send PM
@@ -366,6 +386,10 @@ const isDisconnected = computed(() => props.entry.connectionCount === 0);
         <SkyContextMenuItem v-if="canModerateVoice && isInVoice" @select="voiceKickUser">
             <fa icon="phone-slash" class="w-4 mr-2 text-danger" />
             Voice kick
+        </SkyContextMenuItem>
+        <SkyContextMenuItem @select="giveMoney">
+            <fa icon="coins" class="w-4 mr-2 text-amber-300" />
+            Give money
         </SkyContextMenuItem>
         <SkyContextMenuItem v-if="!isBlacklisted" @select="blacklistUser">
             <fa icon="ban" class="w-4 mr-2" />

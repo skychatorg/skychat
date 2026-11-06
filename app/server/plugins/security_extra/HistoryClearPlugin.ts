@@ -15,7 +15,7 @@ export class HistoryClearPlugin extends RoomPlugin {
     };
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
-        await UserController.buy(connection.session.user, 100);
+        await UserController.buy(connection.session.user, 100, 'History clear');
         this.room.clearHistory();
     }
 }

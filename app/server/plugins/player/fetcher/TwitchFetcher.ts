@@ -16,7 +16,7 @@ export class TwitchFetcher implements VideoFetcher {
             duration: 0,
             startCursor: 0,
             title: `${channelName}'s twitch`,
-            thumb: 'assets/images/icons/twitch.png',
+            thumb: '/assets/images/icons/twitch.png',
         };
         return [videoInfo];
     }

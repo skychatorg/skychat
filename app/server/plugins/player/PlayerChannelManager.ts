@@ -1,7 +1,8 @@
 import { EventEmitter } from 'events';
 import { Connection } from '../../skychat/Connection.js';
 import { Session } from '../../skychat/Session.js';
-import { PlayerChannel, SanitizedPlayerChannel } from './PlayerChannel.js';
+import { CasinoOptions, logFailure } from './casino/BlackjackTable.js';
+import { ChannelKind, PlayerChannel, SanitizedPlayerChannel } from './PlayerChannel.js';
 import { PlayerPlugin } from './PlayerPlugin.js';
 
 export class PlayerChannelManager extends EventEmitter {
@@ -22,24 +23,27 @@ export class PlayerChannelManager extends EventEmitter {
     }
 
     /**
-     * Get the next available channel id
-     * @returns
+     * Highest id ever given out, saved with the channels so a deleted channel's id is never reused
+     */
+    public lastChannelId = 0;
+
+    /**
+     * Users rejoin their last channel by id, so a reused id would drop them into an unrelated channel
      */
     public getNextChannelId(): number {
-        return this.channels.length === 0 ? 1 : Math.max(...this.channels.map((channel) => channel.id)) + 1;
+        this.lastChannelId = Math.max(this.lastChannelId, ...this.channels.map((channel) => channel.id)) + 1;
+        return this.lastChannelId;
     }
 
     /**
      * Create a new channel with the given name
-     * @param id
-     * @param name
      */
-    public createChannel(id: number, name: string): PlayerChannel {
+    public createChannel(id: number, name: string, kind: ChannelKind = 'media', casino?: Partial<CasinoOptions>): PlayerChannel {
         if (this.getChannelById(id)) {
             throw new Error(`Unable to create existing channel ${id}`);
         }
 
-        const channel = new PlayerChannel(this, id, name);
+        const channel = new PlayerChannel(this, id, name, kind, casino);
         this.channels.push(channel);
         this.emit('channels-changed', this.channels);
         return channel;
@@ -61,6 +65,15 @@ export class PlayerChannelManager extends EventEmitter {
     }
 
     /**
+     * Put the channels in the given order. Channels missing from the list keep their place at the end.
+     */
+    public reorderChannels(ids: number[]) {
+        const rank = (channel: PlayerChannel) => (ids.includes(channel.id) ? ids.indexOf(channel.id) : ids.length);
+        this.channels.sort((a, b) => rank(a) - rank(b));
+        this.emit('channels-changed', this.channels);
+    }
+
+    /**
      * Delete a given channel id
      * @param id
      */
@@ -70,8 +83,8 @@ export class PlayerChannelManager extends EventEmitter {
             throw new Error(`Unable to delete non-existant channel ${id}`);
         }
 
-        // Remove all sessions from this channel
-        for (const session of channel.sessions) {
+        // Remove all sessions from this channel. A copy: leaving removes the session from this very list
+        for (const session of [...channel.sessions]) {
             this.leaveChannel(session);
         }
 
@@ -91,6 +104,20 @@ export class PlayerChannelManager extends EventEmitter {
             return this.getChannelById(channelId) || null;
         }
         return null;
+    }
+
+    /**
+     * The session's channel, for commands that only make sense with media
+     */
+    public getSessionMediaChannel(session: Session): PlayerChannel {
+        const channel = this.getSessionChannel(session);
+        if (!channel) {
+            throw new Error('Join a media channel first');
+        }
+        if (channel.kind !== 'media') {
+            throw new Error('This channel is for games, it has no media');
+        }
+        return channel;
     }
 
     /**
@@ -144,11 +171,18 @@ export class PlayerChannelManager extends EventEmitter {
         // Update mappings and session list
         const channel = this.getChannelById(channelId);
         this.sessionChannels.delete(session);
-        if (channel) {
-            // If channel is not deleted
+        if (channel?.sessions.includes(session)) {
             channel.sessions.splice(channel.sessions.indexOf(session), 1);
+            if (channel.party) {
+                logFailure(channel.party.onSessionLeft(session));
+            }
         }
         session.send('player-sync', { current: null, queue: [], cursor: 0, paused: false });
+        session.send('party', null);
+        session.send('casino-table', null);
+        session.send('lucky-pop', null);
+        session.send('crash', null);
+        session.send('daily-roll', null);
 
         // Notify all connections of this session that the channel changed
         session.send('player-channel', null);

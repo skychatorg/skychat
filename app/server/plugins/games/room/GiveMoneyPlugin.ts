@@ -1,8 +1,8 @@
+import { formatMoney } from '../../../../api/money.js';
 import { Connection } from '../../../skychat/Connection.js';
 import { RoomPlugin } from '../../RoomPlugin.js';
 import { Session } from '../../../skychat/Session.js';
 import { User } from '../../../skychat/User.js';
-import { ConnectedListPlugin } from '../../core/global/ConnectedListPlugin.js';
 import { UserController } from '../../../skychat/UserController.js';
 
 export class GiveMoneyPlugin extends RoomPlugin {
@@ -46,8 +46,8 @@ export class GiveMoneyPlugin extends RoomPlugin {
         }
 
         // Actually transfer the money
-        await UserController.buy(senderSession.user, totalAmount);
-        await UserController.giveMoney(receiverSession.user, givenAmount);
+        await UserController.buy(senderSession.user, totalAmount, `Gave to ${receiverSession.user.username}`);
+        await UserController.giveMoney(receiverSession.user, givenAmount, `From ${senderSession.user.username}`);
 
         // Notify the receiver & sender
         this.room.send('give', {
@@ -56,14 +56,13 @@ export class GiveMoneyPlugin extends RoomPlugin {
             givenAmount,
             commission,
         });
-        let message = senderSession.user.username + ' sent $' + givenAmount / 100 + ' to ' + receiverSession.user.username;
+        let message = `${senderSession.user.username} sent ${formatMoney(givenAmount)} to ${receiverSession.user.username}`;
         if (commission > 0) {
-            message += ' (- $' + commission / 100 + ' commission)';
+            message += ` (- ${formatMoney(commission)} commission)`;
         }
         await this.room.sendMessage({
             content: message,
             user: UserController.getNeutralUser(),
         });
-        (this.room.getPlugin('connectedlist') as unknown as ConnectedListPlugin).sync();
     }
 }

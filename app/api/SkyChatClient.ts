@@ -11,6 +11,11 @@ import {
     OngoingConvert,
     PublicConfig,
     QueuedVideoInfo,
+    SanitizedBlackjackTable,
+    SanitizedLuckyPop,
+    SanitizedCrash,
+    SanitizedDailyRoll,
+    SanitizedParty,
     SanitizedMessage,
     SanitizedPlayerChannel,
     SanitizedPoll,
@@ -23,6 +28,7 @@ import {
 } from '../server/index.js';
 import { BinaryMessageTypes } from './BinaryMessageTypes.js';
 import { MutePluginHelper } from './plugins/MutePluginHelper.js';
+import { MoneyChange } from './money.js';
 
 const defaultUser: SanitizedUser = {
     id: 0,
@@ -74,6 +80,7 @@ export type SkyChatClientState = {
     roomConnectedUsers: { [roomId: number]: Array<SanitizedUser> };
     rooms: SanitizedRoom[];
     currentRoomId: number | null;
+    joinRefused: boolean;
     currentRoomReady: boolean;
     currentRoom: SanitizedRoom | null;
     lastMention: { roomId: number; identifier: string; messageId: number } | null;
@@ -82,6 +89,7 @@ export type SkyChatClientState = {
     cursors: { [identifier: string]: { date: Date; cursor: { x: number; y: number; user: SanitizedUser } } };
     roll: { state: boolean };
     op: boolean;
+    moneyHistory: MoneyChange[];
     files: string[];
     file: { filePath: string; content: string } | null;
     gallery: FolderContent | null;
@@ -93,6 +101,16 @@ export type SkyChatClientState = {
     playerApiSearchResult: { type: string; items: Array<VideoInfo> } | null;
     player: PlayerState;
     playerLastUpdate: Date | null;
+    /** The table of the casino channel you are in, null elsewhere */
+    casino: SanitizedBlackjackTable | null;
+    /** The party of the party channel you are in, null elsewhere */
+    party: SanitizedParty | null;
+    /** The Lucky Pop sky of your party channel, null when another game is on */
+    luckyPop: SanitizedLuckyPop | null;
+    /** The Crash flight of your party channel, null when another game is on */
+    crash: SanitizedCrash | null;
+    /** The Daily Roll board of your party channel, null when another game is on */
+    dailyRoll: SanitizedDailyRoll | null;
     voiceChannels: SanitizedVoiceChannel[];
     currentVoiceChannelId: number | null;
     voiceChannelUsers: { [channelId: number]: Array<SanitizedUser> };
@@ -101,6 +119,7 @@ export type SkyChatClientState = {
 
 export declare interface SkyChatClient {
     on(event: 'connection-accepted', listener: () => unknown): this;
+    on(event: 'auth-refused', listener: () => unknown): this;
 
     on(event: 'config', listener: (config: PublicConfig) => any): this;
     on(event: 'sticker-list', listener: (stickers: Record<string, string>) => any): this;
@@ -129,6 +148,7 @@ export declare interface SkyChatClient {
     on(event: 'info', listener: (message: string) => any): this;
 
     on(event: 'set-op', listener: (op: boolean) => any): this;
+    on(event: 'money-history', listener: (history: MoneyChange[]) => any): this;
 
     on(event: 'gallery', listener: (data: FolderContent) => any): this;
     on(event: 'convert-info', listener: (data: VideoStreamInfo) => any): this;
@@ -138,6 +158,11 @@ export declare interface SkyChatClient {
     on(event: 'player-channel', listener: (channelId: number | null) => any): this;
     on(event: 'player-search', listener: (data: { type: string; items: Array<VideoInfo> }) => any): this;
     on(event: 'player-sync', listener: (data: PlayerState) => any): this;
+    on(event: 'casino-table', listener: (table: SanitizedBlackjackTable | null) => any): this;
+    on(event: 'party', listener: (party: SanitizedParty | null) => any): this;
+    on(event: 'lucky-pop', listener: (luckyPop: SanitizedLuckyPop | null) => any): this;
+    on(event: 'crash', listener: (crash: SanitizedCrash | null) => any): this;
+    on(event: 'daily-roll', listener: (dailyRoll: SanitizedDailyRoll | null) => any): this;
 
     on(event: 'voice-channels', listener: (voiceChannels: Array<SanitizedVoiceChannel>) => any): this;
     on(event: 'voice-channel', listener: (channelId: number | null) => any): this;
@@ -200,6 +225,15 @@ export class SkyChatClient extends EventEmitter {
     private _roomConnectedUsers: { [roomId: number]: Array<SanitizedUser> } = {};
     private _rooms: Array<SanitizedRoom> = [];
     private _currentRoomId: number | null = null;
+
+    // The server answers every /join with one join-room. While newer joins are on their way, an answer is stale: applying it would flip back to a room already left
+    private _pendingJoins = 0;
+
+    // The last answer refused the room this client asked for
+    private _joinRefused = false;
+
+    // This tab's room, kept across reconnections. localStorage is shared by all tabs, so it only serves a cold start
+    private _lastRoomId: number | null = null;
     private _currentRoomReady: boolean = false;
     private _lastMention: { roomId: number; identifier: string; messageId: number } | null = null;
     private _typingList: Array<SanitizedUser> = [];
@@ -207,6 +241,7 @@ export class SkyChatClient extends EventEmitter {
     private _cursors: { [identifier: string]: { date: Date; cursor: { x: number; y: number; user: SanitizedUser } } } = {};
     private _roll: { state: boolean } = { state: false };
     private _op = false;
+    private _moneyHistory: MoneyChange[] = [];
     private _files: Array<string> = [];
     private _file: { filePath: string; content: string } | null = null;
     private _gallery: FolderContent | null = null;
@@ -227,6 +262,15 @@ export class SkyChatClient extends EventEmitter {
         paused: false,
     };
     private _playerLastUpdate: Date | null = null;
+    private _casino: SanitizedBlackjackTable | null = null;
+
+    private _party: SanitizedParty | null = null;
+
+    private _luckyPop: SanitizedLuckyPop | null = null;
+
+    private _crash: SanitizedCrash | null = null;
+
+    private _dailyRoll: SanitizedDailyRoll | null = null;
 
     // Connection resilience properties
     private _reconnectAttempts: number = 0;
@@ -290,6 +334,7 @@ export class SkyChatClient extends EventEmitter {
 
         // Admin
         this.on('set-op', this._onSetOP.bind(this));
+        this.on('money-history', this._onMoneyHistory.bind(this));
 
         // Gallery
         this.on('gallery', this._onGallery.bind(this));
@@ -301,6 +346,23 @@ export class SkyChatClient extends EventEmitter {
         this.on('player-channel', this._onPlayerChannel.bind(this));
         this.on('player-search', this._onPlayerApiSearchResults.bind(this));
         this.on('player-sync', this._onPlayerSync.bind(this));
+        this.on('casino-table', this._onCasinoTable.bind(this));
+        this.on('party', (party) => {
+            this._party = party;
+            this.emit('update', this.state);
+        });
+        this.on('lucky-pop', (luckyPop) => {
+            this._luckyPop = luckyPop;
+            this.emit('update', this.state);
+        });
+        this.on('crash', (crash) => {
+            this._crash = crash;
+            this.emit('update', this.state);
+        });
+        this.on('daily-roll', (dailyRoll) => {
+            this._dailyRoll = dailyRoll;
+            this.emit('update', this.state);
+        });
 
         // Voice (channel + roster only; transport/produce/consume handled by VoiceClient engine)
         this.on('voice-channels', this._onVoiceChannels.bind(this));
@@ -589,6 +651,12 @@ export class SkyChatClient extends EventEmitter {
     }
 
     private _onJoinRoom(currentRoomId: number | null) {
+        const answersJoin = this._pendingJoins > 0;
+        if (answersJoin && --this._pendingJoins > 0) {
+            return;
+        }
+        this._joinRefused = answersJoin && currentRoomId !== this._currentRoomId;
+        this._lastRoomId = currentRoomId ?? this._lastRoomId;
         // Authoritative: also used to correct an optimistic join the server rejected
         if (currentRoomId !== this._currentRoomId) {
             this._currentRoomReady = false;
@@ -660,6 +728,11 @@ export class SkyChatClient extends EventEmitter {
         this.emit('update', this.state);
     }
 
+    private _onMoneyHistory(history: MoneyChange[]) {
+        this._moneyHistory = history;
+        this.emit('update', this.state);
+    }
+
     private _onGallery(gallery: FolderContent) {
         this._gallery = gallery;
         this.emit('update', this.state);
@@ -723,6 +796,11 @@ export class SkyChatClient extends EventEmitter {
         this.emit('update', this.state);
     }
 
+    private _onCasinoTable(table: SanitizedBlackjackTable | null) {
+        this._casino = table;
+        this.emit('update', this.state);
+    }
+
     private _onPlayerSync(player: PlayerState) {
         this._player = player;
         this._playerLastUpdate = new Date();
@@ -759,6 +837,7 @@ export class SkyChatClient extends EventEmitter {
             roomConnectedUsers: this._roomConnectedUsers,
             rooms: this._rooms,
             currentRoomId: this._currentRoomId,
+            joinRefused: this._joinRefused,
             currentRoomReady: this._currentRoomReady,
             currentRoom: this._rooms.find((room) => room.id === this._currentRoomId) || null,
             lastMention: this._lastMention,
@@ -767,6 +846,7 @@ export class SkyChatClient extends EventEmitter {
             cursors: this._cursors,
             roll: this._roll,
             op: this._op,
+            moneyHistory: this._moneyHistory,
             files: this._files,
             file: this._file,
             gallery: this._gallery,
@@ -778,6 +858,11 @@ export class SkyChatClient extends EventEmitter {
             playerApiSearchResult: this._playerApiSearchResult,
             player: this._player,
             playerLastUpdate: this._playerLastUpdate,
+            casino: this._casino,
+            party: this._party,
+            luckyPop: this._luckyPop,
+            crash: this._crash,
+            dailyRoll: this._dailyRoll,
             voiceChannels: this._voiceChannels,
             currentVoiceChannelId: this._currentVoiceChannelId,
             voiceChannelUsers: this._voiceChannelUsers,
@@ -898,7 +983,16 @@ export class SkyChatClient extends EventEmitter {
      * Join a specific room
      */
     join(roomId: number) {
-        // Client-side prediction
+        // Client-side prediction. Also the room to ask for if the socket drops before the answer
+        this._lastRoomId = roomId;
+        // Not in a room (connecting, reconnecting): commands are not read yet. The login carries the room instead
+        if (this._currentRoomId === null || !this.state.isConnected) {
+            this._currentRoomId = roomId;
+            this.emit('update', this.state);
+            return;
+        }
+        this._pendingJoins++;
+        this._joinRefused = false;
         this._currentRoomReady = false;
         this._currentRoomId = roomId;
         this.emit('update', this.state);
@@ -923,6 +1017,10 @@ export class SkyChatClient extends EventEmitter {
         if (typeof localStorage !== 'undefined') {
             localStorage.removeItem(SkyChatClient.LOCAL_STORAGE_TOKEN_KEY);
         }
+        // Out of the room right away, not when the socket finishes closing, so the app can leave the chat now
+        this._currentRoomId = null;
+        this._lastRoomId = null;
+        this.emit('update', this.state);
         if (this._websocket) {
             this._websocket.close();
         }
@@ -935,6 +1033,7 @@ export class SkyChatClient extends EventEmitter {
                 password,
                 register: true,
             },
+            roomId: this.getPreferredRoomId(),
         });
     }
 
@@ -985,9 +1084,12 @@ export class SkyChatClient extends EventEmitter {
     }
 
     /**
-     * Get preferred room ID from local storage
+     * The room to (re)connect to: this tab's last room, else the last one saved
      */
     private getPreferredRoomId() {
+        if (this._lastRoomId !== null) {
+            return this._lastRoomId;
+        }
         if (typeof localStorage === 'undefined') {
             return undefined;
         }
@@ -1011,6 +1113,17 @@ export class SkyChatClient extends EventEmitter {
                 this.authenticate({
                     token: JSON.parse(authToken),
                     roomId: this.getPreferredRoomId(),
+                }).catch((error) => {
+                    // Only a bad token is forgotten. Anything else (rate limit, server busy) keeps it for the next reconnection
+                    if (!/Invalid token|Token expired|User does not exist/.test(String(error))) {
+                        return;
+                    }
+                    localStorage.removeItem(SkyChatClient.LOCAL_STORAGE_TOKEN_KEY);
+                    // Out of any room picked while reconnecting, or the app would keep showing the chat
+                    this._currentRoomId = null;
+                    this._lastRoomId = null;
+                    this.emit('update', this.state);
+                    this.emit('auth-refused');
                 });
             }
         }
@@ -1094,6 +1207,7 @@ export class SkyChatClient extends EventEmitter {
         console.warn(`WebSocket closed: ${event.code} - ${event.reason}`);
         // Reset some (not all) values
         this._currentRoomId = null;
+        this._pendingJoins = 0;
         this._typingList = [];
         this._polls = {};
         this._cursors = {};

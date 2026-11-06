@@ -1,3 +1,4 @@
+import { formatMoney } from '../../../../api/money.js';
 import { Connection } from '../../../skychat/Connection.js';
 import { RoomManager } from '../../../skychat/RoomManager.js';
 import { Session } from '../../../skychat/Session.js';
@@ -77,10 +78,10 @@ export class ConfusePlugin extends GlobalPlugin {
             throw new Error('User ' + identifier + ' is already confused');
         }
 
-        await UserController.buy(connection.session.user, ConfusePlugin.COST);
+        await UserController.buy(connection.session.user, ConfusePlugin.COST, 'Confuse');
 
         // Notify everyone but the user who is sandalized
-        const messageContent = `${connection.session.identifier} confused ${identifier} 🤯 (cost: $${ConfusePlugin.COST / 100})`;
+        const messageContent = `${connection.session.identifier} confused ${identifier} 🤯 (cost: ${formatMoney(ConfusePlugin.COST)})`;
         const message = UserController.createNeutralMessage({ id: 0, content: messageContent });
         if (connection.room) {
             connection.room.connections.forEach((c) => {
@@ -91,6 +92,13 @@ export class ConfusePlugin extends GlobalPlugin {
             });
         }
         this.setConfused(identifier, true);
+    }
+
+    /**
+     * Hit the user's next message, for games that hand this out as a malus
+     */
+    public flag(username: string): void {
+        this.setConfused(username, true);
     }
 
     /**
