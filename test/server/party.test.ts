@@ -451,6 +451,18 @@ describe('crash', () => {
         expect(draws.filter((p) => p >= 1000).length / draws.length).toBeCloseTo(0.099, 1);
     });
 
+    it('cashes out everyone still riding when the flight reaches the ×100 cap', async () => {
+        const { party, clients } = await partyChannel(1);
+        const [alice] = clients;
+        await alice.send('/party pick crash');
+        crashAt(party, 1_000_000);
+        await alice.send('/party bet 1000');
+        await phase(party, 'crashed');
+
+        expect(party.crash!.sanitized()).toMatchObject({ crashedAt: 10000, bets: [{ cashedAt: 10000, payout: 100000 }] });
+        await until(() => alice.session.user.money === 119000);
+    });
+
     it('pays the multiplier at the moment you cash out, and nothing to those still in at the crash', async () => {
         const { party, clients } = await partyChannel(2);
         const [alice, bob] = clients;

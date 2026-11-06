@@ -115,3 +115,112 @@ export function unlockCasinoSound() {
         // No audio on this device
     }
 }
+
+/** Two seconds of brown noise, looped: deep and soft, like air rushing past */
+let brown = null;
+function brownNoise(ctx) {
+    if (!brown) {
+        brown = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
+        const data = brown.getChannelData(0);
+        let last = 0;
+        for (let i = 0; i < data.length; i++) {
+            last = (last + 0.02 * (Math.random() * 2 - 1)) / 1.02;
+            data[i] = last * 3.5;
+        }
+    }
+    const source = ctx.createBufferSource();
+    source.buffer = brown;
+    source.loop = true;
+    return source;
+}
+
+/**
+ * The sound of a Crash flight: wind that opens up and gets louder with `intensity` (0 to 1),
+ * gusting on its own so it never sounds like a held note, and a low rumble that only comes in late.
+ * Never throws: on a device without audio every method does nothing
+ */
+export function createFlightSound() {
+    const silent = { set() {}, whoosh() {}, stop() {} };
+    let ctx;
+    try {
+        ctx = audio();
+    } catch {
+        return silent;
+    }
+    if (!ctx) {
+        return silent;
+    }
+    const now = ctx.currentTime;
+
+    const wind = brownNoise(ctx);
+    const windFilter = ctx.createBiquadFilter();
+    windFilter.type = 'lowpass';
+    windFilter.Q.value = 0.8;
+    windFilter.frequency.value = 300;
+    const windGain = ctx.createGain();
+    windGain.gain.setValueAtTime(0, now);
+    windGain.gain.linearRampToValueAtTime(0.05, now + 0.6);
+    // Gusts: a slow wobble on the filter
+    const gust = ctx.createOscillator();
+    const gustDepth = ctx.createGain();
+    gust.frequency.value = 0.23;
+    gustDepth.gain.value = 120;
+    gust.connect(gustDepth).connect(windFilter.frequency);
+    wind.connect(windFilter).connect(windGain).connect(master);
+
+    const rumble = brownNoise(ctx);
+    const rumbleFilter = ctx.createBiquadFilter();
+    rumbleFilter.type = 'lowpass';
+    rumbleFilter.frequency.value = 90;
+    const rumbleGain = ctx.createGain();
+    rumbleGain.gain.value = 0;
+    rumble.connect(rumbleFilter).connect(rumbleGain).connect(master);
+
+    const sources = [wind, rumble, gust];
+    sources.forEach((source) => source.start(now));
+    let stopped = false;
+    let windLevel = 0.05;
+
+    return {
+        set(intensity) {
+            if (stopped) {
+                return;
+            }
+            const t = ctx.currentTime;
+            windLevel = 0.05 + 0.3 * intensity;
+            windFilter.frequency.setTargetAtTime(300 + 2700 * intensity ** 1.4, t, 0.3);
+            gustDepth.gain.setTargetAtTime(120 + 600 * intensity, t, 0.3);
+            windGain.gain.setTargetAtTime(windLevel, t, 0.3);
+            rumbleGain.gain.setTargetAtTime(Math.max(0, intensity - 0.45) * 0.9, t, 0.5);
+        },
+        /** A swell of wind, for a milestone */
+        whoosh() {
+            if (stopped) {
+                return;
+            }
+            const t = ctx.currentTime;
+            windGain.gain.cancelScheduledValues(t);
+            windGain.gain.setTargetAtTime(windLevel * 2.2, t, 0.08);
+            windGain.gain.setTargetAtTime(windLevel, t + 0.35, 0.4);
+            swish(ctx, t, 0.6, { from: 500, to: 2600, gain: 0.25 });
+        },
+        /** Silence, cut dead and then a muffled thud when it crashed, faded otherwise */
+        stop(crashed = false) {
+            if (stopped) {
+                return;
+            }
+            stopped = true;
+            const t = ctx.currentTime;
+            const fade = crashed ? 0.02 : 0.4;
+            [windGain, rumbleGain].forEach((gain) => {
+                gain.gain.cancelScheduledValues(t);
+                gain.gain.setTargetAtTime(0, t, fade / 3);
+            });
+            sources.forEach((source) => source.stop(t + fade + 0.1));
+            if (crashed) {
+                tone(ctx, t + 0.04, 80, 0.7, { type: 'sine', gain: 0.5, slideTo: 32 });
+                swish(ctx, t + 0.04, 0.35, { from: 600, to: 120, gain: 0.4 });
+            }
+        },
+    };
+}
