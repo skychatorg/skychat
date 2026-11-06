@@ -34,6 +34,8 @@ export type SanitizedCrash = {
     minBet: number;
     maxBet: number;
     bets: { user: SanitizedUser; bet: number; cashedAt: number | null; payout: number | null }[];
+    /** In hundredths: reaching it cashes out everyone still riding */
+    maxMultiplier: number;
     /** The last crash points, newest first, in hundredths */
     history: number[];
 };
@@ -190,6 +192,7 @@ export class Crash {
             now: Date.now(),
             doubleMs: this.timings.doubleMs,
             crashedAt: this.crashedAt,
+            maxMultiplier: Crash.MAX_MULTIPLIER,
             minBet: this.party.options.minBet,
             maxBet: this.party.options.maxBet,
             bets: this.bets.map(({ session, bet, cashedAt, payout }) => ({
@@ -232,7 +235,16 @@ export class Crash {
         this.phase = 'crashed';
         this.crashedAt = this.crashPoint;
         this.history = [this.crashPoint, ...this.history].slice(0, 12);
-        this.bets.filter((b) => b.cashedAt === null).forEach((b) => (b.payout = 0));
+        // Nobody can cash out past the cap, so reaching it cashes out everyone still riding
+        const capped = this.crashPoint >= Crash.MAX_MULTIPLIER;
+        const riding = this.bets.filter((b) => b.cashedAt === null);
+        for (const seat of riding) {
+            seat.cashedAt = capped ? this.crashPoint : null;
+            seat.payout = capped ? Math.floor((seat.bet * this.crashPoint) / 100) : 0;
+        }
+        if (capped) {
+            logFailure(Promise.all(riding.map((seat) => UserController.giveMoney(seat.session.user, seat.payout!, 'Crash win'))));
+        }
         this.broadcast();
         this.schedule(this.timings.crashedMs, () => (this.flight >= Crash.FLIGHTS ? this.end() : this.openBets()));
     }

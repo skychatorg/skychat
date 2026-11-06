@@ -1,5 +1,6 @@
 <script setup>
-import { playCasinoSound } from '@/lib/casinoSounds';
+import CrashStars from '@/components/party/CrashStars.vue';
+import { createFlightSound, playCasinoSound } from '@/lib/casinoSounds';
 import { useCountdown } from '@/composables/useCountdown';
 import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
@@ -52,6 +53,40 @@ const multiplier = computed(() => {
 });
 const times = (hundredths) => `×${(hundredths / 100).toFixed(2)}`;
 
+// 0 at take-off, 0.5 at ×10, 1 at ×100: drives the stars, the sound and the heat
+const intensity = computed(() => (game.value.phase === 'betting' ? 0 : Math.min(1, Math.log(multiplier.value / 100) / Math.log(100))));
+const MILESTONES = [200, 500, 1000, 5000, 10000];
+const milestone = computed(() => MILESTONES.filter((m) => multiplier.value >= m).length);
+const shake = computed(() => game.value.phase === 'flying' && multiplier.value >= 5000);
+// The flight reached the cap: everyone still riding was paid, so it ends as a win, not a crash
+const capped = computed(() => game.value.phase === 'crashed' && game.value.crashedAt >= game.value.maxMultiplier);
+const look = computed(() => (capped.value ? 'capped' : game.value.phase));
+const multiplierTone = computed(() =>
+    game.value.phase !== 'flying' ? '' : multiplier.value >= 5000 ? 'hot' : multiplier.value >= 1000 ? 'gold' : '',
+);
+
+// Wind for the whole flight, everyone hears it: louder and brighter as it climbs
+let flight = null;
+const stopFlight = (crashed) => {
+    flight?.stop(crashed);
+    flight = null;
+};
+watch(
+    () => [game.value.phase, app.casinoSound],
+    ([phase, sound]) => {
+        if (phase === 'flying' && sound) {
+            flight ??= createFlightSound();
+        } else {
+            stopFlight(phase === 'crashed' && sound && !capped.value);
+        }
+    },
+    { immediate: true },
+);
+watch(intensity, (value) => flight?.set(value));
+watch(capped, (value) => value && app.casinoSound && playCasinoSound('blackjack'));
+watch(milestone, (value, before) => value > before && flight?.whoosh());
+onUnmounted(() => stopFlight(false));
+
 // The curve: time across, multiplier up, both axes growing with the flight
 const curve = computed(() => {
     const t = game.value.phase === 'crashed' ? Math.log2(game.value.crashedAt / 100) * game.value.doubleMs : Math.max(0, elapsed.value);
@@ -72,7 +107,9 @@ const status = computed(() => {
         case 'flying':
             return 'In flight';
         default:
-            return `Crashed at ${times(game.value.crashedAt)}`;
+            return capped.value
+                ? `Reached ${times(game.value.crashedAt)}, everyone riding cashed out`
+                : `Crashed at ${times(game.value.crashedAt)}`;
     }
 });
 
@@ -143,7 +180,8 @@ watch(
             </div>
 
             <div class="body">
-                <div class="sky" :class="game.phase">
+                <div class="sky" :class="[look, { shake }]" :style="{ '--heat': intensity }">
+                    <CrashStars :speed="game.phase === 'flying' || capped ? 0.08 + 0.92 * intensity : 0" :crashed="look === 'crashed'" />
                     <svg v-if="game.phase !== 'betting'" class="graph" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
                         <path :d="curve.path" class="line" vector-effect="non-scaling-stroke" />
                     </svg>
@@ -153,7 +191,8 @@ watch(
                         :style="{ left: `${4 + curve.tip[0] * 0.9}%`, top: `${8 + curve.tip[1] * 0.86}%` }"
                         aria-hidden="true"
                     ></span>
-                    <span class="multiplier" :class="game.phase" role="status">
+                    <!-- Re-created at each milestone, so it pulses -->
+                    <span :key="milestone" class="multiplier" :class="[look, multiplierTone, { pulse: milestone }]" role="status">
                         {{ game.phase === 'betting' ? betSeconds + 's' : times(multiplier) }}
                     </span>
                 </div>
@@ -280,6 +319,30 @@ watch(
         linear-gradient(rgb(255 255 255 / 0.04) 1px, transparent 1px) 0 0 / 100% 25%,
         rgb(0 0 0 / 0.25);
     overflow: hidden;
+    --heat: 0;
+}
+/* Warms from blue to violet to red as it climbs */
+.sky::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+        ellipse at 85% 15%,
+        hsl(calc(230 + var(--heat) * 130) 80% 50% / calc(0.12 + var(--heat) * 0.4)),
+        transparent 70%
+    );
+    transition: background 0.4s;
+    pointer-events: none;
+}
+/* A red flash when it crashes */
+.sky.crashed::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgb(255 60 80 / 0.35);
+    opacity: 0;
+    animation: flash 0.7s ease-out;
+    pointer-events: none;
 }
 .graph {
     /* The tip is placed in the same box: keep its maths in step */
@@ -322,8 +385,49 @@ watch(
 .multiplier.betting {
     color: rgb(255 255 255 / 0.5);
 }
+.multiplier.capped {
+    color: #ffd54a;
+    text-shadow: 0 0 28px rgb(255 213 74 / 0.75);
+}
+.sky.capped .line {
+    stroke: #ffd54a;
+}
 .multiplier.crashed {
     color: #ff8fa3;
+}
+.multiplier.gold {
+    color: #ffd54a;
+}
+.multiplier.hot {
+    color: #ff7a59;
+    text-shadow: 0 0 24px rgb(255 122 89 / 0.7);
+}
+@media (prefers-reduced-motion: no-preference) {
+    .multiplier.flying.pulse,
+    .multiplier.capped.pulse {
+        animation: pulse 0.5s cubic-bezier(0.3, 1.6, 0.5, 1);
+    }
+    .sky.shake {
+        animation: shake 0.12s linear infinite;
+    }
+    @keyframes pulse {
+        from {
+            transform: scale(1.35);
+        }
+    }
+    @keyframes shake {
+        25% {
+            transform: translate(1px, -1px);
+        }
+        75% {
+            transform: translate(-1px, 1px);
+        }
+    }
+}
+@keyframes flash {
+    from {
+        opacity: 1;
+    }
 }
 .side {
     width: clamp(180px, 34cqw, 300px);
