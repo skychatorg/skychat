@@ -15,6 +15,7 @@ import {
     SanitizedLuckyPop,
     SanitizedCrash,
     SanitizedDailyRoll,
+    SanitizedMonkeyFight,
     SanitizedParty,
     SanitizedMessage,
     SanitizedPlayerChannel,
@@ -111,6 +112,8 @@ export type SkyChatClientState = {
     crash: SanitizedCrash | null;
     /** The Daily Roll board of your party channel, null when another game is on */
     dailyRoll: SanitizedDailyRoll | null;
+    /** The Monkey Fight of your party channel, null when another game is on */
+    monkeyFight: SanitizedMonkeyFight | null;
     voiceChannels: SanitizedVoiceChannel[];
     currentVoiceChannelId: number | null;
     voiceChannelUsers: { [channelId: number]: Array<SanitizedUser> };
@@ -163,6 +166,7 @@ export declare interface SkyChatClient {
     on(event: 'lucky-pop', listener: (luckyPop: SanitizedLuckyPop | null) => any): this;
     on(event: 'crash', listener: (crash: SanitizedCrash | null) => any): this;
     on(event: 'daily-roll', listener: (dailyRoll: SanitizedDailyRoll | null) => any): this;
+    on(event: 'monkey-fight', listener: (monkeyFight: SanitizedMonkeyFight | null) => any): this;
 
     on(event: 'voice-channels', listener: (voiceChannels: Array<SanitizedVoiceChannel>) => any): this;
     on(event: 'voice-channel', listener: (channelId: number | null) => any): this;
@@ -272,6 +276,8 @@ export class SkyChatClient extends EventEmitter {
 
     private _dailyRoll: SanitizedDailyRoll | null = null;
 
+    private _monkeyFight: SanitizedMonkeyFight | null = null;
+
     // Connection resilience properties
     private _reconnectAttempts: number = 0;
     private _reconnectTimer: ReturnType<typeof setTimeout> | null = null;
@@ -361,6 +367,10 @@ export class SkyChatClient extends EventEmitter {
         });
         this.on('daily-roll', (dailyRoll) => {
             this._dailyRoll = dailyRoll;
+            this.emit('update', this.state);
+        });
+        this.on('monkey-fight', (monkeyFight) => {
+            this._monkeyFight = monkeyFight;
             this.emit('update', this.state);
         });
 
@@ -863,6 +873,7 @@ export class SkyChatClient extends EventEmitter {
             luckyPop: this._luckyPop,
             crash: this._crash,
             dailyRoll: this._dailyRoll,
+            monkeyFight: this._monkeyFight,
             voiceChannels: this._voiceChannels,
             currentVoiceChannelId: this._currentVoiceChannelId,
             voiceChannelUsers: this._voiceChannelUsers,

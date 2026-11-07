@@ -39,6 +39,46 @@ function tone(ctx, at, freq, duration, { type = 'triangle', gain = 0.25, slideTo
     osc.stop(at + duration + 0.05);
 }
 
+/** Mouth shapes for the ape voice: the two resonances that make a buzz sound like a vowel */
+const VOWELS = { oo: [320, 800], ah: [750, 1150], ee: [400, 2200] };
+
+/** Lower is meaner: every ape voice plays at this share of its pitch, through a slightly bigger mouth */
+const APE_PITCH = 0.55;
+const APE_MOUTH = 0.85;
+
+/**
+ * An ape call: a buzzing voice that slides between two pitches, shaped into a vowel, with a shaky throat
+ */
+function ape(ctx, at, { from, to, vowel, length, gain = 0.3, wobble = 18 }) {
+    const voice = ctx.createOscillator();
+    const shake = ctx.createOscillator();
+    const shakeDepth = ctx.createGain();
+    const env = ctx.createGain();
+    voice.type = 'sawtooth';
+    voice.frequency.setValueAtTime(from * APE_PITCH, at);
+    voice.frequency.linearRampToValueAtTime(to * APE_PITCH, at + length * 0.6);
+    voice.frequency.linearRampToValueAtTime(to * APE_PITCH * 0.85, at + length);
+    shake.frequency.value = 28;
+    shakeDepth.gain.value = wobble;
+    shake.connect(shakeDepth).connect(voice.frequency);
+    env.gain.setValueAtTime(0, at);
+    env.gain.linearRampToValueAtTime(gain, at + 0.02);
+    env.gain.setValueAtTime(gain, at + length * 0.7);
+    env.gain.exponentialRampToValueAtTime(0.0001, at + length);
+    for (const frequency of VOWELS[vowel]) {
+        const formant = ctx.createBiquadFilter();
+        formant.type = 'bandpass';
+        formant.frequency.value = frequency * APE_MOUTH;
+        formant.Q.value = 5;
+        voice.connect(formant).connect(env);
+    }
+    env.connect(master);
+    voice.start(at);
+    shake.start(at);
+    voice.stop(at + length + 0.05);
+    shake.stop(at + length + 0.05);
+}
+
 /** Filtered noise, sweeping between two frequencies: the sound of paper or felt */
 function swish(ctx, at, duration, { from = 3000, to = 900, gain = 0.35 } = {}) {
     const samples = Math.ceil(ctx.sampleRate * duration);
@@ -85,6 +125,41 @@ const SOUNDS = {
     },
     // A wooden tick for the last seconds of your turn
     tick: (ctx, at) => tone(ctx, at, 900, 0.04, { type: 'sine', gain: 0.12 }),
+    // Monkey Fight: a body blow, a bone-cracking crit, a swing in the air, a banana, the bell and the screech
+    punch: (ctx, at) => {
+        swish(ctx, at, 0.08, { from: 900, to: 200, gain: 0.6 });
+        tone(ctx, at, 130, 0.14, { type: 'sine', gain: 0.5, slideTo: 45 });
+    },
+    smash: (ctx, at) => {
+        swish(ctx, at, 0.04, { from: 5000, to: 2500, gain: 0.5 });
+        swish(ctx, at + 0.01, 0.16, { from: 700, to: 120, gain: 0.8 });
+        tone(ctx, at, 95, 0.3, { type: 'sine', gain: 0.7, slideTo: 32 });
+    },
+    whoosh: (ctx, at) => swish(ctx, at, 0.22, { from: 300, to: 2200, gain: 0.3 }),
+    chomp: (ctx, at) => [0, 0.11, 0.22].forEach((d) => swish(ctx, at + d, 0.05, { from: 1400, to: 700, gain: 0.35 })),
+    bell: (ctx, at) =>
+        [0, 0.35].forEach((d) =>
+            [523, 1210, 1690, 2380].forEach((f, i) => tone(ctx, at + d, f, 1.4 - i * 0.2, { type: 'sine', gain: 0.12 / (i + 1) })),
+        ),
+    // Apes: a pant-hoot that climbs into a scream, grunts, yelps and a chest beat
+    screech: (ctx, at) => {
+        ape(ctx, at, { from: 500, to: 900, vowel: 'ee', length: 0.14 });
+        ape(ctx, at + 0.15, { from: 650, to: 1100, vowel: 'ee', length: 0.14 });
+        ape(ctx, at + 0.32, { from: 900, to: 1500, vowel: 'ah', length: 0.38, gain: 0.4 });
+    },
+    hoot: (ctx, at) => {
+        [0, 0.16, 0.3, 0.42, 0.52].forEach((d, i) => ape(ctx, at + d, { from: 220 + i * 50, to: 300 + i * 60, vowel: 'oo', length: 0.12 }));
+        ape(ctx, at + 0.64, { from: 700, to: 1000, vowel: 'ah', length: 0.3, gain: 0.35 });
+        ape(ctx, at + 0.98, { from: 750, to: 1050, vowel: 'ah', length: 0.32, gain: 0.35 });
+    },
+    grunt: (ctx, at) => ape(ctx, at, { from: 170, to: 120, vowel: 'oo', length: 0.14, gain: 0.35 }),
+    yelp: (ctx, at) => ape(ctx, at, { from: 900, to: 1300, vowel: 'ah', length: 0.13, gain: 0.25 }),
+    scream: (ctx, at) => ape(ctx, at, { from: 1100, to: 1700, vowel: 'ee', length: 0.4, gain: 0.35, wobble: 40 }),
+    chatter: (ctx, at) =>
+        [0, 0.08, 0.16, 0.24].forEach((d, i) => ape(ctx, at + d, { from: 700 + i * 60, to: 950, vowel: 'ah', length: 0.07, gain: 0.22 })),
+    ooh: (ctx, at) => ape(ctx, at, { from: 260, to: 380, vowel: 'oo', length: 0.22, gain: 0.3 }),
+    chestbeat: (ctx, at) =>
+        [0, 0.09, 0.18, 0.27, 0.36, 0.45, 0.54].forEach((d) => tone(ctx, at + d, 95, 0.1, { type: 'sine', gain: 0.55, slideTo: 60 })),
     pop: (ctx, at) => {
         swish(ctx, at, 0.05, { from: 1200, to: 300, gain: 0.5 });
         tone(ctx, at, 160, 0.08, { type: 'sine', gain: 0.25, slideTo: 60 });
@@ -221,6 +296,66 @@ export function createFlightSound() {
                 tone(ctx, t + 0.04, 80, 0.7, { type: 'sine', gain: 0.5, slideTo: 32 });
                 swish(ctx, t + 0.04, 0.35, { from: 600, to: 120, gain: 0.4 });
             }
+        },
+    };
+}
+
+/**
+ * A crowd around the fight pit: a low murmur that never stops while it plays, and a roar on demand.
+ * Never throws: on a device without audio every method does nothing
+ */
+export function createCrowdSound() {
+    const silent = { roar() {}, stop() {} };
+    let ctx;
+    try {
+        ctx = audio();
+    } catch {
+        return silent;
+    }
+    if (!ctx) {
+        return silent;
+    }
+    const now = ctx.currentTime;
+    const crowd = brownNoise(ctx);
+    const voices = ctx.createBiquadFilter();
+    voices.type = 'bandpass';
+    voices.frequency.value = 520;
+    voices.Q.value = 0.7;
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.18, now + 1);
+    // The murmur rises and falls on its own, like people talking over each other
+    const sway = ctx.createOscillator();
+    const swayDepth = ctx.createGain();
+    sway.frequency.value = 0.4;
+    swayDepth.gain.value = 0.05;
+    sway.connect(swayDepth).connect(gain.gain);
+    crowd.connect(voices).connect(gain).connect(master);
+    crowd.start(now);
+    sway.start(now);
+    let stopped = false;
+    return {
+        roar(strength = 1) {
+            if (stopped) {
+                return;
+            }
+            const t = ctx.currentTime;
+            gain.gain.cancelScheduledValues(t);
+            gain.gain.setTargetAtTime(0.18 + 0.5 * strength, t, 0.06);
+            gain.gain.setTargetAtTime(0.18, t + 0.5 + strength * 0.6, 0.5);
+            voices.frequency.setTargetAtTime(700 + 400 * strength, t, 0.05);
+            voices.frequency.setTargetAtTime(520, t + 0.6, 0.4);
+        },
+        stop() {
+            if (stopped) {
+                return;
+            }
+            stopped = true;
+            const t = ctx.currentTime;
+            gain.gain.cancelScheduledValues(t);
+            gain.gain.setTargetAtTime(0, t, 0.4);
+            crowd.stop(t + 2);
+            sway.stop(t + 2);
         },
     };
 }

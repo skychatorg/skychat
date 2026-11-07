@@ -183,6 +183,7 @@ export class PlayerChannelManager extends EventEmitter {
         session.send('lucky-pop', null);
         session.send('crash', null);
         session.send('daily-roll', null);
+        session.send('monkey-fight', null);
 
         // Notify all connections of this session that the channel changed
         session.send('player-channel', null);

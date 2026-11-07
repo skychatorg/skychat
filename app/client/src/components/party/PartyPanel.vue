@@ -2,6 +2,7 @@
 import CasinoTable from '@/components/casino/CasinoTable.vue';
 import CrashGame from '@/components/party/CrashGame.vue';
 import DailyRoll from '@/components/party/DailyRoll.vue';
+import MonkeyFight from '@/components/party/MonkeyFight.vue';
 import LuckyPop from '@/components/party/LuckyPop.vue';
 import { useCountdown } from '@/composables/useCountdown';
 import { useNow } from '@/composables/useNow';
@@ -21,6 +22,7 @@ const meta = (game) =>
         crash: limits.value && `bets ${betLimits(limits.value)} · up to ×100`,
         luckypop: '$1 to $20 a balloon',
         dailyroll: 'free · once a day',
+        monkeys: limits.value && `bets ${betLimits(limits.value)} · up to ×50`,
     })[game] ?? '';
 
 // Daily Roll is locked for the whole channel until 10 PM once played
@@ -49,6 +51,7 @@ const voteGames = computed(() =>
             return {
                 id,
                 name: PARTY_GAMES[id].name,
+                emoji: PARTY_GAMES[id].emoji,
                 again: id === party.value.lastGame,
                 locked: lockLabel(id),
                 voters,
@@ -68,6 +71,7 @@ const vote = (game) => client.sendMessage(`/party vote ${game}`);
             <LuckyPop v-else-if="party.game === 'luckypop' && client.state.luckyPop" />
             <CrashGame v-else-if="party.game === 'crash' && client.state.crash" />
             <DailyRoll v-else-if="party.game === 'dailyroll' && client.state.dailyRoll" />
+            <MonkeyFight v-else-if="party.game === 'monkeys' && client.state.monkeyFight" />
         </template>
 
         <section v-else-if="party.phase === 'vote'" class="screen" aria-labelledby="party-vote-title">
@@ -88,7 +92,10 @@ const vote = (game) => client.sendMessage(`/party vote ${game}`);
                     :disabled="isGuest || Boolean(game.locked)"
                     @click="vote(game.id)"
                 >
-                    <span class="name">{{ game.again ? `Again: ${game.name}` : game.name }}</span>
+                    <span class="name"
+                        ><span class="emoji" aria-hidden="true">{{ game.emoji }}</span>
+                        {{ game.again ? `Again: ${game.name}` : game.name }}</span
+                    >
                     <span v-if="game.locked" class="sub">{{ game.locked }}</span>
                     <span v-else class="sub">
                         {{ game.voters.length }} vote{{ game.voters.length === 1 ? '' : 's'
@@ -115,7 +122,9 @@ const vote = (game) => client.sendMessage(`/party vote ${game}`);
                     :disabled="isGuest || Boolean(game.locked)"
                     @click="pick(game.id)"
                 >
-                    <span class="name">{{ game.name }}</span>
+                    <span class="name"
+                        ><span class="emoji" aria-hidden="true">{{ game.emoji }}</span> {{ game.name }}</span
+                    >
                     <span class="pitch">{{ game.pitch }}</span>
                     <span class="sub">{{ game.locked ?? game.meta }}</span>
                 </button>
@@ -183,8 +192,8 @@ const vote = (game) => client.sendMessage(`/party vote ${game}`);
 }
 .games {
     display: grid;
-    /* Two by two when there is room, the short and narrow rules below take over otherwise */
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    /* Two rows when there is room, the short and narrow rules below take over otherwise */
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: clamp(6px, 2cqw, 16px);
 }
 .game {
@@ -281,6 +290,12 @@ const vote = (game) => client.sendMessage(`/party vote ${game}`);
     .sub,
     .lead {
         display: none;
+    }
+}
+/* Medium width: two per row */
+@container (max-width: 700px) and (min-height: 201px) {
+    .games {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 /* Narrow: the cards stack */

@@ -39,6 +39,9 @@ const partyRound = computed(() => {
             done: 'Cards revealed',
         }[client.state.dailyRoll.phase];
     }
+    if (client.state.monkeyFight) {
+        return `Fight ${client.state.monkeyFight.fight} of ${client.state.monkeyFight.fights}`;
+    }
     if (client.state.crash) {
         return `Flight ${client.state.crash.flight} of ${client.state.crash.flights}`;
     }

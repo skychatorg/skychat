@@ -5,15 +5,28 @@ import type { PlayerChannel } from '../PlayerChannel.js';
 import { Crash } from './Crash.js';
 import { DailyRoll } from './DailyRoll.js';
 import { LuckyPop } from './LuckyPop.js';
+import { MonkeyFight } from './MonkeyFight.js';
 
-export const PARTY_GAMES = { blackjack: 'Blackjack', luckypop: 'Lucky Pop', crash: 'Crash', dailyroll: 'Daily Roll' } as const;
+export const PARTY_GAMES = {
+    blackjack: 'Blackjack',
+    luckypop: 'Lucky Pop',
+    crash: 'Crash',
+    dailyroll: 'Daily Roll',
+    monkeys: 'Monkey Fight',
+} as const;
 
 export type PartyGameId = keyof typeof PARTY_GAMES;
 
-type PartyGame = BlackjackTable | LuckyPop | Crash | DailyRoll;
+type PartyGame = BlackjackTable | LuckyPop | Crash | DailyRoll | MonkeyFight;
 
 /** What each game sends its state as, null clears it */
-const GAME_EVENTS = { blackjack: 'casino-table', luckypop: 'lucky-pop', crash: 'crash', dailyroll: 'daily-roll' } as const;
+const GAME_EVENTS = {
+    blackjack: 'casino-table',
+    luckypop: 'lucky-pop',
+    crash: 'crash',
+    dailyroll: 'daily-roll',
+    monkeys: 'monkey-fight',
+} as const;
 
 /**
  * - lobby: no game, the first pick starts one
@@ -86,6 +99,10 @@ export class Party {
 
     public get dailyRoll(): DailyRoll | null {
         return this.game instanceof DailyRoll ? this.game : null;
+    }
+
+    public get monkeyFight(): MonkeyFight | null {
+        return this.game instanceof MonkeyFight ? this.game : null;
     }
 
     public pick(session: Session, game: string): void {
@@ -185,6 +202,7 @@ export class Party {
             luckypop: () => new LuckyPop(this, onRoundEnd),
             crash: () => new Crash(this, onRoundEnd),
             dailyroll: () => new DailyRoll(this, onRoundEnd),
+            monkeys: () => new MonkeyFight(this, onRoundEnd),
         }[game]();
         if (game === 'dailyroll') {
             this.dailyRollAt = DailyRoll.nextReset(Date.now());

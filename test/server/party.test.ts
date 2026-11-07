@@ -7,6 +7,7 @@ import { PlayerPlugin } from '../../app/server/plugins/player/PlayerPlugin.js';
 import { BALLOONS, LuckyPop } from '../../app/server/plugins/player/party/LuckyPop.js';
 import { Crash } from '../../app/server/plugins/player/party/Crash.js';
 import { DailyRoll } from '../../app/server/plugins/player/party/DailyRoll.js';
+import { MonkeyFight, simulate } from '../../app/server/plugins/player/party/MonkeyFight.js';
 import { Party } from '../../app/server/plugins/player/party/Party.js';
 import { UserController } from '../../app/server/skychat/UserController.js';
 import { hand } from './cards.js';
@@ -61,7 +62,10 @@ async function partyChannel(players = 2, { idleMs = 100 } = {}) {
             game.timings = { pickMs: 800, lastCallMs: 30, countdownMs: 5, flipMs: 1, suspenseMs: 5, afterFlipMs: 1, resultsMs: 30 };
             // Every card $5, the last one the jackpot
             game.random = scripted([]);
-        } else {
+        } else if (game instanceof MonkeyFight) {
+            game.timings = { betMs: 600, lastCallMs: 20, introMs: 5, beatMs: 2, resultsMs: 30 };
+            game.random = scripted([]);
+        } else if (game instanceof Crash) {
             // ×2 every 100 ms
             game.timings = { betMs: 80, beatMs: 10, doubleMs: 100, crashedMs: 40 };
             game.random = scripted([]);
@@ -670,5 +674,85 @@ describe('daily roll', () => {
         await bob.send('/party vote dailyroll');
         expect(bob.errors()).toHaveLength(1);
         expect(bob.last('party').votes).toEqual({ dailyroll: [bob.session.user.username] });
+    });
+});
+
+describe('monkey fight', () => {
+    // The monkeys arrive once their odds are priced
+    const phase = (party: Party, wanted: string) =>
+        until(() => party.monkeyFight?.sanitized().phase === wanted && party.monkeyFight.sanitized().monkeys.length > 0, 4000);
+
+    it('always ends with one winner, even when every roll misses', () => {
+        const game = new MonkeyFight({} as Party, () => {});
+        game.random = scripted([]);
+        const monkeys = game['drawMonkeys']();
+        const { events, winner } = simulate(monkeys, scripted([]));
+        expect(events.length).toBeLessThanOrEqual(80);
+        expect(monkeys.map((m) => m.id)).toContain(winner);
+        expect(new Set(monkeys.map((m) => m.name)).size).toBe(4);
+    });
+
+    it('prices every monkey fairly, so a bet is worth its stake on average', async () => {
+        const game = new MonkeyFight({} as Party, () => {});
+        const monkeys = game['drawMonkeys']();
+        const odds = await game.computeOdds(monkeys);
+        // Odds are 1 / chance: the chances they imply add up to about 1
+        expect(odds.reduce((sum, o) => sum + 100 / o, 0)).toBeCloseTo(1, 1);
+        odds.forEach((o) => expect(o).toBeGreaterThanOrEqual(101));
+    });
+
+    it('takes one bet per player, hides traits and the fight while betting, and pays the winners when the fight is over', async () => {
+        const { party, clients } = await partyChannel(2);
+        const [alice, bob] = clients;
+        const guest = await server.connect(null);
+        await guest.send(`/playerchannel join ${party.channel.id}`);
+        await alice.send('/party pick monkeys');
+        await phase(party, 'betting');
+
+        const betting = alice.last('monkey-fight');
+        expect(betting.monkeys).toHaveLength(4);
+        expect(betting.monkeys.every((m: { trait: unknown }) => m.trait === null)).toBe(true);
+        expect(betting.events).toBeNull();
+
+        await guest.send('/party back 0 1000');
+        await alice.send('/party back 9 1000');
+        expect(guest.errors()).toEqual(['Log in to play']);
+        expect(alice.errors()).toEqual(['No such monkey']);
+
+        // Switching monkey or amount only moves the difference
+        await alice.send('/party back 1 3000');
+        await alice.send('/party back 0 1000');
+        expect(alice.errors()).toHaveLength(1);
+        expect(alice.session.user.money).toBe(19000);
+        expect(party.monkeyFight!.sanitized().bets).toMatchObject([{ monkey: 0, bet: 1000 }]);
+
+        // Bob backs every monkey but Alice's, so one of the two wins
+        await bob.send('/party back 1 1000');
+        await until(() => party.monkeyFight?.sanitized().phase === 'fighting');
+        const fight = party.monkeyFight!.sanitized();
+        expect(fight.monkeys.every((m) => m.trait !== null)).toBe(true);
+        // Nobody is paid before the last punch
+        expect([alice.session.user.money, bob.session.user.money]).toEqual([19000, 19000]);
+
+        await phase(party, 'done');
+        const done = party.monkeyFight!.sanitized();
+        const winners = done.bets.filter((b) => b.payout);
+        winners.forEach((b) => expect(b.payout).toBe(Math.floor((b.bet * done.monkeys[b.monkey].odds) / 100)));
+        await until(() => alice.session.user.money + bob.session.user.money === 38000 + winners.reduce((s, b) => s + b.payout!, 0));
+    });
+
+    it('ends the round when nobody bets, and refunds bets still open when the game is destroyed', async () => {
+        const { party, clients } = await partyChannel(2);
+        const [alice] = clients;
+        await alice.send('/party pick monkeys');
+        await phase(party, 'betting');
+        await alice.send('/party back 2 1000');
+        expect(alice.session.user.money).toBe(19000);
+        await party.monkeyFight!.destroy();
+        expect(alice.session.user.money).toBe(20000);
+
+        const other = await partyChannel(1);
+        await other.clients[0].send('/party pick monkeys');
+        await until(() => other.party.sanitized().phase !== 'playing', 4000);
     });
 });
