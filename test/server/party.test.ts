@@ -40,10 +40,12 @@ async function until(check: () => boolean, ms = 2000) {
 }
 
 const scripted = (rolls: number[]) => (max: number) => (rolls.length ? (rolls.shift() as number) : max - 1);
-/** Lucky Pop skies with a special balloon at id 0, the hot air one followed by the rolls that keep the sky in order, so its burst roll can come next */
+/** Lucky Pop skies with a special balloon at id 0. The hot air one also rolls no second special and keeps the sky in order, so its burst roll can come next */
 const PEEK = [0, 1];
 const PINATA = [0, 2];
-const HOT_AIR = [0, 3, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1];
+const FREEZE = [0, 4];
+const PATIENCE = [0, 5];
+const HOT_AIR = [0, 3, 99, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1];
 
 /**
  * A party channel with short timers and the given players in it, $200 each (money is in cents)
@@ -270,7 +272,7 @@ describe('lucky pop', () => {
         expect(sizes(golden).filter((s) => s === 'md')).toHaveLength(3);
         await golden.destroy();
 
-        // Alone, no piñata or hot air balloon: the last special is the peek one
+        // Alone, only golden and peek: the last special is the peek one
         const solo = new LuckyPop(party, () => {});
         solo.random = scripted([0]);
         solo.start();
@@ -283,6 +285,18 @@ describe('lucky pop', () => {
         expect(sizes(peek)[0]).toBe('peek');
         expect(sizes(peek).filter((s) => s === 'xs')).toHaveLength(6);
         await peek.destroy();
+    });
+
+    it('sometimes adds a second special, never the same as the first', async () => {
+        const { party, clients } = await partyChannel(2);
+        await clients[0].send('/party pick luckypop');
+        const two = new LuckyPop(party, () => {});
+        // Golden, then the third of those left
+        two.random = scripted([0, 0, 0, 2]);
+        two.start();
+        const specials = two.sanitizedFor(clients[0].session).balloons.filter((b) => !['xs', 'md', 'lg'].includes(b.size));
+        expect(specials.map((b) => b.size).sort()).toEqual(['golden', 'hotair']);
+        await two.destroy();
     });
 
     it('charges the price, pays what was inside, and shows it to everyone', async () => {
@@ -358,7 +372,7 @@ describe('lucky pop', () => {
 
         expect(results.map((r) => r.status)).toEqual(['fulfilled', 'rejected']);
         expect(bob.session.user.money).toBe(20000);
-        expect(alice.session.user.money).toBe(20000 - 2000 + 3800);
+        expect(alice.session.user.money).toBe(20000 - 2000 + 4200);
     });
 
     it('gives the balloon back when paying fails', async () => {
@@ -531,6 +545,62 @@ describe('lucky pop', () => {
         await bob.send('/party pop 7');
         expect(bob.session.user.money).toBe(20000 - 500 + 2000);
         expect(alice.session.user.money).toBe(20000 - 100);
+    });
+
+    it('lets whoever pops the freeze balloon pop alone for 10 s', async () => {
+        const { clients } = await partyChannel(2, { sky: FREEZE });
+        const [alice, bob] = clients;
+        await alice.send('/party pick luckypop');
+
+        await alice.send('/party pop 0');
+        await bob.send('/party pop 1');
+        await settle(70);
+        await alice.send('/party pop 1');
+
+        expect(alice.errors()).toEqual([]);
+        expect(bob.errors()).toEqual([`${alice.session.user.username} froze the sky, wait 10 s`]);
+        expect(bob.last('lucky-pop').frozen).toMatchObject({ username: alice.session.user.username });
+        expect(bob.last('lucky-pop').balloons[0].result).toMatchObject({ kind: 'freeze', label: 'froze the sky for 10 s' });
+    });
+
+    it('turns a balloon into the patience balloon once two players popped, and grows its prize with every pop', async () => {
+        const { party, clients } = await partyChannel(2, { sky: PATIENCE });
+        const [alice, bob] = clients;
+        await alice.send('/party pick luckypop');
+        const sizes = () => alice.last('lucky-pop').balloons.map((b: { size: string }) => b.size);
+        // Two xs prizes, then the first balloon left turns
+        rig(party, [0, 0, 0, 0]);
+
+        await alice.send('/party pop 0');
+        expect(sizes()).not.toContain('patience');
+        await bob.send('/party pop 1');
+        expect(sizes()[2]).toBe('patience');
+        expect(alice.last('lucky-pop').balloons[2].worth).toBe(500);
+
+        await settle(70);
+        await alice.send('/party pop 3');
+        expect(alice.last('lucky-pop').balloons[2].worth).toBe(750);
+        await settle(70);
+        await bob.send('/party pop 2');
+
+        expect([alice.errors(), bob.errors()]).toEqual([[], []]);
+        expect(bob.session.user.money).toBe(20000 - 100 + 140 - 500 + 750);
+    });
+
+    it('never turns a balloon someone peeked at into the patience balloon', async () => {
+        // Peek at id 0, then patience as the second special
+        const { party, clients } = await partyChannel(2, { sky: [0, 1, 0, 4] });
+        const [alice, bob] = clients;
+        await alice.send('/party pick luckypop');
+        // Alice peeks at id 1, Bob pops id 2, then the first balloon left that nobody peeked turns
+        rig(party, [0, 0, 0, 0]);
+
+        await alice.send('/party pop 0');
+        await bob.send('/party pop 2');
+
+        const sizes = alice.last('lucky-pop').balloons.map((b: { size: string }) => b.size);
+        expect([sizes[1], sizes[3]]).toEqual(['xs', 'patience']);
+        expect(alice.last('lucky-pop').balloons[1].peek).not.toBeNull();
     });
 
     it('ends the round on its timer, or right after the last balloon', async () => {

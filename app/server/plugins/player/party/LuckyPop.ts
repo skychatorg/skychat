@@ -8,9 +8,9 @@ import { SandalePlugin } from '../../games/global/SandalePlugin.js';
 import { logFailure } from '../casino/BlackjackTable.js';
 import type { Party } from './Party.js';
 
-export type BalloonSize = 'xs' | 'md' | 'lg' | 'golden' | 'pinata' | 'hotair' | 'peek';
+export type BalloonSize = 'xs' | 'md' | 'lg' | 'golden' | 'pinata' | 'hotair' | 'peek' | 'freeze' | 'patience';
 
-export type PrizeKind = 'money' | 'jackpot' | 'pinata' | 'peek' | 'empty' | 'malus' | 'lose';
+export type PrizeKind = 'money' | 'jackpot' | 'pinata' | 'peek' | 'freeze' | 'empty' | 'malus' | 'lose';
 
 /** Chances are in percent and add up to 100. Amounts are in cents, like user money */
 export type Prize = { chance: number; kind: PrizeKind; amount: number };
@@ -35,7 +35,7 @@ export const BALLOONS: { [size in BalloonSize]: { price: number; prizes: Prize[]
     md: {
         price: 500,
         prizes: [
-            { chance: 40, kind: 'money', amount: 600 },
+            { chance: 40, kind: 'money', amount: 650 },
             { chance: 12, kind: 'money', amount: 2000 },
             { chance: 17, kind: 'empty', amount: 0 },
             { chance: 30, kind: 'malus', amount: 0 },
@@ -46,7 +46,7 @@ export const BALLOONS: { [size in BalloonSize]: { price: number; prizes: Prize[]
     lg: {
         price: 2000,
         prizes: [
-            { chance: 30, kind: 'money', amount: 3800 },
+            { chance: 30, kind: 'money', amount: 4200 },
             { chance: 7, kind: 'money', amount: 12000 },
             { chance: 22, kind: 'empty', amount: 0 },
             { chance: 30, kind: 'malus', amount: 0 },
@@ -70,6 +70,10 @@ export const BALLOONS: { [size in BalloonSize]: { price: number; prizes: Prize[]
     hotair: { price: 500, prizes: [], maluses: [] },
     // Shows the popper what another balloon holds
     peek: { price: 100, prizes: [], maluses: [] },
+    // Nobody else can pop for FREEZE_MS
+    freeze: { price: 25, prizes: [], maluses: [] },
+    // Never in the sky at first: a balloon turns into it once two players have popped. Its prize grows with every pop after that
+    patience: { price: 500, prizes: [], maluses: [] },
 };
 
 export const MALUS_LABELS: { [malus in Malus]: string } = {
@@ -85,8 +89,8 @@ export const MALUS_LABELS: { [malus in Malus]: string } = {
 /** 7 xs, 4 md, 1 lg, and in most rounds one special balloon in place of an xs (or an md for the golden one) */
 const SKY: BalloonSize[] = ['xs', 'xs', 'xs', 'xs', 'xs', 'xs', 'xs', 'md', 'md', 'md', 'md', 'lg'];
 
-/** The last two are races between players: a player alone only gets the first two */
-const SPECIALS: BalloonSize[] = ['golden', 'peek', 'pinata', 'hotair'];
+/** All but the first two are races between players: a player alone only gets the first two */
+const SPECIALS: BalloonSize[] = ['golden', 'peek', 'pinata', 'hotair', 'freeze', 'patience'];
 
 /**
  * - `prize`: drawn on the first peek or pop, so a peek shows what the pop will give
@@ -119,6 +123,8 @@ export type SanitizedLuckyPop = {
         pot: number;
         /** What's inside, only for a viewer who peeked at it */
         peek: Prize | null;
+        /** The patience balloon's prize right now */
+        worth: number | null;
     }[];
     /** What each size costs and holds, shown on hover. Maluses are only named once someone gets one */
     sizes: { [size in BalloonSize]: { price: number; prizes: Prize[] } };
@@ -126,6 +132,8 @@ export type SanitizedLuckyPop = {
     pinataOdds: number;
     /** The hot air balloon's prize is its price × 2^((now − startedAt) / doubleMs) */
     hotAir: { startedAt: number; doubleMs: number };
+    /** Who froze the sky, until when. Null when it isn't frozen */
+    frozen: { username: string; until: number } | null;
     /** The viewer's own limits */
     you: { nextPopAt: number; grounded: boolean };
 };
@@ -136,7 +144,15 @@ export type SanitizedLuckyPop = {
  */
 export class LuckyPop {
     /** In percent: the share of rounds with a special balloon */
-    static readonly SPECIAL_CHANCE = 65;
+    static readonly SPECIAL_CHANCE = 78;
+
+    /** In percent: the share of skies with a special that get a second, different one */
+    static readonly SECOND_SPECIAL_CHANCE = 30;
+
+    static readonly FREEZE_MS = 10_000;
+
+    /** What the patience balloon's prize gains with each balloon popped after it appears */
+    static readonly PATIENCE_STEP = 250;
 
     static readonly HOT_AIR_DOUBLE_MS = 20_000;
 
@@ -173,6 +189,11 @@ export class LuckyPop {
     private burstAt = Infinity;
 
     private burstTimer: ReturnType<typeof setTimeout> | undefined;
+
+    private frozen: { session: Session; until: number } | null = null;
+
+    /** The patience balloon: none, waiting for two players to pop, or out since this many balloons were popped */
+    private patience: 'none' | 'waiting' | number = 'none';
 
     private readonly nextPopAt = new Map<Session, number>();
 
@@ -215,6 +236,10 @@ export class LuckyPop {
         }
         if (this.grounded.has(session)) {
             throw new Error('You are grounded until the next round');
+        }
+        const frozen = this.frozen && this.frozen.session !== session ? this.frozen.until - Date.now() : 0;
+        if (frozen > 0) {
+            throw new Error(`${this.frozen!.session.user.username} froze the sky, wait ${Math.ceil(frozen / 1000)} s`);
         }
         const wait = (this.nextPopAt.get(session) ?? 0) - Date.now();
         if (wait > 0) {
@@ -274,11 +299,17 @@ export class LuckyPop {
                 result,
                 hits,
                 pot,
-                peek: peekedBy.has(session) ? prize : null,
+                // Only on balloons that still hold their prize: never on one that turned into the patience balloon
+                peek: peekedBy.has(session) && BALLOONS[size].prizes.length ? prize : null,
+                worth: size === 'patience' && !popped ? this.patienceWorth() : null,
             })),
             sizes: LuckyPop.SIZES,
             pinataOdds: LuckyPop.PINATA_ODDS,
             hotAir: { startedAt: this.startedAt, doubleMs: this.timings.hotAirDoubleMs },
+            frozen:
+                this.frozen && this.frozen.until > Date.now()
+                    ? { username: this.frozen.session.user.username, until: this.frozen.until }
+                    : null,
             you: { nextPopAt: this.nextPopAt.get(session) ?? 0, grounded: this.grounded.has(session) },
         };
     }
@@ -287,9 +318,20 @@ export class LuckyPop {
         const sizes: BalloonSize[] = [...SKY];
         if (this.random(100) < LuckyPop.SPECIAL_CHANCE) {
             const players = this.party.channel.sessions.filter((s) => !s.user.isGuest()).length;
-            const specials = players > 1 ? SPECIALS : SPECIALS.slice(0, 2);
-            const special = specials[this.random(specials.length)];
-            sizes[sizes.indexOf(special === 'golden' ? 'md' : 'xs')] = special;
+            const specials = players > 1 ? [...SPECIALS] : SPECIALS.slice(0, 2);
+            const add = () => {
+                // Taken out of the list, so a second special is always a different one
+                const [special] = specials.splice(this.random(specials.length), 1);
+                if (special === 'patience') {
+                    this.patience = 'waiting';
+                } else {
+                    sizes[sizes.indexOf(special === 'golden' ? 'md' : 'xs')] = special;
+                }
+            };
+            add();
+            if (this.random(100) < LuckyPop.SECOND_SPECIAL_CHANCE) {
+                add();
+            }
         }
         // Shuffled, so the big one is not always in the same spot
         for (let i = sizes.length - 1; i > 0; i--) {
@@ -355,8 +397,30 @@ export class LuckyPop {
         this.afterPop();
     }
 
+    /** Its price, plus a step for each balloon popped since it appeared */
+    private patienceWorth(): number {
+        // Not counting itself, popped just before it pays
+        const popped = this.balloons.filter((b) => b.popped && b.size !== 'patience').length;
+        return BALLOONS.patience.price + LuckyPop.PATIENCE_STEP * (popped - (this.patience as number));
+    }
+
+    /** Once two players have popped, a random balloon left turns into the patience balloon */
+    private maybeRevealPatience(): void {
+        const poppers = new Set(this.balloons.map((b) => b.result?.username).filter(Boolean));
+        const regular = this.balloons.filter((b) => !b.popped && ['xs', 'md', 'lg'].includes(b.size));
+        // A balloon nobody peeked at, so no one holds a peek of what it used to be
+        const unpeeked = regular.filter((b) => !b.peekedBy.size);
+        const left = unpeeked.length ? unpeeked : regular;
+        if (this.patience !== 'waiting' || poppers.size < 2 || !left.length) {
+            return;
+        }
+        left[this.random(left.length)].size = 'patience';
+        this.patience = this.balloons.filter((b) => b.popped).length;
+    }
+
     /** Show the change, and end the round soon once the sky is empty */
     private afterPop(): void {
+        this.maybeRevealPatience();
         this.broadcast();
         if (this.balloons.every((b) => b.popped)) {
             clearTimeout(this.timer);
@@ -387,6 +451,17 @@ export class LuckyPop {
             await UserController.giveMoney(session.user, amount, 'Lucky Pop win');
             return { ...base, kind: 'money', amount, label: '+' + formatMoney(amount) };
         }
+        if (size === 'freeze') {
+            this.frozen = { session, until: Date.now() + LuckyPop.FREEZE_MS };
+            // Everyone sees the sky thaw on time
+            setTimeout(() => this.broadcast(), LuckyPop.FREEZE_MS);
+            return { ...base, kind: 'freeze', label: `froze the sky for ${LuckyPop.FREEZE_MS / 1000} s` };
+        }
+        if (size === 'patience') {
+            const amount = this.patienceWorth();
+            await UserController.giveMoney(session.user, amount, 'Lucky Pop win');
+            return { ...base, kind: 'money', amount, label: '+' + formatMoney(amount) };
+        }
         if (size === 'peek') {
             // Another balloon that holds a prize, ones you have not peeked at first
             const targets = this.balloons.filter((b) => !b.popped && BALLOONS[b.size].prizes.length);
@@ -411,6 +486,7 @@ export class LuckyPop {
             case 'jackpot':
             case 'pinata':
             case 'peek':
+            case 'freeze':
                 await UserController.giveMoney(session.user, prize.amount, 'Lucky Pop win');
                 return {
                     ...result,

@@ -318,6 +318,12 @@ const SOUNDS = {
         [0, 0.12, 0.24, 0.36].forEach((d, i) =>
             tone(ctx, at + d, i % 2 ? 2300 : 1900, 0.09, { type: 'sine', gain: 0.1, slideTo: i % 2 ? 2900 : 2500 }),
         ),
+    // Lucky Pop: ice cracking over the sky, and a twinkle when the patience balloon turns up
+    freeze: (ctx, at) => {
+        [0, 0.05, 0.13].forEach((d) => swish(ctx, at + d, 0.06, { from: 6000, to: 3000, gain: 0.35 }));
+        [1568, 2093, 2637, 3136].forEach((f, i) => tone(ctx, at + 0.1 + i * 0.07, f, 0.8, { type: 'sine', gain: 0.07 }));
+    },
+    sparkle: (ctx, at) => [1319, 1760, 2349, 2637, 3520].forEach((f, i) => tone(ctx, at + i * 0.06, f, 0.5, { type: 'sine', gain: 0.08 })),
     pop: (ctx, at) => {
         swish(ctx, at, 0.05, { from: 1200, to: 300, gain: 0.5 });
         tone(ctx, at, 160, 0.08, { type: 'sine', gain: 0.25, slideTo: 60 });

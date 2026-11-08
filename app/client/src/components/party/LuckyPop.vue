@@ -6,7 +6,19 @@ import { useClientStore } from '@/stores/client';
 import { formatMoney } from '../../../../api/money.ts';
 import { computed, ref, watch } from 'vue';
 
-const SIZE_LABELS = { xs: 'xs', md: 'md', lg: 'lg', golden: 'golden', pinata: 'piñata', hotair: 'hot air', peek: 'peek' };
+const SIZE_LABELS = {
+    xs: 'xs',
+    md: 'md',
+    lg: 'lg',
+    golden: 'golden',
+    pinata: 'piñata',
+    hotair: 'hot air',
+    peek: 'peek',
+    freeze: 'freeze',
+    patience: 'patience',
+};
+/** Drawn on the special balloons that have no look of their own */
+const MARKS = { peek: '?', freeze: '❄', patience: '⏳' };
 const MALUS_WORDS = { xs: 'mild', md: 'medium', lg: 'nasty' };
 // A popped balloon has room for a word or two: the feed has the full text
 const MALUS_TAGS = {
@@ -29,6 +41,8 @@ const tag = (result) =>
         ? `+${formatMoney(result.amount)}`
         : result.kind === 'peek'
         ? 'peeked'
+        : result.kind === 'freeze'
+        ? '❄ froze'
         : result.label;
 // What a peek showed you, on the balloon itself
 const peekTag = ({ kind, amount }) =>
@@ -43,6 +57,9 @@ const isGuest = computed(() => !client.state.user.id);
 const secondsLeft = computed(() => Math.max(0, Math.ceil((sky.value.deadline - now.value) / 1000)));
 const cooldown = computed(() => Math.max(0, Math.ceil((sky.value.you.nextPopAt - now.value) / 1000)));
 const left = computed(() => sky.value.balloons.filter((b) => !b.popped).length);
+// Seconds left on a freeze, and whether it locks you out
+const frozenFor = computed(() => (sky.value.frozen ? Math.max(0, Math.ceil((sky.value.frozen.until - now.value) / 1000)) : 0));
+const frozenOut = computed(() => frozenFor.value > 0 && sky.value.frozen.username !== client.state.user.username);
 
 // The round's time always shows, your own limit after it
 const status = computed(() => {
@@ -50,6 +67,10 @@ const status = computed(() => {
         ? 'log in to pop'
         : sky.value.you.grounded
         ? 'grounded'
+        : frozenOut.value
+        ? `❄ ${sky.value.frozen.username} froze the sky: ${frozenFor.value}s`
+        : frozenFor.value
+        ? `❄ the sky is yours: ${frozenFor.value}s`
         : cooldown.value
         ? `next pop in ${cooldown.value}s`
         : null;
@@ -90,6 +111,8 @@ const rules = (size, price) =>
             'first to pop takes the prize',
         ],
         peek: ['no prize inside', 'shows you what another', 'balloon holds, only you'],
+        freeze: ['nobody else can pop', 'for 10 s: the sky is yours'],
+        patience: ['its prize grows with every', 'other balloon popped', 'first to pop it takes it'],
     })[size]?.map((text) => ({ text, kind: 'muted' }));
 
 // The hot air balloon's prize right now, and how much it has inflated
@@ -108,15 +131,19 @@ const balloons = computed(() =>
                     ? `${formatMoney(balloon.pot)} pot`
                     : balloon.size === 'hotair'
                     ? hotAirPrize
+                    : balloon.size === 'patience'
+                    ? formatMoney(balloon.worth)
                     : formatMoney(price),
             aria:
                 balloon.size === 'pinata'
                     ? `Hit the piñata for ${formatMoney(price)}, pot ${formatMoney(balloon.pot)}`
                     : balloon.size === 'hotair'
                     ? `Pop the hot air balloon for ${formatMoney(price)}, prize ${hotAirPrize}`
-                    : `Pop ${balloon.size === 'golden' ? 'the golden' : 'an ' + SIZE_LABELS[balloon.size]} balloon for ${formatMoney(
-                          price,
-                      )}${balloon.peek ? `, you peeked: ${peekTag(balloon.peek)}` : ''}`,
+                    : balloon.size === 'patience'
+                    ? `Pop the patience balloon for ${formatMoney(price)}, prize ${formatMoney(balloon.worth)}`
+                    : `Pop ${['xs', 'md', 'lg'].includes(balloon.size) ? 'an' : 'the'} ${
+                          SIZE_LABELS[balloon.size]
+                      } balloon for ${formatMoney(price)}${balloon.peek ? `, you peeked: ${peekTag(balloon.peek)}` : ''}`,
             odds:
                 rules(balloon.size, formatMoney(price)) ??
                 sky.value.sizes[balloon.size].prizes.map((prize) => oddsLine(balloon.size, prize)),
@@ -126,7 +153,7 @@ const balloons = computed(() =>
         };
     }),
 );
-const canPop = computed(() => !isGuest.value && !sky.value.you.grounded && !cooldown.value);
+const canPop = computed(() => !isGuest.value && !sky.value.you.grounded && !cooldown.value && !frozenOut.value);
 
 // Phones have no hover: the first tap shows the odds, the second pops
 const shown = ref(null);
@@ -156,6 +183,12 @@ watch(
     (hits, before) => app.casinoSound && hits > before && playCasinoSound('punch'),
 );
 
+// The patience balloon turning up
+watch(
+    () => sky.value.balloons.some((b) => b.size === 'patience'),
+    (shown, before) => app.casinoSound && shown && !before && playCasinoSound('sparkle'),
+);
+
 // A pop sound for every balloon that bursts, and how it went for yours
 watch(
     () => feed.value.length,
@@ -165,9 +198,11 @@ watch(
         }
         playCasinoSound('pop');
         const latest = feed.value[0];
-        // A jackpot or a burst piñata is a moment for the whole room
+        // A jackpot, a burst piñata or a frozen sky is a moment for the whole room
         if (latest.kind === 'jackpot' || latest.kind === 'pinata') {
             playCasinoSound('blackjack', 150);
+        } else if (latest.kind === 'freeze') {
+            playCasinoSound('freeze');
         } else if (latest.username === client.state.user.username) {
             playCasinoSound(latest.kind === 'money' ? 'win' : ['empty', 'peek'].includes(latest.kind) ? 'push' : 'lose', 150);
         }
@@ -191,7 +226,7 @@ watch(
                 </button>
             </div>
             <div class="body">
-                <div class="sky">
+                <div class="sky" :class="{ frozen: frozenFor > 0 }">
                     <template v-for="balloon in balloons" :key="balloon.id">
                         <button
                             v-if="!balloon.popped"
@@ -229,7 +264,9 @@ watch(
                                 <ellipse cx="13" cy="12" rx="4" ry="6" fill="#fff" opacity=".3" />
                                 <path d="M17 39l3 3 3-3z" class="skin" />
                                 <path d="M20 42c-3 4 3 7 0 13" stroke="rgba(255,255,255,.4)" stroke-width="1" fill="none" />
-                                <text v-if="balloon.size === 'peek'" x="20" y="27" text-anchor="middle" font-size="20" fill="#fff">?</text>
+                                <text v-if="MARKS[balloon.size]" x="20" y="27" text-anchor="middle" font-size="18" fill="#fff">
+                                    {{ MARKS[balloon.size] }}
+                                </text>
                                 <rect v-if="balloon.size === 'hotair'" x="15" y="48" width="10" height="7" rx="1.5" fill="#a0703c" />
                             </svg>
                             <span v-if="balloon.peek" class="peeked" :class="balloon.peek.kind">👁 {{ peekTag(balloon.peek) }}</span>
@@ -356,6 +393,30 @@ watch(
     --w: calc(var(--b) * 1.2 * var(--grow));
     --skin: #ff7a3d;
     transition: width 1s linear;
+}
+.balloon.freeze {
+    --skin: #8fd8ff;
+}
+.balloon.patience {
+    --w: calc(var(--b) * 1.4);
+    --skin: #3ec9a7;
+}
+/* Frost over the whole sky while someone has it to themselves */
+.sky::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(ellipse at center, transparent 55%, rgb(160 220 255 / 0.35));
+    box-shadow: inset 0 0 0 3px rgb(190 235 255 / 0.6);
+    opacity: 0;
+    transition: opacity 0.4s;
+}
+.sky.frozen::after {
+    opacity: 1;
+}
+.sky.frozen .balloon svg {
+    filter: saturate(0.4) brightness(1.15) hue-rotate(-20deg) drop-shadow(0 0 6px rgb(190 235 255 / 0.8));
 }
 .balloon.peek {
     --w: calc(var(--b) * 1.2);
@@ -539,6 +600,20 @@ watch(
         }
         60% {
             transform: rotate(10deg);
+        }
+    }
+    .balloon.patience {
+        animation:
+            appear 0.9s ease-out,
+            bob 3.2s ease-in-out 0.9s infinite;
+    }
+    @keyframes appear {
+        from {
+            transform: translate(-50%, -50%) scale(0.4) rotate(-20deg);
+            filter: brightness(3);
+        }
+        60% {
+            transform: translate(-50%, -50%) scale(1.25) rotate(6deg);
         }
     }
     @keyframes burst {
