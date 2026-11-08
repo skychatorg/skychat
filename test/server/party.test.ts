@@ -815,6 +815,52 @@ describe('monkey fight', () => {
         expect(new Set(monkeys.map((m) => m.name)).size).toBe(4);
     });
 
+    it('plays every trait by its rules, and the events replay to the fight the server played', () => {
+        const game = new MonkeyFight({} as Party, () => {});
+        const roll = (max: number) => Math.floor(Math.random() * max);
+        game.random = roll;
+        const seen = new Set<string>();
+        for (let i = 0; i < 400; i++) {
+            const monkeys = game['drawMonkeys']();
+            expect(new Set(monkeys.map((m) => m.trait)).size).toBe(4);
+            const { events, winner } = simulate(monkeys, roll);
+            const hp = monkeys.map((m) => m.stats.hp);
+            const stunned = new Set<number>();
+            events.forEach((event, index) => {
+                const { actor, target, kind, amount, gain = 0 } = event;
+                const trait = (id: number) => monkeys[id].trait;
+                seen.add(kind);
+                if (['heal', 'revive'].includes(kind)) {
+                    hp[actor] += amount;
+                } else {
+                    hp[target] -= amount;
+                }
+                hp[actor] += gain;
+                expect(hp.every((value, id) => value >= 0 && value <= monkeys[id].stats.hp)).toBe(true);
+                expect(event.ko).toBe(hp[target] === 0 && !['heal', 'revive', 'roar', 'stunned'].includes(kind));
+                if (gain) {
+                    expect(trait(actor)).toBe('vampire');
+                }
+                if (kind === 'counter') {
+                    expect([trait(actor), events[index - 1].kind, events[index - 1].target]).toEqual(['ninja', 'miss', actor]);
+                }
+                if (kind === 'revive') {
+                    expect([trait(actor), events[index - 1].ko, events[index - 1].target]).toEqual(['zombie', true, actor]);
+                    expect(events.filter((e) => e.kind === 'revive' && e.actor === actor)).toHaveLength(1);
+                }
+                if (kind === 'roar') {
+                    expect(trait(actor)).toBe('gorilla');
+                    monkeys.forEach((m) => m.id !== actor && hp[m.id] > 0 && stunned.add(m.id));
+                }
+                if (kind === 'stunned') {
+                    expect(stunned.delete(actor)).toBe(true);
+                }
+            });
+            expect(hp[winner]).toBeGreaterThan(0);
+        }
+        expect([...seen].sort()).toEqual(['counter', 'crit', 'heal', 'hit', 'miss', 'revive', 'roar', 'stunned', 'trip']);
+    });
+
     it('prices every monkey fairly, so a bet is worth its stake on average', async () => {
         const game = new MonkeyFight({} as Party, () => {});
         const monkeys = game['drawMonkeys']();

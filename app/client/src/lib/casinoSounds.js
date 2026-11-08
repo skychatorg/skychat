@@ -1,5 +1,5 @@
 /**
- * Casino sounds, synthesized with Web Audio so there are no files to load or license
+ * Casino sounds, synthesized with Web Audio, except a few real ape recordings (public domain, see public/audio/monkeys/README.md)
  */
 
 let context = null;
@@ -46,37 +46,152 @@ const VOWELS = { oo: [320, 800], ah: [750, 1150], ee: [400, 2200] };
 const APE_PITCH = 0.55;
 const APE_MOUTH = 0.85;
 
+/** White noise, made once and shared by every sound that needs breath or air */
+let noiseBuffer = null;
+function noise(ctx) {
+    if (!noiseBuffer) {
+        noiseBuffer = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
+        const data = noiseBuffer.getChannelData(0);
+        for (let i = 0; i < data.length; i++) {
+            data[i] = Math.random() * 2 - 1;
+        }
+    }
+    const source = ctx.createBufferSource();
+    source.buffer = noiseBuffer;
+    source.loop = true;
+    return source;
+}
+
+/** Soft clipping: turns a clean buzz into a raw, strained throat */
+const roughCurves = new Map();
+function roughCurve(amount) {
+    if (!roughCurves.has(amount)) {
+        const curve = new Float32Array(256);
+        for (let i = 0; i < 256; i++) {
+            const x = (i / 255) * 2 - 1;
+            curve[i] = Math.tanh(x * (1 + amount * 8));
+        }
+        roughCurves.set(amount, curve);
+    }
+    return roughCurves.get(amount);
+}
+
 /**
- * An ape call: a buzzing voice that slides between two pitches, shaped into a vowel, with a shaky throat
+ * An ape call: a buzzing voice sliding between two pitches, shaped into a vowel. What makes it sound alive:
+ * - breath mixed into the voice, through the same mouth
+ * - a pitch that never holds still (jitter), and a shaky throat
+ * - `rough` strains the voice, for screams and roars
+ * - every call is a little higher or lower than the last, so no two sound the same
  */
-function ape(ctx, at, { from, to, vowel, length, gain = 0.3, wobble = 18 }) {
+function ape(ctx, at, { from, to, vowel, length, gain = 0.3, wobble = 18, breath = 0.35, rough = 0.3 }) {
+    const pitch = APE_PITCH * (0.9 + Math.random() * 0.2);
     const voice = ctx.createOscillator();
     const shake = ctx.createOscillator();
     const shakeDepth = ctx.createGain();
+    const throat = ctx.createWaveShaper();
+    const air = noise(ctx);
+    const airGain = ctx.createGain();
     const env = ctx.createGain();
     voice.type = 'sawtooth';
-    voice.frequency.setValueAtTime(from * APE_PITCH, at);
-    voice.frequency.linearRampToValueAtTime(to * APE_PITCH, at + length * 0.6);
-    voice.frequency.linearRampToValueAtTime(to * APE_PITCH * 0.85, at + length);
-    shake.frequency.value = 28;
+    voice.frequency.setValueAtTime(from * pitch, at);
+    // Jitter: small random steps along the slide
+    const steps = Math.max(2, Math.round(length / 0.03));
+    for (let i = 1; i <= steps; i++) {
+        const progress = i / steps;
+        const base = progress < 0.6 ? from + (to - from) * (progress / 0.6) : to * (1 - 0.15 * ((progress - 0.6) / 0.4));
+        voice.frequency.linearRampToValueAtTime(base * pitch * (0.94 + Math.random() * 0.12), at + length * progress);
+    }
+    shake.frequency.value = 22 + Math.random() * 12;
     shakeDepth.gain.value = wobble;
     shake.connect(shakeDepth).connect(voice.frequency);
+    throat.curve = roughCurve(rough);
+    airGain.gain.value = breath;
     env.gain.setValueAtTime(0, at);
     env.gain.linearRampToValueAtTime(gain, at + 0.02);
     env.gain.setValueAtTime(gain, at + length * 0.7);
     env.gain.exponentialRampToValueAtTime(0.0001, at + length);
+    voice.connect(throat);
+    air.connect(airGain);
     for (const frequency of VOWELS[vowel]) {
         const formant = ctx.createBiquadFilter();
         formant.type = 'bandpass';
         formant.frequency.value = frequency * APE_MOUTH;
         formant.Q.value = 5;
-        voice.connect(formant).connect(env);
+        throat.connect(formant);
+        airGain.connect(formant);
+        formant.connect(env);
     }
     env.connect(master);
-    voice.start(at);
-    shake.start(at);
-    voice.stop(at + length + 0.05);
-    shake.stop(at + length + 0.05);
+    [voice, shake, air].forEach((node) => {
+        node.start(at);
+        node.stop(at + length + 0.05);
+    });
+}
+
+/**
+ * Real ape recordings, and the slices of each worth hearing, as [start, length] in seconds.
+ * Loaded once on first use: until then, the synthesized calls play instead
+ */
+const RECORDINGS = {
+    'chimp-scream': {
+        file: 'chimp-scream.mp3',
+        gain: 2.5,
+        slices: [
+            [0.6, 0.7],
+            [1.6, 0.45],
+            [2.2, 0.9],
+            [3.4, 0.85],
+            [6.3, 0.9],
+            [7.4, 0.9],
+        ],
+    },
+    'chimp-cry': { file: 'chimp-cry.mp3', gain: 2, slices: [[1.1, 2]] },
+    'gorilla-roar': { file: 'gorilla-roar.mp3', gain: 1, slices: [[0.05, 1.3]] },
+    // The end of the build-up, then the screaming climax
+    'chimp-pant-hoot': { file: 'chimp-pant-hoot.mp3', gain: 1.6, slices: [[5, 4]] },
+};
+const recordings = new Map();
+
+/** Fetch and decode the ape recordings, so they are ready when the fight starts */
+export function preloadApeRecordings() {
+    const ctx = audio();
+    if (!ctx) {
+        return;
+    }
+    for (const [name, { file }] of Object.entries(RECORDINGS)) {
+        if (!recordings.has(name)) {
+            recordings.set(name, null);
+            fetch(`/audio/monkeys/${file}`)
+                .then((response) => response.arrayBuffer())
+                .then((data) => ctx.decodeAudioData(data))
+                .then((buffer) => recordings.set(name, buffer))
+                .catch(() => recordings.delete(name));
+        }
+    }
+}
+
+/**
+ * Play a random slice of a recording, a bit lower than life since lower sounds meaner. False when it isn't loaded yet
+ */
+function recording(ctx, at, name, { rate = 0.85 + Math.random() * 0.15, gain = 1 } = {}) {
+    const buffer = recordings.get(name);
+    if (!buffer) {
+        return false;
+    }
+    const { slices, gain: level } = RECORDINGS[name];
+    const [offset, length] = slices[Math.floor(Math.random() * slices.length)];
+    const source = ctx.createBufferSource();
+    const env = ctx.createGain();
+    const heard = length / rate;
+    source.buffer = buffer;
+    source.playbackRate.value = rate;
+    env.gain.setValueAtTime(level * gain, at);
+    // A short fade, so the cut never clicks
+    env.gain.setValueAtTime(level * gain, at + heard - 0.08);
+    env.gain.linearRampToValueAtTime(0, at + heard);
+    source.connect(env).connect(master);
+    source.start(at, offset, length);
+    return true;
 }
 
 /** Filtered noise, sweeping between two frequencies: the sound of paper or felt */
@@ -143,18 +258,26 @@ const SOUNDS = {
         ),
     // Apes: a pant-hoot that climbs into a scream, grunts, yelps and a chest beat
     screech: (ctx, at) => {
+        if (recording(ctx, at, 'chimp-cry')) {
+            return;
+        }
         ape(ctx, at, { from: 500, to: 900, vowel: 'ee', length: 0.14 });
         ape(ctx, at + 0.15, { from: 650, to: 1100, vowel: 'ee', length: 0.14 });
-        ape(ctx, at + 0.32, { from: 900, to: 1500, vowel: 'ah', length: 0.38, gain: 0.4 });
+        ape(ctx, at + 0.32, { from: 900, to: 1500, vowel: 'ah', length: 0.38, gain: 0.4, rough: 0.9, breath: 0.5 });
     },
     hoot: (ctx, at) => {
+        if (recording(ctx, at, 'chimp-pant-hoot', { rate: 0.92 })) {
+            return;
+        }
         [0, 0.16, 0.3, 0.42, 0.52].forEach((d, i) => ape(ctx, at + d, { from: 220 + i * 50, to: 300 + i * 60, vowel: 'oo', length: 0.12 }));
         ape(ctx, at + 0.64, { from: 700, to: 1000, vowel: 'ah', length: 0.3, gain: 0.35 });
         ape(ctx, at + 0.98, { from: 750, to: 1050, vowel: 'ah', length: 0.32, gain: 0.35 });
     },
-    grunt: (ctx, at) => ape(ctx, at, { from: 170, to: 120, vowel: 'oo', length: 0.14, gain: 0.35 }),
+    grunt: (ctx, at) => ape(ctx, at, { from: 170, to: 120, vowel: 'oo', length: 0.14, gain: 0.35, breath: 0.6, rough: 0.5 }),
     yelp: (ctx, at) => ape(ctx, at, { from: 900, to: 1300, vowel: 'ah', length: 0.13, gain: 0.25 }),
-    scream: (ctx, at) => ape(ctx, at, { from: 1100, to: 1700, vowel: 'ee', length: 0.4, gain: 0.35, wobble: 40 }),
+    scream: (ctx, at) =>
+        recording(ctx, at, 'chimp-scream') ||
+        ape(ctx, at, { from: 1100, to: 1700, vowel: 'ee', length: 0.4, gain: 0.35, wobble: 40, rough: 0.9, breath: 0.5 }),
     // A bomb: a crack, then a long low rumble
     boom: (ctx, at) => {
         swish(ctx, at, 0.06, { from: 4000, to: 1500, gain: 0.6 });
@@ -166,6 +289,35 @@ const SOUNDS = {
     ooh: (ctx, at) => ape(ctx, at, { from: 260, to: 380, vowel: 'oo', length: 0.22, gain: 0.3 }),
     chestbeat: (ctx, at) =>
         [0, 0.09, 0.18, 0.27, 0.36, 0.45, 0.54].forEach((d) => tone(ctx, at + d, 95, 0.1, { type: 'sine', gain: 0.55, slideTo: 60 })),
+    // Monkey Fight traits: the gorilla's roar, a coconut on a skull, a throw, a vampire's sip, a ninja's smoke, a counter's blade, a zombie rising, and the birds of a stunned head
+    roar: (ctx, at) => {
+        if (!recording(ctx, at, 'gorilla-roar', { rate: 0.9 })) {
+            ape(ctx, at, { from: 150, to: 110, vowel: 'ah', length: 0.8, gain: 0.45, wobble: 30, breath: 0.6, rough: 1 });
+            swish(ctx, at, 0.9, { from: 400, to: 80, gain: 0.5 });
+        }
+        [0.85, 0.94, 1.03, 1.12].forEach((d) => tone(ctx, at + d, 90, 0.1, { type: 'sine', gain: 0.55, slideTo: 55 }));
+    },
+    bonk: (ctx, at) => {
+        tone(ctx, at, 540, 0.06, { type: 'square', gain: 0.18 });
+        tone(ctx, at, 260, 0.16, { type: 'sine', gain: 0.5, slideTo: 170 });
+        swish(ctx, at, 0.05, { from: 2500, to: 900, gain: 0.3 });
+    },
+    throw: (ctx, at) => swish(ctx, at, 0.2, { from: 500, to: 2600, gain: 0.25 }),
+    slurp: (ctx, at) => [0, 0.09, 0.2].forEach((d, i) => swish(ctx, at + d, 0.09 + i * 0.03, { from: 350, to: 1300, gain: 0.35 })),
+    poof: (ctx, at) => swish(ctx, at, 0.4, { from: 2600, to: 250, gain: 0.45 }),
+    slash: (ctx, at) => {
+        swish(ctx, at, 0.12, { from: 7000, to: 2200, gain: 0.5 });
+        tone(ctx, at, 1900, 0.15, { type: 'sine', gain: 0.12, slideTo: 900 });
+        swish(ctx, at + 0.08, 0.1, { from: 900, to: 200, gain: 0.6 });
+    },
+    revive: (ctx, at) => {
+        tone(ctx, at, 110, 1, { type: 'sawtooth', gain: 0.08, slideTo: 330 });
+        ape(ctx, at + 0.1, { from: 120, to: 170, vowel: 'oo', length: 0.9, gain: 0.35, wobble: 25, breath: 0.7, rough: 0.6 });
+    },
+    dizzy: (ctx, at) =>
+        [0, 0.12, 0.24, 0.36].forEach((d, i) =>
+            tone(ctx, at + d, i % 2 ? 2300 : 1900, 0.09, { type: 'sine', gain: 0.1, slideTo: i % 2 ? 2900 : 2500 }),
+        ),
     pop: (ctx, at) => {
         swish(ctx, at, 0.05, { from: 1200, to: 300, gain: 0.5 });
         tone(ctx, at, 160, 0.08, { type: 'sine', gain: 0.25, slideTo: 60 });

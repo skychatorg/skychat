@@ -14,7 +14,7 @@ import type { Party } from './Party.js';
  */
 export type MonkeyFightPhase = 'betting' | 'fighting' | 'done';
 
-export type Trait = 'berserk' | 'coward' | 'banana' | 'showoff' | 'grudge';
+export type Trait = 'berserk' | 'coward' | 'banana' | 'showoff' | 'grudge' | 'vampire' | 'thrower' | 'ninja' | 'zombie' | 'gorilla';
 
 /** Indices into the client's palettes, so the server never deals with colours */
 export type Skin = { fur: number; face: number; accessory: number; eyes: number };
@@ -23,8 +23,20 @@ export type Stats = { hp: number; attack: number; defense: number; speed: number
 
 export type Monkey = { id: number; name: string; skin: Skin; stats: Stats; trait: Trait };
 
-/** One action of the fight. A trip hurts the actor itself, a heal is the banana stash */
-export type FightEvent = { actor: number; target: number; kind: 'hit' | 'crit' | 'miss' | 'heal' | 'trip'; amount: number; ko: boolean };
+/**
+ * One action of the fight:
+ * - on the actor itself: a trip hurts it, a heal is the banana stash, a revive is the zombie getting up, a roar stuns everyone else, stunned is a lost turn
+ * - a counter is the ninja hitting back right after dodging
+ * - `gain` is what a vampire drank from the blow
+ */
+export type FightEvent = {
+    actor: number;
+    target: number;
+    kind: 'hit' | 'crit' | 'miss' | 'heal' | 'trip' | 'counter' | 'revive' | 'roar' | 'stunned';
+    amount: number;
+    ko: boolean;
+    gain?: number;
+};
 
 /** An event of the fight as it plays: when it starts and how long it lasts, in ms from the first punch */
 export type TimedFightEvent = FightEvent & { at: number; duration: number };
@@ -68,7 +80,15 @@ const LAST_NAMES = [
     'Silverbackov',
     'Gibbonovich',
 ];
-const TRAITS: Trait[] = ['berserk', 'coward', 'banana', 'showoff', 'grudge'];
+const TRAITS: Trait[] = ['berserk', 'coward', 'banana', 'showoff', 'grudge', 'vampire', 'thrower', 'ninja', 'zombie', 'gorilla'];
+/** Damage factors, the price some traits pay for their power */
+const TRAIT_DAMAGE: Partial<Record<Trait, number>> = { coward: 0.75, thrower: 1.1, gorilla: 1.15, zombie: 0.85 };
+/** Chance in percent to dodge a blow, 10 for everyone else */
+const DODGE: Partial<Record<Trait, number>> = { coward: 30, ninja: 17 };
+/** A berserk at its last breath hits this many times harder */
+const BERSERK_MAX = 1.5;
+/** A grudge hits harder whoever hit it last */
+const GRUDGE_REVENGE = 1.45;
 const SKINS = { fur: 8, face: 4, accessory: 7, eyes: 3 };
 
 /** A fight that drags on is called on points, so a fight always ends */
@@ -83,51 +103,89 @@ export function simulate(monkeys: Monkey[], random: (max: number) => number): { 
     const nextAt = monkeys.map((m) => 1000 / m.stats.speed + random(100));
     const lastHitBy = monkeys.map(() => -1);
     const ateBanana = monkeys.map(() => false);
+    const revived = monkeys.map(() => false);
+    const stunned = monkeys.map(() => false);
     const alive = () => monkeys.map((m) => m.id).filter((id) => hp[id] > 0);
     const events: FightEvent[] = [];
+
+    const strike = (actor: number, target: number, crit: boolean, factor = 1) => {
+        const { trait, stats } = monkeys[actor];
+        // ×1.4 so a fight is about 25 big actions
+        let damage = (stats.attack * 1.4 * (80 + random(41)) * factor) / 100;
+        damage *= TRAIT_DAMAGE[trait] ?? 1;
+        if (trait === 'berserk') {
+            damage *= BERSERK_MAX - (BERSERK_MAX - 1) * (hp[actor] / stats.hp);
+        }
+        if (trait === 'grudge' && target === lastHitBy[actor]) {
+            damage *= GRUDGE_REVENGE;
+        }
+        if (crit) {
+            damage *= trait === 'showoff' ? 2.5 : 2;
+        }
+        // A coconut from afar doesn't care about defense
+        const defense = trait === 'thrower' ? 0 : monkeys[target].stats.defense / 2;
+        return Math.min(hp[target], Math.max(1, Math.round(damage - defense)));
+    };
+    const land = (actor: number, target: number, kind: FightEvent['kind'], amount: number) => {
+        hp[target] -= amount;
+        lastHitBy[target] = actor;
+        const event: FightEvent = { actor, target, kind, amount, ko: hp[target] === 0 };
+        if (monkeys[actor].trait === 'vampire') {
+            const gain = Math.min(monkeys[actor].stats.hp - hp[actor], Math.round(amount * 0.15));
+            if (gain > 0) {
+                hp[actor] += gain;
+                event.gain = gain;
+            }
+        }
+        events.push(event);
+        if (event.ko && monkeys[target].trait === 'zombie' && !revived[target]) {
+            revived[target] = true;
+            hp[target] = Math.round(monkeys[target].stats.hp * 0.08);
+            events.push({ actor: target, target, kind: 'revive', amount: hp[target], ko: false });
+        }
+    };
 
     while (alive().length > 1 && events.length < MAX_EVENTS) {
         const actor = alive().reduce((a, b) => (nextAt[b] < nextAt[a] ? b : a));
         const me = monkeys[actor];
         nextAt[actor] += 1000 / me.stats.speed + random(100);
 
+        if (stunned[actor]) {
+            stunned[actor] = false;
+            events.push({ actor, target: actor, kind: 'stunned', amount: 0, ko: false });
+            continue;
+        }
         if (me.trait === 'banana' && !ateBanana[actor] && hp[actor] < me.stats.hp * 0.35) {
             ateBanana[actor] = true;
-            const amount = Math.min(me.stats.hp - hp[actor], Math.round(me.stats.hp * 0.4));
+            const amount = Math.min(me.stats.hp - hp[actor], Math.round(me.stats.hp * 0.3));
             hp[actor] += amount;
             events.push({ actor, target: actor, kind: 'heal', amount, ko: false });
             continue;
         }
         const others = alive().filter((id) => id !== actor);
+        if (me.trait === 'gorilla' && others.some((id) => !stunned[id]) && random(100) < 30) {
+            others.forEach((id) => (stunned[id] = true));
+            events.push({ actor, target: actor, kind: 'roar', amount: 0, ko: false });
+            continue;
+        }
         const target = me.trait === 'grudge' && others.includes(lastHitBy[actor]) ? lastHitBy[actor] : others[random(others.length)];
         const roll = random(100);
-        if (me.trait === 'showoff' && roll < 8) {
+        if (me.trait === 'showoff' && roll < 5) {
             // Never a KO on itself: tripping is embarrassing, not fatal
             const amount = Math.min(hp[actor] - 1, Math.round(me.stats.hp * 0.06));
             hp[actor] -= amount;
             events.push({ actor, target: actor, kind: 'trip', amount, ko: false });
             continue;
         }
-        if (roll >= 100 - (monkeys[target].trait === 'coward' ? 30 : 10)) {
+        if (roll >= 100 - (DODGE[monkeys[target].trait] ?? 10)) {
             events.push({ actor, target, kind: 'miss', amount: 0, ko: false });
+            if (monkeys[target].trait === 'ninja' && random(100) < 30) {
+                land(target, actor, 'counter', strike(target, actor, false, 0.7));
+            }
             continue;
         }
-        const crit = random(100) < (me.trait === 'showoff' ? 25 : 10);
-        // ×1.4 so a fight is about 25 big actions
-        let damage = (me.stats.attack * 1.4 * (80 + random(41))) / 100;
-        if (me.trait === 'berserk') {
-            damage *= 2 - hp[actor] / me.stats.hp;
-        }
-        if (me.trait === 'coward') {
-            damage *= 0.75;
-        }
-        if (crit) {
-            damage *= me.trait === 'showoff' ? 2.5 : 2;
-        }
-        const amount = Math.min(hp[target], Math.max(1, Math.round(damage - monkeys[target].stats.defense / 2)));
-        hp[target] -= amount;
-        lastHitBy[target] = actor;
-        events.push({ actor, target, kind: crit ? 'crit' : 'hit', amount, ko: hp[target] === 0 });
+        const crit = random(100) < (me.trait === 'showoff' ? 33 : 10);
+        land(actor, target, crit ? 'crit' : 'hit', strike(actor, target, crit));
     }
 
     const standing = alive();
@@ -324,13 +382,19 @@ export class MonkeyFight {
     private drawMonkeys(): Monkey[] {
         const pick = <T>(list: T[]) => list[this.random(list.length)];
         const range = (min: number, max: number) => min + this.random(max - min + 1);
-        // Distinct last names, so two monkeys never share a name
-        const last = [...LAST_NAMES];
-        for (let i = last.length - 1; i > 0; i--) {
-            const j = this.random(i + 1);
-            [last[i], last[j]] = [last[j], last[i]];
-        }
-        const names = last.slice(0, MonkeyFight.MONKEYS).map((name) => `${pick(FIRST_NAMES)} ${name}`);
+        const shuffled = <T>(list: T[]) => {
+            const copy = [...list];
+            for (let i = copy.length - 1; i > 0; i--) {
+                const j = this.random(i + 1);
+                [copy[i], copy[j]] = [copy[j], copy[i]];
+            }
+            return copy;
+        };
+        // Distinct last names and traits: two monkeys never share a name, every fight is a different mix
+        const names = shuffled(LAST_NAMES)
+            .slice(0, MonkeyFight.MONKEYS)
+            .map((name) => `${pick(FIRST_NAMES)} ${name}`);
+        const traits = shuffled(TRAITS);
         return names.map((name, id) => ({
             id,
             name,
@@ -341,7 +405,7 @@ export class MonkeyFight {
                 eyes: this.random(SKINS.eyes),
             },
             stats: { hp: range(70, 130), attack: range(12, 24), defense: range(0, 10), speed: range(6, 14) },
-            trait: pick(TRAITS),
+            trait: traits[id],
         }));
     }
 

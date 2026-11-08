@@ -2,7 +2,7 @@
 import MonkeySprite from '@/components/party/MonkeySprite.vue';
 import { useCountdown } from '@/composables/useCountdown';
 import { useNow } from '@/composables/useNow';
-import { createCrowdSound, playCasinoSound } from '@/lib/casinoSounds';
+import { createCrowdSound, playCasinoSound, preloadApeRecordings } from '@/lib/casinoSounds';
 import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
 import { betChips } from '@/lib/channel';
@@ -10,12 +10,23 @@ import { formatMoney } from '../../../../api/money.ts';
 import { computed, onUnmounted, ref, watch } from 'vue';
 
 const TRAITS = {
-    berserk: { name: 'Berserk', text: 'hits harder when hurt' },
-    coward: { name: 'Coward', text: 'dodges a lot, hits soft' },
-    banana: { name: 'Banana stash', text: 'heals once' },
-    showoff: { name: 'Show-off', text: 'big crits, sometimes trips' },
-    grudge: { name: 'Grudge', text: 'hits back whoever hit it' },
+    berserk: { emoji: '😡', name: 'Berserk', text: 'hits harder when hurt' },
+    coward: { emoji: '🐔', name: 'Coward', text: 'dodges a lot, hits soft' },
+    banana: { emoji: '🍌', name: 'Banana stash', text: 'heals once' },
+    showoff: { emoji: '😎', name: 'Show-off', text: 'big crits, sometimes trips' },
+    grudge: { emoji: '😤', name: 'Grudge', text: 'hits back whoever hit it, harder' },
+    vampire: { emoji: '🧛', name: 'Vampire', text: 'drinks some of the damage it deals' },
+    thrower: { emoji: '🥥', name: 'Coconut thrower', text: 'throws from afar, ignores defense' },
+    ninja: { emoji: '🥷', name: 'Ninja', text: 'vanishes from blows, sometimes counters' },
+    zombie: { emoji: '🧟', name: 'Undying', text: 'gets back up once after a KO' },
+    gorilla: { emoji: '🦍', name: 'Chest beater', text: 'roars: everyone else loses a turn' },
 };
+/** Actions a monkey does on its own, without leaving its spot */
+const SOLO = ['heal', 'trip', 'revive', 'roar', 'stunned'];
+/** Actions that throw a coconut instead of a punch, when the thrower does them */
+const THROWN = ['hit', 'crit', 'miss'];
+/** Comic words for the big blows */
+const BANGS = ['POW!', 'BAM!', 'WHAM!', 'KRAK!', 'BONK!', 'SMASH!'];
 const VERBS = ['punches', 'mauls', 'headbutts', 'kicks', 'bites', 'smashes', 'body-slams', 'claws'];
 const STATS = [
     { key: 'hp', label: 'HP', max: 130 },
@@ -88,11 +99,12 @@ const landed = computed(() => (step.value === 'windup' || step.value === 'dash' 
 const hp = computed(() => {
     const hp = fight.value.monkeys.map((m) => m.stats.hp);
     for (const event of events.value.slice(0, landed.value + 1)) {
-        if (event.kind === 'heal') {
+        if (event.kind === 'heal' || event.kind === 'revive') {
             hp[event.actor] += event.amount;
         } else {
             hp[event.target] -= event.amount;
         }
+        hp[event.actor] += event.gain ?? 0;
     }
     return hp;
 });
@@ -108,13 +120,18 @@ const winner = computed(() => {
     return fight.value.monkeys.filter((m) => hp.value[m.id] > 0).reduce((a, b) => (share(b) > share(a) ? b : a));
 });
 
+const trait = (id) => fight.value.monkeys[id].trait;
+// The thrower stays home and its coconut flies
+const throwing = (event) => event && trait(event.actor) === 'thrower' && THROWN.includes(event.kind);
+
 // Only the attacker moves: to the side of its target for the hit, then back home
 const spot = (id) => {
     if (winner.value?.id === id) {
         return { x: 50, y: 70 };
     }
     const event = current.value;
-    const attacking = event && event.actor === id && event.target !== id && (step.value === 'dash' || step.value === 'impact');
+    const attacking =
+        event && event.actor === id && event.target !== id && !throwing(event) && (step.value === 'dash' || step.value === 'impact');
     if (!attacking) {
         return HOMES[id];
     }
@@ -125,16 +142,21 @@ const spot = (id) => {
 
 const describe = (event, index) => {
     const [a, t] = [surname(event.actor), surname(event.target)];
-    const verb = VERBS[index % VERBS.length].toUpperCase();
+    const verb = (throwing(event) ? 'pelts' : trait(event.actor) === 'vampire' ? 'bites' : VERBS[index % VERBS.length]).toUpperCase();
+    const drank = event.gain ? ` (+${event.gain})` : '';
     if (event.ko) {
         return { text: `${t} IS DOWN!`, kind: 'ko' };
     }
     return {
-        hit: { text: `${a} ${verb} ${t} −${event.amount}`, kind: 'hit' },
-        crit: { text: `CRIT! ${a} ${verb} ${t} −${event.amount}`, kind: 'crit' },
-        miss: { text: `${t} DODGES ${a}`, kind: 'miss' },
+        hit: { text: `${a} ${verb} ${t} −${event.amount}${drank}`, kind: 'hit' },
+        crit: { text: `CRIT! ${a} ${verb} ${t} −${event.amount}${drank}`, kind: 'crit' },
+        miss: { text: trait(event.target) === 'ninja' ? `${t} VANISHES` : `${t} DODGES ${a}`, kind: 'miss' },
         heal: { text: `${a} EATS A BANANA +${event.amount}`, kind: 'heal' },
         trip: { text: `${a} TRIPS −${event.amount}`, kind: 'miss' },
+        counter: { text: `${a} COUNTERS ${t} −${event.amount}`, kind: 'crit' },
+        revive: { text: `${a} GETS BACK UP!`, kind: 'heal' },
+        roar: { text: `${a} ROARS! EVERYONE FREEZES`, kind: 'crit' },
+        stunned: { text: `${a} IS STUNNED`, kind: 'miss' },
     }[event.kind];
 };
 // The newest line stays until the next blow lands, the two before it fade out under it: time to read
@@ -153,7 +175,24 @@ const floater = (event) =>
         miss: { text: 'MISS', kind: 'miss' },
         heal: { text: `+${event.amount}`, kind: 'heal' },
         trip: { text: `−${event.amount}`, kind: 'miss' },
+        counter: { text: `−${event.amount}`, kind: 'crit' },
+        revive: { text: `+${event.amount}`, kind: 'heal' },
+        roar: { text: 'ROAR!', kind: 'crit' },
+        stunned: { text: 'STUNNED', kind: 'miss' },
     })[event.kind];
+
+// Who is frozen right now: everyone a roar caught, until their lost turn has played. The KO'd ones are filtered out on display
+const stunned = computed(() => {
+    const frozen = new Set();
+    for (const event of events.value.slice(0, landed.value + 1)) {
+        if (event.kind === 'roar') {
+            fight.value.monkeys.forEach((m) => m.id !== event.actor && frozen.add(m.id));
+        } else if (event.kind === 'stunned') {
+            frozen.delete(event.actor);
+        }
+    }
+    return frozen;
+});
 
 const fighters = computed(() =>
     fight.value.monkeys.map((monkey) => {
@@ -163,6 +202,9 @@ const fighters = computed(() =>
         const target = event && event.target !== event.actor ? event.target : null;
         // Faces whoever it attacks, otherwise the middle of the pit
         const facing = event?.actor === monkey.id && target !== null ? HOMES[target].x : 50;
+        const impact = step.value === 'impact';
+        const acting = event?.actor === monkey.id;
+        const hit = event?.target === monkey.id;
         return {
             ...monkey,
             ...at,
@@ -174,17 +216,59 @@ const fighters = computed(() =>
             winner: winner.value?.id === monkey.id,
             mine: myBet.value?.monkey === monkey.id,
             // Everyone else steps into the dark while an action plays
-            dim: Boolean(step.value) && !involved,
+            // A roar hits everyone, so nobody steps back for it
+            dim: Boolean(step.value) && !involved && event.kind !== 'roar',
             marked: step.value && step.value !== 'back' && target === monkey.id,
-            windup: step.value === 'windup' && event.actor === monkey.id,
-            striking: step.value === 'impact' && event.actor === monkey.id && ['hit', 'crit', 'miss'].includes(event.kind),
-            struck: step.value === 'impact' && event.target === monkey.id && ['hit', 'crit', 'trip'].includes(event.kind),
-            falling: step.value === 'impact' && event.ko && event.target === monkey.id,
-            pop: step.value === 'impact' && event.target === monkey.id ? floater(event) : null,
+            emoji: TRAITS[monkey.trait]?.emoji,
+            windup: step.value === 'windup' && acting && !SOLO.includes(event.kind),
+            throwing: (step.value === 'windup' || step.value === 'dash') && acting && throwing(event),
+            striking: impact && acting && ['hit', 'crit', 'miss', 'counter'].includes(event.kind),
+            struck: impact && hit && ['hit', 'crit', 'trip', 'counter'].includes(event.kind),
+            falling: impact && event.ko && hit,
+            vanish: impact && hit && event.kind === 'miss' && monkey.trait === 'ninja',
+            rising: impact && acting && event.kind === 'revive',
+            roaring: step.value && step.value !== 'back' && acting && event.kind === 'roar',
+            dazed: stunned.value.has(monkey.id) && hp.value[monkey.id] > 0,
+            pop: impact && hit ? floater(event) : null,
+            // What a vampire drank floats up over the vampire
+            drank: impact && acting && event.gain ? `+${event.gain}` : null,
+            bang: impact && hit && (event.kind === 'crit' || event.ko) ? BANGS[beat.value % BANGS.length] : null,
         };
     }),
 );
-const shake = computed(() => step.value === 'impact' && (current.value.kind === 'crit' || current.value.ko));
+const shake = computed(() => step.value === 'impact' && (['crit', 'roar', 'counter'].includes(current.value.kind) || current.value.ko));
+// A white flash on the big blows
+const flash = computed(() => step.value === 'impact' && (current.value.kind === 'crit' || current.value.ko));
+
+// Things flying across the pit: a coconut on its way, a drop of blood back to a vampire
+const flying = computed(() => {
+    const event = current.value;
+    if (!event) {
+        return null;
+    }
+    const at = (id, dx = 0) => ({ x: HOMES[id].x + dx, y: HOMES[id].y - 12 });
+    if (throwing(event) && step.value === 'dash') {
+        // A dodged coconut sails past
+        const miss = event.kind === 'miss' ? (HOMES[event.target].x > HOMES[event.actor].x ? 16 : -16) : 0;
+        return { key: `nut-${beat.value}`, emoji: '🥥', kind: 'nut', from: at(event.actor), to: at(event.target, miss) };
+    }
+    if (event.gain && step.value === 'impact') {
+        return { key: `blood-${beat.value}`, emoji: '🩸', kind: 'blood', from: at(event.target), to: at(event.actor) };
+    }
+    return null;
+});
+
+// Dust where an attacker kicks off
+const dust = computed(() => {
+    const event = current.value;
+    if (step.value !== 'dash' || !event || event.actor === event.target || throwing(event)) {
+        return null;
+    }
+    return { key: beat.value, ...HOMES[event.actor] };
+});
+
+// Bananas rain on the winner
+const BANANAS = Array.from({ length: 14 }, (_, i) => ({ x: (i * 37) % 100, delay: (i * 0.23) % 1.6, spin: (i * 53) % 360 }));
 // A KO plays in slow motion, zoomed on the one going down
 const slowmo = computed(() => (current.value?.ko && step.value ? HOMES[current.value.target] : null));
 
@@ -266,6 +350,11 @@ const stopCrowd = () => {
 };
 const sound = (name, delayMs) => app.casinoSound && playCasinoSound(name, delayMs);
 watch(
+    () => app.casinoSound,
+    (on) => on && preloadApeRecordings(),
+    { immediate: true },
+);
+watch(
     () => [fight.value.phase, app.casinoSound],
     ([phase, on], before) => {
         if (phase === 'fighting' && on) {
@@ -333,14 +422,33 @@ watch(
         if (event.kind === 'crit') {
             crowd?.roar(0.6);
         }
-        sound({ hit: 'punch', crit: 'smash', miss: 'whoosh', heal: 'chomp', trip: 'punch' }[event.kind]);
+        const thrown = throwing(event);
+        sound(
+            {
+                hit: thrown ? 'bonk' : 'punch',
+                crit: thrown ? 'bonk' : 'smash',
+                miss: trait(event.target) === 'ninja' ? 'poof' : 'whoosh',
+                heal: 'chomp',
+                trip: 'punch',
+                counter: 'slash',
+                revive: 'revive',
+                roar: 'roar',
+                stunned: 'dizzy',
+            }[event.kind],
+        );
         if (event.kind === 'miss') {
             crowd?.roar(0.3);
             // The one who dodged mocks the other
             sound('chatter', 250);
         }
+        if (event.kind === 'roar' || event.kind === 'revive') {
+            crowd?.roar(0.7);
+        }
+        if (event.gain) {
+            sound('slurp', 120);
+        }
         // And how the one on the receiving end feels about it
-        const cry = { hit: 'yelp', crit: 'scream', trip: 'chatter', heal: 'ooh' }[event.kind];
+        const cry = { hit: 'yelp', crit: 'scream', trip: 'chatter', heal: 'ooh', counter: 'scream', stunned: 'ooh' }[event.kind];
         if (cry) {
             sound(cry, 70);
         }
@@ -349,10 +457,12 @@ watch(
 watch(
     () => step.value === 'dash' && beat.value,
     (index) => {
-        if (index !== false && current.value?.kind !== 'heal') {
-            sound('whoosh');
-            sound('grunt');
+        const event = current.value;
+        if (index === false || !event || event.actor === event.target) {
+            return;
         }
+        sound(throwing(event) ? 'throw' : 'whoosh');
+        sound('grunt');
     },
 );
 watch(
@@ -429,9 +539,38 @@ watch(
             <!-- The pit, seen from above at an angle -->
             <template v-else>
                 <div class="pit" :class="{ shake }">
-                    <div class="scene" :class="{ slowmo }" :style="slowmo ? { transformOrigin: `${slowmo.x}% ${slowmo.y}%` } : {}">
+                    <div
+                        class="scene"
+                        :class="{ slowmo, zoom: flash && !slowmo }"
+                        :style="slowmo ? { transformOrigin: `${slowmo.x}% ${slowmo.y}%` } : {}"
+                    >
                         <div class="floor"></div>
                         <div class="fence"></div>
+                        <span v-if="dust" :key="`dust-${dust.key}`" class="dust" :style="{ left: `${dust.x}%`, top: `${dust.y}%` }"></span>
+                        <span
+                            v-if="flying"
+                            :key="flying.key"
+                            class="flying"
+                            :class="flying.kind"
+                            :style="{
+                                '--x0': `${flying.from.x}%`,
+                                '--y0': `${flying.from.y}%`,
+                                '--x1': `${flying.to.x}%`,
+                                '--y1': `${flying.to.y}%`,
+                            }"
+                            aria-hidden="true"
+                            ><span>{{ flying.emoji }}</span></span
+                        >
+                        <template v-if="winner">
+                            <span
+                                v-for="(banana, i) in BANANAS"
+                                :key="`banana-${i}`"
+                                class="banana"
+                                :style="{ left: `${banana.x}%`, animationDelay: `${banana.delay}s`, '--spin': `${banana.spin}deg` }"
+                                aria-hidden="true"
+                                >🍌</span
+                            >
+                        </template>
                         <span
                             v-for="splat in splats"
                             :key="`splat-${splat.index}`"
@@ -443,7 +582,7 @@ watch(
                             v-for="monkey in fighters"
                             :key="`${fight.fight}-${monkey.id}`"
                             class="fighter"
-                            :class="{ ko: monkey.ko, winner: monkey.winner, dim: monkey.dim }"
+                            :class="{ ko: monkey.ko, winner: monkey.winner, dim: monkey.dim, vanish: monkey.vanish }"
                             :style="{
                                 left: `${monkey.x}%`,
                                 top: `${monkey.y}%`,
@@ -462,16 +601,28 @@ watch(
                                     class="body"
                                     :class="{
                                         windup: monkey.windup,
+                                        throwing: monkey.throwing,
                                         striking: monkey.striking,
                                         struck: monkey.struck,
                                         falling: monkey.falling,
+                                        rising: monkey.rising,
+                                        roaring: monkey.roaring,
                                     }"
                                 >
                                     <MonkeySprite :skin="monkey.skin" :ko="monkey.ko" />
                                 </span>
                             </span>
+                            <span v-if="monkey.emoji && !monkey.ko" class="badge" :title="TRAITS[monkey.trait].name">{{
+                                monkey.emoji
+                            }}</span>
+                            <span v-if="monkey.dazed" class="dazed" aria-hidden="true">💫</span>
                             <span v-if="monkey.struck" class="burst" aria-hidden="true"></span>
+                            <span v-if="monkey.vanish" class="smoke" aria-hidden="true">💨</span>
+                            <span v-if="monkey.rising" class="aura" aria-hidden="true"></span>
+                            <span v-if="monkey.roaring" class="shock" aria-hidden="true"></span>
+                            <span v-if="monkey.bang" class="bang" aria-hidden="true">{{ monkey.bang }}</span>
                             <span v-if="monkey.pop" class="pop" :class="monkey.pop.kind">{{ monkey.pop.text }}</span>
+                            <span v-if="monkey.drank" class="pop heal">{{ monkey.drank }}</span>
                         </div>
                     </div>
                     <ol v-if="captions.length" class="captions" aria-live="polite">
@@ -479,6 +630,7 @@ watch(
                             {{ line.text }}
                         </li>
                     </ol>
+                    <div v-if="flash" :key="`flash-${beat}`" class="flash" aria-hidden="true"></div>
                     <div v-if="intro" class="overlay" aria-hidden="true"><span class="fight-word">FIGHT!</span></div>
                 </div>
 
@@ -494,7 +646,9 @@ watch(
                     >
                         <span class="face"><MonkeySprite :skin="monkey.skin" :ko="monkey.ko" /></span>
                         <span class="info">
-                            <span class="entry-name">{{ monkey.winner ? '👑 ' : monkey.ko ? '💀 ' : '' }}{{ monkey.name }}</span>
+                            <span class="entry-name"
+                                >{{ monkey.winner ? '👑 ' : monkey.ko ? '💀 ' : '' }}{{ monkey.name }} {{ monkey.emoji }}</span
+                            >
                             <span class="hp">
                                 <span :style="{ width: `${(100 * Math.max(0, hp[monkey.id])) / monkey.stats.hp}%` }"></span>
                             </span>
@@ -884,6 +1038,108 @@ watch(
 .pop.heal {
     color: #3fbf5f;
 }
+/* The trait, revealed when the fight starts */
+.badge {
+    position: absolute;
+    right: -8%;
+    top: -2%;
+    font-size: calc(var(--m) * var(--depth) * 0.26);
+    line-height: 1;
+    filter: drop-shadow(0 1px 2px #000);
+}
+.dazed,
+.smoke,
+.bang {
+    position: absolute;
+    left: 50%;
+    pointer-events: none;
+    line-height: 1;
+}
+.dazed {
+    top: -4%;
+    font-size: calc(var(--m) * var(--depth) * 0.3);
+    transform: translateX(-50%);
+}
+.smoke {
+    top: 30%;
+    font-size: calc(var(--m) * var(--depth) * 0.7);
+    transform: translate(-50%, -50%);
+}
+.bang {
+    top: 5%;
+    z-index: 6;
+    font-weight: 900;
+    font-style: italic;
+    font-size: clamp(14px, 8cqh, 40px);
+    color: #ffe14a;
+    -webkit-text-stroke: 2px #8a1010;
+    paint-order: stroke;
+    transform: translate(-50%, -50%) rotate(-12deg);
+    text-shadow: 0 3px 0 #000;
+}
+.aura {
+    position: absolute;
+    left: 50%;
+    top: 55%;
+    width: 160%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(circle, rgb(93 255 122 / 0.55), transparent 65%);
+    pointer-events: none;
+}
+.shock {
+    position: absolute;
+    left: 50%;
+    bottom: -8%;
+    width: 100%;
+    aspect-ratio: 2.4;
+    border: 3px solid #ffc21a;
+    border-radius: 50%;
+    transform: translateX(-50%);
+    pointer-events: none;
+}
+.fighter.vanish .body {
+    opacity: 0.08;
+}
+.flash {
+    position: absolute;
+    inset: 0;
+    z-index: 1400;
+    background: #fff;
+    opacity: 0;
+    pointer-events: none;
+}
+.dust {
+    position: absolute;
+    width: calc(var(--m) * 0.8);
+    height: calc(var(--m) * 0.25);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(ellipse, rgb(190 160 120 / 0.55), transparent 70%);
+    pointer-events: none;
+    opacity: 0;
+}
+.flying {
+    position: absolute;
+    left: var(--x1);
+    top: var(--y1);
+    z-index: 1300;
+    transform: translate(-50%, -50%);
+    font-size: clamp(14px, 7cqh, 32px);
+    pointer-events: none;
+}
+.flying span {
+    display: block;
+}
+.banana {
+    position: absolute;
+    top: -10%;
+    z-index: 1200;
+    font-size: clamp(12px, 6cqh, 28px);
+    pointer-events: none;
+    opacity: 0;
+}
 .captions {
     position: absolute;
     left: 3%;
@@ -1043,6 +1299,56 @@ watch(
     .fighter .body.falling {
         animation: fall 1s cubic-bezier(0.5, 0, 0.8, 0.6) both;
     }
+    .fighter .body.throwing {
+        animation: throw 0.45s ease-in-out;
+    }
+    .fighter .body.rising {
+        animation: reborn 0.9s ease-out both;
+    }
+    .fighter .body.roaring {
+        animation: roar 0.6s ease-out;
+    }
+    .fighter.vanish .body {
+        animation: vanish 0.5s ease-out;
+    }
+    .dazed {
+        animation: dizzy 0.9s linear infinite;
+    }
+    .smoke {
+        animation: puff 0.6s ease-out forwards;
+    }
+    .aura {
+        animation: aura 0.9s ease-out forwards;
+    }
+    .shock {
+        animation: shock 0.7s ease-out forwards;
+    }
+    .bang {
+        animation: bang 0.6s cubic-bezier(0.3, 1.8, 0.5, 1) forwards;
+    }
+    .flash {
+        animation: flash 0.22s ease-out;
+    }
+    .dust {
+        animation: dust 0.5s ease-out;
+    }
+    .flying {
+        animation: fly 0.28s linear both;
+    }
+    .flying.nut span {
+        animation:
+            arc 0.28s ease-in-out,
+            spin 0.28s linear;
+    }
+    .flying.blood {
+        animation-duration: 0.35s;
+    }
+    .banana {
+        animation: rain 1.8s ease-in infinite;
+    }
+    .scene.zoom {
+        animation: zoom 0.3s ease-out;
+    }
     .fighter.winner .body {
         animation: cheer 0.55s ease-in-out infinite;
     }
@@ -1067,6 +1373,142 @@ watch(
     .fight-word {
         animation: slam 0.5s cubic-bezier(0.3, 1.6, 0.5, 1) both;
     }
+    @keyframes throw {
+        40% {
+            transform: rotate(-16deg) scaleY(0.9);
+        }
+        70% {
+            transform: rotate(12deg) translateX(10%);
+        }
+    }
+    @keyframes reborn {
+        from {
+            transform: translateY(30%) rotate(-88deg) scale(0.9);
+            filter: brightness(0.6);
+        }
+        60% {
+            transform: translateY(-10%) rotate(8deg);
+            filter: brightness(1.8) hue-rotate(60deg);
+        }
+    }
+    @keyframes roar {
+        20%,
+        60% {
+            transform: translateY(-6%) scale(1.3) rotate(-5deg);
+        }
+        40% {
+            transform: translateY(-6%) scale(1.25) rotate(5deg);
+        }
+    }
+    @keyframes vanish {
+        from {
+            opacity: 1;
+        }
+        30% {
+            opacity: 0.05;
+            transform: translateX(-35%) scale(0.8);
+        }
+    }
+    @keyframes dizzy {
+        to {
+            transform: translateX(-50%) rotate(360deg);
+        }
+    }
+    @keyframes puff {
+        from {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(0.4);
+        }
+        to {
+            opacity: 0;
+            transform: translate(-50%, -100%) scale(1.8);
+        }
+    }
+    @keyframes aura {
+        from {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(0.3);
+        }
+        to {
+            opacity: 0;
+            transform: translate(-50%, -50%) scale(1.4);
+        }
+    }
+    @keyframes shock {
+        from {
+            opacity: 1;
+            transform: translateX(-50%) scale(0.2);
+        }
+        to {
+            opacity: 0;
+            transform: translateX(-50%) scale(6);
+        }
+    }
+    @keyframes bang {
+        from {
+            opacity: 0;
+            transform: translate(-50%, -50%) rotate(-30deg) scale(0.2);
+        }
+        25% {
+            opacity: 1;
+        }
+        80% {
+            opacity: 1;
+        }
+        to {
+            opacity: 0;
+            transform: translate(-50%, -90%) rotate(-12deg) scale(1.1);
+        }
+    }
+    @keyframes flash {
+        from {
+            opacity: 0.55;
+        }
+        to {
+            opacity: 0;
+        }
+    }
+    @keyframes dust {
+        from {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(0.4);
+        }
+        to {
+            opacity: 0;
+            transform: translate(-50%, -70%) scale(1.6);
+        }
+    }
+    @keyframes fly {
+        from {
+            left: var(--x0);
+            top: var(--y0);
+        }
+    }
+    @keyframes arc {
+        50% {
+            transform: translateY(-80%);
+        }
+    }
+    @keyframes spin {
+        to {
+            rotate: 600deg;
+        }
+    }
+    @keyframes rain {
+        from {
+            opacity: 1;
+            transform: translateY(0) rotate(0);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(85cqh) rotate(var(--spin));
+        }
+    }
+    @keyframes zoom {
+        40% {
+            transform: scale(1.06);
+        }
+    }
     @keyframes breathe {
         50% {
             transform: scaleY(0.96) translateY(2%);
@@ -1077,18 +1519,26 @@ watch(
             transform: scaleY(0.85) scaleX(1.08) translateX(-6%);
         }
     }
+    /* Squash into the blow, stretch out of it */
     @keyframes strike {
-        30% {
-            transform: translateX(20%) rotate(14deg) scale(1.12);
+        25% {
+            transform: translateX(26%) rotate(16deg) scale(1.18, 0.9);
+        }
+        55% {
+            transform: translateX(8%) rotate(4deg) scale(0.95, 1.06);
         }
     }
     @keyframes struck {
         0%,
         20% {
-            transform: translateX(-12%) rotate(-12deg);
+            transform: translateX(-18%) rotate(-16deg) scale(1.05, 0.9);
             filter: brightness(3) saturate(0);
         }
-        60% {
+        45% {
+            transform: translateX(-8%) rotate(-6deg);
+            filter: brightness(1.4) sepia(1) hue-rotate(-40deg) saturate(4);
+        }
+        70% {
             transform: translateX(5%) rotate(4deg);
         }
     }
