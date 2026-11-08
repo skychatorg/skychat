@@ -12,6 +12,7 @@ export type { BalloonResult, BalloonSize, SanitizedLuckyPop } from './plugins/pl
 export type { SanitizedCrash } from './plugins/player/party/Crash.js';
 export type { SanitizedDailyRoll } from './plugins/player/party/DailyRoll.js';
 export type { SanitizedMonkeyFight } from './plugins/player/party/MonkeyFight.js';
+export type { SanitizedHotPotato } from './plugins/player/party/HotPotato.js';
 export type { SanitizedVoiceChannel } from './plugins/voice/VoiceTypes.js';
 export type { AuthData } from './skychat/AuthBridge.js';
 export type { PublicConfig } from './skychat/Config.js';

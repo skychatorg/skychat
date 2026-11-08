@@ -39,6 +39,9 @@ const partyRound = computed(() => {
             done: 'Cards revealed',
         }[client.state.dailyRoll.phase];
     }
+    if (client.state.hotPotato) {
+        return `Round ${client.state.hotPotato.round} of ${client.state.hotPotato.rounds}`;
+    }
     if (client.state.monkeyFight) {
         return `Fight ${client.state.monkeyFight.fight} of ${client.state.monkeyFight.fights}`;
     }

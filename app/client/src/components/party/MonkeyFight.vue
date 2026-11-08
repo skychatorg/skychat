@@ -5,6 +5,7 @@ import { useNow } from '@/composables/useNow';
 import { createCrowdSound, playCasinoSound } from '@/lib/casinoSounds';
 import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
+import { betChips } from '@/lib/channel';
 import { formatMoney } from '../../../../api/money.ts';
 import { computed, onUnmounted, ref, watch } from 'vue';
 
@@ -207,10 +208,7 @@ watch(
     () => fight.value.fight,
     () => (selected.value = null),
 );
-const choices = computed(() => {
-    const { minBet, maxBet } = fight.value;
-    return [...new Set([minBet, minBet * 2, minBet * 5, maxBet].map((bet) => Math.min(bet, maxBet)))].sort((a, b) => a - b);
-});
+const choices = computed(() => betChips(fight.value));
 // Until bets close, a bet can move to another monkey or change amount
 const canBet = computed(() => me.value.id && fight.value.phase === 'betting');
 // Each monkey answers with its own call when picked

@@ -9,11 +9,25 @@ export const channelIcon = (channel) => (channel.kind === 'party' ? 'dice' : 'mu
  * The games of a party channel, in lobby order
  */
 export const PARTY_GAMES = {
-    blackjack: { emoji: '🃏', name: 'Blackjack', pitch: 'Up to 5 players against the house. 3:2 blackjack, the dealer stands on 17.' },
-    luckypop: { emoji: '🎈', name: 'Lucky Pop', pitch: 'A shared sky of balloons. Pay to pop one: money, nothing, or a nasty surprise.' },
-    crash: { emoji: '🚀', name: 'Crash', pitch: 'Bet, watch the multiplier climb, and cash out before it crashes.' },
-    dailyroll: { emoji: '🎴', name: 'Daily Roll', pitch: 'Once a day for the whole channel. Pick a free card, one of them holds $50.' },
-    monkeys: { emoji: '🐒', name: 'Monkey Fight', pitch: 'Four monkeys, one arena. Back the one you think stays standing.' },
+    blackjack: { emoji: '🃏', name: 'Blackjack', pitch: 'Beat the dealer to 21. Blackjack pays 3:2.' },
+    luckypop: { emoji: '🎈', name: 'Lucky Pop', pitch: 'Pop balloons for cash, or a nasty surprise.' },
+    crash: { emoji: '🚀', name: 'Crash', pitch: 'Cash out before the multiplier crashes.' },
+    dailyroll: { emoji: '🎴', name: 'Daily Roll', pitch: 'A free card a day. One of them holds $50.' },
+    monkeys: { emoji: '🐒', name: 'Monkey Fight', pitch: 'Back the monkey you think stays standing.' },
+    potato: { emoji: '💣', name: 'Hot Potato', pitch: 'Pass the bomb before it blows up on you.' },
+};
+
+/**
+ * Up to five bet chips between the table limits, on a 1-2-5 ladder: always the min and the max, the rest spread between.
+ * $10–$100 gives 10 · 20 · 50 · 100, $10–$10,000 gives 10 · 100 · 500 · 1,000 · 10,000
+ */
+export const betChips = ({ minBet, maxBet }) => {
+    const ladder = [];
+    for (let unit = 1; unit <= maxBet; unit *= 10) {
+        ladder.push(...[1, 2, 5].map((step) => step * unit).filter((value) => value > minBet && value < maxBet));
+    }
+    const between = ladder.length <= 3 ? ladder : [1, 2, 3].map((i) => ladder[Math.round((i * (ladder.length - 1)) / 4)]);
+    return [...new Set([minBet, ...between, maxBet])];
 };
 
 /**

@@ -3,7 +3,7 @@ import CasinoChip from '@/components/casino/CasinoChip.vue';
 import CasinoHand from '@/components/casino/CasinoHand.vue';
 import { useCasinoSounds } from '@/composables/useCasinoSounds';
 import { useNow } from '@/composables/useNow';
-import { betLimits } from '@/lib/channel';
+import { betChips, betLimits } from '@/lib/channel';
 import { formatMoney } from '../../../../api/money.ts';
 import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
@@ -34,10 +34,7 @@ const showChips = computed(
 const canDouble = computed(() => myTurn.value && mySeat.value.cards.length === 2 && me.value.money >= mySeat.value.bet);
 
 // A few chips between the table limits, like 10 · 20 · 50 · 100
-const betChoices = computed(() => {
-    const { minBet, maxBet } = table.value;
-    return [...new Set([minBet, minBet * 2, minBet * 5, maxBet].map((bet) => Math.min(bet, maxBet)))].sort((a, b) => a - b);
-});
+const betChoices = computed(() => betChips(table.value));
 const chipColor = (value) => CHIP_COLORS[betChoices.value.indexOf(value) % CHIP_COLORS.length];
 
 // A bet as the chips on the felt, biggest first: what was clicked, two of them once doubled

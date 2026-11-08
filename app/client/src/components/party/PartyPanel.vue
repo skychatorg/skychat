@@ -3,6 +3,7 @@ import CasinoTable from '@/components/casino/CasinoTable.vue';
 import CrashGame from '@/components/party/CrashGame.vue';
 import DailyRoll from '@/components/party/DailyRoll.vue';
 import MonkeyFight from '@/components/party/MonkeyFight.vue';
+import HotPotato from '@/components/party/HotPotato.vue';
 import LuckyPop from '@/components/party/LuckyPop.vue';
 import { useCountdown } from '@/composables/useCountdown';
 import { useNow } from '@/composables/useNow';
@@ -23,6 +24,7 @@ const meta = (game) =>
         luckypop: '$1 to $20 a balloon',
         dailyroll: 'free · once a day',
         monkeys: limits.value && `bets ${betLimits(limits.value)} · up to ×50`,
+        potato: limits.value && `stake ${betLimits(limits.value)} · 2+ players`,
     })[game] ?? '';
 
 // Daily Roll is locked for the whole channel until 10 PM once played
@@ -72,6 +74,7 @@ const vote = (game) => client.sendMessage(`/party vote ${game}`);
             <CrashGame v-else-if="party.game === 'crash' && client.state.crash" />
             <DailyRoll v-else-if="party.game === 'dailyroll' && client.state.dailyRoll" />
             <MonkeyFight v-else-if="party.game === 'monkeys' && client.state.monkeyFight" />
+            <HotPotato v-else-if="party.game === 'potato' && client.state.hotPotato" />
         </template>
 
         <section v-else-if="party.phase === 'vote'" class="screen" aria-labelledby="party-vote-title">
@@ -90,11 +93,12 @@ const vote = (game) => client.sendMessage(`/party vote ${game}`);
                     :class="{ mine: game.mine }"
                     :aria-pressed="game.mine"
                     :disabled="isGuest || Boolean(game.locked)"
+                    :title="game.name"
                     @click="vote(game.id)"
                 >
                     <span class="name"
                         ><span class="emoji" aria-hidden="true">{{ game.emoji }}</span>
-                        {{ game.again ? `Again: ${game.name}` : game.name }}</span
+                        <span class="label">{{ game.again ? `Again: ${game.name}` : game.name }}</span></span
                     >
                     <span v-if="game.locked" class="sub">{{ game.locked }}</span>
                     <span v-else class="sub">
@@ -120,10 +124,11 @@ const vote = (game) => client.sendMessage(`/party vote ${game}`);
                     :key="game.id"
                     class="game"
                     :disabled="isGuest || Boolean(game.locked)"
+                    :title="game.name"
                     @click="pick(game.id)"
                 >
                     <span class="name"
-                        ><span class="emoji" aria-hidden="true">{{ game.emoji }}</span> {{ game.name }}</span
+                        ><span class="emoji" aria-hidden="true">{{ game.emoji }}</span> <span class="label">{{ game.name }}</span></span
                     >
                     <span class="pitch">{{ game.pitch }}</span>
                     <span class="sub">{{ game.locked ?? game.meta }}</span>
@@ -192,9 +197,12 @@ const vote = (game) => client.sendMessage(`/party vote ${game}`);
 }
 .games {
     display: grid;
-    /* Two rows when there is room, the short and narrow rules below take over otherwise */
+    /* Three by two when there is room, the rules below take over otherwise */
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: clamp(6px, 2cqw, 16px);
+    min-height: 0;
+    /* Last resort only: the rules below make the cards fit first */
+    overflow-y: auto;
 }
 .game {
     display: flex;
@@ -224,8 +232,12 @@ const vote = (game) => client.sendMessage(`/party vote ${game}`);
     background: rgb(var(--color-primary) / 0.12);
 }
 .name {
+    max-width: 100%;
     font-weight: 700;
     font-size: clamp(14px, 5cqh, 20px);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 .pitch {
     color: rgb(255 255 255 / 0.65);
@@ -233,9 +245,13 @@ const vote = (game) => client.sendMessage(`/party vote ${game}`);
     font-size: clamp(12px, 3.5cqh, 15px);
 }
 .sub {
+    max-width: 100%;
     font-family: ui-monospace, monospace;
     font-size: 12px;
     color: rgb(255 255 255 / 0.55);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 .game.mine .sub {
     color: #f4f4ff;
@@ -246,7 +262,50 @@ const vote = (game) => client.sendMessage(`/party vote ${game}`);
     }
 }
 
-/* Short players: one row, the descriptions go */
+/* Not much height: the descriptions go first, the cards stay readable */
+@container (max-height: 300px) {
+    .pitch {
+        display: none;
+    }
+    .game {
+        padding: clamp(6px, 2cqh, 12px) clamp(8px, 2cqw, 14px);
+        gap: 2px;
+    }
+}
+/* Medium width: two per row, three rows */
+@container (max-width: 700px) and (min-height: 201px) {
+    .games {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+/* Medium width without the height for three full rows */
+@container (max-width: 700px) and (max-height: 520px) {
+    .pitch {
+        display: none;
+    }
+    .game {
+        padding: clamp(6px, 2cqh, 12px) clamp(8px, 2cqw, 14px);
+        gap: 2px;
+    }
+    .name {
+        font-size: clamp(13px, 4cqh, 17px);
+    }
+}
+/* Narrow, like a phone: still two per row, name and limits only */
+@container (max-width: 420px) and (min-height: 201px) {
+    .pitch,
+    .lead {
+        display: none;
+    }
+    .name {
+        font-size: 14px;
+    }
+    .sub {
+        font-size: 11px;
+    }
+}
+
+/* Short players: every game on one row, no descriptions */
 @container (max-height: 200px) {
     .screen {
         flex-direction: row;
@@ -265,46 +324,51 @@ const vote = (game) => client.sendMessage(`/party vote ${game}`);
     .bar {
         display: none;
     }
-    .name {
-        max-width: 100%;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
     .games {
         flex: 1;
         min-width: 0;
-        /* Every game on the one row */
         grid-template-columns: none;
         grid-auto-flow: column;
         grid-auto-columns: minmax(0, 1fr);
+        overflow: visible;
     }
     .game {
         justify-content: center;
         padding: 6px 10px;
         border-radius: 10px;
     }
+    .name {
+        font-size: 14px;
+    }
 }
-/* Short and narrow: names only, the lead goes */
-@container (max-height: 200px) and (max-width: 520px) {
+/* Short: in one row, the limits and the lead go, names may take two lines rather than be cut */
+@container (max-height: 200px) and (max-width: 1100px) {
     .sub,
     .lead {
         display: none;
     }
-}
-/* Medium width: two per row */
-@container (max-width: 700px) and (min-height: 201px) {
-    .games {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+    .name {
+        white-space: normal;
+        line-height: 1.15;
+        text-align: center;
+        font-size: 13px;
+    }
+    .game {
+        align-items: center;
+        padding: 6px 4px;
     }
 }
-/* Narrow: the cards stack */
-@container (max-width: 420px) and (min-height: 201px) {
-    .games {
-        grid-template-columns: minmax(0, 1fr);
-    }
-    .pitch {
+/* Short and narrow: the emoji alone says which game, the full name is in the tooltip */
+@container (max-height: 200px) and (max-width: 560px) {
+    .label {
         display: none;
+    }
+    .game {
+        align-items: center;
+        padding: 6px 4px;
+    }
+    .emoji {
+        font-size: 20px;
     }
 }
 </style>

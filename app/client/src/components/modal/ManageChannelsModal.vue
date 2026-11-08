@@ -129,7 +129,7 @@ function create() {
                 </div>
                 <div v-if="form.kind === 'party'" class="grid grid-cols-2 gap-2">
                     <label class="flex flex-col gap-1 text-xs font-mono uppercase tracking-wider text-white/50">
-                        Blackjack min bet $
+                        Min bet $
                         <input
                             id="newChannelMinBet"
                             v-model.number="form.minBet"
@@ -139,7 +139,7 @@ function create() {
                         />
                     </label>
                     <label class="flex flex-col gap-1 text-xs font-mono uppercase tracking-wider text-white/50">
-                        Blackjack max bet $
+                        Max bet $
                         <input
                             id="newChannelMaxBet"
                             v-model.number="form.maxBet"

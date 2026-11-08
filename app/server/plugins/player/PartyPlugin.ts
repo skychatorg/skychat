@@ -5,7 +5,7 @@ import { PlayerPlugin } from './PlayerPlugin.js';
 /**
  * Party channel actions: /party pick <game> in the lobby, /party vote <game> after a round, /party pop <balloon> at Lucky Pop,
  * /party bet <cents> and /party cashout at Crash, /party card <id> at Daily Roll,
- * /party back <monkey> <cents> at Monkey Fight
+ * /party back <monkey> <cents> at Monkey Fight, /party join <cents> and /party pass <seat> at Hot Potato
  */
 export class PartyPlugin extends GlobalPlugin {
     static readonly commandName = 'party';
@@ -19,7 +19,7 @@ export class PartyPlugin extends GlobalPlugin {
             maxCount: 3,
             maxCallsPer10Seconds: 30,
             params: [
-                { name: 'action', pattern: /^(pick|vote|pop|bet|cashout|card|back)$/ },
+                { name: 'action', pattern: /^(pick|vote|pop|bet|cashout|card|back|join|pass)$/ },
                 { name: 'value', pattern: /^[a-z0-9]{1,20}$/ },
                 { name: 'amount', pattern: /^[0-9]{1,9}$/ },
             ],
@@ -68,6 +68,16 @@ export class PartyPlugin extends GlobalPlugin {
                     throw new Error('No monkey fight here');
                 }
                 return monkeyFight.bet(connection.session, Number(value), Number(amount));
+            }
+            case 'join':
+            case 'pass': {
+                const hotPotato = party.hotPotato;
+                if (!hotPotato) {
+                    throw new Error('No hot potato here');
+                }
+                return action === 'join'
+                    ? hotPotato.join(connection.session, Number(value))
+                    : hotPotato.pass(connection.session, Number(value));
             }
         }
     }

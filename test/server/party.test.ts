@@ -8,6 +8,7 @@ import { BALLOONS, LuckyPop } from '../../app/server/plugins/player/party/LuckyP
 import { Crash } from '../../app/server/plugins/player/party/Crash.js';
 import { DailyRoll } from '../../app/server/plugins/player/party/DailyRoll.js';
 import { MonkeyFight, simulate } from '../../app/server/plugins/player/party/MonkeyFight.js';
+import { HotPotato } from '../../app/server/plugins/player/party/HotPotato.js';
 import { Party } from '../../app/server/plugins/player/party/Party.js';
 import { UserController } from '../../app/server/skychat/UserController.js';
 import { hand } from './cards.js';
@@ -64,6 +65,10 @@ async function partyChannel(players = 2, { idleMs = 100 } = {}) {
             game.random = scripted([]);
         } else if (game instanceof MonkeyFight) {
             game.timings = { betMs: 600, lastCallMs: 20, introMs: 5, beatMs: 2, resultsMs: 30 };
+            game.random = scripted([]);
+        } else if (game instanceof HotPotato) {
+            game.timings = { joinMs: 300, lastCallMs: 20, holdMs: 150, fuseMinMs: 500, fuseMeanMs: 100, fuseMaxMs: 500, resultsMs: 30 };
+            // The first holder is the last seat
             game.random = scripted([]);
         } else if (game instanceof Crash) {
             // ×2 every 100 ms
@@ -754,5 +759,129 @@ describe('monkey fight', () => {
         const other = await partyChannel(1);
         await other.clients[0].send('/party pick monkeys');
         await until(() => other.party.sanitized().phase !== 'playing', 4000);
+    });
+});
+
+describe('hot potato', () => {
+    const phase = (party: Party, wanted: string) => until(() => party.hotPotato?.sanitized().phase === wanted, 4000);
+    const money = (clients: TestClient[]) => clients.map((c) => c.session.user.money);
+
+    it('refuses guests and second seats, and refunds a player left alone', async () => {
+        const { party, clients } = await partyChannel(2);
+        const [alice] = clients;
+        const guest = await server.connect(null);
+        await guest.send(`/playerchannel join ${party.channel.id}`);
+        await alice.send('/party pick potato');
+
+        await guest.send('/party join 1000');
+        await alice.send('/party join 2000');
+        await alice.send('/party join 2000');
+        expect(guest.errors()).toEqual(['Log in to play']);
+        expect(alice.errors()).toEqual(['You are already in']);
+        expect(alice.session.user.money).toBe(18000);
+
+        await until(() => party.sanitized().phase !== 'playing', 4000);
+        expect(alice.session.user.money).toBe(20000);
+    });
+
+    it('holds everyone to the first stake, and sends the bomb where the holder aimed once the hold ends', async () => {
+        const { party, clients } = await partyChannel(3);
+        const [alice, bob, carol] = clients;
+        await alice.send('/party pick potato');
+        await alice.send('/party join 1000');
+        await bob.send('/party join 1000');
+        await carol.send('/party join 5000');
+        await carol.send('/party join 1000');
+        expect(carol.session.user.money).toBe(19000);
+        await phase(party, 'playing');
+        // Carol, last seat, holds it first
+        expect(party.hotPotato!.sanitized().holder).toBe(2);
+
+        await alice.send('/party pass 1');
+        await carol.send('/party pass 2');
+        // Picked during the hold: kept, and sent the moment the hold ends
+        await carol.send('/party pass 0');
+        expect(party.hotPotato!.sanitized()).toMatchObject({ holder: 2, aim: 0 });
+        await until(() => party.hotPotato!.sanitized().holder === 0);
+        expect(party.hotPotato!.sanitized()).toMatchObject({ aim: null, pot: 3100, passCount: 1 });
+        expect(carol.session.user.money).toBe(18900);
+
+        // Straight back to whoever sent it is fine
+        await settle(170);
+        await alice.send('/party pass 2');
+        expect(party.hotPotato!.sanitized().holder).toBe(2);
+        expect(alice.errors()).toEqual(['You are not holding the bomb']);
+        expect(carol.errors()).toEqual(['The stake is $10', 'Pass it to someone else']);
+        expect(bob.errors()).toEqual([]);
+    });
+
+    it('blows up on the holder, and splits the pot evenly when no survivor ever held it', async () => {
+        const { party, clients } = await partyChannel(4);
+        await clients[0].send('/party pick potato');
+        for (const client of clients) {
+            await client.send('/party join 1000');
+        }
+        await phase(party, 'done');
+
+        const done = party.hotPotato!.sanitized();
+        expect(done.loser).toBe(3);
+        expect(done.players.map((p) => p.payout)).toEqual([1334, 1333, 1333, 0]);
+        await until(() => clients[0].session.user.money === 20334);
+        // Nothing created, nothing taken: money only moved between players
+        expect(money(clients).reduce((a, b) => a + b)).toBe(80000);
+    });
+
+    it('shares the whole pot between survivors by how long each held the bomb', async () => {
+        const { party, clients } = await partyChannel(3);
+        const [alice, bob, carol] = clients;
+        await alice.send('/party pick potato');
+        for (const client of clients) {
+            await client.send('/party join 1000');
+        }
+        await phase(party, 'playing');
+        // Carol holds it a moment, passes to Alice, and it blows up on Alice
+        await settle(170);
+        await carol.send('/party pass 0');
+        await phase(party, 'done');
+
+        // Bob survived without ever holding it: nothing. Carol is the only survivor who held it: the whole pot
+        expect(party.hotPotato!.sanitized().players.map((p) => p.payout)).toEqual([0, 0, 3100]);
+        await until(() => carol.session.user.money === 22000);
+        expect([alice.session.user.money, bob.session.user.money]).toEqual([19000, 19000]);
+    });
+
+    it('keeps the bomb on a holder who leaves, and never passes it to someone who left', async () => {
+        const { party, clients } = await partyChannel(3);
+        const [alice, , carol] = clients;
+        await alice.send('/party pick potato');
+        for (const client of clients) {
+            await client.send('/party join 1000');
+        }
+        await phase(party, 'playing');
+        await alice.send('/playerchannel leave');
+        await settle(170);
+        await carol.send('/party pass 0');
+        expect(carol.errors()).toEqual([`${alice.session.user.username} left the table`]);
+
+        await carol.send('/playerchannel leave');
+        expect(party.hotPotato!.sanitized().holder).toBe(2);
+        await phase(party, 'done');
+        expect(party.hotPotato!.sanitized().loser).toBe(2);
+    });
+
+    it('gives back stakes and fees when the game is torn down mid-round', async () => {
+        const { party, clients } = await partyChannel(3);
+        const [alice, , carol] = clients;
+        await alice.send('/party pick potato');
+        for (const client of clients) {
+            await client.send('/party join 1000');
+        }
+        await phase(party, 'playing');
+        await settle(170);
+        await carol.send('/party pass 0');
+        await until(() => party.hotPotato!.sanitized().pot === 3100);
+
+        await party.hotPotato!.destroy();
+        expect(money(clients)).toEqual([20000, 20000, 20000]);
     });
 });

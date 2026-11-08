@@ -4,6 +4,7 @@ import { createFlightSound, playCasinoSound } from '@/lib/casinoSounds';
 import { useCountdown } from '@/composables/useCountdown';
 import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
+import { betChips } from '@/lib/channel';
 import { formatMoney } from '../../../../api/money.ts';
 import { computed, onUnmounted, ref, watch } from 'vue';
 
@@ -114,10 +115,7 @@ const status = computed(() => {
 });
 
 // Chips between the table limits, like the blackjack table
-const choices = computed(() => {
-    const { minBet, maxBet } = game.value;
-    return [...new Set([minBet, minBet * 2, minBet * 5, maxBet].map((bet) => Math.min(bet, maxBet)))].sort((a, b) => a - b);
-});
+const choices = computed(() => betChips(game.value));
 const canBet = computed(() => me.value.id && game.value.phase === 'betting' && !myBet.value);
 const bet = (amount) => client.sendMessage(`/party bet ${amount}`);
 const cashOut = () => client.sendMessage('/party cashout');

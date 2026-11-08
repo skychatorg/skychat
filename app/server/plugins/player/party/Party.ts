@@ -4,6 +4,7 @@ import { BlackjackTable, CasinoOptions, logFailure } from '../casino/BlackjackTa
 import type { PlayerChannel } from '../PlayerChannel.js';
 import { Crash } from './Crash.js';
 import { DailyRoll } from './DailyRoll.js';
+import { HotPotato } from './HotPotato.js';
 import { LuckyPop } from './LuckyPop.js';
 import { MonkeyFight } from './MonkeyFight.js';
 
@@ -13,11 +14,12 @@ export const PARTY_GAMES = {
     crash: 'Crash',
     dailyroll: 'Daily Roll',
     monkeys: 'Monkey Fight',
+    potato: 'Hot Potato',
 } as const;
 
 export type PartyGameId = keyof typeof PARTY_GAMES;
 
-type PartyGame = BlackjackTable | LuckyPop | Crash | DailyRoll | MonkeyFight;
+type PartyGame = BlackjackTable | LuckyPop | Crash | DailyRoll | MonkeyFight | HotPotato;
 
 /** What each game sends its state as, null clears it */
 const GAME_EVENTS = {
@@ -26,6 +28,7 @@ const GAME_EVENTS = {
     crash: 'crash',
     dailyroll: 'daily-roll',
     monkeys: 'monkey-fight',
+    potato: 'hot-potato',
 } as const;
 
 /**
@@ -103,6 +106,10 @@ export class Party {
 
     public get monkeyFight(): MonkeyFight | null {
         return this.game instanceof MonkeyFight ? this.game : null;
+    }
+
+    public get hotPotato(): HotPotato | null {
+        return this.game instanceof HotPotato ? this.game : null;
     }
 
     public pick(session: Session, game: string): void {
@@ -203,6 +210,7 @@ export class Party {
             crash: () => new Crash(this, onRoundEnd),
             dailyroll: () => new DailyRoll(this, onRoundEnd),
             monkeys: () => new MonkeyFight(this, onRoundEnd),
+            potato: () => new HotPotato(this, onRoundEnd),
         }[game]();
         if (game === 'dailyroll') {
             this.dailyRollAt = DailyRoll.nextReset(Date.now());

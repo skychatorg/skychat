@@ -155,6 +155,12 @@ const SOUNDS = {
     grunt: (ctx, at) => ape(ctx, at, { from: 170, to: 120, vowel: 'oo', length: 0.14, gain: 0.35 }),
     yelp: (ctx, at) => ape(ctx, at, { from: 900, to: 1300, vowel: 'ah', length: 0.13, gain: 0.25 }),
     scream: (ctx, at) => ape(ctx, at, { from: 1100, to: 1700, vowel: 'ee', length: 0.4, gain: 0.35, wobble: 40 }),
+    // A bomb: a crack, then a long low rumble
+    boom: (ctx, at) => {
+        swish(ctx, at, 0.06, { from: 4000, to: 1500, gain: 0.6 });
+        swish(ctx, at, 1.2, { from: 900, to: 60, gain: 0.9 });
+        tone(ctx, at, 70, 1.4, { type: 'sine', gain: 0.8, slideTo: 25 });
+    },
     chatter: (ctx, at) =>
         [0, 0.08, 0.16, 0.24].forEach((d, i) => ape(ctx, at + d, { from: 700 + i * 60, to: 950, vowel: 'ah', length: 0.07, gain: 0.22 })),
     ooh: (ctx, at) => ape(ctx, at, { from: 260, to: 380, vowel: 'oo', length: 0.22, gain: 0.3 }),
