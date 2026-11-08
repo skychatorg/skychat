@@ -40,11 +40,15 @@ async function until(check: () => boolean, ms = 2000) {
 }
 
 const scripted = (rolls: number[]) => (max: number) => (rolls.length ? (rolls.shift() as number) : max - 1);
+/** Lucky Pop skies with a special balloon at id 0, the hot air one followed by the rolls that keep the sky in order, so its burst roll can come next */
+const PEEK = [0, 1];
+const PINATA = [0, 2];
+const HOT_AIR = [0, 3, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1];
 
 /**
  * A party channel with short timers and the given players in it, $200 each (money is in cents)
  */
-async function partyChannel(players = 2, { idleMs = 100 } = {}) {
+async function partyChannel(players = 2, { idleMs = 100, sky = [] as number[] } = {}) {
     const admin = await server.connect(name('op'));
     admin.session.setOP(true);
     await admin.send('/playerchannelmanage create party 1000 10000 Fun');
@@ -57,8 +61,8 @@ async function partyChannel(players = 2, { idleMs = 100 } = {}) {
             // Never a natural: every hand is played out
             game.shuffle = () => hand('10♠ 9♣ 6♠ 7♦ 10♥ 10♦ 10♣').reverse();
         } else if (game instanceof LuckyPop) {
-            game.timings = { roundMs: 400, cooldownMs: 60, butterfingersMs: 300, lastPopBeatMs: 20 };
-            game.random = scripted([]);
+            game.timings = { roundMs: 400, cooldownMs: 60, butterfingersMs: 300, lastPopBeatMs: 20, hotAirDoubleMs: 100 };
+            game.random = scripted([...sky]);
         } else if (game instanceof DailyRoll) {
             game.timings = { pickMs: 800, lastCallMs: 30, countdownMs: 5, flipMs: 1, suspenseMs: 5, afterFlipMs: 1, resultsMs: 30 };
             // Every card $5, the last one the jackpot
@@ -253,22 +257,36 @@ describe('party cycle', () => {
 });
 
 describe('lucky pop', () => {
-    it('fills a sky with 7 xs, 4 md and 1 lg, and now and then a golden one instead of an md', async () => {
+    it('fills a sky with 7 xs, 4 md and 1 lg, and in most rounds a special one instead of an xs, or an md for the golden one', async () => {
         const { party, clients } = await partyChannel(1);
         await clients[0].send('/party pick luckypop');
         const sizes = (pop: LuckyPop) => pop.sanitizedFor(clients[0].session).balloons.map((b) => b.size);
-        expect(sizes(party.luckyPop!).sort()).toEqual([...Array(1).fill('lg'), ...Array(4).fill('md'), ...Array(7).fill('xs')]);
+        expect(sizes(party.luckyPop!).sort()).toEqual(['lg', ...Array(4).fill('md'), ...Array(7).fill('xs')]);
 
         const golden = new LuckyPop(party, () => {});
-        golden.random = scripted([LuckyPop.GOLDEN_CHANCE - 1]);
+        golden.random = scripted([LuckyPop.SPECIAL_CHANCE - 1, 0]);
         golden.start();
         expect(sizes(golden).filter((s) => s === 'golden')).toHaveLength(1);
         expect(sizes(golden).filter((s) => s === 'md')).toHaveLength(3);
         await golden.destroy();
+
+        // Alone, no piñata or hot air balloon: the last special is the peek one
+        const solo = new LuckyPop(party, () => {});
+        solo.random = scripted([0]);
+        solo.start();
+        expect(sizes(solo).filter((s) => !['xs', 'md', 'lg'].includes(s))).toEqual(['peek']);
+        await solo.destroy();
+
+        const peek = new LuckyPop(party, () => {});
+        peek.random = scripted([...PEEK]);
+        peek.start();
+        expect(sizes(peek)[0]).toBe('peek');
+        expect(sizes(peek).filter((s) => s === 'xs')).toHaveLength(6);
+        await peek.destroy();
     });
 
     it('charges the price, pays what was inside, and shows it to everyone', async () => {
-        // First xs prize ($1.50), then the second md prize ($20)
+        // First xs prize ($1.40), then the second md prize ($20)
         const { party, clients } = await partyChannel(2);
         const [alice, bob] = clients;
         await alice.send('/party pick luckypop');
@@ -278,17 +296,29 @@ describe('lucky pop', () => {
         await bob.send('/party pop 7');
 
         expect([alice.errors(), bob.errors()]).toEqual([[], []]);
-        expect(alice.session.user.money).toBe(20000 - 100 + 150);
+        expect(alice.session.user.money).toBe(20000 - 100 + 140);
         expect(bob.session.user.money).toBe(20000 - 500 + 2000);
         expect(bob.last('lucky-pop').balloons[0]).toMatchObject({
             popped: true,
-            result: { username: alice.session.user.username, kind: 'money', amount: 150, label: '+$1.50' },
+            result: { username: alice.session.user.username, kind: 'money', amount: 140, label: '+$1.40' },
         });
         expect(alice.session.user.storage.moneyHistory.slice(0, 2).map((m: { reason: string }) => m.reason)).toEqual([
             'Lucky Pop win',
             'Lucky Pop',
         ]);
         expect(party.luckyPop).not.toBeNull();
+    });
+
+    it('pays the jackpot on the last roll', async () => {
+        const { party, clients } = await partyChannel(1);
+        const [alice] = clients;
+        await alice.send('/party pick luckypop');
+        rig(party, [99]);
+
+        await alice.send('/party pop 0');
+
+        expect(alice.session.user.money).toBe(20000 - 100 + 1000);
+        expect(alice.last('lucky-pop').balloons[0].result).toMatchObject({ kind: 'jackpot', amount: 1000, label: 'JACKPOT +$10' });
     });
 
     it('refuses guests, popped balloons, pops during the cooldown, and pops you cannot afford', async () => {
@@ -322,12 +352,13 @@ describe('lucky pop', () => {
         const [alice, bob] = clients;
         await alice.send('/party pick luckypop');
         const pop = party.luckyPop!;
+        rig(party, [0]);
 
         const results = await Promise.allSettled([pop.pop(alice.session, 11), pop.pop(bob.session, 11)]);
 
         expect(results.map((r) => r.status)).toEqual(['fulfilled', 'rejected']);
         expect(bob.session.user.money).toBe(20000);
-        expect(alice.session.user.money).toBeLessThan(20000);
+        expect(alice.session.user.money).toBe(20000 - 2000 + 3800);
     });
 
     it('gives the balloon back when paying fails', async () => {
@@ -346,7 +377,7 @@ describe('lucky pop', () => {
     });
 
     it('takes $10 more at most what is left, never below zero', async () => {
-        // The lg "lose" prize sits at 90 to 99
+        // The lg "lose" prize sits at 89 to 98
         const { party, clients } = await partyChannel(2);
         const [alice, bob] = clients;
         await alice.send('/party pick luckypop');
@@ -370,7 +401,7 @@ describe('lucky pop', () => {
     });
 
     it('applies maluses: grounded, butterfingers, a sandaled or scrambled next message, and a wizz', async () => {
-        // md malus is 70 to 99, then which one: sandale, grounded, scramble. xs malus is 80 to 99: wizz, scramble, butterfingers
+        // md malus is 69 to 98, then which one: sandale, grounded, scramble. xs malus is 79 to 98: wizz, scramble, butterfingers
         const { party, clients } = await partyChannel(3);
         const [alice, bob, carol] = clients;
         await alice.send('/party pick luckypop');
@@ -397,7 +428,7 @@ describe('lucky pop', () => {
     });
 
     it('sends a wizz storm over time, skipping the ticks while the player is offline', async () => {
-        // lg malus at 60 to 89, then the storm
+        // lg malus at 59 to 88, then the storm
         const { party, clients } = await partyChannel(1);
         const [alice] = clients;
         await alice.send('/party pick luckypop');
@@ -417,6 +448,91 @@ describe('lucky pop', () => {
         expect(party['storms'].size).toBe(0);
     });
 
+    it('bursts the piñata on a 1 in 12 hit, and the burster takes the pot', async () => {
+        const { party, clients } = await partyChannel(2, { sky: PINATA });
+        const [alice, bob] = clients;
+        await alice.send('/party pick luckypop');
+        rig(party, [5, 3]);
+
+        await alice.send('/party pop 0');
+        await bob.send('/party pop 0');
+        expect(alice.last('lucky-pop').balloons[0]).toMatchObject({ popped: false, hits: 2, pot: 200 });
+        await settle(70);
+        rig(party, [0]);
+        await alice.send('/party pop 0');
+
+        expect([alice.errors(), bob.errors()]).toEqual([[], []]);
+        expect(alice.session.user.money).toBe(20000 - 200 + 300);
+        expect(bob.session.user.money).toBe(20000 - 100);
+        expect(bob.last('lucky-pop').balloons[0]).toMatchObject({
+            popped: true,
+            pot: 300,
+            result: { username: alice.session.user.username, kind: 'pinata', amount: 300, label: 'burst the piñata, +$3' },
+        });
+        await bob.send('/party pop 0');
+        expect(bob.errors()).toEqual(['Someone burst it first']);
+    });
+
+    it('pays back every hit on a piñata nobody burst', async () => {
+        const { party, clients } = await partyChannel(2, { sky: PINATA });
+        const [alice, bob] = clients;
+        await alice.send('/party pick luckypop');
+        rig(party, [5, 3]);
+        await alice.send('/party pop 0');
+        await bob.send('/party pop 0');
+        expect(alice.session.user.money).toBe(19900);
+
+        await until(() => party.sanitized().phase === 'vote');
+        await settle(10);
+
+        expect([alice.session.user.money, bob.session.user.money]).toEqual([20000, 20000]);
+        expect(alice.session.user.storage.moneyHistory[0]).toMatchObject({ amount: 100, reason: 'Lucky Pop refund' });
+    });
+
+    it('lets the hot air balloon grow until someone pops it', async () => {
+        const { clients } = await partyChannel(2, { sky: [...HOT_AIR, 750_000] });
+        const [alice] = clients;
+        await alice.send('/party pick luckypop');
+        await settle(110);
+        await alice.send('/party pop 0');
+
+        const { result } = alice.last('lucky-pop').balloons[0];
+        expect(alice.errors()).toEqual([]);
+        expect(result).toMatchObject({ username: alice.session.user.username, kind: 'money' });
+        // Doubles every 100 ms in tests, bursts on its own at ×4
+        expect(result.amount).toBeGreaterThanOrEqual(1000);
+        expect(result.amount).toBeLessThan(2000);
+        expect(alice.session.user.money).toBe(20000 - 500 + result.amount);
+    });
+
+    it('lets the hot air balloon burst on its own when nobody pops it', async () => {
+        const { clients } = await partyChannel(2, { sky: [...HOT_AIR, 750_000] });
+        const [alice] = clients;
+        await alice.send('/party pick luckypop');
+        await settle(230);
+
+        expect(alice.last('lucky-pop').balloons[0]).toMatchObject({ popped: true, result: { kind: 'empty', label: 'burst on its own' } });
+        await alice.send('/party pop 0');
+        expect(alice.errors()).toEqual(['Someone popped it first']);
+    });
+
+    it('shows only the peeker what another balloon holds, and that balloon gives exactly that', async () => {
+        const { party, clients } = await partyChannel(2, { sky: PEEK });
+        const [alice, bob] = clients;
+        await alice.send('/party pick luckypop');
+        // The 7th balloon left with a prize is id 7, an md: its second prize, $20
+        rig(party, [6, 45]);
+
+        await alice.send('/party pop 0');
+        expect(alice.last('lucky-pop').balloons[0].result).toMatchObject({ kind: 'peek', label: 'peeked inside an md balloon' });
+        expect(alice.last('lucky-pop').balloons[7].peek).toMatchObject({ kind: 'money', amount: 2000 });
+        expect(bob.last('lucky-pop').balloons[7].peek).toBeNull();
+
+        await bob.send('/party pop 7');
+        expect(bob.session.user.money).toBe(20000 - 500 + 2000);
+        expect(alice.session.user.money).toBe(20000 - 100);
+    });
+
     it('ends the round on its timer, or right after the last balloon', async () => {
         const { party, clients } = await partyChannel(1);
         await clients[0].send('/party pick luckypop');
@@ -425,9 +541,11 @@ describe('lucky pop', () => {
     });
 
     it('has positive money odds on every balloon, and chances adding up to 100', () => {
-        for (const [size, { price, prizes }] of Object.entries(BALLOONS)) {
+        // The piñata, hot air and peek balloons have no prize table
+        for (const [size, { price, prizes }] of Object.entries(BALLOONS).filter(([, { prizes }]) => prizes.length)) {
             const back = prizes.reduce(
-                (sum, p) => sum + (p.chance * (p.kind === 'money' ? p.amount : p.kind === 'lose' ? -p.amount : 0)) / 100,
+                (sum, p) =>
+                    sum + (p.chance * (p.kind === 'money' || p.kind === 'jackpot' ? p.amount : p.kind === 'lose' ? -p.amount : 0)) / 100,
                 0,
             );
             expect(

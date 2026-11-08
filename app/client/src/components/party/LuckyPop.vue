@@ -6,7 +6,7 @@ import { useClientStore } from '@/stores/client';
 import { formatMoney } from '../../../../api/money.ts';
 import { computed, ref, watch } from 'vue';
 
-const SIZE_LABELS = { xs: 'xs', md: 'md', lg: 'lg', golden: 'golden' };
+const SIZE_LABELS = { xs: 'xs', md: 'md', lg: 'lg', golden: 'golden', pinata: 'piñata', hotair: 'hot air', peek: 'peek' };
 const MALUS_WORDS = { xs: 'mild', md: 'medium', lg: 'nasty' };
 // A popped balloon has room for a word or two: the feed has the full text
 const MALUS_TAGS = {
@@ -25,7 +25,14 @@ const tag = (result) =>
         ? result.amount
             ? formatMoney(result.amount)
             : 'face pop'
+        : result.kind === 'jackpot' || result.kind === 'pinata'
+        ? `+${formatMoney(result.amount)}`
+        : result.kind === 'peek'
+        ? 'peeked'
         : result.label;
+// What a peek showed you, on the balloon itself
+const peekTag = ({ kind, amount }) =>
+    ({ money: formatMoney(amount), jackpot: formatMoney(amount), empty: 'empty', malus: 'malus', lose: 'face pop' })[kind];
 
 const app = useAppStore();
 const client = useClientStore();
@@ -52,6 +59,7 @@ const status = computed(() => {
 const oddsLine = (size, { chance, kind, amount }) => {
     const what = {
         money: formatMoney(amount),
+        jackpot: `jackpot ${formatMoney(amount)}`,
         empty: 'nothing',
         lose: `lose ${formatMoney(amount)} more`,
         malus: `${MALUS_WORDS[size]} malus`,
@@ -67,14 +75,56 @@ const spot = (id) => ({
     delay: `-${(id * 0.37) % 3}s`,
 });
 
+// The special balloons explain themselves instead of listing prizes
+const rules = (size, price) =>
+    ({
+        pinata: [
+            `${price} a hit, into the pot`,
+            `1 hit in ${sky.value.pinataOdds} bursts it`,
+            'the burster takes it all',
+            'no burst: hits paid back',
+        ],
+        hotair: [
+            `its prize doubles every ${sky.value.hotAir.doubleMs / 1000} s`,
+            'it may burst any second',
+            'first to pop takes the prize',
+        ],
+        peek: ['no prize inside', 'shows you what another', 'balloon holds, only you'],
+    })[size]?.map((text) => ({ text, kind: 'muted' }));
+
+// The hot air balloon's prize right now, and how much it has inflated
+const multiplier = computed(() => 2 ** (Math.max(0, now.value - sky.value.hotAir.startedAt) / sky.value.hotAir.doubleMs));
+
 const balloons = computed(() =>
-    sky.value.balloons.map((balloon) => ({
-        ...balloon,
-        price: formatMoney(sky.value.sizes[balloon.size].price),
-        odds: sky.value.sizes[balloon.size].prizes.map((prize) => oddsLine(balloon.size, prize)),
-        spot: spot(balloon.id),
-        mine: balloon.result?.username === client.state.user.username,
-    })),
+    sky.value.balloons.map((balloon) => {
+        const price = sky.value.sizes[balloon.size].price;
+        const hotAirPrize = formatMoney(Math.floor(price * multiplier.value));
+        return {
+            ...balloon,
+            price: formatMoney(price),
+            // Under the balloon: what is at stake
+            label:
+                balloon.size === 'pinata'
+                    ? `${formatMoney(balloon.pot)} pot`
+                    : balloon.size === 'hotair'
+                    ? hotAirPrize
+                    : formatMoney(price),
+            aria:
+                balloon.size === 'pinata'
+                    ? `Hit the piñata for ${formatMoney(price)}, pot ${formatMoney(balloon.pot)}`
+                    : balloon.size === 'hotair'
+                    ? `Pop the hot air balloon for ${formatMoney(price)}, prize ${hotAirPrize}`
+                    : `Pop ${balloon.size === 'golden' ? 'the golden' : 'an ' + SIZE_LABELS[balloon.size]} balloon for ${formatMoney(
+                          price,
+                      )}${balloon.peek ? `, you peeked: ${peekTag(balloon.peek)}` : ''}`,
+            odds:
+                rules(balloon.size, formatMoney(price)) ??
+                sky.value.sizes[balloon.size].prizes.map((prize) => oddsLine(balloon.size, prize)),
+            grow: balloon.size === 'hotair' ? Math.min(1.8, 1 + Math.log2(multiplier.value) * 0.2) : 1,
+            spot: spot(balloon.id),
+            mine: balloon.result?.username === client.state.user.username,
+        };
+    }),
 );
 const canPop = computed(() => !isGuest.value && !sky.value.you.grounded && !cooldown.value);
 
@@ -100,6 +150,12 @@ const feed = computed(() =>
         .map((b) => ({ ...b.result, size: b.size })),
 );
 
+// Every hit on the piñata is heard by the whole room
+watch(
+    () => sky.value.balloons.reduce((sum, b) => sum + b.hits, 0),
+    (hits, before) => app.casinoSound && hits > before && playCasinoSound('punch'),
+);
+
 // A pop sound for every balloon that bursts, and how it went for yours
 watch(
     () => feed.value.length,
@@ -109,8 +165,11 @@ watch(
         }
         playCasinoSound('pop');
         const latest = feed.value[0];
-        if (latest.username === client.state.user.username) {
-            playCasinoSound(latest.kind === 'money' ? 'win' : latest.kind === 'empty' ? 'push' : 'lose', 150);
+        // A jackpot or a burst piñata is a moment for the whole room
+        if (latest.kind === 'jackpot' || latest.kind === 'pinata') {
+            playCasinoSound('blackjack', 150);
+        } else if (latest.username === client.state.user.username) {
+            playCasinoSound(latest.kind === 'money' ? 'win' : ['empty', 'peek'].includes(latest.kind) ? 'push' : 'lose', 150);
         }
     },
 );
@@ -137,17 +196,24 @@ watch(
                         <button
                             v-if="!balloon.popped"
                             class="balloon"
-                            :class="[balloon.size, { shown: shown === balloon.id, high: balloon.id < 6 }]"
+                            :class="[
+                                balloon.size,
+                                {
+                                    shown: shown === balloon.id,
+                                    high: balloon.id < 6,
+                                    west: balloon.id % 6 < 2,
+                                    east: balloon.id % 6 > 3,
+                                },
+                            ]"
                             :style="{
                                 left: balloon.spot.left,
                                 top: balloon.spot.top,
                                 animationDelay: balloon.spot.delay,
                                 '--i': balloon.id,
+                                '--grow': balloon.grow,
                             }"
                             :aria-disabled="!canPop"
-                            :aria-label="`Pop ${balloon.size === 'golden' ? 'the golden' : 'an ' + SIZE_LABELS[balloon.size]} balloon for ${
-                                balloon.price
-                            }`"
+                            :aria-label="balloon.aria"
                             :aria-describedby="`odds-${balloon.id}`"
                             @pointerdown="touch = $event.pointerType === 'touch'"
                             @pointerenter="hovered = balloon.id"
@@ -156,17 +222,22 @@ watch(
                             @blur="hovered = null"
                             @click="tap(balloon)"
                         >
-                            <svg viewBox="0 0 40 56" aria-hidden="true">
+                            <!-- Keyed on the hits, so it shakes again at every hit -->
+                            <span v-if="balloon.size === 'pinata'" :key="balloon.hits" class="pinata-body" aria-hidden="true">🪅</span>
+                            <svg v-else viewBox="0 0 40 56" aria-hidden="true">
                                 <ellipse cx="20" cy="20" rx="17" ry="19" class="skin" />
                                 <ellipse cx="13" cy="12" rx="4" ry="6" fill="#fff" opacity=".3" />
                                 <path d="M17 39l3 3 3-3z" class="skin" />
                                 <path d="M20 42c-3 4 3 7 0 13" stroke="rgba(255,255,255,.4)" stroke-width="1" fill="none" />
+                                <text v-if="balloon.size === 'peek'" x="20" y="27" text-anchor="middle" font-size="20" fill="#fff">?</text>
+                                <rect v-if="balloon.size === 'hotair'" x="15" y="48" width="10" height="7" rx="1.5" fill="#a0703c" />
                             </svg>
-                            <span class="price">{{ balloon.price }}</span>
+                            <span v-if="balloon.peek" class="peeked" :class="balloon.peek.kind">👁 {{ peekTag(balloon.peek) }}</span>
+                            <span class="price">{{ balloon.label }}</span>
                             <span :id="`odds-${balloon.id}`" class="odds" role="tooltip">
                                 <span class="odds-title"
                                     >{{ balloon.size === 'golden' ? 'golden, no malus' : SIZE_LABELS[balloon.size] }} ·
-                                    {{ balloon.price }}</span
+                                    {{ balloon.label }}</span
                                 >
                                 <span v-for="(line, i) in balloon.odds" :key="i" :class="line.kind">{{ line.text }}</span>
                             </span>
@@ -177,14 +248,14 @@ watch(
                             :class="[balloon.result?.kind, { mine: balloon.mine }]"
                             :style="{ left: balloon.spot.left, top: balloon.spot.top, '--i': balloon.id }"
                         >
-                            <span class="who">{{ balloon.result?.username }}</span>
+                            <span v-if="balloon.result?.username" class="who">{{ balloon.result.username }}</span>
                             {{ tag(balloon.result) }}
                         </span>
                     </template>
                 </div>
                 <ol class="feed" aria-label="What popped" aria-live="polite">
                     <li v-for="entry in feed" :key="entry.order">
-                        <b>{{ entry.username }}</b>
+                        <b v-if="entry.username">{{ entry.username }}</b>
                         <span class="muted">{{ entry.size === 'golden' ? 'golden' : SIZE_LABELS[entry.size] }}:</span>
                         <span :class="entry.kind">{{ entry.label }}</span>
                     </li>
@@ -193,7 +264,7 @@ watch(
             </div>
             <!-- Short players have no room for the odds box: one line along the bottom instead -->
             <div v-if="active" class="odds-line" aria-hidden="true">
-                <span class="muted">{{ active.size === 'golden' ? 'golden' : SIZE_LABELS[active.size] }} {{ active.price }}</span>
+                <span class="muted">{{ SIZE_LABELS[active.size] }} {{ active.label }}</span>
                 <span v-for="(line, i) in active.odds" :key="i" :class="line.kind">{{ line.text }}</span>
             </div>
         </div>
@@ -277,6 +348,34 @@ watch(
     --w: calc(var(--b) * 1.35);
     --skin: #ffd54a;
 }
+.balloon.pinata {
+    --w: calc(var(--b) * 1.5);
+}
+/* Inflates as its prize grows */
+.balloon.hotair {
+    --w: calc(var(--b) * 1.2 * var(--grow));
+    --skin: #ff7a3d;
+    transition: width 1s linear;
+}
+.balloon.peek {
+    --w: calc(var(--b) * 1.2);
+    --skin: #9b7bff;
+}
+.peeked {
+    position: absolute;
+    top: 20%;
+    padding: 1px 5px;
+    border-radius: 6px;
+    background: rgb(0 0 0 / 0.75);
+    font-size: clamp(10px, 3cqh, 13px);
+    font-weight: 700;
+    white-space: nowrap;
+}
+.pinata-body {
+    font-size: calc(var(--w) * 0.85);
+    line-height: 1.1;
+    filter: drop-shadow(0 4px 8px rgb(0 0 0 / 0.35));
+}
 .balloon svg {
     width: 100%;
     filter: drop-shadow(0 4px 8px rgb(0 0 0 / 0.35));
@@ -324,6 +423,16 @@ watch(
     text-align: left;
     white-space: nowrap;
 }
+/* The two outer columns on each side open their odds inward, so they stay inside the player */
+.balloon.west .odds {
+    left: 0;
+    transform: none;
+}
+.balloon.east .odds {
+    left: auto;
+    right: 0;
+    transform: none;
+}
 /* The top row opens its odds below, so they stay inside the player */
 .balloon.high .odds {
     bottom: auto;
@@ -345,6 +454,11 @@ watch(
 }
 .money {
     color: #7bd88f;
+}
+.jackpot,
+.pinata {
+    color: #f0c46c;
+    font-weight: 700;
 }
 .empty,
 .muted {
@@ -414,6 +528,17 @@ watch(
     @keyframes bob {
         50% {
             transform: translate(-50%, calc(-50% - 6px));
+        }
+    }
+    .pinata-body {
+        animation: whack 0.35s ease-out;
+    }
+    @keyframes whack {
+        30% {
+            transform: rotate(-18deg) scale(1.1);
+        }
+        60% {
+            transform: rotate(10deg);
         }
     }
     @keyframes burst {
