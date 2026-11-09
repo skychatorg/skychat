@@ -9,6 +9,8 @@ import { formatMoney } from '../../../../api/money.ts';
 import { computed, onUnmounted, ref, watch } from 'vue';
 
 const app = useAppStore();
+// Muted per game: one game's noise shouldn't silence the others
+const soundOn = computed(() => app.gameSound('crash'));
 const client = useClientStore();
 
 const game = computed(() => client.state.crash);
@@ -73,7 +75,7 @@ const stopFlight = (crashed) => {
     flight = null;
 };
 watch(
-    () => [game.value.phase, app.casinoSound],
+    () => [game.value.phase, soundOn.value],
     ([phase, sound]) => {
         if (phase === 'flying' && sound) {
             flight ??= createFlightSound();
@@ -84,7 +86,7 @@ watch(
     { immediate: true },
 );
 watch(intensity, (value) => flight?.set(value));
-watch(capped, (value) => value && app.casinoSound && playCasinoSound('blackjack'));
+watch(capped, (value) => value && soundOn.value && playCasinoSound('blackjack'));
 watch(milestone, (value, before) => value > before && flight?.whoosh());
 onUnmounted(() => stopFlight(false));
 
@@ -144,7 +146,7 @@ const tone = (hundredths) => (hundredths >= 1000 ? 'gold' : hundredths >= 200 ? 
 watch(
     () => [game.value.phase, myBet.value?.cashedAt],
     ([phase, cashedAt], [beforePhase, beforeCashed]) => {
-        if (!app.casinoSound || !myBet.value) {
+        if (!soundOn.value || !myBet.value) {
             return;
         }
         if (cashedAt && !beforeCashed) {
@@ -169,11 +171,11 @@ watch(
                 </span>
                 <button
                     class="mute"
-                    :title="app.casinoSound ? 'Mute the game' : 'Turn game sounds on'"
-                    :aria-pressed="!app.casinoSound"
-                    @click="app.toggleCasinoSound()"
+                    :title="soundOn ? 'Mute the game' : 'Turn game sounds on'"
+                    :aria-pressed="!soundOn"
+                    @click="app.toggleGameSound('crash')"
                 >
-                    <fa :icon="app.casinoSound ? 'volume-high' : 'volume-xmark'" />
+                    <fa :icon="soundOn ? 'volume-high' : 'volume-xmark'" />
                 </button>
             </div>
 

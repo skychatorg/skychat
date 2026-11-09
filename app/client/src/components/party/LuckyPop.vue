@@ -49,6 +49,8 @@ const peekTag = ({ kind, amount }) =>
     ({ money: formatMoney(amount), jackpot: formatMoney(amount), empty: 'empty', malus: 'malus', lose: 'face pop' })[kind];
 
 const app = useAppStore();
+// Muted per game: one game's noise shouldn't silence the others
+const soundOn = computed(() => app.gameSound('luckypop'));
 const client = useClientStore();
 const now = useNow();
 
@@ -180,20 +182,20 @@ const feed = computed(() =>
 // Every hit on the piñata is heard by the whole room
 watch(
     () => sky.value.balloons.reduce((sum, b) => sum + b.hits, 0),
-    (hits, before) => app.casinoSound && hits > before && playCasinoSound('punch'),
+    (hits, before) => soundOn.value && hits > before && playCasinoSound('punch'),
 );
 
 // The patience balloon turning up
 watch(
     () => sky.value.balloons.some((b) => b.size === 'patience'),
-    (shown, before) => app.casinoSound && shown && !before && playCasinoSound('sparkle'),
+    (shown, before) => soundOn.value && shown && !before && playCasinoSound('sparkle'),
 );
 
 // A pop sound for every balloon that bursts, and how it went for yours
 watch(
     () => feed.value.length,
     (count, before) => {
-        if (!app.casinoSound || count <= before) {
+        if (!soundOn.value || count <= before) {
             return;
         }
         playCasinoSound('pop');
@@ -218,11 +220,11 @@ watch(
                 <span class="status">{{ status }}</span>
                 <button
                     class="mute"
-                    :title="app.casinoSound ? 'Mute the game' : 'Turn game sounds on'"
-                    :aria-pressed="!app.casinoSound"
-                    @click="app.toggleCasinoSound()"
+                    :title="soundOn ? 'Mute the game' : 'Turn game sounds on'"
+                    :aria-pressed="!soundOn"
+                    @click="app.toggleGameSound('luckypop')"
                 >
-                    <fa :icon="app.casinoSound ? 'volume-high' : 'volume-xmark'" />
+                    <fa :icon="soundOn ? 'volume-high' : 'volume-xmark'" />
                 </button>
             </div>
             <div class="body">

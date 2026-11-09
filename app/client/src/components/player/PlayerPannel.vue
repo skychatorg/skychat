@@ -43,7 +43,11 @@ const partyRound = computed(() => {
         return `Round ${client.state.hotPotato.round} of ${client.state.hotPotato.rounds}`;
     }
     if (client.state.monkeyFight) {
-        return `Fight ${client.state.monkeyFight.fight} of ${client.state.monkeyFight.fights}`;
+        const { fight, fights, phase } = client.state.monkeyFight;
+        if (fights > 1) {
+            return `Fight ${fight} of ${fights}`;
+        }
+        return { betting: 'Bets are open', fighting: 'Fight!', done: 'Fight over' }[phase];
     }
     if (client.state.crash) {
         return `Flight ${client.state.crash.flight} of ${client.state.crash.flights}`;

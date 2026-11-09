@@ -16,6 +16,8 @@ const OUTCOME_LABELS = { blackjack: 'Blackjack', win: 'Win', push: 'Push', lose:
 const BANNERS = { blackjack: 'Blackjack!', win: 'You win', push: 'Push', lose: 'Dealer wins', bust: 'Bust' };
 
 const app = useAppStore();
+// Muted per game: one game's noise shouldn't silence the others
+const soundOn = computed(() => app.gameSound('blackjack'));
 const client = useClientStore();
 const now = useNow();
 
@@ -127,7 +129,7 @@ useCasinoSounds({
     myId: computed(() => me.value.id),
     myTurn,
     secondsLeft,
-    enabled: computed(() => app.casinoSound),
+    enabled: computed(() => soundOn.value),
     dealStaggerMs: DEAL_STAGGER_MS,
 });
 
@@ -145,11 +147,11 @@ const play = (action) => client.sendMessage(`/casino ${action}`);
                     <span class="limits">{{ betLimits(table) }}</span>
                     <button
                         class="mute"
-                        :title="app.casinoSound ? 'Mute the table' : 'Turn table sounds on'"
-                        :aria-pressed="!app.casinoSound"
-                        @click="app.toggleCasinoSound()"
+                        :title="soundOn ? 'Mute the table' : 'Turn table sounds on'"
+                        :aria-pressed="!soundOn"
+                        @click="app.toggleGameSound('blackjack')"
                     >
-                        <fa :icon="app.casinoSound ? 'volume-high' : 'volume-xmark'" />
+                        <fa :icon="soundOn ? 'volume-high' : 'volume-xmark'" />
                     </button>
                 </span>
                 <span

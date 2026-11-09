@@ -11,7 +11,7 @@ const DEFAULT_DOCUMENT_TITLE = '~ SkyChat';
 const NOTIFICATION_SOUND_MP3_PATH = '/assets/sound/notification.mp3';
 
 const CURRENT_VERSION = 5;
-const STORE_SAVED_KEYS = ['playerMode', 'leftCollapsed', 'rightCollapsed', 'voiceSettings', 'casinoSound'];
+const STORE_SAVED_KEYS = ['playerMode', 'leftCollapsed', 'rightCollapsed', 'voiceSettings', 'mutedGames'];
 
 const applyLeftCollapsedClass = (collapsed) => {
     if (typeof document === 'undefined') return;
@@ -171,9 +171,9 @@ export const useAppStore = defineStore('app', {
         rightCollapsed: false,
 
         /**
-         * Whether the casino table plays sounds
+         * The party games muted on this device, by id: each game has its own sound switch
          */
-        casinoSound: true,
+        mutedGames: [],
 
         /**
          * Local voice capture preferences (persisted).
@@ -478,8 +478,12 @@ export const useAppStore = defineStore('app', {
             );
         },
 
-        toggleCasinoSound: function () {
-            this.casinoSound = !this.casinoSound;
+        gameSound: function (game) {
+            return !this.mutedGames.includes(game);
+        },
+
+        toggleGameSound: function (game) {
+            this.mutedGames = this.gameSound(game) ? [...this.mutedGames, game] : this.mutedGames.filter((id) => id !== game);
             this.savePreferences();
         },
 

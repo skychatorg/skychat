@@ -15,6 +15,8 @@ const CHIP_COLORS = ['#c9452f', '#2f6db0', '#2e8655', '#26222a', '#8a3fb0'];
 const HEAT_MS = 20_000;
 
 const app = useAppStore();
+// Muted per game: one game's noise shouldn't silence the others
+const soundOn = computed(() => app.gameSound('potato'));
 const client = useClientStore();
 const now = useNow(50);
 
@@ -140,14 +142,14 @@ const hint = computed(() => {
 });
 
 // Sounds: a tick that speeds up as the bomb heats, a swish on every pass, and the boom
-const sound = (name, delayMs) => app.casinoSound && playCasinoSound(name, delayMs);
+const sound = (name, delayMs) => soundOn.value && playCasinoSound(name, delayMs);
 let ticker = null;
 const tick = () => {
     sound('tick');
     ticker = setTimeout(tick, 700 - 560 * heat.value);
 };
 watch(
-    () => game.value.phase === 'playing' && app.casinoSound,
+    () => game.value.phase === 'playing' && soundOn.value,
     (on) => {
         clearTimeout(ticker);
         if (on) {
@@ -188,11 +190,11 @@ watch(
                 <span class="pot">Pot {{ formatMoney(game.pot) }}</span>
                 <button
                     class="mute"
-                    :title="app.casinoSound ? 'Mute the game' : 'Turn game sounds on'"
-                    :aria-pressed="!app.casinoSound"
-                    @click="app.toggleCasinoSound()"
+                    :title="soundOn ? 'Mute the game' : 'Turn game sounds on'"
+                    :aria-pressed="!soundOn"
+                    @click="app.toggleGameSound('potato')"
                 >
-                    <fa :icon="app.casinoSound ? 'volume-high' : 'volume-xmark'" />
+                    <fa :icon="soundOn ? 'volume-high' : 'volume-xmark'" />
                 </button>
             </div>
 

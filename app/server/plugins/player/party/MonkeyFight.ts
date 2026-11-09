@@ -195,15 +195,15 @@ export function simulate(monkeys: Monkey[], random: (max: number) => number): { 
 
 /**
  * Four random monkeys fight, last one standing wins. Everyone backs one monkey, at odds the server
- * works out by running the fight thousands of times, so every bet is worth its stake on average: no house edge.
+ * works out by running the fight thousands of times, so every bet is worth 99% of its stake on average.
  */
 export class MonkeyFight {
-    static readonly FIGHTS = 3;
+    static readonly FIGHTS = 1;
 
     static readonly MONKEYS = 4;
 
-    /** Fair odds: Monkey Fight is for fun, the house takes nothing */
-    static readonly HOUSE_EDGE = 0;
+    /** The house keeps 1% of every bet on average, like Crash */
+    static readonly HOUSE_EDGE = 0.01;
 
     /** In hundredths: a monkey that almost never wins still pays at most ×50 */
     static readonly MAX_ODDS = 5000;

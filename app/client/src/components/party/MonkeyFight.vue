@@ -47,6 +47,8 @@ const HOMES = [
 const STEPS = { dash: 0.25, impact: 0.45, back: 0.75 };
 
 const app = useAppStore();
+// Muted per game: one game's noise shouldn't silence the others
+const soundOn = computed(() => app.gameSound('monkeys'));
 const client = useClientStore();
 const now = useNow(40);
 
@@ -348,14 +350,14 @@ const stopCrowd = () => {
     crowd?.stop();
     crowd = null;
 };
-const sound = (name, delayMs) => app.casinoSound && playCasinoSound(name, delayMs);
+const sound = (name, delayMs) => soundOn.value && playCasinoSound(name, delayMs);
 watch(
-    () => app.casinoSound,
+    () => soundOn.value,
     (on) => on && preloadApeRecordings(),
     { immediate: true },
 );
 watch(
-    () => [fight.value.phase, app.casinoSound],
+    () => [fight.value.phase, soundOn.value],
     ([phase, on], before) => {
         if (phase === 'fighting' && on) {
             if (!crowd) {
@@ -384,7 +386,7 @@ const rattle = () => {
     cage = setTimeout(rattle, 2500 + Math.random() * 3500);
 };
 watch(
-    () => fight.value.phase === 'betting' && app.casinoSound,
+    () => fight.value.phase === 'betting' && soundOn.value,
     (open) => {
         clearTimeout(cage);
         if (open) {
@@ -410,7 +412,7 @@ watch(
     () => step.value === 'impact' && beat.value,
     (index) => {
         const event = current.value;
-        if (!app.casinoSound || index === false || !event) {
+        if (!soundOn.value || index === false || !event) {
             return;
         }
         if (event.ko) {
@@ -468,7 +470,7 @@ watch(
 watch(
     () => myBet.value?.payout,
     (payout, before) => {
-        if (app.casinoSound && before === null && payout !== null && payout !== undefined) {
+        if (soundOn.value && before === null && payout !== null && payout !== undefined) {
             playCasinoSound(payout ? 'win' : 'lose', 600);
         }
     },
@@ -483,11 +485,11 @@ watch(
                 <span class="status" aria-live="polite">{{ status }}</span>
                 <button
                     class="mute"
-                    :title="app.casinoSound ? 'Mute the game' : 'Turn game sounds on'"
-                    :aria-pressed="!app.casinoSound"
-                    @click="app.toggleCasinoSound()"
+                    :title="soundOn ? 'Mute the game' : 'Turn game sounds on'"
+                    :aria-pressed="!soundOn"
+                    @click="app.toggleGameSound('monkeys')"
                 >
-                    <fa :icon="app.casinoSound ? 'volume-high' : 'volume-xmark'" />
+                    <fa :icon="soundOn ? 'volume-high' : 'volume-xmark'" />
                 </button>
             </div>
 

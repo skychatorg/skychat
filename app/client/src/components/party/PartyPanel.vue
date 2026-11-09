@@ -43,7 +43,7 @@ const lobbyGames = computed(() =>
 );
 const pick = (game) => client.sendMessage(`/party pick ${game}`);
 
-const { seconds: voteSeconds, fraction: voteFraction } = useCountdown(() => party.value.deadline);
+const { seconds: voteSeconds, total: voteTotal } = useCountdown(() => party.value.deadline);
 // The game just played first, as "Again"
 const voteGames = computed(() =>
     Object.keys(PARTY_GAMES)
@@ -83,7 +83,7 @@ const vote = (game) => client.sendMessage(`/party vote ${game}`);
                 <span class="count" aria-hidden="true">{{ voteSeconds }}s</span>
             </header>
             <div class="bar" aria-hidden="true">
-                <span :style="{ transform: `scaleX(${voteFraction})` }"></span>
+                <span :key="party.deadline" :style="{ animationDuration: `${voteTotal}ms` }"></span>
             </div>
             <div class="games">
                 <button
@@ -193,7 +193,12 @@ const vote = (game) => client.sendMessage(`/party vote ${game}`);
     height: 100%;
     background: #f0c46c;
     transform-origin: left;
-    transition: transform 0.25s linear;
+    animation: drain linear forwards;
+}
+@keyframes drain {
+    to {
+        transform: scaleX(0);
+    }
 }
 .games {
     display: grid;
@@ -255,11 +260,6 @@ const vote = (game) => client.sendMessage(`/party vote ${game}`);
 }
 .game.mine .sub {
     color: #f4f4ff;
-}
-@media (prefers-reduced-motion: reduce) {
-    .bar span {
-        transition: none;
-    }
 }
 
 /* Not much height: the descriptions go first, the cards stay readable */

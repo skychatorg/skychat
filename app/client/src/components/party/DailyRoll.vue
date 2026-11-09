@@ -7,12 +7,14 @@ import { formatMoney } from '../../../../api/money.ts';
 import { computed, watch } from 'vue';
 
 const app = useAppStore();
+// Muted per game: one game's noise shouldn't silence the others
+const soundOn = computed(() => app.gameSound('dailyroll'));
 const client = useClientStore();
 
 const board = computed(() => client.state.dailyRoll);
 const me = computed(() => client.state.user.username);
 const isGuest = computed(() => !client.state.user.id);
-const { seconds, fraction } = useCountdown(() => board.value.deadline);
+const { seconds, total } = useCountdown(() => board.value.deadline);
 
 const mine = computed(() => board.value.cards.find((card) => card.username === me.value) ?? null);
 const picked = computed(() => board.value.cards.filter((card) => card.username).length);
@@ -61,7 +63,7 @@ const pick = (card) => {
     }
 };
 
-const sound = (name) => app.casinoSound && playCasinoSound(name);
+const sound = (name) => soundOn.value && playCasinoSound(name);
 
 // Ticks for the last 5 seconds of picking, and each step of the 3, 2, 1
 watch(seconds, (left, before) => {
@@ -97,15 +99,15 @@ watch(
                 <span v-if="board.phase === 'picking'" class="clock" :class="{ hurry }" aria-hidden="true">{{ seconds }}s</span>
                 <button
                     class="mute"
-                    :title="app.casinoSound ? 'Mute the game' : 'Turn game sounds on'"
-                    :aria-pressed="!app.casinoSound"
-                    @click="app.toggleCasinoSound()"
+                    :title="soundOn ? 'Mute the game' : 'Turn game sounds on'"
+                    :aria-pressed="!soundOn"
+                    @click="app.toggleGameSound('dailyroll')"
                 >
-                    <fa :icon="app.casinoSound ? 'volume-high' : 'volume-xmark'" />
+                    <fa :icon="soundOn ? 'volume-high' : 'volume-xmark'" />
                 </button>
             </div>
             <div v-if="board.phase === 'picking'" class="bar" :class="{ hurry }" aria-hidden="true">
-                <span :style="{ transform: `scaleX(${fraction})` }"></span>
+                <span :key="board.deadline" :style="{ animationDuration: `${total}ms` }"></span>
             </div>
             <div class="stage">
                 <div class="board">
@@ -218,7 +220,12 @@ watch(
     height: 100%;
     background: #f0c46c;
     transform-origin: left;
-    transition: transform 0.25s linear;
+    animation: drain linear forwards;
+}
+@keyframes drain {
+    to {
+        transform: scaleX(0);
+    }
 }
 .bar.hurry span {
     background: #ff8fa3;
@@ -458,8 +465,7 @@ watch(
     }
 }
 @media (prefers-reduced-motion: reduce) {
-    .inner,
-    .bar span {
+    .inner {
         transition: none;
     }
 }

@@ -931,12 +931,12 @@ describe('monkey fight', () => {
         expect([...seen].sort()).toEqual(['counter', 'crit', 'heal', 'hit', 'miss', 'revive', 'roar', 'stunned', 'trip']);
     });
 
-    it('prices every monkey fairly, so a bet is worth its stake on average', async () => {
+    it('prices every monkey so a bet is worth 99% of its stake on average', async () => {
         const game = new MonkeyFight({} as Party, () => {});
         const monkeys = game['drawMonkeys']();
         const odds = await game.computeOdds(monkeys);
-        // Odds are 1 / chance: the chances they imply add up to about 1
-        expect(odds.reduce((sum, o) => sum + 100 / o, 0)).toBeCloseTo(1, 1);
+        // Odds are 99% / chance: the chances they imply add up to about 1 / 99%
+        expect(odds.reduce((sum, o) => sum + 100 / o, 0)).toBeCloseTo(1 / (1 - MonkeyFight.HOUSE_EDGE), 1);
         odds.forEach((o) => expect(o).toBeGreaterThanOrEqual(101));
     });
 
