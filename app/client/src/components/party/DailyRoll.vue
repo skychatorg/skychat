@@ -20,6 +20,9 @@ const mine = computed(() => board.value.cards.find((card) => card.username === m
 const picked = computed(() => board.value.cards.filter((card) => card.username).length);
 const canPick = computed(() => board.value.phase === 'picking' && !isGuest.value);
 const jackpotCard = computed(() => board.value.cards.find((card) => card.amount === board.value.jackpot) ?? null);
+// A big card someone holds, but not the jackpot: still a win worth a show
+const isBig = (card) => card.amount !== null && card.amount >= board.value.bigWin && card.amount !== board.value.jackpot;
+const bigWinner = computed(() => board.value.cards.filter((card) => isBig(card) && card.username).at(-1) ?? null);
 const suspenseCard = computed(() => board.value.cards.find((card) => card.id === board.value.suspense) ?? null);
 // The last seconds of picking get loud
 const hurry = computed(() => board.value.phase === 'picking' && seconds.value <= 10);
@@ -36,8 +39,14 @@ const status = computed(() => {
     if (suspenseCard.value) {
         return suspenseCard.value.username === me.value ? 'Your card…' : `${suspenseCard.value.username}'s card…`;
     }
+    if (jackpotCard.value?.username) {
+        return `💰 ${jackpotCard.value.username} hit the jackpot!`;
+    }
+    if (bigWinner.value) {
+        return `🎉 ${bigWinner.value.username} won ${formatMoney(bigWinner.value.amount)}!`;
+    }
     if (jackpotCard.value) {
-        return jackpotCard.value.username ? `💰 ${jackpotCard.value.username} hit the jackpot!` : '💰 the jackpot was in nobody’s hand';
+        return '💰 the jackpot was in nobody’s hand';
     }
     return '💰 the jackpot is still hiding…';
 });
@@ -51,6 +60,9 @@ const banner = computed(() => {
     }
     if (mine.value.amount === board.value.jackpot) {
         return { text: `JACKPOT! You won ${formatMoney(mine.value.amount)}`, kind: 'jackpot' };
+    }
+    if (isBig(mine.value)) {
+        return { text: `BIG WIN! You won ${formatMoney(mine.value.amount)}`, kind: 'big' };
     }
     return mine.value.amount
         ? { text: `You won ${formatMoney(mine.value.amount)}`, kind: 'win' }
@@ -80,6 +92,10 @@ watch(
         for (const card of flipped) {
             if (card.amount === board.value.jackpot) {
                 sound('blackjack');
+            } else if (isBig(card) && card.username) {
+                // Everyone hears a big win, not only the winner
+                sound('win');
+                sound('sparkle');
             } else if (card.username === me.value) {
                 sound(card.amount ? 'win' : 'lose');
             } else {
@@ -121,6 +137,7 @@ watch(
                             shown: card.amount !== null,
                             suspense: card.id === board.suspense,
                             jackpot: card.amount === board.jackpot,
+                            big: isBig(card),
                             empty: card.amount === 0,
                         }"
                         :aria-disabled="!canPick || Boolean(card.username)"
@@ -136,8 +153,16 @@ watch(
                         <span class="inner">
                             <span class="face front"><span class="emblem">?</span></span>
                             <span class="face back">{{
-                                card.amount === board.jackpot ? `💰 ${formatMoney(card.amount)}` : formatMoney(card.amount ?? 0)
+                                card.amount === board.jackpot
+                                    ? `💰 ${formatMoney(card.amount)}`
+                                    : isBig(card)
+                                    ? `🎉 ${formatMoney(card.amount)}`
+                                    : formatMoney(card.amount ?? 0)
                             }}</span>
+                        </span>
+                        <!-- Bills fly out of a big card someone holds -->
+                        <span v-if="(isBig(card) || card.amount === board.jackpot) && card.username" class="confetti" aria-hidden="true">
+                            <span v-for="i in 8" :key="i" :style="{ '--angle': `${i * 45}deg` }">{{ i % 2 ? '💵' : '✨' }}</span>
                         </span>
                         <!-- Inside the card, so picking never moves anything -->
                         <span v-if="card.username" class="who">{{ card.username === me ? 'you' : card.username }}</span>
@@ -325,6 +350,26 @@ watch(
     color: rgb(255 255 255 / 0.35);
     box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1);
 }
+.card.big .back {
+    --glow: rgb(47 191 154 / 0.85);
+    background: linear-gradient(135deg, #0f5a4a, #2fbf9a 55%, #0f5a4a);
+    color: #eafff8;
+    text-shadow: 0 1px 3px rgb(0 0 0 / 0.6);
+    box-shadow: inset 0 0 0 2px #8ff0d0;
+}
+.confetti {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    z-index: 3;
+    pointer-events: none;
+}
+.confetti span {
+    position: absolute;
+    font-size: clamp(10px, 4cqh, 20px);
+    transform: translate(-50%, -50%);
+    opacity: 0;
+}
 .card.jackpot .back {
     background: linear-gradient(135deg, #6b4e10, #d4a52a 55%, #7a5a12);
     color: #fffbe6;
@@ -333,7 +378,7 @@ watch(
 }
 /* Cards nobody picked fade once the show is on the picked ones */
 .frame.done .card.shown:not(.taken),
-.frame.revealing .card.shown:not(.taken):not(.jackpot) {
+.frame.revealing .card.shown:not(.taken):not(.jackpot):not(.big) {
     opacity: 0.35;
 }
 .who {
@@ -397,6 +442,11 @@ watch(
     color: #7bd88f;
     border-color: #7bd88f;
 }
+.banner.big {
+    color: #8ff0d0;
+    border-color: #8ff0d0;
+    box-shadow: 0 0 32px rgb(47 191 154 / 0.5);
+}
 .banner.jackpot {
     color: #ffd54a;
     border-color: #ffd54a;
@@ -412,8 +462,32 @@ watch(
     .card.suspense .inner {
         animation: shake 0.45s ease-in-out infinite;
     }
-    .card.jackpot.shown .back {
+    .card.jackpot.shown .back,
+    .card.big.shown .back {
         animation: glow 1.2s ease-in-out infinite;
+    }
+    .card.big.shown.taken,
+    .card.jackpot.shown.taken {
+        z-index: 2;
+        animation: jump 0.6s cubic-bezier(0.3, 1.6, 0.5, 1);
+    }
+    .confetti span {
+        animation: spray 1.1s ease-out forwards;
+    }
+    @keyframes jump {
+        40% {
+            transform: scale(1.3) rotate(-4deg);
+        }
+    }
+    @keyframes spray {
+        from {
+            opacity: 1;
+            transform: translate(-50%, -50%) rotate(var(--angle)) translateY(0) rotate(calc(-1 * var(--angle)));
+        }
+        to {
+            opacity: 0;
+            transform: translate(-50%, -50%) rotate(var(--angle)) translateY(-260%) rotate(calc(-1 * var(--angle))) scale(1.3);
+        }
     }
     .big {
         animation: zoom 1s ease-out both;
@@ -440,7 +514,7 @@ watch(
     }
     @keyframes glow {
         50% {
-            box-shadow: 0 0 26px rgb(255 213 74 / 0.85);
+            box-shadow: 0 0 26px var(--glow, rgb(255 213 74 / 0.85));
         }
     }
     @keyframes zoom {

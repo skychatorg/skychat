@@ -16,6 +16,7 @@ const SIZE_LABELS = {
     peek: 'peek',
     freeze: 'freeze',
     patience: 'patience',
+    egg: 'egg',
 };
 /** Drawn on the special balloons that have no look of their own */
 const MARKS = { peek: '?', freeze: '❄', patience: '⏳' };
@@ -62,6 +63,9 @@ const left = computed(() => sky.value.balloons.filter((b) => !b.popped).length);
 // Seconds left on a freeze, and whether it locks you out
 const frozenFor = computed(() => (sky.value.frozen ? Math.max(0, Math.ceil((sky.value.frozen.until - now.value) / 1000)) : 0));
 const frozenOut = computed(() => frozenFor.value > 0 && sky.value.frozen.username !== client.state.user.username);
+// Seconds left of happy hour, and before the egg hatches
+const happyFor = computed(() => (sky.value.happyHour ? Math.max(0, Math.ceil((sky.value.happyHour - now.value) / 1000)) : 0));
+const hatchIn = computed(() => Math.max(0, Math.ceil((sky.value.hatchAt - now.value) / 1000)));
 
 // The round's time always shows, your own limit after it
 const status = computed(() => {
@@ -114,6 +118,7 @@ const rules = (size, price) =>
         ],
         peek: ['no prize inside', 'shows you what another', 'balloon holds, only you'],
         freeze: ['nobody else can pop', 'for 10 s: the sky is yours'],
+        egg: ['a tiny prize if popped', `hatches into a golden balloon`, `in ${hatchIn.value}s if nobody pops it`],
         patience: ['its prize grows with every', 'other balloon popped', 'first to pop it takes it'],
     })[size]?.map((text) => ({ text, kind: 'muted' }));
 
@@ -185,10 +190,19 @@ watch(
     (hits, before) => soundOn.value && hits > before && playCasinoSound('punch'),
 );
 
-// The patience balloon turning up
+// The patience balloon turning up, or the egg hatching
 watch(
     () => sky.value.balloons.some((b) => b.size === 'patience'),
     (shown, before) => soundOn.value && shown && !before && playCasinoSound('sparkle'),
+);
+watch(
+    () => sky.value.balloons.filter((b) => b.size === 'golden').length,
+    (count, before) => soundOn.value && count > before && playCasinoSound('sparkle'),
+);
+// Happy hour starts with a fanfare
+watch(
+    () => happyFor.value > 0,
+    (happy, before) => soundOn.value && happy && !before && playCasinoSound('blackjack'),
 );
 
 // A pop sound for every balloon that bursts, and how it went for yours
@@ -228,7 +242,8 @@ watch(
                 </button>
             </div>
             <div class="body">
-                <div class="sky" :class="{ frozen: frozenFor > 0 }">
+                <div class="sky" :class="{ frozen: frozenFor > 0, happy: happyFor > 0 }">
+                    <div v-if="happyFor > 0" class="happy-banner" aria-live="polite">💸 HAPPY HOUR · prizes ×2 · {{ happyFor }}s</div>
                     <template v-for="balloon in balloons" :key="balloon.id">
                         <button
                             v-if="!balloon.popped"
@@ -261,6 +276,14 @@ watch(
                         >
                             <!-- Keyed on the hits, so it shakes again at every hit -->
                             <span v-if="balloon.size === 'pinata'" :key="balloon.hits" class="pinata-body" aria-hidden="true">🪅</span>
+                            <!-- Wobbles more as it gets close to hatching -->
+                            <span
+                                v-else-if="balloon.size === 'egg'"
+                                class="pinata-body egg"
+                                :class="{ hatching: hatchIn <= 5 }"
+                                aria-hidden="true"
+                                >🥚</span
+                            >
                             <svg v-else viewBox="0 0 40 56" aria-hidden="true">
                                 <ellipse cx="20" cy="20" rx="17" ry="19" class="skin" />
                                 <ellipse cx="13" cy="12" rx="4" ry="6" fill="#fff" opacity=".3" />
@@ -434,6 +457,28 @@ watch(
     font-weight: 700;
     white-space: nowrap;
 }
+.happy-banner {
+    position: absolute;
+    left: 50%;
+    top: 4px;
+    z-index: 7;
+    transform: translateX(-50%);
+    padding: 3px 12px;
+    border-radius: 999px;
+    background: #f0c46c;
+    color: #2a1d05;
+    font-weight: 800;
+    font-size: clamp(11px, 3.4cqh, 15px);
+    white-space: nowrap;
+    box-shadow: 0 0 18px rgb(240 196 108 / 0.6);
+}
+/* A warm glow over the whole sky while prizes pay double */
+.sky.happy {
+    background: radial-gradient(ellipse at 50% 0%, rgb(240 196 108 / 0.22), transparent 70%);
+}
+.balloon.egg {
+    --w: calc(var(--b) * 1.1);
+}
 .pinata-body {
     font-size: calc(var(--w) * 0.85);
     line-height: 1.1;
@@ -595,6 +640,29 @@ watch(
     }
     .pinata-body {
         animation: whack 0.35s ease-out;
+    }
+    .pinata-body.egg {
+        animation: wobble 1.6s ease-in-out infinite;
+    }
+    .pinata-body.egg.hatching {
+        animation-duration: 0.35s;
+    }
+    .happy-banner {
+        animation: glow 0.8s ease-in-out infinite alternate;
+    }
+    @keyframes wobble {
+        25% {
+            transform: rotate(-8deg);
+        }
+        75% {
+            transform: rotate(8deg);
+        }
+    }
+    @keyframes glow {
+        to {
+            box-shadow: 0 0 30px rgb(240 196 108 / 0.95);
+            transform: translateX(-50%) scale(1.05);
+        }
     }
     @keyframes whack {
         30% {

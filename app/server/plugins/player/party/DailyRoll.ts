@@ -23,6 +23,8 @@ export type SanitizedDailyRoll = {
     /** `amount` stays null until that card flips, so the jackpot cannot be read off the wire */
     cards: { id: number; username: string | null; amount: number | null }[];
     jackpot: number;
+    /** Cards worth this much or more get a big win show */
+    bigWin: number;
 };
 
 /**
@@ -31,8 +33,12 @@ export type SanitizedDailyRoll = {
 export class DailyRoll {
     static readonly CARDS = 30;
 
-    /** In cents: every other card holds $0 to $5 */
-    static readonly JACKPOT = 50 * 100;
+    /** In cents: the big cards, the first one the jackpot. Every other card holds $0 to $5 */
+    static readonly PRIZES = [8000, 4000, 4000, 1000, 1000, 1000, 1000];
+
+    static readonly JACKPOT = DailyRoll.PRIZES[0];
+
+    static readonly BIG_WIN = DailyRoll.PRIZES[1];
 
     /** The lock lifts at this hour, server time */
     static readonly RESET_HOUR = 22;
@@ -147,6 +153,7 @@ export class DailyRoll {
                 amount: this.shown.has(id) ? this.amounts[id] : null,
             })),
             jackpot: DailyRoll.JACKPOT,
+            bigWin: DailyRoll.BIG_WIN,
         };
     }
 
@@ -166,13 +173,14 @@ export class DailyRoll {
 
         // Drawn only now, so nothing about the board exists before the picks are in
         this.amounts = Array.from({ length: DailyRoll.CARDS }, () => this.random(6) * 100);
-        this.amounts[this.random(DailyRoll.CARDS)] = DailyRoll.JACKPOT;
+        const spots = this.shuffle(Array.from({ length: DailyRoll.CARDS }, (_, id) => id));
+        DailyRoll.PRIZES.forEach((amount, i) => (this.amounts[spots[i]] = amount));
         this.phase = 'revealing';
         this.deadline = 0;
 
         const ids = this.shuffle(Array.from({ length: DailyRoll.CARDS }, (_, id) => id));
-        // The jackpot, if someone holds it, flips last
-        const picked = ids.filter((id) => this.picks.has(id)).sort((a, b) => Number(this.isJackpot(a)) - Number(this.isJackpot(b)));
+        // The picked cards flip smallest first, so the big ones come last
+        const picked = ids.filter((id) => this.picks.has(id)).sort((a, b) => this.amounts[a] - this.amounts[b]);
         for (const id of ids.filter((id) => !this.picks.has(id))) {
             this.shown.add(id);
             this.broadcast();
@@ -211,10 +219,6 @@ export class DailyRoll {
     private async wait(ms: number): Promise<boolean> {
         await new Promise((resolve) => (this.timer = setTimeout(resolve, ms)));
         return !this.over;
-    }
-
-    private isJackpot(id: number): boolean {
-        return this.amounts[id] === DailyRoll.JACKPOT;
     }
 
     private shuffle(ids: number[]): number[] {

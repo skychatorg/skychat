@@ -8,7 +8,7 @@ import { SandalePlugin } from '../../games/global/SandalePlugin.js';
 import { logFailure } from '../casino/BlackjackTable.js';
 import type { Party } from './Party.js';
 
-export type BalloonSize = 'xs' | 'md' | 'lg' | 'golden' | 'pinata' | 'hotair' | 'peek' | 'freeze' | 'patience';
+export type BalloonSize = 'xs' | 'md' | 'lg' | 'golden' | 'pinata' | 'hotair' | 'peek' | 'freeze' | 'patience' | 'egg';
 
 export type PrizeKind = 'money' | 'jackpot' | 'pinata' | 'peek' | 'freeze' | 'empty' | 'malus' | 'lose';
 
@@ -74,6 +74,8 @@ export const BALLOONS: { [size in BalloonSize]: { price: number; prizes: Prize[]
     freeze: { price: 25, prizes: [], maluses: [] },
     // Never in the sky at first: a balloon turns into it once two players have popped. Its prize grows with every pop after that
     patience: { price: 500, prizes: [], maluses: [] },
+    // Pays EGG_PRIZE, or hatches into a golden balloon if nobody pops it in time
+    egg: { price: 50, prizes: [], maluses: [] },
 };
 
 export const MALUS_LABELS: { [malus in Malus]: string } = {
@@ -89,8 +91,9 @@ export const MALUS_LABELS: { [malus in Malus]: string } = {
 /** 7 xs, 4 md, 1 lg, and in most rounds one special balloon in place of an xs (or an md for the golden one) */
 const SKY: BalloonSize[] = ['xs', 'xs', 'xs', 'xs', 'xs', 'xs', 'xs', 'md', 'md', 'md', 'md', 'lg'];
 
-/** All but the first two are races between players: a player alone only gets the first two */
-const SPECIALS: BalloonSize[] = ['golden', 'peek', 'pinata', 'hotair', 'freeze', 'patience'];
+const SPECIALS: BalloonSize[] = ['golden', 'peek', 'pinata', 'hotair', 'freeze', 'patience', 'egg'];
+/** The others are races between players: a player alone only gets these */
+const SOLO_SPECIALS: BalloonSize[] = ['golden', 'peek', 'egg'];
 
 /**
  * - `prize`: drawn on the first peek or pop, so a peek shows what the pop will give
@@ -134,6 +137,10 @@ export type SanitizedLuckyPop = {
     hotAir: { startedAt: number; doubleMs: number };
     /** Who froze the sky, until when. Null when it isn't frozen */
     frozen: { username: string; until: number } | null;
+    /** Until when prizes pay double. Null when it isn't happy hour */
+    happyHour: number | null;
+    /** When the egg hatches */
+    hatchAt: number;
     /** The viewer's own limits */
     you: { nextPopAt: number; grounded: boolean };
 };
@@ -144,10 +151,10 @@ export type SanitizedLuckyPop = {
  */
 export class LuckyPop {
     /** In percent: the share of rounds with a special balloon */
-    static readonly SPECIAL_CHANCE = 78;
+    static readonly SPECIAL_CHANCE = 90;
 
     /** In percent: the share of skies with a special that get a second, different one */
-    static readonly SECOND_SPECIAL_CHANCE = 30;
+    static readonly SECOND_SPECIAL_CHANCE = 40;
 
     static readonly FREEZE_MS = 10_000;
 
@@ -155,6 +162,18 @@ export class LuckyPop {
     static readonly PATIENCE_STEP = 250;
 
     static readonly HOT_AIR_DOUBLE_MS = 20_000;
+
+    /** What an egg pays when popped before it hatches */
+    static readonly EGG_PRIZE = 75;
+
+    /** In percent: the share of rounds with a happy hour, when prizes pay double */
+    static readonly HAPPY_HOUR_CHANCE = 40;
+
+    /** How many balloons a peek shows */
+    static readonly PEEKS = 3;
+
+    /** Balloons that pay nothing: alone in the sky, they don't keep a round going */
+    static readonly BLANKS: BalloonSize[] = ['freeze', 'peek'];
 
     static readonly STORM_WIZZES = 10;
 
@@ -172,6 +191,13 @@ export class LuckyPop {
         butterfingersMs: 30_000,
         lastPopBeatMs: 2000,
         hotAirDoubleMs: LuckyPop.HOT_AIR_DOUBLE_MS,
+        /** Nobody popped or hit for this long: the round is over */
+        idleMs: 20_000,
+        eggMs: 30_000,
+        /** Happy hour starts at a random time in this window, and lasts happyHourMs */
+        happyHourFromMs: 8_000,
+        happyHourToMs: 25_000,
+        happyHourMs: 10_000,
     };
 
     /** Overridable for tests: a whole number in [0, max) */
@@ -185,12 +211,19 @@ export class LuckyPop {
 
     private timer: ReturnType<typeof setTimeout> | undefined;
 
+    private idleTimer: ReturnType<typeof setTimeout> | undefined;
+
     /** When the hot air balloon bursts on its own */
     private burstAt = Infinity;
 
     private burstTimer: ReturnType<typeof setTimeout> | undefined;
 
     private frozen: { session: Session; until: number } | null = null;
+
+    private happyHourUntil = 0;
+
+    /** Hatching the egg, and starting happy hour */
+    private eventTimers: ReturnType<typeof setTimeout>[] = [];
 
     /** The patience balloon: none, waiting for two players to pop, or out since this many balloons were popped */
     private patience: 'none' | 'waiting' | number = 'none';
@@ -221,6 +254,32 @@ export class LuckyPop {
             this.burstAt = this.startedAt + Math.log2(multiplier) * this.timings.hotAirDoubleMs;
             this.burstTimer = setTimeout(() => this.burstOnItsOwn(hotAir), this.burstAt - this.startedAt);
         }
+        const egg = this.balloons.find((b) => b.size === 'egg');
+        if (egg) {
+            this.eventTimers.push(setTimeout(() => this.hatch(egg), this.timings.eggMs));
+        }
+        if (this.random(100) < LuckyPop.HAPPY_HOUR_CHANCE) {
+            const { happyHourFromMs: from, happyHourToMs: to } = this.timings;
+            this.eventTimers.push(setTimeout(() => this.startHappyHour(), from + this.random(to - from + 1)));
+        }
+    }
+
+    /** Nobody popped the egg in time: it becomes a golden balloon */
+    private hatch(egg: Balloon): void {
+        if (!egg.popped && !this.over) {
+            egg.size = 'golden';
+            this.broadcast();
+        }
+    }
+
+    private startHappyHour(): void {
+        if (this.over) {
+            return;
+        }
+        this.happyHourUntil = Date.now() + this.timings.happyHourMs;
+        this.broadcast();
+        // Everyone sees it end on time
+        this.eventTimers.push(setTimeout(() => this.broadcast(), this.timings.happyHourMs));
     }
 
     public async pop(session: Session, id: number): Promise<void> {
@@ -282,7 +341,9 @@ export class LuckyPop {
     public async destroy(): Promise<void> {
         this.over = true;
         clearTimeout(this.timer);
+        clearTimeout(this.idleTimer);
         clearTimeout(this.burstTimer);
+        this.eventTimers.forEach((timer) => clearTimeout(timer));
         const refunds = this.balloons.filter((b) => !b.popped).flatMap((b) => [...b.paid]);
         this.balloons.forEach((b) => b.paid.clear());
         await Promise.all(refunds.map(([session, amount]) => UserController.giveMoney(session.user, amount, 'Lucky Pop refund')));
@@ -306,6 +367,8 @@ export class LuckyPop {
             sizes: LuckyPop.SIZES,
             pinataOdds: LuckyPop.PINATA_ODDS,
             hotAir: { startedAt: this.startedAt, doubleMs: this.timings.hotAirDoubleMs },
+            happyHour: this.happyHourUntil > Date.now() ? this.happyHourUntil : null,
+            hatchAt: this.startedAt + this.timings.eggMs,
             frozen:
                 this.frozen && this.frozen.until > Date.now()
                     ? { username: this.frozen.session.user.username, until: this.frozen.until }
@@ -318,7 +381,7 @@ export class LuckyPop {
         const sizes: BalloonSize[] = [...SKY];
         if (this.random(100) < LuckyPop.SPECIAL_CHANCE) {
             const players = this.party.channel.sessions.filter((s) => !s.user.isGuest()).length;
-            const specials = players > 1 ? [...SPECIALS] : SPECIALS.slice(0, 2);
+            const specials = SPECIALS.filter((special) => players > 1 || SOLO_SPECIALS.includes(special));
             const add = () => {
                 // Taken out of the list, so a second special is always a different one
                 const [special] = specials.splice(this.random(specials.length), 1);
@@ -419,14 +482,34 @@ export class LuckyPop {
     }
 
     /** Show the change, and end the round soon once the sky is empty */
+    /**
+     * Ends the round soon when nothing worth playing is left:
+     * - only balloons that pay nothing are left
+     * - every player is grounded
+     * - nobody popped or hit for a while, unless a hot air balloon is still up: waiting is its game
+     */
     private afterPop(): void {
         this.maybeRevealPatience();
         this.broadcast();
-        if (this.balloons.every((b) => b.popped)) {
-            clearTimeout(this.timer);
-            // A beat, so the last result shows before the vote
-            this.timer = setTimeout(() => this.end(), this.timings.lastPopBeatMs);
+        const players = this.party.channel.sessions.filter((s) => !s.user.isGuest());
+        const blanksOnly = this.balloons.every((b) => b.popped || LuckyPop.BLANKS.includes(b.size));
+        if (blanksOnly || (players.length && players.every((s) => this.grounded.has(s)))) {
+            this.endSoon();
+            return;
         }
+        clearTimeout(this.idleTimer);
+        const idle = () => {
+            const hotAirUp = this.balloons.some((b) => ['hotair', 'egg'].includes(b.size) && !b.popped);
+            this.idleTimer = setTimeout(hotAirUp ? idle : () => this.endSoon(), this.timings.idleMs);
+        };
+        idle();
+    }
+
+    private endSoon(): void {
+        clearTimeout(this.timer);
+        clearTimeout(this.idleTimer);
+        // A beat, so the last result shows before the vote
+        this.timer = setTimeout(() => this.end(), this.timings.lastPopBeatMs);
     }
 
     private draw(size: BalloonSize): Prize {
@@ -470,14 +553,19 @@ export class LuckyPop {
             if (!pool.length) {
                 return { ...base, kind: 'peek', label: 'nothing left to peek at' };
             }
-            const target = pool[this.random(pool.length)];
-            target.prize ??= this.draw(target.size);
-            target.peekedBy.add(session);
-            return {
-                ...base,
-                kind: 'peek',
-                label: `peeked inside ${target.size === 'golden' ? 'the golden' : 'an ' + target.size} balloon`,
-            };
+            const seen: string[] = [];
+            while (pool.length && seen.length < LuckyPop.PEEKS) {
+                const [target] = pool.splice(this.random(pool.length), 1);
+                target.prize ??= this.draw(target.size);
+                target.peekedBy.add(session);
+                seen.push(target.size === 'golden' ? 'the golden' : 'an ' + target.size);
+            }
+            const list = seen.length > 1 ? `${seen.slice(0, -1).join(', ')} and ${seen.at(-1)}` : seen[0];
+            return { ...base, kind: 'peek', label: `peeked inside ${list} balloon${seen.length > 1 ? 's' : ''}` };
+        }
+        if (size === 'egg') {
+            await UserController.giveMoney(session.user, LuckyPop.EGG_PRIZE, 'Lucky Pop win');
+            return { ...base, kind: 'money', amount: LuckyPop.EGG_PRIZE, label: '+' + formatMoney(LuckyPop.EGG_PRIZE) };
         }
         const prize = (balloon.prize ??= this.draw(size));
         const result = { ...base, kind: prize.kind, label: '' };
@@ -486,13 +574,16 @@ export class LuckyPop {
             case 'jackpot':
             case 'pinata':
             case 'peek':
-            case 'freeze':
-                await UserController.giveMoney(session.user, prize.amount, 'Lucky Pop win');
+            case 'freeze': {
+                const happy = this.happyHourUntil > Date.now();
+                const amount = happy ? prize.amount * 2 : prize.amount;
+                await UserController.giveMoney(session.user, amount, 'Lucky Pop win');
                 return {
                     ...result,
-                    amount: prize.amount,
-                    label: (prize.kind === 'jackpot' ? 'JACKPOT +' : '+') + formatMoney(prize.amount),
+                    amount,
+                    label: (prize.kind === 'jackpot' ? 'JACKPOT +' : '+') + formatMoney(amount) + (happy ? ' (×2)' : ''),
                 };
+            }
             case 'empty':
                 return { ...result, label: 'empty' };
             case 'lose': {

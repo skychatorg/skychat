@@ -12,7 +12,7 @@ export const PARTY_GAMES = {
     blackjack: { emoji: '🃏', name: 'Blackjack', pitch: 'Beat the dealer to 21. Blackjack pays 3:2.' },
     luckypop: { emoji: '🎈', name: 'Lucky Pop', pitch: 'Pop balloons for cash, or a nasty surprise.' },
     crash: { emoji: '🚀', name: 'Crash', pitch: 'Cash out before the multiplier crashes.' },
-    dailyroll: { emoji: '🎴', name: 'Daily Roll', pitch: 'A free card a day. One of them holds $50.' },
+    dailyroll: { emoji: '🎴', name: 'Daily Roll', pitch: 'A free card a day. One of them holds $80.' },
     monkeys: { emoji: '🐒', name: 'Monkey Fight', pitch: 'Back the monkey you think stays standing.' },
     potato: { emoji: '💣', name: 'Hot Potato', pitch: 'Pass the bomb before it blows up on you.' },
 };

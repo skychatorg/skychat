@@ -101,9 +101,12 @@ const vote = (game) => client.sendMessage(`/party vote ${game}`);
                         <span class="label">{{ game.again ? `Again: ${game.name}` : game.name }}</span></span
                     >
                     <span v-if="game.locked" class="sub">{{ game.locked }}</span>
+                    <!-- Only games with votes say so, so they stand out. The empty line keeps every card the same height -->
                     <span v-else class="sub">
-                        {{ game.voters.length }} vote{{ game.voters.length === 1 ? '' : 's'
-                        }}<template v-if="game.voters.length"> · {{ game.voters.join(', ') }}</template>
+                        <template v-if="game.voters.length">
+                            {{ game.voters.length }} vote{{ game.voters.length === 1 ? '' : 's' }} · {{ game.voters.join(', ') }}
+                        </template>
+                        <template v-else>&nbsp;</template>
                     </span>
                 </button>
             </div>
