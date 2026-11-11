@@ -24,6 +24,34 @@ export function useSettingsCommands() {
             run: () => app.toggleModal('profile'),
         });
 
+        // Only users in the server's OP list can enter, with its passcode: everyone else gets told no
+        if (loggedIn && !client.state.op) {
+            out.push({
+                id: 'settings.opEnter',
+                title: labels.enterOpMode(),
+                icon: 'key',
+                category: 'Settings',
+                keywords: ['admin', 'op', 'operator', 'passcode'],
+                expand: () => ({
+                    type: 'prompt',
+                    title: 'OP passcode',
+                    placeholder: 'passcode',
+                    secret: true,
+                    run: (value) => value.trim() && client.sendMessage(`/op ${value.trim()}`),
+                }),
+            });
+        }
+        if (client.state.op) {
+            out.push({
+                id: 'settings.opLeave',
+                title: labels.leaveOpMode(),
+                icon: 'arrow-right-from-bracket',
+                category: 'Settings',
+                keywords: ['admin', 'op', 'operator', 'exit'],
+                run: () => client.sendMessage('/opexit'),
+            });
+        }
+
         out.push({
             id: 'settings.gallery',
             title: labels.openGallery(),
@@ -40,7 +68,7 @@ export function useSettingsCommands() {
                 icon: 'image',
                 category: 'Settings',
                 keywords: ['emoji', 'custom'],
-                run: () => app.toggleModal('manageStickers'),
+                run: () => app.toggleModal('admin', { tab: 'stickers' }),
             });
         }
 
@@ -51,7 +79,7 @@ export function useSettingsCommands() {
                 icon: 'highlighter',
                 category: 'Settings',
                 keywords: ['words', 'effects', 'burst'],
-                run: () => app.toggleModal('manageHighlights'),
+                run: () => app.toggleModal('admin', { tab: 'highlights' }),
             });
         }
 

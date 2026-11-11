@@ -97,7 +97,7 @@ export function usePlayerCommands() {
                 icon: 'gears',
                 category: 'Player',
                 keywords: ['admin', 'create channel', 'party', 'casino', 'games', 'media'],
-                run: () => app.toggleModal('manageChannels'),
+                run: () => app.toggleModal('admin', { tab: 'channels' }),
             });
         }
 

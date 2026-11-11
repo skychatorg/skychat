@@ -1,5 +1,4 @@
 <script setup>
-import ModalTemplate from '@/components/modal/ModalTemplate.vue';
 import { useUserRight } from '@/composables/useUserRight';
 import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
@@ -99,7 +98,7 @@ const deleteSticker = (code) => {
 </script>
 
 <template>
-    <ModalTemplate id="manageStickers" title="Manage stickers" variant="wide">
+    <div>
         <div v-if="canManageStickers" class="flex flex-col gap-6 pb-6 text-skygray-lightest">
             <form class="flex flex-col gap-4 w-full max-w-md" @submit.prevent="submitSticker">
                 <div>
@@ -169,5 +168,5 @@ const deleteSticker = (code) => {
             </div>
         </div>
         <div v-else class="text-sm text-skygray-light">You do not have permission to manage stickers.</div>
-    </ModalTemplate>
+    </div>
 </template>

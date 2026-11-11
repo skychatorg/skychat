@@ -27,7 +27,7 @@ defineProps({
                 v-if="client.state.op"
                 title="Manage channels"
                 class="text-xs text-white/40 hover:text-white/80"
-                @click="app.toggleModal('manageChannels')"
+                @click="app.toggleModal('admin', { tab: 'channels' })"
             >
                 <fa icon="gear" />
             </button>

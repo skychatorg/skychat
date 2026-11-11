@@ -25,7 +25,7 @@ const publicRooms = computed(() => (client.state.rooms || []).filter((r) => !r.i
 const directRooms = computed(() => (client.state.rooms || []).filter((r) => r.isPrivate));
 
 function manageRooms() {
-    app.toggleModal('manageRooms');
+    app.toggleModal('admin', { tab: 'rooms' });
 }
 </script>
 

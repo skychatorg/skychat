@@ -1,5 +1,4 @@
 <script setup>
-import ModalTemplate from '@/components/modal/ModalTemplate.vue';
 import { betLimits, channelIcon } from '@/lib/channel';
 import { useClientStore } from '@/stores/client';
 import { reactive, ref, watch } from 'vue';
@@ -56,7 +55,7 @@ function create() {
 </script>
 
 <template>
-    <ModalTemplate id="manageChannels" title="Manage channels">
+    <div>
         <div class="flex flex-col gap-6 pb-4">
             <section class="flex flex-col gap-2">
                 <p class="text-sm text-white/50">Rename a channel in place, drag to reorder.</p>
@@ -152,5 +151,5 @@ function create() {
                 <button type="submit" class="form-control self-start px-4" :disabled="!form.name.trim()">Create channel</button>
             </form>
         </div>
-    </ModalTemplate>
+    </div>
 </template>

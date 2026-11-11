@@ -99,7 +99,7 @@ export function useRoomCommands() {
                 icon: 'gears',
                 category: 'Rooms',
                 keywords: ['admin', 'create room', 'edit room'],
-                run: () => app.toggleModal('manageRooms'),
+                run: () => app.toggleModal('admin', { tab: 'rooms' }),
             });
         }
 

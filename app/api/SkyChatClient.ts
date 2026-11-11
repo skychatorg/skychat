@@ -11,6 +11,7 @@ import {
     OngoingConvert,
     PublicConfig,
     QueuedVideoInfo,
+    SanitizedBan,
     SanitizedBlackjackTable,
     SanitizedLuckyPop,
     SanitizedCrash,
@@ -74,6 +75,10 @@ export type SkyChatClientState = {
     config: PublicConfig | null;
     stickers: Record<string, string>;
     highlights: Record<string, string> | null;
+    /** Null until a moderator asks for it */
+    banList: SanitizedBan[] | null;
+    /** Whether guests are locked out. Null until an OP asks */
+    bunker: boolean | null;
     custom: CustomizationElements;
     token: AuthToken | null;
     connectedList: Array<SanitizedSession>;
@@ -118,6 +123,8 @@ export type SkyChatClientState = {
     /** The Hot Potato of your party channel, null when another game is on */
     hotPotato: SanitizedHotPotato | null;
     voiceChannels: SanitizedVoiceChannel[];
+    /** The server sends voice channels on connect only when voice is on */
+    voiceEnabled: boolean;
     currentVoiceChannelId: number | null;
     voiceChannelUsers: { [channelId: number]: Array<SanitizedUser> };
     voiceSpeaking: { [userId: number]: boolean };
@@ -130,6 +137,8 @@ export declare interface SkyChatClient {
     on(event: 'config', listener: (config: PublicConfig) => any): this;
     on(event: 'sticker-list', listener: (stickers: Record<string, string>) => any): this;
     on(event: 'highlight-list', listener: (highlights: Record<string, string>) => any): this;
+    on(event: 'ban-list', listener: (bans: SanitizedBan[]) => any): this;
+    on(event: 'bunker', listener: (on: boolean) => any): this;
     on(event: 'custom', listener: (custom: CustomizationElements) => any): this;
     on(event: 'set-user', listener: (user: SanitizedUser) => any): this;
     on(event: 'auth-token', listener: (token: AuthToken | null) => any): this;
@@ -225,6 +234,10 @@ export class SkyChatClient extends EventEmitter {
     private _config: PublicConfig | null = null;
     private _stickers: Record<string, string> = {};
     private _highlights: Record<string, string> | null = null;
+
+    private _banList: SanitizedBan[] | null = null;
+
+    private _bunker: boolean | null = null;
     private _custom: CustomizationElements = {};
     private _token: AuthToken | null = null;
     private _connectedList: Array<SanitizedSession> = [];
@@ -259,6 +272,8 @@ export class SkyChatClient extends EventEmitter {
     private _currentPlayerChannelId: number | null = null;
     private _currentPlayerChannel: SanitizedPlayerChannel | null = null;
     private _voiceChannels: Array<SanitizedVoiceChannel> = [];
+
+    private _voiceEnabled = false;
     private _currentVoiceChannelId: number | null = null;
     private _voiceChannelUsers: { [channelId: number]: Array<SanitizedUser> } = {};
     private _voiceSpeaking: { [userId: number]: boolean } = {};
@@ -316,6 +331,8 @@ export class SkyChatClient extends EventEmitter {
         this.on('config', this._onConfig.bind(this));
         this.on('sticker-list', this._onStickerList.bind(this));
         this.on('highlight-list', this._onHighlightList.bind(this));
+        this.on('ban-list', this._onBanList.bind(this));
+        this.on('bunker', this._onBunker.bind(this));
         this.on('custom', this._onCustom.bind(this));
         this.on('set-user', this._onUser.bind(this));
         this.on('auth-token', this._onToken.bind(this));
@@ -532,6 +549,16 @@ export class SkyChatClient extends EventEmitter {
 
     private _onHighlightList(highlights: Record<string, string>) {
         this._highlights = highlights;
+        this.emit('update', this.state);
+    }
+
+    private _onBanList(bans: SanitizedBan[]) {
+        this._banList = bans;
+        this.emit('update', this.state);
+    }
+
+    private _onBunker(on: boolean) {
+        this._bunker = on;
         this.emit('update', this.state);
     }
 
@@ -791,6 +818,7 @@ export class SkyChatClient extends EventEmitter {
 
     private _onVoiceChannels(voiceChannels: Array<SanitizedVoiceChannel>) {
         this._voiceChannels = voiceChannels;
+        this._voiceEnabled = true;
         this._voiceChannelUsers = this._generateVoiceChannelUsers();
         this.emit('update', this.state);
     }
@@ -849,6 +877,8 @@ export class SkyChatClient extends EventEmitter {
             config: this._config,
             stickers: this._stickers,
             highlights: this._highlights,
+            banList: this._banList,
+            bunker: this._bunker,
             custom: this._custom,
             token: this._token,
             connectedList: this._connectedList,
@@ -886,6 +916,7 @@ export class SkyChatClient extends EventEmitter {
             monkeyFight: this._monkeyFight,
             hotPotato: this._hotPotato,
             voiceChannels: this._voiceChannels,
+            voiceEnabled: this._voiceEnabled,
             currentVoiceChannelId: this._currentVoiceChannelId,
             voiceChannelUsers: this._voiceChannelUsers,
             voiceSpeaking: this._voiceSpeaking,

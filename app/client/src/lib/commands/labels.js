@@ -9,6 +9,8 @@ export const labels = {
     previousRoom: () => 'Previous room',
     manageRooms: () => 'Manage rooms',
     manageChannels: () => 'Manage channels',
+    enterOpMode: () => 'Enter OP mode…',
+    leaveOpMode: () => 'Leave OP mode',
 
     // Users
     sendPm: (username) => `Send PM to ${username}`,

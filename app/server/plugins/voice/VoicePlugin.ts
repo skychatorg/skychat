@@ -253,8 +253,13 @@ export class VoicePlugin extends GlobalPlugin {
             this.channelManager.createChannel(id, value || `Voice ${id}`);
             return;
         }
+        // Delete and rename take a channel id first, so the admin panel needs no voice connection.
+        // Without one, they act on the channel the OP is in
+        const [, id, rest] = value.match(/^(\d+)(?:\s+(.*))?$/) ?? [];
+        const target = id ? this.channelManager.getChannelById(parseInt(id, 10)) : null;
+        const channel = target ?? this.channelManager.getSessionChannel(connection.session);
+        const name = target ? (rest ?? '').trim() : value;
         if (action === 'delete') {
-            const channel = this.channelManager.getSessionChannel(connection.session);
             if (!channel) {
                 throw new VoiceError('Not in a channel');
             }
@@ -262,11 +267,13 @@ export class VoicePlugin extends GlobalPlugin {
             return;
         }
         if (action === 'rename') {
-            const channel = this.channelManager.getSessionChannel(connection.session);
             if (!channel) {
                 throw new VoiceError('Not in a channel');
             }
-            this.channelManager.renameChannel(channel.id, value);
+            if (!name) {
+                throw new VoiceError('Missing name');
+            }
+            this.channelManager.renameChannel(channel.id, name);
             return;
         }
         throw new VoiceError('Unsupported action');

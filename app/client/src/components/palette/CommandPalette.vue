@@ -158,6 +158,8 @@ const activeItemId = computed(() =>
                         v-if="mode === 'prompt'"
                         ref="inputEl"
                         v-model="promptValue"
+                        :type="topFrame?.secret ? 'password' : 'text'"
+                        :autocomplete="topFrame?.secret ? 'off' : undefined"
                         :placeholder="topFrame?.placeholder || ''"
                         class="flex-1 bg-transparent outline-none text-skygray-white placeholder:text-skygray-lighter"
                         @keydown="onKeyDown"

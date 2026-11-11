@@ -232,24 +232,9 @@ export const useAppStore = defineStore('app', {
             playerQueue: false,
 
             /**
-             * Room management modal
+             * Admin panel: false, or the tab to show as `{ tab }`
              */
-            manageRooms: false,
-
-            /**
-             * Player channel management modal
-             */
-            manageChannels: false,
-
-            /**
-             * Sticker management modal
-             */
-            manageStickers: false,
-
-            /**
-             * Highlighted words management modal
-             */
-            manageHighlights: false,
+            admin: false,
         },
     }),
 

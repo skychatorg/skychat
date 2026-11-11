@@ -9,9 +9,11 @@ import { useIsBlacklisted } from '@/composables/useIsBlacklisted';
 import { useUserProfile } from '@/composables/useUserProfile';
 import { useUserRight } from '@/composables/useUserRight';
 import { useVoice } from '@/composables/useVoice';
+import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 
+const app = useAppStore();
 const client = useClientStore();
 const { openProfile } = useUserProfile();
 
@@ -35,6 +37,7 @@ const isSelf = computed(() => {
 });
 
 const canModerate = useUserRight('minRightForUserModeration');
+const canSetRight = useUserRight('minRightForSetRight');
 
 const voice = useVoice();
 const canModerateVoice = useUserRight('minRightForVoiceModeration');
@@ -79,12 +82,11 @@ const kickUser = () => {
     }
 };
 
-const banUser = () => {
-    const duration = prompt(`Ban ${props.entry.user.username} for how long? (duration in seconds)`);
-    if (duration) {
-        client.sendMessage(`/ban ${props.entry.user.username} access ${duration}`);
-    }
-};
+// The ban form and the rights list, in the admin panel, with this user filled in
+const banUser = () => app.toggleModal('admin', { tab: 'bans', username: props.entry.user.username });
+const setRight = () => app.toggleModal('admin', { tab: 'users', username: props.entry.user.username });
+// The server answers with a table of their connections, each IP and username a link to follow. Offline users have none
+const showIps = () => client.sendMessage(`/ip ${props.entry.user.username}`);
 
 const giveMoney = () => client.giveMoney(props.entry.user.username);
 
@@ -344,7 +346,15 @@ const isDisconnected = computed(() => props.entry.connectionCount === 0);
                             </SkyDropdownItem>
                             <SkyDropdownItem v-if="canModerate" @click="banUser">
                                 <fa icon="ban" class="w-4 mr-2 text-danger" />
-                                Ban
+                                Ban…
+                            </SkyDropdownItem>
+                            <SkyDropdownItem v-if="canModerate && entry.connectionCount" @click="showIps">
+                                <fa icon="globe" class="w-4 mr-2" />
+                                Show IPs
+                            </SkyDropdownItem>
+                            <SkyDropdownItem v-if="canSetRight && entry.user.right >= 0" @click="setRight">
+                                <fa icon="key" class="w-4 mr-2" />
+                                Set right…
                             </SkyDropdownItem>
                             <SkyDropdownItem @click="openAvatar">
                                 <fa icon="image" class="w-4 mr-2" />
@@ -405,7 +415,15 @@ const isDisconnected = computed(() => props.entry.connectionCount === 0);
         </SkyContextMenuItem>
         <SkyContextMenuItem v-if="canModerate" @select="banUser">
             <fa icon="ban" class="w-4 mr-2 text-danger" />
-            Ban
+            Ban…
+        </SkyContextMenuItem>
+        <SkyContextMenuItem v-if="canModerate && entry.connectionCount" @select="showIps">
+            <fa icon="globe" class="w-4 mr-2" />
+            Show IPs
+        </SkyContextMenuItem>
+        <SkyContextMenuItem v-if="canSetRight && entry.user.right >= 0" @select="setRight">
+            <fa icon="key" class="w-4 mr-2" />
+            Set right…
         </SkyContextMenuItem>
         <SkyContextMenuItem @select="openAvatar">
             <fa icon="image" class="w-4 mr-2" />

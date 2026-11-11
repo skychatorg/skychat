@@ -43,6 +43,9 @@ export type PublicConfig = {
     minRightForHighlightManagement: number | 'op';
     minRightForMessageHistory: number;
     minRightForAudioRecording: number;
+    minRightForUserModeration: number | 'op';
+    minRightForSetRight: number | 'op';
+    minRightForVoiceModeration: number | 'op';
 };
 
 export class Config {
@@ -78,6 +81,10 @@ export class Config {
             minRightForHighlightManagement: Config.PREFERENCES.minRightForHighlightManagement ?? 'op',
             minRightForMessageHistory: Config.PREFERENCES.minRightForMessageHistory,
             minRightForAudioRecording: Config.PREFERENCES.minRightForAudioRecording,
+            // So the client shows moderation tools to whoever the server lets use them
+            minRightForUserModeration: Config.PREFERENCES.minRightForUserModeration,
+            minRightForSetRight: Config.PREFERENCES.minRightForSetRight,
+            minRightForVoiceModeration: Config.PREFERENCES.minRightForVoiceModeration,
         };
     }
 

@@ -1,12 +1,9 @@
 <script setup>
 import CursorOverlay from '@/components/cursor/CursorOverlay.vue';
+import AdminModal from '@/components/admin/AdminModal.vue';
 import AppHeader from '@/components/layout/AppHeader.vue';
 import GalleryModal from '@/components/modal/GalleryModal.vue';
 import JellyfinModal from '@/components/modal/JellyfinModal.vue';
-import ManageHighlightsModal from '@/components/modal/ManageHighlightsModal.vue';
-import ManageRoomsModal from '@/components/modal/ManageRoomsModal.vue';
-import ManageChannelsModal from '@/components/modal/ManageChannelsModal.vue';
-import ManageStickersModal from '@/components/modal/ManageStickersModal.vue';
 import OngoingConvertsModal from '@/components/modal/OngoingConvertsModal.vue';
 import PlayerQueueModal from '@/components/modal/PlayerQueueModal.vue';
 import ProfileModal from '@/components/modal/ProfileModal.vue';
@@ -28,10 +25,7 @@ import CommandPalette from '@/components/palette/CommandPalette.vue';
         <GalleryModal />
         <JellyfinModal />
         <PlayerQueueModal />
-        <ManageRoomsModal />
-        <ManageChannelsModal />
-        <ManageStickersModal />
-        <ManageHighlightsModal />
+        <AdminModal />
         <CommandPalette />
         <RouterView class="grow" />
     </div>
