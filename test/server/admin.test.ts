@@ -27,6 +27,18 @@ describe('ban list', () => {
         expect(mod.events('message').length).toBeGreaterThan(0);
     });
 
+    it('only takes ban types in capitals, as the client sends them', async () => {
+        const mod = await server.connect('banmod2');
+        mod.session.setOP(true);
+        mod.clear();
+        await mod.send('/ban banned2 access 600');
+        expect(mod.errors()).toHaveLength(1);
+        await mod.send('/ban banned2 ACCESS 600');
+        expect(mod.errors()).toHaveLength(1);
+        expect(mod.last('ban-list')).toEqual([expect.objectContaining({ source: 'banned2', type: 'ACCESS' })]);
+        await mod.send('/unban banned2');
+    });
+
     it('refuses the list to anyone who cannot moderate', async () => {
         const user = await server.connect('banuser1');
         user.clear();

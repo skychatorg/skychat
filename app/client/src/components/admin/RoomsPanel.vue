@@ -1,4 +1,5 @@
 <script setup>
+import { useRoomCommand } from '@/composables/useRoomCommand';
 import { useClientStore } from '@/stores/client';
 import { computed, ref, watch } from 'vue';
 import draggable from 'vuedraggable';
@@ -21,29 +22,8 @@ const create = () => {
     }
 };
 
-/**
- * Room commands act on the room the admin is in: go there first, and wait for the server to confirm,
- * since commands sent right after a join could be handled before it
- */
-const inRoom = (roomId, command) =>
-    new Promise((resolve) => {
-        if (client.state.currentRoomId === roomId) {
-            client.sendMessage(command);
-            resolve();
-            return;
-        }
-        const stop = watch(
-            () => client.state.currentRoomId,
-            (id) => {
-                if (id === roomId) {
-                    stop();
-                    client.sendMessage(command);
-                    resolve();
-                }
-            },
-        );
-        client.join(roomId);
-    });
+// Room commands act on the room you're in
+const inRoom = useRoomCommand();
 
 // One room open for editing at a time
 const editing = ref(null);

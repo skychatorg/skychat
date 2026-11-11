@@ -2,6 +2,7 @@
 import { copyText } from '@/lib/copyText.js';
 import { useClientState } from '@/composables/useClientState.js';
 import { roomName } from '@/lib/roomName.js';
+import { useAppStore } from '@/stores/app';
 import { apiClient, useClientStore } from '@/stores/client';
 import { computed, ref } from 'vue';
 import SkyContextMenu from '../common/SkyContextMenu.vue';
@@ -10,6 +11,7 @@ import SkyDropdown from '../common/SkyDropdown.vue';
 import SkyDropdownItem from '../common/SkyDropdownItem.vue';
 import SkyTooltip from '../common/SkyTooltip.vue';
 
+const app = useAppStore();
 const client = useClientStore();
 
 const props = defineProps({
@@ -176,6 +178,10 @@ const leaveConversation = () => {
                                 <fa icon="arrow-right-from-bracket" class="w-4 mr-2" />
                                 Join room
                             </SkyDropdownItem>
+                            <SkyDropdownItem v-if="room.isPrivate" @click="app.toggleModal('groupChat', { roomId: room.id })">
+                                <fa icon="users" class="w-4 mr-2" />
+                                Members…
+                            </SkyDropdownItem>
                             <SkyDropdownItem v-if="room.isPrivate" @click="leaveConversation">
                                 <fa icon="arrow-left" class="w-4 mr-2" />
                                 Leave conversation
@@ -209,6 +215,10 @@ const leaveConversation = () => {
         <SkyContextMenuItem v-if="!selected" @select="joinRoom">
             <fa icon="arrow-right-from-bracket" class="w-4 mr-2" />
             Join room
+        </SkyContextMenuItem>
+        <SkyContextMenuItem v-if="room.isPrivate" @select="app.toggleModal('groupChat', { roomId: room.id })">
+            <fa icon="users" class="w-4 mr-2" />
+            Members…
         </SkyContextMenuItem>
         <SkyContextMenuItem v-if="room.isPrivate" @select="leaveConversation">
             <fa icon="arrow-left" class="w-4 mr-2" />

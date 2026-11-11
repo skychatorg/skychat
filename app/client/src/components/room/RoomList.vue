@@ -79,6 +79,14 @@ function manageRooms() {
             <div :class="compact ? 'px-1 pb-2' : 'px-3 pb-2'">
                 <div v-if="!compact" class="flex items-center justify-between px-2 my-1">
                     <span class="text-xs font-mono uppercase tracking-wider text-white/30">Direct</span>
+                    <button
+                        v-if="client.state.user.right >= 0"
+                        title="New conversation"
+                        class="text-xs text-white/40 hover:text-white/80"
+                        @click="app.toggleModal('groupChat')"
+                    >
+                        <fa icon="plus" />
+                    </button>
                 </div>
                 <div v-else class="h-px bg-white/5 mx-2 my-2" aria-hidden="true" />
                 <div class="flex flex-col">

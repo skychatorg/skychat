@@ -1,4 +1,5 @@
 <script setup>
+import AccountSettings from '@/components/user/AccountSettings.vue';
 import { watch, ref, computed, onUnmounted } from 'vue';
 import hark from 'hark';
 import { useAppStore } from '@/stores/app';
@@ -193,5 +194,8 @@ watch(
             />
             <p class="text-xs text-white/40 mt-1">How long the mic stays open after you stop talking, so word endings aren’t cut off.</p>
         </template>
+
+        <!-- Accounts only: guests have no email, password or Discord to change -->
+        <AccountSettings v-if="client.state.user.right >= 0" class="pb-6" />
     </ModalTemplate>
 </template>

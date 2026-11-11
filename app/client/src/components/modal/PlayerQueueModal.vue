@@ -5,6 +5,7 @@ import { useClientStore } from '@/stores/client';
 import { formatMs } from '@/lib/formatTime';
 import ModalTemplate from '@/components/modal/ModalTemplate.vue';
 import HoverCard from '@/components/util/HoverCard.vue';
+import PlayerLinkTools from '@/components/player/PlayerLinkTools.vue';
 
 const app = useAppStore();
 const client = useClientStore();
@@ -123,6 +124,8 @@ const addVideo = () => app.toggleModal('youtubeVideoSearcher');
             <div class="text-xs text-skygray-lighter mb-4">Add a video to line up what plays next.</div>
             <button class="btn text-sm" @click="addVideo"><fa icon="plus" class="mr-1" />Add a video</button>
         </div>
+
+        <PlayerLinkTools />
     </ModalTemplate>
 </template>
 

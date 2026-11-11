@@ -46,6 +46,8 @@ export type PublicConfig = {
     minRightForUserModeration: number | 'op';
     minRightForSetRight: number | 'op';
     minRightForVoiceModeration: number | 'op';
+    minRightForPlayerAddMedia: number | 'op';
+    minRightForPlayerManageSchedule: number | 'op';
 };
 
 export class Config {
@@ -85,6 +87,8 @@ export class Config {
             minRightForUserModeration: Config.PREFERENCES.minRightForUserModeration,
             minRightForSetRight: Config.PREFERENCES.minRightForSetRight,
             minRightForVoiceModeration: Config.PREFERENCES.minRightForVoiceModeration,
+            minRightForPlayerAddMedia: Config.PREFERENCES.minRightForPlayerAddMedia,
+            minRightForPlayerManageSchedule: Config.PREFERENCES.minRightForPlayerManageSchedule,
         };
     }
 

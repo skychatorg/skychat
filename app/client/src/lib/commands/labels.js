@@ -10,6 +10,7 @@ export const labels = {
     manageRooms: () => 'Manage rooms',
     manageChannels: () => 'Manage channels',
     enterOpMode: () => 'Enter OP mode…',
+    createPoll: () => 'Create a poll…',
     leaveOpMode: () => 'Leave OP mode',
 
     // Users

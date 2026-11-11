@@ -1,11 +1,13 @@
 import { computed } from 'vue';
 import { useRoute } from 'vue-router';
+import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
 import { useMessageComposer } from '@/composables/useMessageComposer';
 import { useUserRight } from '@/composables/useUserRight';
 import { labels } from '../labels';
 
 export function useChatCommands() {
+    const app = useAppStore();
     const client = useClientStore();
     const composerRef = useMessageComposer();
     const route = useRoute();
@@ -15,6 +17,17 @@ export function useChatCommands() {
         /** @type {import('../types.js').Command[]} */
         const out = [];
         if (route?.name !== 'app') return out;
+
+        if (client.state.user.right >= 0) {
+            out.push({
+                id: 'chat.poll',
+                title: labels.createPoll(),
+                icon: 'list',
+                category: 'Chat',
+                keywords: ['vote', 'question', 'survey'],
+                run: () => app.toggleModal('createPoll'),
+            });
+        }
 
         const composer = composerRef.value;
         if (composer) {

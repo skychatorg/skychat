@@ -235,6 +235,16 @@ export const useAppStore = defineStore('app', {
              * Admin panel: false, or the tab to show as `{ tab }`
              */
             admin: false,
+
+            /**
+             * New poll form, posted in the current room
+             */
+            createPoll: false,
+
+            /**
+             * New private conversation, or `{ roomId }` to see and change who is in one
+             */
+            groupChat: false,
         },
     }),
 
