@@ -3,6 +3,7 @@ import { Connection } from '../../../skychat/Connection.js';
 import { Session } from '../../../skychat/Session.js';
 import { UserController } from '../../../skychat/UserController.js';
 import { logFailure } from '../casino/BlackjackTable.js';
+import { shuffle } from './shuffle.js';
 import type { Party } from './Party.js';
 
 /**
@@ -172,13 +173,14 @@ export class DailyRoll {
         }
 
         // Drawn only now, so nothing about the board exists before the picks are in
+        const cardIds = () => Array.from({ length: DailyRoll.CARDS }, (_, id) => id);
         this.amounts = Array.from({ length: DailyRoll.CARDS }, () => this.random(6) * 100);
-        const spots = this.shuffle(Array.from({ length: DailyRoll.CARDS }, (_, id) => id));
+        const spots = shuffle(cardIds(), this.random);
         DailyRoll.PRIZES.forEach((amount, i) => (this.amounts[spots[i]] = amount));
         this.phase = 'revealing';
         this.deadline = 0;
 
-        const ids = this.shuffle(Array.from({ length: DailyRoll.CARDS }, (_, id) => id));
+        const ids = shuffle(cardIds(), this.random);
         // The picked cards flip smallest first, so the big ones come last
         const picked = ids.filter((id) => this.picks.has(id)).sort((a, b) => this.amounts[a] - this.amounts[b]);
         for (const id of ids.filter((id) => !this.picks.has(id))) {
@@ -221,17 +223,9 @@ export class DailyRoll {
         return !this.over;
     }
 
-    private shuffle(ids: number[]): number[] {
-        for (let i = ids.length - 1; i > 0; i--) {
-            const j = this.random(i + 1);
-            [ids[i], ids[j]] = [ids[j], ids[i]];
-        }
-        return ids;
-    }
-
     private broadcast(): void {
         if (!this.over) {
-            this.syncConnections(this.party.channel.sessions.flatMap((session) => session.connections));
+            this.syncConnections(this.party.connections());
         }
     }
 }

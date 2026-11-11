@@ -145,10 +145,7 @@ export class HotPotato {
             throw new Error(`The stake is ${formatMoney(this.stake)}`);
         }
         const stake = this.stake ?? amount;
-        const { minBet, maxBet } = this.party.options;
-        if (!Number.isInteger(stake) || stake < minBet || stake > maxBet) {
-            throw new Error(`Stakes are between ${formatMoney(minBet)} and ${formatMoney(maxBet)}`);
-        }
+        this.party.checkBet(stake, 'Stakes');
         if (session.user.money < stake) {
             throw new Error(`You need ${formatMoney(stake)} to join`);
         }
@@ -167,7 +164,7 @@ export class HotPotato {
         }
         this.pot += stake;
         // Everyone here is in: a last call, not the whole clock
-        const players = this.party.channel.sessions.filter((s) => !s.user.isGuest());
+        const players = this.party.players();
         const lastCallAt = Date.now() + this.timings.lastCallMs;
         if (
             this.seats.length >= HotPotato.MIN_PLAYERS &&
@@ -431,7 +428,7 @@ export class HotPotato {
 
     private broadcast(): void {
         if (!this.over) {
-            this.syncConnections(this.party.channel.sessions.flatMap((session) => session.connections));
+            this.syncConnections(this.party.connections());
         }
     }
 }

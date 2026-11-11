@@ -1,4 +1,6 @@
 <script setup>
+import DrainBar from '@/components/party/DrainBar.vue';
+import MuteButton from '@/components/party/MuteButton.vue';
 import { useCountdown } from '@/composables/useCountdown';
 import { playCasinoSound } from '@/lib/casinoSounds';
 import { useAppStore } from '@/stores/app';
@@ -113,18 +115,9 @@ watch(
                 <span class="title">Daily Roll</span>
                 <span class="status" aria-live="polite">{{ status }}</span>
                 <span v-if="board.phase === 'picking'" class="clock" :class="{ hurry }" aria-hidden="true">{{ seconds }}s</span>
-                <button
-                    class="mute"
-                    :title="soundOn ? 'Mute the game' : 'Turn game sounds on'"
-                    :aria-pressed="!soundOn"
-                    @click="app.toggleGameSound('dailyroll')"
-                >
-                    <fa :icon="soundOn ? 'volume-high' : 'volume-xmark'" />
-                </button>
+                <MuteButton game="dailyroll" />
             </div>
-            <div v-if="board.phase === 'picking'" class="bar" :class="{ hurry }" aria-hidden="true">
-                <span :key="board.deadline" :style="{ animationDuration: `${total}ms` }"></span>
-            </div>
+            <DrainBar v-if="board.phase === 'picking'" class="bar" :deadline="board.deadline" :ms="total" :hurry="hurry" />
             <div class="stage">
                 <div class="board">
                     <button
@@ -224,36 +217,9 @@ watch(
 .clock.hurry {
     color: #ff8fa3;
 }
-.mute {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    color: rgb(255 255 255 / 0.7);
-}
-.mute:hover {
-    background: rgb(255 255 255 / 0.1);
-}
 .bar {
     height: 4px;
     margin: 0 clamp(8px, 2cqw, 20px) clamp(4px, 1.5cqh, 10px);
-    border-radius: 2px;
-    background: rgb(255 255 255 / 0.1);
-    overflow: hidden;
-}
-.bar span {
-    display: block;
-    height: 100%;
-    background: #f0c46c;
-    transform-origin: left;
-    animation: drain linear forwards;
-}
-@keyframes drain {
-    to {
-        transform: scaleX(0);
-    }
-}
-.bar.hurry span {
-    background: #ff8fa3;
 }
 .stage {
     position: relative;

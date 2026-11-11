@@ -1,3 +1,4 @@
+import { formatMoney } from '../../../../api/money.js';
 import { Connection } from '../../../skychat/Connection.js';
 import { Session } from '../../../skychat/Session.js';
 import { BlackjackTable, CasinoOptions, logFailure } from '../casino/BlackjackTable.js';
@@ -267,8 +268,22 @@ export class Party {
         this.broadcast();
     }
 
-    private connections(): Connection[] {
+    /** Every open connection in the channel, guests included */
+    public connections(): Connection[] {
         return this.channel.sessions.flatMap((session) => session.connections);
+    }
+
+    /** Throws unless the amount is a whole number of cents within the channel's limits */
+    public checkBet(amount: number, what = 'Bets'): void {
+        const { minBet, maxBet } = this.options;
+        if (!Number.isInteger(amount) || amount < minBet || amount > maxBet) {
+            throw new Error(`${what} are between ${formatMoney(minBet)} and ${formatMoney(maxBet)}`);
+        }
+    }
+
+    /** Who can play: everyone in the channel but guests */
+    public players(): Session[] {
+        return this.channel.sessions.filter((session) => !session.user.isGuest());
     }
 
     private broadcast(): void {

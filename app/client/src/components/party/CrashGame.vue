@@ -1,4 +1,5 @@
 <script setup>
+import MuteButton from '@/components/party/MuteButton.vue';
 import CrashStars from '@/components/party/CrashStars.vue';
 import { createFlightSound, playCasinoSound } from '@/lib/casinoSounds';
 import { useCountdown } from '@/composables/useCountdown';
@@ -169,14 +170,7 @@ watch(
                         times(point)
                     }}</span>
                 </span>
-                <button
-                    class="mute"
-                    :title="soundOn ? 'Mute the game' : 'Turn game sounds on'"
-                    :aria-pressed="!soundOn"
-                    @click="app.toggleGameSound('crash')"
-                >
-                    <fa :icon="soundOn ? 'volume-high' : 'volume-xmark'" />
-                </button>
+                <MuteButton game="crash" />
             </div>
 
             <div class="body">
@@ -292,16 +286,6 @@ watch(
 }
 .muted {
     color: rgb(255 255 255 / 0.55);
-}
-.mute {
-    width: 32px;
-    height: 32px;
-    flex-shrink: 0;
-    border-radius: 8px;
-    color: rgb(255 255 255 / 0.7);
-}
-.mute:hover {
-    background: rgb(255 255 255 / 0.1);
 }
 .body {
     flex: 1;

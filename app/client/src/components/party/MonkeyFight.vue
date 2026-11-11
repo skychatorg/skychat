@@ -1,4 +1,5 @@
 <script setup>
+import MuteButton from '@/components/party/MuteButton.vue';
 import MonkeySprite from '@/components/party/MonkeySprite.vue';
 import { useCountdown } from '@/composables/useCountdown';
 import { useNow } from '@/composables/useNow';
@@ -483,14 +484,7 @@ watch(
             <div class="top">
                 <span class="title">Monkey Fight</span>
                 <span class="status" aria-live="polite">{{ status }}</span>
-                <button
-                    class="mute"
-                    :title="soundOn ? 'Mute the game' : 'Turn game sounds on'"
-                    :aria-pressed="!soundOn"
-                    @click="app.toggleGameSound('monkeys')"
-                >
-                    <fa :icon="soundOn ? 'volume-high' : 'volume-xmark'" />
-                </button>
+                <MuteButton game="monkeys" />
             </div>
 
             <!-- Betting: who they are, what they're worth -->
@@ -697,16 +691,6 @@ watch(
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-}
-.mute {
-    width: 32px;
-    height: 32px;
-    flex-shrink: 0;
-    border-radius: 8px;
-    color: rgb(255 255 255 / 0.7);
-}
-.mute:hover {
-    background: rgb(255 255 255 / 0.1);
 }
 
 /* Betting line-up */

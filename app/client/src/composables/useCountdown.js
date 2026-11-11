@@ -2,8 +2,7 @@ import { useNow } from '@/composables/useNow';
 import { computed, ref, toValue, watch } from 'vue';
 
 /**
- * Seconds left until a server-given instant, and the full wait in ms. A bar drains over `total` with one CSS animation keyed on
- * the deadline: nudging it on every tick made it jump back in Firefox
+ * Seconds left until a server-given instant, and the full wait in ms, for a DrainBar
  */
 export function useCountdown(deadline) {
     const now = useNow();

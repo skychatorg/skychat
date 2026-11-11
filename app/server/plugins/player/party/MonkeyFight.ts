@@ -1,10 +1,10 @@
 import { randomInt } from 'node:crypto';
-import { formatMoney } from '../../../../api/money.js';
 import { Connection } from '../../../skychat/Connection.js';
 import { Session } from '../../../skychat/Session.js';
 import { SanitizedUser } from '../../../skychat/User.js';
 import { UserController } from '../../../skychat/UserController.js';
 import { logFailure } from '../casino/BlackjackTable.js';
+import { shuffle } from './shuffle.js';
 import type { Party } from './Party.js';
 
 /**
@@ -260,10 +260,7 @@ export class MonkeyFight {
         if (!this.monkeys.some((m) => m.id === monkey)) {
             throw new Error('No such monkey');
         }
-        const { minBet, maxBet } = this.party.options;
-        if (!Number.isInteger(amount) || amount < minBet || amount > maxBet) {
-            throw new Error(`Bets are between ${formatMoney(minBet)} and ${formatMoney(maxBet)}`);
-        }
+        this.party.checkBet(amount);
         const seat = this.bets.find((b) => b.session === session);
         if (seat) {
             await this.moveBet(seat, monkey, amount);
@@ -282,7 +279,7 @@ export class MonkeyFight {
             }
         }
         // Everyone has bet: a last call to switch, not an instant start
-        const players = this.party.channel.sessions.filter((s) => !s.user.isGuest());
+        const players = this.party.players();
         const lastCallAt = Date.now() + this.timings.lastCallMs;
         if (this.phase === 'betting' && lastCallAt < this.deadline! && players.every((s) => this.bets.some((b) => b.session === s))) {
             this.deadline = lastCallAt;
@@ -382,19 +379,11 @@ export class MonkeyFight {
     private drawMonkeys(): Monkey[] {
         const pick = <T>(list: T[]) => list[this.random(list.length)];
         const range = (min: number, max: number) => min + this.random(max - min + 1);
-        const shuffled = <T>(list: T[]) => {
-            const copy = [...list];
-            for (let i = copy.length - 1; i > 0; i--) {
-                const j = this.random(i + 1);
-                [copy[i], copy[j]] = [copy[j], copy[i]];
-            }
-            return copy;
-        };
         // Distinct last names and traits: two monkeys never share a name, every fight is a different mix
-        const names = shuffled(LAST_NAMES)
+        const names = shuffle([...LAST_NAMES], this.random)
             .slice(0, MonkeyFight.MONKEYS)
             .map((name) => `${pick(FIRST_NAMES)} ${name}`);
-        const traits = shuffled(TRAITS);
+        const traits = shuffle([...TRAITS], this.random);
         return names.map((name, id) => ({
             id,
             name,
@@ -491,7 +480,7 @@ export class MonkeyFight {
 
     private broadcast(): void {
         if (!this.over) {
-            this.syncConnections(this.party.channel.sessions.flatMap((session) => session.connections));
+            this.syncConnections(this.party.connections());
         }
     }
 }

@@ -1,4 +1,5 @@
 <script setup>
+import DrainBar from '@/components/party/DrainBar.vue';
 import CasinoTable from '@/components/casino/CasinoTable.vue';
 import CrashGame from '@/components/party/CrashGame.vue';
 import DailyRoll from '@/components/party/DailyRoll.vue';
@@ -82,9 +83,7 @@ const vote = (game) => client.sendMessage(`/party vote ${game}`);
                 <h2 id="party-vote-title" class="title">Next game?</h2>
                 <span class="count" aria-hidden="true">{{ voteSeconds }}s</span>
             </header>
-            <div class="bar" aria-hidden="true">
-                <span :key="party.deadline" :style="{ animationDuration: `${voteTotal}ms` }"></span>
-            </div>
+            <DrainBar class="bar" :deadline="party.deadline" :ms="voteTotal" />
             <div class="games">
                 <button
                     v-for="game in voteGames"
@@ -187,21 +186,6 @@ const vote = (game) => client.sendMessage(`/party vote ${game}`);
 }
 .bar {
     height: 5px;
-    border-radius: 3px;
-    background: rgb(255 255 255 / 0.1);
-    overflow: hidden;
-}
-.bar span {
-    display: block;
-    height: 100%;
-    background: #f0c46c;
-    transform-origin: left;
-    animation: drain linear forwards;
-}
-@keyframes drain {
-    to {
-        transform: scaleX(0);
-    }
 }
 .games {
     display: grid;

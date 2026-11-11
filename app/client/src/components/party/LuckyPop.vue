@@ -1,4 +1,5 @@
 <script setup>
+import MuteButton from '@/components/party/MuteButton.vue';
 import { playCasinoSound } from '@/lib/casinoSounds';
 import { useNow } from '@/composables/useNow';
 import { useAppStore } from '@/stores/app';
@@ -57,15 +58,17 @@ const now = useNow();
 
 const sky = computed(() => client.state.luckyPop);
 const isGuest = computed(() => !client.state.user.id);
-const secondsLeft = computed(() => Math.max(0, Math.ceil((sky.value.deadline - now.value) / 1000)));
-const cooldown = computed(() => Math.max(0, Math.ceil((sky.value.you.nextPopAt - now.value) / 1000)));
+// Whole seconds until a server-given instant, 0 once it is past or when there is none
+const secondsTo = (at) => (at ? Math.max(0, Math.ceil((at - now.value) / 1000)) : 0);
+const secondsLeft = computed(() => secondsTo(sky.value.deadline));
+const cooldown = computed(() => secondsTo(sky.value.you.nextPopAt));
 const left = computed(() => sky.value.balloons.filter((b) => !b.popped).length);
 // Seconds left on a freeze, and whether it locks you out
-const frozenFor = computed(() => (sky.value.frozen ? Math.max(0, Math.ceil((sky.value.frozen.until - now.value) / 1000)) : 0));
+const frozenFor = computed(() => secondsTo(sky.value.frozen?.until));
 const frozenOut = computed(() => frozenFor.value > 0 && sky.value.frozen.username !== client.state.user.username);
 // Seconds left of happy hour, and before the egg hatches
-const happyFor = computed(() => (sky.value.happyHour ? Math.max(0, Math.ceil((sky.value.happyHour - now.value) / 1000)) : 0));
-const hatchIn = computed(() => Math.max(0, Math.ceil((sky.value.hatchAt - now.value) / 1000)));
+const happyFor = computed(() => secondsTo(sky.value.happyHour));
+const hatchIn = computed(() => secondsTo(sky.value.hatchAt));
 
 // The round's time always shows, your own limit after it
 const status = computed(() => {
@@ -232,14 +235,7 @@ watch(
             <div class="top">
                 <span class="title">Lucky Pop</span>
                 <span class="status">{{ status }}</span>
-                <button
-                    class="mute"
-                    :title="soundOn ? 'Mute the game' : 'Turn game sounds on'"
-                    :aria-pressed="!soundOn"
-                    @click="app.toggleGameSound('luckypop')"
-                >
-                    <fa :icon="soundOn ? 'volume-high' : 'volume-xmark'" />
-                </button>
+                <MuteButton game="luckypop" />
             </div>
             <div class="body">
                 <div class="sky" :class="{ frozen: frozenFor > 0, happy: happyFor > 0 }">
@@ -368,15 +364,6 @@ watch(
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-}
-.mute {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    color: rgb(255 255 255 / 0.7);
-}
-.mute:hover {
-    background: rgb(255 255 255 / 0.1);
 }
 .body {
     flex: 1;

@@ -1,4 +1,5 @@
 <script setup>
+import MuteButton from '@/components/party/MuteButton.vue';
 import CasinoChip from '@/components/casino/CasinoChip.vue';
 import UserMiniAvatar from '@/components/user/UserMiniAvatar.vue';
 import { useCountdown } from '@/composables/useCountdown';
@@ -188,14 +189,7 @@ watch(
                 <span class="title">💣 Hot Potato</span>
                 <span class="status" :class="{ alarm: holding }" aria-live="polite">{{ status }}</span>
                 <span class="pot">Pot {{ formatMoney(game.pot) }}</span>
-                <button
-                    class="mute"
-                    :title="soundOn ? 'Mute the game' : 'Turn game sounds on'"
-                    :aria-pressed="!soundOn"
-                    @click="app.toggleGameSound('potato')"
-                >
-                    <fa :icon="soundOn ? 'volume-high' : 'volume-xmark'" />
-                </button>
+                <MuteButton game="potato" />
             </div>
 
             <div class="table" :class="{ boom: game.phase === 'done' }">
@@ -346,16 +340,6 @@ watch(
         monospace;
     color: #ffc21a;
     white-space: nowrap;
-}
-.mute {
-    width: 32px;
-    height: 32px;
-    flex-shrink: 0;
-    border-radius: 8px;
-    color: rgb(255 255 255 / 0.7);
-}
-.mute:hover {
-    background: rgb(255 255 255 / 0.1);
 }
 .table {
     position: relative;

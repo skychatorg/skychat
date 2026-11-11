@@ -1,5 +1,4 @@
 import { randomInt } from 'node:crypto';
-import { formatMoney } from '../../../../api/money.js';
 import { Connection } from '../../../skychat/Connection.js';
 import { Session } from '../../../skychat/Session.js';
 import { SanitizedUser } from '../../../skychat/User.js';
@@ -109,10 +108,7 @@ export class Crash {
         if (this.phase !== 'betting' || this.over) {
             throw new Error('Wait for the next flight');
         }
-        const { minBet, maxBet } = this.party.options;
-        if (!Number.isInteger(amount) || amount < minBet || amount > maxBet) {
-            throw new Error(`Bets are between ${formatMoney(minBet)} and ${formatMoney(maxBet)}`);
-        }
+        this.party.checkBet(amount);
         if (this.bets.some((b) => b.session === session)) {
             throw new Error('You already bet on this flight');
         }
@@ -129,7 +125,7 @@ export class Crash {
             throw error;
         }
         // Everyone who can bet has: no need to wait out the clock. Guests watch, they can't bet
-        const players = this.party.channel.sessions.filter((s) => !s.user.isGuest());
+        const players = this.party.players();
         if (this.phase === 'betting' && players.every((s) => this.bets.some((b) => b.session === s))) {
             this.schedule(this.timings.beatMs, () => this.takeOff());
         }
@@ -272,6 +268,6 @@ export class Crash {
         if (this.over) {
             return;
         }
-        this.syncConnections(this.party.channel.sessions.flatMap((session) => session.connections));
+        this.syncConnections(this.party.connections());
     }
 }

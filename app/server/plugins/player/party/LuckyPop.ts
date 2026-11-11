@@ -6,6 +6,7 @@ import { UserController } from '../../../skychat/UserController.js';
 import { ConfusePlugin } from '../../games/global/ConfusePlugin.js';
 import { SandalePlugin } from '../../games/global/SandalePlugin.js';
 import { logFailure } from '../casino/BlackjackTable.js';
+import { shuffle } from './shuffle.js';
 import type { Party } from './Party.js';
 
 export type BalloonSize = 'xs' | 'md' | 'lg' | 'golden' | 'pinata' | 'hotair' | 'peek' | 'freeze' | 'patience' | 'egg';
@@ -380,7 +381,7 @@ export class LuckyPop {
     private drawSky(): Balloon[] {
         const sizes: BalloonSize[] = [...SKY];
         if (this.random(100) < LuckyPop.SPECIAL_CHANCE) {
-            const players = this.party.channel.sessions.filter((s) => !s.user.isGuest()).length;
+            const players = this.party.players().length;
             const specials = SPECIALS.filter((special) => players > 1 || SOLO_SPECIALS.includes(special));
             const add = () => {
                 // Taken out of the list, so a second special is always a different one
@@ -397,11 +398,7 @@ export class LuckyPop {
             }
         }
         // Shuffled, so the big one is not always in the same spot
-        for (let i = sizes.length - 1; i > 0; i--) {
-            const j = this.random(i + 1);
-            [sizes[i], sizes[j]] = [sizes[j], sizes[i]];
-        }
-        return sizes.map((size, id) => ({
+        return shuffle(sizes, this.random).map((size, id) => ({
             id,
             size,
             popped: false,
@@ -491,7 +488,7 @@ export class LuckyPop {
     private afterPop(): void {
         this.maybeRevealPatience();
         this.broadcast();
-        const players = this.party.channel.sessions.filter((s) => !s.user.isGuest());
+        const players = this.party.players();
         const blanksOnly = this.balloons.every((b) => b.popped || LuckyPop.BLANKS.includes(b.size));
         if (blanksOnly || (players.length && players.every((s) => this.grounded.has(s)))) {
             this.endSoon();
