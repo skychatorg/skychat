@@ -2,8 +2,8 @@ import { randomInt } from 'node:crypto';
 import { Connection } from '../../../skychat/Connection.js';
 import { Session } from '../../../skychat/Session.js';
 import { SanitizedUser } from '../../../skychat/User.js';
-import { UserController } from '../../../skychat/UserController.js';
 import { logFailure } from '../casino/BlackjackTable.js';
+import { GameMoney } from '../GameMoney.js';
 import { shuffle } from './shuffle.js';
 import type { Party } from './Party.js';
 
@@ -270,7 +270,7 @@ export class MonkeyFight {
             const fresh: Bet = { session, monkey, bet: amount, payout: null };
             this.bets.push(fresh);
             try {
-                await UserController.buy(session.user, amount, 'Monkey Fight bet');
+                await GameMoney.bet(session.user, amount, 'Monkey Fight bet');
             } catch (error) {
                 this.bets.splice(this.bets.indexOf(fresh), 1);
                 throw error;
@@ -300,9 +300,9 @@ export class MonkeyFight {
         seat.bet = amount;
         try {
             if (difference > 0) {
-                await UserController.buy(seat.session.user, difference, 'Monkey Fight bet');
+                await GameMoney.bet(seat.session.user, difference, 'Monkey Fight bet');
             } else if (difference < 0) {
-                await UserController.giveMoney(seat.session.user, -difference, 'Monkey Fight refund');
+                await GameMoney.refund(seat.session.user, -difference, 'Monkey Fight refund');
             }
         } catch (error) {
             Object.assign(seat, before);
@@ -315,7 +315,7 @@ export class MonkeyFight {
         const seat = this.bets.find((b) => b.session === session);
         if (seat && this.phase === 'betting') {
             this.bets.splice(this.bets.indexOf(seat), 1);
-            await UserController.giveMoney(session.user, seat.bet, 'Monkey Fight refund');
+            await GameMoney.refund(session.user, seat.bet, 'Monkey Fight refund');
             this.broadcast();
         }
     }
@@ -332,7 +332,7 @@ export class MonkeyFight {
         this.over = true;
         clearTimeout(this.timer);
         await Promise.all(
-            this.bets.filter((b) => b.payout === null).map((b) => UserController.giveMoney(b.session.user, b.bet, 'Monkey Fight refund')),
+            this.bets.filter((b) => b.payout === null).map((b) => GameMoney.refund(b.session.user, b.bet, 'Monkey Fight refund')),
         );
         this.bets = [];
     }
@@ -455,9 +455,7 @@ export class MonkeyFight {
             seat.payout = seat.monkey === this.winner ? Math.floor((seat.bet * this.odds[seat.monkey]) / 100) : 0;
         }
         this.broadcast();
-        await Promise.all(
-            this.bets.filter((b) => b.payout).map((b) => UserController.giveMoney(b.session.user, b.payout!, 'Monkey Fight win')),
-        );
+        await Promise.all(this.bets.filter((b) => b.payout).map((b) => GameMoney.win(b.session.user, b.payout!, 'Monkey Fight win')));
         this.schedule(this.timings.resultsMs, () => (this.fight >= MonkeyFight.FIGHTS ? this.end() : logFailure(this.openBets())));
     }
 

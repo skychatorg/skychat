@@ -57,6 +57,17 @@ CREATE TABLE IF NOT EXISTS state_counters (
   key varchar(64) PRIMARY KEY,
   value int NOT NULL
 );
+
+-- Every bet, win and refund of the party games, for the daily summary
+CREATE TABLE IF NOT EXISTS game_money (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL,
+  kind varchar(8) NOT NULL,
+  amount int NOT NULL,
+  date timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS game_money_date_index ON game_money (date);
 `;
 
 /**

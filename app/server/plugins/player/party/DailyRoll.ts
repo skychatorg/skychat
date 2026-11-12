@@ -1,8 +1,8 @@
 import { randomInt } from 'node:crypto';
 import { Connection } from '../../../skychat/Connection.js';
 import { Session } from '../../../skychat/Session.js';
-import { UserController } from '../../../skychat/UserController.js';
 import { logFailure } from '../casino/BlackjackTable.js';
+import { GameMoney } from '../GameMoney.js';
 import { shuffle } from './shuffle.js';
 import type { Party } from './Party.js';
 
@@ -199,7 +199,7 @@ export class DailyRoll {
             this.suspense = null;
             this.shown.add(id);
             if (this.amounts[id]) {
-                await UserController.giveMoney(this.picks.get(id)!.user, this.amounts[id], 'Daily roll');
+                await GameMoney.win(this.picks.get(id)!.user, this.amounts[id], 'Daily roll');
             }
             this.broadcast();
             if (!(await this.wait(this.timings.afterFlipMs))) {

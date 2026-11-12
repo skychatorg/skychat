@@ -3,7 +3,7 @@ import { Connection } from '../../../skychat/Connection.js';
 import { Logging } from '../../../skychat/Logging.js';
 import { Session } from '../../../skychat/Session.js';
 import { SanitizedUser } from '../../../skychat/User.js';
-import { UserController } from '../../../skychat/UserController.js';
+import { GameMoney } from '../GameMoney.js';
 import type { PlayerChannel } from '../PlayerChannel.js';
 import { Card, createShoe, dealerShouldHit, handValue, isBlackjack, isBust, Outcome, settle } from './blackjack.js';
 
@@ -152,7 +152,7 @@ export class BlackjackTable {
             this.schedule(this.timings.betMs, () => this.deal());
         }
         this.seats.push({ session, bet: amount, doubled: false, cards: [], done: false, outcome: null, payout: null });
-        await UserController.buy(session.user, amount, 'Blackjack bet');
+        await GameMoney.bet(session.user, amount, 'Blackjack bet');
 
         // No need to wait out the clock once everyone watching has bet, just a beat so the last chip lands before the cards
         if (this.channel.sessions.every((s) => this.seatOf(s))) {
@@ -188,7 +188,7 @@ export class BlackjackTable {
         seat.doubled = true;
         seat.cards.push(this.draw());
         seat.done = true;
-        await UserController.buy(session.user, extra, 'Blackjack double');
+        await GameMoney.bet(session.user, extra, 'Blackjack double');
         this.afterAction();
     }
 
@@ -343,7 +343,7 @@ export class BlackjackTable {
         await Promise.all(
             this.seats
                 .filter((seat) => seat.payout)
-                .map((seat) => UserController.giveMoney(seat.session.user, seat.payout as number, 'Blackjack payout')),
+                .map((seat) => GameMoney.win(seat.session.user, seat.payout as number, 'Blackjack payout')),
         );
         this.broadcast();
     }
@@ -409,6 +409,6 @@ export class BlackjackTable {
     }
 
     private async refund(seat: Seat): Promise<void> {
-        await UserController.giveMoney(seat.session.user, seat.bet, 'Blackjack refund');
+        await GameMoney.refund(seat.session.user, seat.bet, 'Blackjack refund');
     }
 }
