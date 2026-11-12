@@ -194,17 +194,19 @@ export class DailySummaryPlugin extends GlobalPlugin {
         const winners = stats
             .filter((s) => s.net > 0)
             .sort((a, b) => b.net - a.net)
-            .slice(0, DailySummaryPlugin.GAMES_TOP);
+            .slice(0, DailySummaryPlugin.GAMES_TOP)
+            .map((s) => `${s.username} +${formatMoney(s.net)}`);
         if (winners.length > 0) {
-            content += `\n- Winners: ${winners.map((s) => `${s.username} +${formatMoney(s.net)}`).join(', ')}`;
+            content += `\n- Winners: ${winners.join(', ')}`;
         }
 
         const losers = stats
             .filter((s) => s.net < 0)
             .sort((a, b) => a.net - b.net)
-            .slice(0, DailySummaryPlugin.GAMES_TOP);
+            .slice(0, DailySummaryPlugin.GAMES_TOP)
+            .map((s) => `${s.username} ${formatMoney(s.net)}`);
         if (losers.length > 0) {
-            content += `\n- Losers: ${losers.map((s) => `${s.username} ${formatMoney(s.net)}`).join(', ')}`;
+            content += `\n- Losers: ${losers.join(', ')}`;
         }
 
         return content;
