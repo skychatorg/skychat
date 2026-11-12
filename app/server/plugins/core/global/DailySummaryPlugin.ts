@@ -1,4 +1,5 @@
 import SQL from 'sql-template-strings';
+import { formatMoney } from '../../../../api/money.js';
 import { DatabaseHelper } from '../../../skychat/DatabaseHelper.js';
 import { Logging } from '../../../skychat/Logging.js';
 import { RoomManager } from '../../../skychat/RoomManager.js';
@@ -9,6 +10,12 @@ type RoomStats = {
     room_id: number;
     message_count: number;
     unique_users: number;
+};
+
+type GameStats = {
+    username: string;
+    net: number;
+    bet: number;
 };
 
 export class DailySummaryPlugin extends GlobalPlugin {
@@ -32,6 +39,16 @@ export class DailySummaryPlugin extends GlobalPlugin {
      * Scheduled time in hours. 20.0 = 8 PM
      */
     public static readonly SCHEDULED_TIME: number = 20.0;
+
+    /**
+     * How many winners and losers of the games are named
+     */
+    public static readonly GAMES_TOP: number = 3;
+
+    /**
+     * Days the games' money moves are kept
+     */
+    public static readonly GAMES_RETENTION: number = 30;
 
     constructor(manager: RoomManager) {
         super(manager);
@@ -59,6 +76,12 @@ export class DailySummaryPlugin extends GlobalPlugin {
     private async onScheduledTime(): Promise<void> {
         await this.postDailySummary();
         this.armTimer();
+        try {
+            const expired = new Date(Date.now() - DailySummaryPlugin.GAMES_RETENTION * 24 * 60 * 60 * 1000);
+            await DatabaseHelper.db.query(SQL`DELETE FROM game_money WHERE date < ${expired}`);
+        } catch (error) {
+            Logging.error('DailySummaryPlugin: Could not remove old game money', error);
+        }
     }
 
     private async postDailySummary(): Promise<void> {
@@ -120,6 +143,12 @@ export class DailySummaryPlugin extends GlobalPlugin {
         }
 
         content += `\nTotal: ${totalMessages} messages, ${totalUniqueUsers} unique users`;
+        // The games must never cost the room stats
+        try {
+            content += await this.getGamesSummary(yesterday, now);
+        } catch (error) {
+            Logging.error('DailySummaryPlugin: Could not summarize the games', error);
+        }
 
         // Send to main room
         await mainRoom.sendMessage({
@@ -128,5 +157,56 @@ export class DailySummaryPlugin extends GlobalPlugin {
         });
 
         Logging.info(`DailySummaryPlugin: Posted summary to main room ${mainRoom.id}`);
+    }
+
+    /**
+     * What the party games took and gave: empty when nobody played
+     */
+    private async getGamesSummary(from: Date, to: Date): Promise<string> {
+        // A refund cancels its bet, so it counts in neither
+        const result = await DatabaseHelper.db.query(SQL`
+            SELECT
+                users.username_custom as username,
+                SUM(CASE game_money.kind WHEN 'bet' THEN -game_money.amount ELSE game_money.amount END) as net,
+                SUM(CASE game_money.kind WHEN 'bet' THEN game_money.amount WHEN 'refund' THEN -game_money.amount ELSE 0 END) as bet
+            FROM game_money
+            JOIN users ON users.id = game_money.user_id
+            WHERE game_money.date >= ${from} AND game_money.date < ${to}
+            GROUP BY users.id
+        `);
+
+        // Someone whose bets all came back did not play
+        const stats: GameStats[] = result.rows
+            .map((row) => ({ username: row.username, net: Number(row.net), bet: Number(row.bet) }))
+            .filter((s) => s.bet > 0 || s.net !== 0);
+        if (stats.length === 0) {
+            return '';
+        }
+
+        // Daily Roll is free: its winners are named, but they bet nothing
+        const totalBet = stats.reduce((total, s) => total + s.bet, 0);
+        const bettors = stats.filter((s) => s.bet > 0).length;
+        let content = `\n\nGames: ${formatMoney(totalBet)} bet`;
+        if (bettors > 0) {
+            content += ` by ${bettors} ${bettors > 1 ? 'players' : 'player'}`;
+        }
+
+        const winners = stats
+            .filter((s) => s.net > 0)
+            .sort((a, b) => b.net - a.net)
+            .slice(0, DailySummaryPlugin.GAMES_TOP);
+        if (winners.length > 0) {
+            content += `\n- Winners: ${winners.map((s) => `${s.username} +${formatMoney(s.net)}`).join(', ')}`;
+        }
+
+        const losers = stats
+            .filter((s) => s.net < 0)
+            .sort((a, b) => a.net - b.net)
+            .slice(0, DailySummaryPlugin.GAMES_TOP);
+        if (losers.length > 0) {
+            content += `\n- Losers: ${losers.map((s) => `${s.username} ${formatMoney(s.net)}`).join(', ')}`;
+        }
+
+        return content;
     }
 }
