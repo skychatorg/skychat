@@ -3,7 +3,7 @@ import { Connection } from '../../../skychat/Connection.js';
 import { Session } from '../../../skychat/Session.js';
 import { SanitizedUser } from '../../../skychat/User.js';
 import { logFailure } from '../casino/BlackjackTable.js';
-import { GameMoney } from '../GameMoney.js';
+import { UserController } from '../../../skychat/UserController.js';
 import type { Party } from './Party.js';
 
 /**
@@ -117,7 +117,7 @@ export class Crash {
         const seat: Bet = { session, bet: amount, cashedAt: null, payout: null };
         this.bets.push(seat);
         try {
-            await GameMoney.bet(session.user, amount, 'Crash bet');
+            await UserController.buy(session.user, amount, 'Crash bet', 'bet');
         } catch (error) {
             this.bets.splice(this.bets.indexOf(seat), 1);
             throw error;
@@ -143,7 +143,7 @@ export class Crash {
         seat.cashedAt = multiplier;
         seat.payout = Math.floor((seat.bet * multiplier) / 100);
         this.broadcast();
-        await GameMoney.win(session.user, seat.payout, 'Crash win');
+        await UserController.giveMoney(session.user, seat.payout, 'Crash win', 'win');
     }
 
     public async onSessionLeft(session: Session): Promise<void> {
@@ -151,7 +151,7 @@ export class Crash {
         const seat = this.bets.find((b) => b.session === session);
         if (seat && this.phase === 'betting') {
             this.bets.splice(this.bets.indexOf(seat), 1);
-            await GameMoney.refund(session.user, seat.bet, 'Crash refund');
+            await UserController.giveMoney(session.user, seat.bet, 'Crash refund', 'refund');
             this.broadcast();
         }
     }
@@ -169,7 +169,9 @@ export class Crash {
         this.clearTimers();
         if (this.phase !== 'crashed') {
             await Promise.all(
-                this.bets.filter((b) => b.cashedAt === null).map((b) => GameMoney.refund(b.session.user, b.bet, 'Crash refund')),
+                this.bets
+                    .filter((b) => b.cashedAt === null)
+                    .map((b) => UserController.giveMoney(b.session.user, b.bet, 'Crash refund', 'refund')),
             );
         }
         this.bets = [];
@@ -236,7 +238,7 @@ export class Crash {
             seat.payout = capped ? Math.floor((seat.bet * this.crashPoint) / 100) : 0;
         }
         if (capped) {
-            logFailure(Promise.all(riding.map((seat) => GameMoney.win(seat.session.user, seat.payout!, 'Crash win'))));
+            logFailure(Promise.all(riding.map((seat) => UserController.giveMoney(seat.session.user, seat.payout!, 'Crash win', 'win'))));
         }
         this.broadcast();
         this.schedule(this.timings.crashedMs, () => (this.flight >= Crash.FLIGHTS ? this.end() : this.openBets()));

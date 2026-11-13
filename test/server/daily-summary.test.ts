@@ -1,8 +1,8 @@
 import { beforeAll, describe, expect, it } from 'vitest';
-import { GameMoney } from '../../app/server/plugins/player/GameMoney.js';
 import { PlayerChannel } from '../../app/server/plugins/player/PlayerChannel.js';
 import { PlayerPlugin } from '../../app/server/plugins/player/PlayerPlugin.js';
 import { DatabaseHelper } from '../../app/server/skychat/DatabaseHelper.js';
+import { UserController } from '../../app/server/skychat/UserController.js';
 import { TestServer } from './harness.js';
 
 type Query = { text: string; values: unknown[] };
@@ -12,7 +12,7 @@ let n = 0;
 const name = (prefix: string) => `${prefix}${++n}`;
 /** What the database answers about the games: one row per player, sums as strings, the way pg sends them */
 let played: { username: string; net: string; bet: string }[] = [];
-/** Every move written for the summary: user id, kind, amount */
+/** Every money change written: user id, signed amount, kind */
 const moves: unknown[][] = [];
 /** Makes writing a move fail */
 let down = false;
@@ -21,13 +21,13 @@ beforeAll(async () => {
     server = await new TestServer().start();
     const query = DatabaseHelper.db.query;
     DatabaseHelper.db.query = (async (q: Query) => {
-        if (/insert into game_money/i.test(q.text)) {
+        if (/insert into money_changes/i.test(q.text)) {
             if (down) {
                 throw new Error('DB down');
             }
             moves.push(q.values.slice(0, 3));
         }
-        if (/select[\s\S]*from game_money/i.test(q.text)) {
+        if (/select[\s\S]*sum[\s\S]*from money_changes/i.test(q.text)) {
             return { rows: played };
         }
         return query(q);
@@ -95,21 +95,23 @@ describe('daily summary', () => {
     });
 });
 
-describe('game money', () => {
-    it('moves the money and keeps every bet, win and refund', async () => {
+describe('money changes', () => {
+    it('moves the money and keeps every change with its kind', async () => {
         const { user } = (await server.connect(name('gambler'))).session;
         user.money = 5000;
         moves.length = 0;
 
-        await GameMoney.bet(user, 2000, 'Crash bet');
-        await GameMoney.win(user, 3000, 'Crash win');
-        await GameMoney.refund(user, 2000, 'Crash refund');
+        await UserController.buy(user, 2000, 'Crash bet', 'bet');
+        await UserController.giveMoney(user, 3000, 'Crash win', 'win');
+        await UserController.giveMoney(user, 2000, 'Crash refund', 'refund');
+        await UserController.buy(user, 100, 'Wizz');
 
-        expect(user.money).toBe(8000);
+        expect(user.money).toBe(7900);
         expect(moves).toEqual([
-            [user.id, 'bet', 2000],
-            [user.id, 'win', 3000],
-            [user.id, 'refund', 2000],
+            [user.id, -2000, 'bet'],
+            [user.id, 3000, 'win'],
+            [user.id, 2000, 'refund'],
+            [user.id, -100, 'other'],
         ]);
     });
 
@@ -118,7 +120,7 @@ describe('game money', () => {
         user.money = 500;
         moves.length = 0;
 
-        await expect(GameMoney.bet(user, 2000, 'Crash bet')).rejects.toThrow();
+        await expect(UserController.buy(user, 2000, 'Crash bet', 'bet')).rejects.toThrow();
 
         expect(user.money).toBe(500);
         expect(moves).toEqual([]);
@@ -129,7 +131,7 @@ describe('game money', () => {
         user.money = 5000;
         down = true;
 
-        await GameMoney.bet(user, 2000, 'Crash bet');
+        await UserController.buy(user, 2000, 'Crash bet', 'bet');
         down = false;
 
         expect(user.money).toBe(3000);
@@ -154,8 +156,8 @@ describe('game money', () => {
         await alice.send('/playerchannel leave');
 
         expect(moves).toEqual([
-            [alice.session.user.id, 'bet', 2000],
-            [alice.session.user.id, 'refund', 2000],
+            [alice.session.user.id, -2000, 'bet'],
+            [alice.session.user.id, 2000, 'refund'],
         ]);
         await admin.send(`/playerchannelmanage delete ${channel.id}`);
     });

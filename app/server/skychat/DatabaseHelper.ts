@@ -58,16 +58,18 @@ CREATE TABLE IF NOT EXISTS state_counters (
   value int NOT NULL
 );
 
--- Every bet, win and refund of the party games, for the daily summary
-CREATE TABLE IF NOT EXISTS game_money (
+-- Every change to a user's money: their history in Preferences, and the games in the daily summary
+CREATE TABLE IF NOT EXISTS money_changes (
   id SERIAL PRIMARY KEY,
   user_id INTEGER NOT NULL,
-  kind varchar(8) NOT NULL,
   amount int NOT NULL,
+  kind varchar(8) NOT NULL,
+  reason text NOT NULL,
   date timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS game_money_date_index ON game_money (date);
+CREATE INDEX IF NOT EXISTS money_changes_date_index ON money_changes (date);
+CREATE INDEX IF NOT EXISTS money_changes_user_index ON money_changes (user_id, id);
 `;
 
 /**

@@ -4,7 +4,7 @@ import { Connection } from '../../../skychat/Connection.js';
 import { Session } from '../../../skychat/Session.js';
 import { SanitizedUser } from '../../../skychat/User.js';
 import { logFailure } from '../casino/BlackjackTable.js';
-import { GameMoney } from '../GameMoney.js';
+import { UserController } from '../../../skychat/UserController.js';
 import type { Party } from './Party.js';
 
 /**
@@ -152,7 +152,7 @@ export class HotPotato {
         this.seats.push(seat);
         this.stake = stake;
         try {
-            await GameMoney.bet(session.user, stake, 'Hot Potato stake');
+            await UserController.buy(session.user, stake, 'Hot Potato stake', 'bet');
         } catch (error) {
             this.seats.splice(this.seats.indexOf(seat), 1);
             if (!this.seats.length) {
@@ -221,7 +221,7 @@ export class HotPotato {
             seat.paid += fee;
             this.broadcast();
             try {
-                await GameMoney.bet(seat.session.user, fee, 'Hot Potato pass');
+                await UserController.buy(seat.session.user, fee, 'Hot Potato pass', 'bet');
             } catch (error) {
                 this.pot -= fee;
                 seat.paid -= fee;
@@ -253,7 +253,7 @@ export class HotPotato {
             if (!this.seats.length) {
                 this.stake = null;
             }
-            await GameMoney.refund(session.user, stake, 'Hot Potato refund');
+            await UserController.giveMoney(session.user, stake, 'Hot Potato refund', 'refund');
             this.broadcast();
             return;
         }
@@ -281,7 +281,7 @@ export class HotPotato {
         clearTimeout(this.passTimer);
         const seats = this.phase === 'done' ? [] : this.seats;
         this.seats = [];
-        await Promise.all(seats.map((s) => GameMoney.refund(s.session.user, s.paid, 'Hot Potato refund')));
+        await Promise.all(seats.map((s) => UserController.giveMoney(s.session.user, s.paid, 'Hot Potato refund', 'refund')));
     }
 
     public sanitized(): SanitizedHotPotato {
@@ -336,7 +336,7 @@ export class HotPotato {
         if (this.seats.length < HotPotato.MIN_PLAYERS) {
             const seats = this.seats;
             this.seats = [];
-            logFailure(Promise.all(seats.map((s) => GameMoney.refund(s.session.user, s.paid, 'Hot Potato refund'))));
+            logFailure(Promise.all(seats.map((s) => UserController.giveMoney(s.session.user, s.paid, 'Hot Potato refund', 'refund'))));
             this.end();
             return;
         }
@@ -387,7 +387,7 @@ export class HotPotato {
         this.broadcast();
         // Scheduled before paying, so a game torn down meanwhile never starts another round
         this.schedule(this.timings.resultsMs, () => (this.round >= HotPotato.ROUNDS ? this.end() : this.openJoining()));
-        await Promise.all(winners.map((seat) => GameMoney.win(seat.session.user, seat.payout!, 'Hot Potato win')));
+        await Promise.all(winners.map((seat) => UserController.giveMoney(seat.session.user, seat.payout!, 'Hot Potato win', 'win')));
     }
 
     /**

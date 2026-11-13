@@ -84,6 +84,12 @@ watch(
         }
     },
 );
+
+// Money history: fetched while the drawer is open, again whenever the balance moves
+watch(
+    () => app.modals.profile && client.state.user.money,
+    () => app.modals.profile && client.sendMessage('/moneyhistory'),
+);
 </script>
 
 <template>
