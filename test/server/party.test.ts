@@ -41,14 +41,14 @@ async function until(check: () => boolean, ms = 2000) {
 
 const scripted = (rolls: number[]) => (max: number) => (rolls.length ? (rolls.shift() as number) : max - 1);
 /** Lucky Pop skies with a special balloon at id 0. The hot air one also rolls no second special and keeps the sky in order, so its burst roll can come next */
-const PEEK = [0, 1];
-const PINATA = [0, 2];
-const FREEZE = [0, 4];
-const PATIENCE = [0, 5];
-const EGG = [0, 6];
+const PEEK = [0, 0];
+const PINATA = [0, 1];
+const FREEZE = [0, 3];
+const PATIENCE = [0, 4];
+const EGG = [0, 5];
 /** No special, the sky in order, then a happy hour */
 const HAPPY_HOUR = [99, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 0];
-const HOT_AIR = [0, 3, 99, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1];
+const HOT_AIR = [0, 2, 99, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1];
 
 /**
  * A party channel with short timers and the given players in it, $200 each (money is in cents)
@@ -273,20 +273,13 @@ describe('party cycle', () => {
 });
 
 describe('lucky pop', () => {
-    it('fills a sky with 7 xs, 4 md and 1 lg, and in most rounds a special one instead of an xs, or an md for the golden one', async () => {
+    it('fills a sky with 7 xs, 4 md and 1 lg, and in most rounds a special one instead of an xs', async () => {
         const { party, clients } = await partyChannel(1);
         await clients[0].send('/party pick luckypop');
         const sizes = (pop: LuckyPop) => pop.sanitizedFor(clients[0].session).balloons.map((b) => b.size);
         expect(sizes(party.luckyPop!).sort()).toEqual(['lg', ...Array(4).fill('md'), ...Array(7).fill('xs')]);
 
-        const golden = new LuckyPop(party, () => {});
-        golden.random = scripted([LuckyPop.SPECIAL_CHANCE - 1, 0]);
-        golden.start();
-        expect(sizes(golden).filter((s) => s === 'golden')).toHaveLength(1);
-        expect(sizes(golden).filter((s) => s === 'md')).toHaveLength(3);
-        await golden.destroy();
-
-        // Alone, only golden, peek and egg: the last special is the egg
+        // Alone, only peek and egg: the last special is the egg
         const solo = new LuckyPop(party, () => {});
         solo.random = scripted([0]);
         solo.start();
@@ -301,15 +294,41 @@ describe('lucky pop', () => {
         await peek.destroy();
     });
 
+    it('turns some plain balloons golden: same price, golden prizes, no malus', async () => {
+        const { party, clients } = await partyChannel(1);
+        const [alice] = clients;
+        await alice.send('/party pick luckypop');
+        const golden = new LuckyPop(party, () => {});
+        // Every roll out of 100 at 0: two specials (peek and egg), a happy hour, and every plain balloon golden
+        golden.random = (max) => (max === 100 ? 0 : max - 1);
+        golden.start();
+        const balloons = golden.sanitizedFor(alice.session).balloons;
+        expect(balloons.filter((b) => b.golden)).toHaveLength(10);
+        expect(
+            balloons
+                .filter((b) => !b.golden)
+                .map((b) => b.size)
+                .sort(),
+        ).toEqual(['egg', 'peek']);
+
+        // The last golden xs prize, $3, for $1
+        const xs = balloons.find((b) => b.size === 'xs')!;
+        golden.random = (max) => max - 1;
+        await golden.pop(alice.session, xs.id);
+        expect(golden.sanitizedFor(alice.session).balloons[xs.id].result).toMatchObject({ kind: 'money', amount: 300 });
+        expect(alice.session.user.money).toBe(20000 - 100 + 300);
+        await golden.destroy();
+    });
+
     it('sometimes adds a second special, never the same as the first', async () => {
         const { party, clients } = await partyChannel(2);
         await clients[0].send('/party pick luckypop');
         const two = new LuckyPop(party, () => {});
-        // Golden, then the third of those left
-        two.random = scripted([0, 0, 0, 2]);
+        // Peek, then the second of those left
+        two.random = scripted([0, 0, 0, 1]);
         two.start();
         const specials = two.sanitizedFor(clients[0].session).balloons.filter((b) => !['xs', 'md', 'lg'].includes(b.size));
-        expect(specials.map((b) => b.size).sort()).toEqual(['golden', 'hotair']);
+        expect(specials.map((b) => b.size).sort()).toEqual(['hotair', 'peek']);
         await two.destroy();
     });
 
@@ -608,7 +627,7 @@ describe('lucky pop', () => {
 
     it('never turns a balloon someone peeked at into the patience balloon', async () => {
         // Peek at id 0, then patience as the second special
-        const { party, clients } = await partyChannel(2, { sky: [0, 1, 0, 4] });
+        const { party, clients } = await partyChannel(2, { sky: [0, 0, 0, 3] });
         const [alice, bob] = clients;
         await alice.send('/party pick luckypop');
         // Alice peeks at ids 1, 2 and 3, Bob pops id 4, then the first balloon left that nobody peeked turns
@@ -622,7 +641,7 @@ describe('lucky pop', () => {
         expect(alice.last('lucky-pop').balloons[1].peek).not.toBeNull();
     });
 
-    it('pays a little for an egg, or hatches it into a golden balloon when nobody pops it in time', async () => {
+    it('pays a little for an egg, or hatches it into a golden md when nobody pops it in time', async () => {
         const { party, clients } = await partyChannel(2, { sky: EGG });
         const [alice] = clients;
         await alice.send('/party pick luckypop');
@@ -636,7 +655,7 @@ describe('lucky pop', () => {
         hatching.start();
         expect(hatching.sanitizedFor(alice.session).balloons[0].size).toBe('egg');
         await settle(50);
-        expect(hatching.sanitizedFor(alice.session).balloons[0].size).toBe('golden');
+        expect(hatching.sanitizedFor(alice.session).balloons[0]).toMatchObject({ size: 'md', golden: true });
         await hatching.destroy();
     });
 
@@ -689,6 +708,19 @@ describe('lucky pop', () => {
         await settle(150);
 
         expect(party.sanitized()).toMatchObject({ phase: 'vote', lastGame: 'luckypop' });
+    });
+
+    it('waits for a butterfingered player to pop again before ending an idle round', async () => {
+        const { party, clients } = await partyChannel(1);
+        await clients[0].send('/party pick luckypop');
+        party.luckyPop!.timings.idleMs = 80;
+        // xs malus, the third one: butterfingers for 300 ms
+        rig(party, [85, 2]);
+
+        await clients[0].send('/party pop 0');
+        await settle(250);
+        expect(party.sanitized().phase).toBe('playing');
+        await until(() => party.sanitized().phase === 'vote');
     });
 
     it('ends the round on its timer, or right after the last balloon', async () => {

@@ -9,7 +9,7 @@ import { logFailure } from '../casino/BlackjackTable.js';
 import { shuffle } from './shuffle.js';
 import type { Party } from './Party.js';
 
-export type BalloonSize = 'xs' | 'md' | 'lg' | 'golden' | 'pinata' | 'hotair' | 'peek' | 'freeze' | 'patience' | 'egg';
+export type BalloonSize = 'xs' | 'md' | 'lg' | 'pinata' | 'hotair' | 'peek' | 'freeze' | 'patience' | 'egg';
 
 export type PrizeKind = 'money' | 'jackpot' | 'pinata' | 'peek' | 'freeze' | 'empty' | 'malus' | 'lose';
 
@@ -56,15 +56,6 @@ export const BALLOONS: { [size in BalloonSize]: { price: number; prizes: Prize[]
         ],
         maluses: ['storm', 'grounded-sandale'],
     },
-    golden: {
-        price: 500,
-        prizes: [
-            { chance: 60, kind: 'money', amount: 600 },
-            { chance: 30, kind: 'money', amount: 1000 },
-            { chance: 10, kind: 'money', amount: 1400 },
-        ],
-        maluses: [],
-    },
     // Each hit costs the price and goes into the pot, whoever bursts it takes the pot
     pinata: { price: 100, prizes: [], maluses: [] },
     // Its prize starts at its price and doubles every HOT_AIR_DOUBLE_MS, until someone pops it or it bursts on its own
@@ -75,8 +66,38 @@ export const BALLOONS: { [size in BalloonSize]: { price: number; prizes: Prize[]
     freeze: { price: 25, prizes: [], maluses: [] },
     // Never in the sky at first: a balloon turns into it once two players have popped. Its prize grows with every pop after that
     patience: { price: 500, prizes: [], maluses: [] },
-    // Pays EGG_PRIZE, or hatches into a golden balloon if nobody pops it in time
+    // Pays EGG_PRIZE, or hatches into a golden md if nobody pops it in time
     egg: { price: 50, prizes: [], maluses: [] },
+};
+
+type PlainSize = 'xs' | 'md' | 'lg';
+
+/** A plain balloon's rare variant: same price, no malus, about 160% back. `chance` is in percent, per balloon */
+export const GOLDEN: { [size in PlainSize]: { chance: number; prizes: Prize[] } } = {
+    xs: {
+        chance: 4,
+        prizes: [
+            { chance: 60, kind: 'money', amount: 120 },
+            { chance: 30, kind: 'money', amount: 200 },
+            { chance: 10, kind: 'money', amount: 300 },
+        ],
+    },
+    md: {
+        chance: 3,
+        prizes: [
+            { chance: 60, kind: 'money', amount: 600 },
+            { chance: 30, kind: 'money', amount: 1000 },
+            { chance: 10, kind: 'money', amount: 1400 },
+        ],
+    },
+    lg: {
+        chance: 2,
+        prizes: [
+            { chance: 60, kind: 'money', amount: 2400 },
+            { chance: 30, kind: 'money', amount: 4000 },
+            { chance: 10, kind: 'money', amount: 5600 },
+        ],
+    },
 };
 
 export const MALUS_LABELS: { [malus in Malus]: string } = {
@@ -89,12 +110,12 @@ export const MALUS_LABELS: { [malus in Malus]: string } = {
     'grounded-sandale': 'grounded, and next message turns into 👞',
 };
 
-/** 7 xs, 4 md, 1 lg, and in most rounds one special balloon in place of an xs (or an md for the golden one) */
+/** 7 xs, 4 md, 1 lg, and in most rounds a special balloon in place of an xs */
 const SKY: BalloonSize[] = ['xs', 'xs', 'xs', 'xs', 'xs', 'xs', 'xs', 'md', 'md', 'md', 'md', 'lg'];
 
-const SPECIALS: BalloonSize[] = ['golden', 'peek', 'pinata', 'hotair', 'freeze', 'patience', 'egg'];
+const SPECIALS: BalloonSize[] = ['peek', 'pinata', 'hotair', 'freeze', 'patience', 'egg'];
 /** The others are races between players: a player alone only gets these */
-const SOLO_SPECIALS: BalloonSize[] = ['golden', 'peek', 'egg'];
+const SOLO_SPECIALS: BalloonSize[] = ['peek', 'egg'];
 
 /**
  * - `prize`: drawn on the first peek or pop, so a peek shows what the pop will give
@@ -103,6 +124,7 @@ const SOLO_SPECIALS: BalloonSize[] = ['golden', 'peek', 'egg'];
 type Balloon = {
     id: number;
     size: BalloonSize;
+    golden: boolean;
     popped: boolean;
     result: BalloonResult | null;
     prize: Prize | null;
@@ -121,6 +143,7 @@ export type SanitizedLuckyPop = {
     balloons: {
         id: number;
         size: BalloonSize;
+        golden: boolean;
         popped: boolean;
         result: BalloonResult | null;
         hits: number;
@@ -132,6 +155,8 @@ export type SanitizedLuckyPop = {
     }[];
     /** What each size costs and holds, shown on hover. Maluses are only named once someone gets one */
     sizes: { [size in BalloonSize]: { price: number; prizes: Prize[] } };
+    /** What the golden variant of each plain size holds */
+    golden: { [size in PlainSize]: Prize[] };
     /** One hit in this many bursts the piñata */
     pinataOdds: number;
     /** The hot air balloon's prize is its price × 2^((now − startedAt) / doubleMs) */
@@ -184,6 +209,10 @@ export class LuckyPop {
     static readonly SIZES = Object.fromEntries(
         Object.entries(BALLOONS).map(([size, { price, prizes }]) => [size, { price, prizes }]),
     ) as SanitizedLuckyPop['sizes'];
+
+    static readonly GOLDEN_PRIZES = Object.fromEntries(
+        Object.entries(GOLDEN).map(([size, { prizes }]) => [size, prizes]),
+    ) as SanitizedLuckyPop['golden'];
 
     /** Instance values, so tests can shorten them */
     public timings = {
@@ -263,12 +292,18 @@ export class LuckyPop {
             const { happyHourFromMs: from, happyHourToMs: to } = this.timings;
             this.eventTimers.push(setTimeout(() => this.startHappyHour(), from + this.random(to - from + 1)));
         }
+        // Drawn last, so tests can script the sky and its events without them
+        for (const balloon of this.balloons) {
+            const golden = GOLDEN[balloon.size as PlainSize];
+            balloon.golden = Boolean(golden) && this.random(100) < golden.chance;
+        }
     }
 
-    /** Nobody popped the egg in time: it becomes a golden balloon */
+    /** Nobody popped the egg in time: it becomes a golden md */
     private hatch(egg: Balloon): void {
         if (!egg.popped && !this.over) {
-            egg.size = 'golden';
+            egg.size = 'md';
+            egg.golden = true;
             this.broadcast();
         }
     }
@@ -354,9 +389,10 @@ export class LuckyPop {
         return {
             channelId: this.party.channel.id,
             deadline: this.deadline,
-            balloons: this.balloons.map(({ id, size, popped, result, hits, pot, prize, peekedBy }) => ({
+            balloons: this.balloons.map(({ id, size, golden, popped, result, hits, pot, prize, peekedBy }) => ({
                 id,
                 size,
+                golden,
                 popped,
                 result,
                 hits,
@@ -366,6 +402,7 @@ export class LuckyPop {
                 worth: size === 'patience' && !popped ? this.patienceWorth() : null,
             })),
             sizes: LuckyPop.SIZES,
+            golden: LuckyPop.GOLDEN_PRIZES,
             pinataOdds: LuckyPop.PINATA_ODDS,
             hotAir: { startedAt: this.startedAt, doubleMs: this.timings.hotAirDoubleMs },
             happyHour: this.happyHourUntil > Date.now() ? this.happyHourUntil : null,
@@ -389,7 +426,7 @@ export class LuckyPop {
                 if (special === 'patience') {
                     this.patience = 'waiting';
                 } else {
-                    sizes[sizes.indexOf(special === 'golden' ? 'md' : 'xs')] = special;
+                    sizes[sizes.indexOf('xs')] = special;
                 }
             };
             add();
@@ -401,6 +438,7 @@ export class LuckyPop {
         return shuffle(sizes, this.random).map((size, id) => ({
             id,
             size,
+            golden: false,
             popped: false,
             result: null,
             prize: null,
@@ -467,7 +505,7 @@ export class LuckyPop {
     /** Once two players have popped, a random balloon left turns into the patience balloon */
     private maybeRevealPatience(): void {
         const poppers = new Set(this.balloons.map((b) => b.result?.username).filter(Boolean));
-        const regular = this.balloons.filter((b) => !b.popped && ['xs', 'md', 'lg'].includes(b.size));
+        const regular = this.balloons.filter((b) => !b.popped && !b.golden && ['xs', 'md', 'lg'].includes(b.size));
         // A balloon nobody peeked at, so no one holds a peek of what it used to be
         const unpeeked = regular.filter((b) => !b.peekedBy.size);
         const left = unpeeked.length ? unpeeked : regular;
@@ -483,7 +521,7 @@ export class LuckyPop {
      * Ends the round soon when nothing worth playing is left:
      * - only balloons that pay nothing are left
      * - every player is grounded
-     * - nobody popped or hit for a while, unless a hot air balloon is still up: waiting is its game
+     * - nobody popped or hit for a while once everyone could, unless a hot air balloon or egg is still up: waiting is their game
      */
     private afterPop(): void {
         this.maybeRevealPatience();
@@ -494,12 +532,21 @@ export class LuckyPop {
             this.endSoon();
             return;
         }
+        this.armIdle();
+    }
+
+    /** Counted from when every player can pop again: a butterfingers malus must not run out the round */
+    private armIdle(): void {
         clearTimeout(this.idleTimer);
-        const idle = () => {
-            const hotAirUp = this.balloons.some((b) => ['hotair', 'egg'].includes(b.size) && !b.popped);
-            this.idleTimer = setTimeout(hotAirUp ? idle : () => this.endSoon(), this.timings.idleMs);
-        };
-        idle();
+        const now = Date.now();
+        const freeAt = Math.max(now, ...this.party.players().map((s) => this.nextPopAt.get(s) ?? 0));
+        this.idleTimer = setTimeout(
+            () => {
+                const waiting = this.balloons.some((b) => ['hotair', 'egg'].includes(b.size) && !b.popped);
+                return waiting ? this.armIdle() : this.endSoon();
+            },
+            freeAt - now + this.timings.idleMs,
+        );
     }
 
     private endSoon(): void {
@@ -509,9 +556,9 @@ export class LuckyPop {
         this.timer = setTimeout(() => this.end(), this.timings.lastPopBeatMs);
     }
 
-    private draw(size: BalloonSize): Prize {
+    private draw({ size, golden }: Balloon): Prize {
         let roll = this.random(100);
-        const { prizes } = BALLOONS[size];
+        const prizes = golden ? GOLDEN[size as PlainSize].prizes : BALLOONS[size].prizes;
         return prizes.find((prize) => (roll -= prize.chance) < 0) ?? prizes[prizes.length - 1];
     }
 
@@ -553,9 +600,9 @@ export class LuckyPop {
             const seen: string[] = [];
             while (pool.length && seen.length < LuckyPop.PEEKS) {
                 const [target] = pool.splice(this.random(pool.length), 1);
-                target.prize ??= this.draw(target.size);
+                target.prize ??= this.draw(target);
                 target.peekedBy.add(session);
-                seen.push(target.size === 'golden' ? 'the golden' : 'an ' + target.size);
+                seen.push((target.golden ? 'a golden ' : 'an ') + target.size);
             }
             const list = seen.length > 1 ? `${seen.slice(0, -1).join(', ')} and ${seen.at(-1)}` : seen[0];
             return { ...base, kind: 'peek', label: `peeked inside ${list} balloon${seen.length > 1 ? 's' : ''}` };
@@ -564,7 +611,7 @@ export class LuckyPop {
             await UserController.giveMoney(session.user, LuckyPop.EGG_PRIZE, 'Lucky Pop win');
             return { ...base, kind: 'money', amount: LuckyPop.EGG_PRIZE, label: '+' + formatMoney(LuckyPop.EGG_PRIZE) };
         }
-        const prize = (balloon.prize ??= this.draw(size));
+        const prize = (balloon.prize ??= this.draw(balloon));
         const result = { ...base, kind: prize.kind, label: '' };
         switch (prize.kind) {
             case 'money':

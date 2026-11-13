@@ -11,7 +11,6 @@ const SIZE_LABELS = {
     xs: 'xs',
     md: 'md',
     lg: 'lg',
-    golden: 'golden',
     pinata: 'piñata',
     hotair: 'hot air',
     peek: 'peek',
@@ -22,6 +21,7 @@ const SIZE_LABELS = {
 /** Drawn on the special balloons that have no look of their own */
 const MARKS = { peek: '?', freeze: '❄', patience: '⏳' };
 const MALUS_WORDS = { xs: 'mild', md: 'medium', lg: 'nasty' };
+const nameOf = ({ size, golden }) => (golden ? 'golden ' : '') + SIZE_LABELS[size];
 // A popped balloon has room for a word or two: the feed has the full text
 const MALUS_TAGS = {
     wizz: 'wizzed',
@@ -121,7 +121,7 @@ const rules = (size, price) =>
         ],
         peek: ['no prize inside', 'shows you what another', 'balloon holds, only you'],
         freeze: ['nobody else can pop', 'for 10 s: the sky is yours'],
-        egg: ['a tiny prize if popped', `hatches into a golden balloon`, `in ${hatchIn.value}s if nobody pops it`],
+        egg: ['a tiny prize if popped', 'hatches into a golden md', `in ${hatchIn.value}s if nobody pops it`],
         patience: ['its prize grows with every', 'other balloon popped', 'first to pop it takes it'],
     })[size]?.map((text) => ({ text, kind: 'muted' }));
 
@@ -151,12 +151,14 @@ const balloons = computed(() =>
                     ? `Pop the hot air balloon for ${formatMoney(price)}, prize ${hotAirPrize}`
                     : balloon.size === 'patience'
                     ? `Pop the patience balloon for ${formatMoney(price)}, prize ${formatMoney(balloon.worth)}`
-                    : `Pop ${['xs', 'md', 'lg'].includes(balloon.size) ? 'an' : 'the'} ${
-                          SIZE_LABELS[balloon.size]
-                      } balloon for ${formatMoney(price)}${balloon.peek ? `, you peeked: ${peekTag(balloon.peek)}` : ''}`,
+                    : `Pop ${balloon.golden ? 'a' : ['xs', 'md', 'lg'].includes(balloon.size) ? 'an' : 'the'} ${nameOf(
+                          balloon,
+                      )} balloon for ${formatMoney(price)}${balloon.peek ? `, you peeked: ${peekTag(balloon.peek)}` : ''}`,
             odds:
                 rules(balloon.size, formatMoney(price)) ??
-                sky.value.sizes[balloon.size].prizes.map((prize) => oddsLine(balloon.size, prize)),
+                (balloon.golden ? sky.value.golden[balloon.size] : sky.value.sizes[balloon.size].prizes).map((prize) =>
+                    oddsLine(balloon.size, prize),
+                ),
             grow: balloon.size === 'hotair' ? Math.min(1.8, 1 + Math.log2(multiplier.value) * 0.2) : 1,
             spot: spot(balloon.id),
             mine: balloon.result?.username === client.state.user.username,
@@ -184,7 +186,7 @@ const feed = computed(() =>
     sky.value.balloons
         .filter((b) => b.result)
         .sort((a, b) => b.result.order - a.result.order)
-        .map((b) => ({ ...b.result, size: b.size })),
+        .map((b) => ({ ...b.result, name: nameOf(b) })),
 );
 
 // Every hit on the piñata is heard by the whole room
@@ -199,7 +201,7 @@ watch(
     (shown, before) => soundOn.value && shown && !before && playCasinoSound('sparkle'),
 );
 watch(
-    () => sky.value.balloons.filter((b) => b.size === 'golden').length,
+    () => sky.value.balloons.filter((b) => b.golden).length,
     (count, before) => soundOn.value && count > before && playCasinoSound('sparkle'),
 );
 // Happy hour starts with a fanfare
@@ -247,6 +249,7 @@ watch(
                             :class="[
                                 balloon.size,
                                 {
+                                    golden: balloon.golden,
                                     shown: shown === balloon.id,
                                     high: balloon.id < 6,
                                     west: balloon.id % 6 < 2,
@@ -294,8 +297,7 @@ watch(
                             <span class="price">{{ balloon.label }}</span>
                             <span :id="`odds-${balloon.id}`" class="odds" role="tooltip">
                                 <span class="odds-title"
-                                    >{{ balloon.size === 'golden' ? 'golden, no malus' : SIZE_LABELS[balloon.size] }} ·
-                                    {{ balloon.label }}</span
+                                    >{{ nameOf(balloon) }}{{ balloon.golden ? ', no malus' : '' }} · {{ balloon.label }}</span
                                 >
                                 <span v-for="(line, i) in balloon.odds" :key="i" :class="line.kind">{{ line.text }}</span>
                             </span>
@@ -314,7 +316,7 @@ watch(
                 <ol class="feed" aria-label="What popped" aria-live="polite">
                     <li v-for="entry in feed" :key="entry.order">
                         <b v-if="entry.username">{{ entry.username }}</b>
-                        <span class="muted">{{ entry.size === 'golden' ? 'golden' : SIZE_LABELS[entry.size] }}:</span>
+                        <span class="muted">{{ entry.name }}:</span>
                         <span :class="entry.kind">{{ entry.label }}</span>
                     </li>
                     <li v-if="!feed.length" class="muted">Nothing popped yet.</li>
@@ -322,7 +324,7 @@ watch(
             </div>
             <!-- Short players have no room for the odds box: one line along the bottom instead -->
             <div v-if="active" class="odds-line" aria-hidden="true">
-                <span class="muted">{{ SIZE_LABELS[active.size] }} {{ active.label }}</span>
+                <span class="muted">{{ nameOf(active) }} {{ active.label }}</span>
                 <span v-for="(line, i) in active.odds" :key="i" :class="line.kind">{{ line.text }}</span>
             </div>
         </div>
@@ -394,7 +396,6 @@ watch(
     --skin: #e5527a;
 }
 .balloon.golden {
-    --w: calc(var(--b) * 1.35);
     --skin: #ffd54a;
 }
 .balloon.pinata {
