@@ -52,8 +52,6 @@ export type SanitizedMonkeyFight = {
     deadline: number | null;
     /** Wall-clock ms of the first punch */
     startedAt: number | null;
-    /** The server's clock when this was sent, so clients play the fight on the server's time */
-    now: number;
     minBet: number;
     maxBet: number;
     /** `trait` stays null while betting: it is the surprise of the fight. `odds` are in hundredths */
@@ -348,7 +346,6 @@ export class MonkeyFight {
             fights: MonkeyFight.FIGHTS,
             deadline: this.deadline,
             startedAt: this.startedAt,
-            now: Date.now(),
             minBet: this.party.options.minBet,
             maxBet: this.party.options.maxBet,
             monkeys: this.monkeys.map((monkey) => ({ ...monkey, trait: betting ? null : monkey.trait, odds: this.odds[monkey.id] })),

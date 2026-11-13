@@ -3,6 +3,7 @@ import { useToast } from 'vue-toastification';
 import { SkyChatClient } from '../../../api/index.ts';
 import { WebPush } from '../lib/WebPush.js';
 import { triggerWizz } from '../lib/wizz.js';
+import { setServerTime } from '../lib/serverClock.js';
 import { VoiceClient } from '../lib/voice/VoiceClient.js';
 import { useAppStore } from './app';
 import { useEncryptionStore } from './encryption';
@@ -190,6 +191,7 @@ export const useClientStore = defineStore('client', {
             client.on('discord-link', (url) => {
                 window.open(url, '_blank', 'width=500,height=800');
             });
+            client.on('ping', setServerTime);
             client.on('wizz', () => {
                 triggerWizz();
             });

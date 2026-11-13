@@ -27,19 +27,11 @@ const mySeat = computed(() => game.value.players.findIndex((p) => p.user.id === 
 const joined = computed(() => mySeat.value !== -1);
 const { seconds: joinSeconds } = useCountdown(() => game.value.deadline);
 
-let offset = 0;
-watch(
-    () => game.value.now,
-    (serverNow) => (offset = serverNow - Date.now()),
-    { immediate: true },
-);
-const serverNow = computed(() => now.value + offset);
-
 const holding = computed(() => game.value.phase === 'playing' && game.value.holder === mySeat.value);
-const holdLeft = computed(() => Math.max(0, (game.value.canPassAt ?? 0) - serverNow.value));
+const holdLeft = computed(() => Math.max(0, (game.value.canPassAt ?? 0) - now.value));
 const canPass = computed(() => holding.value && holdLeft.value === 0);
 // How hard the bomb fizzes: it only ever gets worse
-const heat = computed(() => (game.value.phase === 'playing' ? Math.min(1, (serverNow.value - game.value.startedAt) / HEAT_MS) : 0));
+const heat = computed(() => (game.value.phase === 'playing' ? Math.min(1, (now.value - game.value.startedAt) / HEAT_MS) : 0));
 
 /**
  * Seats spread evenly around the circle, first one on top. While joining, one more empty seat waits for the next player
@@ -82,7 +74,7 @@ const bomb = computed(() => {
 // Everything this player held the bomb this round, counting the hold going on right now
 const heldMs = (seat) =>
     seat.heldMs +
-    (seat.holder && game.value.phase === 'playing' && game.value.heldSince ? Math.max(0, serverNow.value - game.value.heldSince) : 0);
+    (seat.holder && game.value.phase === 'playing' && game.value.heldSince ? Math.max(0, now.value - game.value.heldSince) : 0);
 
 const name = (index) => game.value.players[index]?.user.username ?? '?';
 const passes = computed(() =>

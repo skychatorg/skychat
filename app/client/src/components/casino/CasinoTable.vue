@@ -3,6 +3,7 @@ import CasinoChip from '@/components/casino/CasinoChip.vue';
 import CasinoHand from '@/components/casino/CasinoHand.vue';
 import { useCasinoSounds } from '@/composables/useCasinoSounds';
 import { useNow } from '@/composables/useNow';
+import { serverNow } from '@/lib/serverClock';
 import { betChips, betLimits } from '@/lib/channel';
 import { formatMoney } from '../../../../api/money.ts';
 import { useAppStore } from '@/stores/app';
@@ -75,7 +76,7 @@ const status = computed(() => {
 const clockMs = ref(0);
 watch(
     () => table.value.deadline,
-    (deadline) => (clockMs.value = deadline ? Math.max(0, deadline - Date.now()) : 0),
+    (deadline) => (clockMs.value = deadline ? Math.max(0, deadline - serverNow()) : 0),
     { immediate: true },
 );
 

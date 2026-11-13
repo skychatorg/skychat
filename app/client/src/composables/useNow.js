@@ -1,11 +1,12 @@
+import { serverNow } from '@/lib/serverClock';
 import { onUnmounted, ref } from 'vue';
 
 /**
- * The current time, refreshed on an interval, for countdowns to a server-given instant
+ * The server's current time, refreshed on an interval, for countdowns to a server-given instant
  */
 export function useNow(intervalMs = 250) {
-    const now = ref(Date.now());
-    const timer = setInterval(() => (now.value = Date.now()), intervalMs);
+    const now = ref(serverNow());
+    const timer = setInterval(() => (now.value = serverNow()), intervalMs);
     onUnmounted(() => clearInterval(timer));
     return now;
 }

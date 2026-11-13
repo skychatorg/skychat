@@ -29,8 +29,6 @@ export type SanitizedHotPotato = {
     deadline: number | null;
     /** Wall-clock ms the bomb was lit, it fizzes harder from there. The fuse itself is never sent */
     startedAt: number | null;
-    /** The server's clock when this was sent */
-    now: number;
     /** In cents, set by the first player to join */
     stake: number | null;
     pot: number;
@@ -294,7 +292,6 @@ export class HotPotato {
             rounds: HotPotato.ROUNDS,
             deadline: this.deadline,
             startedAt: this.startedAt,
-            now: Date.now(),
             stake: this.stake,
             pot: this.pot,
             minBet: this.party.options.minBet,

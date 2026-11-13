@@ -24,8 +24,6 @@ export type SanitizedCrash = {
     deadline: number | null;
     /** Wall-clock ms of the take-off, the multiplier grows from there */
     startedAt: number | null;
-    /** The server's clock when this was sent, so clients draw the flight on the server's time */
-    now: number;
     /** Doubling time of the multiplier, in ms */
     doubleMs: number;
     /** In hundredths, only once crashed */
@@ -185,7 +183,6 @@ export class Crash {
             flights: Crash.FLIGHTS,
             deadline: this.deadline,
             startedAt: this.startedAt,
-            now: Date.now(),
             doubleMs: this.timings.doubleMs,
             crashedAt: this.crashedAt,
             maxMultiplier: Crash.MAX_MULTIPLIER,

@@ -60,17 +60,9 @@ const { seconds: betSeconds } = useCountdown(() => fight.value.deadline);
 const times = (hundredths) => `×${(hundredths / 100).toFixed(2)}`;
 const surname = (id) => fight.value.monkeys[id].name.split(' ').at(-1);
 
-// The fight is played on the server's clock: the offset is taken from each update
-let offset = 0;
-watch(
-    () => fight.value.now,
-    (serverNow) => (offset = serverNow - Date.now()),
-    { immediate: true },
-);
-
 const events = computed(() => fight.value.events ?? []);
 // Ms since the first punch, negative during the intro
-const elapsed = computed(() => (fight.value.phase === 'fighting' ? now.value + offset - fight.value.startedAt : Infinity));
+const elapsed = computed(() => (fight.value.phase === 'fighting' ? now.value - fight.value.startedAt : Infinity));
 const intro = computed(() => fight.value.phase === 'fighting' && elapsed.value < 0);
 // Index of the event playing now, -1 before the first punch
 const beat = computed(() => {

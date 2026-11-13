@@ -1,4 +1,5 @@
 import { useNow } from '@/composables/useNow';
+import { serverNow } from '@/lib/serverClock';
 import { computed, ref, toValue, watch } from 'vue';
 
 /**
@@ -10,7 +11,7 @@ export function useCountdown(deadline) {
     const total = ref(1);
     watch(
         () => toValue(deadline),
-        (at) => (total.value = Math.max(1, (at ?? 0) - Date.now())),
+        (at) => (total.value = Math.max(1, (at ?? 0) - serverNow())),
         { immediate: true },
     );
     const msLeft = computed(() => Math.max(0, (toValue(deadline) ?? 0) - now.value));

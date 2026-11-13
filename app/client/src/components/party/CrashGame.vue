@@ -6,6 +6,7 @@ import { useCountdown } from '@/composables/useCountdown';
 import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
 import { betChips } from '@/lib/channel';
+import { serverNow } from '@/lib/serverClock';
 import { formatMoney } from '../../../../api/money.ts';
 import { computed, onUnmounted, ref, watch } from 'vue';
 
@@ -19,19 +20,11 @@ const me = computed(() => client.state.user);
 const myBet = computed(() => game.value.bets.find((b) => b.user.id === me.value.id) ?? null);
 const { seconds: betSeconds } = useCountdown(() => game.value.deadline);
 
-// The flight is drawn on the server's clock: the offset is taken from each update
-let offset = 0;
-watch(
-    () => game.value.now,
-    (now) => (offset = now - Date.now()),
-    { immediate: true },
-);
-
 // Redrawn every frame while flying, like the server computes it
 const elapsed = ref(0);
 let frame = null;
 const tick = () => {
-    elapsed.value = Date.now() + offset - game.value.startedAt;
+    elapsed.value = serverNow() - game.value.startedAt;
     frame = requestAnimationFrame(tick);
 };
 watch(
