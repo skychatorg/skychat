@@ -472,15 +472,16 @@ export class LuckyPop {
         if (this.random(LuckyPop.PINATA_ODDS) === 0) {
             pinata.popped = true;
             pinata.paid.clear();
+            const order = ++this.pops;
+            const { amount, label } = await this.pay(session, pinata.pot, 'Lucky Pop piñata');
             pinata.result = {
                 username: session.user.username,
                 kind: 'pinata',
-                amount: pinata.pot,
+                amount,
                 malus: null,
-                label: `burst the piñata, +${formatMoney(pinata.pot)}`,
-                order: ++this.pops,
+                label: `burst the piñata, ${label}`,
+                order,
             };
-            await UserController.giveMoney(session.user, pinata.pot, 'Lucky Pop piñata');
         }
         this.afterPop();
     }
@@ -574,9 +575,8 @@ export class LuckyPop {
                 return { ...base, kind: 'empty', label: 'burst in their hands' };
             }
             clearTimeout(this.burstTimer);
-            const amount = Math.floor(BALLOONS.hotair.price * 2 ** ((now - this.startedAt) / this.timings.hotAirDoubleMs));
-            await UserController.giveMoney(session.user, amount, 'Lucky Pop win');
-            return { ...base, kind: 'money', amount, label: '+' + formatMoney(amount) };
+            const prize = Math.floor(BALLOONS.hotair.price * 2 ** ((now - this.startedAt) / this.timings.hotAirDoubleMs));
+            return { ...base, kind: 'money', ...(await this.pay(session, prize)) };
         }
         if (size === 'freeze') {
             this.frozen = { session, until: Date.now() + LuckyPop.FREEZE_MS };
@@ -585,9 +585,7 @@ export class LuckyPop {
             return { ...base, kind: 'freeze', label: `froze the sky for ${LuckyPop.FREEZE_MS / 1000} s` };
         }
         if (size === 'patience') {
-            const amount = this.patienceWorth();
-            await UserController.giveMoney(session.user, amount, 'Lucky Pop win');
-            return { ...base, kind: 'money', amount, label: '+' + formatMoney(amount) };
+            return { ...base, kind: 'money', ...(await this.pay(session, this.patienceWorth())) };
         }
         if (size === 'peek') {
             // Another balloon that holds a prize, ones you have not peeked at first
@@ -608,8 +606,7 @@ export class LuckyPop {
             return { ...base, kind: 'peek', label: `peeked inside ${list} balloon${seen.length > 1 ? 's' : ''}` };
         }
         if (size === 'egg') {
-            await UserController.giveMoney(session.user, LuckyPop.EGG_PRIZE, 'Lucky Pop win');
-            return { ...base, kind: 'money', amount: LuckyPop.EGG_PRIZE, label: '+' + formatMoney(LuckyPop.EGG_PRIZE) };
+            return { ...base, kind: 'money', ...(await this.pay(session, LuckyPop.EGG_PRIZE)) };
         }
         const prize = (balloon.prize ??= this.draw(balloon));
         const result = { ...base, kind: prize.kind, label: '' };
@@ -619,14 +616,8 @@ export class LuckyPop {
             case 'pinata':
             case 'peek':
             case 'freeze': {
-                const happy = this.happyHourUntil > Date.now();
-                const amount = happy ? prize.amount * 2 : prize.amount;
-                await UserController.giveMoney(session.user, amount, 'Lucky Pop win');
-                return {
-                    ...result,
-                    amount,
-                    label: (prize.kind === 'jackpot' ? 'JACKPOT +' : '+') + formatMoney(amount) + (happy ? ' (×2)' : ''),
-                };
+                const { amount, label } = await this.pay(session, prize.amount);
+                return { ...result, amount, label: (prize.kind === 'jackpot' ? 'JACKPOT ' : '') + label };
             }
             case 'empty':
                 return { ...result, label: 'empty' };
@@ -649,6 +640,14 @@ export class LuckyPop {
                 return { ...result, malus, label: MALUS_LABELS[malus] };
             }
         }
+    }
+
+    /** Every prize pays double during happy hour */
+    private async pay(session: Session, prize: number, reason = 'Lucky Pop win'): Promise<{ amount: number; label: string }> {
+        const happy = this.happyHourUntil > Date.now();
+        const amount = happy ? prize * 2 : prize;
+        await UserController.giveMoney(session.user, amount, reason);
+        return { amount, label: '+' + formatMoney(amount) + (happy ? ' (×2)' : '') };
     }
 
     private applyMalus(session: Session, malus: Malus): void {

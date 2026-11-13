@@ -673,6 +673,24 @@ describe('lucky pop', () => {
         expect(alice.last('lucky-pop').balloons[0].result).toMatchObject({ amount: 280, label: '+$2.80 (×2)' });
     });
 
+    it('pays double during happy hour on the special balloons too: egg and piñata', async () => {
+        // A special at id 0, no second one, the sky in order, then a happy hour
+        const withHappyHour = (special: number[]) => [...special, 99, ...HAPPY_HOUR.slice(1)];
+        const egg = await partyChannel(2, { sky: withHappyHour(EGG) });
+        await egg.clients[0].send('/party pick luckypop');
+        await settle(10);
+        await egg.clients[0].send('/party pop 0');
+        expect(egg.clients[0].last('lucky-pop').balloons[0].result).toMatchObject({ amount: 150, label: '+$1.50 (×2)' });
+
+        const pinata = await partyChannel(2, { sky: withHappyHour(PINATA) });
+        await pinata.clients[0].send('/party pick luckypop');
+        await settle(10);
+        rig(pinata.party, [0]);
+        await pinata.clients[0].send('/party pop 0');
+        expect(pinata.clients[0].session.user.money).toBe(20000 - 100 + 200);
+        expect(pinata.clients[0].last('lucky-pop').balloons[0].result).toMatchObject({ amount: 200, label: 'burst the piñata, +$2 (×2)' });
+    });
+
     it('ends the round once only balloons that pay nothing are left', async () => {
         const { party, clients } = await partyChannel(2, { sky: FREEZE });
         const [alice] = clients;
