@@ -349,10 +349,13 @@ describe('lucky pop', () => {
             popped: true,
             result: { username: alice.session.user.username, kind: 'money', amount: 140, label: '+$1.40' },
         });
-        expect(alice.session.user.storage.moneyHistory.slice(0, 2).map((m: { reason: string }) => m.reason)).toEqual([
-            'Lucky Pop win',
-            'Lucky Pop',
-        ]);
+        await alice.send('/moneyhistory');
+        expect(
+            alice
+                .last('money-history')
+                .slice(0, 2)
+                .map((m: { reason: string }) => m.reason),
+        ).toEqual(['Lucky Pop win', 'Lucky Pop']);
         expect(party.luckyPop).not.toBeNull();
     });
 
@@ -437,7 +440,8 @@ describe('lucky pop', () => {
         await bob.send('/party pop 11');
 
         expect(alice.session.user.money).toBe(0);
-        expect(alice.session.user.storage.moneyHistory[0]).toMatchObject({ amount: -600, reason: 'Lucky Pop' });
+        await alice.send('/moneyhistory');
+        expect(alice.last('money-history')[0]).toMatchObject({ amount: -600, reason: 'Lucky Pop' });
         expect(bob.session.user.money).toBe(0);
         expect(bob.last('lucky-pop').balloons[11].result).toMatchObject({
             kind: 'lose',
@@ -533,7 +537,8 @@ describe('lucky pop', () => {
         await settle(10);
 
         expect([alice.session.user.money, bob.session.user.money]).toEqual([20000, 20000]);
-        expect(alice.session.user.storage.moneyHistory[0]).toMatchObject({ amount: 100, reason: 'Lucky Pop refund' });
+        await alice.send('/moneyhistory');
+        expect(alice.last('money-history')[0]).toMatchObject({ amount: 100, reason: 'Lucky Pop refund' });
     });
 
     it('lets the hot air balloon grow until someone pops it', async () => {

@@ -259,7 +259,6 @@ export class Session implements IBroadcaster {
      */
     private sendUserData(connection: Connection): void {
         connection.send('set-user', this.user.sanitized());
-        connection.send('money-history', this.user.storage.moneyHistory ?? []);
     }
 
     /**

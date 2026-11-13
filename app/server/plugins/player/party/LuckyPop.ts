@@ -5,7 +5,7 @@ import { Session } from '../../../skychat/Session.js';
 import { ConfusePlugin } from '../../games/global/ConfusePlugin.js';
 import { SandalePlugin } from '../../games/global/SandalePlugin.js';
 import { logFailure } from '../casino/BlackjackTable.js';
-import { GameMoney } from '../GameMoney.js';
+import { UserController } from '../../../skychat/UserController.js';
 import { shuffle } from './shuffle.js';
 import type { Party } from './Party.js';
 
@@ -352,7 +352,7 @@ export class LuckyPop {
         balloon.popped = true;
         this.nextPopAt.set(session, Date.now() + this.timings.cooldownMs);
         try {
-            await GameMoney.bet(session.user, price, 'Lucky Pop');
+            await UserController.buy(session.user, price, 'Lucky Pop', 'bet');
         } catch (error) {
             balloon.popped = false;
             this.nextPopAt.delete(session);
@@ -382,7 +382,7 @@ export class LuckyPop {
         this.eventTimers.forEach((timer) => clearTimeout(timer));
         const refunds = this.balloons.filter((b) => !b.popped).flatMap((b) => [...b.paid]);
         this.balloons.forEach((b) => b.paid.clear());
-        await Promise.all(refunds.map(([session, amount]) => GameMoney.refund(session.user, amount, 'Lucky Pop refund')));
+        await Promise.all(refunds.map(([session, amount]) => UserController.giveMoney(session.user, amount, 'Lucky Pop refund', 'refund')));
     }
 
     public sanitizedFor(session: Session): SanitizedLuckyPop {
@@ -456,14 +456,14 @@ export class LuckyPop {
         const { price } = BALLOONS.pinata;
         this.nextPopAt.set(session, Date.now() + this.timings.cooldownMs);
         try {
-            await GameMoney.bet(session.user, price, 'Lucky Pop piñata');
+            await UserController.buy(session.user, price, 'Lucky Pop piñata', 'bet');
         } catch (error) {
             this.nextPopAt.delete(session);
             throw error;
         }
         // Burst while this hit was being paid: the hit never landed
         if (pinata.popped || this.over) {
-            await GameMoney.refund(session.user, price, 'Lucky Pop refund');
+            await UserController.giveMoney(session.user, price, 'Lucky Pop refund', 'refund');
             throw new Error('Someone burst it first');
         }
         pinata.hits++;
@@ -625,7 +625,7 @@ export class LuckyPop {
                 // Never more than what is left
                 const loss = Math.min(prize.amount, session.user.money);
                 if (loss) {
-                    await GameMoney.bet(session.user, loss, 'Lucky Pop');
+                    await UserController.buy(session.user, loss, 'Lucky Pop', 'loss');
                 }
                 return {
                     ...result,
@@ -646,7 +646,7 @@ export class LuckyPop {
     private async pay(session: Session, prize: number, reason = 'Lucky Pop win'): Promise<{ amount: number; label: string }> {
         const happy = this.happyHourUntil > Date.now();
         const amount = happy ? prize * 2 : prize;
-        await GameMoney.win(session.user, amount, reason);
+        await UserController.giveMoney(session.user, amount, reason, 'win');
         return { amount, label: '+' + formatMoney(amount) + (happy ? ' (×2)' : '') };
     }
 

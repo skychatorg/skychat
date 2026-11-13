@@ -46,9 +46,9 @@ export class DailySummaryPlugin extends GlobalPlugin {
     public static readonly GAMES_TOP: number = 3;
 
     /**
-     * Days the games' money moves are kept
+     * Days the money changes are kept
      */
-    public static readonly GAMES_RETENTION: number = 30;
+    public static readonly MONEY_RETENTION: number = 30;
 
     constructor(manager: RoomManager) {
         super(manager);
@@ -77,10 +77,10 @@ export class DailySummaryPlugin extends GlobalPlugin {
         await this.postDailySummary();
         this.armTimer();
         try {
-            const expired = new Date(Date.now() - DailySummaryPlugin.GAMES_RETENTION * 24 * 60 * 60 * 1000);
-            await DatabaseHelper.db.query(SQL`DELETE FROM game_money WHERE date < ${expired}`);
+            const expired = new Date(Date.now() - DailySummaryPlugin.MONEY_RETENTION * 24 * 60 * 60 * 1000);
+            await DatabaseHelper.db.query(SQL`DELETE FROM money_changes WHERE date < ${expired}`);
         } catch (error) {
-            Logging.error('DailySummaryPlugin: Could not remove old game money', error);
+            Logging.error('DailySummaryPlugin: Could not remove old money changes', error);
         }
     }
 
@@ -163,15 +163,15 @@ export class DailySummaryPlugin extends GlobalPlugin {
      * What the party games took and gave: empty when nobody played
      */
     private async getGamesSummary(from: Date, to: Date): Promise<string> {
-        // A refund cancels its bet, so it counts in neither
+        // Amounts are signed: a refund cancels its bet, so it counts in neither
         const result = await DatabaseHelper.db.query(SQL`
             SELECT
                 users.username_custom as username,
-                SUM(CASE game_money.kind WHEN 'bet' THEN -game_money.amount ELSE game_money.amount END) as net,
-                SUM(CASE game_money.kind WHEN 'bet' THEN game_money.amount WHEN 'refund' THEN -game_money.amount ELSE 0 END) as bet
-            FROM game_money
-            JOIN users ON users.id = game_money.user_id
-            WHERE game_money.date >= ${from} AND game_money.date < ${to}
+                SUM(money_changes.amount) as net,
+                -SUM(CASE WHEN money_changes.kind IN ('bet', 'refund') THEN money_changes.amount ELSE 0 END) as bet
+            FROM money_changes
+            JOIN users ON users.id = money_changes.user_id
+            WHERE money_changes.kind <> 'other' AND money_changes.date >= ${from} AND money_changes.date < ${to}
             GROUP BY users.id
         `);
 
