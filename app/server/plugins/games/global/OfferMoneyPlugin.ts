@@ -1,8 +1,8 @@
+import { formatMoney } from '../../../../api/money.js';
 import { Connection } from '../../../skychat/Connection.js';
 import { GlobalPlugin } from '../../GlobalPlugin.js';
 import { Session } from '../../../skychat/Session.js';
 import { User } from '../../../skychat/User.js';
-import { ConnectedListPlugin } from '../../core/global/ConnectedListPlugin.js';
 import { UserController } from '../../../skychat/UserController.js';
 
 export class OfferMoneyPlugin extends GlobalPlugin {
@@ -32,15 +32,14 @@ export class OfferMoneyPlugin extends GlobalPlugin {
         }
 
         const amount = parseInt(param.split(' ')[1]);
-        await UserController.giveMoney(session.user, amount);
+        await UserController.giveMoney(session.user, amount, 'Gift');
         session.send(
             'message',
             UserController.createNeutralMessage({
-                content: connection.session.user.username + ' sent you $ ' + amount / 100,
+                content: `${connection.session.user.username} sent you ${formatMoney(amount)}`,
                 room: connection.roomId,
                 id: 0,
             }).sanitized(),
         );
-        (this.manager.getPlugin('connectedlist') as ConnectedListPlugin).sync();
     }
 }

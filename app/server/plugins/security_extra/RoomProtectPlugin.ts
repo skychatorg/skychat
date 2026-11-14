@@ -1,5 +1,6 @@
 import { Connection } from '../../skychat/Connection.js';
 import { Room } from '../../skychat/Room.js';
+import { Session } from '../../skychat/Session.js';
 import { UserController } from '../../skychat/UserController.js';
 import { RoomPlugin } from '../RoomPlugin.js';
 import { triggerVoiceRevalidate } from '../voice/triggerVoiceRevalidate.js';
@@ -68,6 +69,8 @@ export class RoomProtectPlugin extends RoomPlugin {
 
         // Live: members now below the room min-right must be evicted from voice.
         triggerVoiceRevalidate(this.room.manager);
+        // The room list carries the protection, so admin screens show it right away
+        Object.values(Session.sessions).forEach((session) => this.room.manager.sendRoomList(session));
     }
 
     public async onBeforeConnectionJoinedRoom(connection: Connection): Promise<void> {

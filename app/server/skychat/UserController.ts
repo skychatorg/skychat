@@ -1,14 +1,21 @@
 import _ from 'lodash';
 import sha256 from 'sha256';
 import SQL from 'sql-template-strings';
+import { MoneyChange, MoneyKind } from '../../api/money.js';
 import { globalPluginGroup } from '../plugins/GlobalPluginGroup.js';
 import { Config } from './Config.js';
 import { DatabaseHelper } from './DatabaseHelper.js';
+import { Logging } from './Logging.js';
 import { Message, MessageConstructorOptions } from './Message.js';
 import { Session } from './Session.js';
 import { AuthToken, User } from './User.js';
 
 export class UserController {
+    static readonly MONEY_HISTORY_SIZE = 20;
+
+    /** Set by the user list, so every balance change shows there right away without each game asking */
+    static onMoneyChange: () => void = () => {};
+
     /**
      * Validity of the auth token in seconds
      */
@@ -208,23 +215,61 @@ export class UserController {
     /**
      * Remove money from an user account
      */
-    public static async buy(user: User, amount: number): Promise<void> {
+    public static async buy(user: User, amount: number, reason: string, kind: MoneyKind = 'other'): Promise<void> {
         if (amount > user.money) {
             throw new Error('User has not enough money to buy this amount');
         }
-        user.money -= amount;
-        await UserController.sync(user);
+        await UserController.changeMoney(user, -amount, reason, kind);
     }
 
     /**
      * Give money to an user
      */
-    public static async giveMoney(user: User, amount: number): Promise<void> {
+    public static async giveMoney(user: User, amount: number, reason: string, kind: MoneyKind = 'other'): Promise<void> {
         if (amount < 0) {
             throw new Error("Can't give negative amount");
         }
+        await UserController.changeMoney(user, amount, reason, kind);
+    }
+
+    private static async changeMoney(user: User, amount: number, reason: string, kind: MoneyKind): Promise<void> {
         user.money += amount;
         await UserController.sync(user);
+        await UserController.logMoney(user, amount, reason, kind);
+        UserController.syncSessionUser(user);
+        UserController.onMoneyChange();
+    }
+
+    /**
+     * Never fails: the money has moved by now, a missing line in the history beats undoing a paid bet
+     */
+    private static async logMoney(user: User, amount: number, reason: string, kind: MoneyKind): Promise<void> {
+        try {
+            // The date comes from here, like for messages: the database may not be on the server's timezone
+            await DatabaseHelper.db.query(SQL`
+                INSERT INTO money_changes (user_id, amount, kind, reason, date)
+                VALUES (${user.id}, ${amount}, ${kind}, ${reason}, ${new Date()})
+            `);
+        } catch (error) {
+            Logging.error('Could not log a money change', error);
+        }
+    }
+
+    /**
+     * The user's last money changes, newest first
+     */
+    public static async getMoneyHistory(user: User): Promise<MoneyChange[]> {
+        const { rows } = await DatabaseHelper.db.query(
+            SQL`SELECT amount, reason, date FROM money_changes WHERE user_id = ${user.id} ORDER BY id DESC LIMIT ${UserController.MONEY_HISTORY_SIZE}`,
+        );
+        return rows.map((row) => ({ amount: row.amount, reason: row.reason, date: new Date(row.date).getTime() }));
+    }
+
+    /**
+     * Show a balance change on the user's own screens right away
+     */
+    private static syncSessionUser(user: User): void {
+        Session.getSessionByIdentifier(user.username.toLowerCase())?.syncUserData();
     }
 
     /**

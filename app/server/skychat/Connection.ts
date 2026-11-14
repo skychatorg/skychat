@@ -92,13 +92,15 @@ export class Connection extends EventEmitter implements IBroadcaster {
             this.stopPing();
         }
 
+        // Carries the server's clock: clients count down to server instants on it, whatever their own clock says
+        this.send('ping', Date.now());
         this.pingInterval = setInterval(() => {
             if (this.webSocket.readyState !== WebSocket.OPEN) {
                 this.stopPing();
                 return;
             }
 
-            this.send('ping', null);
+            this.send('ping', Date.now());
         }, Connection.PING_INTERVAL);
     }
 

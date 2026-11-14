@@ -26,6 +26,7 @@
  * @property {'prompt'} type
  * @property {string} title
  * @property {string} [placeholder]
+ * @property {boolean} [secret] Typed like a password, never shown
  * @property {(value: string) => void} run
  */
 

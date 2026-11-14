@@ -69,7 +69,8 @@ export class AccountPlugin extends GlobalPlugin {
                     throw new Error('Invalid current password');
                 }
                 UserController.changePassword(connection.session.user, newPassword);
-                messageContent = `Your password has been changed to ${newPassword}`;
+                // Never echo the password: it would sit on screen in the chat
+                messageContent = 'Your password has been changed';
                 break;
 
             default:

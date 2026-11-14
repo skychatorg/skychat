@@ -8,6 +8,10 @@ export const labels = {
     nextRoom: () => 'Next room',
     previousRoom: () => 'Previous room',
     manageRooms: () => 'Manage rooms',
+    manageChannels: () => 'Manage channels',
+    enterOpMode: () => 'Enter OP mode…',
+    createPoll: () => 'Create a poll…',
+    leaveOpMode: () => 'Leave OP mode',
 
     // Users
     sendPm: (username) => `Send PM to ${username}`,
@@ -38,7 +42,7 @@ export const labels = {
     toggleEncryption: () => 'Toggle message encryption',
 
     // Settings
-    openProfile: () => 'Open profile',
+    openProfile: () => 'Open preferences',
     openGallery: () => 'Open gallery',
     manageStickers: () => 'Manage stickers',
     manageHighlights: () => 'Manage highlighted words',
@@ -52,8 +56,6 @@ export const labels = {
     mobileShowLeft: () => 'Show left column (rooms)',
     mobileShowMiddle: () => 'Show middle column (chat)',
     mobileShowRight: () => 'Show right column (users)',
-    goToChat: () => 'Go to chat',
-    goToHome: () => 'Go to home',
 
     // Session
     logout: () => 'Log out',

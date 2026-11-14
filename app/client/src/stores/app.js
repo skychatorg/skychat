@@ -11,7 +11,7 @@ const DEFAULT_DOCUMENT_TITLE = '~ SkyChat';
 const NOTIFICATION_SOUND_MP3_PATH = '/assets/sound/notification.mp3';
 
 const CURRENT_VERSION = 5;
-const STORE_SAVED_KEYS = ['playerMode', 'leftCollapsed', 'rightCollapsed', 'voiceSettings'];
+const STORE_SAVED_KEYS = ['playerMode', 'leftCollapsed', 'rightCollapsed', 'voiceSettings', 'mutedGames'];
 
 const applyLeftCollapsedClass = (collapsed) => {
     if (typeof document === 'undefined') return;
@@ -171,6 +171,11 @@ export const useAppStore = defineStore('app', {
         rightCollapsed: false,
 
         /**
+         * The party games muted on this device, by id: each game has its own sound switch
+         */
+        mutedGames: [],
+
+        /**
          * Local voice capture preferences (persisted).
          * inputMode: 'open' (always on) | 'vad' (voice activity / noise gate) | 'ptt' (push-to-talk)
          * vadThreshold: dBFS speaking threshold (mic sensitivity), drives the gate + own speaking dot
@@ -227,23 +232,30 @@ export const useAppStore = defineStore('app', {
             playerQueue: false,
 
             /**
-             * Room management modal
+             * Admin panel: false, or the tab to show as `{ tab }`
              */
-            manageRooms: false,
+            admin: false,
 
             /**
-             * Sticker management modal
+             * New poll form, posted in the current room
              */
-            manageStickers: false,
+            createPoll: false,
 
             /**
-             * Highlighted words management modal
+             * New private conversation, or `{ roomId }` to see and change who is in one
              */
-            manageHighlights: false,
+            groupChat: false,
         },
     }),
 
     getters: {
+        /**
+         * The window is given to the player panel, with the chat beside it
+         */
+        cinemaActive() {
+            return this.playerMode.size === 'cinema' && this.playerMode.enabled && this.isDesktop && useClientStore().channelHasContent;
+        },
+
         /**
          * The collapsed flag is only meaningful at the desktop breakpoint.
          * On mobile the left column is full-width and shouldn't render in compact mode.
@@ -384,17 +396,8 @@ export const useAppStore = defineStore('app', {
             mousetrap.bind('shift+up', () => this.shrinkPlayer());
 
             // ARROW + ALT + UP/DOWN: Switch rooms
-            mousetrap.bind('alt+down', () => {
-                const newRoomIndex = (clientStore.state.rooms.indexOf(clientStore.state.currentRoom) + 1) % clientStore.state.rooms.length;
-                clientStore.join(clientStore.state.rooms[newRoomIndex].id);
-            });
-            mousetrap.bind('alt+up', () => {
-                let newRoomIndex = clientStore.state.rooms.indexOf(clientStore.state.currentRoom) - 1;
-                if (newRoomIndex < 0) {
-                    newRoomIndex = clientStore.state.rooms.length - 1;
-                }
-                clientStore.join(clientStore.state.rooms[newRoomIndex].id);
-            });
+            mousetrap.bind('alt+down', () => clientStore.joinAdjacentRoom(1));
+            mousetrap.bind('alt+up', () => clientStore.joinAdjacentRoom(-1));
 
             // Ctrl/Cmd+K: toggle command palette. Bypasses mousetrap because
             // mousetrap suppresses shortcuts inside input/textarea, which is
@@ -468,6 +471,15 @@ export const useAppStore = defineStore('app', {
                     values: Object.fromEntries(STORE_SAVED_KEYS.map((key) => [key, this[key]])),
                 }),
             );
+        },
+
+        gameSound: function (game) {
+            return !this.mutedGames.includes(game);
+        },
+
+        toggleGameSound: function (game) {
+            this.mutedGames = this.gameSound(game) ? [...this.mutedGames, game] : this.mutedGames.filter((id) => id !== game);
+            this.savePreferences();
         },
 
         // ---- Voice capture preferences (persist + push to the live engine) ----

@@ -17,7 +17,8 @@ export class BunkerPlugin extends GlobalPlugin {
             params: [
                 {
                     name: 'mode',
-                    pattern: /^(off|on)$/,
+                    // `status` only tells the asker whether it is on, for the admin panel
+                    pattern: /^(off|on|status)$/,
                 },
             ],
         },
@@ -43,12 +44,17 @@ export class BunkerPlugin extends GlobalPlugin {
     }
 
     async handleBunker(param: string, connection: Connection) {
+        if (param === 'status') {
+            connection.send('bunker', this.storage);
+            return;
+        }
         this.storage = param === 'on';
         this.syncStorage();
 
         // Live revoke/restore guest voice producers on toggle.
         triggerVoiceRevalidate(this.manager);
 
+        connection.send('bunker', this.storage);
         connection.send(
             'message',
             new Message({

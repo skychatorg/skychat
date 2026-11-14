@@ -3,6 +3,7 @@ import { Config } from '../../../skychat/Config.js';
 import { Connection } from '../../../skychat/Connection.js';
 import { RoomManager } from '../../../skychat/RoomManager.js';
 import { SanitizedSession, Session } from '../../../skychat/Session.js';
+import { UserController } from '../../../skychat/UserController.js';
 import { GlobalPlugin } from '../../GlobalPlugin.js';
 
 /**
@@ -30,6 +31,7 @@ export class ConnectedListPlugin extends GlobalPlugin {
             objectHash: (obj: any, index?: number | undefined) => (obj as SanitizedSession)?.identifier ?? obj.id ?? index,
         });
         setInterval(this.sync.bind(this), ConnectedListPlugin.SYNC_DELAY);
+        UserController.onMoneyChange = () => this.sync();
     }
 
     public run(): Promise<void> {

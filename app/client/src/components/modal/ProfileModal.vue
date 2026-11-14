@@ -1,10 +1,12 @@
 <script setup>
+import AccountSettings from '@/components/user/AccountSettings.vue';
 import { watch, ref, computed, onUnmounted } from 'vue';
 import hark from 'hark';
 import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
 import ModalTemplate from '@/components/modal/ModalTemplate.vue';
 import SectionSubTitle from '@/components/util/SectionSubTitle.vue';
+import { formatMoney } from '../../../../api/money.ts';
 
 const app = useAppStore();
 const client = useClientStore();
@@ -82,6 +84,12 @@ watch(
         }
     },
 );
+
+// Money history: fetched while the drawer is open, again whenever the balance moves
+watch(
+    () => app.modals.profile && client.state.user.money,
+    () => app.modals.profile && client.sendMessage('/moneyhistory'),
+);
 </script>
 
 <template>
@@ -113,6 +121,21 @@ watch(
                 @click="client.sendMessage(`/custom use color:${color.id}`)"
             ></div>
         </div>
+
+        <!-- Money -->
+        <SectionSubTitle class="mt-6">Money · {{ formatMoney(client.state.user.money) }}</SectionSubTitle>
+        <ul v-if="client.state.moneyHistory.length" class="max-h-48 overflow-y-auto text-xs font-mono">
+            <li v-for="(change, index) in client.state.moneyHistory" :key="index" class="flex gap-3 py-0.5">
+                <span class="text-white/40 shrink-0">{{
+                    new Date(change.date).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })
+                }}</span>
+                <span class="grow truncate">{{ change.reason }}</span>
+                <span class="tabular-nums" :class="change.amount < 0 ? 'text-danger' : 'text-emerald-400'">
+                    {{ change.amount > 0 ? '+' : '' }}{{ formatMoney(change.amount) }}
+                </span>
+            </li>
+        </ul>
+        <p v-else class="text-xs text-white/40 text-center">Nothing won or spent yet</p>
 
         <!-- Voice input mode -->
         <SectionSubTitle class="mt-6">Voice input mode</SectionSubTitle>
@@ -177,5 +200,8 @@ watch(
             />
             <p class="text-xs text-white/40 mt-1">How long the mic stays open after you stop talking, so word endings aren’t cut off.</p>
         </template>
+
+        <!-- Accounts only: guests have no email, password or Discord to change -->
+        <AccountSettings v-if="client.state.user.right >= 0" class="pb-6" />
     </ModalTemplate>
 </template>

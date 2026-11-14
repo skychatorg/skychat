@@ -1,5 +1,4 @@
 <script setup>
-import ModalTemplate from '@/components/modal/ModalTemplate.vue';
 import { useUserRight } from '@/composables/useUserRight';
 import { useClientStore } from '@/stores/client';
 import { computed, ref } from 'vue';
@@ -48,7 +47,7 @@ const deleteHighlight = (word) => {
 </script>
 
 <template>
-    <ModalTemplate id="manageHighlights" title="Manage highlighted words" variant="wide">
+    <div>
         <div v-if="canManageHighlights" class="flex flex-col gap-6 pb-6 text-skygray-lightest">
             <form class="flex flex-col gap-4 w-full max-w-md" @submit.prevent="submitHighlight">
                 <div>
@@ -115,5 +114,5 @@ const deleteHighlight = (word) => {
             </div>
         </div>
         <div v-else class="text-sm text-skygray-light">You do not have permission to manage highlighted words.</div>
-    </ModalTemplate>
+    </div>
 </template>
