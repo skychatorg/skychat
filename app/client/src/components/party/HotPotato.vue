@@ -200,7 +200,7 @@ watch(
                             into the pot
                         </li>
                         <li>💥 Holding it when it blows? Your stake is gone</li>
-                        <li>💰 Everyone else shares the pot, by how long each held the bomb</li>
+                        <li>💰 Everyone else gets their stake back, and shares the rest by how long each held the bomb</li>
                     </ul>
                 </div>
 

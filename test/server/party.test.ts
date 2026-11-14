@@ -1209,7 +1209,7 @@ describe('hot potato', () => {
         expect(money(clients).reduce((a, b) => a + b)).toBe(80000);
     });
 
-    it('shares the whole pot between survivors by how long each held the bomb', async () => {
+    it('gives survivors their stake back, and shares the rest by how long each held the bomb', async () => {
         const { party, clients } = await partyChannel(3);
         const [alice, bob, carol] = clients;
         await alice.send('/party pick potato');
@@ -1222,10 +1222,10 @@ describe('hot potato', () => {
         await carol.send('/party pass 0');
         await phase(party, 'done');
 
-        // Bob survived without ever holding it: nothing. Carol is the only survivor who held it: the whole pot
-        expect(party.hotPotato!.sanitized().players.map((p) => p.payout)).toEqual([0, 0, 3100]);
-        await until(() => carol.session.user.money === 22000);
-        expect([alice.session.user.money, bob.session.user.money]).toEqual([19000, 19000]);
+        // Bob survived without ever holding it: his stake back. Carol is the only survivor who held it: the rest
+        expect(party.hotPotato!.sanitized().players.map((p) => p.payout)).toEqual([0, 1000, 2100]);
+        await until(() => carol.session.user.money === 21000);
+        expect([alice.session.user.money, bob.session.user.money]).toEqual([19000, 20000]);
     });
 
     it('keeps the bomb on a holder who leaves, and never passes it to someone who left', async () => {

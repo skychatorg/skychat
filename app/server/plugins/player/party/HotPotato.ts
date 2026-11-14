@@ -10,7 +10,7 @@ import type { Party } from './Party.js';
 /**
  * - joining: players buy a seat around the circle, all at the same stake
  * - playing: the bomb goes from hand to hand until its hidden fuse runs out
- * - done: whoever held it gets nothing, the other players share the pot by how long each held the bomb
+ * - done: whoever held it gets nothing, the other players get their stake back and share the rest by how long each held the bomb
  */
 export type HotPotatoPhase = 'joining' | 'playing' | 'done';
 
@@ -57,8 +57,8 @@ export type SanitizedHotPotato = {
 
 /**
  * A bomb with a hidden fuse goes around a circle of players. Hold it at least a moment, then pass it to anyone
- * for a small fee into the pot. When it blows, its holder gets nothing and the others share the pot by how long
- * each held it: holding is a risk that pays, up to a point. Nothing rewards being fast: the fuse is as likely to
+ * for a small fee into the pot. When it blows, its holder gets nothing, the others get their stake back and share
+ * the rest by how long each held it: holding is a risk that pays, up to a point. Nothing rewards being fast: the fuse is as likely to
  * blow in any second, and a pass picked during the hold goes out the moment it ends.
  */
 export class HotPotato {
@@ -391,13 +391,16 @@ export class HotPotato {
     }
 
     /**
-     * Survivors share the whole pot by how long each held the bomb. No stake comes back for free: passing it on at
-     * once is safe but slowly pays the braver players. Nobody held it, an even split. Cent for cent, the house takes nothing
+     * Survivors get their stake back: the holder picks who gets the bomb, so never getting it must not cost anything.
+     * The rest, the loser's stake and the pass fees, is shared by how long each held the bomb. Nobody held it, an even
+     * split. Cent for cent, the house takes nothing
      */
     private split(winners: Seat[]): void {
+        const stake = this.stake ?? 0;
+        const rest = this.pot - stake * winners.length;
         const totalMs = winners.reduce((sum, seat) => sum + seat.heldMs, 0);
         const weight = (seat: Seat) => (totalMs ? seat.heldMs / totalMs : 1 / winners.length);
-        winners.forEach((seat) => (seat.payout = Math.floor(this.pot * weight(seat))));
+        winners.forEach((seat) => (seat.payout = stake + Math.floor(rest * weight(seat))));
         // The cents lost to rounding go to the bravest first
         let leftover = this.pot - winners.reduce((sum, seat) => sum + seat.payout!, 0);
         for (const seat of [...winners].sort((a, b) => b.heldMs - a.heldMs)) {
