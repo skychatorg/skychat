@@ -599,7 +599,9 @@ export const useAppStore = defineStore('app', {
                 // Create form and send request to backend
                 const data = new FormData();
                 data.append('file', file);
-                const result = await (await fetch('/api/upload', { method: 'POST', body: data })).json();
+                // Only logged-in users may upload: the server checks the login token the client keeps
+                const headers = { 'X-Auth-Token': JSON.stringify(useClientStore().state.token) };
+                const result = await (await fetch('/api/upload', { method: 'POST', body: data, headers })).json();
                 if (result.status === 500) {
                     throw new Error('Unable to upload: ' + result.message);
                 }

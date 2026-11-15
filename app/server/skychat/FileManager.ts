@@ -21,7 +21,7 @@ export class FileManager {
         );
     }
 
-    static saveFile(file: fileUpload.UploadedFile): string {
+    static async saveFile(file: fileUpload.UploadedFile): Promise<string> {
         const mimeTypes: { [mimetype: string]: string } = {
             'image/jpeg': 'jpg',
             'image/jpg': 'jpg',
@@ -43,7 +43,7 @@ export class FileManager {
         }
         const extension = mimeTypes[mimetype];
         const filePath = FileManager.getNewFileLocation(extension);
-        file.mv(filePath);
+        await file.mv(filePath);
         return filePath;
     }
 
