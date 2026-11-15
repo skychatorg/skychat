@@ -63,7 +63,12 @@ const onLibrary = (payload) => {
     token.value = payload.streamToken;
 };
 
+// Songs queued from this panel, ticked right away
+const queued = ref(new Set());
+
 const onError = (message) => {
+    // A refused queue is toasted globally: drop the optimistic ticks so the songs can be retried
+    queued.value = new Set();
     if (typeof message === 'string' && /music library/i.test(message)) {
         loading.value = false;
         error.value = message;
@@ -99,7 +104,6 @@ const queue = (items) => {
     if (items.length === 0) return;
     client.sendMessage(`/navidrome ${items.map((s) => s.id).join(' ')}`);
 };
-const queued = ref(new Set());
 const queueSong = (song) => {
     queue([song]);
     queued.value.add(song.id);

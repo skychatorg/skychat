@@ -24,6 +24,9 @@ const STREAM_BITRATE_KBPS = 192;
 const CACHE_DIR = path.join(os.tmpdir(), 'skychat-navidrome');
 const CACHE_MAX_FILES = 200;
 
+// At most this many downloads from home at once, however many different songs are asked for
+const MAX_CONCURRENT_DOWNLOADS = 2;
+
 type SubsonicAlbum = { id: string; name: string; artist?: string; year?: number; coverArt?: string; songCount?: number };
 type SubsonicSong = {
     id: string;
@@ -179,6 +182,10 @@ export class NavidromeClient {
 export class TrackCache {
     private readonly downloads = new Map<string, Promise<string>>();
 
+    private active = 0;
+
+    private readonly waiting: Array<() => void> = [];
+
     constructor(private readonly client: NavidromeClient) {}
 
     // Path of the cached mp3, downloading it first if needed. Concurrent callers share one download.
@@ -203,15 +210,36 @@ export class TrackCache {
         }
         await fs.promises.mkdir(CACHE_DIR, { recursive: true });
         const partial = `${file}.${crypto.randomBytes(4).toString('hex')}.part`;
+        await this.acquire();
         try {
             await this.client.downloadTrack(id, partial);
             await fs.promises.rename(partial, file);
         } catch (err) {
             await fs.promises.rm(partial, { force: true });
             throw err;
+        } finally {
+            this.release();
         }
         await this.evict().catch((err) => Logging.warn(`Navidrome cache eviction failed: ${(err as Error).message}`));
         return file;
+    }
+
+    private async acquire(): Promise<void> {
+        if (this.active < MAX_CONCURRENT_DOWNLOADS) {
+            this.active++;
+            return;
+        }
+        // The slot is handed over by release(), so `active` stays counted
+        await new Promise<void>((resolve) => this.waiting.push(resolve));
+    }
+
+    private release() {
+        const next = this.waiting.shift();
+        if (next) {
+            next();
+        } else {
+            this.active--;
+        }
     }
 
     private async evict(): Promise<void> {
