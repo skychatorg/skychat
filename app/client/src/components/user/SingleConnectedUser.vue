@@ -1,4 +1,5 @@
 <script setup>
+import UserTitle from '@/components/user/UserTitle.vue';
 import { avatarStyle, nameStyle } from '@/lib/cosmetics';
 import { copyText } from '@/lib/copyText.js';
 import SkyContextMenu from '@/components/common/SkyContextMenu.vue';
@@ -210,6 +211,7 @@ const isDisconnected = computed(() => props.entry.connectionCount === 0);
                         >
                             {{ entry.user.username }}
                         </button>
+                        <UserTitle :user="entry.user" />
                         <sup v-if="entry.connectionCount > 1" class="font-mono text-xs text-white/40">
                             {{ entry.connectionCount }}
                         </sup>

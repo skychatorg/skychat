@@ -1,4 +1,4 @@
-import { COLORS, Duration, DURATIONS, SHOP, ShopSlot } from '../../../../api/shop.js';
+import { COLORS, Duration, DURATIONS, SHOP, ShopItem, ShopSlot, TITLE_MAX_LENGTH } from '../../../../api/shop.js';
 import { Connection } from '../../../skychat/Connection.js';
 import { logFailure } from '../../../skychat/Logging.js';
 import { RoomManager } from '../../../skychat/RoomManager.js';
@@ -23,6 +23,9 @@ export type CustomizationElements = { [key: string]: CustomizationElementValue[]
 type CustomizationData = { [slot in ShopSlot]?: string } & { [slot in ShopSlot as `${slot}Until`]?: number };
 
 const SLOTS = Object.keys(SHOP) as ShopSlot[];
+
+/** Any printable text, no line breaks */
+const TITLE_PATTERN = new RegExp(`^[^\\p{C}]{1,${TITLE_MAX_LENGTH}}$`, 'u');
 
 export class CustomizationPlugin extends GlobalPlugin {
     /**
@@ -76,7 +79,7 @@ export class CustomizationPlugin extends GlobalPlugin {
     }
 
     /**
-     * `buy <item>[:<option>] <duration>` rents an item, adding to the time left. `use <item>:<option>` switches for free while it runs
+     * `buy <item>[:<option>] <duration> [title]` rents an item, adding to the time left. `use <item>[:<option>] [title]` switches for free while it runs
      */
     public async run(alias: string, param: string, connection: Connection): Promise<void> {
         const [action, choice, ...rest] = param.split(' ');
@@ -90,7 +93,7 @@ export class CustomizationPlugin extends GlobalPlugin {
             if (!price) {
                 throw new Error(`Choose how long to rent it for: ${Object.keys(SHOP[slot].prices).join(' or ')}`);
             }
-            const value = this.valueOf(slot, option);
+            const value = this.valueOf(slot, option, rest.join(' '));
             await UserController.buy(user, price, `${SHOP[slot].name} for a ${duration}`);
             data[`${slot}Until`] = Math.max(Date.now(), data[`${slot}Until`] ?? 0) + DURATIONS[duration] * 24 * 60 * 60 * 1000;
             data[slot] = value;
@@ -98,7 +101,7 @@ export class CustomizationPlugin extends GlobalPlugin {
             if (!CustomizationPlugin.isRenting(user, slot)) {
                 throw new Error(`Rent the ${SHOP[slot].name.toLowerCase()} in the shop first`);
             }
-            data[slot] = this.valueOf(slot, option);
+            data[slot] = this.valueOf(slot, option, rest.join(' '));
         }
 
         await this.saveUserData(user, data);
@@ -108,9 +111,16 @@ export class CustomizationPlugin extends GlobalPlugin {
     /**
      * What is stored for the picked option, checked before anything is paid
      */
-    private valueOf(slot: ShopSlot, option: string | undefined): string {
+    private valueOf(slot: ShopSlot, option: string | undefined, text: string): string {
+        if (slot === 'title') {
+            const title = text.trim();
+            if (!TITLE_PATTERN.test(title)) {
+                throw new Error(`Write a title of up to ${TITLE_MAX_LENGTH} characters`);
+            }
+            return title;
+        }
         const value = slot === 'color' ? COLORS.find((color) => String(color.id) === option)?.value : option;
-        if (!value || !SHOP[slot].options.some((o) => o.id === option)) {
+        if (!value || !(SHOP[slot] as ShopItem).options?.some((o) => o.id === option)) {
             throw new Error(`Pick one of the ${SHOP[slot].name.toLowerCase()}s`);
         }
         return value;

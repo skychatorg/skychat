@@ -1,11 +1,12 @@
 <script setup>
-import { computed, reactive, watch } from 'vue';
+import { computed, reactive, ref, watch } from 'vue';
+import UserTitle from '@/components/user/UserTitle.vue';
 import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
 import { useNow } from '@/composables/useNow';
 import ModalTemplate from '@/components/modal/ModalTemplate.vue';
 import { formatMoney } from '../../../../api/money.ts';
-import { COLORS, SHOP } from '../../../../api/shop.ts';
+import { COLORS, SHOP, TITLE_MAX_LENGTH } from '../../../../api/shop.ts';
 import { avatarStyle, nameStyle } from '@/lib/cosmetics';
 
 const app = useAppStore();
@@ -26,10 +27,18 @@ const optionOf = (slot) => {
     return slot === 'color' ? String(COLORS.find((color) => color.value === value)?.id) : value;
 };
 const selected = (slot) => (renting(slot) ? optionOf(slot) : picked[slot]);
+/** The title being written, starting from the one worn */
+const titleDraft = ref('');
 watch(
     () => app.modals.shop,
-    (open) => open && Object.keys(picked).forEach((slot) => delete picked[slot]),
+    (open) => {
+        if (open) {
+            Object.keys(picked).forEach((slot) => delete picked[slot]);
+            titleDraft.value = worn.value.title ?? '';
+        }
+    },
 );
+const saveTitle = () => client.sendMessage(`/custom use title ${titleDraft.value.trim()}`);
 
 /** Clicking an option wears it right away while the item is rented, and only tries it on otherwise */
 const choose = (slot, option) => {
@@ -48,6 +57,9 @@ const preview = computed(() => {
             custom[slot] = slot === 'color' ? colorHex(option) : option;
         }
     }
+    if (titleDraft.value.trim()) {
+        custom.title = titleDraft.value.trim();
+    }
     return { username: user.value.username, data: { plugins: { ...user.value.data.plugins, custom } } };
 });
 /** The preview, wearing this option instead */
@@ -64,10 +76,15 @@ const timeLeft = (slot) => {
 /** Why a rental can't be bought, shown on its button */
 const blocker = (slot, price) => {
     if (!renting(slot) && SHOP[slot].options && !picked[slot]) return 'Pick one first';
+    if (slot === 'title' && !titleDraft.value.trim()) return 'Write it first';
     if (user.value.money < price) return `${formatMoney(price - user.value.money)} short`;
     return null;
 };
 const buy = (slot, duration) => {
+    if (slot === 'title') {
+        client.sendMessage(`/custom buy title ${duration} ${titleDraft.value.trim()}`);
+        return;
+    }
     const option = selected(slot);
     client.sendMessage(`/custom buy ${option ? `${slot}:${option}` : slot} ${duration}`);
 };
@@ -85,7 +102,8 @@ const colorHex = (id) => COLORS.find((color) => String(color.id) === id)?.value;
                 </div>
                 <div class="min-w-0">
                     <div class="who">
-                        <span v-bind="nameStyle(preview)">{{ user.username }}</span>
+                        <span class="truncate" v-bind="nameStyle(preview)">{{ user.username }}</span>
+                        <UserTitle :user="preview" />
                     </div>
                     <div class="hint">How others see you</div>
                 </div>
@@ -116,6 +134,23 @@ const colorHex = (id) => COLORS.find((color) => String(color.id) === id)?.value;
                         @click="choose(slot, option.id)"
                     />
                 </div>
+
+                <form v-else-if="slot === 'title'" class="flex gap-2" @submit.prevent="renting(slot) && saveTitle()">
+                    <input
+                        v-model="titleDraft"
+                        class="form-control grow min-w-0"
+                        :maxlength="TITLE_MAX_LENGTH"
+                        placeholder="Queen of Crash"
+                        aria-label="Your title"
+                    />
+                    <button
+                        v-if="renting(slot)"
+                        class="form-control shrink-0 disabled:opacity-40"
+                        :disabled="!titleDraft.trim() || titleDraft.trim() === worn.title"
+                    >
+                        Save
+                    </button>
+                </form>
 
                 <div v-else-if="item.options" class="chips">
                     <button
@@ -182,10 +217,11 @@ const colorHex = (id) => COLORS.find((color) => String(color.id) === id)?.value;
     object-fit: cover;
 }
 .who {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     font-size: 18px;
     font-weight: 700;
-    overflow: hidden;
-    text-overflow: ellipsis;
     white-space: nowrap;
     transition: color 0.2s;
 }

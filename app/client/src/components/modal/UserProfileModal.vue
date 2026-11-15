@@ -1,4 +1,5 @@
 <script setup>
+import UserTitle from '@/components/user/UserTitle.vue';
 import { avatarStyle, nameStyle } from '@/lib/cosmetics';
 import ModalTemplate from '@/components/modal/ModalTemplate.vue';
 import { useIsBlacklisted } from '@/composables/useIsBlacklisted';
@@ -120,6 +121,7 @@ const editOwnProfile = () => {
                 <h2 class="text-2xl font-semibold break-words max-w-full" v-bind="nameStyle(user)">
                     {{ user.username }}
                 </h2>
+                <UserTitle :user="user" class="text-sm" />
                 <p class="flex flex-wrap items-center justify-center gap-x-1.5 text-sm text-white/60">
                     <span class="w-2 h-2 rounded-full" :class="status.dot" />
                     <span>{{ status.label }}</span>

@@ -1,4 +1,5 @@
 <script setup>
+import UserTitle from '@/components/user/UserTitle.vue';
 import { avatarStyle, nameStyle } from '@/lib/cosmetics';
 import { copyText } from '@/lib/copyText.js';
 import SkyContextMenu from '@/components/common/SkyContextMenu.vue';
@@ -328,6 +329,7 @@ const toggleActionMenu = () => {
                             >
                                 {{ message.user.username }}
                             </button>
+                            <UserTitle :user="message.user" />
                             <span
                                 v-if="message.user.right > 0"
                                 class="font-mono text-xs text-white/30"
@@ -348,6 +350,7 @@ const toggleActionMenu = () => {
                             >
                                 {{ message.user.username }}
                             </button>
+                            <UserTitle :user="message.user" />
                             <span class="font-mono text-xs text-white/35">
                                 {{ formattedTime }}<template v-if="room"> @ {{ room.name }}</template>
                             </span>

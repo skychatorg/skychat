@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from 'vitest';
-import { SHOP } from '../../app/api/shop.js';
+import { SHOP, TITLE_MAX_LENGTH } from '../../app/api/shop.js';
 import { CustomizationPlugin } from '../../app/server/plugins/core/global/CustomizationPlugin.js';
 import { settle, TestServer } from './harness.js';
 
@@ -167,5 +167,30 @@ describe('avatar frames', () => {
         expect(alice.errors()).toEqual([]);
         expect(custom(alice)).toMatchObject({ color: RED, frame: 'neon' });
         expect(alice.session.user.money).toBe(SHOP.color.prices.month - SHOP.frame.prices.week);
+    });
+});
+
+describe('titles', () => {
+    it('rents a title with its text, and rewrites it for free', async () => {
+        const alice = await shopper();
+
+        await alice.send('/custom buy title week Queen of  Crash');
+        await alice.send('/custom use title Lucky Pop addict 🎈');
+
+        expect(alice.errors()).toEqual([]);
+        expect(custom(alice).title).toBe('Lucky Pop addict 🎈');
+        expect(alice.session.user.money).toBe(SHOP.color.prices.month + SHOP.color.prices.week - SHOP.title.prices.week);
+    });
+
+    it('charges nothing for a title too long, empty or spread over lines', async () => {
+        const alice = await shopper();
+        const money = alice.session.user.money;
+
+        await alice.send(`/custom buy title week ${'a'.repeat(TITLE_MAX_LENGTH + 1)}`);
+        await alice.send('/custom buy title week');
+        await alice.send('/custom buy title week two\nlines');
+
+        expect(alice.errors()).toEqual(Array(3).fill(`Write a title of up to ${TITLE_MAX_LENGTH} characters`));
+        expect(alice.session.user.money).toBe(money);
     });
 });

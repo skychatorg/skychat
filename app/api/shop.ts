@@ -65,6 +65,9 @@ export const COLORS = [
     { id: 39, name: 'Spring green 3', value: '#49FF8C' },
 ];
 
+/** Longest title, in characters */
+export const TITLE_MAX_LENGTH = 24;
+
 /** Everything for sale. Rented items are stored on the user under their key, and when they end under `<key>Until`, in ms */
 export const SHOP = {
     color: {
@@ -96,6 +99,11 @@ export const SHOP = {
             { id: 'ice', name: 'Ice' },
             { id: 'rainbow', name: 'Rainbow' },
         ],
+    },
+    title: {
+        name: 'Title',
+        pitch: `A few words of your own next to your name, up to ${TITLE_MAX_LENGTH} characters.`,
+        prices: { week: 500 * 100, month: 1350 * 100 },
     },
 } satisfies Record<string, ShopItem>;
 
