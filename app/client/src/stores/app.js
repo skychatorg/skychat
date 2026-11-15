@@ -202,6 +202,11 @@ export const useAppStore = defineStore('app', {
             profile: false,
 
             /**
+             * Shop, to rent cosmetics
+             */
+            shop: false,
+
+            /**
              * Modal to navigate in the gallery
              */
             gallery: false,

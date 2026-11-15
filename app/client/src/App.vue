@@ -7,6 +7,7 @@ import JellyfinModal from '@/components/modal/JellyfinModal.vue';
 import OngoingConvertsModal from '@/components/modal/OngoingConvertsModal.vue';
 import PlayerQueueModal from '@/components/modal/PlayerQueueModal.vue';
 import ProfileModal from '@/components/modal/ProfileModal.vue';
+import ShopModal from '@/components/modal/ShopModal.vue';
 import UserProfileModal from '@/components/modal/UserProfileModal.vue';
 import VideoConverterModal from '@/components/modal/VideoConverterModal.vue';
 import YoutubeVideoSearcherModal from '@/components/modal/YoutubeVideoSearcherModal.vue';
@@ -20,6 +21,7 @@ import GroupChatModal from '@/components/modal/GroupChatModal.vue';
         <CursorOverlay />
         <AppHeader />
         <ProfileModal />
+        <ShopModal />
         <UserProfileModal />
         <YoutubeVideoSearcherModal />
         <OngoingConvertsModal />

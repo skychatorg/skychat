@@ -159,6 +159,16 @@ const adminTabs = useAdminTabs();
                 <span v-if="!compact">Settings</span>
             </button>
             <button
+                v-if="client.state.user.right >= 0"
+                class="h-10 flex items-center justify-center gap-1.5 rounded-lg hairline bg-white/[.03] hover:bg-white/[.07] text-sm"
+                :class="compact ? 'w-full' : 'col-span-2'"
+                title="Open the shop"
+                @click="app.toggleModal('shop')"
+            >
+                <fa icon="store" />
+                <span v-if="!compact">Shop</span>
+            </button>
+            <button
                 v-if="client.state.config && client.state.config.jellyfinEnabled"
                 class="h-10 flex items-center justify-center gap-1.5 rounded-lg hairline bg-white/[.03] hover:bg-white/[.07] text-sm"
                 :class="compact ? 'w-full' : 'col-span-2'"

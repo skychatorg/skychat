@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from 'vitest';
-import { COLOR_RENTALS } from '../../app/api/shop.js';
+import { SHOP } from '../../app/api/shop.js';
 import { CustomizationPlugin } from '../../app/server/plugins/core/global/CustomizationPlugin.js';
 import { settle, TestServer } from './harness.js';
 
@@ -15,7 +15,7 @@ beforeAll(async () => {
 });
 
 /** A user with enough for a month and a week */
-async function shopper(money = COLOR_RENTALS.month.price + COLOR_RENTALS.week.price) {
+async function shopper(money = SHOP.color.prices.month + SHOP.color.prices.week) {
     const client = await server.connect(`shopper${++n}`, 0);
     client.session.user.money = money;
     client.clear();
@@ -24,7 +24,7 @@ async function shopper(money = COLOR_RENTALS.month.price + COLOR_RENTALS.week.pr
 
 const custom = (client: Awaited<ReturnType<typeof shopper>>) => client.session.user.data.plugins.custom;
 
-const expireColors = () => (server.roomManager.getPlugin('custom') as unknown as { expireColors(): Promise<void> }).expireColors();
+const expire = () => (server.roomManager.getPlugin('custom') as unknown as { expire(): Promise<void> }).expire();
 
 describe('colour shop', () => {
     it('refuses a colour that was not rented', async () => {
@@ -32,7 +32,7 @@ describe('colour shop', () => {
 
         await alice.send('/custom use color:10');
 
-        expect(alice.errors()).toEqual(['Rent a custom color first']);
+        expect(alice.errors()).toEqual(['Rent a name color in the shop first']);
         expect(custom(alice).color).toBe(CustomizationPlugin.DEFAULT_COLOR);
     });
 
@@ -45,7 +45,7 @@ describe('colour shop', () => {
         await settle(150);
 
         expect(alice.errors()).toEqual([]);
-        expect(alice.session.user.money).toBe(COLOR_RENTALS.month.price);
+        expect(alice.session.user.money).toBe(SHOP.color.prices.month);
         expect(custom(alice).color).toBe(RED);
         expect(custom(alice).colorUntil).toBeGreaterThan(Date.now() + 7 * DAY - 1000);
         expect(JSON.stringify(watcher.events('connected-list-patch'))).toContain(RED);
@@ -75,12 +75,12 @@ describe('colour shop', () => {
     });
 
     it('takes nothing from a user who cannot afford it', async () => {
-        const alice = await shopper(COLOR_RENTALS.week.price - 1);
+        const alice = await shopper(SHOP.color.prices.week - 1);
 
         await alice.send('/custom buy color:10 week');
 
         expect(alice.errors()).toHaveLength(1);
-        expect(alice.session.user.money).toBe(COLOR_RENTALS.week.price - 1);
+        expect(alice.session.user.money).toBe(SHOP.color.prices.week - 1);
         expect(custom(alice).color).toBe(CustomizationPlugin.DEFAULT_COLOR);
     });
 
@@ -92,18 +92,36 @@ describe('colour shop', () => {
         custom(alice).colorUntil = Date.now() - 1;
         alice.clear();
 
-        await expireColors();
+        await expire();
 
         expect(custom(alice)).toEqual({ color: CustomizationPlugin.DEFAULT_COLOR });
         expect(alice.last('set-user').data.plugins.custom.color).toBe(CustomizationPlugin.DEFAULT_COLOR);
         expect(custom(running).color).toBe(BLUE);
     });
 
+    it('takes off only what ran out', async () => {
+        const alice = await shopper();
+        alice.session.user.data.plugins.custom = { color: RED, colorUntil: Date.now() - 1, frame: 'gold', frameUntil: Date.now() + DAY };
+
+        await expire();
+
+        expect(custom(alice)).toEqual({ color: CustomizationPlugin.DEFAULT_COLOR, frame: 'gold', frameUntil: expect.any(Number) });
+    });
+
+    it('leaves alone what has nothing to take off', async () => {
+        const alice = await shopper();
+        alice.clear();
+
+        await expire();
+
+        expect(alice.events('set-user')).toEqual([]);
+    });
+
     it('takes back a colour picked when colours were free', async () => {
         const alice = await shopper();
         alice.session.user.data.plugins.custom = { color: RED };
 
-        await expireColors();
+        await expire();
 
         expect(custom(alice).color).toBe(CustomizationPlugin.DEFAULT_COLOR);
     });
