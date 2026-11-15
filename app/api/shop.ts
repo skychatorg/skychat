@@ -105,6 +105,11 @@ export const SHOP = {
         pitch: `A few words of your own next to your name, up to ${TITLE_MAX_LENGTH} characters.`,
         prices: { week: 500 * 100, month: 1350 * 100 },
     },
+    shield: {
+        name: 'Shield',
+        pitch: 'Wizz, sandale and confuse bounce off you, and nobody pays for them.',
+        prices: { day: 300 * 100, week: 1500 * 100 },
+    },
 } satisfies Record<string, ShopItem>;
 
 export type ShopSlot = keyof typeof SHOP;

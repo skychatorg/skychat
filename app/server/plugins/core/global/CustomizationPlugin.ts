@@ -72,6 +72,16 @@ export class CustomizationPlugin extends GlobalPlugin {
         return (data[`${slot}Until`] ?? 0) > Date.now();
     }
 
+    /**
+     * Refuses a wizz, sandale or confuse on a shielded user, before the sender pays for it
+     */
+    static checkUnshielded(identifier: string): void {
+        const user = Session.getSessionByIdentifier(identifier)?.user;
+        if (user && CustomizationPlugin.isRenting(user, 'shield')) {
+            throw new Error(`${user.username} has a shield up`);
+        }
+    }
+
     constructor(manager: RoomManager) {
         super(manager);
 
@@ -111,7 +121,10 @@ export class CustomizationPlugin extends GlobalPlugin {
     /**
      * What is stored for the picked option, checked before anything is paid
      */
-    private valueOf(slot: ShopSlot, option: string | undefined, text: string): string {
+    private valueOf(slot: ShopSlot, option: string | undefined, text: string): string | undefined {
+        if (slot === 'shield') {
+            return undefined;
+        }
         if (slot === 'title') {
             const title = text.trim();
             if (!TITLE_PATTERN.test(title)) {

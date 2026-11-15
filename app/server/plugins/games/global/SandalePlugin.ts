@@ -1,3 +1,4 @@
+import { CustomizationPlugin } from '../../core/global/CustomizationPlugin.js';
 import { formatMoney } from '../../../../api/money.js';
 import { Connection } from '../../../skychat/Connection.js';
 import { RoomManager } from '../../../skychat/RoomManager.js';
@@ -78,6 +79,7 @@ export class SandalePlugin extends GlobalPlugin {
             throw new Error('User ' + identifier + ' is already sandaled');
         }
 
+        CustomizationPlugin.checkUnshielded(identifier);
         await UserController.buy(connection.session.user, SandalePlugin.COST, 'Sandale');
 
         // Notify everyone but the user who is sandalized

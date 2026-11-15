@@ -194,3 +194,30 @@ describe('titles', () => {
         expect(alice.session.user.money).toBe(money);
     });
 });
+
+describe('shield', () => {
+    it.each(['/wizz', '/sandale', '/confuse'])('stops %s, and the sender pays nothing', async (command) => {
+        const alice = await shopper();
+        const bob = await shopper();
+        await alice.send('/custom buy shield day');
+        const money = bob.session.user.money;
+
+        await bob.send(`${command} ${alice.session.identifier}`);
+
+        expect(alice.errors()).toEqual([]);
+        expect(bob.errors()).toEqual([`${alice.session.user.username} has a shield up`]);
+        expect(bob.session.user.money).toBe(money);
+        expect(alice.session.user.money).toBe(SHOP.color.prices.month + SHOP.color.prices.week - SHOP.shield.prices.day);
+    });
+
+    it('lets them through again once it is over', async () => {
+        const alice = await shopper();
+        const bob = await shopper();
+        await alice.send('/custom buy shield day');
+        custom(alice).shieldUntil = Date.now() - 1;
+
+        await bob.send(`/wizz ${alice.session.identifier}`);
+
+        expect(bob.errors()).toEqual([]);
+    });
+});

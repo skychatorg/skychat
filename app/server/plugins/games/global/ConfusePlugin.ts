@@ -1,3 +1,4 @@
+import { CustomizationPlugin } from '../../core/global/CustomizationPlugin.js';
 import { formatMoney } from '../../../../api/money.js';
 import { Connection } from '../../../skychat/Connection.js';
 import { RoomManager } from '../../../skychat/RoomManager.js';
@@ -78,6 +79,7 @@ export class ConfusePlugin extends GlobalPlugin {
             throw new Error('User ' + identifier + ' is already confused');
         }
 
+        CustomizationPlugin.checkUnshielded(identifier);
         await UserController.buy(connection.session.user, ConfusePlugin.COST, 'Confuse');
 
         // Notify everyone but the user who is sandalized
