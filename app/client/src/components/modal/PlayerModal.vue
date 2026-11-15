@@ -10,7 +10,6 @@ import YoutubeSource from '@/components/player/add/YoutubeSource.vue';
 import MusicSource from '@/components/player/add/MusicSource.vue';
 import JellyfinSource from '@/components/player/add/JellyfinSource.vue';
 import LinkSource from '@/components/player/add/LinkSource.vue';
-import GalleryPannel from '@/components/gallery/GalleryPannel.vue';
 
 const app = useAppStore();
 const client = useClientStore();
@@ -35,7 +34,6 @@ const sources = computed(() =>
             component: JellyfinSource,
             shown: client.state.config?.jellyfinEnabled && canJellyfin.value,
         },
-        { id: 'gallery', label: 'Gallery', icon: 'folder-tree', component: GalleryPannel, shown: client.state.config?.galleryEnabled },
         { id: 'link', label: 'Link', icon: 'link', component: LinkSource, shown: true },
     ].filter((source) => source.shown),
 );

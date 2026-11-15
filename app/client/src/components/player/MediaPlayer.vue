@@ -4,7 +4,6 @@ import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
 import YoutubePlayer from '@/components/player/impl/YoutubePlayer.vue';
 import TwitchPlayer from '@/components/player/impl/TwitchPlayer.vue';
-import GalleryPlayer from '@/components/player/impl/GalleryPlayer.vue';
 import IFramePlayer from '@/components/player/impl/IFramePlayer.vue';
 import JellyfinPlayer from '@/components/player/impl/JellyfinPlayer.vue';
 import NavidromePlayer from '@/components/player/impl/NavidromePlayer.vue';
@@ -20,7 +19,6 @@ const playerImpl = computed(() => {
         {
             youtube: YoutubePlayer,
             twitch: TwitchPlayer,
-            gallery: GalleryPlayer,
             iframe: IFramePlayer,
             jellyfin: JellyfinPlayer,
             navidrome: NavidromePlayer,

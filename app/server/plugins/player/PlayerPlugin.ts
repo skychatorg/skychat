@@ -8,7 +8,6 @@ import { PollPlugin } from '../core/global/PollPlugin.js';
 import { SanitizedPlayerChannel } from './PlayerChannel.js';
 import { PlayerChannelManager } from './PlayerChannelManager.js';
 import { CasinoOptions } from './casino/BlackjackTable.js';
-import { GalleryFetcher } from './fetcher/GalleryFetcher.js';
 import { IFrameFetcher } from './fetcher/IFrameFetcher.js';
 import {
     issueStreamToken,
@@ -33,7 +32,6 @@ export class PlayerPlugin extends GlobalPlugin {
         yt: new YoutubeFetcher(),
         twitch: new TwitchFetcher(),
         iframe: new IFrameFetcher(),
-        galleryadd: new GalleryFetcher(),
         jellyfin: new JellyfinFetcher(),
         navidrome: new NavidromeFetcher(),
     };

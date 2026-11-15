@@ -12,7 +12,6 @@ const SOURCES = {
     twitch: { icon: 'tv', label: 'Twitch' },
     jellyfin: { icon: 'film', label: 'Jellyfin' },
     navidrome: { icon: 'music', label: 'Music' },
-    gallery: { icon: 'image', label: 'Gallery' },
     iframe: { icon: 'globe', label: 'Web' },
 };
 const source = (video) => SOURCES[video.type] ?? { icon: 'film', label: video.type };

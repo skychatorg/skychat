@@ -87,7 +87,7 @@ export function usePlayerCommands() {
             title: labels.addToPlayer(),
             icon: 'plus',
             category: 'Player',
-            keywords: ['youtube', 'search video', 'queue video', 'link', 'jellyfin', 'gallery', 'schedule'],
+            keywords: ['youtube', 'search video', 'queue video', 'link', 'jellyfin', 'schedule'],
             run: () => app.toggleModal('player'),
         });
         if (client.state.config?.navidromeEnabled) {

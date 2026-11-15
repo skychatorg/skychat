@@ -42,7 +42,8 @@ const cancel = (event) => send(`/unschedule ${event.start}`);
 </script>
 
 <template>
-    <div class="flex flex-col gap-6 min-h-0 overflow-y-auto scrollbar pr-1">
+    <!-- p-1 -m-1: room for the inputs' focus ring, which the scroll container would clip -->
+    <div class="flex flex-col gap-6 min-h-0 overflow-y-auto scrollbar p-1 -m-1">
         <form class="flex flex-col gap-1.5" @submit.prevent="add">
             <label class="text-sm font-semibold" for="player-link">Play a link</label>
             <div class="flex gap-2">

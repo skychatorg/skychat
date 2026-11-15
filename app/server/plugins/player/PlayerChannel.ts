@@ -47,7 +47,7 @@ export type VideoInfo = {
     /**
      * Video type
      */
-    type: 'youtube' | 'twitch' | 'gallery' | 'iframe' | 'jellyfin' | 'navidrome';
+    type: 'youtube' | 'twitch' | 'iframe' | 'jellyfin' | 'navidrome';
 
     /**
      * Video data (for youtube, video id; for jellyfin, item id)

@@ -8,10 +8,6 @@ const getFileNamePath = (folderList, fileName) => {
     return folderList.length === 0 ? fileName : `${folderList.join('/')}/${fileName}`;
 };
 
-const isFileTypeAddable = (fileType) => {
-    return fileType === 'video';
-};
-
 const getFileExtension = (fileName) => {
     return fileName.split('.').pop();
 };
@@ -41,7 +37,6 @@ const getFileColor = (file) => {
 export const useGallery = () => {
     return {
         getFileNamePath,
-        isFileTypeAddable,
         getFileExtension,
         getFileIcon,
         getFileColor,

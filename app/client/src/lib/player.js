@@ -25,7 +25,7 @@ export function roomCursorMs(player, playerLastUpdate) {
  * Adding a type here is the ONLY change needed to enable pause for it client-side (plus the
  * actual pause/play wiring in that type's impl component). The server stays media-type-agnostic.
  */
-const PAUSABLE_TYPES = { gallery: true, jellyfin: true, navidrome: true };
+const PAUSABLE_TYPES = { jellyfin: true, navidrome: true };
 
 /**
  * Media types served by SkyChat's own proxy, whose stream and thumbnail URLs need the viewer's stream token.

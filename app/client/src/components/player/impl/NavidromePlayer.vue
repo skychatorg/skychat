@@ -77,6 +77,21 @@ const load = () => {
     player.value.src = `/api/plugin/player/navidrome/stream/${encodeURIComponent(loadedId)}?t=${encodeURIComponent(token.value)}`;
 };
 
+// One retry per track: a server restart or a slow first download shouldn't cost the whole song
+let retriedId = '';
+let retryTimer = null;
+const onAudioError = () => {
+    if (retriedId === loadedId) {
+        error.value = 'This track could not be played.';
+        return;
+    }
+    retriedId = loadedId;
+    retryTimer = setTimeout(() => {
+        loadedId = '';
+        load();
+    }, 3_000);
+};
+
 watch(() => video.value?.id, load);
 watch(token, load);
 watch(
@@ -100,6 +115,7 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+    clearTimeout(retryTimer);
     clearInterval(pollTimer);
     if (player.value) {
         player.value.removeAttribute('src');
@@ -139,13 +155,7 @@ onBeforeUnmount(() => {
                         class="w-full max-w-[7rem] min-w-0 accent-white"
                     />
                 </label>
-                <audio
-                    ref="player"
-                    :volume="volume"
-                    @loadedmetadata="syncToRoom(true)"
-                    @play="onNativePlay"
-                    @error="error = 'This track could not be played.'"
-                ></audio>
+                <audio ref="player" :volume="volume" @loadedmetadata="syncToRoom(true)" @play="onNativePlay" @error="onAudioError"></audio>
             </div>
         </div>
     </div>
