@@ -4,7 +4,7 @@ import { Connection } from '../../../skychat/Connection.js';
 import { Session } from '../../../skychat/Session.js';
 import { ConfusePlugin } from '../../games/global/ConfusePlugin.js';
 import { SandalePlugin } from '../../games/global/SandalePlugin.js';
-import { logFailure } from '../casino/BlackjackTable.js';
+import { logFailure } from '../../../skychat/Logging.js';
 import { UserController } from '../../../skychat/UserController.js';
 import { shuffle } from './shuffle.js';
 import type { Party } from './Party.js';
@@ -681,7 +681,7 @@ export class LuckyPop {
             return;
         }
         this.over = true;
-        logFailure(Promise.resolve().then(this.onRoundEnd));
+        logFailure(Promise.resolve().then(this.onRoundEnd), 'Lucky Pop');
     }
 
     private broadcast(): void {

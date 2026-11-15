@@ -2,7 +2,7 @@ import { randomInt } from 'node:crypto';
 import { Connection } from '../../../skychat/Connection.js';
 import { Session } from '../../../skychat/Session.js';
 import { SanitizedUser } from '../../../skychat/User.js';
-import { logFailure } from '../casino/BlackjackTable.js';
+import { logFailure } from '../../../skychat/Logging.js';
 import { UserController } from '../../../skychat/UserController.js';
 import type { Party } from './Party.js';
 
@@ -238,7 +238,10 @@ export class Crash {
             seat.payout = capped ? Math.floor((seat.bet * this.crashPoint) / 100) : 0;
         }
         if (capped) {
-            logFailure(Promise.all(riding.map((seat) => UserController.giveMoney(seat.session.user, seat.payout!, 'Crash win', 'win'))));
+            logFailure(
+                Promise.all(riding.map((seat) => UserController.giveMoney(seat.session.user, seat.payout!, 'Crash win', 'win'))),
+                'Crash',
+            );
         }
         this.broadcast();
         this.schedule(this.timings.crashedMs, () => (this.flight >= Crash.FLIGHTS ? this.end() : this.openBets()));
@@ -250,7 +253,7 @@ export class Crash {
         }
         this.over = true;
         this.clearTimers();
-        logFailure(Promise.resolve().then(this.onRoundEnd));
+        logFailure(Promise.resolve().then(this.onRoundEnd), 'Crash');
     }
 
     private schedule(ms: number, fn: () => void): void {

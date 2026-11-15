@@ -44,6 +44,8 @@ describe('money farmer', () => {
         expect(broke.session.user.money).toBe(15);
 
         vi.spyOn(Date, 'now').mockReturnValue(Date.now() + MoneyFarmerPlugin.BAILOUT.everyMs);
+        // A day later, and still chatting
+        broke.session.lastPublicMessageSentDate = new Date(Date.now());
         await farmer['tick']();
         expect(broke.session.user.money).toBe(1015);
     });

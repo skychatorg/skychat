@@ -1,7 +1,7 @@
 import { randomInt } from 'node:crypto';
 import { Connection } from '../../../skychat/Connection.js';
 import { Session } from '../../../skychat/Session.js';
-import { logFailure } from '../casino/BlackjackTable.js';
+import { logFailure } from '../../../skychat/Logging.js';
 import { UserController } from '../../../skychat/UserController.js';
 import { shuffle } from './shuffle.js';
 import type { Party } from './Party.js';
@@ -93,7 +93,7 @@ export class DailyRoll {
 
     public start(): void {
         this.deadline = Date.now() + this.timings.pickMs;
-        this.timer = setTimeout(() => logFailure(this.reveal()), this.timings.pickMs);
+        this.timer = setTimeout(() => logFailure(this.reveal(), 'Daily Roll'), this.timings.pickMs);
     }
 
     public pick(session: Session, id: number): void {
@@ -124,7 +124,7 @@ export class DailyRoll {
         if (lastCallAt < this.deadline && this.party.channel.sessions.every((s) => s.user.isGuest() || pickers.includes(s))) {
             clearTimeout(this.timer);
             this.deadline = lastCallAt;
-            this.timer = setTimeout(() => logFailure(this.reveal()), this.timings.lastCallMs);
+            this.timer = setTimeout(() => logFailure(this.reveal(), 'Daily Roll'), this.timings.lastCallMs);
         }
         this.broadcast();
     }

@@ -1,7 +1,8 @@
 import { formatMoney } from '../../../../api/money.js';
 import { Connection } from '../../../skychat/Connection.js';
 import { Session } from '../../../skychat/Session.js';
-import { BlackjackTable, CasinoOptions, logFailure } from '../casino/BlackjackTable.js';
+import { BlackjackTable, CasinoOptions } from '../casino/BlackjackTable.js';
+import { logFailure } from '../../../skychat/Logging.js';
 import type { PlayerChannel } from '../PlayerChannel.js';
 import { Crash } from './Crash.js';
 import { DailyRoll } from './DailyRoll.js';
@@ -231,7 +232,7 @@ export class Party {
         this.lastGame = this.gameId;
         this.game = null;
         this.gameId = null;
-        logFailure(game.destroy());
+        logFailure(game.destroy(), 'Party');
         // Clears the game from everyone's screen
         this.channel.sessions.forEach((session) => session.send(event, null));
         // Nobody left to vote: straight back to the lobby, no timer running in an empty channel

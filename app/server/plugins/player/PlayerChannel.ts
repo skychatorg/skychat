@@ -5,7 +5,8 @@ import { UserController } from '../../skychat/UserController.js';
 import { PlayerChannelManager } from './PlayerChannelManager.js';
 import { PlayerChannelScheduler, SanitizedScheduler } from './PlayerChannelScheduler.js';
 import { issueStreamToken, STREAM_TOKEN_TTL_MS } from './fetcher/JellyfinFetcher.js';
-import { BlackjackTable, CasinoOptions, logFailure } from './casino/BlackjackTable.js';
+import { BlackjackTable, CasinoOptions } from './casino/BlackjackTable.js';
+import { logFailure } from '../../skychat/Logging.js';
 import { Party, PartyGameId } from './party/Party.js';
 
 export type ChannelKind = 'media' | 'party';
@@ -396,7 +397,7 @@ export class PlayerChannel {
      */
     public destroy() {
         if (this.party) {
-            logFailure(this.party.destroy());
+            logFailure(this.party.destroy(), 'Player channel');
         }
         this.cancelResync();
         if (this.playNextTimeout) {

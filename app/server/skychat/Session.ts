@@ -34,6 +34,16 @@ export class Session implements IBroadcaster {
     static sessions: { [identifier: string]: Session } = {};
 
     /**
+     * Logged-in sessions that sent a public message in the last `maxInactivityMs`: who the minute rewards go to
+     */
+    public static activeLoggedSessions(maxInactivityMs: number): Session[] {
+        const since = Date.now() - maxInactivityMs;
+        return Object.values(Session.sessions).filter(
+            (session) => session.user.right >= 0 && session.lastPublicMessageSentDate.getTime() >= since,
+        );
+    }
+
+    /**
      * Find an existing session using its identifier
      * @param identifier
      */

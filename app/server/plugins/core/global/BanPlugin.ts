@@ -10,6 +10,7 @@ import { User } from '../../../skychat/User.js';
 import { UserController } from '../../../skychat/UserController.js';
 import { GlobalPlugin } from '../../GlobalPlugin.js';
 import { MessageHistoryPlugin } from '../../core/room/MessageHistoryPlugin.js';
+import { logFailure } from '../../../skychat/Logging.js';
 import { triggerVoiceRevalidate } from '../../voice/triggerVoiceRevalidate.js';
 
 enum BAN_TYPES {
@@ -83,7 +84,7 @@ export class BanPlugin extends GlobalPlugin {
 
         this.loadStorage();
 
-        setInterval(() => this.tick(), BanPlugin.TICK_INTERVAL);
+        setInterval(() => logFailure(this.tick(), 'Ban'), BanPlugin.TICK_INTERVAL);
     }
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {

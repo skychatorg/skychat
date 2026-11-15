@@ -5,6 +5,7 @@ import { UserController } from '../../../skychat/UserController.js';
 import { GlobalPlugin } from '../../GlobalPlugin.js';
 import { Session } from '../../../skychat/Session.js';
 import { RoomManager } from '../../../skychat/RoomManager.js';
+import { logFailure } from '../../../skychat/Logging.js';
 
 export class MoneyFarmerPlugin extends GlobalPlugin {
     public static readonly MAX_INACTIVITY_DURATION_MS: number = 5 * 60 * 1000;
@@ -31,7 +32,7 @@ export class MoneyFarmerPlugin extends GlobalPlugin {
     constructor(manager: RoomManager) {
         super(manager);
 
-        setInterval(this.tick.bind(this), 60 * 1000);
+        setInterval(() => logFailure(this.tick(), 'Money farmer'), 60 * 1000);
     }
 
     async run(): Promise<void> {
@@ -59,19 +60,7 @@ export class MoneyFarmerPlugin extends GlobalPlugin {
     }
 
     private async tick(): Promise<void> {
-        // Get all sessions
-        const sessions = Object.values(Session.sessions);
-        // For each session in the room
-        for (const session of sessions) {
-            // If it's not a logged session, continue
-            if (session.user.right < 0) {
-                continue;
-            }
-            // If user inactive for too long, continue
-            if (session.lastPublicMessageSentDate.getTime() + MoneyFarmerPlugin.MAX_INACTIVITY_DURATION_MS < new Date().getTime()) {
-                continue;
-            }
-
+        for (const session of Session.activeLoggedSessions(MoneyFarmerPlugin.MAX_INACTIVITY_DURATION_MS)) {
             if (await this.bailout(session)) {
                 continue;
             }

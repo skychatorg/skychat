@@ -3,7 +3,7 @@ import { formatMoney } from '../../../../api/money.js';
 import { Connection } from '../../../skychat/Connection.js';
 import { Session } from '../../../skychat/Session.js';
 import { SanitizedUser } from '../../../skychat/User.js';
-import { logFailure } from '../casino/BlackjackTable.js';
+import { logFailure } from '../../../skychat/Logging.js';
 import { UserController } from '../../../skychat/UserController.js';
 import type { Party } from './Party.js';
 
@@ -197,7 +197,7 @@ export class HotPotato {
         if (wait > 0) {
             this.aim = to;
             clearTimeout(this.passTimer);
-            this.passTimer = setTimeout(() => logFailure(this.passNow(from)), wait);
+            this.passTimer = setTimeout(() => logFailure(this.passNow(from), 'Hot Potato'), wait);
             this.broadcast();
             return;
         }
@@ -336,7 +336,10 @@ export class HotPotato {
         if (this.seats.length < HotPotato.MIN_PLAYERS) {
             const seats = this.seats;
             this.seats = [];
-            logFailure(Promise.all(seats.map((s) => UserController.giveMoney(s.session.user, s.paid, 'Hot Potato refund', 'refund'))));
+            logFailure(
+                Promise.all(seats.map((s) => UserController.giveMoney(s.session.user, s.paid, 'Hot Potato refund', 'refund'))),
+                'Hot Potato',
+            );
             this.end();
             return;
         }
@@ -347,7 +350,7 @@ export class HotPotato {
         // Same danger in every second past the minimum, so no moment is a safe one to hold it
         const { fuseMinMs, fuseMeanMs, fuseMaxMs } = this.timings;
         const fuseMs = Math.min(fuseMaxMs, fuseMinMs - Math.log(1 - this.random(1_000_000) / 1_000_000) * fuseMeanMs);
-        this.fuse = setTimeout(() => logFailure(this.explode()), fuseMs);
+        this.fuse = setTimeout(() => logFailure(this.explode(), 'Hot Potato'), fuseMs);
     }
 
     private handOver(to: number): void {
@@ -418,7 +421,7 @@ export class HotPotato {
         this.over = true;
         clearTimeout(this.timer);
         clearTimeout(this.fuse);
-        logFailure(Promise.resolve().then(this.onRoundEnd));
+        logFailure(Promise.resolve().then(this.onRoundEnd), 'Hot Potato');
     }
 
     private schedule(ms: number, fn: () => void): void {

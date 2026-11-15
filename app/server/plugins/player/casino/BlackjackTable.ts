@@ -1,6 +1,6 @@
 import { formatMoney } from '../../../../api/money.js';
 import { Connection } from '../../../skychat/Connection.js';
-import { Logging } from '../../../skychat/Logging.js';
+import { logFailure } from '../../../skychat/Logging.js';
 import { Session } from '../../../skychat/Session.js';
 import { SanitizedUser } from '../../../skychat/User.js';
 import { UserController } from '../../../skychat/UserController.js';
@@ -50,13 +50,6 @@ export type SanitizedBlackjackTable = {
     seats: SanitizedSeat[];
     /** In a party: which hand of the round this is, and when the round ends if nobody bets */
     round: { hand: number; hands: number; idleEndsAt: number | null } | null;
-};
-
-/**
- * Money moves hit the DB and can fail: log it, since an unhandled rejection stops the server
- */
-export const logFailure = (work: Promise<unknown>): void => {
-    work.catch((error) => Logging.error('Blackjack table', error));
 };
 
 /**
@@ -371,7 +364,7 @@ export class BlackjackTable {
     private schedule(ms: number, fn: () => void | Promise<void>, withDeadline = true): void {
         this.clearTimer();
         this.deadline = withDeadline ? Date.now() + ms : null;
-        this.timer = setTimeout(() => logFailure(Promise.resolve().then(fn)), ms);
+        this.timer = setTimeout(() => logFailure(Promise.resolve().then(fn), 'Blackjack'), ms);
     }
 
     /**

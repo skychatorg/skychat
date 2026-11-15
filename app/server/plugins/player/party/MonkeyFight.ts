@@ -2,7 +2,7 @@ import { randomInt } from 'node:crypto';
 import { Connection } from '../../../skychat/Connection.js';
 import { Session } from '../../../skychat/Session.js';
 import { SanitizedUser } from '../../../skychat/User.js';
-import { logFailure } from '../casino/BlackjackTable.js';
+import { logFailure } from '../../../skychat/Logging.js';
 import { UserController } from '../../../skychat/UserController.js';
 import { shuffle } from './shuffle.js';
 import type { Party } from './Party.js';
@@ -245,7 +245,7 @@ export class MonkeyFight {
     ) {}
 
     public start(): void {
-        logFailure(this.openBets());
+        logFailure(this.openBets(), 'Monkey Fight');
     }
 
     public async bet(session: Session, monkey: number, amount: number): Promise<void> {
@@ -431,7 +431,9 @@ export class MonkeyFight {
         this.startedAt = Date.now() + this.timings.introMs;
         // Paid once the last punch has played, so balances don't give the winner away
         const last = this.events.at(-1);
-        this.schedule(this.timings.introMs + (last ? last.at + last.duration : 0) + this.timings.beatMs, () => logFailure(this.settle()));
+        this.schedule(this.timings.introMs + (last ? last.at + last.duration : 0) + this.timings.beatMs, () =>
+            logFailure(this.settle(), 'Monkey Fight'),
+        );
         this.broadcast();
     }
 
@@ -460,7 +462,9 @@ export class MonkeyFight {
         await Promise.all(
             this.bets.filter((b) => b.payout).map((b) => UserController.giveMoney(b.session.user, b.payout!, 'Monkey Fight win', 'win')),
         );
-        this.schedule(this.timings.resultsMs, () => (this.fight >= MonkeyFight.FIGHTS ? this.end() : logFailure(this.openBets())));
+        this.schedule(this.timings.resultsMs, () =>
+            this.fight >= MonkeyFight.FIGHTS ? this.end() : logFailure(this.openBets(), 'Monkey Fight'),
+        );
     }
 
     private end(): void {
@@ -469,7 +473,7 @@ export class MonkeyFight {
         }
         this.over = true;
         clearTimeout(this.timer);
-        logFailure(Promise.resolve().then(this.onRoundEnd));
+        logFailure(Promise.resolve().then(this.onRoundEnd), 'Monkey Fight');
     }
 
     private schedule(ms: number, fn: () => void): void {
