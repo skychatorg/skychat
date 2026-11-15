@@ -1,4 +1,4 @@
-import { COLORS, Duration, DURATIONS, SHOP, ShopItem, ShopSlot, TITLE_MAX_LENGTH } from '../../../../api/shop.js';
+import { COLORS, DEFAULT_COLOR, Duration, DURATIONS, SHOP, ShopItem, ShopSlot, TITLE_MAX_LENGTH } from '../../../../api/shop.js';
 import { Connection } from '../../../skychat/Connection.js';
 import { Logging, logFailure } from '../../../skychat/Logging.js';
 import { RoomManager } from '../../../skychat/RoomManager.js';
@@ -34,7 +34,7 @@ export class CustomizationPlugin extends GlobalPlugin {
     /**
      * Everyone's color when they don't rent one
      */
-    static readonly DEFAULT_COLOR = '#aaaaaa';
+    static readonly DEFAULT_COLOR = DEFAULT_COLOR;
 
     /**
      * All possible customization keys/values
@@ -51,7 +51,7 @@ export class CustomizationPlugin extends GlobalPlugin {
             params: [
                 {
                     name: 'action',
-                    pattern: /^(use|buy)$/,
+                    pattern: /^(use|buy|off)$/,
                     info: 'Action',
                 },
                 {
@@ -92,7 +92,7 @@ export class CustomizationPlugin extends GlobalPlugin {
     }
 
     /**
-     * `buy <item>[:<option>] <duration> [title]` rents an item, adding to the time left. `use <item>[:<option>] [title]` switches for free while it runs
+     * `buy <item>[:<option>] <duration> [title]` rents an item, adding to the time left. `use <item>[:<option>] [title]` switches for free while it runs, `off <item>` takes it off
      */
     public async run(alias: string, param: string, connection: Connection): Promise<void> {
         const [action, choice, ...rest] = param.split(' ');
@@ -112,6 +112,9 @@ export class CustomizationPlugin extends GlobalPlugin {
             await UserController.buy(user, price, `${SHOP[slot].name} for a ${duration}`);
             data[`${slot}Until`] = Math.max(Date.now(), data[`${slot}Until`] ?? 0) + DURATIONS[duration] * 24 * 60 * 60 * 1000;
             data[slot] = value;
+        } else if (action === 'off') {
+            // The rental keeps running: picking an option again puts it back on
+            data[slot] = CustomizationPlugin.defaultDataStorageValue[slot];
         } else {
             if (!CustomizationPlugin.isRenting(user, slot)) {
                 throw new Error(`Rent the ${SHOP[slot].name.toLowerCase()} in the shop first`);

@@ -6,7 +6,7 @@ import { useClientStore } from '@/stores/client';
 import { useNow } from '@/composables/useNow';
 import ModalTemplate from '@/components/modal/ModalTemplate.vue';
 import { formatMoney } from '../../../../api/money.ts';
-import { COLORS, SHOP, TITLE_MAX_LENGTH } from '../../../../api/shop.ts';
+import { COLORS, DEFAULT_COLOR, SHOP, TITLE_MAX_LENGTH } from '../../../../api/shop.ts';
 import { avatarStyle, nameStyle } from '@/lib/cosmetics';
 
 const app = useAppStore();
@@ -132,6 +132,13 @@ const colorHex = (id) => COLORS.find((color) => String(color.id) === id)?.value;
                 <header class="item-head">
                     <h3 class="item-name">{{ item.name }}</h3>
                     <span v-if="renting(slot)" class="tag">{{ timeLeft(slot) }}</span>
+                    <button
+                        v-if="renting(slot) && worn[slot] && worn[slot] !== DEFAULT_COLOR"
+                        class="take-off"
+                        @click="client.sendMessage(`/custom off ${slot}`)"
+                    >
+                        Take off
+                    </button>
                 </header>
                 <p class="hint">
                     {{ item.pitch }}<template v-if="renting(slot) && item.options"> Switch for free while it lasts.</template>
@@ -266,8 +273,8 @@ const colorHex = (id) => COLORS.find((color) => String(color.id) === id)?.value;
 }
 .item-head {
     display: flex;
+    flex-wrap: wrap;
     align-items: baseline;
-    justify-content: space-between;
     gap: 8px;
 }
 .item-name {
@@ -275,7 +282,16 @@ const colorHex = (id) => COLORS.find((color) => String(color.id) === id)?.value;
     font-size: 17px;
     font-weight: 700;
 }
+.take-off {
+    font-size: 12px;
+    color: rgb(255 255 255 / 0.55);
+    text-decoration: underline;
+}
+.take-off:hover {
+    color: white;
+}
 .tag {
+    margin-left: auto;
     font-family: ui-monospace, monospace;
     font-size: 12px;
     color: rgb(52 211 153);

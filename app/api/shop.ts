@@ -14,6 +14,9 @@ export type ShopItem = {
     options?: ShopOption[];
 };
 
+/** Everyone's name color when they don't rent one */
+export const DEFAULT_COLOR = '#aaaaaa';
+
 /** Name colours. The stored value is the hex code */
 export const COLORS = [
     // Grays

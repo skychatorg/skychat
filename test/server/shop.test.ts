@@ -264,3 +264,22 @@ describe('shop robustness', () => {
         expect(custom(bob).color).toBe(CustomizationPlugin.DEFAULT_COLOR);
     });
 });
+
+describe('taking off', () => {
+    it('takes an item off without ending the rental, and puts it back for free', async () => {
+        const alice = await shopper();
+        await alice.send('/custom buy frame:neon week');
+        await alice.send('/custom buy color:10 week');
+        const money = alice.session.user.money;
+
+        await alice.send('/custom off frame');
+        await alice.send('/custom off color');
+        expect(custom(alice).frame).toBeUndefined();
+        expect(custom(alice).color).toBe(CustomizationPlugin.DEFAULT_COLOR);
+
+        await alice.send('/custom use frame:gold');
+        expect(alice.errors()).toEqual([]);
+        expect(custom(alice).frame).toBe('gold');
+        expect(alice.session.user.money).toBe(money);
+    });
+});
