@@ -138,17 +138,26 @@ export class UserController {
     }
 
     /**
-     * Store a new user in the database
+     * Why a registration would be refused. Checked before it counts against the hourly limit, so a typo locks nobody out,
+     * and before the insert, so a refused one leaves no account behind
      */
-    static async register(username: string, password: string): Promise<User> {
-        // Check that username matches regex
+    static async checkRegistration(username: string, password: string): Promise<void> {
         if (!User.USERNAME_LOGGED_REGEXP.test(username)) {
             throw new Error('Invalid username');
         }
-        // Checked before the insert: the hash needs the new id, and a refused password must leave no account behind
         if (typeof password !== 'string' || password.length === 0) {
             throw new Error('Choose a password');
         }
+        if (await UserController.getUserByUsername(username)) {
+            throw new Error('This username is taken');
+        }
+    }
+
+    /**
+     * Store a new user in the database
+     */
+    static async register(username: string, password: string): Promise<User> {
+        await UserController.checkRegistration(username, password);
 
         const tms = Math.floor(Date.now() / 1000);
         const sqlQuery = SQL`insert into users

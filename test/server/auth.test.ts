@@ -54,6 +54,17 @@ describe('register', () => {
         expect(second.sent.at(-1)?.event).toBe('error');
     });
 
+    it('does not count a refused attempt against the limit', async () => {
+        const register = vi.spyOn(UserController, 'register').mockResolvedValue(new User(999, 'new', null, '', 0, 0, 0));
+        const { connect } = authBridge();
+
+        const typo = await connect('10.9.0.2', { credentials: { register: true, username: 'typo', password: '' } });
+        await connect('10.9.0.2', { credentials: { register: true, username: 'fixed', password: 'pw' } });
+
+        expect(typo.sent.at(-1)).toMatchObject({ event: 'error', data: 'Error: Choose a password' });
+        expect(register).toHaveBeenCalledTimes(1);
+    });
+
     it('checks the password before writing the account, so a bad one leaves no account behind', async () => {
         const query = vi.spyOn(DatabaseHelper.db, 'query');
 
