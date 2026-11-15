@@ -4,10 +4,10 @@ import { Connection } from '../../../skychat/Connection.js';
 import { Session } from '../../../skychat/Session.js';
 import { ConfusePlugin } from '../../games/global/ConfusePlugin.js';
 import { SandalePlugin } from '../../games/global/SandalePlugin.js';
-import { logFailure } from '../../../skychat/Logging.js';
 import { UserController } from '../../../skychat/UserController.js';
 import { shuffle } from './shuffle.js';
 import type { Party } from './Party.js';
+import { PartyRound } from './PartyRound.js';
 
 export type BalloonSize = 'xs' | 'md' | 'lg' | 'pinata' | 'hotair' | 'peek' | 'freeze' | 'patience' | 'egg';
 
@@ -175,7 +175,7 @@ export type SanitizedLuckyPop = {
  * A shared sky of balloons: pay to pop one, get money, nothing, or a malus.
  * A round ends when the sky is empty or the timer runs out.
  */
-export class LuckyPop {
+export class LuckyPop extends PartyRound {
     /** In percent: the share of rounds with a special balloon */
     static readonly SPECIAL_CHANCE = 90;
 
@@ -239,8 +239,6 @@ export class LuckyPop {
 
     private startedAt = 0;
 
-    private timer: ReturnType<typeof setTimeout> | undefined;
-
     private idleTimer: ReturnType<typeof setTimeout> | undefined;
 
     /** When the hot air balloon bursts on its own */
@@ -264,18 +262,15 @@ export class LuckyPop {
 
     private pops = 0;
 
-    private over = false;
-
-    constructor(
-        private readonly party: Party,
-        private readonly onRoundEnd: () => void,
-    ) {}
+    constructor(party: Party, onRoundEnd: () => void) {
+        super(party, onRoundEnd, 'Lucky Pop');
+    }
 
     public start(): void {
         this.balloons = this.drawSky();
         this.startedAt = Date.now();
         this.deadline = this.startedAt + this.timings.roundMs;
-        this.timer = setTimeout(() => this.end(), this.timings.roundMs);
+        this.schedule(this.timings.roundMs, () => this.end());
         const hotAir = this.balloons.find((b) => b.size === 'hotair');
         if (hotAir) {
             // P(still up at ×m) = 1 / m: whenever it is popped, the prize is worth its price on average
@@ -376,13 +371,13 @@ export class LuckyPop {
      */
     public async destroy(): Promise<void> {
         this.over = true;
-        clearTimeout(this.timer);
+        this.cancelStep();
         clearTimeout(this.idleTimer);
         clearTimeout(this.burstTimer);
         this.eventTimers.forEach((timer) => clearTimeout(timer));
         const refunds = this.balloons.filter((b) => !b.popped).flatMap((b) => [...b.paid]);
         this.balloons.forEach((b) => b.paid.clear());
-        await Promise.all(refunds.map(([session, amount]) => UserController.giveMoney(session.user, amount, 'Lucky Pop refund', 'refund')));
+        await this.refund(refunds.map(([session, amount]) => ({ session, amount })));
     }
 
     public sanitizedFor(session: Session): SanitizedLuckyPop {
@@ -463,7 +458,7 @@ export class LuckyPop {
         }
         // Burst while this hit was being paid: the hit never landed
         if (pinata.popped || this.over) {
-            await UserController.giveMoney(session.user, price, 'Lucky Pop refund', 'refund');
+            await this.refund([{ session, amount: price }]);
             throw new Error('Someone burst it first');
         }
         pinata.hits++;
@@ -551,10 +546,9 @@ export class LuckyPop {
     }
 
     private endSoon(): void {
-        clearTimeout(this.timer);
         clearTimeout(this.idleTimer);
         // A beat, so the last result shows before the vote
-        this.timer = setTimeout(() => this.end(), this.timings.lastPopBeatMs);
+        this.schedule(this.timings.lastPopBeatMs, () => this.end());
     }
 
     private draw({ size, golden }: Balloon): Prize {
@@ -674,22 +668,5 @@ export class LuckyPop {
             case 'storm':
                 return this.party.wizzStorm(session, LuckyPop.STORM_WIZZES);
         }
-    }
-
-    private end(): void {
-        if (this.over) {
-            return;
-        }
-        this.over = true;
-        logFailure(Promise.resolve().then(this.onRoundEnd), 'Lucky Pop');
-    }
-
-    private broadcast(): void {
-        if (this.over) {
-            return;
-        }
-        this.party.channel.sessions.forEach((session) =>
-            session.connections.forEach((connection) => connection.send('lucky-pop', this.sanitizedFor(session))),
-        );
     }
 }

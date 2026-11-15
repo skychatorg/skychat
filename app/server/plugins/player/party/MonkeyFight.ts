@@ -6,6 +6,7 @@ import { logFailure } from '../../../skychat/Logging.js';
 import { UserController } from '../../../skychat/UserController.js';
 import { shuffle } from './shuffle.js';
 import type { Party } from './Party.js';
+import { PartyRound } from './PartyRound.js';
 
 /**
  * - betting: four new monkeys, everyone backs one
@@ -195,7 +196,7 @@ export function simulate(monkeys: Monkey[], random: (max: number) => number): { 
  * Four random monkeys fight, last one standing wins. Everyone backs one monkey, at odds the server
  * works out by running the fight thousands of times, so every bet is worth 99% of its stake on average.
  */
-export class MonkeyFight {
+export class MonkeyFight extends PartyRound {
     static readonly FIGHTS = 1;
 
     static readonly MONKEYS = 4;
@@ -235,14 +236,9 @@ export class MonkeyFight {
 
     private startedAt: number | null = null;
 
-    private timer: ReturnType<typeof setTimeout> | undefined;
-
-    private over = false;
-
-    constructor(
-        private readonly party: Party,
-        private readonly onRoundEnd: () => void,
-    ) {}
+    constructor(party: Party, onRoundEnd: () => void) {
+        super(party, onRoundEnd, 'Monkey Fight');
+    }
 
     public start(): void {
         logFailure(this.openBets(), 'Monkey Fight');
@@ -302,7 +298,7 @@ export class MonkeyFight {
             if (difference > 0) {
                 await UserController.buy(seat.session.user, difference, 'Monkey Fight bet', 'bet');
             } else if (difference < 0) {
-                await UserController.giveMoney(seat.session.user, -difference, 'Monkey Fight refund', 'refund');
+                await this.refund([{ session: seat.session, amount: -difference }]);
             }
         } catch (error) {
             Object.assign(seat, before);
@@ -315,7 +311,7 @@ export class MonkeyFight {
         const seat = this.bets.find((b) => b.session === session);
         if (seat && this.phase === 'betting') {
             this.bets.splice(this.bets.indexOf(seat), 1);
-            await UserController.giveMoney(session.user, seat.bet, 'Monkey Fight refund', 'refund');
+            await this.refund([{ session, amount: seat.bet }]);
             this.broadcast();
         }
     }
@@ -330,12 +326,8 @@ export class MonkeyFight {
      */
     public async destroy(): Promise<void> {
         this.over = true;
-        clearTimeout(this.timer);
-        await Promise.all(
-            this.bets
-                .filter((b) => b.payout === null)
-                .map((b) => UserController.giveMoney(b.session.user, b.bet, 'Monkey Fight refund', 'refund')),
-        );
+        this.cancelStep();
+        await this.refund(this.bets.filter((b) => b.payout === null).map((b) => ({ session: b.session, amount: b.bet })));
         this.bets = [];
     }
 
@@ -465,25 +457,5 @@ export class MonkeyFight {
         this.schedule(this.timings.resultsMs, () =>
             this.fight >= MonkeyFight.FIGHTS ? this.end() : logFailure(this.openBets(), 'Monkey Fight'),
         );
-    }
-
-    private end(): void {
-        if (this.over) {
-            return;
-        }
-        this.over = true;
-        clearTimeout(this.timer);
-        logFailure(Promise.resolve().then(this.onRoundEnd), 'Monkey Fight');
-    }
-
-    private schedule(ms: number, fn: () => void): void {
-        clearTimeout(this.timer);
-        this.timer = setTimeout(fn, ms);
-    }
-
-    private broadcast(): void {
-        if (!this.over) {
-            this.syncConnections(this.party.connections());
-        }
     }
 }

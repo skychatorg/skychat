@@ -5,6 +5,7 @@ import { SanitizedUser } from '../../../skychat/User.js';
 import { logFailure } from '../../../skychat/Logging.js';
 import { UserController } from '../../../skychat/UserController.js';
 import type { Party } from './Party.js';
+import { PartyRound } from './PartyRound.js';
 
 /**
  * - betting: bets are open for a few seconds
@@ -41,7 +42,7 @@ export type SanitizedCrash = {
  * Everyone bets, a multiplier climbs from ×1.00, and each player cashes out before it crashes, or loses the bet.
  * Multipliers are kept in hundredths (250 is ×2.50) so money maths stays in whole numbers.
  */
-export class Crash {
+export class Crash extends PartyRound {
     static readonly FLIGHTS = 5;
 
     /** Every cash-out target is worth 99% of the bet */
@@ -71,14 +72,9 @@ export class Crash {
 
     private history: number[] = [];
 
-    private timers: ReturnType<typeof setTimeout>[] = [];
-
-    private over = false;
-
-    constructor(
-        private readonly party: Party,
-        private readonly onRoundEnd: () => void,
-    ) {}
+    constructor(party: Party, onRoundEnd: () => void) {
+        super(party, onRoundEnd, 'Crash');
+    }
 
     public start(): void {
         this.openBets();
@@ -151,7 +147,7 @@ export class Crash {
         const seat = this.bets.find((b) => b.session === session);
         if (seat && this.phase === 'betting') {
             this.bets.splice(this.bets.indexOf(seat), 1);
-            await UserController.giveMoney(session.user, seat.bet, 'Crash refund', 'refund');
+            await this.refund([{ session, amount: seat.bet }]);
             this.broadcast();
         }
     }
@@ -166,13 +162,9 @@ export class Crash {
      */
     public async destroy(): Promise<void> {
         this.over = true;
-        this.clearTimers();
+        this.cancelStep();
         if (this.phase !== 'crashed') {
-            await Promise.all(
-                this.bets
-                    .filter((b) => b.cashedAt === null)
-                    .map((b) => UserController.giveMoney(b.session.user, b.bet, 'Crash refund', 'refund')),
-            );
+            await this.refund(this.bets.filter((b) => b.cashedAt === null).map((b) => ({ session: b.session, amount: b.bet })));
         }
         this.bets = [];
     }
@@ -216,17 +208,15 @@ export class Crash {
         if (this.phase !== 'betting') {
             return;
         }
-        this.clearTimers();
         this.phase = 'flying';
         this.deadline = null;
         this.crashPoint = this.drawCrashPoint();
         this.startedAt = Date.now();
-        this.timers.push(setTimeout(() => this.crash(), Math.ceil(Math.log2(this.crashPoint / 100) * this.timings.doubleMs)));
+        this.schedule(Math.ceil(Math.log2(this.crashPoint / 100) * this.timings.doubleMs), () => this.crash());
         this.broadcast();
     }
 
     private crash(): void {
-        this.clearTimers();
         this.phase = 'crashed';
         this.crashedAt = this.crashPoint;
         this.history = [this.crashPoint, ...this.history].slice(0, 12);
@@ -245,31 +235,5 @@ export class Crash {
         }
         this.broadcast();
         this.schedule(this.timings.crashedMs, () => (this.flight >= Crash.FLIGHTS ? this.end() : this.openBets()));
-    }
-
-    private end(): void {
-        if (this.over) {
-            return;
-        }
-        this.over = true;
-        this.clearTimers();
-        logFailure(Promise.resolve().then(this.onRoundEnd), 'Crash');
-    }
-
-    private schedule(ms: number, fn: () => void): void {
-        this.clearTimers();
-        this.timers.push(setTimeout(fn, ms));
-    }
-
-    private clearTimers(): void {
-        this.timers.forEach((timer) => clearTimeout(timer));
-        this.timers = [];
-    }
-
-    private broadcast(): void {
-        if (this.over) {
-            return;
-        }
-        this.syncConnections(this.party.connections());
     }
 }

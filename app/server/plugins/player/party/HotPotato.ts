@@ -6,6 +6,7 @@ import { SanitizedUser } from '../../../skychat/User.js';
 import { logFailure } from '../../../skychat/Logging.js';
 import { UserController } from '../../../skychat/UserController.js';
 import type { Party } from './Party.js';
+import { PartyRound } from './PartyRound.js';
 
 /**
  * - joining: players buy a seat around the circle, all at the same stake
@@ -61,7 +62,7 @@ export type SanitizedHotPotato = {
  * the rest by how long each held it: holding is a risk that pays, up to a point. Nothing rewards being fast: the fuse is as likely to
  * blow in any second, and a pass picked during the hold goes out the moment it ends.
  */
-export class HotPotato {
+export class HotPotato extends PartyRound {
     static readonly ROUNDS = 3;
 
     /** Two is a duel: the bomb goes back and forth until it blows */
@@ -112,16 +113,11 @@ export class HotPotato {
 
     private startedAt: number | null = null;
 
-    private timer: ReturnType<typeof setTimeout> | undefined;
-
     private fuse: ReturnType<typeof setTimeout> | undefined;
 
-    private over = false;
-
-    constructor(
-        private readonly party: Party,
-        private readonly onRoundEnd: () => void,
-    ) {}
+    constructor(party: Party, onRoundEnd: () => void) {
+        super(party, onRoundEnd, 'Hot Potato');
+    }
 
     public start(): void {
         this.openJoining();
@@ -253,7 +249,7 @@ export class HotPotato {
             if (!this.seats.length) {
                 this.stake = null;
             }
-            await UserController.giveMoney(session.user, stake, 'Hot Potato refund', 'refund');
+            await this.refund([{ session, amount: stake }]);
             this.broadcast();
             return;
         }
@@ -276,12 +272,12 @@ export class HotPotato {
      */
     public async destroy(): Promise<void> {
         this.over = true;
-        clearTimeout(this.timer);
+        this.cancelStep();
         clearTimeout(this.fuse);
         clearTimeout(this.passTimer);
         const seats = this.phase === 'done' ? [] : this.seats;
         this.seats = [];
-        await Promise.all(seats.map((s) => UserController.giveMoney(s.session.user, s.paid, 'Hot Potato refund', 'refund')));
+        await this.refund(seats.map((s) => ({ session: s.session, amount: s.paid })));
     }
 
     public sanitized(): SanitizedHotPotato {
@@ -336,10 +332,7 @@ export class HotPotato {
         if (this.seats.length < HotPotato.MIN_PLAYERS) {
             const seats = this.seats;
             this.seats = [];
-            logFailure(
-                Promise.all(seats.map((s) => UserController.giveMoney(s.session.user, s.paid, 'Hot Potato refund', 'refund'))),
-                'Hot Potato',
-            );
+            logFailure(this.refund(seats.map((s) => ({ session: s.session, amount: s.paid }))), 'Hot Potato');
             this.end();
             return;
         }
@@ -414,24 +407,8 @@ export class HotPotato {
         }
     }
 
-    private end(): void {
-        if (this.over) {
-            return;
-        }
-        this.over = true;
-        clearTimeout(this.timer);
+    protected end(): void {
         clearTimeout(this.fuse);
-        logFailure(Promise.resolve().then(this.onRoundEnd), 'Hot Potato');
-    }
-
-    private schedule(ms: number, fn: () => void): void {
-        clearTimeout(this.timer);
-        this.timer = setTimeout(fn, ms);
-    }
-
-    private broadcast(): void {
-        if (!this.over) {
-            this.syncConnections(this.party.connections());
-        }
+        super.end();
     }
 }
