@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { PlayerChannel } from '../../app/server/plugins/player/PlayerChannel.js';
 import { PlayerPlugin } from '../../app/server/plugins/player/PlayerPlugin.js';
 import { DatabaseHelper } from '../../app/server/skychat/DatabaseHelper.js';
@@ -160,5 +160,22 @@ describe('money changes', () => {
             [alice.session.user.id, 2000, 'refund'],
         ]);
         await admin.send(`/playerchannelmanage delete ${channel.id}`);
+    });
+});
+
+describe('scheduled summary', () => {
+    it('schedules the next one even when posting this one fails', async () => {
+        const plugin = server.roomManager.getPlugin('dailysummary') as unknown as {
+            onScheduledTime(): Promise<void>;
+            armTimer(): void;
+            postDailySummary(): Promise<void>;
+        };
+        vi.spyOn(plugin, 'postDailySummary').mockRejectedValue(new Error('DB down'));
+        const armTimer = vi.spyOn(plugin, 'armTimer').mockImplementation(() => {});
+
+        await plugin.onScheduledTime();
+
+        expect(armTimer).toHaveBeenCalledTimes(1);
+        vi.restoreAllMocks();
     });
 });

@@ -74,8 +74,13 @@ export class DailySummaryPlugin extends GlobalPlugin {
     }
 
     private async onScheduledTime(): Promise<void> {
-        await this.postDailySummary();
+        // Scheduled first, so one failed summary never stops the next ones
         this.armTimer();
+        try {
+            await this.postDailySummary();
+        } catch (error) {
+            Logging.error('DailySummaryPlugin: Could not post the summary', error);
+        }
         try {
             const expired = new Date(Date.now() - DailySummaryPlugin.MONEY_RETENTION * 24 * 60 * 60 * 1000);
             await DatabaseHelper.db.query(SQL`DELETE FROM money_changes WHERE date < ${expired}`);
