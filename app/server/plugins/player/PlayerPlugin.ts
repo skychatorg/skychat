@@ -19,6 +19,8 @@ import {
     STREAM_TOKEN_TTL_MS,
 } from './fetcher/JellyfinFetcher.js';
 import { buildJellyfinRoutes } from './fetcher/JellyfinRoutes.js';
+import { mapAlbum, mapSong, NAVIDROME_ID_REGEX, NAVIDROME_PAGE_SIZE, NavidromeFetcher } from './fetcher/NavidromeFetcher.js';
+import { buildNavidromeRoutes } from './fetcher/NavidromeRoutes.js';
 import { TwitchFetcher } from './fetcher/TwitchFetcher.js';
 import { VideoFetcher } from './fetcher/VideoFetcher.js';
 import { YoutubeFetcher } from './fetcher/YoutubeFetcher.js';
@@ -33,6 +35,7 @@ export class PlayerPlugin extends GlobalPlugin {
         iframe: new IFrameFetcher(),
         galleryadd: new GalleryFetcher(),
         jellyfin: new JellyfinFetcher(),
+        navidrome: new NavidromeFetcher(),
     };
 
     /**
@@ -58,6 +61,8 @@ export class PlayerPlugin extends GlobalPlugin {
         'unschedule',
         'jellyfinls',
         'jellyfinsearch',
+        'navidromels',
+        'navidromesearch',
     ].concat(Object.keys(PlayerPlugin.FETCHERS));
 
     static readonly defaultDataStorageValue: { channel: null | number } = { channel: null };
@@ -157,6 +162,20 @@ export class PlayerPlugin extends GlobalPlugin {
             coolDown: 300,
             maxCallsPer10Seconds: 30,
         },
+        navidromels: {
+            // `newest [offset]` or `album <id>`, validated in the handler
+            minCount: 1,
+            maxCount: 2,
+            coolDown: 200,
+            maxCallsPer10Seconds: 30,
+            params: [{ name: 'view', pattern: /^(newest|album)$/ }],
+        },
+        navidromesearch: {
+            // `<offset> <term>`: the term carries spaces, so it is parsed in the handler
+            minCount: 1,
+            coolDown: 300,
+            maxCallsPer10Seconds: 30,
+        },
     };
 
     protected storage: { channels: SanitizedPlayerChannel[]; lastChannelId?: number } = {
@@ -210,8 +229,8 @@ export class PlayerPlugin extends GlobalPlugin {
     public async run(alias: string, param: string, connection: Connection) {
         // If using a fetcher alias to play a video
         if (typeof PlayerPlugin.FETCHERS[alias] !== 'undefined') {
-            if (alias === 'jellyfin' && !this.canBrowseJellyfin(connection.session)) {
-                throw new Error('You do not have the permission to play Jellyfin content');
+            if (!this.canUseFetcher(alias, connection.session)) {
+                throw new Error('You do not have the permission to play this content');
             }
             await this.handlePlayerFetch(alias, param, connection);
             return;
@@ -262,6 +281,14 @@ export class PlayerPlugin extends GlobalPlugin {
                 await this.handleJellyfinSearch(param, connection);
                 break;
 
+            case 'navidromels':
+                await this.handleNavidromeLs(param, connection);
+                break;
+
+            case 'navidromesearch':
+                await this.handleNavidromeSearch(param, connection);
+                break;
+
             default:
                 throw new Error('Unsupported action');
         }
@@ -299,6 +326,113 @@ export class PlayerPlugin extends GlobalPlugin {
             Config.PREFERENCES.minRightForJellyfinBrowse === 'op' ? Infinity : Config.PREFERENCES.minRightForJellyfinBrowse;
         const actualRight = session.isOP() ? Infinity : session.user.right;
         return actualRight >= expectedRight;
+    }
+
+    /**
+     * Return whether a session has the right to browse or play the Navidrome music library
+     */
+    public canUseNavidrome(session: Session) {
+        const pref = Config.PREFERENCES.minRightForNavidrome ?? 0;
+        const expectedRight = pref === 'op' ? Infinity : pref;
+        const actualRight = session.isOP() ? Infinity : session.user.right;
+        return actualRight >= expectedRight;
+    }
+
+    /**
+     * Return whether a session may use the given fetcher (the self-hosted libraries are gated)
+     */
+    public canUseFetcher(fetcherName: string, session: Session) {
+        if (fetcherName === 'jellyfin') {
+            return this.canBrowseJellyfin(session);
+        }
+        if (fetcherName === 'navidrome') {
+            return this.canUseNavidrome(session);
+        }
+        return true;
+    }
+
+    private get navidrome(): NavidromeFetcher {
+        const fetcher = PlayerPlugin.FETCHERS.navidrome as NavidromeFetcher;
+        if (!fetcher.enabled) {
+            throw new Error('The music library is not configured on this server');
+        }
+        return fetcher;
+    }
+
+    /**
+     * Browse the music library: `newest [offset]` lists recent albums, `album <id>` its songs.
+     */
+    private async handleNavidromeLs(param: string, connection: Connection) {
+        if (!this.canUseNavidrome(connection.session)) {
+            throw new Error('You do not have the permission to browse the music library');
+        }
+        const client = this.navidrome.client;
+        const [view, arg] = param.trim().split(' ');
+        const streamToken = issueStreamToken(connection.session.user.id, Date.now() + STREAM_TOKEN_TTL_MS);
+        // Upstream errors become a "music library" message: the raw axios one leaks internals, and the
+        // client only leaves its loading state on errors that mention the music library.
+        try {
+            if (view === 'album') {
+                if (!arg || !NAVIDROME_ID_REGEX.test(arg)) {
+                    throw new Error('Invalid album id');
+                }
+                const album = await client.getAlbum(arg);
+                connection.send('navidrome-library', {
+                    key: `album:${arg}`,
+                    startIndex: 0,
+                    hasMore: false,
+                    album: mapAlbum(album),
+                    albums: [],
+                    songs: (album.song ?? []).map(mapSong),
+                    streamToken,
+                });
+                return;
+            }
+            const startIndex = arg && /^\d{1,6}$/.test(arg) ? parseInt(arg, 10) : 0;
+            const albums = await client.newestAlbums(startIndex);
+            connection.send('navidrome-library', {
+                key: 'newest',
+                startIndex,
+                hasMore: albums.length === NAVIDROME_PAGE_SIZE,
+                albums: albums.map(mapAlbum),
+                songs: [],
+                streamToken,
+            });
+        } catch (err) {
+            Logging.warn(`Navidrome browse failed (${param}): ${(err as Error).message}`);
+            throw new Error('Could not load the music library');
+        }
+    }
+
+    /**
+     * Search albums and songs in the music library: `<offset> <term>`.
+     */
+    private async handleNavidromeSearch(param: string, connection: Connection) {
+        if (!this.canUseNavidrome(connection.session)) {
+            throw new Error('You do not have the permission to browse the music library');
+        }
+        const client = this.navidrome.client;
+        const match = param.trim().match(/^(\d{1,6}) (.+)$/);
+        if (!match) {
+            throw new Error('Empty music library search');
+        }
+        const startIndex = parseInt(match[1], 10);
+        const term = match[2].trim();
+        let albums, songs;
+        try {
+            ({ albums, songs } = await client.search(term, startIndex));
+        } catch (err) {
+            Logging.warn(`Navidrome search failed (term=${term}): ${(err as Error).message}`);
+            throw new Error('Could not search the music library');
+        }
+        connection.send('navidrome-library', {
+            key: `search:${term}`,
+            startIndex,
+            hasMore: albums.length === NAVIDROME_PAGE_SIZE || songs.length === NAVIDROME_PAGE_SIZE,
+            albums: albums.map(mapAlbum),
+            songs: songs.map(mapSong),
+            streamToken: issueStreamToken(connection.session.user.id, Date.now() + STREAM_TOKEN_TTL_MS),
+        });
     }
 
     /**
@@ -384,8 +518,10 @@ export class PlayerPlugin extends GlobalPlugin {
     }
 
     public getRoutes(): PluginRoute[] {
-        const fetcher = PlayerPlugin.FETCHERS.jellyfin as JellyfinFetcher;
-        return buildJellyfinRoutes(fetcher);
+        return [
+            ...buildJellyfinRoutes(PlayerPlugin.FETCHERS.jellyfin as JellyfinFetcher),
+            ...buildNavidromeRoutes(PlayerPlugin.FETCHERS.navidrome as NavidromeFetcher),
+        ];
     }
 
     /**
@@ -527,8 +663,8 @@ export class PlayerPlugin extends GlobalPlugin {
         if (typeof PlayerPlugin.FETCHERS[fetcherName] === 'undefined') {
             throw new Error('Invalid fetcher specified');
         }
-        if (fetcherName === 'jellyfin' && !this.canBrowseJellyfin(connection.session)) {
-            throw new Error('You do not have the permission to browse Jellyfin');
+        if (!this.canUseFetcher(fetcherName, connection.session)) {
+            throw new Error('You do not have the permission to search this library');
         }
         const fetcher = PlayerPlugin.FETCHERS[fetcherName];
         const type = param.split(' ')[1];

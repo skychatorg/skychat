@@ -25,7 +25,29 @@ export function roomCursorMs(player, playerLastUpdate) {
  * Adding a type here is the ONLY change needed to enable pause for it client-side (plus the
  * actual pause/play wiring in that type's impl component). The server stays media-type-agnostic.
  */
-const PAUSABLE_TYPES = { gallery: true, jellyfin: true };
+const PAUSABLE_TYPES = { gallery: true, jellyfin: true, navidrome: true };
+
+/**
+ * Media types served by SkyChat's own proxy, whose stream and thumbnail URLs need the viewer's stream token.
+ */
+const PROXIED_TYPES = { jellyfin: true, navidrome: true };
+
+/**
+ * Thumbnail URL of a media as the viewer can load it: proxied thumbs get the stream token appended
+ * (their URL always carries a query already), others pass through unchanged.
+ * @param {{ type: string, thumb?: string }} video
+ * @param {string|undefined} token client.state.player.streamToken
+ * @returns {string|null}
+ */
+export function mediaThumbUrl(video, token) {
+    if (!video?.thumb) {
+        return null;
+    }
+    if (PROXIED_TYPES[video.type]) {
+        return token ? `${video.thumb}&t=${encodeURIComponent(token)}` : null;
+    }
+    return video.thumb;
+}
 
 /**
  * Whether the given video can be paused from the UI.

@@ -22,6 +22,8 @@ export type Preferences = {
     minRightForPlayerAddMedia: number | 'op';
     minRightForPlayerManageSchedule: number | 'op';
     minRightForJellyfinBrowse: number | 'op';
+    /** Optional, defaults to 0 (any registered user) */
+    minRightForNavidrome?: number | 'op';
     minRightForVoiceJoin: number | 'op';
     minRightForVoiceSpeak: number | 'op';
     minRightForVoiceModeration: number | 'op';
@@ -39,6 +41,7 @@ export type Preferences = {
 export type PublicConfig = {
     galleryEnabled: boolean;
     jellyfinEnabled: boolean;
+    navidromeEnabled: boolean;
     minRightForStickerManagement: number | 'op';
     minRightForHighlightManagement: number | 'op';
     minRightForMessageHistory: number;
@@ -79,6 +82,11 @@ export class Config {
             jellyfinEnabled:
                 Boolean(process.env.ENABLED_PLUGINS?.includes('PlayerPluginGroup')) &&
                 Boolean(process.env.JELLYFIN_API_KEY && process.env.JELLYFIN_API_KEY.trim().length > 0),
+            navidromeEnabled:
+                Boolean(process.env.ENABLED_PLUGINS?.includes('PlayerPluginGroup')) &&
+                Boolean(
+                    process.env.NAVIDROME_INTERNAL_URL?.trim() && process.env.NAVIDROME_USERNAME?.trim() && process.env.NAVIDROME_PASSWORD,
+                ),
             minRightForStickerManagement: Config.PREFERENCES.minRightForStickerManagement,
             minRightForHighlightManagement: Config.PREFERENCES.minRightForHighlightManagement ?? 'op',
             minRightForMessageHistory: Config.PREFERENCES.minRightForMessageHistory,

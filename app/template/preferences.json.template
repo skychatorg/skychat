@@ -19,6 +19,7 @@
     "minRightForPlayerAddMedia": 0,
     "minRightForPlayerManageSchedule": "op",
     "minRightForJellyfinBrowse": 0,
+    "minRightForNavidrome": 0,
     "minRightForVoiceJoin": 0,
     "minRightForVoiceSpeak": 0,
     "minRightForVoiceModeration": "op",

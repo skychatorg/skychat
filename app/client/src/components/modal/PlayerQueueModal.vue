@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
 import { formatMs } from '@/lib/formatTime';
+import { mediaThumbUrl } from '@/lib/player';
 import ModalTemplate from '@/components/modal/ModalTemplate.vue';
 import HoverCard from '@/components/util/HoverCard.vue';
 import PlayerLinkTools from '@/components/player/PlayerLinkTools.vue';
@@ -15,6 +16,7 @@ const SOURCES = {
     youtube: { icon: 'video', label: 'YouTube' },
     twitch: { icon: 'tv', label: 'Twitch' },
     jellyfin: { icon: 'film', label: 'Jellyfin' },
+    navidrome: { icon: 'music', label: 'Music' },
     gallery: { icon: 'image', label: 'Gallery' },
     iframe: { icon: 'globe', label: 'Web' },
 };
@@ -27,18 +29,7 @@ const totalDuration = computed(() => queue.value.reduce((sum, entry) => sum + (e
 
 const canManage = (entry) => client.state.op || entry.user.id === client.state.user.id;
 
-// Jellyfin thumbnails go through the authenticated proxy and need the per-viewer stream token.
-// Every other source exposes an absolute URL that passes through unchanged.
-const thumbUrl = (video) => {
-    if (!video.thumb) {
-        return null;
-    }
-    if (video.type === 'jellyfin') {
-        const token = client.state.player.streamToken;
-        return token ? `${video.thumb}&t=${encodeURIComponent(token)}` : null;
-    }
-    return video.thumb;
-};
+const thumbUrl = (video) => mediaThumbUrl(video, client.state.player.streamToken);
 
 const remove = (video) => client.sendMessage(`/playerremovevideo ${video.type} ${video.id}`);
 const clearQueue = () => client.sendMessage('/player flush');

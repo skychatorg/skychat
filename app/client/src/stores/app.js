@@ -217,6 +217,11 @@ export const useAppStore = defineStore('app', {
             jellyfin: false,
 
             /**
+             * Modal to browse the Navidrome music library
+             */
+            navidrome: false,
+
+            /**
              * List on currently converting videos
              */
             ongoingConverts: false,

@@ -4,6 +4,7 @@ import AdminModal from '@/components/admin/AdminModal.vue';
 import AppHeader from '@/components/layout/AppHeader.vue';
 import GalleryModal from '@/components/modal/GalleryModal.vue';
 import JellyfinModal from '@/components/modal/JellyfinModal.vue';
+import NavidromeModal from '@/components/modal/NavidromeModal.vue';
 import OngoingConvertsModal from '@/components/modal/OngoingConvertsModal.vue';
 import PlayerQueueModal from '@/components/modal/PlayerQueueModal.vue';
 import ProfileModal from '@/components/modal/ProfileModal.vue';
@@ -28,6 +29,7 @@ import GroupChatModal from '@/components/modal/GroupChatModal.vue';
         <VideoConverterModal />
         <GalleryModal />
         <JellyfinModal />
+        <NavidromeModal />
         <PlayerQueueModal />
         <AdminModal />
         <CreatePollModal />

@@ -11,7 +11,7 @@ import SkyDropdownItem from '@/components/common/SkyDropdownItem.vue';
 import { useJellyfinTracks } from '@/composables/useJellyfinTracks.js';
 import { useCountdown } from '@/composables/useCountdown';
 import { useNow } from '@/composables/useNow';
-import { isPausable } from '@/lib/player';
+import { isPausable, mediaThumbUrl } from '@/lib/player';
 import { computed } from 'vue';
 
 const app = useAppStore();
@@ -79,22 +79,7 @@ const playerHeightCss = computed(() => {
 });
 
 const currentTitle = computed(() => (isParty.value ? client.currentChannel?.name : client.state.player.current?.video?.title) ?? '');
-// Jellyfin thumbnails are served through the authenticated proxy, so they need the per-viewer
-// stream token appended. Other video types expose absolute thumb URLs and pass through unchanged.
-const currentThumb = computed(() => {
-    const video = client.state.player.current?.video;
-    if (!video?.thumb) {
-        return null;
-    }
-    if (video.type === 'jellyfin') {
-        const token = client.state.player.streamToken;
-        if (!token) {
-            return null;
-        }
-        return `${video.thumb}&t=${encodeURIComponent(token)}`;
-    }
-    return video.thumb;
-});
+const currentThumb = computed(() => mediaThumbUrl(client.state.player.current?.video, client.state.player.streamToken));
 const currentOwner = computed(() => client.state.player.current?.user?.username ?? null);
 // Watchers are the users in the current player channel (not the chat room — the two are independent)
 const watchers = computed(() => client.currentChannel?.users ?? []);

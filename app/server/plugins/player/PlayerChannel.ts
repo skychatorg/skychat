@@ -47,7 +47,7 @@ export type VideoInfo = {
     /**
      * Video type
      */
-    type: 'youtube' | 'twitch' | 'gallery' | 'iframe' | 'jellyfin';
+    type: 'youtube' | 'twitch' | 'gallery' | 'iframe' | 'jellyfin' | 'navidrome';
 
     /**
      * Video data (for youtube, video id; for jellyfin, item id)
@@ -542,13 +542,14 @@ export class PlayerChannel {
     }
 
     /**
-     * Build the player-sync payload for a specific session. When the current item is
-     * a Jellyfin media, include a signed stream token scoped to that session's user.
-     * Returns the bare payload unchanged for non-Jellyfin content.
+     * Build the player-sync payload for a specific session. When the current item comes from a
+     * self-hosted library (Jellyfin, Navidrome), include a signed stream token scoped to that
+     * session's user. Returns the bare payload unchanged for other content.
      */
     private buildSyncPayload(session: Session): ReturnType<PlayerChannel['getPlayerData']> & { streamToken?: string } {
         const data = this.getPlayerData();
-        if (data.current?.video.type === 'jellyfin' && this.manager.plugin.canBrowseJellyfin(session)) {
+        const type = data.current?.video.type;
+        if ((type === 'jellyfin' || type === 'navidrome') && this.manager.plugin.canUseFetcher(type, session)) {
             return { ...data, streamToken: issueStreamToken(session.user.id, Date.now() + STREAM_TOKEN_TTL_MS) };
         }
         return data;
