@@ -1,4 +1,3 @@
-import type { DtlsParameters, MediaKind, RtpCapabilities, RtpParameters } from 'mediasoup/node/lib/types.js';
 import { Config } from '../../skychat/Config.js';
 import { Connection } from '../../skychat/Connection.js';
 import { Logging } from '../../skychat/Logging.js';
@@ -12,6 +11,7 @@ import { BunkerPlugin } from '../security_extra/BunkerPlugin.js';
 import { VoiceChannelManager } from './VoiceChannelManager.js';
 import { VoiceError } from './VoiceError.js';
 import { VoiceSfu } from './VoiceSfu.js';
+import { ClientDtlsParameters, ClientProduceParameters, ClientRtpCapabilities, VoiceTransportParams } from './VoiceTypes.js';
 import { issueVoiceDtlsId } from './VoiceToken.js';
 
 /** Ban types from BanPlugin (verified: ACCESS=0, SHADOW=1). */
@@ -317,7 +317,7 @@ export class VoicePlugin extends GlobalPlugin {
 
     private async handleRtpCaps(param: string, connection: Connection) {
         const channel = this.requireChannel(connection);
-        const { rtpCapabilities } = this.parseJson<{ rtpCapabilities: RtpCapabilities }>(param);
+        const { rtpCapabilities } = this.parseJson<ClientRtpCapabilities>(param);
         channel.setRtpCapabilities(connection, rtpCapabilities);
         connection.send('voice-rtpcaps-ok', { ok: true });
     }
@@ -342,14 +342,15 @@ export class VoicePlugin extends GlobalPlugin {
         });
 
         // SERVER candidates ONLY. No client IP, no SDP.
-        connection.send('voice-transport', {
+        const params: VoiceTransportParams = {
             direction,
             id: transport.id,
             iceParameters: transport.iceParameters,
             iceCandidates: transport.iceCandidates,
             dtlsParameters: transport.dtlsParameters,
             dtlsId,
-        });
+        };
+        connection.send('voice-transport', params);
 
         // Once the recv transport exists, hand the client the current producer list so it
         // consumes speakers that were already producing before it was ready (avoids a race
@@ -370,7 +371,7 @@ export class VoicePlugin extends GlobalPlugin {
         if (!json) {
             throw new VoiceError('Missing dtlsParameters');
         }
-        const { dtlsParameters, dtlsId } = this.parseJson<{ dtlsParameters: DtlsParameters; dtlsId?: string }>(json);
+        const { dtlsParameters, dtlsId } = this.parseJson<ClientDtlsParameters>(json);
         await channel.connectTransport(connection, direction, dtlsParameters, dtlsId);
         connection.send('voice-connected', { direction });
     }
@@ -390,7 +391,7 @@ export class VoicePlugin extends GlobalPlugin {
         }
         // Shadowban: allow produce (preserve the illusion) but it is never announced/consumed.
 
-        const { kind, rtpParameters } = this.parseJson<{ kind: MediaKind; rtpParameters: RtpParameters }>(param);
+        const { kind, rtpParameters } = this.parseJson<ClientProduceParameters>(param);
         const producer = await channel.produce(connection, kind, rtpParameters);
         connection.send('voice-producer-id', { id: producer.id });
     }
