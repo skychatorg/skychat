@@ -7,17 +7,17 @@ import { TestServer } from './harness.js';
 const upload = (mimetype: string) => FileManager.saveFile({ mimetype, mv: vi.fn() } as never);
 
 describe('voice notes', () => {
-    it('saves recordings as uploads, with a distinct extension per recorder format', () => {
+    it('saves recordings as uploads, with a distinct extension per recorder format', async () => {
         // Chrome sends audio/webm;codecs=opus, Firefox audio/ogg;codecs=opus, Safari audio/mp4
-        expect(upload('audio/webm;codecs=opus')).toMatch(/^uploads\/all\/.+\.weba$/);
-        expect(upload('audio/ogg;codecs=opus')).toMatch(/\.ogg$/);
-        expect(upload('audio/mp4')).toMatch(/\.m4a$/);
-        expect(upload('video/webm')).toMatch(/\.webm$/);
+        expect(await upload('audio/webm;codecs=opus')).toMatch(/^uploads\/all\/.+\.weba$/);
+        expect(await upload('audio/ogg;codecs=opus')).toMatch(/\.ogg$/);
+        expect(await upload('audio/mp4')).toMatch(/\.m4a$/);
+        expect(await upload('video/webm')).toMatch(/\.webm$/);
     });
 
-    it('renders an uploaded recording as a player from the message content alone', () => {
+    it('renders an uploaded recording as a player from the message content alone', async () => {
         // History and restarts re-format messages from their content, which used to lose the audio
-        const url = FileManager.getFileUrlFromLocalPath(upload('audio/webm;codecs=opus'));
+        const url = FileManager.getFileUrlFromLocalPath(await upload('audio/webm;codecs=opus'));
         expect(url.startsWith(Config.LOCATION + '/uploads/all/')).toBe(true);
 
         const formatted = MessageFormatter.getInstance().format(url);
@@ -26,8 +26,8 @@ describe('voice notes', () => {
         expect(MessageFormatter.getInstance().format(url, true)).toBe('');
     });
 
-    it('does not render a video upload as audio', () => {
-        const url = FileManager.getFileUrlFromLocalPath(upload('video/webm'));
+    it('does not render a video upload as audio', async () => {
+        const url = FileManager.getFileUrlFromLocalPath(await upload('video/webm'));
         expect(MessageFormatter.getInstance().format(url)).not.toContain('<audio');
     });
 
@@ -40,7 +40,7 @@ describe('voice notes', () => {
         it('refuses voice notes, sent or edited in, below the right', async () => {
             Config.PREFERENCES.minRightForAudioRecording = 5;
             const server = await new TestServer().start();
-            const url = FileManager.getFileUrlFromLocalPath(upload('audio/webm'));
+            const url = FileManager.getFileUrlFromLocalPath(await upload('audio/webm'));
             const low = await server.connect('audiolow', 0);
             const high = await server.connect('audiohigh', 5);
 
