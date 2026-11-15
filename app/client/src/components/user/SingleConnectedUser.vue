@@ -1,4 +1,5 @@
 <script setup>
+import { nameStyle } from '@/lib/cosmetics';
 import { copyText } from '@/lib/copyText.js';
 import SkyContextMenu from '@/components/common/SkyContextMenu.vue';
 import SkyContextMenuItem from '@/components/common/SkyContextMenuItem.vue';
@@ -204,7 +205,7 @@ const isDisconnected = computed(() => props.entry.connectionCount === 0);
                         <button
                             class="text-sm font-semibold truncate text-left hover:underline"
                             :title="`${entry.user.username}’s profile`"
-                            :style="{ color: entry.user.data.plugins.custom.color }"
+                            v-bind="nameStyle(entry.user)"
                             @click="showProfile"
                         >
                             {{ entry.user.username }}

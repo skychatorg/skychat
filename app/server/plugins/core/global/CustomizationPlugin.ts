@@ -96,7 +96,7 @@ export class CustomizationPlugin extends GlobalPlugin {
             data[slot] = value;
         } else {
             if (!CustomizationPlugin.isRenting(user, slot)) {
-                throw new Error(`Rent a ${SHOP[slot].name.toLowerCase()} in the shop first`);
+                throw new Error(`Rent the ${SHOP[slot].name.toLowerCase()} in the shop first`);
             }
             data[slot] = this.valueOf(slot, option);
         }
@@ -111,7 +111,7 @@ export class CustomizationPlugin extends GlobalPlugin {
     private valueOf(slot: ShopSlot, option: string | undefined): string {
         const value = slot === 'color' ? COLORS.find((color) => String(color.id) === option)?.value : option;
         if (!value || !SHOP[slot].options.some((o) => o.id === option)) {
-            throw new Error(`Pick a ${SHOP[slot].name.toLowerCase()}`);
+            throw new Error(`Pick one of the ${SHOP[slot].name.toLowerCase()}s`);
         }
         return value;
     }

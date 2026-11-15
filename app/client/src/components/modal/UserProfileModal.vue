@@ -1,4 +1,5 @@
 <script setup>
+import { nameStyle } from '@/lib/cosmetics';
 import ModalTemplate from '@/components/modal/ModalTemplate.vue';
 import { useIsBlacklisted } from '@/composables/useIsBlacklisted';
 import { useUserProfile } from '@/composables/useUserProfile';
@@ -116,7 +117,7 @@ const editOwnProfile = () => {
             </div>
 
             <div class="flex flex-col items-center gap-1 min-w-0 max-w-full">
-                <h2 class="text-2xl font-semibold break-words max-w-full" :style="{ color: user.data.plugins.custom.color }">
+                <h2 class="text-2xl font-semibold break-words max-w-full" v-bind="nameStyle(user)">
                     {{ user.username }}
                 </h2>
                 <p class="flex flex-wrap items-center justify-center gap-x-1.5 text-sm text-white/60">

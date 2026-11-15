@@ -6,6 +6,7 @@ import { useNow } from '@/composables/useNow';
 import ModalTemplate from '@/components/modal/ModalTemplate.vue';
 import { formatMoney } from '../../../../api/money.ts';
 import { COLORS, SHOP } from '../../../../api/shop.ts';
+import { nameStyle } from '@/lib/cosmetics';
 
 const app = useAppStore();
 const client = useClientStore();
@@ -39,10 +40,16 @@ const choose = (slot, option) => {
     }
 };
 
-/** What the preview shows: what is worn, with what is being tried on over it */
-const preview = computed(() => ({
-    color: picked.color && !renting('color') ? COLORS.find((color) => String(color.id) === picked.color).value : worn.value.color,
-}));
+/** You with what is worn, and what is being tried on over it */
+const preview = computed(() => {
+    const custom = { ...worn.value };
+    for (const [slot, option] of Object.entries(picked)) {
+        if (option && !renting(slot)) {
+            custom[slot] = slot === 'color' ? colorHex(option) : option;
+        }
+    }
+    return { username: user.value.username, data: { plugins: { ...user.value.data.plugins, custom } } };
+});
 
 const timeLeft = (slot) => {
     const minutes = Math.max(0, Math.floor((until(slot) - now.value) / 60_000));
@@ -71,11 +78,13 @@ const colorHex = (id) => COLORS.find((color) => String(color.id) === id)?.value;
         <div class="shop">
             <!-- You, as others will see you -->
             <div class="preview">
-                <div class="avatar" :style="{ borderColor: preview.color }">
+                <div class="avatar" :style="{ borderColor: preview.data.plugins.custom.color }">
                     <img :src="user.data.plugins.avatar" :alt="user.username" />
                 </div>
                 <div class="min-w-0">
-                    <div class="who" :style="{ color: preview.color }">{{ user.username }}</div>
+                    <div class="who">
+                        <span v-bind="nameStyle(preview)">{{ user.username }}</span>
+                    </div>
                     <div class="hint">How others see you</div>
                 </div>
                 <div class="balance">{{ formatMoney(user.money) }}</div>
@@ -104,6 +113,22 @@ const colorHex = (id) => COLORS.find((color) => String(color.id) === id)?.value;
                         :aria-pressed="selected(slot) === option.id"
                         @click="choose(slot, option.id)"
                     />
+                </div>
+
+                <div v-else-if="slot === 'effect'" class="chips">
+                    <button
+                        v-for="option in item.options"
+                        :key="option.id"
+                        class="chip"
+                        :class="{ on: selected(slot) === option.id }"
+                        :aria-pressed="selected(slot) === option.id"
+                        @click="choose(slot, option.id)"
+                    >
+                        <span
+                            v-bind="nameStyle({ data: { plugins: { custom: { ...preview.data.plugins.custom, effect: option.id } } } })"
+                            >{{ option.name }}</span
+                        >
+                    </button>
                 </div>
 
                 <div class="buys">
@@ -217,6 +242,25 @@ const colorHex = (id) => COLORS.find((color) => String(color.id) === id)?.value;
 }
 .swatch.on {
     outline-color: white;
+}
+.chips {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+    gap: 6px;
+}
+.chip {
+    padding: 8px;
+    border-radius: 10px;
+    font-weight: 700;
+    background: rgb(255 255 255 / 0.04);
+    border: 2px solid rgb(255 255 255 / 0.1);
+    transition: border-color 0.15s;
+}
+.chip:hover {
+    border-color: rgb(255 255 255 / 0.3);
+}
+.chip.on {
+    border-color: white;
 }
 .buys {
     display: grid;

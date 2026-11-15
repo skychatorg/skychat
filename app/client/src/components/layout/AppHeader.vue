@@ -1,4 +1,5 @@
 <script setup>
+import { nameStyle } from '@/lib/cosmetics';
 import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
 import { usePaletteStore } from '@/stores/palette';
@@ -84,7 +85,9 @@ const onlineCount = computed(() => (client.state.connectedList || []).length);
                                 class="h-full w-full object-cover"
                             />
                         </div>
-                        <span v-if="!app.effectiveRightCollapsed" class="text-sm">{{ client.state.user.username }}</span>
+                        <span v-if="!app.effectiveRightCollapsed" class="text-sm" v-bind="nameStyle(client.state.user)">{{
+                            client.state.user.username
+                        }}</span>
                         <span v-if="!app.effectiveRightCollapsed" class="font-mono text-xs text-white/40">
                             {{ client.state.user.right }}
                         </span>

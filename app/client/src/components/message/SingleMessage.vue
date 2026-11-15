@@ -1,4 +1,5 @@
 <script setup>
+import { nameStyle } from '@/lib/cosmetics';
 import { copyText } from '@/lib/copyText.js';
 import SkyContextMenu from '@/components/common/SkyContextMenu.vue';
 import SkyContextMenuItem from '@/components/common/SkyContextMenuItem.vue';
@@ -322,7 +323,7 @@ const userColor = computed(() => props.message.user.data.plugins.custom.color);
                         <div v-if="!compact" class="flex items-baseline gap-2 mb-0.5">
                             <button
                                 class="font-semibold text-base enabled:hover:underline"
-                                :style="{ color: userColor }"
+                                v-bind="nameStyle(message.user)"
                                 :title="message.user.id < 0 ? undefined : `${message.user.username}’s profile`"
                                 :disabled="message.user.id < 0"
                                 @click.stop="openProfile(message.user.username)"
@@ -342,7 +343,7 @@ const userColor = computed(() => props.message.user.data.plugins.custom.color);
                         <div v-else class="flex items-baseline gap-2 mb-0.5">
                             <button
                                 class="font-semibold text-base enabled:hover:underline"
-                                :style="{ color: userColor }"
+                                v-bind="nameStyle(message.user)"
                                 :title="message.user.id < 0 ? undefined : `${message.user.username}’s profile`"
                                 :disabled="message.user.id < 0"
                                 @click.stop="openProfile(message.user.username)"

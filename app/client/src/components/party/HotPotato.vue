@@ -1,4 +1,5 @@
 <script setup>
+import { nameStyle } from '@/lib/cosmetics';
 import MuteButton from '@/components/party/MuteButton.vue';
 import CasinoChip from '@/components/casino/CasinoChip.vue';
 import UserMiniAvatar from '@/components/user/UserMiniAvatar.vue';
@@ -245,7 +246,7 @@ watch(
                             <span v-if="game.stake" class="stake"><CasinoChip :value="game.stake" :color="chipColor(game.stake)" /></span>
                             <span v-if="seat.loser" class="dead" aria-hidden="true">💀</span>
                         </span>
-                        <span class="who" :style="{ color: seat.user.data?.plugins?.custom?.color }">{{ seat.user.username }}</span>
+                        <span class="who" v-bind="nameStyle(seat.user)">{{ seat.user.username }}</span>
                         <span class="money">{{ formatMoney(seat.user.money) }}</span>
                         <span v-if="game.phase !== 'joining'" class="held" :class="{ live: seat.holder && game.phase === 'playing' }">
                             held {{ (heldMs(seat) / 1000).toFixed(1) }}s

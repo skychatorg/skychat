@@ -73,6 +73,18 @@ export const SHOP = {
         prices: { week: 750 * 100, month: 2000 * 100 },
         options: COLORS.map((color) => ({ id: String(color.id), name: color.name })),
     },
+    effect: {
+        name: 'Animated name',
+        pitch: 'Your name in motion, everywhere it shows.',
+        prices: { day: 400 * 100, week: 2000 * 100 },
+        options: [
+            { id: 'shimmer', name: 'Shimmer' },
+            { id: 'rainbow', name: 'Rainbow' },
+            { id: 'fire', name: 'Fire' },
+            { id: 'ice', name: 'Ice' },
+            { id: 'gold', name: 'Gold' },
+        ],
+    },
 } satisfies Record<string, ShopItem>;
 
 export type ShopSlot = keyof typeof SHOP;

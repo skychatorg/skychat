@@ -32,7 +32,7 @@ describe('colour shop', () => {
 
         await alice.send('/custom use color:10');
 
-        expect(alice.errors()).toEqual(['Rent a name color in the shop first']);
+        expect(alice.errors()).toEqual(['Rent the name color in the shop first']);
         expect(custom(alice).color).toBe(CustomizationPlugin.DEFAULT_COLOR);
     });
 
@@ -124,5 +124,35 @@ describe('colour shop', () => {
         await expire();
 
         expect(custom(alice).color).toBe(CustomizationPlugin.DEFAULT_COLOR);
+    });
+});
+
+describe('animated names', () => {
+    it('rents an effect for a day, and switches it for free', async () => {
+        const alice = await shopper();
+
+        await alice.send('/custom buy effect:fire day');
+        await alice.send('/custom use effect:ice');
+
+        expect(alice.errors()).toEqual([]);
+        expect(alice.session.user.money).toBe(SHOP.color.prices.month + SHOP.color.prices.week - SHOP.effect.prices.day);
+        expect(custom(alice).effect).toBe('ice');
+        expect(custom(alice).effectUntil).toBeGreaterThan(Date.now() + DAY - 1000);
+    });
+
+    it('charges nothing for an effect that does not exist or a duration not sold', async () => {
+        const alice = await shopper();
+        const money = alice.session.user.money;
+
+        await alice.send('/custom buy effect:sparkles day');
+        await alice.send('/custom buy effect:fire month');
+        await alice.send('/custom use effect:fire');
+
+        expect(alice.errors()).toEqual([
+            'Pick one of the animated names',
+            'Choose how long to rent it for: day or week',
+            'Rent the animated name in the shop first',
+        ]);
+        expect(alice.session.user.money).toBe(money);
     });
 });
