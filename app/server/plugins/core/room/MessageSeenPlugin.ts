@@ -1,4 +1,6 @@
 import { Connection } from '../../../skychat/Connection.js';
+import { logFailure } from '../../../skychat/Logging.js';
+import { User } from '../../../skychat/User.js';
 import { UserController } from '../../../skychat/UserController.js';
 import { RoomPlugin } from '../../RoomPlugin.js';
 
@@ -11,6 +13,27 @@ export class MessageSeenPlugin extends RoomPlugin {
     static readonly commandName = 'lastseen';
 
     static readonly defaultDataStorageValue = {};
+
+    /** How often last seen messages are written to the database: everyone in a room acknowledges every message */
+    static readonly FLUSH_INTERVAL_MS = 30 * 1000;
+
+    /** Users whose last seen messages changed since the last write */
+    private static readonly unsaved = new Set<User>();
+
+    static {
+        setInterval(() => logFailure(MessageSeenPlugin.flush(), 'Last seen'), MessageSeenPlugin.FLUSH_INTERVAL_MS);
+    }
+
+    /**
+     * Write the last seen messages that changed. Kept in memory until then, where everything reads them
+     */
+    public static async flush(): Promise<void> {
+        const users = [...MessageSeenPlugin.unsaved];
+        MessageSeenPlugin.unsaved.clear();
+        for (const user of users) {
+            await UserController.sync(user);
+        }
+    }
 
     /**
      * We need to allow guests to send /lastseen even though it is not recorded in the backend because sometimes,
@@ -73,8 +96,9 @@ export class MessageSeenPlugin extends RoomPlugin {
         }
         // Update plugin data
         pluginData[room.id] = message.id;
-        // Save plugin data with the new last message seen id
-        await UserController.savePluginData(connection.session.user, this.commandName, pluginData);
+        // In memory now, written with the next flush
+        connection.session.user.data.plugins[this.commandName] = pluginData;
+        MessageSeenPlugin.unsaved.add(connection.session.user);
         const event = { user: connection.session.user.id, data: pluginData } as MessageSeenEventData;
         // Send update to others in the room the message belongs to
         room.send('message-seen', event);

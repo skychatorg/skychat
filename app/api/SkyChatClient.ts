@@ -207,6 +207,9 @@ export declare interface SkyChatClient {
 export class SkyChatClient extends EventEmitter {
     static readonly CURSOR_DECAY_DELAY = 10 * 1e3;
 
+    /** Read receipts wait this long, so a burst of messages sends one per room: each costs the server a broadcast to the room */
+    static readonly SEEN_BATCH_MS = 1000;
+
     /**
      * The server pings every 30s. If nothing at all arrives within this window the socket is dead,
      * whatever `readyState` claims: a phone whose radio slept, or a network that changed under us,
@@ -310,6 +313,10 @@ export class SkyChatClient extends EventEmitter {
     private _isReconnecting: boolean = false;
 
     private autoMessageAck: boolean;
+
+    /** The latest message seen per room, waiting to be sent */
+    private _pendingSeen = new Map<number, number>();
+    private _seenTimer: ReturnType<typeof setTimeout> | null = null;
 
     private diffPatcher = jsondiffpatch.create({
         objectHash: (obj: any, index?: number) => (obj as SanitizedSession)?.identifier ?? obj.id ?? index,
@@ -956,7 +963,19 @@ export class SkyChatClient extends EventEmitter {
      * currently in as read.
      */
     notifySeenMessage(messageId: number, roomId?: number) {
-        this.sendMessage(`/lastseen ${messageId}` + (typeof roomId === 'number' ? ` ${roomId}` : ''));
+        // Named even for the current room: by the time it is sent, we may be in another one
+        const room = roomId ?? this._currentRoomId;
+        if (room === null) {
+            return;
+        }
+        this._pendingSeen.set(room, Math.max(messageId, this._pendingSeen.get(room) ?? 0));
+        this._seenTimer ??= setTimeout(() => {
+            this._seenTimer = null;
+            for (const [pendingRoom, pendingId] of this._pendingSeen) {
+                this.sendMessage(`/lastseen ${pendingId} ${pendingRoom}`);
+            }
+            this._pendingSeen.clear();
+        }, SkyChatClient.SEEN_BATCH_MS);
     }
 
     /**
