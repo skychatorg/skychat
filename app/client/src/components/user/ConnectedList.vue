@@ -169,26 +169,6 @@ const adminTabs = useAdminTabs();
                 <span v-if="!compact">Shop</span>
             </button>
             <button
-                v-if="client.state.config && client.state.config.jellyfinEnabled"
-                class="h-10 flex items-center justify-center gap-1.5 rounded-lg hairline bg-white/[.03] hover:bg-white/[.07] text-sm"
-                :class="compact ? 'w-full' : 'col-span-2'"
-                title="Browse Jellyfin library"
-                @click="app.toggleModal('jellyfin')"
-            >
-                <fa icon="film" />
-                <span v-if="!compact">Jellyfin</span>
-            </button>
-            <button
-                v-if="client.state.config && client.state.config.navidromeEnabled"
-                class="h-10 flex items-center justify-center gap-1.5 rounded-lg hairline bg-white/[.03] hover:bg-white/[.07] text-sm"
-                :class="compact ? 'w-full' : 'col-span-2'"
-                title="Browse the music library"
-                @click="app.toggleModal('navidrome')"
-            >
-                <fa icon="music" />
-                <span v-if="!compact">Music</span>
-            </button>
-            <button
                 v-if="adminTabs.length"
                 class="h-10 flex items-center justify-center gap-1.5 rounded-lg hairline bg-white/[.03] hover:bg-white/[.07] text-sm"
                 :class="compact ? 'w-full' : 'col-span-2'"

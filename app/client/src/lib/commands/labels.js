@@ -31,8 +31,9 @@ export const labels = {
     skipForward30: () => 'Skip forward 30s',
     replay30: () => 'Replay 30s',
     syncPlayer: () => 'Sync player',
-    openPlayerQueue: () => 'Open player queue',
-    addYoutubeVideo: () => 'Add YouTube video…',
+    openPlayerQueue: () => 'See what plays next',
+    addToPlayer: () => 'Add to the player…',
+    browseMusic: () => 'Browse the music library…',
 
     // Chat
     focusMessageInput: () => 'Focus message input',

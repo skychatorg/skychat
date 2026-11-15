@@ -1,14 +1,9 @@
 <script setup>
 import { computed } from 'vue';
-import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
 import { formatMs } from '@/lib/formatTime';
 import { mediaThumbUrl } from '@/lib/player';
-import ModalTemplate from '@/components/modal/ModalTemplate.vue';
-import HoverCard from '@/components/util/HoverCard.vue';
-import PlayerLinkTools from '@/components/player/PlayerLinkTools.vue';
 
-const app = useAppStore();
 const client = useClientStore();
 
 // Per-source presentation. Falls back to a generic film icon for unknown types.
@@ -24,24 +19,21 @@ const source = (video) => SOURCES[video.type] ?? { icon: 'film', label: video.ty
 
 const current = computed(() => client.state.player.current);
 const queue = computed(() => client.state.player.queue);
-
 const totalDuration = computed(() => queue.value.reduce((sum, entry) => sum + (entry.video.duration || 0), 0));
 
 const canManage = (entry) => client.state.op || entry.user.id === client.state.user.id;
-
 const thumbUrl = (video) => mediaThumbUrl(video, client.state.player.streamToken);
 
 const remove = (video) => client.sendMessage(`/playerremovevideo ${video.type} ${video.id}`);
 const clearQueue = () => client.sendMessage('/player flush');
-const addVideo = () => app.toggleModal('youtubeVideoSearcher');
 </script>
 
 <template>
-    <ModalTemplate id="playerQueue" title="Player Queue">
+    <div class="flex flex-col gap-3 min-h-0">
         <!-- Now playing -->
-        <div v-if="current" class="now-playing mb-3 flex gap-3 p-2 rounded-lg">
+        <div v-if="current" class="now-playing flex gap-3 p-2 rounded-lg">
             <div class="thumb shrink-0">
-                <img v-if="thumbUrl(current.video)" :src="thumbUrl(current.video)" class="h-full w-full object-cover" />
+                <img v-if="thumbUrl(current.video)" :src="thumbUrl(current.video)" alt="" class="h-full w-full object-cover" />
                 <fa v-else :icon="source(current.video).icon" class="text-skygray-light" />
             </div>
             <div class="min-w-0 flex flex-col justify-center">
@@ -57,67 +49,64 @@ const addVideo = () => app.toggleModal('youtubeVideoSearcher');
             </div>
         </div>
 
-        <!-- Queue header -->
-        <div v-if="queue.length" class="flex items-center justify-between mb-2 px-1">
+        <div class="flex items-center justify-between px-1">
             <div class="text-xs text-skygray-lighter">
                 <span class="text-skygray-white font-medium">{{ queue.length }}</span>
                 up next
                 <span v-if="totalDuration > 0"> · {{ formatMs(totalDuration) }}</span>
             </div>
-            <button v-if="client.state.op" class="text-xs text-danger hover:underline" @click="clearQueue">
+            <button v-if="client.state.op && queue.length" class="text-xs text-danger hover:underline" @click="clearQueue">
                 <fa icon="trash" class="mr-1" />Clear
             </button>
         </div>
 
-        <!-- Queue list -->
-        <div v-if="queue.length" class="flex flex-col gap-1">
-            <HoverCard
+        <ol v-if="queue.length" class="flex flex-col gap-1">
+            <li
                 v-for="(entry, index) in queue"
                 :key="`${entry.video.type}-${entry.video.id}-${index}`"
-                :selectable="false"
-                :border-color="entry.user.data.plugins.custom.color"
+                class="entry flex items-center gap-2 py-1.5 pl-2 pr-1 rounded-lg hairline bg-white/[.02]"
             >
-                <div class="entry group flex items-center gap-2 py-1.5 pl-2 pr-1">
-                    <div class="position text-xs text-skygray-light font-mono w-4 text-right shrink-0">{{ index + 1 }}</div>
-
-                    <div class="thumb shrink-0">
-                        <img v-if="thumbUrl(entry.video)" :src="thumbUrl(entry.video)" class="h-full w-full object-cover" />
-                        <fa v-else :icon="source(entry.video).icon" class="text-skygray-light" />
-                    </div>
-
-                    <div class="min-w-0 grow flex flex-col">
-                        <div class="text-sm text-skygray-lightest truncate" :title="entry.video.title">{{ entry.video.title }}</div>
-                        <div class="flex items-center gap-2 text-xs text-skygray-lighter">
-                            <span :title="source(entry.video).label"><fa :icon="source(entry.video).icon" /></span>
-                            <span class="truncate">@{{ entry.user.username }}</span>
-                            <span v-if="entry.video.duration > 0" class="ml-auto shrink-0 font-mono">
-                                {{ formatMs(entry.video.duration) }}
-                            </span>
-                        </div>
-                    </div>
-
-                    <button
-                        v-if="canManage(entry)"
-                        class="remove shrink-0 w-7 h-7 rounded-md flex items-center justify-center text-skygray-light hover:text-danger hover:bg-danger/10"
-                        title="Remove from queue"
-                        @click="remove(entry.video)"
-                    >
-                        <fa icon="xmark" />
-                    </button>
+                <div class="text-xs text-skygray-light font-mono w-4 text-right shrink-0">{{ index + 1 }}</div>
+                <div class="thumb shrink-0">
+                    <img
+                        v-if="thumbUrl(entry.video)"
+                        :src="thumbUrl(entry.video)"
+                        alt=""
+                        loading="lazy"
+                        class="h-full w-full object-cover"
+                    />
+                    <fa v-else :icon="source(entry.video).icon" class="text-skygray-light" />
                 </div>
-            </HoverCard>
+                <div class="min-w-0 grow flex flex-col">
+                    <div class="text-sm text-skygray-lightest truncate" :title="entry.video.title">{{ entry.video.title }}</div>
+                    <div class="flex items-center gap-2 text-xs text-skygray-lighter">
+                        <span :title="source(entry.video).label"><fa :icon="source(entry.video).icon" /></span>
+                        <span class="truncate">@{{ entry.user.username }}</span>
+                        <span v-if="entry.video.duration > 0" class="ml-auto shrink-0 font-mono">{{ formatMs(entry.video.duration) }}</span>
+                    </div>
+                </div>
+                <button
+                    v-if="canManage(entry)"
+                    class="remove shrink-0 w-7 h-7 rounded-md flex items-center justify-center text-skygray-light hover:text-danger hover:bg-danger/10"
+                    title="Remove from the queue"
+                    @click="remove(entry.video)"
+                >
+                    <fa icon="xmark" />
+                </button>
+            </li>
+        </ol>
+
+        <div
+            v-else
+            class="flex flex-col items-center justify-center text-center py-10 px-4 rounded-lg border border-dashed border-white/10"
+        >
+            <fa icon="list" class="text-3xl text-skygray-light mb-2" />
+            <div class="text-sm text-skygray-lightest">Nothing up next</div>
+            <div class="text-xs text-skygray-lighter mt-1">What you add shows up here.</div>
         </div>
 
-        <!-- Empty state -->
-        <div v-else class="flex flex-col items-center justify-center text-center py-12 px-4">
-            <fa icon="list" class="text-4xl text-skygray-light mb-3" />
-            <div class="text-skygray-lightest mb-1">The queue is empty</div>
-            <div class="text-xs text-skygray-lighter mb-4">Add a video to line up what plays next.</div>
-            <button class="btn text-sm" @click="addVideo"><fa icon="plus" class="mr-1" />Add a video</button>
-        </div>
-
-        <PlayerLinkTools />
-    </ModalTemplate>
+        <p v-if="queue.length > 1" class="text-xs text-white/40 px-1">Turns alternate between people, so everyone gets a go.</p>
+    </div>
 </template>
 
 <style scoped>
@@ -127,7 +116,7 @@ const addVideo = () => app.toggleModal('youtubeVideoSearcher');
 }
 
 .thumb {
-    width: 4.5rem;
+    width: 4rem;
     aspect-ratio: 16 / 9;
     border-radius: 0.375rem;
     overflow: hidden;
@@ -154,7 +143,7 @@ const addVideo = () => app.toggleModal('youtubeVideoSearcher');
     }
 }
 
-/* Reveal the remove button on row hover; keep it reachable on touch (always visible without hover support). */
+/* Reveal remove on row hover; always visible on touch screens */
 .remove {
     opacity: 0;
     transition: opacity 0.15s ease;

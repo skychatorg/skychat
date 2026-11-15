@@ -51,6 +51,8 @@ export type PublicConfig = {
     minRightForVoiceModeration: number | 'op';
     minRightForPlayerAddMedia: number | 'op';
     minRightForPlayerManageSchedule: number | 'op';
+    minRightForJellyfinBrowse: number | 'op';
+    minRightForNavidrome: number | 'op';
 };
 
 export class Config {
@@ -97,6 +99,8 @@ export class Config {
             minRightForVoiceModeration: Config.PREFERENCES.minRightForVoiceModeration,
             minRightForPlayerAddMedia: Config.PREFERENCES.minRightForPlayerAddMedia,
             minRightForPlayerManageSchedule: Config.PREFERENCES.minRightForPlayerManageSchedule,
+            minRightForJellyfinBrowse: Config.PREFERENCES.minRightForJellyfinBrowse,
+            minRightForNavidrome: Config.PREFERENCES.minRightForNavidrome ?? 0,
         };
     }
 

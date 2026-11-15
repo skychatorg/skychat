@@ -212,16 +212,6 @@ export const useAppStore = defineStore('app', {
             gallery: false,
 
             /**
-             * Modal to browse the Jellyfin library
-             */
-            jellyfin: false,
-
-            /**
-             * Modal to browse the Navidrome music library
-             */
-            navidrome: false,
-
-            /**
              * List on currently converting videos
              */
             ongoingConverts: false,
@@ -232,14 +222,9 @@ export const useAppStore = defineStore('app', {
             videoConverter: false,
 
             /**
-             * Modal to add videos from youtube
+             * Player window: add from any source, and see what's up next. false, or `{ tab, pane }`
              */
-            youtubeVideoSearcher: false,
-
-            /**
-             * List of next videos to play
-             */
-            playerQueue: false,
+            player: false,
 
             /**
              * Admin panel: false, or the tab to show as `{ tab }`

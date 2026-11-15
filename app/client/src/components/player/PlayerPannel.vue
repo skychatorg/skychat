@@ -161,6 +161,21 @@ const syncSelf = () => client.sendMessage('/playersync');
                 </button>
             </div>
 
+            <!-- One window for every way to add, with what plays next -->
+            <div v-if="!isParty" class="strip-group hairline">
+                <button class="strip-btn" title="Add to the player and see what plays next" @click="app.toggleModal('player')">
+                    <fa icon="plus" />
+                    <span class="strip-label">Add</span>
+                    <span
+                        v-if="client.state.player.queue.length"
+                        class="ml-0.5 px-1.5 rounded-full bg-primary/20 text-primary text-xs font-mono"
+                        :aria-label="`${client.state.player.queue.length} up next`"
+                    >
+                        {{ client.state.player.queue.length }}
+                    </span>
+                </button>
+            </div>
+
             <!-- A party round's progress -->
             <div v-if="showPlayer && partyRound" class="party-round font-mono text-sm text-white/70 truncate min-w-0">
                 {{ partyRound }}
@@ -256,34 +271,9 @@ const syncSelf = () => client.sendMessage('/playersync');
                     <template #trigger>
                         <span class="strip-btn" title="More player options">
                             <fa icon="ellipsis" />
-                            <!-- The queue count used to be visible in the bar; keep it surfaced here -->
-                            <span
-                                v-if="client.state.player.queue.length"
-                                class="ml-0.5 px-1.5 rounded-full bg-primary/20 text-primary text-xs font-mono"
-                            >
-                                {{ client.state.player.queue.length }}
-                            </span>
                         </span>
                     </template>
                     <template #default>
-                        <SkyDropdownItem v-if="!isParty" @click="app.toggleModal('youtubeVideoSearcher')">
-                            <fa icon="plus" class="w-4 mr-2" />
-                            Add a video
-                        </SkyDropdownItem>
-                        <SkyDropdownItem
-                            v-if="!isParty"
-                            :disabled="!client.state.player.queue.length"
-                            @click="client.state.player.queue.length && app.toggleModal('playerQueue')"
-                        >
-                            <fa icon="list" class="w-4 mr-2" />
-                            Queue
-                            <span
-                                v-if="client.state.player.queue.length"
-                                class="ml-1 px-1.5 rounded-full bg-primary/20 text-primary text-xs font-mono"
-                            >
-                                {{ client.state.player.queue.length }}
-                            </span>
-                        </SkyDropdownItem>
                         <SkyDropdownItem v-if="showPlayer && !isParty" @click="syncSelf">
                             <fa icon="rotate" class="w-4 mr-2" />
                             Sync just me

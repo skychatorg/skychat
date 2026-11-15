@@ -1,11 +1,10 @@
 <script setup>
 import { computed, nextTick, onMounted, onBeforeUnmount, ref } from 'vue';
-import { useAppStore } from '@/stores/app';
 import { useClientStore, apiClient } from '@/stores/client';
-import draggable from 'vuedraggable';
+import { usePlayerAdd } from '@/composables/usePlayerAdd';
 
-const app = useAppStore();
 const client = useClientStore();
+const { isQueued, send } = usePlayerAdd();
 
 // Breadcrumb is a stack of { id, name } (id=null for root).
 const breadcrumb = ref([{ id: null, name: 'Library' }]);
@@ -101,29 +100,8 @@ const leave = () => {
     refresh();
 };
 
-// Pick a batch first, order it, then queue it all at once. Selection survives folder
-// navigation, so you can gather items from different folders before submitting.
-const selected = ref([]);
-const isSelected = (item) => selected.value.some((s) => s.id === item.id);
-const selectionIndex = (item) => selected.value.findIndex((s) => s.id === item.id) + 1;
-const toggleSelect = (item) => {
-    if (item.isFolder) return;
-    if (isSelected(item)) {
-        selected.value = selected.value.filter((s) => s.id !== item.id);
-    } else {
-        selected.value.push(item);
-    }
-};
-const clearSelection = () => {
-    selected.value = [];
-};
-const submitSelection = () => {
-    if (selected.value.length === 0) return;
-    // One command queues every id in order: a single rate-limit hit, server-side order preserved.
-    client.sendMessage(`/jellyfin ${selected.value.map((s) => s.id).join(' ')}`);
-    clearSelection();
-    app.closeModal('jellyfin');
-};
+const queued = (item) => isQueued('jellyfin', item.id);
+const add = (item) => !queued(item) && send(`/jellyfin ${item.id}`);
 
 const posterUrl = (item) => {
     const token = browseToken.value || client.state.player.streamToken;
@@ -161,9 +139,19 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <div class="flex flex-col h-full">
+    <div class="flex flex-col min-h-0">
         <!-- Search the whole library (recursive) -->
-        <input v-model="searchTerm" type="text" placeholder="Search the library…" class="form-control w-full mb-2" @input="onSearchInput" />
+        <div class="relative mb-2">
+            <fa icon="magnifying-glass" class="absolute left-3 top-1/2 -translate-y-1/2 text-sm opacity-50" />
+            <input
+                v-model="searchTerm"
+                type="search"
+                placeholder="Search movies and series…"
+                aria-label="Search Jellyfin"
+                class="form-control w-full pl-9"
+                @input="onSearchInput"
+            />
+        </div>
 
         <!-- Breadcrumb (folder-browse only) -->
         <div class="flex items-center gap-2 mb-2 text-sm">
@@ -184,7 +172,7 @@ onBeforeUnmount(() => {
 
         <div v-if="error" class="text-sm text-red-400 mb-2">{{ error }}</div>
 
-        <div ref="scrollEl" class="grow overflow-y-auto scrollbar">
+        <div ref="scrollEl" class="grow min-h-0 overflow-y-auto scrollbar">
             <div v-if="loading && items.length === 0" class="text-center text-sm opacity-60 py-6">Loading…</div>
             <div v-else-if="items.length === 0" class="text-center text-sm opacity-60 py-6">No items</div>
 
@@ -201,14 +189,14 @@ onBeforeUnmount(() => {
                     v-for="item in items"
                     :key="item.id"
                     class="group cursor-pointer select-none min-w-0"
-                    @click="item.isFolder ? enter(item) : toggleSelect(item)"
+                    @click="item.isFolder ? enter(item) : add(item)"
                 >
                     <!-- Poster / thumb -->
                     <div
                         class="relative w-full overflow-hidden rounded bg-skygray-dark/40 ring-2 ring-inset transition-colors"
                         :class="[
                             posterAspect(item),
-                            isSelected(item)
+                            queued(item)
                                 ? 'ring-[rgb(var(--color-primary))]'
                                 : 'ring-transparent group-hover:ring-[rgb(var(--color-primary))]',
                         ]"
@@ -225,17 +213,17 @@ onBeforeUnmount(() => {
                             <fa :icon="item.isFolder ? 'folder' : 'film'" />
                         </div>
 
-                        <!-- Order badge when selected -->
+                        <!-- Already playing or queued -->
                         <div
-                            v-if="isSelected(item)"
-                            class="absolute top-1 left-1 h-6 min-w-6 px-1 rounded-full bg-[rgb(var(--color-primary))] text-white text-xs font-bold flex items-center justify-center shadow"
+                            v-if="queued(item)"
+                            class="absolute top-1 right-1 h-6 w-6 rounded-full bg-[rgb(var(--color-primary))] text-white text-xs flex items-center justify-center shadow"
                         >
-                            {{ selectionIndex(item) }}
+                            <fa icon="check" />
                         </div>
 
-                        <!-- Add affordance on hover (unselected playables only) -->
+                        <!-- Add affordance on hover (playables not queued yet) -->
                         <div
-                            v-if="isPlayable(item) && !isSelected(item)"
+                            v-if="isPlayable(item) && !queued(item)"
                             class="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition group-hover:opacity-100"
                         >
                             <fa icon="plus" class="text-2xl" />
@@ -260,31 +248,6 @@ onBeforeUnmount(() => {
 
             <!-- Infinite-scroll trigger: sibling of the grid so it lands on its own full-width row below the last tile. -->
             <div ref="sentinel" class="h-px"></div>
-        </div>
-
-        <!-- Selection tray: drag the chips to set play order, then queue them all at once. -->
-        <div v-if="selected.length" class="shrink-0 border-t border-skygray-light/40 pt-2 mt-2">
-            <div class="flex items-center gap-2 mb-2 text-sm">
-                <span class="opacity-70">{{ selected.length }} selected · drag to reorder</span>
-                <button class="ml-auto form-control px-3 py-1 text-xs" @click="clearSelection">Clear</button>
-                <button class="form-control px-3 py-1 text-xs text-primary" @click="submitSelection">
-                    Add {{ selected.length }} to queue
-                </button>
-            </div>
-            <draggable v-model="selected" item-key="id" :animation="150" class="flex gap-2 overflow-x-auto pb-1 scrollbar">
-                <template #item="{ element, index }">
-                    <div
-                        class="shrink-0 flex items-center gap-2 bg-skygray-dark/60 rounded-lg pl-1 pr-2 py-1 cursor-grab active:cursor-grabbing"
-                    >
-                        <img v-if="showPoster(element)" :src="posterUrl(element)" class="h-8 w-8 object-cover rounded" />
-                        <span class="text-xs opacity-50 w-4 text-center">{{ index + 1 }}</span>
-                        <span class="truncate max-w-[160px] text-sm" :title="element.name">{{ element.name }}</span>
-                        <button class="text-skygray-lighter hover:text-danger" title="Remove" @click.stop="toggleSelect(element)">
-                            <fa icon="xmark" />
-                        </button>
-                    </div>
-                </template>
-            </draggable>
         </div>
     </div>
 </template>

@@ -789,7 +789,10 @@ export class PlayerPlugin extends GlobalPlugin {
         if (videos.length === 0) {
             throw new Error('Unable to fetch items');
         }
-        channel.add(videos, connection.session.user, { allowFailure: false });
+        // In a batch (an album, a playlist), skip what is already queued instead of refusing it all
+        if (channel.add(videos, connection.session.user, { allowFailure: videos.length > 1 }) === 0) {
+            throw new Error('Everything here is already in the queue');
+        }
     }
 
     /**

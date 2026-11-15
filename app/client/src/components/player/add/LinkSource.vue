@@ -1,21 +1,21 @@
 <script setup>
+import { computed, ref } from 'vue';
 import { useNow } from '@/composables/useNow';
 import { useUserRight } from '@/composables/useUserRight';
 import { mediaFromLink } from '@/lib/mediaLink';
 import { useClientStore } from '@/stores/client';
-import { computed, ref } from 'vue';
+import { usePlayerAdd } from '@/composables/usePlayerAdd';
 
 const client = useClientStore();
 const now = useNow(30_000);
-
-const canAdd = useUserRight('minRightForPlayerAddMedia');
+const { send } = usePlayerAdd();
 const canSchedule = useUserRight('minRightForPlayerManageSchedule');
 
 // Add a link to the queue, right now
 const link = ref('');
 const media = computed(() => mediaFromLink(link.value));
 const add = () => {
-    client.sendMessage(`/${media.value.fetcher} ${media.value.param}`);
+    send(`/${media.value.fetcher} ${media.value.param}`);
     link.value = '';
 };
 
@@ -26,7 +26,7 @@ const canPlan = computed(() => planned.value && plan.value.at && new Date(plan.v
 const schedule = () => {
     const { fetcher, param } = planned.value;
     const duration = plan.value.minutes ? ` ${Math.round(plan.value.minutes * 60_000)}` : '';
-    client.sendMessage(`/schedule ${fetcher} ${param} ${new Date(plan.value.at).toISOString()}${duration}`);
+    send(`/schedule ${fetcher} ${param} ${new Date(plan.value.at).toISOString()}${duration}`);
     plan.value = { link: '', at: '', minutes: '' };
 };
 
@@ -38,13 +38,13 @@ const upcoming = computed(() =>
 );
 const when = (start) =>
     new Date(start).toLocaleString(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
-const cancel = (event) => client.sendMessage(`/unschedule ${event.start}`);
+const cancel = (event) => send(`/unschedule ${event.start}`);
 </script>
 
 <template>
-    <div class="flex flex-col gap-4 mt-6 pt-4 border-t border-white/10">
-        <form v-if="canAdd" class="flex flex-col gap-1.5" @submit.prevent="add">
-            <label class="text-sm font-semibold" for="player-link">Add by link</label>
+    <div class="flex flex-col gap-6 min-h-0 overflow-y-auto scrollbar pr-1">
+        <form class="flex flex-col gap-1.5" @submit.prevent="add">
+            <label class="text-sm font-semibold" for="player-link">Play a link</label>
             <div class="flex gap-2">
                 <input
                     id="player-link"
@@ -54,15 +54,15 @@ const cancel = (event) => client.sendMessage(`/unschedule ${event.start}`);
                     type="url"
                     autocomplete="off"
                 />
-                <button class="form-control shrink-0" type="submit" :disabled="!media">Add</button>
+                <button class="btn text-sm shrink-0" type="submit" :disabled="!media">Add</button>
             </div>
             <p class="text-xs text-white/45">
-                {{ media ? `Adds ${media.label} to the queue.` : 'Paste a link to a video, a stream or a sound.' }}
+                {{ media ? `Adds ${media.label} to the queue.` : 'A video, a live stream, or any page that plays something.' }}
             </p>
         </form>
 
         <section v-if="canSchedule" class="flex flex-col gap-2">
-            <h3 class="text-sm font-semibold">Scheduled</h3>
+            <h3 class="text-sm font-semibold">Schedule for later</h3>
             <ul v-if="upcoming.length" class="flex flex-col gap-1.5">
                 <li v-for="event in upcoming" :key="event.start" class="flex items-center gap-2 p-2 rounded-lg hairline bg-white/[.02]">
                     <span class="text-xs font-mono text-primary shrink-0">{{ when(event.start) }}</span>
@@ -99,7 +99,7 @@ const cancel = (event) => client.sendMessage(`/unschedule ${event.start}`);
                     />
                 </div>
                 <p class="text-xs text-white/45">Leave the minutes empty to use the video's length, or 2 hours for a stream.</p>
-                <button class="form-control self-start" type="submit" :disabled="!canPlan">Schedule</button>
+                <button class="btn text-sm self-start" type="submit" :disabled="!canPlan">Schedule</button>
             </form>
         </section>
     </div>
