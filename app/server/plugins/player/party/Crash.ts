@@ -95,6 +95,16 @@ export class Crash extends PartyRound {
         return Math.floor(100 * 2 ** (elapsedMs / this.timings.doubleMs));
     }
 
+    public act(session: Session, action: string, [amount]: number[]): Promise<void> {
+        if (action === 'bet') {
+            return this.bet(session, amount);
+        }
+        if (action === 'cashout') {
+            return this.cashOut(session);
+        }
+        this.wrongMove();
+    }
+
     public async bet(session: Session, amount: number): Promise<void> {
         if (session.user.isGuest()) {
             throw new Error('Log in to play');

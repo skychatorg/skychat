@@ -244,6 +244,13 @@ export class MonkeyFight extends PartyRound {
         logFailure(this.openBets(), 'Monkey Fight');
     }
 
+    public act(session: Session, action: string, [monkey, amount]: number[]): Promise<void> {
+        if (action !== 'back') {
+            this.wrongMove();
+        }
+        return this.bet(session, monkey, amount);
+    }
+
     public async bet(session: Session, monkey: number, amount: number): Promise<void> {
         if (session.user.isGuest()) {
             throw new Error('Log in to play');

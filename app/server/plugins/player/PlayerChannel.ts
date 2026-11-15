@@ -7,7 +7,8 @@ import { PlayerChannelScheduler, SanitizedScheduler } from './PlayerChannelSched
 import { issueStreamToken, STREAM_TOKEN_TTL_MS } from './fetcher/JellyfinFetcher.js';
 import { BlackjackTable, CasinoOptions } from './casino/BlackjackTable.js';
 import { logFailure } from '../../skychat/Logging.js';
-import { Party, PartyGameId } from './party/Party.js';
+import { PartyGameId } from '../../../api/party.js';
+import { Party } from './party/Party.js';
 
 export type ChannelKind = 'media' | 'party';
 
@@ -624,7 +625,7 @@ export class PlayerChannel {
             name: this.name,
             kind: this.kind,
             party: this.party
-                ? { ...this.party.options, seated: this.party.table?.seatedCount ?? 0, game: this.party.sanitized().game }
+                ? { ...this.party.options, seated: this.party.gameOf(BlackjackTable)?.seatedCount ?? 0, game: this.party.sanitized().game }
                 : undefined,
             playing: this.isPlaying(),
             paused: this.pausedCursor !== null,

@@ -1,5 +1,6 @@
 import { Connection } from '../../skychat/Connection.js';
 import { GlobalPlugin } from '../GlobalPlugin.js';
+import { BlackjackTable } from './casino/BlackjackTable.js';
 import { PlayerPlugin } from './PlayerPlugin.js';
 
 /**
@@ -24,9 +25,9 @@ export class CasinoPlugin extends GlobalPlugin {
     };
 
     async run(_alias: string, param: string, connection: Connection): Promise<void> {
-        const table = (this.manager.getPlugin(PlayerPlugin.commandName) as PlayerPlugin).channelManager.getSessionChannel(
-            connection.session,
-        )?.party?.table;
+        const table = (this.manager.getPlugin(PlayerPlugin.commandName) as PlayerPlugin).channelManager
+            .getSessionChannel(connection.session)
+            ?.party?.gameOf(BlackjackTable);
         if (!table) {
             throw new Error('No blackjack table here');
         }

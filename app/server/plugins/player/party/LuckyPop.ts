@@ -313,6 +313,13 @@ export class LuckyPop extends PartyRound {
         this.eventTimers.push(setTimeout(() => this.broadcast(), this.timings.happyHourMs));
     }
 
+    public act(session: Session, action: string, [id]: number[]): Promise<void> {
+        if (action !== 'pop') {
+            this.wrongMove();
+        }
+        return this.pop(session, id);
+    }
+
     public async pop(session: Session, id: number): Promise<void> {
         if (session.user.isGuest()) {
             throw new Error('Log in to pop balloons');

@@ -43,7 +43,7 @@ async function casino(players = 2) {
     }
     await clients[0].send('/party pick blackjack');
     clients.forEach((client) => client.clear());
-    const table = party.table!;
+    const table = party.gameOf(BlackjackTable)!;
     return { admin, channel, table, clients };
 }
 

@@ -8,7 +8,8 @@ export type { OngoingConvert, VideoStreamInfo } from './plugins/gallery/VideoCon
 export type { QueuedVideoInfo, SanitizedPlayerChannel, VideoInfo } from './plugins/player/PlayerChannel.js';
 export type { SanitizedBlackjackTable } from './plugins/player/casino/BlackjackTable.js';
 export type { Card } from './plugins/player/casino/blackjack.js';
-export type { PartyGameId, SanitizedParty } from './plugins/player/party/Party.js';
+export type { PartyGameId } from '../api/party.js';
+export type { SanitizedParty } from './plugins/player/party/Party.js';
 export type { BalloonResult, BalloonSize, SanitizedLuckyPop } from './plugins/player/party/LuckyPop.js';
 export type { SanitizedCrash } from './plugins/player/party/Crash.js';
 export type { SanitizedDailyRoll } from './plugins/player/party/DailyRoll.js';

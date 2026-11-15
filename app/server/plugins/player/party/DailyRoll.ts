@@ -96,6 +96,13 @@ export class DailyRoll {
         this.timer = setTimeout(() => logFailure(this.reveal(), 'Daily Roll'), this.timings.pickMs);
     }
 
+    public act(session: Session, action: string, [id]: number[]): void {
+        if (action !== 'card') {
+            throw new Error('That is not a Daily Roll move');
+        }
+        this.pick(session, id);
+    }
+
     public pick(session: Session, id: number): void {
         if (session.user.isGuest()) {
             throw new Error('Log in to pick a card');

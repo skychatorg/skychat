@@ -18,7 +18,7 @@ let server: TestServer;
 let n = 0;
 const name = (prefix: string) => `${prefix}${++n}`;
 /** What the next pops draw, in order: the prize roll (0 to 99), then which malus when it is one */
-const rig = (party: Party, rolls: number[]) => (party.luckyPop!.random = scripted(rolls));
+const rig = (party: Party, rolls: number[]) => (party.gameOf(LuckyPop)!.random = scripted(rolls));
 const player = () => server.roomManager.getPlugin(PlayerPlugin.commandName) as PlayerPlugin;
 
 beforeAll(async () => {
@@ -152,9 +152,13 @@ describe('party cycle', () => {
         for (let i = 0; i < BlackjackTable.ROUND_HANDS; i++) {
             expect(party.sanitized().phase).toBe('playing');
             // Between hands the round shows its hand and when it ends without a bet, during a hand only the hand
-            expect(party.table!.sanitized().round).toMatchObject({ hand: i + 1, hands: 5, idleEndsAt: expect.any(Number) });
+            expect(party.gameOf(BlackjackTable)!.sanitized().round).toMatchObject({
+                hand: i + 1,
+                hands: 5,
+                idleEndsAt: expect.any(Number),
+            });
             await alice.send('/casino bet 1000');
-            expect(party.table!.sanitized().round).toMatchObject({ hand: i + 1, idleEndsAt: null });
+            expect(party.gameOf(BlackjackTable)!.sanitized().round).toMatchObject({ hand: i + 1, idleEndsAt: null });
             // Bet, deal, the turn times out, the dealer plays and the results show
             await settle(160);
         }
@@ -176,7 +180,7 @@ describe('party cycle', () => {
         expect(alice.errors()).toEqual(['There is no vote right now']);
 
         // The last balloon popped: the round ends
-        party.luckyPop!['balloons'].forEach((balloon) => (balloon.popped = balloon.id !== 0));
+        party.gameOf(LuckyPop)!['balloons'].forEach((balloon) => (balloon.popped = balloon.id !== 0));
         await alice.send('/party pop 0');
         await phase('vote');
         expect(party.sanitized()).toMatchObject({ phase: 'vote', lastGame: 'luckypop' });
@@ -277,7 +281,7 @@ describe('lucky pop', () => {
         const { party, clients } = await partyChannel(1);
         await clients[0].send('/party pick luckypop');
         const sizes = (pop: LuckyPop) => pop.sanitizedFor(clients[0].session).balloons.map((b) => b.size);
-        expect(sizes(party.luckyPop!).sort()).toEqual(['lg', ...Array(4).fill('md'), ...Array(7).fill('xs')]);
+        expect(sizes(party.gameOf(LuckyPop)!).sort()).toEqual(['lg', ...Array(4).fill('md'), ...Array(7).fill('xs')]);
 
         // Alone, only peek and egg: the last special is the egg
         const solo = new LuckyPop(party, () => {});
@@ -356,7 +360,7 @@ describe('lucky pop', () => {
                 .slice(0, 2)
                 .map((m: { reason: string }) => m.reason),
         ).toEqual(['Lucky Pop win', 'Lucky Pop']);
-        expect(party.luckyPop).not.toBeNull();
+        expect(party.gameOf(LuckyPop)).not.toBeNull();
     });
 
     it('pays the jackpot on the last roll', async () => {
@@ -401,7 +405,7 @@ describe('lucky pop', () => {
         const { party, clients } = await partyChannel(2);
         const [alice, bob] = clients;
         await alice.send('/party pick luckypop');
-        const pop = party.luckyPop!;
+        const pop = party.gameOf(LuckyPop)!;
         rig(party, [0]);
 
         const results = await Promise.allSettled([pop.pop(alice.session, 11), pop.pop(bob.session, 11)]);
@@ -420,7 +424,7 @@ describe('lucky pop', () => {
         await alice.send('/party pop 3');
 
         expect(alice.errors()).toEqual(['DB down']);
-        expect(party.luckyPop!.sanitizedFor(alice.session)).toMatchObject({
+        expect(party.gameOf(LuckyPop)!.sanitizedFor(alice.session)).toMatchObject({
             balloons: expect.arrayContaining([expect.objectContaining({ id: 3, popped: false })]),
             you: { nextPopAt: 0 },
         });
@@ -436,7 +440,7 @@ describe('lucky pop', () => {
         bob.session.user.money = 2000;
 
         await alice.send('/party pop 11');
-        party.luckyPop!['balloons'][11].popped = false;
+        party.gameOf(LuckyPop)!['balloons'][11].popped = false;
         await bob.send('/party pop 11');
 
         expect(alice.session.user.money).toBe(0);
@@ -475,7 +479,7 @@ describe('lucky pop', () => {
         await carol.send('/party pop 2');
         expect(carol.errors()).toEqual([expect.stringMatching(/^Wait \d s before your next pop$/)]);
         expect(bob.last('lucky-pop').balloons[0].result.label).toBe('wizzed');
-        expect(party.luckyPop).not.toBeNull();
+        expect(party.gameOf(LuckyPop)).not.toBeNull();
     });
 
     it('sends a wizz storm over time, skipping the ticks while the player is offline', async () => {
@@ -655,7 +659,7 @@ describe('lucky pop', () => {
         expect(alice.session.user.money).toBe(20000 - 50 + 75);
 
         const hatching = new LuckyPop(party, () => {});
-        hatching.timings = { ...party.luckyPop!.timings, eggMs: 30 };
+        hatching.timings = { ...party.gameOf(LuckyPop)!.timings, eggMs: 30 };
         hatching.random = scripted([...EGG]);
         hatching.start();
         expect(hatching.sanitizedFor(alice.session).balloons[0].size).toBe('egg');
@@ -700,7 +704,7 @@ describe('lucky pop', () => {
         const { party, clients } = await partyChannel(2, { sky: FREEZE });
         const [alice] = clients;
         await alice.send('/party pick luckypop');
-        party.luckyPop!['balloons'].forEach((b) => (b.popped = b.id > 1));
+        party.gameOf(LuckyPop)!['balloons'].forEach((b) => (b.popped = b.id > 1));
 
         await alice.send('/party pop 1');
         await settle(60);
@@ -723,7 +727,7 @@ describe('lucky pop', () => {
     it('ends the round when nobody pops for a while', async () => {
         const { party, clients } = await partyChannel(1);
         await clients[0].send('/party pick luckypop');
-        party.luckyPop!.timings.idleMs = 80;
+        party.gameOf(LuckyPop)!.timings.idleMs = 80;
         rig(party, [0]);
 
         await clients[0].send('/party pop 0');
@@ -736,7 +740,7 @@ describe('lucky pop', () => {
     it('waits for a butterfingered player to pop again before ending an idle round', async () => {
         const { party, clients } = await partyChannel(1);
         await clients[0].send('/party pick luckypop');
-        party.luckyPop!.timings.idleMs = 80;
+        party.gameOf(LuckyPop)!.timings.idleMs = 80;
         // xs malus, the third one: butterfingers for 300 ms
         rig(party, [85, 2]);
 
@@ -773,8 +777,8 @@ describe('lucky pop', () => {
 describe('crash', () => {
     /** Crash points for the next flights: the roll that gives ×x is 1e6 - 0.99e6 / x */
     const crashAt = (party: Party, ...multipliers: number[]) =>
-        (party.crash!.random = scripted(multipliers.map((x) => Math.ceil(1e6 - (0.99e6 * 100) / x))));
-    const phase = (party: Party, wanted: string) => until(() => party.crash?.sanitized().phase === wanted);
+        (party.gameOf(Crash)!.random = scripted(multipliers.map((x) => Math.ceil(1e6 - (0.99e6 * 100) / x))));
+    const phase = (party: Party, wanted: string) => until(() => party.gameOf(Crash)?.sanitized().phase === wanted);
 
     it('draws crash points where every target is worth 99% of the bet', () => {
         const game = new Crash({} as Party, () => {});
@@ -799,7 +803,7 @@ describe('crash', () => {
         await alice.send('/party bet 1000');
         await phase(party, 'crashed');
 
-        expect(party.crash!.sanitized()).toMatchObject({ crashedAt: 10000, bets: [{ cashedAt: 10000, payout: 100000 }] });
+        expect(party.gameOf(Crash)!.sanitized()).toMatchObject({ crashedAt: 10000, bets: [{ cashedAt: 10000, payout: 100000 }] });
         await until(() => alice.session.user.money === 119000);
     });
 
@@ -817,14 +821,14 @@ describe('crash', () => {
         await alice.send('/party cashout');
         await phase(party, 'crashed');
 
-        const [aliceBet, bobBet] = party.crash!.sanitized().bets;
+        const [aliceBet, bobBet] = party.gameOf(Crash)!.sanitized().bets;
         expect(aliceBet.cashedAt).toBeGreaterThanOrEqual(150);
         expect(aliceBet.cashedAt).toBeLessThan(400);
         expect(aliceBet.payout).toBe(Math.floor((2000 * aliceBet.cashedAt!) / 100));
         expect(alice.session.user.money).toBe(20000 - 2000 + aliceBet.payout!);
         expect(bobBet).toMatchObject({ cashedAt: null, payout: 0 });
         expect(bob.session.user.money).toBe(19000);
-        expect(party.crash!.sanitized()).toMatchObject({ crashedAt: 400, history: [400] });
+        expect(party.gameOf(Crash)!.sanitized()).toMatchObject({ crashedAt: 400, history: [400] });
         await bob.send('/party cashout');
         expect(bob.errors()).toEqual(['Nothing to cash out']);
     });
@@ -838,7 +842,7 @@ describe('crash', () => {
         await phase(party, 'flying');
 
         // ×2 is reached after 100 ms: the crash timer hasn't fired yet, the cash-out comes in just past it
-        vi.spyOn(Date, 'now').mockReturnValue(party.crash!.sanitized().startedAt! + 101);
+        vi.spyOn(Date, 'now').mockReturnValue(party.gameOf(Crash)!.sanitized().startedAt! + 101);
         await alice.send('/party cashout');
 
         expect(alice.errors()).toEqual(['Too late, it crashed']);
@@ -853,10 +857,13 @@ describe('crash', () => {
         await alice.send('/party bet 1000');
         await phase(party, 'flying');
 
-        const results = await Promise.allSettled([party.crash!.cashOut(alice.session), party.crash!.cashOut(alice.session)]);
+        const results = await Promise.allSettled([
+            party.gameOf(Crash)!.cashOut(alice.session),
+            party.gameOf(Crash)!.cashOut(alice.session),
+        ]);
 
         expect(results.map((r) => r.status)).toEqual(['fulfilled', 'rejected']);
-        const { payout } = party.crash!.sanitized().bets[0];
+        const { payout } = party.gameOf(Crash)!.sanitized().bets[0];
         expect(alice.session.user.money).toBe(19000 + payout!);
     });
 
@@ -866,15 +873,15 @@ describe('crash', () => {
         const guest = await server.connect(null);
         await guest.send(`/playerchannel join ${party.channel.id}`);
         await alice.send('/party pick crash');
-        party.crash!.timings.betMs = 60_000;
+        party.gameOf(Crash)!.timings.betMs = 60_000;
         crashAt(party, 10000, 10000);
-        party.crash!['openBets']();
+        party.gameOf(Crash)!['openBets']();
 
         await guest.send('/party bet 1000');
         await alice.send('/party bet 500');
         await alice.send('/party bet 1000');
         await alice.send('/party bet 1000');
-        party.crash!['takeOff']();
+        party.gameOf(Crash)!['takeOff']();
         await bob.send('/party bet 1000');
 
         expect(guest.errors()).toEqual(['Log in to play']);
@@ -888,9 +895,9 @@ describe('crash', () => {
         const guest = await server.connect(null);
         await guest.send(`/playerchannel join ${party.channel.id}`);
         await alice.send('/party pick crash');
-        party.crash!.timings.betMs = 60_000;
+        party.gameOf(Crash)!.timings.betMs = 60_000;
         crashAt(party, 10000, 10000);
-        party.crash!['openBets']();
+        party.gameOf(Crash)!['openBets']();
 
         await alice.send('/party bet 1000');
         await phase(party, 'flying');
@@ -901,9 +908,9 @@ describe('crash', () => {
         const { party, clients } = await partyChannel(2);
         const [alice, bob] = clients;
         await alice.send('/party pick crash');
-        party.crash!.timings.betMs = 60_000;
+        party.gameOf(Crash)!.timings.betMs = 60_000;
         crashAt(party, 10000, 10000);
-        party.crash!['openBets']();
+        party.gameOf(Crash)!['openBets']();
 
         await alice.send('/party bet 3000');
         await alice.send('/playerchannel leave');
@@ -911,7 +918,12 @@ describe('crash', () => {
 
         await bob.send('/party bet 1000');
         await phase(party, 'flying');
-        expect(party.crash!.sanitized().bets.map((b) => b.user.username)).toEqual([bob.session.user.username]);
+        expect(
+            party
+                .gameOf(Crash)!
+                .sanitized()
+                .bets.map((b) => b.user.username),
+        ).toEqual([bob.session.user.username]);
     });
 
     it('ends the round when a betting window gets no bet, or after 5 flights', async () => {
@@ -925,9 +937,9 @@ describe('crash', () => {
         await until(() => party.sanitized().game === 'crash');
         crashAt(party, 101, 101, 101, 101, 101);
         for (let i = 1; i <= Crash.FLIGHTS; i++) {
-            await until(() => party.crash?.sanitized().phase === 'betting' && party.crash.sanitized().flight === i);
+            await until(() => party.gameOf(Crash)?.sanitized().phase === 'betting' && party.gameOf(Crash).sanitized().flight === i);
             await alice.send('/party bet 1000');
-            await until(() => party.crash?.sanitized().phase !== 'betting' || party.sanitized().phase !== 'playing');
+            await until(() => party.gameOf(Crash)?.sanitized().phase !== 'betting' || party.sanitized().phase !== 'playing');
         }
         await until(() => party.sanitized().phase === 'vote');
         expect(party.sanitized().lastGame).toBe('crash');
@@ -1017,7 +1029,10 @@ describe('daily roll', () => {
 describe('monkey fight', () => {
     // The monkeys arrive once their odds are priced
     const phase = (party: Party, wanted: string) =>
-        until(() => party.monkeyFight?.sanitized().phase === wanted && party.monkeyFight.sanitized().monkeys.length > 0, 4000);
+        until(
+            () => party.gameOf(MonkeyFight)?.sanitized().phase === wanted && party.gameOf(MonkeyFight).sanitized().monkeys.length > 0,
+            4000,
+        );
 
     it('always ends with one winner, even when every roll misses', () => {
         const game = new MonkeyFight({} as Party, () => {});
@@ -1107,18 +1122,18 @@ describe('monkey fight', () => {
         await alice.send('/party back 0 1000');
         expect(alice.errors()).toHaveLength(1);
         expect(alice.session.user.money).toBe(19000);
-        expect(party.monkeyFight!.sanitized().bets).toMatchObject([{ monkey: 0, bet: 1000 }]);
+        expect(party.gameOf(MonkeyFight)!.sanitized().bets).toMatchObject([{ monkey: 0, bet: 1000 }]);
 
         // Bob backs every monkey but Alice's, so one of the two wins
         await bob.send('/party back 1 1000');
-        await until(() => party.monkeyFight?.sanitized().phase === 'fighting');
-        const fight = party.monkeyFight!.sanitized();
+        await until(() => party.gameOf(MonkeyFight)?.sanitized().phase === 'fighting');
+        const fight = party.gameOf(MonkeyFight)!.sanitized();
         expect(fight.monkeys.every((m) => m.trait !== null)).toBe(true);
         // Nobody is paid before the last punch
         expect([alice.session.user.money, bob.session.user.money]).toEqual([19000, 19000]);
 
         await phase(party, 'done');
-        const done = party.monkeyFight!.sanitized();
+        const done = party.gameOf(MonkeyFight)!.sanitized();
         const winners = done.bets.filter((b) => b.payout);
         winners.forEach((b) => expect(b.payout).toBe(Math.floor((b.bet * done.monkeys[b.monkey].odds) / 100)));
         await until(() => alice.session.user.money + bob.session.user.money === 38000 + winners.reduce((s, b) => s + b.payout!, 0));
@@ -1131,7 +1146,7 @@ describe('monkey fight', () => {
         await phase(party, 'betting');
         await alice.send('/party back 2 1000');
         expect(alice.session.user.money).toBe(19000);
-        await party.monkeyFight!.destroy();
+        await party.gameOf(MonkeyFight)!.destroy();
         expect(alice.session.user.money).toBe(20000);
 
         const other = await partyChannel(1);
@@ -1141,7 +1156,7 @@ describe('monkey fight', () => {
 });
 
 describe('hot potato', () => {
-    const phase = (party: Party, wanted: string) => until(() => party.hotPotato?.sanitized().phase === wanted, 4000);
+    const phase = (party: Party, wanted: string) => until(() => party.gameOf(HotPotato)?.sanitized().phase === wanted, 4000);
     const money = (clients: TestClient[]) => clients.map((c) => c.session.user.money);
 
     it('refuses guests and second seats, and refunds a player left alone', async () => {
@@ -1173,21 +1188,21 @@ describe('hot potato', () => {
         expect(carol.session.user.money).toBe(19000);
         await phase(party, 'playing');
         // Carol, last seat, holds it first
-        expect(party.hotPotato!.sanitized().holder).toBe(2);
+        expect(party.gameOf(HotPotato)!.sanitized().holder).toBe(2);
 
         await alice.send('/party pass 1');
         await carol.send('/party pass 2');
         // Picked during the hold: kept, and sent the moment the hold ends
         await carol.send('/party pass 0');
-        expect(party.hotPotato!.sanitized()).toMatchObject({ holder: 2, aim: 0 });
-        await until(() => party.hotPotato!.sanitized().holder === 0);
-        expect(party.hotPotato!.sanitized()).toMatchObject({ aim: null, pot: 3100, passCount: 1 });
+        expect(party.gameOf(HotPotato)!.sanitized()).toMatchObject({ holder: 2, aim: 0 });
+        await until(() => party.gameOf(HotPotato)!.sanitized().holder === 0);
+        expect(party.gameOf(HotPotato)!.sanitized()).toMatchObject({ aim: null, pot: 3100, passCount: 1 });
         expect(carol.session.user.money).toBe(18900);
 
         // Straight back to whoever sent it is fine
         await settle(170);
         await alice.send('/party pass 2');
-        expect(party.hotPotato!.sanitized().holder).toBe(2);
+        expect(party.gameOf(HotPotato)!.sanitized().holder).toBe(2);
         expect(alice.errors()).toEqual(['You are not holding the bomb']);
         expect(carol.errors()).toEqual(['The stake is $10', 'Pass it to someone else']);
         expect(bob.errors()).toEqual([]);
@@ -1201,7 +1216,7 @@ describe('hot potato', () => {
         }
         await phase(party, 'done');
 
-        const done = party.hotPotato!.sanitized();
+        const done = party.gameOf(HotPotato)!.sanitized();
         expect(done.loser).toBe(3);
         expect(done.players.map((p) => p.payout)).toEqual([1334, 1333, 1333, 0]);
         await until(() => clients[0].session.user.money === 20334);
@@ -1223,7 +1238,12 @@ describe('hot potato', () => {
         await phase(party, 'done');
 
         // Bob survived without ever holding it: his stake back. Carol is the only survivor who held it: the rest
-        expect(party.hotPotato!.sanitized().players.map((p) => p.payout)).toEqual([0, 1000, 2100]);
+        expect(
+            party
+                .gameOf(HotPotato)!
+                .sanitized()
+                .players.map((p) => p.payout),
+        ).toEqual([0, 1000, 2100]);
         await until(() => carol.session.user.money === 21000);
         expect([alice.session.user.money, bob.session.user.money]).toEqual([19000, 20000]);
     });
@@ -1242,9 +1262,9 @@ describe('hot potato', () => {
         expect(carol.errors()).toEqual([`${alice.session.user.username} left the table`]);
 
         await carol.send('/playerchannel leave');
-        expect(party.hotPotato!.sanitized().holder).toBe(2);
+        expect(party.gameOf(HotPotato)!.sanitized().holder).toBe(2);
         await phase(party, 'done');
-        expect(party.hotPotato!.sanitized().loser).toBe(2);
+        expect(party.gameOf(HotPotato)!.sanitized().loser).toBe(2);
     });
 
     it('gives back stakes and fees when the game is torn down mid-round', async () => {
@@ -1257,9 +1277,9 @@ describe('hot potato', () => {
         await phase(party, 'playing');
         await settle(170);
         await carol.send('/party pass 0');
-        await until(() => party.hotPotato!.sanitized().pot === 3100);
+        await until(() => party.gameOf(HotPotato)!.sanitized().pot === 3100);
 
-        await party.hotPotato!.destroy();
+        await party.gameOf(HotPotato)!.destroy();
         expect(money(clients)).toEqual([20000, 20000, 20000]);
     });
 });

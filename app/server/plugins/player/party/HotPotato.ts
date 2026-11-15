@@ -123,6 +123,16 @@ export class HotPotato extends PartyRound {
         this.openJoining();
     }
 
+    public act(session: Session, action: string, [value]: number[]): Promise<void> {
+        if (action === 'join') {
+            return this.join(session, value);
+        }
+        if (action === 'pass') {
+            return this.pass(session, value);
+        }
+        this.wrongMove();
+    }
+
     public async join(session: Session, amount: number): Promise<void> {
         if (session.user.isGuest()) {
             throw new Error('Log in to play');

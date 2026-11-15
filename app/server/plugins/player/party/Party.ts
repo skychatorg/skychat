@@ -1,4 +1,5 @@
 import { formatMoney } from '../../../../api/money.js';
+import { PARTY_GAMES, PartyGameId } from '../../../../api/party.js';
 import { Connection } from '../../../skychat/Connection.js';
 import { Session } from '../../../skychat/Session.js';
 import { BlackjackTable, CasinoOptions } from '../casino/BlackjackTable.js';
@@ -10,28 +11,7 @@ import { HotPotato } from './HotPotato.js';
 import { LuckyPop } from './LuckyPop.js';
 import { MonkeyFight } from './MonkeyFight.js';
 
-export const PARTY_GAMES = {
-    blackjack: 'Blackjack',
-    luckypop: 'Lucky Pop',
-    crash: 'Crash',
-    dailyroll: 'Daily Roll',
-    monkeys: 'Monkey Fight',
-    potato: 'Hot Potato',
-} as const;
-
-export type PartyGameId = keyof typeof PARTY_GAMES;
-
 type PartyGame = BlackjackTable | LuckyPop | Crash | DailyRoll | MonkeyFight | HotPotato;
-
-/** What each game sends its state as, null clears it */
-const GAME_EVENTS = {
-    blackjack: 'casino-table',
-    luckypop: 'lucky-pop',
-    crash: 'crash',
-    dailyroll: 'daily-roll',
-    monkeys: 'monkey-fight',
-    potato: 'hot-potato',
-} as const;
 
 /**
  * - lobby: no game, the first pick starts one
@@ -90,28 +70,17 @@ export class Party {
         public readonly options: CasinoOptions,
     ) {}
 
-    public get table(): BlackjackTable | null {
-        return this.game instanceof BlackjackTable ? this.game : null;
+    /** The game on, if it is a `type` */
+    public gameOf<T extends PartyGame>(type: new (...args: never[]) => T): T | null {
+        return this.game instanceof type ? this.game : null;
     }
 
-    public get luckyPop(): LuckyPop | null {
-        return this.game instanceof LuckyPop ? this.game : null;
-    }
-
-    public get crash(): Crash | null {
-        return this.game instanceof Crash ? this.game : null;
-    }
-
-    public get dailyRoll(): DailyRoll | null {
-        return this.game instanceof DailyRoll ? this.game : null;
-    }
-
-    public get monkeyFight(): MonkeyFight | null {
-        return this.game instanceof MonkeyFight ? this.game : null;
-    }
-
-    public get hotPotato(): HotPotato | null {
-        return this.game instanceof HotPotato ? this.game : null;
+    /** A move in the game on: each game knows its own */
+    public act(session: Session, action: string, args: number[]): Promise<void> | void {
+        if (!this.game || !('act' in this.game)) {
+            throw new Error('No game here takes that');
+        }
+        return this.game.act(session, action, args);
     }
 
     public pick(session: Session, game: string): void {
@@ -228,7 +197,7 @@ export class Party {
         if (!game) {
             return;
         }
-        const event = GAME_EVENTS[this.gameId!];
+        const { event } = PARTY_GAMES[this.gameId!];
         this.lastGame = this.gameId;
         this.game = null;
         this.gameId = null;

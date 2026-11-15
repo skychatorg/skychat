@@ -1,6 +1,7 @@
 import { EventEmitter } from 'events';
 import { Connection } from '../../skychat/Connection.js';
 import { Session } from '../../skychat/Session.js';
+import { PARTY_GAMES } from '../../../api/party.js';
 import { CasinoOptions } from './casino/BlackjackTable.js';
 import { logFailure } from '../../skychat/Logging.js';
 import { ChannelKind, PlayerChannel, SanitizedPlayerChannel } from './PlayerChannel.js';
@@ -180,12 +181,9 @@ export class PlayerChannelManager extends EventEmitter {
         }
         session.send('player-sync', { current: null, queue: [], cursor: 0, paused: false });
         session.send('party', null);
-        session.send('casino-table', null);
-        session.send('lucky-pop', null);
-        session.send('crash', null);
-        session.send('daily-roll', null);
-        session.send('monkey-fight', null);
-        session.send('hot-potato', null);
+        for (const { event } of Object.values(PARTY_GAMES)) {
+            session.send(event, null);
+        }
 
         // Notify all connections of this session that the channel changed
         session.send('player-channel', null);

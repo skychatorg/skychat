@@ -41,6 +41,11 @@ export abstract class PartyRound {
         logFailure(Promise.resolve().then(this.onRoundEnd), this.label);
     }
 
+    /** A move this game has no use for */
+    protected wrongMove(): never {
+        throw new Error(`That is not a ${this.label} move`);
+    }
+
     protected broadcast(): void {
         if (!this.over) {
             this.syncConnections(this.party.connections());

@@ -35,50 +35,12 @@ export class PartyPlugin extends GlobalPlugin {
         }
 
         const [action, value, amount] = param.split(' ');
-        switch (action) {
-            case 'pick':
-                return party.pick(connection.session, value);
-            case 'vote':
-                return party.vote(connection.session, value);
-            case 'pop': {
-                const luckyPop = party.luckyPop;
-                if (!luckyPop) {
-                    throw new Error('No balloons here');
-                }
-                return luckyPop.pop(connection.session, Number(value));
-            }
-            case 'bet':
-            case 'cashout': {
-                const crash = party.crash;
-                if (!crash) {
-                    throw new Error('No crash game here');
-                }
-                return action === 'bet' ? crash.bet(connection.session, Number(value)) : crash.cashOut(connection.session);
-            }
-            case 'card': {
-                const dailyRoll = party.dailyRoll;
-                if (!dailyRoll) {
-                    throw new Error('No daily roll here');
-                }
-                return dailyRoll.pick(connection.session, Number(value));
-            }
-            case 'back': {
-                const monkeyFight = party.monkeyFight;
-                if (!monkeyFight) {
-                    throw new Error('No monkey fight here');
-                }
-                return monkeyFight.bet(connection.session, Number(value), Number(amount));
-            }
-            case 'join':
-            case 'pass': {
-                const hotPotato = party.hotPotato;
-                if (!hotPotato) {
-                    throw new Error('No hot potato here');
-                }
-                return action === 'join'
-                    ? hotPotato.join(connection.session, Number(value))
-                    : hotPotato.pass(connection.session, Number(value));
-            }
+        if (action === 'pick') {
+            return party.pick(connection.session, value);
         }
+        if (action === 'vote') {
+            return party.vote(connection.session, value);
+        }
+        return party.act(connection.session, action, [Number(value), Number(amount)]);
     }
 }

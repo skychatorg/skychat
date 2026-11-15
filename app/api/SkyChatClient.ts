@@ -32,6 +32,9 @@ import {
 import { BinaryMessageTypes } from './BinaryMessageTypes.js';
 import { MutePluginHelper } from './plugins/MutePluginHelper.js';
 import { MoneyChange } from './money.js';
+import { PARTY_GAMES, PartyGameId } from './party.js';
+
+type PartyGameState = (typeof PARTY_GAMES)[PartyGameId]['state'];
 
 const defaultUser: SanitizedUser = {
     id: 0,
@@ -180,6 +183,7 @@ export declare interface SkyChatClient {
     on(event: 'daily-roll', listener: (dailyRoll: SanitizedDailyRoll | null) => any): this;
     on(event: 'monkey-fight', listener: (monkeyFight: SanitizedMonkeyFight | null) => any): this;
     on(event: 'hot-potato', listener: (hotPotato: SanitizedHotPotato | null) => any): this;
+    on(event: (typeof PARTY_GAMES)[PartyGameId]['event'], listener: (game: SkyChatClientState[PartyGameState]) => any): this;
 
     on(event: 'voice-channels', listener: (voiceChannels: Array<SanitizedVoiceChannel>) => any): this;
     on(event: 'voice-channel', listener: (channelId: number | null) => any): this;
@@ -288,19 +292,17 @@ export class SkyChatClient extends EventEmitter {
         paused: false,
     };
     private _playerLastUpdate: Date | null = null;
-    private _casino: SanitizedBlackjackTable | null = null;
-
     private _party: SanitizedParty | null = null;
 
-    private _luckyPop: SanitizedLuckyPop | null = null;
-
-    private _crash: SanitizedCrash | null = null;
-
-    private _dailyRoll: SanitizedDailyRoll | null = null;
-
-    private _monkeyFight: SanitizedMonkeyFight | null = null;
-
-    private _hotPotato: SanitizedHotPotato | null = null;
+    /** The state of the game on in your party channel, under its PARTY_GAMES state key */
+    private _partyGames: Pick<SkyChatClientState, PartyGameState> = {
+        casino: null,
+        luckyPop: null,
+        crash: null,
+        dailyRoll: null,
+        monkeyFight: null,
+        hotPotato: null,
+    };
 
     // Connection resilience properties
     private _reconnectAttempts: number = 0;
@@ -382,31 +384,16 @@ export class SkyChatClient extends EventEmitter {
         this.on('player-channel', this._onPlayerChannel.bind(this));
         this.on('player-search', this._onPlayerApiSearchResults.bind(this));
         this.on('player-sync', this._onPlayerSync.bind(this));
-        this.on('casino-table', this._onCasinoTable.bind(this));
         this.on('party', (party) => {
             this._party = party;
             this.emit('update', this.state);
         });
-        this.on('lucky-pop', (luckyPop) => {
-            this._luckyPop = luckyPop;
-            this.emit('update', this.state);
-        });
-        this.on('crash', (crash) => {
-            this._crash = crash;
-            this.emit('update', this.state);
-        });
-        this.on('daily-roll', (dailyRoll) => {
-            this._dailyRoll = dailyRoll;
-            this.emit('update', this.state);
-        });
-        this.on('monkey-fight', (monkeyFight) => {
-            this._monkeyFight = monkeyFight;
-            this.emit('update', this.state);
-        });
-        this.on('hot-potato', (hotPotato) => {
-            this._hotPotato = hotPotato;
-            this.emit('update', this.state);
-        });
+        for (const { event, state } of Object.values(PARTY_GAMES)) {
+            this.on(event, (game) => {
+                this._partyGames = { ...this._partyGames, [state]: game } as typeof this._partyGames;
+                this.emit('update', this.state);
+            });
+        }
 
         // Voice (channel + roster only; transport/produce/consume handled by VoiceClient engine)
         this.on('voice-channels', this._onVoiceChannels.bind(this));
@@ -851,11 +838,6 @@ export class SkyChatClient extends EventEmitter {
         this.emit('update', this.state);
     }
 
-    private _onCasinoTable(table: SanitizedBlackjackTable | null) {
-        this._casino = table;
-        this.emit('update', this.state);
-    }
-
     private _onPlayerSync(player: PlayerState) {
         this._player = player;
         this._playerLastUpdate = new Date();
@@ -915,13 +897,8 @@ export class SkyChatClient extends EventEmitter {
             playerApiSearchResult: this._playerApiSearchResult,
             player: this._player,
             playerLastUpdate: this._playerLastUpdate,
-            casino: this._casino,
+            ...this._partyGames,
             party: this._party,
-            luckyPop: this._luckyPop,
-            crash: this._crash,
-            dailyRoll: this._dailyRoll,
-            monkeyFight: this._monkeyFight,
-            hotPotato: this._hotPotato,
             voiceChannels: this._voiceChannels,
             voiceEnabled: this._voiceEnabled,
             currentVoiceChannelId: this._currentVoiceChannelId,
