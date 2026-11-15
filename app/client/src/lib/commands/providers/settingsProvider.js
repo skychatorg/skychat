@@ -99,7 +99,17 @@ export function useSettingsCommands() {
             });
 
             const colors = client.state.custom?.color || [];
-            if (colors.length) {
+            // Colours are rented in Preferences: the quick switch only works while a rental runs
+            if (colors.length && (client.state.user.data.plugins.custom?.colorUntil ?? 0) <= Date.now()) {
+                out.push({
+                    id: 'settings.color',
+                    title: labels.rentColor(),
+                    icon: 'circle',
+                    category: 'Settings',
+                    keywords: ['username color', 'theme', 'shop'],
+                    run: () => app.toggleModal('profile'),
+                });
+            } else if (colors.length) {
                 out.push({
                     id: 'settings.color',
                     title: labels.changeColor(),

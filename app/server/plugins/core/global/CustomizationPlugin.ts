@@ -1,4 +1,9 @@
+import { COLOR_RENTALS, ColorRental } from '../../../../api/shop.js';
 import { Connection } from '../../../skychat/Connection.js';
+import { logFailure } from '../../../skychat/Logging.js';
+import { RoomManager } from '../../../skychat/RoomManager.js';
+import { Session } from '../../../skychat/Session.js';
+import { UserController } from '../../../skychat/UserController.js';
 import { GlobalPlugin } from '../../GlobalPlugin.js';
 import { ConnectedListPlugin } from './ConnectedListPlugin.js';
 
@@ -13,11 +18,18 @@ export type CustomizationElementValue = {
 
 export type CustomizationElements = { [key: string]: CustomizationElementValue[] };
 
+type CustomizationData = { color: string; colorUntil?: number };
+
 export class CustomizationPlugin extends GlobalPlugin {
     /**
      * Key used to store the color
      */
     static KEY_COLOR = 'color';
+
+    /**
+     * Everyone's colour when they don't rent one
+     */
+    static readonly DEFAULT_COLOR = '#aaaaaa';
 
     /**
      * All possible customization keys/values
@@ -81,11 +93,11 @@ export class CustomizationPlugin extends GlobalPlugin {
     readonly rules = {
         custom: {
             minCount: 2,
-            maxCount: 2,
+            maxCount: 3,
             params: [
                 {
                     name: 'action',
-                    pattern: /^use$/,
+                    pattern: /^(use|buy)$/,
                     info: 'Action',
                 },
                 {
@@ -93,39 +105,76 @@ export class CustomizationPlugin extends GlobalPlugin {
                     pattern: /^(color):(\d+)$/,
                     info: 'Chosen color',
                 },
+                {
+                    name: 'duration',
+                    pattern: /^(week|month)$/,
+                    info: 'Rental duration, to buy',
+                },
             ],
         },
     };
 
     /**
-     * Default values
+     * Default values. `colorUntil` is when the rented colour expires, in ms
      */
-    static readonly defaultDataStorageValue = {
-        [CustomizationPlugin.KEY_COLOR]: '#aaaaaa',
+    static readonly defaultDataStorageValue: CustomizationData = {
+        color: CustomizationPlugin.DEFAULT_COLOR,
     };
 
+    constructor(manager: RoomManager) {
+        super(manager);
+
+        setInterval(() => logFailure(this.expireColors(), 'Colour expiry'), 60 * 1000);
+    }
+
     public async run(alias: string, param: string, connection: Connection): Promise<void> {
-        const [, choice] = param.split(' ');
-        const [type, rawId] = choice.split(':');
-        const id = parseInt(rawId);
-
-        // Check that type exists
-        if (!CustomizationPlugin.ITEMS[type]) {
-            throw new Error('Unable to customize this property');
-        }
-
-        // Check that item exists
-        const item = CustomizationPlugin.ITEMS[type].find((item) => item.id === id);
+        const [action, choice, duration] = param.split(' ');
+        const id = parseInt(choice.split(':')[1]);
+        const item = CustomizationPlugin.ITEMS[CustomizationPlugin.KEY_COLOR].find((item) => item.id === id);
         if (!item) {
             throw new Error(`Item ${id} does not exist`);
         }
 
-        // Set item
-        const data = this.getUserData<{ [key: string]: unknown }>(connection.session.user);
-        data[type] = item.value;
-        this.saveUserData(connection.session.user, data);
+        const user = connection.session.user;
+        const data = this.getUserData<CustomizationData>(user);
+        if (action === 'buy') {
+            const rental = COLOR_RENTALS[duration as ColorRental];
+            if (!rental) {
+                throw new Error('Choose how long to rent the color for: week or month');
+            }
+            await UserController.buy(user, rental.price, `Custom color for a ${duration}`);
+            // Buying again adds to the time left
+            data.colorUntil = Math.max(Date.now(), data.colorUntil ?? 0) + rental.days * 24 * 60 * 60 * 1000;
+        } else if (!this.hasColor(data)) {
+            throw new Error('Rent a custom color first');
+        }
+
+        data.color = item.value;
+        await this.saveUserData(user, data);
+        this.sync(connection.session);
+    }
+
+    private hasColor(data: CustomizationData): boolean {
+        return (data.colorUntil ?? 0) > Date.now();
+    }
+
+    /**
+     * Back to the default colour once the rental is over, or for colours picked when they were free
+     */
+    private async expireColors(): Promise<void> {
+        for (const session of Object.values(Session.sessions)) {
+            const data = this.getUserData<CustomizationData>(session.user);
+            if (session.user.right < 0 || this.hasColor(data) || data.color === CustomizationPlugin.DEFAULT_COLOR) {
+                continue;
+            }
+            await this.saveUserData(session.user, { color: CustomizationPlugin.DEFAULT_COLOR });
+            this.sync(session);
+        }
+    }
+
+    private sync(session: Session): void {
         (this.manager.getPlugin('connectedlist') as ConnectedListPlugin).sync();
-        connection.session.syncUserData();
+        session.syncUserData();
     }
 
     /**

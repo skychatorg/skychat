@@ -48,6 +48,7 @@ export const labels = {
     manageHighlights: () => 'Manage highlighted words',
     changeMotto: () => 'Change motto…',
     changeColor: () => 'Change color…',
+    rentColor: () => 'Rent a color…',
     pickColor: (name) => `Use color: ${name}`,
     toggleGuestBlacklist: (hidden) => (hidden ? 'Show guests' : 'Hide all guests'),
     requestNotifPermission: () => 'Enable browser notifications',

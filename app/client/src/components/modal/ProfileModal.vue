@@ -7,6 +7,8 @@ import { useClientStore } from '@/stores/client';
 import ModalTemplate from '@/components/modal/ModalTemplate.vue';
 import SectionSubTitle from '@/components/util/SectionSubTitle.vue';
 import { formatMoney } from '../../../../api/money.ts';
+import { COLOR_RENTALS } from '../../../../api/shop.ts';
+import { useNow } from '@/composables/useNow';
 
 const app = useAppStore();
 const client = useClientStore();
@@ -85,6 +87,22 @@ watch(
     },
 );
 
+// Custom colour: rented in the shop, then switched for free until the rental ends
+const now = useNow(60_000);
+const custom = computed(() => client.state.user.data.plugins.custom ?? {});
+const renting = computed(() => (custom.value.colorUntil ?? 0) > now.value);
+const pickedColor = ref(null);
+const selectedColor = computed(() =>
+    renting.value ? client.state.custom.color?.find((color) => color.value === custom.value.color)?.id : pickedColor.value,
+);
+const clickColor = (color) => {
+    if (renting.value) {
+        client.sendMessage(`/custom use color:${color.id}`);
+    } else {
+        pickedColor.value = color.id;
+    }
+};
+
 // Money history: fetched while the drawer is open, again whenever the balance moves
 watch(
     () => app.modals.profile && client.state.user.money,
@@ -109,17 +127,36 @@ watch(
 
         <!-- Color -->
         <SectionSubTitle class="mt-6">Custom color</SectionSubTitle>
+        <p class="text-xs text-white/40 text-center">
+            <template v-if="renting">
+                Yours until {{ new Date(custom.colorUntil).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) }}. Switch for
+                free until then.
+            </template>
+            <template v-else>Pick a color, then rent it.</template>
+        </p>
         <div class="mt-2 w-full md:w-2/3 lg:w-[120px] mx-auto flex flex-wrap gap-2 justify-center">
             <div
                 v-for="(color, index) in client.state.custom.color"
                 :key="index"
                 class="w-6 h-6 lg:w-4 lg:h-4 cursor-pointer transition-all hover:rounded"
+                :class="{ 'ring-2 ring-white rounded': color.id === selectedColor }"
                 :style="{
                     backgroundColor: color.value,
                 }"
                 :title="color.name"
-                @click="client.sendMessage(`/custom use color:${color.id}`)"
+                @click="clickColor(color)"
             ></div>
+        </div>
+        <div class="mt-3 flex gap-2">
+            <button
+                v-for="(rental, duration) in COLOR_RENTALS"
+                :key="duration"
+                class="form-control grow whitespace-nowrap disabled:opacity-40 disabled:cursor-not-allowed"
+                :disabled="selectedColor === undefined || selectedColor === null || client.state.user.money < rental.price"
+                @click="client.sendMessage(`/custom buy color:${selectedColor} ${duration}`)"
+            >
+                {{ renting ? '+' : '' }}1 {{ duration }} · {{ formatMoney(rental.price) }}
+            </button>
         </div>
 
         <!-- Money -->
@@ -130,7 +167,7 @@ watch(
                     new Date(change.date).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })
                 }}</span>
                 <span class="grow truncate">{{ change.reason }}</span>
-                <span class="tabular-nums" :class="change.amount < 0 ? 'text-danger' : 'text-emerald-400'">
+                <span class="tabular-nums shrink-0 whitespace-nowrap" :class="change.amount < 0 ? 'text-danger' : 'text-emerald-400'">
                     {{ change.amount > 0 ? '+' : '' }}{{ formatMoney(change.amount) }}
                 </span>
             </li>
