@@ -6,6 +6,7 @@ import internal from 'stream';
 import { WebSocket, WebSocketServer } from 'ws';
 import { GlobalPlugin } from '../plugins/GlobalPlugin.js';
 import { Config } from './Config.js';
+import { Connection } from './Connection.js';
 import { Logging } from './Logging.js';
 import { RateLimiter } from './RateLimiter.js';
 
@@ -49,7 +50,8 @@ export class HttpServer extends EventEmitter {
 
         this.app = this.getExpressApp();
         this.httpServer = http.createServer(this.app);
-        this.wss = new WebSocketServer({ noServer: true });
+        // ws buffers a whole frame before any check runs, the login message included: nothing bigger is ever allowed anyway
+        this.wss = new WebSocketServer({ noServer: true, maxPayload: Connection.MAX_RECEIVED_BYTES_PER_10_SEC });
     }
 
     start() {
