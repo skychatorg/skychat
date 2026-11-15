@@ -38,6 +38,8 @@ watch(
         }
     },
 );
+// Counted in characters like the server, not in UTF-16 units like maxlength
+const titleTooLong = computed(() => [...titleDraft.value.trim()].length > TITLE_MAX_LENGTH);
 const saveTitle = () => client.sendMessage(`/custom use title ${titleDraft.value.trim()}`);
 
 /** Clicking an option wears it right away while the item is rented, and only tries it on otherwise */
@@ -77,8 +79,22 @@ const timeLeft = (slot) => {
 const blocker = (slot, price) => {
     if (!renting(slot) && SHOP[slot].options && !picked[slot]) return 'Pick one first';
     if (slot === 'title' && !titleDraft.value.trim()) return 'Write it first';
+    if (slot === 'title' && titleTooLong.value) return 'Too long';
     if (user.value.money < price) return `${formatMoney(price - user.value.money)} short`;
     return null;
+};
+/** The rental waiting for a second tap, so a stray tap while scrolling costs nothing */
+const confirming = ref(null);
+let confirmTimer = null;
+const tapBuy = (slot, duration) => {
+    clearTimeout(confirmTimer);
+    if (confirming.value !== `${slot}:${duration}`) {
+        confirming.value = `${slot}:${duration}`;
+        confirmTimer = setTimeout(() => (confirming.value = null), 3000);
+        return;
+    }
+    confirming.value = null;
+    buy(slot, duration);
 };
 const buy = (slot, duration) => {
     if (slot === 'title') {
@@ -136,17 +152,11 @@ const colorHex = (id) => COLORS.find((color) => String(color.id) === id)?.value;
                 </div>
 
                 <form v-else-if="slot === 'title'" class="flex gap-2" @submit.prevent="renting(slot) && saveTitle()">
-                    <input
-                        v-model="titleDraft"
-                        class="form-control grow min-w-0"
-                        :maxlength="TITLE_MAX_LENGTH"
-                        placeholder="Queen of Crash"
-                        aria-label="Your title"
-                    />
+                    <input v-model="titleDraft" class="form-control grow min-w-0" placeholder="Queen of Crash" aria-label="Your title" />
                     <button
                         v-if="renting(slot)"
                         class="form-control shrink-0 disabled:opacity-40"
-                        :disabled="!titleDraft.trim() || titleDraft.trim() === worn.title"
+                        :disabled="!titleDraft.trim() || titleTooLong || titleDraft.trim() === worn.title"
                     >
                         Save
                     </button>
@@ -173,11 +183,18 @@ const colorHex = (id) => COLORS.find((color) => String(color.id) === id)?.value;
                         v-for="(price, duration) in item.prices"
                         :key="duration"
                         class="buy"
+                        :class="{ confirm: confirming === `${slot}:${duration}` }"
                         :disabled="!loggedIn || !!blocker(slot, price)"
-                        @click="buy(slot, duration)"
+                        @click="tapBuy(slot, duration)"
                     >
                         <span class="duration">{{ renting(slot) ? '+' : '' }}1 {{ duration }}</span>
-                        <span class="price">{{ loggedIn && blocker(slot, price) ? blocker(slot, price) : formatMoney(price) }}</span>
+                        <span class="price">{{
+                            loggedIn && blocker(slot, price)
+                                ? blocker(slot, price)
+                                : confirming === `${slot}:${duration}`
+                                ? `Confirm ${formatMoney(price)}`
+                                : formatMoney(price)
+                        }}</span>
                     </button>
                 </div>
             </section>
@@ -219,11 +236,12 @@ const colorHex = (id) => COLORS.find((color) => String(color.id) === id)?.value;
 }
 .who {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    gap: 8px;
+    gap: 2px 8px;
     font-size: 18px;
     font-weight: 700;
-    white-space: nowrap;
+    overflow-wrap: anywhere;
     transition: color 0.2s;
 }
 .balance {
@@ -339,6 +357,10 @@ const colorHex = (id) => COLORS.find((color) => String(color.id) === id)?.value;
 }
 .buy:hover:not(:disabled) {
     background: rgb(var(--color-primary) / 0.28);
+}
+.buy.confirm {
+    background: rgb(240 196 108 / 0.2);
+    border-color: #f0c46c;
 }
 .buy:disabled {
     cursor: not-allowed;

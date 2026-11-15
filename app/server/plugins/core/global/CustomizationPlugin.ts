@@ -24,8 +24,11 @@ type CustomizationData = { [slot in ShopSlot]?: string } & { [slot in ShopSlot a
 
 const SLOTS = Object.keys(SHOP) as ShopSlot[];
 
-/** Any printable text, no line breaks */
-const TITLE_PATTERN = new RegExp(`^[^\\p{C}]{1,${TITLE_MAX_LENGTH}}$`, 'u');
+/** Refuses control, unassigned and private-use characters, line separators and text direction overrides. Joined emoji stay allowed */
+const TITLE_PATTERN = new RegExp(
+    `^[^\\p{Cc}\\p{Cn}\\p{Co}\\p{Cs}\\u2028\\u2029\\u202A-\\u202E\\u2066-\\u2069]{1,${TITLE_MAX_LENGTH}}$`,
+    'u',
+);
 
 export class CustomizationPlugin extends GlobalPlugin {
     /**

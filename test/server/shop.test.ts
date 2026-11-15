@@ -176,6 +176,8 @@ describe('titles', () => {
         const alice = await shopper();
 
         await alice.send('/custom buy title week Queen of  Crash');
+        await alice.send('/custom use title dev 👩‍💻 🏳️‍🌈');
+        expect(custom(alice).title).toBe('dev 👩‍💻 🏳️‍🌈');
         await alice.send('/custom use title Lucky Pop addict 🎈');
 
         expect(alice.errors()).toEqual([]);
@@ -190,8 +192,9 @@ describe('titles', () => {
         await alice.send(`/custom buy title week ${'a'.repeat(TITLE_MAX_LENGTH + 1)}`);
         await alice.send('/custom buy title week');
         await alice.send('/custom buy title week two\nlines');
+        await alice.send('/custom buy title week \u202Eesrever');
 
-        expect(alice.errors()).toEqual(Array(3).fill(`Write a title of up to ${TITLE_MAX_LENGTH} characters`));
+        expect(alice.errors()).toEqual(Array(4).fill(`Write a title of up to ${TITLE_MAX_LENGTH} characters`));
         expect(alice.session.user.money).toBe(money);
     });
 });
