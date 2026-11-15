@@ -158,12 +158,13 @@ const isDisconnected = computed(() => props.entry.connectionCount === 0);
                         class="w-full flex items-center justify-center py-1.5 rounded-lg hover:bg-white/5 transition select-none"
                         :class="{ 'opacity-40': isBlacklisted }"
                     >
-                        <button class="relative shrink-0" :title="`${entry.user.username}’s profile`" @click="showProfile">
-                            <div
-                                class="w-8 h-8 rounded overflow-hidden bg-black border-2"
-                                :class="{ 'ring-2 ring-emerald-400 ring-offset-1 ring-offset-black': isSpeaking }"
-                                v-bind="avatarStyle(entry.user)"
-                            >
+                        <button
+                            class="relative shrink-0 rounded"
+                            :class="{ 'ring-2 ring-emerald-400 ring-offset-1 ring-offset-black': isSpeaking }"
+                            :title="`${entry.user.username}’s profile`"
+                            @click="showProfile"
+                        >
+                            <div class="w-8 h-8 rounded overflow-hidden bg-black border-2" v-bind="avatarStyle(entry.user)">
                                 <img :src="entry.user.data.plugins.avatar" :alt="entry.user.username" class="h-full w-full object-cover" />
                             </div>
                             <div
@@ -184,12 +185,13 @@ const isDisconnected = computed(() => props.entry.connectionCount === 0);
                 :class="{ 'opacity-40': isBlacklisted }"
             >
                 <!-- Avatar -->
-                <button class="relative shrink-0" :title="`${entry.user.username}’s profile`" @click="showProfile">
-                    <div
-                        class="w-8 h-8 rounded overflow-hidden bg-black border-2"
-                        :class="{ 'ring-2 ring-emerald-400 ring-offset-1 ring-offset-black': isSpeaking }"
-                        v-bind="avatarStyle(entry.user)"
-                    >
+                <button
+                    class="relative shrink-0 rounded"
+                    :class="{ 'ring-2 ring-emerald-400 ring-offset-1 ring-offset-black': isSpeaking }"
+                    :title="`${entry.user.username}’s profile`"
+                    @click="showProfile"
+                >
+                    <div class="w-8 h-8 rounded overflow-hidden bg-black border-2" v-bind="avatarStyle(entry.user)">
                         <img :src="entry.user.data.plugins.avatar" :alt="entry.user.username" class="h-full w-full object-cover" />
                     </div>
                     <div

@@ -207,7 +207,8 @@ const colorHex = (id) => COLORS.find((color) => String(color.id) === id)?.value;
     flex-shrink: 0;
     overflow: hidden;
     border-radius: 8px;
-    border: 3px solid;
+    border-width: 3px;
+    border-style: solid;
     background: black;
     transition: border-color 0.2s;
 }
@@ -306,7 +307,8 @@ const colorHex = (id) => COLORS.find((color) => String(color.id) === id)?.value;
     flex-shrink: 0;
     overflow: hidden;
     border-radius: 5px;
-    border: 2px solid;
+    border-width: 2px;
+    border-style: solid;
     background: black;
 }
 .mini img {
