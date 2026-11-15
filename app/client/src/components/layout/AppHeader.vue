@@ -1,5 +1,5 @@
 <script setup>
-import { nameStyle } from '@/lib/cosmetics';
+import { avatarStyle, nameStyle } from '@/lib/cosmetics';
 import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
 import { usePaletteStore } from '@/stores/palette';
@@ -75,10 +75,7 @@ const onlineCount = computed(() => (client.state.connectedList || []).length);
                         class="flex items-center gap-2 pl-2 pr-2 py-1 hairline rounded-lg bg-white/[.02] hover:bg-white/[.05] transition"
                         @click="app.toggleModal('profile')"
                     >
-                        <div
-                            class="w-[22px] h-[22px] rounded overflow-hidden bg-black border-2"
-                            :style="{ borderColor: client.state.user.data.plugins.custom.color }"
-                        >
+                        <div class="w-[22px] h-[22px] rounded overflow-hidden bg-black border-2" v-bind="avatarStyle(client.state.user)">
                             <img
                                 :src="client.state.user.data.plugins.avatar"
                                 :alt="client.state.user.username"

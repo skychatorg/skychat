@@ -8,3 +8,14 @@ export function nameStyle(user) {
         style: { color: custom.color, '--name-color': custom.color },
     };
 }
+
+/**
+ * Class and style for a user's avatar border: their color, or the frame they rent
+ */
+export function avatarStyle(user) {
+    const custom = user?.data?.plugins?.custom ?? {};
+    return {
+        class: custom.frame ? ['frame', `frame-${custom.frame}`] : [],
+        style: { borderColor: custom.frame ? undefined : custom.color, '--name-color': custom.color },
+    };
+}

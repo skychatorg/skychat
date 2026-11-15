@@ -156,3 +156,16 @@ describe('animated names', () => {
         expect(alice.session.user.money).toBe(money);
     });
 });
+
+describe('avatar frames', () => {
+    it('rents a frame for a week, kept apart from the color', async () => {
+        const alice = await shopper();
+        await alice.send('/custom buy color:10 week');
+
+        await alice.send('/custom buy frame:neon week');
+
+        expect(alice.errors()).toEqual([]);
+        expect(custom(alice)).toMatchObject({ color: RED, frame: 'neon' });
+        expect(alice.session.user.money).toBe(SHOP.color.prices.month - SHOP.frame.prices.week);
+    });
+});

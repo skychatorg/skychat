@@ -1,5 +1,5 @@
 <script setup>
-import { nameStyle } from '@/lib/cosmetics';
+import { avatarStyle, nameStyle } from '@/lib/cosmetics';
 import { copyText } from '@/lib/copyText.js';
 import SkyContextMenu from '@/components/common/SkyContextMenu.vue';
 import SkyContextMenuItem from '@/components/common/SkyContextMenuItem.vue';
@@ -161,7 +161,7 @@ const isDisconnected = computed(() => props.entry.connectionCount === 0);
                             <div
                                 class="w-8 h-8 rounded overflow-hidden bg-black border-2"
                                 :class="{ 'ring-2 ring-emerald-400 ring-offset-1 ring-offset-black': isSpeaking }"
-                                :style="{ borderColor: entry.user.data.plugins.custom.color }"
+                                v-bind="avatarStyle(entry.user)"
                             >
                                 <img :src="entry.user.data.plugins.avatar" :alt="entry.user.username" class="h-full w-full object-cover" />
                             </div>
@@ -187,7 +187,7 @@ const isDisconnected = computed(() => props.entry.connectionCount === 0);
                     <div
                         class="w-8 h-8 rounded overflow-hidden bg-black border-2"
                         :class="{ 'ring-2 ring-emerald-400 ring-offset-1 ring-offset-black': isSpeaking }"
-                        :style="{ borderColor: entry.user.data.plugins.custom.color }"
+                        v-bind="avatarStyle(entry.user)"
                     >
                         <img :src="entry.user.data.plugins.avatar" :alt="entry.user.username" class="h-full w-full object-cover" />
                     </div>

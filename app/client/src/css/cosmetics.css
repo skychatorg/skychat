@@ -32,3 +32,78 @@
         animation: none;
     }
 }
+
+/* Avatar frames from the shop: a border with a glow around it */
+.frame-gold {
+    border-color: #e6b422;
+    box-shadow: 0 0 6px 1px rgb(240 196 108 / 0.7);
+}
+.frame-neon {
+    border-color: var(--name-color);
+    animation: frame-neon 1.6s ease-in-out infinite alternate;
+}
+.frame-fire {
+    animation: frame-fire 1.2s steps(6) infinite alternate;
+}
+.frame-ice {
+    border-color: #bae6fd;
+    box-shadow:
+        0 0 0 1px rgb(255 255 255 / 0.6),
+        0 0 8px 1px rgb(125 211 252 / 0.7);
+}
+.frame-rainbow {
+    animation: frame-rainbow 4s linear infinite;
+}
+@keyframes frame-neon {
+    from {
+        box-shadow: 0 0 2px 0 var(--name-color);
+    }
+    to {
+        box-shadow: 0 0 10px 2px var(--name-color);
+    }
+}
+@keyframes frame-fire {
+    from {
+        border-color: #ff3d00;
+        box-shadow: 0 -2px 6px 1px rgb(255 106 0 / 0.8);
+    }
+    to {
+        border-color: #ffb000;
+        box-shadow: 0 -4px 10px 2px rgb(255 61 0 / 0.7);
+    }
+}
+@keyframes frame-rainbow {
+    0%,
+    100% {
+        border-color: #ff4769;
+        box-shadow: 0 0 6px 1px #ff4769;
+    }
+    25% {
+        border-color: #f0c46c;
+        box-shadow: 0 0 6px 1px #f0c46c;
+    }
+    50% {
+        border-color: #49ff8c;
+        box-shadow: 0 0 6px 1px #49ff8c;
+    }
+    75% {
+        border-color: #4cc9f0;
+        box-shadow: 0 0 6px 1px #4cc9f0;
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .frame {
+        animation: none;
+    }
+    .frame-neon {
+        box-shadow: 0 0 6px 1px var(--name-color);
+    }
+    .frame-fire {
+        border-color: #ff6a00;
+        box-shadow: 0 -2px 6px 1px rgb(255 106 0 / 0.8);
+    }
+    .frame-rainbow {
+        border-color: #bb33ff;
+        box-shadow: 0 0 6px 1px #bb33ff;
+    }
+}

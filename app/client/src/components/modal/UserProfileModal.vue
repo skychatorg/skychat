@@ -1,5 +1,5 @@
 <script setup>
-import { nameStyle } from '@/lib/cosmetics';
+import { avatarStyle, nameStyle } from '@/lib/cosmetics';
 import ModalTemplate from '@/components/modal/ModalTemplate.vue';
 import { useIsBlacklisted } from '@/composables/useIsBlacklisted';
 import { useUserProfile } from '@/composables/useUserProfile';
@@ -112,7 +112,7 @@ const editOwnProfile = () => {
             Profile<span v-if="user" class="sr-only">: {{ user.username }}</span>
         </template>
         <div v-if="user" class="flex flex-col items-center gap-5 pb-4 text-center">
-            <div class="w-28 h-28 rounded-2xl overflow-hidden bg-black border-4" :style="{ borderColor: user.data.plugins.custom.color }">
+            <div class="w-28 h-28 rounded-2xl overflow-hidden bg-black border-4" v-bind="avatarStyle(user)">
                 <img :src="user.data.plugins.avatar" :alt="user.username" class="h-full w-full object-cover" />
             </div>
 

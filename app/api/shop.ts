@@ -85,6 +85,18 @@ export const SHOP = {
             { id: 'gold', name: 'Gold' },
         ],
     },
+    frame: {
+        name: 'Avatar frame',
+        pitch: 'A glowing frame around your avatar, in the list and next to your messages.',
+        prices: { week: 1000 * 100, month: 2700 * 100 },
+        options: [
+            { id: 'gold', name: 'Gold' },
+            { id: 'neon', name: 'Neon' },
+            { id: 'fire', name: 'Fire' },
+            { id: 'ice', name: 'Ice' },
+            { id: 'rainbow', name: 'Rainbow' },
+        ],
+    },
 } satisfies Record<string, ShopItem>;
 
 export type ShopSlot = keyof typeof SHOP;

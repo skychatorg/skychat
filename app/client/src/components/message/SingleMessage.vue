@@ -1,5 +1,5 @@
 <script setup>
-import { nameStyle } from '@/lib/cosmetics';
+import { avatarStyle, nameStyle } from '@/lib/cosmetics';
 import { copyText } from '@/lib/copyText.js';
 import SkyContextMenu from '@/components/common/SkyContextMenu.vue';
 import SkyContextMenuItem from '@/components/common/SkyContextMenuItem.vue';
@@ -272,8 +272,6 @@ const toggleActionMenu = () => {
         actionMenuUp.value = list.getBoundingClientRect().bottom - actionMenuContainer.value.getBoundingClientRect().bottom < 150;
     }
 };
-
-const userColor = computed(() => props.message.user.data.plugins.custom.color);
 </script>
 
 <template>
@@ -310,7 +308,7 @@ const userColor = computed(() => props.message.user.data.plugins.custom.color);
                     <button
                         v-if="!compact"
                         class="w-7 h-7 shrink-0 mt-[2px] rounded overflow-hidden bg-black border-2"
-                        :style="{ borderColor: userColor }"
+                        v-bind="avatarStyle(message.user)"
                         :title="message.user.id < 0 ? undefined : `${message.user.username}’s profile`"
                         :disabled="message.user.id < 0"
                         @click.stop="openProfile(message.user.username)"

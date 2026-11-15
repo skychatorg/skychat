@@ -6,7 +6,7 @@ import { useNow } from '@/composables/useNow';
 import ModalTemplate from '@/components/modal/ModalTemplate.vue';
 import { formatMoney } from '../../../../api/money.ts';
 import { COLORS, SHOP } from '../../../../api/shop.ts';
-import { nameStyle } from '@/lib/cosmetics';
+import { avatarStyle, nameStyle } from '@/lib/cosmetics';
 
 const app = useAppStore();
 const client = useClientStore();
@@ -50,6 +50,8 @@ const preview = computed(() => {
     }
     return { username: user.value.username, data: { plugins: { ...user.value.data.plugins, custom } } };
 });
+/** The preview, wearing this option instead */
+const wearing = (slot, option) => ({ data: { plugins: { custom: { ...preview.value.data.plugins.custom, [slot]: option } } } });
 
 const timeLeft = (slot) => {
     const minutes = Math.max(0, Math.floor((until(slot) - now.value) / 60_000));
@@ -78,7 +80,7 @@ const colorHex = (id) => COLORS.find((color) => String(color.id) === id)?.value;
         <div class="shop">
             <!-- You, as others will see you -->
             <div class="preview">
-                <div class="avatar" :style="{ borderColor: preview.data.plugins.custom.color }">
+                <div class="avatar" v-bind="avatarStyle(preview)">
                     <img :src="user.data.plugins.avatar" :alt="user.username" />
                 </div>
                 <div class="min-w-0">
@@ -115,7 +117,7 @@ const colorHex = (id) => COLORS.find((color) => String(color.id) === id)?.value;
                     />
                 </div>
 
-                <div v-else-if="slot === 'effect'" class="chips">
+                <div v-else-if="item.options" class="chips">
                     <button
                         v-for="option in item.options"
                         :key="option.id"
@@ -124,10 +126,10 @@ const colorHex = (id) => COLORS.find((color) => String(color.id) === id)?.value;
                         :aria-pressed="selected(slot) === option.id"
                         @click="choose(slot, option.id)"
                     >
-                        <span
-                            v-bind="nameStyle({ data: { plugins: { custom: { ...preview.data.plugins.custom, effect: option.id } } } })"
-                            >{{ option.name }}</span
-                        >
+                        <span v-if="slot === 'frame'" class="mini" v-bind="avatarStyle(wearing(slot, option.id))">
+                            <img :src="user.data.plugins.avatar" alt="" />
+                        </span>
+                        <span v-bind="slot === 'effect' ? nameStyle(wearing(slot, option.id)) : {}">{{ option.name }}</span>
                     </button>
                 </div>
 
@@ -255,6 +257,26 @@ const colorHex = (id) => COLORS.find((color) => String(color.id) === id)?.value;
     background: rgb(255 255 255 / 0.04);
     border: 2px solid rgb(255 255 255 / 0.1);
     transition: border-color 0.15s;
+}
+.chip {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+.mini {
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+    overflow: hidden;
+    border-radius: 5px;
+    border: 2px solid;
+    background: black;
+}
+.mini img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 .chip:hover {
     border-color: rgb(255 255 255 / 0.3);
