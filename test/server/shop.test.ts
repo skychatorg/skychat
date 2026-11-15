@@ -265,6 +265,18 @@ describe('shop robustness', () => {
     });
 });
 
+describe('default color', () => {
+    it('is not for sale', async () => {
+        const alice = await shopper();
+        const money = alice.session.user.money;
+
+        await alice.send('/custom buy color:4 week');
+
+        expect(alice.errors()).toEqual(['Pick one of the name colors']);
+        expect(alice.session.user.money).toBe(money);
+    });
+});
+
 describe('taking off', () => {
     it('takes an item off without ending the rental, and puts it back for free', async () => {
         const alice = await shopper();

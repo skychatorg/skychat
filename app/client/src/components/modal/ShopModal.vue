@@ -14,7 +14,7 @@ const TABS = { color: 'Colors', effect: 'Names', frame: 'Frames', title: 'Titles
 
 const app = useAppStore();
 const client = useClientStore();
-const now = useNow(30_000);
+const now = useNow(5_000);
 
 const user = computed(() => client.state.user);
 const worn = computed(() => user.value.data.plugins.custom ?? {});
@@ -31,13 +31,17 @@ const colorHex = (id) => COLORS.find((color) => String(color.id) === id)?.value;
 const picked = reactive({});
 const optionOf = (slot) => {
     const value = worn.value[slot];
-    return slot === 'color' ? String(COLORS.find((color) => color.value === value)?.id) : value;
+    return slot === 'color' ? COLORS.find((color) => color.value === value)?.id.toString() : value;
 };
 const selected = (slot) => (renting(slot) ? optionOf(slot) : picked[slot]);
 
 /** The title being written, starting from the one worn. Counted in characters like the server, not UTF-16 units */
 const titleDraft = ref('');
 const titleLength = computed(() => [...titleDraft.value.trim()].length);
+watch(
+    () => worn.value.title,
+    (title) => (titleDraft.value = title ?? ''),
+);
 const saveTitle = () => client.sendMessage(`/custom use title ${titleDraft.value.trim()}`);
 
 /** The duration picked for each item, the shortest by default */
@@ -66,12 +70,12 @@ const choose = (slot, option) => {
 /** You with what is worn, and what is being tried on over it */
 const preview = computed(() => {
     const custom = { ...worn.value };
-    for (const [slot, option] of Object.entries(picked)) {
-        if (option && !renting(slot)) {
-            custom[slot] = slot === 'color' ? colorHex(option) : option;
-        }
+    // Only what is tried on in the open tab, so the preview never shows something else as worn
+    const slot = tab.value;
+    if (picked[slot] && !renting(slot)) {
+        custom[slot] = slot === 'color' ? colorHex(picked[slot]) : picked[slot];
     }
-    if (titleDraft.value.trim()) {
+    if (slot === 'title' && titleDraft.value.trim()) {
         custom.title = titleDraft.value.trim();
     }
     return { username: user.value.username, data: { plugins: { ...user.value.data.plugins, custom } } };
@@ -104,7 +108,7 @@ const price = computed(() => item.value.prices[durationOf(tab.value)]);
 const blocker = computed(() => {
     const slot = tab.value;
     if (!loggedIn.value) return 'Log in to shop';
-    if (!renting(slot) && item.value.options && !picked[slot]) return 'Pick one first';
+    if (item.value.options && !selected(slot)) return 'Pick one first';
     if (slot === 'title' && !titleLength.value) return 'Write it first';
     if (slot === 'title' && titleLength.value > TITLE_MAX_LENGTH) return 'Too long';
     if (user.value.money < price.value) return `${formatMoney(price.value - user.value.money)} short`;
@@ -122,8 +126,11 @@ const summary = computed(() => {
 /** A first tap asks to confirm, so a stray tap while scrolling costs nothing */
 const confirming = ref(false);
 let confirmTimer = null;
-watch([tab, () => durationOf(tab.value)], () => (confirming.value = false));
+watch([tab, () => durationOf(tab.value), () => selected(tab.value), titleDraft, () => app.modals.shop], () => (confirming.value = false));
 const checkout = () => {
+    if (blocker.value) {
+        return;
+    }
     clearTimeout(confirmTimer);
     if (!confirming.value) {
         confirming.value = true;
@@ -316,7 +323,7 @@ const checkout = () => {
                             1 {{ duration }} · {{ formatMoney(cost) }}
                         </button>
                     </div>
-                    <button class="rent" :class="{ confirm: confirming }" :disabled="!!blocker" @click="checkout">
+                    <button class="rent" :class="{ confirm: confirming }" :aria-disabled="!!blocker" @click="checkout">
                         <template v-if="blocker">{{ blocker }}</template>
                         <template v-else-if="confirming">Confirm {{ formatMoney(price) }}</template>
                         <template v-else>{{ renting(tab) ? 'Extend' : 'Rent' }} · {{ formatMoney(price) }}</template>
@@ -557,14 +564,14 @@ const checkout = () => {
         filter 0.15s,
         background 0.15s;
 }
-.rent:hover:not(:disabled) {
+.rent:hover:not([aria-disabled='true']) {
     filter: brightness(1.15);
 }
 .rent.confirm {
     color: #1a1206;
     background: #f0c46c;
 }
-.rent:disabled {
+.rent[aria-disabled='true'] {
     cursor: not-allowed;
     color: rgb(255 255 255 / 0.45);
     background: rgb(255 255 255 / 0.06);

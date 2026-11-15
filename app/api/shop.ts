@@ -24,7 +24,6 @@ export const COLORS = [
     { id: 1, name: 'Dark Dark Dark Gray', value: '#757575' },
     { id: 2, name: 'Dark Dark Gray', value: '#858585' },
     { id: 3, name: 'Dark Gray', value: '#959595' },
-    { id: 4, name: 'Boring Gray', value: '#aaaaaa' },
     { id: 5, name: 'Gray', value: '#bbbbbb' },
     { id: 6, name: 'lightgray', value: '#cccccc' },
     { id: 7, name: 'Light Gray', value: '#dddddd' },
