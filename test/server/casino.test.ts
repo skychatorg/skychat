@@ -113,7 +113,8 @@ describe('casino table', () => {
         ]);
         expect([alice.session.user.money, bob.session.user.money]).toEqual([22000, 22000]);
         expect(alice.last('set-user').money).toBe(22000);
-        // Everyone's user list too, not only the player's own screen
+        // Everyone's user list too, not only the player's own screen, batched for a moment
+        await settle(150);
         expect(JSON.stringify(bob.events('connected-list-patch'))).toContain('22000');
     });
 

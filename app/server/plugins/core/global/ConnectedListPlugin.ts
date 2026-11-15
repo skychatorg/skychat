@@ -12,6 +12,9 @@ import { GlobalPlugin } from '../../GlobalPlugin.js';
 export class ConnectedListPlugin extends GlobalPlugin {
     static readonly SYNC_DELAY = 2 * 1000;
 
+    /** Changes asked for within this window are sent together: a payout to every winner rebuilds the list once */
+    static readonly BATCH_MS = 100;
+
     static readonly commandName = 'connectedlist';
 
     readonly opOnly = true;
@@ -22,6 +25,8 @@ export class ConnectedListPlugin extends GlobalPlugin {
      * Last connected list sent to clients
      */
     private lastConnectedList: unknown = null;
+
+    private syncQueued = false;
 
     constructor(manager: RoomManager) {
         super(manager);
@@ -42,12 +47,15 @@ export class ConnectedListPlugin extends GlobalPlugin {
         connection.send('connected-list', this.lastConnectedList);
     }
 
-    async onConnectionLeftRoom(): Promise<void> {
-        this.sync();
-    }
-
     public sync(): void {
-        this._patchClients();
+        if (this.syncQueued) {
+            return;
+        }
+        this.syncQueued = true;
+        setTimeout(() => {
+            this.syncQueued = false;
+            this._patchClients();
+        }, ConnectedListPlugin.BATCH_MS);
     }
 
     private _sessionSortFunction(a: Session, b: Session) {

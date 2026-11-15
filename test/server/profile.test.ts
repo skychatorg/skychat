@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { Session } from '../../app/server/skychat/Session.js';
-import { TestServer } from './harness.js';
+import { settle, TestServer } from './harness.js';
 
 let server: TestServer;
 
@@ -16,6 +16,8 @@ describe('profile changes', () => {
         bob.clear();
 
         await alice.send('/motto living dangerously');
+        // The list is batched for a moment
+        await settle(150);
 
         expect(alice.last('set-user').data.plugins.motto).toBe('living dangerously');
         expect(JSON.stringify(bob.events('connected-list-patch'))).toContain('living dangerously');
@@ -45,6 +47,7 @@ describe('profile changes', () => {
         watcher.clear();
 
         await eve.send(command);
+        await settle(150);
 
         expect(eve.errors()).toEqual([]);
         expect(Session.getSessionByIdentifier(changed)!.user.money).toBe(expected);
