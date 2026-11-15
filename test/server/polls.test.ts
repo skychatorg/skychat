@@ -24,3 +24,18 @@ describe('/poll', () => {
         expect(room.messages.map((m) => m.content)).toContain('still here');
     });
 });
+
+describe('/userpoll', () => {
+    // The poll message is formatted as trusted, so its buttons run without a confirm: users must not be able to add their own
+    it('never turns the question or an answer into a trusted button', async () => {
+        const alice = await server.connect('userpollalice');
+        const room = alice.connection.room!;
+
+        await alice.send('/userpoll [[Vote//give alice 5000]]\nYes [[x//give alice 1]]\nNo /give alice 2');
+
+        const { formatted } = room.messages.at(-1)!.sanitized();
+        const actions = [...formatted.matchAll(/data-action="([^"]*)"/g)].map((m) => m[1]);
+        expect(actions.every((action) => action.startsWith('/userpoll'))).toBe(true);
+        expect(actions).toHaveLength(3);
+    });
+});

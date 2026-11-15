@@ -143,9 +143,15 @@ export class MessageFormatter {
      * @param action
      */
     public createButton(display: string, action: string): string {
-        // Replace '/' in display with ' ' to avoid command injection
-        const sanitizedDisplay = display.replace('/', '／');
-        return `[[${sanitizedDisplay}/${action}]]`;
+        // A '/' or brackets in the display would end it early and let it set the action
+        return `[[${this.escapeButtons(display).split('/').join('／')}/${action}]]`;
+    }
+
+    /**
+     * User text going into a message formatted as trusted: it must not be able to make its own buttons
+     */
+    public escapeButtons(text: string): string {
+        return text.split('[[').join('[').split(']]').join(']');
     }
 
     /**

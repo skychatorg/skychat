@@ -111,7 +111,8 @@ export class UserPollPlugin extends GlobalPlugin {
     }
 
     private async handlePoll(param: string, room: Room): Promise<void> {
-        const [question, ...answers] = param.split('\n');
+        // The poll message is trusted, so its buttons run without a confirm: none may come from the user
+        const [question, ...answers] = MessageFormatter.getInstance().escapeButtons(param).split('\n');
         if (!question || answers.filter((a) => a.trim().length > 0).length < 2) {
             throw new Error('Invalid poll');
         }
