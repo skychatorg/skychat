@@ -145,6 +145,10 @@ export class UserController {
         if (!User.USERNAME_LOGGED_REGEXP.test(username)) {
             throw new Error('Invalid username');
         }
+        // Checked before the insert: the hash needs the new id, and a refused password must leave no account behind
+        if (typeof password !== 'string' || password.length === 0) {
+            throw new Error('Choose a password');
+        }
 
         const tms = Math.floor(Date.now() / 1000);
         const sqlQuery = SQL`insert into users
