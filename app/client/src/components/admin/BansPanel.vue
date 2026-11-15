@@ -1,5 +1,6 @@
 <script setup>
 import { useNow } from '@/composables/useNow';
+import { isUsername, useUsernames } from '@/composables/useUsernames';
 import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
 import { computed, onMounted, ref } from 'vue';
@@ -50,8 +51,8 @@ const left = (until) => {
 
 // The user menu's "Ban" opens this tab with the name filled in
 const form = ref({ username: app.modals.admin?.username ?? '', type: 'ACCESS', seconds: 3600 });
-const usernames = computed(() => (client.state.connectedList ?? []).map((entry) => entry.user.username));
-const canBan = computed(() => /^[a-z0-9-_]+$/i.test(form.value.username.trim()));
+const usernames = useUsernames();
+const canBan = computed(() => isUsername(form.value.username));
 
 const ban = () => {
     const { username, type, seconds } = form.value;

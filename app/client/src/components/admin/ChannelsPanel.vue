@@ -1,4 +1,5 @@
 <script setup>
+import { useManagedList } from '@/composables/useManagedList';
 import { betLimits, channelIcon } from '@/lib/channel';
 import { useClientStore } from '@/stores/client';
 import { reactive, ref, watch } from 'vue';
@@ -13,29 +14,9 @@ watch(
     { immediate: true },
 );
 
-const manage = (command) => client.sendMessage(`/playerchannelmanage ${command}`);
+const { manage, rename, confirmingDelete, remove } = useManagedList('playerchannelmanage');
 
 const onMoved = () => manage(`reorder ${channels.value.map((channel) => channel.id).join(',')}`);
-
-function rename(channel, event) {
-    const name = event.target.value.trim();
-    if (name && name !== channel.name) {
-        manage(`rename ${channel.id} ${name}`);
-    } else {
-        event.target.value = channel.name;
-    }
-}
-
-// Deleting asks once more on the same button, since it kicks everyone out of the channel
-const confirmingDelete = ref(null);
-function remove(channel) {
-    if (confirmingDelete.value !== channel.id) {
-        confirmingDelete.value = channel.id;
-        return;
-    }
-    confirmingDelete.value = null;
-    manage(`delete ${channel.id}`);
-}
 
 const KINDS = [
     { kind: 'media', label: 'Media', icon: 'music', description: 'A shared queue of videos and music' },

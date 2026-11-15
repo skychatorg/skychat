@@ -1,30 +1,11 @@
 <script setup>
+import { useManagedList } from '@/composables/useManagedList';
 import { useClientStore } from '@/stores/client';
 import { ref } from 'vue';
 
 const client = useClientStore();
 
-const manage = (command) => client.sendMessage(`/voicechannelmanage ${command}`);
-
-function rename(channel, event) {
-    const name = event.target.value.trim();
-    if (name && name !== channel.name) {
-        manage(`rename ${channel.id} ${name}`);
-    } else {
-        event.target.value = channel.name;
-    }
-}
-
-// Deleting asks once more on the same button, since it drops everyone in the channel out of voice
-const confirmingDelete = ref(null);
-function remove(channel) {
-    if (confirmingDelete.value !== channel.id) {
-        confirmingDelete.value = channel.id;
-        return;
-    }
-    confirmingDelete.value = null;
-    manage(`delete ${channel.id}`);
-}
+const { manage, rename, confirmingDelete, remove } = useManagedList('voicechannelmanage');
 
 const newName = ref('');
 function create() {

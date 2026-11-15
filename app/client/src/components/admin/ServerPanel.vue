@@ -1,4 +1,5 @@
 <script setup>
+import { isUsername, useUsernames } from '@/composables/useUsernames';
 import { useClientStore } from '@/stores/client';
 import { computed, onMounted, ref } from 'vue';
 
@@ -16,14 +17,9 @@ const run = (key, command) => {
     setTimeout(() => (done.value = { ...done.value, [key]: false }), 3000);
 };
 
-const usernames = computed(() =>
-    (client.state.connectedList ?? [])
-        .map((entry) => entry.user)
-        .filter((user) => user.right >= 0)
-        .map((user) => user.username),
-);
+const usernames = useUsernames({ accountsOnly: true });
 const gift = ref({ username: '', dollars: 10 });
-const canGive = computed(() => /^[a-z0-9-_]+$/i.test(gift.value.username.trim()) && gift.value.dollars > 0);
+const canGive = computed(() => isUsername(gift.value.username) && gift.value.dollars > 0);
 const give = () => {
     // Money is counted in cents
     run('money', `/offermoney ${gift.value.username.trim()} ${Math.round(gift.value.dollars * 100)}`);

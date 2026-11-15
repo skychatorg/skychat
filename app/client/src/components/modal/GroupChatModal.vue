@@ -1,6 +1,7 @@
 <script setup>
 import ModalTemplate from '@/components/modal/ModalTemplate.vue';
 import { useRoomCommand } from '@/composables/useRoomCommand';
+import { isUsername } from '@/composables/useUsernames';
 import { roomName } from '@/lib/roomName';
 import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
@@ -31,7 +32,7 @@ watch(
         picked.value = [];
     },
 );
-const validName = computed(() => /^[a-z0-9-_]+$/i.test(typed.value.trim()));
+const validName = computed(() => isUsername(typed.value));
 const pick = () => {
     const name = typed.value.trim();
     if (validName.value && !picked.value.some((p) => p.toLowerCase() === name.toLowerCase())) {
