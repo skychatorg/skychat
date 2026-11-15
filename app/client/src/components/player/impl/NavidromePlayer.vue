@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue';
 import { useClientStore } from '@/stores/client';
-import { mediaThumbUrl, roomCursorMs } from '@/lib/player';
+import { lockedReason as getLockedReason, mediaThumbUrl, roomCursorMs } from '@/lib/player';
 
 const client = useClientStore();
 
@@ -33,6 +33,7 @@ watch(volume, (value) => {
 
 const video = computed(() => client.state.player.current?.video || null);
 const token = computed(() => client.state.player.streamToken || '');
+const lockedReason = computed(() => getLockedReason(video.value, token.value, client.state.user));
 const cover = computed(() => mediaThumbUrl(video.value, token.value)?.replace('size=300', 'size=600') ?? null);
 
 // The title is "Artist - Song", split back for display
@@ -122,11 +123,12 @@ onBeforeUnmount(() => {
             <div class="min-w-0 max-w-xs flex-1 flex flex-col gap-2">
                 <div class="text-lg font-semibold leading-tight line-clamp-2">{{ titleParts.song }}</div>
                 <div v-if="titleParts.artist" class="text-sm text-white/70 truncate">{{ titleParts.artist }}</div>
-                <div v-if="error" class="text-sm text-red-300">{{ error }}</div>
+                <div v-if="lockedReason" class="text-sm text-white/80">{{ lockedReason }}</div>
+                <div v-else-if="error" class="text-sm text-red-300">{{ error }}</div>
                 <button v-else-if="needsClick" class="form-control px-3 py-1 text-sm w-fit" @click="play">
                     <fa icon="play" class="mr-1" /> Listen
                 </button>
-                <label class="flex items-center gap-2 min-w-0 text-white/70" title="Volume">
+                <label v-if="!lockedReason" class="flex items-center gap-2 min-w-0 text-white/70" title="Volume">
                     <fa :icon="volume > 0 ? 'volume-high' : 'volume-xmark'" fixed-width />
                     <input
                         v-model.number="volume"

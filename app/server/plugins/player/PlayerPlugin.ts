@@ -351,6 +351,15 @@ export class PlayerPlugin extends GlobalPlugin {
         return true;
     }
 
+    // Says why, since a guest only needs to log in
+    private assertCanUseNavidrome(session: Session) {
+        if (!this.canUseNavidrome(session)) {
+            throw new Error(
+                session.user.isGuest() ? 'Log in to browse the music library' : 'Your account cannot browse the music library yet',
+            );
+        }
+    }
+
     private get navidrome(): NavidromeFetcher {
         const fetcher = PlayerPlugin.FETCHERS.navidrome as NavidromeFetcher;
         if (!fetcher.enabled) {
@@ -363,9 +372,7 @@ export class PlayerPlugin extends GlobalPlugin {
      * Browse the music library: `newest [offset]` lists recent albums, `album <id>` its songs.
      */
     private async handleNavidromeLs(param: string, connection: Connection) {
-        if (!this.canUseNavidrome(connection.session)) {
-            throw new Error('You do not have the permission to browse the music library');
-        }
+        this.assertCanUseNavidrome(connection.session);
         const client = this.navidrome.client;
         const [view, arg] = param.trim().split(' ');
         const streamToken = issueStreamToken(connection.session.user.id, Date.now() + STREAM_TOKEN_TTL_MS);
@@ -408,9 +415,7 @@ export class PlayerPlugin extends GlobalPlugin {
      * Search albums and songs in the music library: `<offset> <term>`.
      */
     private async handleNavidromeSearch(param: string, connection: Connection) {
-        if (!this.canUseNavidrome(connection.session)) {
-            throw new Error('You do not have the permission to browse the music library');
-        }
+        this.assertCanUseNavidrome(connection.session);
         const client = this.navidrome.client;
         const match = param.trim().match(/^(\d{1,6}) (.+)$/);
         if (!match) {

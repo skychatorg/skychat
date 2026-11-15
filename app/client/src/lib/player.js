@@ -50,6 +50,24 @@ export function mediaThumbUrl(video, token) {
 }
 
 /**
+ * Why this viewer gets no stream for a proxied media (the server only sends a token to those
+ * allowed to play it), or null when they can play it.
+ * @param {{ type: string }|null|undefined} video
+ * @param {string|undefined} token client.state.player.streamToken
+ * @param {{ id?: number }} user client.state.user
+ * @returns {string|null}
+ */
+export function lockedReason(video, token, user) {
+    if (!video || !PROXIED_TYPES[video.type] || token) {
+        return null;
+    }
+    if (video.type === 'navidrome') {
+        return user?.id ? "Your account can't play the music library yet." : 'Guests cannot hear the music. Log in to listen along.';
+    }
+    return user?.id ? "Your account can't play Jellyfin videos yet." : 'Guests cannot see this video. Log in to watch along.';
+}
+
+/**
  * Whether the given video can be paused from the UI.
  * @param {{ type?: string }|null|undefined} video
  * @returns {boolean}
