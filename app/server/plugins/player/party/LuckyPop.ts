@@ -581,7 +581,7 @@ export class LuckyPop {
         if (size === 'freeze') {
             this.frozen = { session, until: Date.now() + LuckyPop.FREEZE_MS };
             // Everyone sees the sky thaw on time
-            setTimeout(() => this.broadcast(), LuckyPop.FREEZE_MS);
+            this.eventTimers.push(setTimeout(() => this.broadcast(), LuckyPop.FREEZE_MS));
             return { ...base, kind: 'freeze', label: `froze the sky for ${LuckyPop.FREEZE_MS / 1000} s` };
         }
         if (size === 'patience') {

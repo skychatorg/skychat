@@ -39,7 +39,7 @@ function remove(channel) {
 
 const KINDS = [
     { kind: 'media', label: 'Media', icon: 'music', description: 'A shared queue of videos and music' },
-    { kind: 'party', label: 'Party', icon: 'dice', description: 'Mini-games played with SkyChat money: blackjack, Lucky Pop' },
+    { kind: 'party', label: 'Party', icon: 'dice', description: 'Mini-games played with SkyChat money, the room votes the next one' },
 ];
 const form = reactive({ name: '', kind: 'media', minBet: 10, maxBet: 100 });
 function create() {

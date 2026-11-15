@@ -180,5 +180,3 @@ library.add(
     faWaveSquare,
     faXmark,
 );
-
-export default library;

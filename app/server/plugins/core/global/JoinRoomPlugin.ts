@@ -4,8 +4,6 @@ import { GlobalPlugin } from '../../GlobalPlugin.js';
 import { MessageHistoryPlugin } from '../room/MessageHistoryPlugin.js';
 
 export class JoinRoomPlugin extends GlobalPlugin {
-    static readonly CHANGE_USERNAME_PRICE = 2000;
-
     static readonly commandName = 'join';
 
     readonly minRight = -1;

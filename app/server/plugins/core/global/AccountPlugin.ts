@@ -5,8 +5,6 @@ import { UserController } from '../../../skychat/UserController.js';
 import { GlobalPlugin } from '../../GlobalPlugin.js';
 
 export class AccountPlugin extends GlobalPlugin {
-    static readonly CHANGE_USERNAME_PRICE = 2000;
-
     static readonly commandName = 'account';
 
     static readonly commandAliases = ['set', 'resetpassword'];

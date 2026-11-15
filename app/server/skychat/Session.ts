@@ -2,8 +2,6 @@ import { Connection } from './Connection.js';
 import { IBroadcaster } from './IBroadcaster.js';
 import { SanitizedUser, User } from './User.js';
 
-export const BinaryMessageTypes = 123;
-
 export type SanitizedSession = {
     identifier: string;
 

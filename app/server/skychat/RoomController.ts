@@ -2,7 +2,7 @@ import SQL from 'sql-template-strings';
 import { DatabaseHelper } from './DatabaseHelper.js';
 import { StoredRoom } from './Room.js';
 
-export type RoomDBRow = {
+type RoomDBRow = {
     id: number;
     name: string;
     order: number;

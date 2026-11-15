@@ -5,8 +5,8 @@ import { randomInt } from 'node:crypto';
  * One deck, reshuffled every hand. The dealer stands on all 17s. Blackjack pays 3 to 2.
  */
 
-export const SUITS = ['♠', '♥', '♦', '♣'] as const;
-export const RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'] as const;
+const SUITS = ['♠', '♥', '♦', '♣'] as const;
+const RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'] as const;
 
 export type Card = { rank: (typeof RANKS)[number]; suit: (typeof SUITS)[number] };
 

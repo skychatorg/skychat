@@ -25,7 +25,7 @@ export function roomCursorMs(player, playerLastUpdate) {
  * Adding a type here is the ONLY change needed to enable pause for it client-side (plus the
  * actual pause/play wiring in that type's impl component). The server stays media-type-agnostic.
  */
-export const PAUSABLE_TYPES = { gallery: true, jellyfin: true };
+const PAUSABLE_TYPES = { gallery: true, jellyfin: true };
 
 /**
  * Whether the given video can be paused from the UI.

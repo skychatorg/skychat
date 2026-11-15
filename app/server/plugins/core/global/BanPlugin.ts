@@ -240,14 +240,6 @@ export class BanPlugin extends GlobalPlugin {
         }
     }
 
-    public async onConnectionJoinedRoom(connection: Connection): Promise<void> {
-        // If access ban, just close connection
-        if (this.isBanned(connection, BAN_TYPES.ACCESS)) {
-            connection.close(Connection.CLOSE_KICKED, 'You have been disconnected');
-            throw new Error();
-        }
-    }
-
     private async tick(): Promise<void> {
         const getRandomUser = (sessions: Session[]): User => {
             return sessions[Math.floor(Math.random() * sessions.length)].user;
