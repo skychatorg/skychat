@@ -24,6 +24,10 @@ const STREAM_BITRATE_KBPS = 192;
 const CACHE_DIR = path.join(os.tmpdir(), 'skychat-navidrome');
 const CACHE_MAX_FILES = 200;
 
+// Songs one command can queue, and how many of them are fetched ahead of their turn
+const MAX_BATCH = 100;
+const PREFETCH_COUNT = 3;
+
 // At most this many downloads from home at once, however many different songs are asked for
 const MAX_CONCURRENT_DOWNLOADS = 2;
 
@@ -186,7 +190,16 @@ export class TrackCache {
 
     private readonly waiting: Array<() => void> = [];
 
-    constructor(private readonly client: NavidromeClient) {}
+    constructor(private readonly client: NavidromeClient) {
+        // Downloads cut short by a crash or restart left .part files behind; none can be in flight yet
+        try {
+            for (const name of fs.readdirSync(CACHE_DIR)) {
+                if (name.endsWith('.part')) fs.rmSync(path.join(CACHE_DIR, name), { force: true });
+            }
+        } catch {
+            // No cache folder yet
+        }
+    }
 
     // Path of the cached mp3, downloading it first if needed. Concurrent callers share one download.
     get(id: string): Promise<string> {
@@ -311,6 +324,9 @@ export class NavidromeFetcher implements VideoFetcher {
         if (ids.length === 0 || ids.some((id) => !NAVIDROME_ID_REGEX.test(id))) {
             throw new Error('Invalid Navidrome song id');
         }
+        if (ids.length > MAX_BATCH) {
+            throw new Error(`Add at most ${MAX_BATCH} songs at once`);
+        }
         // In parallel: a whole album is one request per song
         const results = await Promise.allSettled(ids.map((id) => this.client.getSong(id)));
         const videos = results.flatMap((result) => (result.status === 'fulfilled' ? [songToVideo(result.value)] : []));
@@ -322,7 +338,7 @@ export class NavidromeFetcher implements VideoFetcher {
             // Subsonic code 70 is "not found"; anything else means Navidrome itself is unreachable or broken
             throw new Error(failure?.reason?.code === 70 ? 'Song not found' : 'Could not reach the music library');
         }
-        for (const video of videos) {
+        for (const video of videos.slice(0, PREFETCH_COUNT)) {
             this.prefetch(video.id);
         }
         return videos;

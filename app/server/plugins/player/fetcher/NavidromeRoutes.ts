@@ -10,7 +10,9 @@ const coverLimiter = new RateLimiterMemory({ points: 60, duration: 1 });
 
 const COVER_SIZES = new Set(['80', '300', '600']);
 
-export function buildNavidromeRoutes(fetcher: NavidromeFetcher): PluginRoute[] {
+// Only songs playing or queued somewhere can be streamed: a token holder can't make the server download the library
+// eslint-disable-next-line no-unused-vars
+export function buildNavidromeRoutes(fetcher: NavidromeFetcher, isPlayingOrQueued: (id: string) => boolean): PluginRoute[] {
     const handleStream: PluginRoute['handler'] = async (req, res) => {
         if (!fetcher.enabled) {
             res.status(503).json({ message: 'Navidrome not configured' });
@@ -26,6 +28,10 @@ export function buildNavidromeRoutes(fetcher: NavidromeFetcher): PluginRoute[] {
         const { id } = req.params;
         if (!NAVIDROME_ID_REGEX.test(id)) {
             res.status(400).end();
+            return;
+        }
+        if (!isPlayingOrQueued(id)) {
+            res.status(404).end();
             return;
         }
         let file: string;

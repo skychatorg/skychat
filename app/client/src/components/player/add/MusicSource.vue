@@ -68,7 +68,8 @@ const onLibrary = (payload) => {
 };
 
 const onError = (message) => {
-    if (typeof message === 'string' && /music library/i.test(message)) {
+    // Also the cooldown error, which names the command: either way the loading state must end
+    if (typeof message === 'string' && /music library|navidrome/i.test(message)) {
         loading.value = false;
         error.value = message;
     }

@@ -2,10 +2,12 @@ import { computed } from 'vue';
 import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
 import { labels } from '../labels';
+import { useUserRight } from '@/composables/useUserRight';
 
 export function usePlayerCommands() {
     const client = useClientStore();
     const app = useAppStore();
+    const canMusic = useUserRight('minRightForNavidrome', 0);
 
     return computed(() => {
         /** @type {import('../types.js').Command[]} */
@@ -90,7 +92,7 @@ export function usePlayerCommands() {
             keywords: ['youtube', 'search video', 'queue video', 'link', 'jellyfin', 'schedule'],
             run: () => app.toggleModal('player'),
         });
-        if (client.state.config?.navidromeEnabled) {
+        if (client.state.config?.navidromeEnabled && canMusic.value) {
             out.push({
                 id: 'player.add.music',
                 title: labels.browseMusic(),

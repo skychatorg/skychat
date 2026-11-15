@@ -209,6 +209,10 @@ export class PlayerPlugin extends GlobalPlugin {
                 limits && { minBet: limits.minBet, maxBet: limits.maxBet },
             );
             for (const event of channelData.schedule.events) {
+                // Gallery files can't be played any more
+                if ((event.media.type as string) === 'gallery') {
+                    continue;
+                }
                 channel.schedule(event.media, event.start, event.duration);
             }
         }
@@ -523,7 +527,9 @@ export class PlayerPlugin extends GlobalPlugin {
     public getRoutes(): PluginRoute[] {
         return [
             ...buildJellyfinRoutes(PlayerPlugin.FETCHERS.jellyfin as JellyfinFetcher),
-            ...buildNavidromeRoutes(PlayerPlugin.FETCHERS.navidrome as NavidromeFetcher),
+            ...buildNavidromeRoutes(PlayerPlugin.FETCHERS.navidrome as NavidromeFetcher, (id) =>
+                this.channelManager.channels.some((channel) => channel.isVideoPlayingOrInQueue({ type: 'navidrome', id })),
+            ),
         ];
     }
 

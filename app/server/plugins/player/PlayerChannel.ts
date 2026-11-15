@@ -439,7 +439,7 @@ export class PlayerChannel {
      * @param video
      * @returns
      */
-    public isVideoPlayingOrInQueue(video: VideoInfo): boolean {
+    public isVideoPlayingOrInQueue(video: Pick<VideoInfo, 'type' | 'id'>): boolean {
         if (this.queue.find((q) => q.video.type === video.type && q.video.id === video.id)) {
             return true;
         }
@@ -548,8 +548,9 @@ export class PlayerChannel {
      */
     private buildSyncPayload(session: Session): ReturnType<PlayerChannel['getPlayerData']> & { streamToken?: string } {
         const data = this.getPlayerData();
-        const type = data.current?.video.type;
-        if ((type === 'jellyfin' || type === 'navidrome') && this.manager.plugin.canUseFetcher(type, session)) {
+        // Whatever is playing: queued library items need it for their covers too
+        const plugin = this.manager.plugin;
+        if (plugin.canUseFetcher('jellyfin', session) || plugin.canUseFetcher('navidrome', session)) {
             return { ...data, streamToken: issueStreamToken(session.user.id, Date.now() + STREAM_TOKEN_TTL_MS) };
         }
         return data;
