@@ -1,6 +1,7 @@
-import { beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { SHOP, TITLE_MAX_LENGTH } from '../../app/api/shop.js';
 import { CustomizationPlugin } from '../../app/server/plugins/core/global/CustomizationPlugin.js';
+import { UserController } from '../../app/server/skychat/UserController.js';
 import { settle, TestServer } from './harness.js';
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -219,5 +220,44 @@ describe('shield', () => {
         await bob.send(`/wizz ${alice.session.identifier}`);
 
         expect(bob.errors()).toEqual([]);
+    });
+});
+
+describe('shop robustness', () => {
+    it.each(['constructor', '__proto__', 'toString'])('charges nothing for %s as a duration', async (duration) => {
+        const alice = await shopper();
+        const money = alice.session.user.money;
+
+        await alice.send(`/custom buy shield ${duration}`);
+
+        expect(alice.errors()).toEqual(['Choose how long to rent it for: day or week']);
+        expect(alice.session.user.money).toBe(money);
+        expect(custom(alice).shieldUntil).toBeUndefined();
+    });
+
+    it('never takes an amount that is not a number', async () => {
+        const alice = await shopper();
+        const money = alice.session.user.money;
+
+        await expect(UserController.buy(alice.session.user, NaN, 'Broken')).rejects.toThrow('Invalid amount');
+
+        expect(alice.session.user.money).toBe(money);
+    });
+
+    it('keeps expiring the others when one user cannot be saved', async () => {
+        const alice = await shopper();
+        const bob = await shopper();
+        alice.session.user.data.plugins.custom = { color: RED };
+        bob.session.user.data.plugins.custom = { color: RED };
+        const save = vi.spyOn(UserController, 'savePluginData').mockImplementation(async (user) => {
+            if (user === alice.session.user) {
+                throw new Error('DB down');
+            }
+        });
+
+        await expire();
+        save.mockRestore();
+
+        expect(custom(bob).color).toBe(CustomizationPlugin.DEFAULT_COLOR);
     });
 });

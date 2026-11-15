@@ -279,7 +279,8 @@ const colorHex = (id) => COLORS.find((color) => String(color.id) === id)?.value;
 .swatch:hover {
     transform: scale(1.12);
 }
-.swatch.on {
+.swatch.on,
+.swatch:focus-visible {
     outline-color: white;
 }
 .chips {
@@ -288,18 +289,16 @@ const colorHex = (id) => COLORS.find((color) => String(color.id) === id)?.value;
     gap: 6px;
 }
 .chip {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
     padding: 8px;
     border-radius: 10px;
     font-weight: 700;
     background: rgb(255 255 255 / 0.04);
     border: 2px solid rgb(255 255 255 / 0.1);
     transition: border-color 0.15s;
-}
-.chip {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
 }
 .mini {
     width: 22px;

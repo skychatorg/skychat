@@ -229,6 +229,10 @@ export class UserController {
      * Remove money from an user account
      */
     public static async buy(user: User, amount: number, reason: string, kind: MoneyKind = 'other'): Promise<void> {
+        // NaN would pass the check below, and every check after it once it is the balance
+        if (!Number.isFinite(amount) || amount < 0) {
+            throw new Error('Invalid amount');
+        }
         if (amount > user.money) {
             throw new Error('User has not enough money to buy this amount');
         }

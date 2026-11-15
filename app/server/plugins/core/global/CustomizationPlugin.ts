@@ -1,6 +1,6 @@
 import { COLORS, Duration, DURATIONS, SHOP, ShopItem, ShopSlot, TITLE_MAX_LENGTH } from '../../../../api/shop.js';
 import { Connection } from '../../../skychat/Connection.js';
-import { logFailure } from '../../../skychat/Logging.js';
+import { Logging, logFailure } from '../../../skychat/Logging.js';
 import { RoomManager } from '../../../skychat/RoomManager.js';
 import { Session } from '../../../skychat/Session.js';
 import { User } from '../../../skychat/User.js';
@@ -99,7 +99,9 @@ export class CustomizationPlugin extends GlobalPlugin {
 
         if (action === 'buy') {
             const duration = rest.shift() as Duration;
-            const price = (SHOP[slot].prices as Partial<Record<Duration, number>>)[duration];
+            const prices: Partial<Record<string, number>> = SHOP[slot].prices;
+            // Own keys only: `constructor` would find Object's
+            const price = Object.prototype.hasOwnProperty.call(prices, duration) ? prices[duration] : undefined;
             if (!price) {
                 throw new Error(`Choose how long to rent it for: ${Object.keys(SHOP[slot].prices).join(' or ')}`);
             }
@@ -151,7 +153,7 @@ export class CustomizationPlugin extends GlobalPlugin {
             const expired = SLOTS.filter(
                 (slot) =>
                     !CustomizationPlugin.isRenting(session.user, slot) &&
-                    (data[slot] !== this.default(slot) || data[`${slot}Until`] !== undefined),
+                    (data[slot] !== CustomizationPlugin.defaultDataStorageValue[slot] || data[`${slot}Until`] !== undefined),
             );
             if (expired.length === 0) {
                 continue;
@@ -161,13 +163,14 @@ export class CustomizationPlugin extends GlobalPlugin {
                 delete data[`${slot}Until`];
             }
             data.color ??= CustomizationPlugin.DEFAULT_COLOR;
-            await this.saveUserData(session.user, data);
-            this.sync(session);
+            // One user failing to save must not stop the others
+            try {
+                await this.saveUserData(session.user, data);
+                this.sync(session);
+            } catch (error) {
+                Logging.error('Shop expiry', error);
+            }
         }
-    }
-
-    private default(slot: ShopSlot): string | undefined {
-        return slot === 'color' ? CustomizationPlugin.DEFAULT_COLOR : undefined;
     }
 
     private sync(session: Session): void {

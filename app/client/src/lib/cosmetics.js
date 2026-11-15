@@ -15,7 +15,7 @@ export function nameStyle(user) {
 export function avatarStyle(user) {
     const custom = user?.data?.plugins?.custom ?? {};
     return {
-        class: custom.frame ? ['frame', `frame-${custom.frame}`] : [],
+        class: custom.frame ? ['avatar-frame', `frame-${custom.frame}`] : [],
         style: { borderColor: custom.frame ? undefined : custom.color, '--name-color': custom.color },
     };
 }

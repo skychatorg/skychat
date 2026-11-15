@@ -92,7 +92,7 @@
     }
 }
 @media (prefers-reduced-motion: reduce) {
-    .frame {
+    .avatar-frame {
         animation: none;
     }
     .frame-neon {

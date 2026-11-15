@@ -53,7 +53,6 @@ export const COLORS = [
     { id: 29, name: 'French Sky Blue', value: '#70B5FF' },
 
     // https://coolors.co/70b5ff-6cbff1-67c8e3-62d1d5-5ddac6-58e4b8-53eda9-4ef69b-4cfb94-49ff8c
-    { id: 30, name: 'Argentinian Blue', value: '#70B5FF' },
     { id: 31, name: 'Maya blue', value: '#6CBFF1' },
     { id: 32, name: 'Sky blue', value: '#67C8E3' },
     { id: 33, name: 'Robin egg blue', value: '#62D1D5' },
