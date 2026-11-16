@@ -178,10 +178,10 @@ describe('titles', () => {
         await alice.send('/custom buy title week Queen of  Crash');
         await alice.send('/custom use title dev 👩‍💻 🏳️‍🌈');
         expect(custom(alice).title).toBe('dev 👩‍💻 🏳️‍🌈');
-        await alice.send('/custom use title Lucky Pop addict 🎈');
+        await alice.send('/custom use title Lucky Pop fan 🎈');
 
         expect(alice.errors()).toEqual([]);
-        expect(custom(alice).title).toBe('Lucky Pop addict 🎈');
+        expect(custom(alice).title).toBe('Lucky Pop fan 🎈');
         expect(alice.session.user.money).toBe(SHOP.color.prices.month + SHOP.color.prices.week - SHOP.title.prices.week);
     });
 
