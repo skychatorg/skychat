@@ -67,7 +67,7 @@ export const COLORS = [
 ];
 
 /** Longest title, in characters */
-export const TITLE_MAX_LENGTH = 24;
+export const TITLE_MAX_LENGTH = 16;
 
 /** Everything for sale. Rented items are stored on the user under their key, and when they end under `<key>Until`, in ms */
 export const SHOP = {
