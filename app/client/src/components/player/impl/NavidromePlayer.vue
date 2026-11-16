@@ -1,7 +1,8 @@
 <script setup>
-import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue';
+import { computed, ref, shallowRef, watch, onMounted, onBeforeUnmount } from 'vue';
 import { useClientStore } from '@/stores/client';
 import { lockedReason as getLockedReason, mediaThumbUrl, roomCursorMs } from '@/lib/player';
+import MusicVisualizer from '@/components/player/impl/MusicVisualizer.vue';
 
 const client = useClientStore();
 
@@ -53,6 +54,10 @@ const gainFor = (value) => value * value;
 // (an AudioContext needs a user gesture)
 let audioContext = null;
 let gainNode = null;
+// Read by the visualizer. It sits before the gain, so the visuals don't shrink with the volume
+const analyser = shallowRef(null);
+const audioPlaying = ref(false);
+const disc = ref(null);
 const applyGain = () => {
     if (gainNode) gainNode.gain.value = gainFor(volume.value);
 };
@@ -60,7 +65,13 @@ const ensureAudioGraph = () => {
     if (audioContext || !player.value || !window.AudioContext) return;
     audioContext = new AudioContext();
     gainNode = audioContext.createGain();
-    audioContext.createMediaElementSource(player.value).connect(gainNode).connect(audioContext.destination);
+    const analyserNode = audioContext.createAnalyser();
+    analyserNode.fftSize = 1024;
+    // The default range (-100 dB) reads almost any music as loud everywhere; this leaves room for the beats
+    analyserNode.minDecibels = -75;
+    analyserNode.maxDecibels = -20;
+    audioContext.createMediaElementSource(player.value).connect(analyserNode).connect(gainNode).connect(audioContext.destination);
+    analyser.value = analyserNode;
     applyGain();
 };
 
@@ -154,12 +165,12 @@ onBeforeUnmount(() => {
         <!-- Blurred cover as the backdrop -->
         <img v-if="cover" :src="cover" alt="" class="absolute inset-0 w-full h-full object-cover blur-2xl scale-110 opacity-40" />
 
-        <div class="relative h-full flex items-center justify-center gap-4 p-4">
-            <div
-                class="h-full max-h-[min(16rem,40vw)] aspect-square shrink-0 rounded-lg overflow-hidden bg-white/10 shadow-2xl flex items-center justify-center"
-            >
-                <img v-if="cover" :src="cover" alt="" class="w-full h-full object-cover" />
-                <fa v-else icon="music" class="text-4xl opacity-40" />
+        <MusicVisualizer :analyser="analyser" :playing="audioPlaying" :cover="cover" :disc="disc" />
+
+        <div class="relative h-full flex items-center justify-center gap-[max(2rem,6%)] p-4">
+            <!-- The visualizer draws the cover here as a turning disc, inside its rings -->
+            <div ref="disc" class="h-[48%] max-h-[min(13rem,30vw)] aspect-square shrink-0 rounded-full flex items-center justify-center">
+                <fa v-if="!cover" icon="music" class="text-2xl opacity-40" />
             </div>
             <div class="min-w-0 max-w-xs flex-1 flex flex-col gap-2">
                 <div class="text-lg font-semibold leading-tight line-clamp-2">{{ titleParts.song }}</div>
@@ -180,7 +191,15 @@ onBeforeUnmount(() => {
                         class="w-full max-w-[7rem] min-w-0 accent-white"
                     />
                 </label>
-                <audio ref="player" @loadedmetadata="syncToRoom(true)" @play="onNativePlay" @error="onAudioError"></audio>
+                <audio
+                    ref="player"
+                    @loadedmetadata="syncToRoom(true)"
+                    @play="onNativePlay"
+                    @playing="audioPlaying = true"
+                    @pause="audioPlaying = false"
+                    @ended="audioPlaying = false"
+                    @error="onAudioError"
+                ></audio>
             </div>
         </div>
     </div>
