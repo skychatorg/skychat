@@ -1,6 +1,7 @@
 <script setup>
 import SkyTooltip from '@/components/common/SkyTooltip.vue';
 import UserMiniAvatarCollection from '@/components/user/UserMiniAvatarCollection.vue';
+import { channelIcon, PARTY_GAMES } from '@/lib/channel';
 import { useClientStore } from '@/stores/client';
 import { computed } from 'vue';
 
@@ -28,7 +29,9 @@ const currentOwner = computed(() => props.playerChannel.currentMedia?.owner ?? n
 
 // Activity state. `playing` from the server is true whenever a media is loaded (even paused),
 // so split it out: actively playing vs paused vs only-something-queued vs empty.
-const isPlaying = computed(() => props.playerChannel.playing && !props.playerChannel.paused);
+const party = computed(() => props.playerChannel.party);
+// A party is "live" while a game is on
+const isPlaying = computed(() => (party.value ? Boolean(party.value.game) : props.playerChannel.playing && !props.playerChannel.paused));
 const isPaused = computed(() => Boolean(props.playerChannel.paused));
 const hasQueue = computed(() => (props.playerChannel.queueLength ?? 0) > 0);
 // "Something is going on here" — loaded media (playing or paused) or a non-empty queue.
@@ -46,6 +49,13 @@ const iconClass = computed(() => {
 });
 
 const statusText = computed(() => {
+    if (party.value) {
+        const { game, seated } = party.value;
+        if (!game) {
+            return 'lobby';
+        }
+        return PARTY_GAMES[game].name + (seated ? ` · ${seated} playing` : '');
+    }
     if (isPlaying.value) {
         return 'live';
     }
@@ -77,7 +87,7 @@ const onClick = () => {
             >
                 <div v-if="isCurrent" class="absolute left-0 top-2 bottom-2 w-[2px] rounded-r bg-primary" />
                 <div class="w-7 h-7 rounded flex items-center justify-center transition-colors" :class="iconClass">
-                    <fa icon="music" />
+                    <fa :icon="channelIcon(playerChannel)" />
                 </div>
             </button>
         </template>
@@ -97,7 +107,7 @@ const onClick = () => {
     >
         <div v-if="isCurrent" class="absolute left-0 top-2 bottom-2 w-[2px] rounded-r bg-primary" />
         <div class="w-7 h-7 rounded shrink-0 flex items-center justify-center transition-colors" :class="iconClass">
-            <fa icon="music" />
+            <fa :icon="channelIcon(playerChannel)" />
         </div>
         <div class="flex-1 min-w-0">
             <div class="text-sm truncate" :class="hasContent ? '' : 'text-white/50'">{{ currentTitle }}</div>

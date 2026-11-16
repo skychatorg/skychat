@@ -5,8 +5,6 @@ import { UserController } from '../../../skychat/UserController.js';
 import { GlobalPlugin } from '../../GlobalPlugin.js';
 
 export class AccountPlugin extends GlobalPlugin {
-    static readonly CHANGE_USERNAME_PRICE = 2000;
-
     static readonly commandName = 'account';
 
     static readonly commandAliases = ['set', 'resetpassword'];
@@ -56,20 +54,22 @@ export class AccountPlugin extends GlobalPlugin {
             // Password
             case 'password':
                 // eslint-disable-next-line no-case-declarations
-                const oldPassword = value.split(' ')[0];
+                const [oldPassword, newPassword] = value.split(' ');
+                if (!oldPassword || !newPassword) {
+                    throw new Error('Give your current password, then the new one');
+                }
                 // eslint-disable-next-line no-case-declarations
                 const oldHashedPassword = UserController.hashPassword(
                     connection.session.user.id,
                     connection.session.user.username.toLowerCase(),
                     oldPassword,
                 );
-                // eslint-disable-next-line no-case-declarations
-                const newPassword = value.split(' ')[1];
                 if (!connection.session.user.testHashedPassword(oldHashedPassword)) {
                     throw new Error('Invalid current password');
                 }
-                UserController.changePassword(connection.session.user, newPassword);
-                messageContent = `Your password has been changed to ${newPassword}`;
+                await UserController.changePassword(connection.session.user, newPassword);
+                // Never echo the password: it would sit on screen in the chat
+                messageContent = 'Your password has been changed';
                 break;
 
             default:

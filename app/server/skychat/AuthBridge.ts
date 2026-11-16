@@ -163,8 +163,10 @@ export class AuthBridge extends EventEmitter {
                 return;
             } else if (data.credentials?.register) {
                 // Register
-                const user = await UserController.register(data.credentials.username, data.credentials.password);
+                // Limited before creating the account, or the cap never stops one. A refused attempt does not count
+                await UserController.checkRegistration(data.credentials.username, data.credentials.password);
                 await RateLimiter.rateLimitSafe(this.registerLimiter, RateLimiter.getIP(request));
+                const user = await UserController.register(data.credentials.username, data.credentials.password);
                 this.emit('connection-accepted', { webSocket, request, data, user });
                 return;
             } else if (data.credentials) {

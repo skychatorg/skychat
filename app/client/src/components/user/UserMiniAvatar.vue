@@ -1,4 +1,5 @@
 <script setup>
+import { avatarStyle } from '@/lib/cosmetics';
 import { computed } from 'vue';
 
 const props = defineProps({
@@ -10,7 +11,10 @@ const props = defineProps({
 
 // Users we only know by name (eg. an offline room member) carry no avatar nor color.
 const avatar = computed(() => props.user.data?.plugins?.avatar ?? null);
-const color = computed(() => props.user.data?.plugins?.custom?.color ?? 'rgba(255, 255, 255, 0.2)');
+// Users we only know by name get a faint border
+const frame = computed(() =>
+    props.user.data?.plugins?.custom ? avatarStyle(props.user) : { style: { borderColor: 'rgba(255, 255, 255, 0.2)' } },
+);
 // Guest identifiers are prefixed with '*', which makes for a useless initial.
 const initial = computed(() => props.user.username.match(/[a-z0-9]/i)?.[0] ?? props.user.username[0]);
 </script>
@@ -19,7 +23,7 @@ const initial = computed(() => props.user.username.match(/[a-z0-9]/i)?.[0] ?? pr
     <div
         class="w-4 h-4 rounded border-2 overflow-hidden bg-black"
         :class="{ 'flex items-center justify-center': !avatar }"
-        :style="{ borderColor: color }"
+        v-bind="frame"
         :title="user.username"
     >
         <img v-if="avatar" :src="avatar" class="h-full object-cover" />

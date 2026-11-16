@@ -1,0 +1,273 @@
+import { formatMoney } from '../../../../api/money.js';
+import { PARTY_GAMES, PartyGameId } from '../../../../api/party.js';
+import { Connection } from '../../../skychat/Connection.js';
+import { Session } from '../../../skychat/Session.js';
+import { BlackjackTable, CasinoOptions } from '../casino/BlackjackTable.js';
+import { logFailure } from '../../../skychat/Logging.js';
+import type { PlayerChannel } from '../PlayerChannel.js';
+import { Crash } from './Crash.js';
+import { DailyRoll } from './DailyRoll.js';
+import { HotPotato } from './HotPotato.js';
+import { LuckyPop } from './LuckyPop.js';
+import { MonkeyFight } from './MonkeyFight.js';
+
+type PartyGame = BlackjackTable | LuckyPop | Crash | DailyRoll | MonkeyFight | HotPotato;
+
+/**
+ * - lobby: no game, the first pick starts one
+ * - playing: a game runs its round, it says when the round is over
+ * - vote: everyone here picks the next game, before a timer
+ */
+export type PartyPhase = 'lobby' | 'playing' | 'vote';
+
+export type SanitizedParty = {
+    channelId: number;
+    phase: PartyPhase;
+    game: PartyGameId | null;
+    /** The game whose round just ended, during a vote */
+    lastGame: PartyGameId | null;
+    /** Wall-clock ms at which the vote closes */
+    deadline: number | null;
+    /** Usernames that voted, by game */
+    votes: { [game: string]: string[] };
+    /** Wall-clock ms at which Daily Roll can be played again, 0 when it can */
+    dailyRollAt: number;
+};
+
+/**
+ * The cycle of a party channel: lobby → a game's round → vote for the next game → that game, or back to the lobby.
+ * Every step ends on a timer, so nobody can hold the channel on a game.
+ */
+export class Party {
+    /** Instance values, so tests can shorten them */
+    public timings = { voteMs: 10_000, stormEveryMs: 6000 };
+
+    public game: PartyGame | null = null;
+
+    /** For tests: shorten a new game's timers or fix its luck before it starts */
+    public onGameCreated?: (game: PartyGame) => void;
+
+    private gameId: PartyGameId | null = null;
+
+    private phase: PartyPhase = 'lobby';
+
+    private lastGame: PartyGameId | null = null;
+
+    private deadline: number | null = null;
+
+    /** Locks the whole channel, in memory: a restart unlocks it */
+    private dailyRollAt = 0;
+
+    private timer: ReturnType<typeof setTimeout> | null = null;
+
+    private readonly votes = new Map<Session, PartyGameId>();
+
+    /** Wizz storms outlive a round, so they belong to the party */
+    private readonly storms = new Map<Session, ReturnType<typeof setInterval>>();
+
+    constructor(
+        public readonly channel: PlayerChannel,
+        public readonly options: CasinoOptions,
+    ) {}
+
+    /** The game on, if it is a `type` */
+    public gameOf<T extends PartyGame>(type: new (...args: never[]) => T): T | null {
+        return this.game instanceof type ? this.game : null;
+    }
+
+    /** A move in the game on: each game knows its own */
+    public act(session: Session, action: string, args: number[]): Promise<void> | void {
+        if (!this.game || !('act' in this.game)) {
+            throw new Error('No game here takes that');
+        }
+        return this.game.act(session, action, args);
+    }
+
+    public pick(session: Session, game: string): void {
+        if (session.user.isGuest()) {
+            throw new Error('Log in to start a game');
+        }
+        if (this.phase !== 'lobby') {
+            throw new Error('A game is already on');
+        }
+        this.start(this.playable(game));
+    }
+
+    public vote(session: Session, game: string): void {
+        if (session.user.isGuest()) {
+            throw new Error('Log in to vote');
+        }
+        if (this.phase !== 'vote') {
+            throw new Error('There is no vote right now');
+        }
+        this.votes.set(session, this.playable(game));
+        this.broadcast();
+    }
+
+    public async onSessionLeft(session: Session): Promise<void> {
+        this.votes.delete(session);
+        if (this.phase === 'vote') {
+            this.broadcast();
+        }
+        await this.game?.onSessionLeft(session);
+    }
+
+    /**
+     * Wizz someone every few seconds, a set number of times. Ticks while they are offline are skipped, not queued
+     */
+    public wizzStorm(session: Session, count: number): void {
+        if (this.storms.has(session)) {
+            return;
+        }
+        let left = count;
+        const interval = setInterval(() => {
+            session.send('wizz', { from: session.user.sanitized() });
+            if (--left <= 0) {
+                clearInterval(interval);
+                this.storms.delete(session);
+            }
+        }, this.timings.stormEveryMs);
+        this.storms.set(session, interval);
+    }
+
+    public syncConnections(connections: Connection[]): void {
+        connections.forEach((connection) => connection.send('party', this.sanitized()));
+        this.game?.syncConnections(connections);
+    }
+
+    /**
+     * Called when the channel is deleted
+     */
+    public async destroy(): Promise<void> {
+        this.clearTimer();
+        this.storms.forEach((interval) => clearInterval(interval));
+        this.storms.clear();
+        await this.game?.destroy();
+        this.game = null;
+    }
+
+    public sanitized(): SanitizedParty {
+        const votes: SanitizedParty['votes'] = {};
+        this.votes.forEach((game, session) => (votes[game] ??= []).push(session.user.username));
+        return {
+            channelId: this.channel.id,
+            phase: this.phase,
+            game: this.gameId,
+            lastGame: this.lastGame,
+            deadline: this.deadline,
+            votes,
+            dailyRollAt: this.dailyRollAt > Date.now() ? this.dailyRollAt : 0,
+        };
+    }
+
+    private playable(game: string): PartyGameId {
+        if (!(game in PARTY_GAMES)) {
+            throw new Error('Unknown game');
+        }
+        if (game === 'dailyroll' && this.dailyRollAt > Date.now()) {
+            throw new Error('Daily Roll is back at 10 PM');
+        }
+        return game as PartyGameId;
+    }
+
+    private start(game: PartyGameId): void {
+        this.clearTimer();
+        this.phase = 'playing';
+        this.gameId = game;
+        const onRoundEnd = () => this.endRound();
+        this.game = {
+            blackjack: () => new BlackjackTable(this.channel, this.options, onRoundEnd),
+            luckypop: () => new LuckyPop(this, onRoundEnd),
+            crash: () => new Crash(this, onRoundEnd),
+            dailyroll: () => new DailyRoll(this, onRoundEnd),
+            monkeys: () => new MonkeyFight(this, onRoundEnd),
+            potato: () => new HotPotato(this, onRoundEnd),
+        }[game]();
+        if (game === 'dailyroll') {
+            this.dailyRollAt = DailyRoll.nextReset(Date.now());
+        }
+        this.onGameCreated?.(this.game);
+        this.game.start();
+        this.broadcast();
+        this.game.syncConnections(this.connections());
+    }
+
+    private endRound(): void {
+        const game = this.game;
+        if (!game) {
+            return;
+        }
+        const { event } = PARTY_GAMES[this.gameId!];
+        this.lastGame = this.gameId;
+        this.game = null;
+        this.gameId = null;
+        logFailure(game.destroy(), 'Party');
+        // Clears the game from everyone's screen
+        this.channel.sessions.forEach((session) => session.send(event, null));
+        // Nobody left to vote: straight back to the lobby, no timer running in an empty channel
+        if (!this.channel.sessions.length) {
+            this.lobby();
+            return;
+        }
+        this.phase = 'vote';
+        this.votes.clear();
+        this.deadline = Date.now() + this.timings.voteMs;
+        this.timer = setTimeout(() => this.closeVote(), this.timings.voteMs);
+        this.broadcast();
+    }
+
+    /**
+     * Most votes wins. A tie goes to a game that was not just played, so a channel does not get stuck on one game
+     */
+    private closeVote(): void {
+        const counts = new Map<PartyGameId, number>();
+        this.votes.forEach((game) => counts.set(game, (counts.get(game) ?? 0) + 1));
+        const best = Math.max(0, ...counts.values());
+        if (!best) {
+            this.lobby();
+            return;
+        }
+        const tied = [...counts.keys()].filter((game) => counts.get(game) === best);
+        this.start(tied.find((game) => game !== this.lastGame) ?? tied[0]);
+    }
+
+    private lobby(): void {
+        this.clearTimer();
+        this.phase = 'lobby';
+        this.votes.clear();
+        this.broadcast();
+    }
+
+    /** Every open connection in the channel, guests included */
+    public connections(): Connection[] {
+        return this.channel.sessions.flatMap((session) => session.connections);
+    }
+
+    /** Throws unless the amount is a whole number of cents within the channel's limits */
+    public checkBet(amount: number, what = 'Bets'): void {
+        const { minBet, maxBet } = this.options;
+        if (!Number.isInteger(amount) || amount < minBet || amount > maxBet) {
+            throw new Error(`${what} are between ${formatMoney(minBet)} and ${formatMoney(maxBet)}`);
+        }
+    }
+
+    /** Who can play: everyone in the channel but guests */
+    public players(): Session[] {
+        return this.channel.sessions.filter((session) => !session.user.isGuest());
+    }
+
+    private broadcast(): void {
+        const payload = this.sanitized();
+        this.channel.sessions.forEach((session) => session.send('party', payload));
+        // The channel list shows which game is on
+        this.channel.manager.sync();
+    }
+
+    private clearTimer(): void {
+        this.deadline = null;
+        if (this.timer) {
+            clearTimeout(this.timer);
+            this.timer = null;
+        }
+    }
+}

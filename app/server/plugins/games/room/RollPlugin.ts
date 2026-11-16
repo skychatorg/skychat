@@ -1,3 +1,4 @@
+import { formatMoney } from '../../../../api/money.js';
 import { Connection } from '../../../skychat/Connection.js';
 import { RoomPlugin } from '../../RoomPlugin.js';
 import { Message } from '../../../skychat/Message.js';
@@ -181,8 +182,8 @@ export class RollPlugin extends RoomPlugin {
             const bet = this.currentGame.bets[identifier];
             const won = bet === this.currentGame.ballPosition;
             if (won) {
-                await UserController.giveMoney(session.user, this.storage.currentJackpot);
-                content += `- ${identifier} won $${this.storage.currentJackpot / 100}\n`;
+                await UserController.giveMoney(session.user, this.storage.currentJackpot, 'Roll jackpot');
+                content += `- ${identifier} won ${formatMoney(this.storage.currentJackpot)}\n`;
                 winnerCount++;
             } else {
                 content += `- ${identifier} lost\n`;
@@ -214,7 +215,7 @@ export class RollPlugin extends RoomPlugin {
             return;
         }
         // Display information about current round
-        let content = `Current jackpot: $${this.storage.currentJackpot / 100}<br>`;
+        let content = `Current jackpot: ${formatMoney(this.storage.currentJackpot)}<br>`;
         content += 'Participants:<br>';
         for (const session of this.currentGame.participants) {
             content += `- ${session.user.username} (${this.currentGame.bets[session.identifier]})<br>`;
@@ -279,7 +280,7 @@ export class RollPlugin extends RoomPlugin {
         if (bet < 0 || bet > 10) {
             throw new Error('Number should be between 0 and 1000');
         }
-        await UserController.buy(connection.session.user, RollPlugin.ENTRY_COST);
+        await UserController.buy(connection.session.user, RollPlugin.ENTRY_COST, 'Roll entry');
         this.currentGame.participants.push(connection.session);
         this.currentGame.bets[connection.session.identifier] = bet;
         this.updateGameMessage();

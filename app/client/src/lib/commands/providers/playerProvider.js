@@ -2,10 +2,12 @@ import { computed } from 'vue';
 import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
 import { labels } from '../labels';
+import { useUserRight } from '@/composables/useUserRight';
 
 export function usePlayerCommands() {
     const client = useClientStore();
     const app = useAppStore();
+    const canMusic = useUserRight('minRightForNavidrome', 0);
 
     return computed(() => {
         /** @type {import('../types.js').Command[]} */
@@ -79,16 +81,38 @@ export function usePlayerCommands() {
             title: labels.openPlayerQueue(),
             icon: 'list',
             category: 'Player',
-            run: () => app.toggleModal('playerQueue'),
+            keywords: ['queue', 'up next'],
+            run: () => app.toggleModal('player', { pane: 'queue' }),
         });
         out.push({
-            id: 'player.add.youtube',
-            title: labels.addYoutubeVideo(),
+            id: 'player.add',
+            title: labels.addToPlayer(),
             icon: 'plus',
             category: 'Player',
-            keywords: ['search video', 'queue video'],
-            run: () => app.toggleModal('youtubeVideoSearcher'),
+            keywords: ['youtube', 'search video', 'queue video', 'link', 'jellyfin', 'schedule'],
+            run: () => app.toggleModal('player'),
         });
+        if (client.state.config?.navidromeEnabled && canMusic.value) {
+            out.push({
+                id: 'player.add.music',
+                title: labels.browseMusic(),
+                icon: 'music',
+                category: 'Player',
+                keywords: ['navidrome', 'song', 'album', 'listen'],
+                run: () => app.toggleModal('player', { tab: 'music' }),
+            });
+        }
+
+        if (client.state.op) {
+            out.push({
+                id: 'player.manageChannels',
+                title: labels.manageChannels(),
+                icon: 'gears',
+                category: 'Player',
+                keywords: ['admin', 'create channel', 'party', 'casino', 'games', 'media'],
+                run: () => app.toggleModal('admin', { tab: 'channels' }),
+            });
+        }
 
         return out;
     });

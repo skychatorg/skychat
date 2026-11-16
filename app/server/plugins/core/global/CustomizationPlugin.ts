@@ -1,4 +1,10 @@
+import { COLORS, DEFAULT_COLOR, Duration, DURATIONS, SHOP, ShopItem, ShopSlot, TITLE_MAX_LENGTH } from '../../../../api/shop.js';
 import { Connection } from '../../../skychat/Connection.js';
+import { Logging, logFailure } from '../../../skychat/Logging.js';
+import { RoomManager } from '../../../skychat/RoomManager.js';
+import { Session } from '../../../skychat/Session.js';
+import { User } from '../../../skychat/User.js';
+import { UserController } from '../../../skychat/UserController.js';
 import { GlobalPlugin } from '../../GlobalPlugin.js';
 import { ConnectedListPlugin } from './ConnectedListPlugin.js';
 
@@ -13,66 +19,27 @@ export type CustomizationElementValue = {
 
 export type CustomizationElements = { [key: string]: CustomizationElementValue[] };
 
+/** What the user wears, and until when each rental runs, in ms */
+type CustomizationData = { [slot in ShopSlot]?: string } & { [slot in ShopSlot as `${slot}Until`]?: number };
+
+const SLOTS = Object.keys(SHOP) as ShopSlot[];
+
+/** Refuses control, unassigned and private-use characters, line separators and text direction overrides. Joined emoji stay allowed */
+const TITLE_PATTERN = new RegExp(
+    `^[^\\p{Cc}\\p{Cn}\\p{Co}\\p{Cs}\\u2028\\u2029\\u202A-\\u202E\\u2066-\\u2069]{1,${TITLE_MAX_LENGTH}}$`,
+    'u',
+);
+
 export class CustomizationPlugin extends GlobalPlugin {
     /**
-     * Key used to store the color
+     * Everyone's color when they don't rent one
      */
-    static KEY_COLOR = 'color';
+    static readonly DEFAULT_COLOR = DEFAULT_COLOR;
 
     /**
      * All possible customization keys/values
      */
-    static readonly ITEMS: CustomizationElements = {
-        [CustomizationPlugin.KEY_COLOR]: [
-            // Grays
-            { id: 0, name: 'Dark Dark Dark Dark Gray', value: '#656565' },
-            { id: 1, name: 'Dark Dark Dark Gray', value: '#757575' },
-            { id: 2, name: 'Dark Dark Gray', value: '#858585' },
-            { id: 3, name: 'Dark Gray', value: '#959595' },
-            { id: 4, name: 'Boring Gray', value: '#aaaaaa' },
-            { id: 5, name: 'Gray', value: '#bbbbbb' },
-            { id: 6, name: 'lightgray', value: '#cccccc' },
-            { id: 7, name: 'Light Gray', value: '#dddddd' },
-            { id: 8, name: 'Light Light Gray', value: '#eeeeee' },
-            { id: 9, name: 'Light Light Light Gray', value: '#f6f6f6' },
-
-            // https://coolors.co/ff4769-f7457c-f34486-ee428f-e640a2-dd3db4-d53bc7-cc38da-c837e4-c436ed
-            { id: 10, name: 'Fiery Rose', value: '#FF4769' },
-            { id: 11, name: 'Light French Rose', value: '#F7457C' },
-            { id: 12, name: 'French Rose', value: '#F34486' },
-            { id: 13, name: 'French Fuchsia', value: '#EE428F' },
-            { id: 14, name: 'Light Frostbite', value: '#E640A2' },
-            { id: 15, name: 'Frostbite', value: '#DD3DB4' },
-            { id: 16, name: 'Light Light Steel Pink', value: '#D53BC7' },
-            { id: 17, name: 'Steel Pink', value: '#CC38DA' },
-            { id: 18, name: 'Steel Pink', value: '#C837E4' },
-            { id: 19, name: 'Phlox', value: '#C436ED' },
-
-            // https://coolors.co/bb33ff-bc47ff-b65cff-a35cff-7e47ff-5447ff-4778ff-4788ff-5c9aff-70b5ff
-            { id: 20, name: 'Electric Purple', value: '#BB33FF' },
-            { id: 21, name: 'Phlox Purple', value: '#BC47FF' },
-            { id: 22, name: 'Medium Orchid', value: '#B65CFF' },
-            { id: 23, name: 'Medium Purple', value: '#A35CFF' },
-            { id: 24, name: 'Majorelle Purple', value: '#7E47FF' },
-            { id: 25, name: 'Majorelle Blue', value: '#5447FF' },
-            { id: 26, name: 'Blue Crayola', value: '#4778FF' },
-            { id: 27, name: 'United Nations Blue', value: '#4788FF' },
-            { id: 28, name: 'Cornflower Blue', value: '#5C9AFF' },
-            { id: 29, name: 'French Sky Blue', value: '#70B5FF' },
-
-            // https://coolors.co/70b5ff-6cbff1-67c8e3-62d1d5-5ddac6-58e4b8-53eda9-4ef69b-4cfb94-49ff8c
-            { id: 30, name: 'Argentinian Blue', value: '#70B5FF' },
-            { id: 31, name: 'Maya blue', value: '#6CBFF1' },
-            { id: 32, name: 'Sky blue', value: '#67C8E3' },
-            { id: 33, name: 'Robin egg blue', value: '#62D1D5' },
-            { id: 34, name: 'Turquoise', value: '#5DDAC6' },
-            { id: 35, name: 'Aquamarine', value: '#58E4B8' },
-            { id: 36, name: 'Aquamarine 2', value: '#53EDA9' },
-            { id: 37, name: 'Spring green', value: '#4EF69B' },
-            { id: 38, name: 'Sprint green 2', value: '#4CFB94' },
-            { id: 39, name: 'Spring green 3', value: '#49FF8C' },
-        ],
-    };
+    static readonly ITEMS: CustomizationElements = { color: COLORS };
 
     static readonly commandName = 'custom';
 
@@ -81,57 +48,144 @@ export class CustomizationPlugin extends GlobalPlugin {
     readonly rules = {
         custom: {
             minCount: 2,
-            maxCount: 2,
             params: [
                 {
                     name: 'action',
-                    pattern: /^use$/,
+                    pattern: /^(use|buy|off)$/,
                     info: 'Action',
                 },
                 {
-                    name: 'choice',
-                    pattern: /^(color):(\d+)$/,
-                    info: 'Chosen color',
+                    name: 'item',
+                    pattern: new RegExp(`^(${SLOTS.join('|')})(:\\w+)?$`),
+                    info: 'Item, and the option picked',
                 },
             ],
         },
     };
 
-    /**
-     * Default values
-     */
-    static readonly defaultDataStorageValue = {
-        [CustomizationPlugin.KEY_COLOR]: '#aaaaaa',
+    static readonly defaultDataStorageValue: CustomizationData = {
+        color: CustomizationPlugin.DEFAULT_COLOR,
     };
 
+    /**
+     * Whether the user rents this item right now
+     */
+    static isRenting(user: User, slot: ShopSlot): boolean {
+        const data = UserController.getUserPluginData<CustomizationData>(user, CustomizationPlugin.commandName);
+        return (data[`${slot}Until`] ?? 0) > Date.now();
+    }
+
+    /**
+     * Refuses a wizz, sandale or confuse on a shielded user, before the sender pays for it
+     */
+    static checkUnshielded(identifier: string): void {
+        const user = Session.getSessionByIdentifier(identifier)?.user;
+        if (user && CustomizationPlugin.isRenting(user, 'shield')) {
+            throw new Error(`${user.username} has a shield up`);
+        }
+    }
+
+    constructor(manager: RoomManager) {
+        super(manager);
+
+        setInterval(() => logFailure(this.expire(), 'Shop expiry'), 60 * 1000);
+    }
+
+    /**
+     * `buy <item>[:<option>] <duration> [title]` rents an item, adding to the time left. `use <item>[:<option>] [title]` switches for free while it runs, `off <item>` takes it off
+     */
     public async run(alias: string, param: string, connection: Connection): Promise<void> {
-        const [, choice] = param.split(' ');
-        const [type, rawId] = choice.split(':');
-        const id = parseInt(rawId);
+        const [action, choice, ...rest] = param.split(' ');
+        const [slot, option] = choice.split(':') as [ShopSlot, string | undefined];
+        const user = connection.session.user;
+        const data = this.getUserData<CustomizationData>(user);
 
-        // Check that type exists
-        if (!CustomizationPlugin.ITEMS[type]) {
-            throw new Error('Unable to customize this property');
+        if (action === 'buy') {
+            const duration = rest.shift() as Duration;
+            const prices: Partial<Record<string, number>> = SHOP[slot].prices;
+            // Own keys only: `constructor` would find Object's
+            const price = Object.prototype.hasOwnProperty.call(prices, duration) ? prices[duration] : undefined;
+            if (!price) {
+                throw new Error(`Choose how long to rent it for: ${Object.keys(SHOP[slot].prices).join(' or ')}`);
+            }
+            const value = this.valueOf(slot, option, rest.join(' '));
+            await UserController.buy(user, price, `${SHOP[slot].name} for a ${duration}`);
+            data[`${slot}Until`] = Math.max(Date.now(), data[`${slot}Until`] ?? 0) + DURATIONS[duration] * 24 * 60 * 60 * 1000;
+            data[slot] = value;
+        } else if (action === 'off') {
+            // The rental keeps running: picking an option again puts it back on
+            data[slot] = CustomizationPlugin.defaultDataStorageValue[slot];
+        } else {
+            if (!CustomizationPlugin.isRenting(user, slot)) {
+                throw new Error(`Rent the ${SHOP[slot].name.toLowerCase()} in the shop first`);
+            }
+            data[slot] = this.valueOf(slot, option, rest.join(' '));
         }
 
-        // Check that item exists
-        const item = CustomizationPlugin.ITEMS[type].find((item) => item.id === id);
-        if (!item) {
-            throw new Error(`Item ${id} does not exist`);
-        }
+        await this.saveUserData(user, data);
+        this.sync(connection.session);
+    }
 
-        // Set item
-        const data = this.getUserData<{ [key: string]: unknown }>(connection.session.user);
-        data[type] = item.value;
-        this.saveUserData(connection.session.user, data);
+    /**
+     * What is stored for the picked option, checked before anything is paid
+     */
+    private valueOf(slot: ShopSlot, option: string | undefined, text: string): string | undefined {
+        if (slot === 'shield') {
+            return undefined;
+        }
+        if (slot === 'title') {
+            const title = text.trim();
+            if (!TITLE_PATTERN.test(title)) {
+                throw new Error(`Write a title of up to ${TITLE_MAX_LENGTH} characters`);
+            }
+            return title;
+        }
+        const value = slot === 'color' ? COLORS.find((color) => String(color.id) === option)?.value : option;
+        if (!value || !(SHOP[slot] as ShopItem).options?.some((o) => o.id === option)) {
+            throw new Error(`Pick one of the ${SHOP[slot].name.toLowerCase()}s`);
+        }
+        return value;
+    }
+
+    /**
+     * Takes off what is no longer rented, item by item. Also takes back colors picked when they were free
+     */
+    private async expire(): Promise<void> {
+        for (const session of Object.values(Session.sessions)) {
+            if (session.user.right < 0) {
+                continue;
+            }
+            const data = this.getUserData<CustomizationData>(session.user);
+            const expired = SLOTS.filter(
+                (slot) =>
+                    !CustomizationPlugin.isRenting(session.user, slot) &&
+                    (data[slot] !== CustomizationPlugin.defaultDataStorageValue[slot] || data[`${slot}Until`] !== undefined),
+            );
+            if (expired.length === 0) {
+                continue;
+            }
+            for (const slot of expired) {
+                delete data[slot];
+                delete data[`${slot}Until`];
+            }
+            data.color ??= CustomizationPlugin.DEFAULT_COLOR;
+            // One user failing to save must not stop the others
+            try {
+                await this.saveUserData(session.user, data);
+                this.sync(session);
+            } catch (error) {
+                Logging.error('Shop expiry', error);
+            }
+        }
+    }
+
+    private sync(session: Session): void {
         (this.manager.getPlugin('connectedlist') as ConnectedListPlugin).sync();
-        connection.session.syncUserData();
+        session.syncUserData();
     }
 
     /**
      * Send the list of all items to the new connection
-     * @abstract
-     * @param connection
      */
     async onNewConnection(connection: Connection): Promise<void> {
         connection.send('custom', CustomizationPlugin.ITEMS);

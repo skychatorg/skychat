@@ -11,7 +11,7 @@ const DEFAULT_DOCUMENT_TITLE = '~ SkyChat';
 const NOTIFICATION_SOUND_MP3_PATH = '/assets/sound/notification.mp3';
 
 const CURRENT_VERSION = 5;
-const STORE_SAVED_KEYS = ['playerMode', 'leftCollapsed', 'rightCollapsed', 'voiceSettings'];
+const STORE_SAVED_KEYS = ['playerMode', 'leftCollapsed', 'rightCollapsed', 'voiceSettings', 'mutedGames'];
 
 const applyLeftCollapsedClass = (collapsed) => {
     if (typeof document === 'undefined') return;
@@ -171,6 +171,11 @@ export const useAppStore = defineStore('app', {
         rightCollapsed: false,
 
         /**
+         * The party games muted on this device, by id: each game has its own sound switch
+         */
+        mutedGames: [],
+
+        /**
          * Local voice capture preferences (persisted).
          * inputMode: 'open' (always on) | 'vad' (voice activity / noise gate) | 'ptt' (push-to-talk)
          * vadThreshold: dBFS speaking threshold (mic sensitivity), drives the gate + own speaking dot
@@ -197,14 +202,14 @@ export const useAppStore = defineStore('app', {
             profile: false,
 
             /**
+             * Shop, to rent cosmetics
+             */
+            shop: false,
+
+            /**
              * Modal to navigate in the gallery
              */
             gallery: false,
-
-            /**
-             * Modal to browse the Jellyfin library
-             */
-            jellyfin: false,
 
             /**
              * List on currently converting videos
@@ -217,33 +222,35 @@ export const useAppStore = defineStore('app', {
             videoConverter: false,
 
             /**
-             * Modal to add videos from youtube
+             * Player window: add from any source, and see what's up next. false, or `{ tab, pane }`
              */
-            youtubeVideoSearcher: false,
+            player: false,
 
             /**
-             * List of next videos to play
+             * Admin panel: false, or the tab to show as `{ tab }`
              */
-            playerQueue: false,
+            admin: false,
 
             /**
-             * Room management modal
+             * New poll form, posted in the current room
              */
-            manageRooms: false,
+            createPoll: false,
 
             /**
-             * Sticker management modal
+             * New private conversation, or `{ roomId }` to see and change who is in one
              */
-            manageStickers: false,
-
-            /**
-             * Highlighted words management modal
-             */
-            manageHighlights: false,
+            groupChat: false,
         },
     }),
 
     getters: {
+        /**
+         * The window is given to the player panel, with the chat beside it
+         */
+        cinemaActive() {
+            return this.playerMode.size === 'cinema' && this.playerMode.enabled && this.isDesktop && useClientStore().channelHasContent;
+        },
+
         /**
          * The collapsed flag is only meaningful at the desktop breakpoint.
          * On mobile the left column is full-width and shouldn't render in compact mode.
@@ -384,17 +391,8 @@ export const useAppStore = defineStore('app', {
             mousetrap.bind('shift+up', () => this.shrinkPlayer());
 
             // ARROW + ALT + UP/DOWN: Switch rooms
-            mousetrap.bind('alt+down', () => {
-                const newRoomIndex = (clientStore.state.rooms.indexOf(clientStore.state.currentRoom) + 1) % clientStore.state.rooms.length;
-                clientStore.join(clientStore.state.rooms[newRoomIndex].id);
-            });
-            mousetrap.bind('alt+up', () => {
-                let newRoomIndex = clientStore.state.rooms.indexOf(clientStore.state.currentRoom) - 1;
-                if (newRoomIndex < 0) {
-                    newRoomIndex = clientStore.state.rooms.length - 1;
-                }
-                clientStore.join(clientStore.state.rooms[newRoomIndex].id);
-            });
+            mousetrap.bind('alt+down', () => clientStore.joinAdjacentRoom(1));
+            mousetrap.bind('alt+up', () => clientStore.joinAdjacentRoom(-1));
 
             // Ctrl/Cmd+K: toggle command palette. Bypasses mousetrap because
             // mousetrap suppresses shortcuts inside input/textarea, which is
@@ -468,6 +466,15 @@ export const useAppStore = defineStore('app', {
                     values: Object.fromEntries(STORE_SAVED_KEYS.map((key) => [key, this[key]])),
                 }),
             );
+        },
+
+        gameSound: function (game) {
+            return !this.mutedGames.includes(game);
+        },
+
+        toggleGameSound: function (game) {
+            this.mutedGames = this.gameSound(game) ? [...this.mutedGames, game] : this.mutedGames.filter((id) => id !== game);
+            this.savePreferences();
         },
 
         // ---- Voice capture preferences (persist + push to the live engine) ----
@@ -587,7 +594,9 @@ export const useAppStore = defineStore('app', {
                 // Create form and send request to backend
                 const data = new FormData();
                 data.append('file', file);
-                const result = await (await fetch('/api/upload', { method: 'POST', body: data })).json();
+                // Only logged-in users may upload: the server checks the login token the client keeps
+                const headers = { 'X-Auth-Token': JSON.stringify(useClientStore().state.token) };
+                const result = await (await fetch('/api/upload', { method: 'POST', body: data, headers })).json();
                 if (result.status === 500) {
                     throw new Error('Unable to upload: ' + result.message);
                 }

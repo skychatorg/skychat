@@ -33,14 +33,6 @@ export class BlacklistPlugin extends GlobalPlugin {
         return this.normalize(UserController.getUserPluginData<BlackListData | string[]>(user, this.commandName));
     }
 
-    static hasBlacklisted(user: User, username: string) {
-        return this.getData(user).users.includes(username.toLowerCase());
-    }
-
-    static hasBlacklistedGuests(user: User) {
-        return this.getData(user).guests;
-    }
-
     /**
      * Check if the blocker has blocked the target (per-user or all-guests).
      */

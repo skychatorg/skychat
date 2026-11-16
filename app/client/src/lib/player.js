@@ -25,7 +25,47 @@ export function roomCursorMs(player, playerLastUpdate) {
  * Adding a type here is the ONLY change needed to enable pause for it client-side (plus the
  * actual pause/play wiring in that type's impl component). The server stays media-type-agnostic.
  */
-export const PAUSABLE_TYPES = { gallery: true, jellyfin: true };
+const PAUSABLE_TYPES = { jellyfin: true, navidrome: true };
+
+/**
+ * Media types served by SkyChat's own proxy, whose stream and thumbnail URLs need the viewer's stream token.
+ */
+const PROXIED_TYPES = { jellyfin: true, navidrome: true };
+
+/**
+ * Thumbnail URL of a media as the viewer can load it: proxied thumbs get the stream token appended
+ * (their URL always carries a query already), others pass through unchanged.
+ * @param {{ type: string, thumb?: string }} video
+ * @param {string|undefined} token client.state.player.streamToken
+ * @returns {string|null}
+ */
+export function mediaThumbUrl(video, token) {
+    if (!video?.thumb) {
+        return null;
+    }
+    if (PROXIED_TYPES[video.type]) {
+        return token ? `${video.thumb}&t=${encodeURIComponent(token)}` : null;
+    }
+    return video.thumb;
+}
+
+/**
+ * Why this viewer gets no stream for a proxied media (the server only sends a token to those
+ * allowed to play it), or null when they can play it.
+ * @param {{ type: string }|null|undefined} video
+ * @param {string|undefined} token client.state.player.streamToken
+ * @param {{ id?: number }} user client.state.user
+ * @returns {string|null}
+ */
+export function lockedReason(video, token, user) {
+    if (!video || !PROXIED_TYPES[video.type] || token) {
+        return null;
+    }
+    if (video.type === 'navidrome') {
+        return user?.id ? "Your account can't play the music library yet." : 'Guests cannot hear the music. Log in to listen along.';
+    }
+    return user?.id ? "Your account can't play Jellyfin videos yet." : 'Guests cannot see this video. Log in to watch along.';
+}
 
 /**
  * Whether the given video can be paused from the UI.

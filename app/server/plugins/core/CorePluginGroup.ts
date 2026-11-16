@@ -14,6 +14,7 @@ import { IpPlugin } from './global/IpPlugin.js';
 import { JoinRoomPlugin } from './global/JoinRoomPlugin.js';
 import { KickPlugin } from './global/KickPlugin.js';
 import { MailPlugin } from './global/MailPlugin.js';
+import { MoneyHistoryPlugin } from './global/MoneyHistoryPlugin.js';
 import { MottoPlugin } from './global/MottoPlugin.js';
 import { MutePlugin } from './global/MutePlugin.js';
 import { OPPlugin } from './global/OPPlugin.js';
@@ -66,6 +67,7 @@ export class CorePluginGroup extends PluginGroup {
         JoinRoomPlugin,
         KickPlugin,
         MailPlugin,
+        MoneyHistoryPlugin,
         MottoPlugin,
         MutePlugin,
         OPPlugin,

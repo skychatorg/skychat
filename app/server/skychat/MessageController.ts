@@ -4,7 +4,7 @@ import { Logging } from './Logging.js';
 import { Message, MessageStorage } from './Message.js';
 import { UserController } from './UserController.js';
 
-export type MessageDBRow = {
+type MessageDBRow = {
     id: number;
     room_id: number;
     user_id: number;

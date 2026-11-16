@@ -1,9 +1,11 @@
 <script setup>
 import { useClientStore } from '@/stores/client';
 import { reactive, watch } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
+import { roomRoute } from '@/router.js';
 
 const client = useClientStore();
+const route = useRoute();
 const router = useRouter();
 
 const state = reactive({
@@ -12,13 +14,14 @@ const state = reactive({
 });
 
 /**
- * When current room changes, auto switch to the room.
+ * Once logged in, open the page that sent you here (a room link), or your room. Replaced, so back does not return to this form
  */
 watch(
     () => client.state.currentRoomId,
     function (newRoomId, oldRoomId) {
         if (oldRoomId === null && newRoomId >= 0) {
-            router.push({ name: 'app', params: {} });
+            const redirect = String(route.query.redirect ?? '');
+            router.replace(redirect.startsWith('/room/') ? redirect : roomRoute(newRoomId));
         }
     },
 );
@@ -33,11 +36,14 @@ const authAsGuest = async function () {
     }
 };
 
-const login = async function () {
-    await client.login({
-        username: state.username,
-        password: state.password,
-    });
+// A refused login comes back as an error event, already shown as a toast
+const login = function () {
+    client
+        .login({
+            username: state.username,
+            password: state.password,
+        })
+        .catch(() => {});
 };
 </script>
 
@@ -47,7 +53,7 @@ const login = async function () {
             <div class="auth bg-skygray-darker/50 p-4 rounded w-full text-center">
                 <!-- Main content -->
                 <p class="font-bold mt-2 mb-8 text-3xl">Login / Register</p>
-                <form class="px-4 grid grid-cols-4 gap-4" @submit="login">
+                <form class="px-4 grid grid-cols-4 gap-4" @submit.prevent="login">
                     <input
                         v-model="state.username"
                         class="form-control col-start-1 col-span-4"

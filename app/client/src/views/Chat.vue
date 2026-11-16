@@ -9,14 +9,35 @@ import PollList from '@/components/poll/PollList.vue';
 import RoomHeader from '@/components/room/RoomHeader.vue';
 import RoomList from '@/components/room/RoomList.vue';
 import ConnectedList from '@/components/user/ConnectedList.vue';
+import { useRoomUrl } from '@/composables/useRoomUrl';
 import { useUserRight } from '@/composables/useUserRight';
 import { roomName } from '@/lib/roomName.js';
 import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 
 const app = useAppStore();
 const client = useClientStore();
+
+useRoomUrl();
+
+// A reload or a link opens this view before the server sent anything. Wait for the first room, then stay mounted through reconnections
+const ready = ref(false);
+watch(
+    () => client.state.currentRoomId,
+    (roomId) => (ready.value ||= roomId !== null),
+    { immediate: true },
+);
+
+// The saved login was refused while connecting: back to the form, keeping the link
+const route = useRoute();
+const router = useRouter();
+watch(
+    () => client.authRefused,
+    (refused) => refused && router.replace({ name: 'home', query: route.name === 'room' ? { redirect: route.fullPath } : {} }),
+    { immediate: true },
+);
 
 const query = ref('');
 
@@ -26,9 +47,7 @@ const currentRoomName = computed(() => roomName(client.state.currentRoom, client
 
 // Cinema mode is a layout, not a size: the video takes the window and chat is reduced to a narrow
 // column of messages beside it. Everything else (rooms, users, search, polls) is dropped.
-const cinema = computed(
-    () => app.playerMode.size === 'cinema' && app.playerMode.enabled && app.isDesktop && Boolean(client.state.player.current),
-);
+const cinema = computed(() => app.cinemaActive);
 
 const runSearch = () => {
     const sanitizedQuery = query.value.trim();
@@ -47,11 +66,16 @@ const clearSearch = () => {
 <template>
     <!-- Cinema mode: a full-window layout of its own. Deliberately not native fullscreen — dropdowns,
          tooltips and toasts portal to <body> and would not render inside a fullscreened element. -->
-    <div v-if="cinema" class="cinema fixed inset-0 z-40 flex flex-row bg-black">
+    <div v-if="!ready" class="grow flex items-center justify-center gap-3 text-white/60">
+        <fa icon="spinner" spin />
+        Connecting…
+    </div>
+
+    <div v-else-if="cinema" class="cinema fixed inset-0 z-40 flex flex-row bg-black">
         <div class="group relative flex-1 min-w-0 flex flex-col justify-center bg-black">
             <PlayerPannel />
             <button
-                class="absolute top-3 right-3 z-10 px-3 py-1.5 rounded-lg text-sm text-white/80 bg-black/50 hover:bg-black/70 opacity-0 group-hover:opacity-100 transition"
+                class="absolute top-3 left-3 z-10 px-3 py-1.5 rounded-lg text-sm text-white/80 bg-black/50 hover:bg-black/70 opacity-0 group-hover:opacity-100 transition"
                 title="Leave cinema mode (Esc)"
                 @click="app.exitCinemaMode()"
             >

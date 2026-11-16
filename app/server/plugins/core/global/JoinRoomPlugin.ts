@@ -4,8 +4,6 @@ import { GlobalPlugin } from '../../GlobalPlugin.js';
 import { MessageHistoryPlugin } from '../room/MessageHistoryPlugin.js';
 
 export class JoinRoomPlugin extends GlobalPlugin {
-    static readonly CHANGE_USERNAME_PRICE = 2000;
-
     static readonly commandName = 'join';
 
     readonly minRight = -1;
@@ -51,6 +49,12 @@ export class JoinRoomPlugin extends GlobalPlugin {
             if (!room.whitelist.includes(connection.session.identifier)) {
                 throw new Error('You are not allowed to join this room');
             }
+        }
+
+        // Already there: still answer, the client counts one join-room per /join
+        if (connection.room === room) {
+            connection.send('join-room', room.id);
+            return;
         }
 
         // Join the room

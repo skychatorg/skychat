@@ -359,7 +359,7 @@ export class JellyfinClient {
 // system (anyone who can browse can stream anything they browse) — so binding to itemId or
 // mediaSourceId would protect nothing. Minimal scheme: HMAC(userId + expiresAt, SALT).
 
-export type StreamTokenPayload = { u: number; e: number };
+type StreamTokenPayload = { u: number; e: number };
 
 function getSalt(): string {
     const salt = process.env.USERS_TOKEN_SALT;

@@ -7,7 +7,7 @@ import { GlobalPlugin, PluginRoute } from '../GlobalPlugin.js';
 import { PollPlugin } from '../core/global/PollPlugin.js';
 import { SanitizedPlayerChannel } from './PlayerChannel.js';
 import { PlayerChannelManager } from './PlayerChannelManager.js';
-import { GalleryFetcher } from './fetcher/GalleryFetcher.js';
+import { CasinoOptions } from './casino/BlackjackTable.js';
 import { IFrameFetcher } from './fetcher/IFrameFetcher.js';
 import {
     issueStreamToken,
@@ -18,6 +18,8 @@ import {
     STREAM_TOKEN_TTL_MS,
 } from './fetcher/JellyfinFetcher.js';
 import { buildJellyfinRoutes } from './fetcher/JellyfinRoutes.js';
+import { mapAlbum, mapSong, NAVIDROME_ID_REGEX, NAVIDROME_PAGE_SIZE, NavidromeFetcher } from './fetcher/NavidromeFetcher.js';
+import { buildNavidromeRoutes } from './fetcher/NavidromeRoutes.js';
 import { TwitchFetcher } from './fetcher/TwitchFetcher.js';
 import { VideoFetcher } from './fetcher/VideoFetcher.js';
 import { YoutubeFetcher } from './fetcher/YoutubeFetcher.js';
@@ -30,8 +32,8 @@ export class PlayerPlugin extends GlobalPlugin {
         yt: new YoutubeFetcher(),
         twitch: new TwitchFetcher(),
         iframe: new IFrameFetcher(),
-        galleryadd: new GalleryFetcher(),
         jellyfin: new JellyfinFetcher(),
+        navidrome: new NavidromeFetcher(),
     };
 
     /**
@@ -41,6 +43,8 @@ export class PlayerPlugin extends GlobalPlugin {
     static readonly RESYNC_COUNTDOWN_MS = 5 * 1000;
 
     static readonly RESYNC_COOLDOWN_MS = 10 * 1000;
+
+    static readonly CHANNEL_NAME_MAX_LENGTH = 32;
 
     static readonly commandName = 'player';
 
@@ -55,6 +59,8 @@ export class PlayerPlugin extends GlobalPlugin {
         'unschedule',
         'jellyfinls',
         'jellyfinsearch',
+        'navidromels',
+        'navidromesearch',
     ].concat(Object.keys(PlayerPlugin.FETCHERS));
 
     static readonly defaultDataStorageValue: { channel: null | number } = { channel: null };
@@ -70,10 +76,10 @@ export class PlayerPlugin extends GlobalPlugin {
             params: [{ name: 'action', pattern: /^(replay30|skip30|list|skip|flush|pause|resume)$/ }],
         },
         playerchannelmanage: {
-            minCount: 1,
+            minCount: 2,
             maxCallsPer10Seconds: 14,
             params: [
-                { name: 'action', pattern: /^(create|delete|rename)$/ },
+                { name: 'action', pattern: /^(create|rename|delete|reorder)$/ },
                 { name: 'param', pattern: /./ },
             ],
         },
@@ -154,9 +160,23 @@ export class PlayerPlugin extends GlobalPlugin {
             coolDown: 300,
             maxCallsPer10Seconds: 30,
         },
+        navidromels: {
+            // `newest [offset]` or `album <id>`, validated in the handler
+            minCount: 1,
+            maxCount: 2,
+            coolDown: 200,
+            maxCallsPer10Seconds: 30,
+            params: [{ name: 'view', pattern: /^(newest|album)$/ }],
+        },
+        navidromesearch: {
+            // `<offset> <term>`: the term carries spaces, so it is parsed in the handler
+            minCount: 1,
+            coolDown: 300,
+            maxCallsPer10Seconds: 30,
+        },
     };
 
-    protected storage: { channels: SanitizedPlayerChannel[] } = {
+    protected storage: { channels: SanitizedPlayerChannel[]; lastChannelId?: number } = {
         channels: [],
     };
 
@@ -177,9 +197,22 @@ export class PlayerPlugin extends GlobalPlugin {
         this.loadStorage();
 
         this.channelManager = new PlayerChannelManager(this);
+        this.channelManager.lastChannelId = this.storage.lastChannelId ?? 0;
         for (const channelData of this.storage.channels) {
-            const channel = this.channelManager.createChannel(channelData.id, channelData.name);
+            // Channels saved before games existed have no kind, and party channels were casinos holding only blackjack
+            const legacy = channelData as { kind?: string; casino?: CasinoOptions };
+            const limits = channelData.party ?? legacy.casino;
+            const channel = this.channelManager.createChannel(
+                channelData.id,
+                channelData.name,
+                legacy.kind === 'casino' ? 'party' : channelData.kind ?? 'media',
+                limits && { minBet: limits.minBet, maxBet: limits.maxBet },
+            );
             for (const event of channelData.schedule.events) {
+                // Gallery files can't be played any more
+                if ((event.media.type as string) === 'gallery') {
+                    continue;
+                }
                 channel.schedule(event.media, event.start, event.duration);
             }
         }
@@ -187,6 +220,7 @@ export class PlayerPlugin extends GlobalPlugin {
         // Bind events
         this.channelManager.on('channels-changed', () => {
             this.storage.channels = this.channelManager.sanitized();
+            this.storage.lastChannelId = this.channelManager.lastChannelId;
             this.syncStorage();
         });
     }
@@ -197,8 +231,8 @@ export class PlayerPlugin extends GlobalPlugin {
     public async run(alias: string, param: string, connection: Connection) {
         // If using a fetcher alias to play a video
         if (typeof PlayerPlugin.FETCHERS[alias] !== 'undefined') {
-            if (alias === 'jellyfin' && !this.canBrowseJellyfin(connection.session)) {
-                throw new Error('You do not have the permission to play Jellyfin content');
+            if (!this.canUseFetcher(alias, connection.session)) {
+                throw new Error('You do not have the permission to play this content');
             }
             await this.handlePlayerFetch(alias, param, connection);
             return;
@@ -249,6 +283,14 @@ export class PlayerPlugin extends GlobalPlugin {
                 await this.handleJellyfinSearch(param, connection);
                 break;
 
+            case 'navidromels':
+                await this.handleNavidromeLs(param, connection);
+                break;
+
+            case 'navidromesearch':
+                await this.handleNavidromeSearch(param, connection);
+                break;
+
             default:
                 throw new Error('Unsupported action');
         }
@@ -286,6 +328,118 @@ export class PlayerPlugin extends GlobalPlugin {
             Config.PREFERENCES.minRightForJellyfinBrowse === 'op' ? Infinity : Config.PREFERENCES.minRightForJellyfinBrowse;
         const actualRight = session.isOP() ? Infinity : session.user.right;
         return actualRight >= expectedRight;
+    }
+
+    /**
+     * Return whether a session has the right to browse or play the Navidrome music library
+     */
+    public canUseNavidrome(session: Session) {
+        const pref = Config.PREFERENCES.minRightForNavidrome ?? 0;
+        const expectedRight = pref === 'op' ? Infinity : pref;
+        const actualRight = session.isOP() ? Infinity : session.user.right;
+        return actualRight >= expectedRight;
+    }
+
+    /**
+     * Return whether a session may use the given fetcher (the self-hosted libraries are gated)
+     */
+    public canUseFetcher(fetcherName: string, session: Session) {
+        if (fetcherName === 'jellyfin') {
+            return this.canBrowseJellyfin(session);
+        }
+        if (fetcherName === 'navidrome') {
+            return this.canUseNavidrome(session);
+        }
+        return true;
+    }
+
+    // Says why, since a guest only needs to log in
+    private assertCanUseNavidrome(session: Session) {
+        if (!this.canUseNavidrome(session)) {
+            throw new Error(
+                session.user.isGuest() ? 'Log in to browse the music library' : 'Your account cannot browse the music library yet',
+            );
+        }
+    }
+
+    private get navidrome(): NavidromeFetcher {
+        const fetcher = PlayerPlugin.FETCHERS.navidrome as NavidromeFetcher;
+        if (!fetcher.enabled) {
+            throw new Error('The music library is not configured on this server');
+        }
+        return fetcher;
+    }
+
+    /**
+     * Browse the music library: `newest [offset]` lists recent albums, `album <id>` its songs.
+     */
+    private async handleNavidromeLs(param: string, connection: Connection) {
+        this.assertCanUseNavidrome(connection.session);
+        const client = this.navidrome.client;
+        const [view, arg] = param.trim().split(' ');
+        const streamToken = issueStreamToken(connection.session.user.id, Date.now() + STREAM_TOKEN_TTL_MS);
+        // Upstream errors become a "music library" message: the raw axios one leaks internals, and the
+        // client only leaves its loading state on errors that mention the music library.
+        try {
+            if (view === 'album') {
+                if (!arg || !NAVIDROME_ID_REGEX.test(arg)) {
+                    throw new Error('Invalid album id');
+                }
+                const album = await client.getAlbum(arg);
+                connection.send('navidrome-library', {
+                    key: `album:${arg}`,
+                    startIndex: 0,
+                    hasMore: false,
+                    album: mapAlbum(album),
+                    albums: [],
+                    songs: (album.song ?? []).map(mapSong),
+                    streamToken,
+                });
+                return;
+            }
+            const startIndex = arg && /^\d{1,6}$/.test(arg) ? parseInt(arg, 10) : 0;
+            const albums = await client.newestAlbums(startIndex);
+            connection.send('navidrome-library', {
+                key: 'newest',
+                startIndex,
+                hasMore: albums.length === NAVIDROME_PAGE_SIZE,
+                albums: albums.map(mapAlbum),
+                songs: [],
+                streamToken,
+            });
+        } catch (err) {
+            Logging.warn(`Navidrome browse failed (${param}): ${(err as Error).message}`);
+            throw new Error('Could not load the music library');
+        }
+    }
+
+    /**
+     * Search albums and songs in the music library: `<offset> <term>`.
+     */
+    private async handleNavidromeSearch(param: string, connection: Connection) {
+        this.assertCanUseNavidrome(connection.session);
+        const client = this.navidrome.client;
+        const match = param.trim().match(/^(\d{1,6}) (.+)$/);
+        if (!match) {
+            throw new Error('Empty music library search');
+        }
+        const startIndex = parseInt(match[1], 10);
+        const term = match[2].trim();
+        let albums, songs;
+        try {
+            ({ albums, songs } = await client.search(term, startIndex));
+        } catch (err) {
+            Logging.warn(`Navidrome search failed (term=${term}): ${(err as Error).message}`);
+            throw new Error('Could not search the music library');
+        }
+        connection.send('navidrome-library', {
+            key: `search:${term}`,
+            startIndex,
+            hasMore: albums.length === NAVIDROME_PAGE_SIZE || songs.length === NAVIDROME_PAGE_SIZE,
+            albums: albums.map(mapAlbum),
+            songs: songs.map(mapSong),
+            streamToken: issueStreamToken(connection.session.user.id, Date.now() + STREAM_TOKEN_TTL_MS),
+        });
     }
 
     /**
@@ -371,52 +525,70 @@ export class PlayerPlugin extends GlobalPlugin {
     }
 
     public getRoutes(): PluginRoute[] {
-        const fetcher = PlayerPlugin.FETCHERS.jellyfin as JellyfinFetcher;
-        return buildJellyfinRoutes(fetcher);
+        return [
+            ...buildJellyfinRoutes(PlayerPlugin.FETCHERS.jellyfin as JellyfinFetcher),
+            ...buildNavidromeRoutes(PlayerPlugin.FETCHERS.navidrome as NavidromeFetcher, (id) =>
+                this.channelManager.channels.some((channel) => channel.isVideoPlayingOrInQueue({ type: 'navidrome', id })),
+            ),
+        ];
     }
 
     /**
-     * Manage channels (Only for OP)
-     * @param param
-     * @param connection
-     * @returns
+     * Manage channels (Only for OP):
+     * create media <name> | create party <minBet> <maxBet> <name> | rename <id> <name> | delete <id> | reorder <id,id,…>
+     * Bets are in cents, like user money.
      */
     private async handlePlayerChannelManage(param: string, connection: Connection) {
         if (!connection.session.isOP()) {
             throw new Error('Command only for OP');
         }
 
-        const action = param.split(' ')[0];
-        const value = param.substr(action.length + 1);
-
-        // Create a new channel
-        if (action === 'create') {
-            const newId = this.channelManager.getNextChannelId();
-            this.channelManager.createChannel(newId, `Channel ${newId}`);
-            return;
-        }
-
-        // Delete a channel
-        if (action === 'delete') {
-            const channel = this.channelManager.getSessionChannel(connection.session);
+        const [action, ...args] = param.split(' ');
+        const channelFromArg = () => {
+            const channel = this.channelManager.getChannelById(Number(args[0]));
             if (!channel) {
-                throw new Error('Not in a channel');
+                throw new Error('This channel does not exist');
             }
-            this.channelManager.deleteChannel(channel.id);
-            return;
-        }
+            return channel;
+        };
 
-        // Rename a channel
-        if (action === 'rename') {
-            const channel = this.channelManager.getSessionChannel(connection.session);
-            if (!channel) {
-                throw new Error('Not in a channel');
+        switch (action) {
+            case 'create': {
+                const kind = args.shift();
+                if (kind === 'media') {
+                    this.channelManager.createChannel(this.channelManager.getNextChannelId(), PlayerPlugin.channelName(args.join(' ')));
+                    return;
+                }
+                if (kind === 'party') {
+                    const [minBet, maxBet] = args.splice(0, 2).map(Number);
+                    if (!Number.isInteger(minBet) || !Number.isInteger(maxBet) || minBet < 1 || maxBet < minBet || maxBet > 10_000_000) {
+                        throw new Error('Bets need a positive minimum, and a maximum at least as high');
+                    }
+                    const name = PlayerPlugin.channelName(args.join(' '));
+                    this.channelManager.createChannel(this.channelManager.getNextChannelId(), name, 'party', { minBet, maxBet });
+                    return;
+                }
+                throw new Error('A channel is either media or party');
             }
-            this.channelManager.renameChannel(channel.id, value);
-            return;
+            case 'rename':
+                this.channelManager.renameChannel(channelFromArg().id, PlayerPlugin.channelName(args.slice(1).join(' ')));
+                return;
+            case 'delete':
+                this.channelManager.deleteChannel(channelFromArg().id);
+                return;
+            case 'reorder':
+                this.channelManager.reorderChannels(args[0].split(',').map(Number));
+                return;
         }
-
         throw new Error('Unsupported action');
+    }
+
+    private static channelName(raw: string): string {
+        const name = raw.trim();
+        if (!name || name.length > PlayerPlugin.CHANNEL_NAME_MAX_LENGTH) {
+            throw new Error(`Channel names are 1 to ${PlayerPlugin.CHANNEL_NAME_MAX_LENGTH} characters`);
+        }
+        return name;
     }
 
     /**
@@ -460,7 +632,8 @@ export class PlayerPlugin extends GlobalPlugin {
      */
     private async handlePlayerSync(param: string, connection: Connection) {
         const channel = this.channelManager.getSessionChannel(connection.session);
-        if (!channel) {
+        // Nothing to sync outside a media channel
+        if (channel?.kind !== 'media') {
             return;
         }
 
@@ -499,8 +672,8 @@ export class PlayerPlugin extends GlobalPlugin {
         if (typeof PlayerPlugin.FETCHERS[fetcherName] === 'undefined') {
             throw new Error('Invalid fetcher specified');
         }
-        if (fetcherName === 'jellyfin' && !this.canBrowseJellyfin(connection.session)) {
-            throw new Error('You do not have the permission to browse Jellyfin');
+        if (!this.canUseFetcher(fetcherName, connection.session)) {
+            throw new Error('You do not have the permission to search this library');
         }
         const fetcher = PlayerPlugin.FETCHERS[fetcherName];
         const type = param.split(' ')[1];
@@ -518,10 +691,7 @@ export class PlayerPlugin extends GlobalPlugin {
         if (!this.canAddMedia(connection.session)) {
             throw new Error('Unable to perform this action');
         }
-        const channel = this.channelManager.getSessionChannel(connection.session);
-        if (!channel) {
-            throw new Error('Join a channel to manage medias');
-        }
+        const channel = this.channelManager.getSessionMediaChannel(connection.session);
         const mediaType = param.split(' ')[0];
         const mediaId = param.split(' ')[1];
         const queueEntry = channel.getQueueEntry(mediaType, mediaId);
@@ -541,10 +711,7 @@ export class PlayerPlugin extends GlobalPlugin {
      * @param connection
      */
     private async handlePlayerSeek(param: string, connection: Connection) {
-        const channel = this.channelManager.getSessionChannel(connection.session);
-        if (!channel) {
-            throw new Error('Channel does not exist');
-        }
+        const channel = this.channelManager.getSessionMediaChannel(connection.session);
         if (channel.locked && !connection.session.isOP()) {
             throw new Error('Channel is locked');
         }
@@ -564,10 +731,7 @@ export class PlayerPlugin extends GlobalPlugin {
         if (!this.canSchedule(connection.session)) {
             throw new Error('You do not have the permission to schedule medias');
         }
-        const channel = this.channelManager.getSessionChannel(connection.session);
-        if (!channel) {
-            throw new Error('Join a channel to add videos');
-        }
+        const channel = this.channelManager.getSessionMediaChannel(connection.session);
         // Get & verify params
         const [fetcherName, id, rawStart, rawDuration] = param.split(' ');
         const fetcher = PlayerPlugin.FETCHERS[fetcherName];
@@ -598,10 +762,7 @@ export class PlayerPlugin extends GlobalPlugin {
         if (!this.canSchedule(connection.session)) {
             throw new Error('Unable to perform this action');
         }
-        const channel = this.channelManager.getSessionChannel(connection.session);
-        if (!channel) {
-            throw new Error('Join a channel to add videos');
-        }
+        const channel = this.channelManager.getSessionMediaChannel(connection.session);
         // Get & verify params
         const start = parseInt(param.split(' ')[0]);
         if (!start) {
@@ -620,10 +781,7 @@ export class PlayerPlugin extends GlobalPlugin {
         if (!this.canAddMedia(connection.session)) {
             throw new Error('Unable to perform this action');
         }
-        const channel = this.channelManager.getSessionChannel(connection.session);
-        if (!channel) {
-            throw new Error('Join a channel to add videos');
-        }
+        const channel = this.channelManager.getSessionMediaChannel(connection.session);
         if (channel.locked && !connection.session.isOP()) {
             throw new Error('Channel is locked');
         }
@@ -635,7 +793,10 @@ export class PlayerPlugin extends GlobalPlugin {
         if (videos.length === 0) {
             throw new Error('Unable to fetch items');
         }
-        channel.add(videos, connection.session.user, { allowFailure: false });
+        // In a batch (an album, a playlist), skip what is already queued instead of refusing it all
+        if (channel.add(videos, connection.session.user, { allowFailure: videos.length > 1 }) === 0) {
+            throw new Error('Everything here is already in the queue');
+        }
     }
 
     /**
@@ -645,10 +806,7 @@ export class PlayerPlugin extends GlobalPlugin {
      * @returns
      */
     private async handlePlayer(param: string, connection: Connection) {
-        const channel = this.channelManager.getSessionChannel(connection.session);
-        if (!channel) {
-            throw new Error('Channel does not exist');
-        }
+        const channel = this.channelManager.getSessionMediaChannel(connection.session);
         if (channel.locked && !connection.session.isOP()) {
             throw new Error('Channel is locked');
         }

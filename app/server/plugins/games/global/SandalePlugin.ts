@@ -1,3 +1,5 @@
+import { CustomizationPlugin } from '../../core/global/CustomizationPlugin.js';
+import { formatMoney } from '../../../../api/money.js';
 import { Connection } from '../../../skychat/Connection.js';
 import { RoomManager } from '../../../skychat/RoomManager.js';
 import { Session } from '../../../skychat/Session.js';
@@ -77,10 +79,11 @@ export class SandalePlugin extends GlobalPlugin {
             throw new Error('User ' + identifier + ' is already sandaled');
         }
 
-        await UserController.buy(connection.session.user, SandalePlugin.COST);
+        CustomizationPlugin.checkUnshielded(identifier);
+        await UserController.buy(connection.session.user, SandalePlugin.COST, 'Sandale');
 
         // Notify everyone but the user who is sandalized
-        const messageContent = `${connection.session.identifier} sandaled ${identifier} 🤯 (cost: $${SandalePlugin.COST / 100}) 👞`;
+        const messageContent = `${connection.session.identifier} sandaled ${identifier} 🤯 (cost: ${formatMoney(SandalePlugin.COST)}) 👞`;
         const message = UserController.createNeutralMessage({ id: 0, content: messageContent });
         if (connection.room) {
             connection.room.connections.forEach((c) => {
@@ -91,6 +94,13 @@ export class SandalePlugin extends GlobalPlugin {
             });
         }
         this.setSandaled(identifier, true);
+    }
+
+    /**
+     * Hit the user's next message, for games that hand this out as a malus
+     */
+    public flag(username: string): void {
+        this.setSandaled(username, true);
     }
 
     /**
