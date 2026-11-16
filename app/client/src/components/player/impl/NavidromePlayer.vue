@@ -77,8 +77,10 @@ const play = () => {
 };
 
 const syncToRoom = (force = false) => {
-    if (!player.value || player.value.readyState < 1) return;
+    // A finished track waits for the next one: play() on an ended element would restart it
+    if (!player.value || player.value.readyState < 1 || player.value.ended) return;
     const desired = roomCursor() / 1000;
+    if (desired >= player.value.duration) return;
     if (force || Math.abs(desired - player.value.currentTime) * 1000 > SEEK_DRIFT_MS) {
         player.value.currentTime = desired;
     }

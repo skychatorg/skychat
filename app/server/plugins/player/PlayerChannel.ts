@@ -283,13 +283,15 @@ export class PlayerChannel {
             throw new Error('No video playing currently');
         }
         this.cancelResync();
+        // Never before the start, nor past the end: replay30 at 0:10 would otherwise put everyone 20s before the start
+        const duration = this.currentVideoInfo.video.duration;
+        const cursor = this.getCursor();
+        const target = duration > 0 ? Math.min(Math.max(0, cursor + delta), duration) : Math.max(0, cursor + delta);
+        delta = target - cursor;
         this.currentVideoInfo.video.startTime -= delta;
-        // When paused, the frozen cursor is authoritative, so move it too. replay30/skip30 reach
-        // moveCursor without clamping, so keep the frozen cursor inside [0, duration].
+        // When paused, the frozen cursor is authoritative, so move it too
         if (this.pausedCursor !== null) {
-            const duration = this.currentVideoInfo.video.duration;
-            this.pausedCursor += delta;
-            this.pausedCursor = duration > 0 ? Math.min(Math.max(0, this.pausedCursor), duration) : Math.max(0, this.pausedCursor);
+            this.pausedCursor = target;
         }
         this.armPlayNextTimeout();
         this.sync();
