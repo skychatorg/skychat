@@ -24,6 +24,7 @@ const readVolume = () => {
 };
 const volume = ref(readVolume());
 watch(volume, (value) => {
+    applyGain();
     try {
         localStorage.setItem('navidrome.volume', String(value));
     } catch {
@@ -45,10 +46,31 @@ const titleParts = computed(() => {
 
 const roomCursor = () => roomCursorMs(client.state.player, client.state.playerLastUpdate);
 
+// Loudness is perceived on a log scale: squaring makes the low end of the slider actually quiet
+const gainFor = (value) => value * value;
+
+// iOS ignores <audio>.volume, so the volume goes through a Web Audio gain node, created on first play
+// (an AudioContext needs a user gesture)
+let audioContext = null;
+let gainNode = null;
+const applyGain = () => {
+    if (gainNode) gainNode.gain.value = gainFor(volume.value);
+};
+const ensureAudioGraph = () => {
+    if (audioContext || !player.value || !window.AudioContext) return;
+    audioContext = new AudioContext();
+    gainNode = audioContext.createGain();
+    audioContext.createMediaElementSource(player.value).connect(gainNode).connect(audioContext.destination);
+    applyGain();
+};
+
 const play = () => {
+    ensureAudioGraph();
+    audioContext?.resume();
     player.value
         ?.play()
-        .then(() => (needsClick.value = false))
+        // The element may be allowed to play while the audio context isn't, which would play silence
+        .then(() => (needsClick.value = audioContext?.state === 'suspended'))
         .catch((err) => {
             if (err?.name === 'NotAllowedError') needsClick.value = true;
         });
@@ -115,6 +137,7 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+    audioContext?.close();
     clearTimeout(retryTimer);
     clearInterval(pollTimer);
     if (player.value) {
@@ -155,7 +178,7 @@ onBeforeUnmount(() => {
                         class="w-full max-w-[7rem] min-w-0 accent-white"
                     />
                 </label>
-                <audio ref="player" :volume="volume" @loadedmetadata="syncToRoom(true)" @play="onNativePlay" @error="onAudioError"></audio>
+                <audio ref="player" @loadedmetadata="syncToRoom(true)" @play="onNativePlay" @error="onAudioError"></audio>
             </div>
         </div>
     </div>
