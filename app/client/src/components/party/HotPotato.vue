@@ -8,11 +8,10 @@ import { useNow } from '@/composables/useNow';
 import { playCasinoSound } from '@/lib/casinoSounds';
 import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
-import { betChips } from '@/lib/channel';
+import { betChips, chipColor } from '@/lib/channel';
 import { formatMoney } from '../../../../api/money.ts';
 import { computed, onUnmounted, watch } from 'vue';
 
-const CHIP_COLORS = ['#c9452f', '#2f6db0', '#2e8655', '#26222a', '#8a3fb0'];
 /** The fizz is at its worst after this long, the real fuse is hidden and random */
 const HEAT_MS = 20_000;
 
@@ -86,7 +85,6 @@ const passes = computed(() =>
 );
 
 const choices = computed(() => betChips(game.value));
-const chipColor = (value) => CHIP_COLORS[Math.max(0, choices.value.indexOf(value)) % CHIP_COLORS.length];
 const join = (amount) => client.sendMessage(`/party join ${amount}`);
 const pass = (seat) => seat.target && client.sendMessage(`/party pass ${seat.index}`);
 

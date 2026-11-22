@@ -4,7 +4,7 @@ import CasinoHand from '@/components/casino/CasinoHand.vue';
 import { useCasinoSounds } from '@/composables/useCasinoSounds';
 import { useNow } from '@/composables/useNow';
 import { serverNow } from '@/lib/serverClock';
-import { betChips, betLimits } from '@/lib/channel';
+import { betChips, betLimits, chipColor } from '@/lib/channel';
 import { formatMoney } from '../../../../api/money.ts';
 import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
@@ -12,7 +12,6 @@ import { computed, onMounted, provide, ref, watch } from 'vue';
 
 // Cards land one after the other, about a second for a full table
 const DEAL_STAGGER_MS = 110;
-const CHIP_COLORS = ['#c9452f', '#2f6db0', '#2e8655', '#26222a'];
 const OUTCOME_LABELS = { blackjack: 'Blackjack', win: 'Win', push: 'Push', lose: 'Lose', bust: 'Bust' };
 const BANNERS = { blackjack: 'Blackjack!', win: 'You win', push: 'Push', lose: 'Dealer wins', bust: 'Bust' };
 
@@ -38,7 +37,6 @@ const canDouble = computed(() => myTurn.value && mySeat.value.cards.length === 2
 
 // A few chips between the table limits, like 10 · 20 · 50 · 100
 const betChoices = computed(() => betChips(table.value));
-const chipColor = (value) => CHIP_COLORS[betChoices.value.indexOf(value) % CHIP_COLORS.length];
 
 // A bet as the chips on the felt, biggest first: what was clicked, two of them once doubled
 function chipsFor(bet) {
