@@ -6,6 +6,25 @@ import { UserController } from '../../../skychat/UserController.js';
 import { shuffle } from './shuffle.js';
 import type { Party } from './Party.js';
 
+/** Geneva's time zone: Europe/Zurich is the IANA zone it uses */
+const TIME_ZONE = 'Europe/Zurich';
+
+/** How far Geneva's clock is ahead of UTC at `at`, in ms */
+function zoneOffset(at: number): number {
+    const parts = new Intl.DateTimeFormat('en-US', {
+        timeZone: TIME_ZONE,
+        hourCycle: 'h23',
+        year: 'numeric',
+        month: 'numeric',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+        second: 'numeric',
+    }).formatToParts(at);
+    const get = (type: string) => Number(parts.find((part) => part.type === type)!.value);
+    return Date.UTC(get('year'), get('month') - 1, get('day'), get('hour'), get('minute'), get('second')) - Math.floor(at / 1000) * 1000;
+}
+
 /**
  * - picking: everyone picks a card, until the deadline
  * - countdown: 3, 2, 1 until the deadline
@@ -80,15 +99,19 @@ export class DailyRoll {
     ) {}
 
     /**
-     * The first 10 PM after `now`, in ms
+     * The first 10 PM after `now` on Geneva's clock, in ms, whatever time zone the server runs in
      */
     static nextReset(now: number): number {
-        const reset = new Date(now);
-        reset.setHours(DailyRoll.RESET_HOUR, 0, 0, 0);
-        if (reset.getTime() <= now) {
-            reset.setDate(reset.getDate() + 1);
+        // Geneva's date now, then 10 PM that day on Geneva's clock, or the next day's once past
+        const local = new Date(now + zoneOffset(now));
+        for (let day = 0; ; day++) {
+            const wall = Date.UTC(local.getUTCFullYear(), local.getUTCMonth(), local.getUTCDate() + day, DailyRoll.RESET_HOUR);
+            // The offset at the reset itself: it differs from now's on daylight saving days
+            const reset = wall - zoneOffset(wall - zoneOffset(now));
+            if (reset > now) {
+                return reset;
+            }
         }
-        return reset.getTime();
     }
 
     public start(): void {

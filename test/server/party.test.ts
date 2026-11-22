@@ -40,6 +40,10 @@ async function until(check: () => boolean, ms = 2000) {
     }
 }
 
+/** The time on Geneva's clock */
+const genevaHour = (at: number) =>
+    new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Zurich', hour: '2-digit', minute: '2-digit' }).format(at);
+
 const scripted = (rolls: number[]) => (max: number) => (rolls.length ? (rolls.shift() as number) : max - 1);
 /** Lucky Pop skies with a special balloon at id 0. The hot air one also rolls no second special and keeps the sky in order, so its burst roll can come next */
 const PEEK = [0, 0];
@@ -1033,6 +1037,19 @@ describe('daily roll', () => {
         expect([alice.session.user.money, bob.session.user.money]).toEqual([21000, 20000]);
     });
 
+    it('resets at 10 PM in Geneva, winter and summer, whatever the server time zone', () => {
+        const reset = (iso: string) => new Date(DailyRoll.nextReset(Date.parse(iso))).toISOString();
+        // Winter, UTC+1: 10 PM in Geneva is 21:00 UTC
+        expect(reset('2026-11-22T20:00:00Z')).toBe('2026-11-22T21:00:00.000Z');
+        expect(reset('2026-11-22T21:30:00Z')).toBe('2026-11-23T21:00:00.000Z');
+        // Summer, UTC+2: 20:00 UTC
+        expect(reset('2026-07-01T19:59:00Z')).toBe('2026-07-01T20:00:00.000Z');
+        expect(reset('2026-07-01T20:00:00Z')).toBe('2026-07-02T20:00:00.000Z');
+        // Across the switches to and from summer time
+        expect(reset('2026-03-28T22:00:00Z')).toBe('2026-03-29T20:00:00.000Z');
+        expect(reset('2026-10-24T21:00:00Z')).toBe('2026-10-25T21:00:00.000Z');
+    });
+
     it('locks the whole channel until 10 PM once played', async () => {
         const { clients } = await partyChannel(2);
         const [alice, bob] = clients;
@@ -1040,7 +1057,7 @@ describe('daily roll', () => {
         await alice.send('/party pick dailyroll');
         const unlocksAt = alice.last('party').dailyRollAt;
         expect(unlocksAt).toBe(DailyRoll.nextReset(startedAt));
-        expect(new Date(unlocksAt).getHours()).toBe(22);
+        expect(genevaHour(unlocksAt)).toBe('22:00');
 
         await until(() => alice.last('party')?.phase === 'vote');
         await bob.send('/party vote dailyroll');
