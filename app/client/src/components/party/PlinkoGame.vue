@@ -70,6 +70,7 @@ const drop = () => {
     client.sendMessage('/party drop');
 };
 
+let lastLandSound = 0;
 function onLand(ball) {
     balls.delete(ball.id);
     landed.add(ball.id);
@@ -89,8 +90,10 @@ function onLand(ball) {
         color: win > PLINKO.ballPrice ? '#ffd6f0' : win ? '#bff5ff' : '#8a8aa8',
         at: now.value,
     });
-    if (!soundOn.value) return;
+    // One landing sound at a time: a tab coming back from the background lands every overdue ball in one frame
+    if (!soundOn.value || now.value - lastLandSound < 120) return;
     // Your own results always sound; others only when they win big, so a busy board stays pleasant
+    if (value >= 5 || mine) lastLandSound = now.value;
     if (value >= 5) playCasinoSound('blackjack');
     else if (mine) playCasinoSound(value >= 1 ? 'win' : value > 0 ? 'push' : 'thud');
 }

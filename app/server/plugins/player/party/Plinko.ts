@@ -115,6 +115,11 @@ export class Plinko extends PartyRound {
             this.nextDropAt.delete(session);
             throw error;
         }
+        // The round ended while paying: nobody would see this ball fall
+        if (this.over) {
+            await this.refund([{ session, amount: PLINKO.ballPrice }]);
+            throw new Error('This round is over');
+        }
         // Paid: from here on the ball falls whatever happens
         this.plugin.addToPlinkoJackpot(PLINKO.toJackpot);
         const id = randomUUID();
@@ -142,7 +147,14 @@ export class Plinko extends PartyRound {
         // A ball in the air keeps the round going until it lands
         clearTimeout(this.idleTimer);
         this.idleDeadline = null;
-        this.broadcast();
+        this.broadcastJackpot();
+    }
+
+    /** The jackpot is shared: every Plinko board shows its new amount, not only this one */
+    private broadcastJackpot(): void {
+        for (const channel of this.plugin.channelManager.channels) {
+            channel.party?.gameOf(Plinko)?.broadcast();
+        }
     }
 
     /** The result first: the jackpot, else a small win from its table, else nothing. Then one of its slots */
@@ -168,7 +180,7 @@ export class Plinko extends PartyRound {
         this.balls.delete(ball.id);
         // Once paid, the meters drop a won jackpot
         logFailure(
-            this.pay(ball).then(() => ball.jackpot && this.broadcast()),
+            this.pay(ball).then(() => ball.jackpot && this.broadcastJackpot()),
             'Plinko',
         );
         this.recent = [{ id: ball.id, username: ball.session.user.username, win: ball.win, jackpot: ball.jackpot }, ...this.recent].slice(

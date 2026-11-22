@@ -238,7 +238,10 @@ export class PlayerPlugin extends GlobalPlugin {
 
     /** What the jackpot meters show: the pot, plus any jackpot still falling, so nobody learns of a win before it lands */
     public get plinkoJackpotShown(): number {
-        return this.plinkoJackpot + this.plinkoPending.filter((win) => win.jackpot).reduce((sum, win) => sum + win.amount, 0);
+        // The pot restarted when the jackpot was drawn: shown as if it hadn't, until the ball lands
+        return this.plinkoPending
+            .filter((win) => win.jackpot)
+            .reduce((shown, win) => shown + win.amount - PLINKO.jackpotStart, this.plinkoJackpot);
     }
 
     private get plinkoPending(): PlinkoStorage['pending'] {
@@ -282,8 +285,13 @@ export class PlayerPlugin extends GlobalPlugin {
     /** Wins of balls that were falling when the server stopped: pay them now */
     private async payLeftoverPlinkoWins(): Promise<void> {
         for (const { ballId, userId, username, amount, jackpot } of this.plinkoPending) {
-            const user = Session.getSessionByIdentifier(username.toLowerCase())?.user ?? (await UserController.getUserById(userId));
-            await UserController.giveMoney(user, amount, jackpot ? 'Plinko jackpot' : 'Plinko', 'win');
+            // One win that can't be paid (a deleted account) must not hold up the others
+            try {
+                const user = Session.getSessionByIdentifier(username.toLowerCase())?.user ?? (await UserController.getUserById(userId));
+                await UserController.giveMoney(user, amount, jackpot ? 'Plinko jackpot' : 'Plinko', 'win');
+            } catch (error) {
+                Logging.error(`Plinko: could not pay ${username} their ${amount} cents`, error);
+            }
             this.releasePlinkoWin(ballId);
         }
     }

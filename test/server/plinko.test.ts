@@ -1,4 +1,5 @@
-import { beforeAll, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { UserController } from '../../app/server/skychat/UserController.js';
 import { PLINKO, PLINKO_SLOTS, PLINKO_SMALL_WINS, plinkoPath, plinkoTimes } from '../../app/api/plinko.js';
 import { PlayerChannel } from '../../app/server/plugins/player/PlayerChannel.js';
 import { PlayerPlugin } from '../../app/server/plugins/player/PlayerPlugin.js';
@@ -12,6 +13,10 @@ const player = () => server.roomManager.getPlugin(PlayerPlugin.commandName) as P
 
 beforeAll(async () => {
     server = await new TestServer().start();
+});
+
+afterEach(() => {
+    vi.restoreAllMocks();
 });
 
 async function until(check: () => boolean, ms = 2000) {
@@ -94,21 +99,41 @@ describe('plinko', () => {
         expect(alice.session.user.money).toBe(20000 - PLINKO.ballPrice);
     });
 
-    it('reserves the jackpot when drawn, keeps showing it while the ball falls, and pays it on landing', async () => {
-        const { clients } = await plinko(1, { rolls: [...JACKPOT], flightMs: 120 });
+    it('reserves the jackpot when drawn, shows nothing of it while the ball falls, and pays it on landing', async () => {
+        const { game, clients } = await plinko(1, { rolls: [...JACKPOT], flightMs: 200 });
         const [alice] = clients;
         const before = player().plinkoJackpot;
 
         await alice.send('/party drop');
-        // The pot restarts, but the meters still show the falling jackpot
+        // The pot restarts, but the meters move as for any ball: nobody can tell a jackpot is falling
         expect(player().plinkoJackpot).toBe(PLINKO.jackpotStart);
-        expect(alice.last('plinko').jackpot).toBe(PLINKO.jackpotStart + before + PLINKO.toJackpot);
-        expect(alice.session.user.money).toBe(20000 - PLINKO.ballPrice);
+        expect(alice.last('plinko').jackpot).toBe(before + PLINKO.toJackpot);
+        await settle(game.timings.cooldownMs + 10);
+        await alice.send('/party drop');
+        expect(alice.last('plinko').jackpot).toBe(before + 2 * PLINKO.toJackpot);
+        // Nothing paid before landing
+        expect(alice.session.user.money).toBe(20000 - 2 * PLINKO.ballPrice);
 
-        await until(() => alice.last('plinko')?.recent.length === 1);
+        await until(() => alice.last('plinko')?.recent.length === 2);
         await settle(20);
-        expect(alice.session.user.money).toBe(20000 - PLINKO.ballPrice + before + PLINKO.toJackpot);
-        expect(alice.last('plinko').jackpot).toBe(PLINKO.jackpotStart);
+        expect(alice.session.user.money).toBe(20000 - 2 * PLINKO.ballPrice + before + PLINKO.toJackpot);
+        expect(alice.last('plinko').jackpot).toBe(PLINKO.jackpotStart + PLINKO.toJackpot);
+    });
+
+    it('refunds a ball paid for just as the round ended', async () => {
+        const { game, clients } = await plinko(1);
+        const [alice] = clients;
+        // The round ends while the payment is under way
+        const buy = UserController.buy;
+        vi.spyOn(UserController, 'buy').mockImplementationOnce(async (...args) => {
+            await buy.apply(UserController, args);
+            await game.destroy();
+        });
+
+        await alice.send('/party drop');
+
+        expect(alice.errors()).toEqual(['This round is over']);
+        expect(alice.session.user.money).toBe(20000);
     });
 
     it('never pays the same jackpot twice when two balls hit it', async () => {
@@ -132,7 +157,7 @@ describe('plinko', () => {
         const plugin = player();
         await alice.send('/party drop');
         const jackpot = plugin.reservePlinkoJackpot('falling-jackpot', alice.session.user.id, alice.session.user.username);
-        expect(plugin.plinkoJackpotShown).toBe(PLINKO.jackpotStart + jackpot);
+        expect(plugin.plinkoJackpotShown).toBe(jackpot);
 
         // What the plugin does when the server starts again
         await (plugin as unknown as { payLeftoverPlinkoWins: () => Promise<void> }).payLeftoverPlinkoWins();
