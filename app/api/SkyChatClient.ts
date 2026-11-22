@@ -18,6 +18,7 @@ import {
     SanitizedDailyRoll,
     SanitizedMonkeyFight,
     SanitizedHotPotato,
+    SanitizedPlinko,
     SanitizedParty,
     SanitizedMessage,
     SanitizedPlayerChannel,
@@ -125,6 +126,8 @@ export type SkyChatClientState = {
     monkeyFight: SanitizedMonkeyFight | null;
     /** The Hot Potato of your party channel, null when another game is on */
     hotPotato: SanitizedHotPotato | null;
+    /** The Plinko board of your party channel, null when another game is on */
+    plinko: SanitizedPlinko | null;
     voiceChannels: SanitizedVoiceChannel[];
     /** The server sends voice channels on connect only when voice is on */
     voiceEnabled: boolean;
@@ -183,6 +186,7 @@ export declare interface SkyChatClient {
     on(event: 'daily-roll', listener: (dailyRoll: SanitizedDailyRoll | null) => any): this;
     on(event: 'monkey-fight', listener: (monkeyFight: SanitizedMonkeyFight | null) => any): this;
     on(event: 'hot-potato', listener: (hotPotato: SanitizedHotPotato | null) => any): this;
+    on(event: 'plinko', listener: (plinko: SanitizedPlinko | null) => any): this;
     on(event: (typeof PARTY_GAMES)[PartyGameId]['event'], listener: (game: SkyChatClientState[PartyGameState]) => any): this;
 
     on(event: 'voice-channels', listener: (voiceChannels: Array<SanitizedVoiceChannel>) => any): this;
@@ -302,6 +306,7 @@ export class SkyChatClient extends EventEmitter {
         dailyRoll: null,
         monkeyFight: null,
         hotPotato: null,
+        plinko: null,
     };
 
     // Connection resilience properties

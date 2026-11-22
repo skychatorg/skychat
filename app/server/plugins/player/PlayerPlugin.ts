@@ -1,8 +1,10 @@
 import { Config } from '../../skychat/Config.js';
 import { Connection } from '../../skychat/Connection.js';
-import { Logging } from '../../skychat/Logging.js';
+import { Logging, logFailure } from '../../skychat/Logging.js';
 import { RoomManager } from '../../skychat/RoomManager.js';
 import { Session } from '../../skychat/Session.js';
+import { UserController } from '../../skychat/UserController.js';
+import { PLINKO } from '../../../api/plinko.js';
 import { GlobalPlugin, PluginRoute } from '../GlobalPlugin.js';
 import { PollPlugin } from '../core/global/PollPlugin.js';
 import { SanitizedPlayerChannel } from './PlayerChannel.js';
@@ -23,6 +25,9 @@ import { buildNavidromeRoutes } from './fetcher/NavidromeRoutes.js';
 import { TwitchFetcher } from './fetcher/TwitchFetcher.js';
 import { VideoFetcher } from './fetcher/VideoFetcher.js';
 import { YoutubeFetcher } from './fetcher/YoutubeFetcher.js';
+
+/** Plinko's jackpot, and the wins of balls still falling: saved so a restart can't lose them */
+type PlinkoStorage = { pot: number; pending: { ballId: string; userId: number; username: string; amount: number; jackpot: boolean }[] };
 
 /**
  *
@@ -176,7 +181,7 @@ export class PlayerPlugin extends GlobalPlugin {
         },
     };
 
-    protected storage: { channels: SanitizedPlayerChannel[]; lastChannelId?: number } = {
+    protected storage: { channels: SanitizedPlayerChannel[]; lastChannelId?: number; plinko?: PlinkoStorage } = {
         channels: [],
     };
 
@@ -195,6 +200,7 @@ export class PlayerPlugin extends GlobalPlugin {
 
         // Rebuild channels from storage
         this.loadStorage();
+        logFailure(this.payLeftoverPlinkoWins(), 'Plinko');
 
         this.channelManager = new PlayerChannelManager(this);
         this.channelManager.lastChannelId = this.storage.lastChannelId ?? 0;
@@ -223,6 +229,63 @@ export class PlayerPlugin extends GlobalPlugin {
             this.storage.lastChannelId = this.channelManager.lastChannelId;
             this.syncStorage();
         });
+    }
+
+    /** Plinko's jackpot, shared by every party channel, in cents */
+    public get plinkoJackpot(): number {
+        return this.storage.plinko?.pot ?? PLINKO.jackpotStart;
+    }
+
+    /** What the jackpot meters show: the pot, plus any jackpot still falling, so nobody learns of a win before it lands */
+    public get plinkoJackpotShown(): number {
+        return this.plinkoJackpot + this.plinkoPending.filter((win) => win.jackpot).reduce((sum, win) => sum + win.amount, 0);
+    }
+
+    private get plinkoPending(): PlinkoStorage['pending'] {
+        return this.storage.plinko?.pending ?? [];
+    }
+
+    private savePlinko(pot: number, pending: PlinkoStorage['pending']): void {
+        this.storage.plinko = { pot, pending };
+        this.syncStorage();
+    }
+
+    public addToPlinkoJackpot(cents: number): void {
+        this.savePlinko(this.plinkoJackpot + cents, this.plinkoPending);
+    }
+
+    /** Saves a ball's win until it lands and is paid, so a restart mid-fall can't lose it */
+    public holdPlinkoWin(ballId: string, userId: number, username: string, amount: number): void {
+        this.savePlinko(this.plinkoJackpot, [...this.plinkoPending, { ballId, userId, username, amount, jackpot: false }]);
+    }
+
+    /** Takes the whole pot for a ball on its way to a jackpot slot, held like any win, and restarts the pot */
+    public reservePlinkoJackpot(ballId: string, userId: number, username: string): number {
+        const amount = this.plinkoJackpot;
+        this.savePlinko(PLINKO.jackpotStart, [...this.plinkoPending, { ballId, userId, username, amount, jackpot: true }]);
+        return amount;
+    }
+
+    /** Whether a ball's win is still waiting to be paid */
+    public hasPlinkoWin(ballId: string): boolean {
+        return this.plinkoPending.some((win) => win.ballId === ballId);
+    }
+
+    /** The win was paid: forget it */
+    public releasePlinkoWin(ballId: string): void {
+        this.savePlinko(
+            this.plinkoJackpot,
+            this.plinkoPending.filter((win) => win.ballId !== ballId),
+        );
+    }
+
+    /** Wins of balls that were falling when the server stopped: pay them now */
+    private async payLeftoverPlinkoWins(): Promise<void> {
+        for (const { ballId, userId, username, amount, jackpot } of this.plinkoPending) {
+            const user = Session.getSessionByIdentifier(username.toLowerCase())?.user ?? (await UserController.getUserById(userId));
+            await UserController.giveMoney(user, amount, jackpot ? 'Plinko jackpot' : 'Plinko', 'win');
+            this.releasePlinkoWin(ballId);
+        }
     }
 
     /**

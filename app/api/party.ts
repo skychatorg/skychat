@@ -40,6 +40,7 @@ export const PARTY_GAMES = {
         state: 'hotPotato',
         minVotes: 2,
     },
+    plinko: { emoji: '🪙', name: 'Plinko', pitch: 'Drop a ball, dream of the jackpot.', event: 'plinko', state: 'plinko' },
 } as const;
 
 export type PartyGameId = keyof typeof PARTY_GAMES;

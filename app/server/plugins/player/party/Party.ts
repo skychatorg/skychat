@@ -8,10 +8,11 @@ import type { PlayerChannel } from '../PlayerChannel.js';
 import { Crash } from './Crash.js';
 import { DailyRoll } from './DailyRoll.js';
 import { HotPotato } from './HotPotato.js';
+import { Plinko } from './Plinko.js';
 import { LuckyPop } from './LuckyPop.js';
 import { MonkeyFight } from './MonkeyFight.js';
 
-type PartyGame = BlackjackTable | LuckyPop | Crash | DailyRoll | MonkeyFight | HotPotato;
+type PartyGame = BlackjackTable | LuckyPop | Crash | DailyRoll | MonkeyFight | HotPotato | Plinko;
 
 /**
  * - lobby: no game, the first pick starts one
@@ -32,6 +33,8 @@ export type SanitizedParty = {
     votes: { [game: string]: string[] };
     /** Wall-clock ms at which Daily Roll can be played again, 0 when it can */
     dailyRollAt: number;
+    /** Plinko's jackpot, so the lobby can tempt people with it */
+    plinkoJackpot: number;
 };
 
 /**
@@ -157,6 +160,7 @@ export class Party {
             deadline: this.deadline,
             votes,
             dailyRollAt: this.dailyRollAt > Date.now() ? this.dailyRollAt : 0,
+            plinkoJackpot: this.channel.manager.plugin.plinkoJackpotShown,
         };
     }
 
@@ -182,6 +186,7 @@ export class Party {
             dailyroll: () => new DailyRoll(this, onRoundEnd),
             monkeys: () => new MonkeyFight(this, onRoundEnd),
             potato: () => new HotPotato(this, onRoundEnd),
+            plinko: () => new Plinko(this, onRoundEnd),
         }[game]();
         if (game === 'dailyroll') {
             this.dailyRollAt = DailyRoll.nextReset(Date.now());

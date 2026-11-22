@@ -19,7 +19,7 @@ export class PartyPlugin extends GlobalPlugin {
             maxCount: 3,
             maxCallsPer10Seconds: 30,
             params: [
-                { name: 'action', pattern: /^(pick|vote|pop|bet|cashout|card|back|join|pass)$/ },
+                { name: 'action', pattern: /^(pick|vote|pop|bet|cashout|card|back|join|pass|drop)$/ },
                 { name: 'value', pattern: /^[a-z0-9]{1,20}$/ },
                 { name: 'amount', pattern: /^[0-9]{1,9}$/ },
             ],
