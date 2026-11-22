@@ -210,6 +210,32 @@ describe('party cycle', () => {
         expect(party.sanitized()).toMatchObject({ game: null, deadline: null, votes: {} });
     });
 
+    it('lets Hot Potato win a vote only with 2 votes', async () => {
+        const { party, clients } = await partyChannel(3, { idleMs: 300 });
+        const [alice, bob] = clients;
+        const phase = (wanted: string) => until(() => party.sanitized().phase === wanted);
+        const endLuckyPop = async () => {
+            party.gameOf(LuckyPop)!['balloons'].forEach((balloon) => (balloon.popped = balloon.id !== 0));
+            await alice.send('/party pop 0');
+            await phase('vote');
+        };
+        await alice.send('/party pick luckypop');
+        await endLuckyPop();
+
+        // One vote for Hot Potato is not enough: the other voted game starts instead
+        await alice.send('/party vote potato');
+        await bob.send('/party vote luckypop');
+        await phase('playing');
+        expect(party.sanitized().game).toBe('luckypop');
+
+        // Two votes are
+        await endLuckyPop();
+        await alice.send('/party vote potato');
+        await bob.send('/party vote potato');
+        await phase('playing');
+        expect(party.sanitized().game).toBe('potato');
+    });
+
     it('drops the vote of someone who leaves, and goes straight to the lobby when the channel is empty', async () => {
         const { party, clients } = await partyChannel(2);
         const [alice, bob] = clients;

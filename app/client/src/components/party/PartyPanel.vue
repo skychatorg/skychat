@@ -8,7 +8,7 @@ import HotPotato from '@/components/party/HotPotato.vue';
 import LuckyPop from '@/components/party/LuckyPop.vue';
 import { useCountdown } from '@/composables/useCountdown';
 import { useNow } from '@/composables/useNow';
-import { betLimits, PARTY_GAMES } from '@/lib/channel';
+import { betLimits, minVotes, PARTY_GAMES } from '@/lib/channel';
 import { useClientStore } from '@/stores/client';
 import { computed } from 'vue';
 
@@ -58,6 +58,7 @@ const voteGames = computed(() =>
                 again: id === party.value.lastGame,
                 locked: lockLabel(id),
                 voters,
+                needs: minVotes(id),
                 mine: voters.includes(client.state.user.username),
             };
         }),
@@ -103,8 +104,14 @@ const vote = (game) => client.sendMessage(`/party vote ${game}`);
                     <!-- Only games with votes say so, so they stand out. The empty line keeps every card the same height -->
                     <span v-else class="sub">
                         <template v-if="game.voters.length">
-                            {{ game.voters.length }} vote{{ game.voters.length === 1 ? '' : 's' }} · {{ game.voters.join(', ') }}
+                            {{
+                                game.needs > 1
+                                    ? `${game.voters.length}/${game.needs} votes`
+                                    : `${game.voters.length} vote${game.voters.length === 1 ? '' : 's'}`
+                            }}
+                            · {{ game.voters.join(', ') }}
                         </template>
+                        <template v-else-if="game.needs > 1">Needs {{ game.needs }} votes</template>
                         <template v-else>&nbsp;</template>
                     </span>
                 </button>

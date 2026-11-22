@@ -1,5 +1,5 @@
 import { formatMoney } from '../../../../api/money.js';
-import { PARTY_GAMES, PartyGameId } from '../../../../api/party.js';
+import { minVotes, PARTY_GAMES, PartyGameId } from '../../../../api/party.js';
 import { Connection } from '../../../skychat/Connection.js';
 import { Session } from '../../../skychat/Session.js';
 import { BlackjackTable, CasinoOptions } from '../casino/BlackjackTable.js';
@@ -222,6 +222,10 @@ export class Party {
     private closeVote(): void {
         const counts = new Map<PartyGameId, number>();
         this.votes.forEach((game) => counts.set(game, (counts.get(game) ?? 0) + 1));
+        // A game short of its minimum drops out, so the next most voted one can win
+        for (const [game, count] of counts) {
+            if (count < minVotes(game)) counts.delete(game);
+        }
         const best = Math.max(0, ...counts.values());
         if (!best) {
             this.lobby();

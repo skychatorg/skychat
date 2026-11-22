@@ -31,7 +31,21 @@ export const PARTY_GAMES = {
         event: 'monkey-fight',
         state: 'monkeyFight',
     },
-    potato: { emoji: '💣', name: 'Hot Potato', pitch: 'Pass the bomb before it blows up on you.', event: 'hot-potato', state: 'hotPotato' },
+    // Played against each other, so it takes two people wanting it
+    potato: {
+        emoji: '💣',
+        name: 'Hot Potato',
+        pitch: 'Pass the bomb before it blows up on you.',
+        event: 'hot-potato',
+        state: 'hotPotato',
+        minVotes: 2,
+    },
 } as const;
 
 export type PartyGameId = keyof typeof PARTY_GAMES;
+
+/** Votes a game needs to win the vote */
+export const minVotes = (game: PartyGameId): number => {
+    const entry = PARTY_GAMES[game];
+    return 'minVotes' in entry ? entry.minVotes : 1;
+};

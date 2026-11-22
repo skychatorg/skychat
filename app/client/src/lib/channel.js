@@ -1,6 +1,6 @@
 import { formatMoney } from '../../../api/money.ts';
 
-export { PARTY_GAMES } from '../../../api/party.ts';
+export { minVotes, PARTY_GAMES } from '../../../api/party.ts';
 
 /**
  * Icon of a player channel by kind
