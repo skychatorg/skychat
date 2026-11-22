@@ -72,5 +72,8 @@ export function plinkoTimes(path: boolean[]): number[] {
     return times;
 }
 
+/** A jackpot in whole dollars with thousands separators: $12,345 */
+export const formatJackpot = (cents: number): string => `$${Math.round(cents / 100).toLocaleString('en-US')}`;
+
 /** How long a ball takes from its drop to its slot, in ms */
 export const plinkoFlightMs = (path: boolean[]): number => plinkoTimes(path)[path.length] + 150;

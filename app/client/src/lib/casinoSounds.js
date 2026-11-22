@@ -328,6 +328,16 @@ const SOUNDS = {
         swish(ctx, at, 0.05, { from: 1200, to: 300, gain: 0.5 });
         tone(ctx, at, 160, 0.08, { type: 'sine', gain: 0.25, slideTo: 60 });
     },
+    // Plinko: a glassy tick on each peg, a little plunk when a ball is dropped, a muffled thud for nothing, and the jackpot
+    peg: (ctx, at) => tone(ctx, at, 1600 + Math.random() * 1400, 0.06, { type: 'sine', gain: 0.05 }),
+    drop: (ctx, at) => tone(ctx, at, 520, 0.12, { type: 'sine', gain: 0.15, slideTo: 880 }),
+    thud: (ctx, at) => tone(ctx, at, 190, 0.18, { type: 'sine', gain: 0.14, slideTo: 110 }),
+    jackpot: (ctx, at) => {
+        tone(ctx, at, 65, 1.6, { type: 'sine', gain: 0.6, slideTo: 40 });
+        [523.25, 659.25, 783.99, 1046.5, 1318.5, 1568, 2093].forEach((f, i) => tone(ctx, at + 0.1 + i * 0.09, f, 0.9, { gain: 0.16 }));
+        [0.8, 1.3, 1.8].forEach((d) => [1046.5, 1318.5, 1568].forEach((f) => tone(ctx, at + d, f, 0.7, { gain: 0.08 })));
+        [2637, 3136, 3520, 4186].forEach((f, i) => tone(ctx, at + 0.75 + i * 0.12, f, 1.2, { type: 'sine', gain: 0.05 }));
+    },
 };
 
 /**

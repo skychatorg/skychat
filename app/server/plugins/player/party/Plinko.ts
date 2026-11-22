@@ -1,6 +1,6 @@
 import { randomInt, randomUUID } from 'node:crypto';
 import { formatMoney } from '../../../../api/money.js';
-import { PLINKO, PLINKO_SLOTS, PLINKO_SMALL_WINS, plinkoFlightMs, plinkoPath } from '../../../../api/plinko.js';
+import { formatJackpot, PLINKO, PLINKO_SLOTS, PLINKO_SMALL_WINS, plinkoFlightMs, plinkoPath } from '../../../../api/plinko.js';
 import { Connection } from '../../../skychat/Connection.js';
 import { logFailure } from '../../../skychat/Logging.js';
 import { Session } from '../../../skychat/Session.js';
@@ -193,7 +193,7 @@ export class Plinko extends PartyRound {
         if (!ball.jackpot) {
             return;
         }
-        await this.announce(`★ ${ball.session.user.username} hit the Plinko jackpot: ${formatMoney(ball.win)}! ★`);
+        await this.announce(`★ ${ball.session.user.username} hit the Plinko jackpot: ${formatJackpot(ball.win)}! ★`);
     }
 
     /** A jackpot is news for the whole chat, not only this channel */

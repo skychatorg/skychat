@@ -6,9 +6,12 @@ import DailyRoll from '@/components/party/DailyRoll.vue';
 import MonkeyFight from '@/components/party/MonkeyFight.vue';
 import HotPotato from '@/components/party/HotPotato.vue';
 import LuckyPop from '@/components/party/LuckyPop.vue';
+import PlinkoGame from '@/components/party/PlinkoGame.vue';
 import { useCountdown } from '@/composables/useCountdown';
 import { useNow } from '@/composables/useNow';
 import { betLimits, minVotes, PARTY_GAMES } from '@/lib/channel';
+import { formatMoney } from '../../../../api/money.ts';
+import { formatJackpot, PLINKO } from '../../../../api/plinko.ts';
 import { useClientStore } from '@/stores/client';
 import { computed } from 'vue';
 
@@ -26,6 +29,7 @@ const meta = (game) =>
         dailyroll: 'free · once a day',
         monkeys: limits.value && `bets ${betLimits(limits.value)} · up to ×50`,
         potato: limits.value && `stake ${betLimits(limits.value)} · 2+ players`,
+        plinko: `${formatMoney(PLINKO.ballPrice)} · ★ ${formatJackpot(party.value.plinkoJackpot ?? 0)}`,
     })[game] ?? '';
 
 // Daily Roll is locked for the whole channel until 10 PM once played
@@ -77,6 +81,7 @@ const vote = (game) => client.sendMessage(`/party vote ${game}`);
             <DailyRoll v-else-if="party.game === 'dailyroll' && client.state.dailyRoll" />
             <MonkeyFight v-else-if="party.game === 'monkeys' && client.state.monkeyFight" />
             <HotPotato v-else-if="party.game === 'potato' && client.state.hotPotato" />
+            <PlinkoGame v-else-if="party.game === 'plinko' && client.state.plinko" />
         </template>
 
         <section v-else-if="party.phase === 'vote'" class="screen" aria-labelledby="party-vote-title">
@@ -196,8 +201,8 @@ const vote = (game) => client.sendMessage(`/party vote ${game}`);
 }
 .games {
     display: grid;
-    /* Three by two when there is room, the rules below take over otherwise */
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    /* Four by two when there is room, the rules below take over otherwise */
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: clamp(6px, 2cqw, 16px);
     min-height: 0;
     /* Last resort only: the rules below make the cards fit first */
