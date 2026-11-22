@@ -45,13 +45,26 @@ const shownJackpot = ref(game.value?.jackpot ?? 0);
 const celebration = ref(null);
 
 const now = ref(serverNow());
-const cooling = computed(() => (game.value?.you.nextDropAt ?? 0) > now.value);
-const canDrop = computed(() => !isGuest.value && client.state.user.money >= PLINKO.ballPrice && !cooling.value);
+// Balls come in bursts, up to a limit per window: the button counts down the last few, then the wait
+const liveDrops = computed(() => {
+    const you = game.value?.you;
+    return you ? you.drops.filter((at) => at > now.value - you.windowMs) : [];
+});
+const ballsLeft = computed(() => Math.max(0, (game.value?.you.maxBalls ?? 0) - liveDrops.value.length));
+const waitSeconds = computed(() =>
+    liveDrops.value.length ? Math.ceil((liveDrops.value[0] + game.value.you.windowMs - now.value) / 1000) : 0,
+);
+const limited = computed(() => ballsLeft.value === 0);
+const canDrop = computed(() => !isGuest.value && client.state.user.money >= PLINKO.ballPrice && !limited.value);
 const dropLabel = computed(() =>
     isGuest.value
         ? 'Log in to play'
         : client.state.user.money < PLINKO.ballPrice
         ? `A ball costs ${formatMoney(PLINKO.ballPrice)}`
+        : limited.value
+        ? `Next ball in ${waitSeconds.value}s`
+        : ballsLeft.value <= 5
+        ? `Drop a ball · ${ballsLeft.value} left`
         : 'Drop a ball',
 );
 const idleSeconds = computed(() => {
@@ -169,21 +182,6 @@ const coins = Array.from({ length: 28 }, (_, i) => ({
 
             <div class="body">
                 <canvas ref="canvas" class="board" aria-label="Plinko board"></canvas>
-
-                <div v-if="celebration" class="celebrate" role="alert">
-                    <span
-                        v-for="(coin, i) in coins"
-                        :key="i"
-                        class="coin"
-                        :style="{ left: coin.left, animationDelay: coin.delay, animationDuration: coin.duration }"
-                        >🪙</span
-                    >
-                    <div class="celebrate-card">
-                        <div class="celebrate-title">★ JACKPOT ★</div>
-                        <div class="celebrate-amount">{{ formatJackpot(celebration.amount) }}</div>
-                        <div class="celebrate-who">{{ celebration.mine ? 'You won it!' : `@${celebration.username} won it` }}</div>
-                    </div>
-                </div>
             </div>
 
             <div class="bottom">
@@ -199,10 +197,24 @@ const coins = Array.from({ length: 28 }, (_, i) => ({
                 <span v-if="idleSeconds !== null && idleSeconds <= 15" class="idle">Round ends in {{ idleSeconds }}s</span>
                 <button class="drop" :disabled="!canDrop" @click="drop">
                     {{ dropLabel }}
-                    <span v-if="!isGuest && client.state.user.money >= PLINKO.ballPrice" class="price">{{
-                        formatMoney(PLINKO.ballPrice)
-                    }}</span>
+                    <span v-if="canDrop" class="price">{{ formatMoney(PLINKO.ballPrice) }}</span>
                 </button>
+            </div>
+        </div>
+
+        <!-- Over the whole game, so the smallest player, which has no board, sees it too -->
+        <div v-if="celebration" class="celebrate" role="alert">
+            <span
+                v-for="(coin, i) in coins"
+                :key="i"
+                class="coin"
+                :style="{ left: coin.left, animationDelay: coin.delay, animationDuration: coin.duration }"
+                >🪙</span
+            >
+            <div class="celebrate-card">
+                <div class="celebrate-title">★ JACKPOT ★</div>
+                <div class="celebrate-amount">{{ formatJackpot(celebration.amount) }}</div>
+                <div class="celebrate-who">{{ celebration.mine ? 'You won it!' : `@${celebration.username} won it` }}</div>
             </div>
         </div>
     </div>
@@ -211,6 +223,7 @@ const coins = Array.from({ length: 28 }, (_, i) => ({
 <style scoped>
 .plinko {
     container-type: size;
+    position: relative;
     width: 100%;
     height: 100%;
 }
@@ -358,6 +371,7 @@ const coins = Array.from({ length: 28 }, (_, i) => ({
 .celebrate {
     position: absolute;
     inset: 0;
+    z-index: 2;
     display: grid;
     place-items: center;
     overflow: hidden;
@@ -402,6 +416,16 @@ const coins = Array.from({ length: 28 }, (_, i) => ({
     .celebrate-amount {
         animation: throb 0.9s ease-in-out infinite alternate;
     }
+    /* Each result lights up as it lands: the smallest player's only sign of it */
+    .recent li {
+        animation: arrive 0.6s ease-out;
+    }
+}
+@keyframes arrive {
+    from {
+        transform: scale(1.25);
+        box-shadow: 0 0 14px rgb(244 196 78 / 0.7);
+    }
 }
 @keyframes shimmer {
     to {
@@ -433,13 +457,30 @@ const coins = Array.from({ length: 28 }, (_, i) => ({
         justify-content: flex-end;
     }
 }
-/* Smallest player: no room for the board, the meter and the button are the game */
+/* Smallest player: no room for the board, so one row with the jackpot, your last result and the button */
 @container (max-height: 130px) {
+    .frame {
+        flex-direction: row;
+        align-items: center;
+    }
     .body {
         display: none;
     }
-    .frame {
-        justify-content: center;
+    .top {
+        flex: 1;
+        min-width: 0;
+    }
+    .bottom {
+        background: none;
+        border: 0;
+        padding-left: 0;
+    }
+    .recent {
+        display: flex;
+        flex: none;
+    }
+    .recent li:not(:first-child) {
+        display: none;
     }
 }
 </style>

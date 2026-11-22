@@ -45,7 +45,7 @@ async function plinko(players = 1, { flightMs = 40, rolls = [] as number[] } = {
     party.timings = { voteMs: 120, stormEveryMs: 10 };
     party.onGameCreated = (game) => {
         if (game instanceof Plinko) {
-            game.timings = { idleMs: 300, roundMs: 5000, cooldownMs: 30 };
+            game.timings = { idleMs: 300, roundMs: 5000, maxBalls: 20, windowMs: 20_000 };
             game.flightMs = () => flightMs;
             game.random = scripted(rolls);
         }
@@ -80,27 +80,38 @@ describe('plinko', () => {
         expect(alice.last('plinko').recent[0]).toMatchObject({ win: 5 * PLINKO.ballPrice, jackpot: false });
     });
 
-    it('refuses guests, a second ball during the cooldown, and players who cannot pay', async () => {
+    it('takes a burst of balls back to back', async () => {
+        const { clients } = await plinko(1);
+        const [alice] = clients;
+
+        for (let i = 0; i < 10; i++) await alice.send('/party drop');
+
+        expect(alice.errors()).toEqual([]);
+        expect(alice.session.user.money).toBe(20000 - 10 * PLINKO.ballPrice);
+        expect(alice.last('plinko').you.drops).toHaveLength(10);
+    });
+
+    it('refuses guests, balls past the limit of the window, and players who cannot pay', async () => {
         const { party, game, clients } = await plinko(2);
         const [alice, bob] = clients;
         const guest = await server.connect(null);
         await guest.send(`/playerchannel join ${party.channel.id}`);
-        game.timings.cooldownMs = 5000;
+        game.timings.maxBalls = 2;
         bob.session.user.money = PLINKO.ballPrice - 1;
 
         await guest.send('/party drop');
-        await alice.send('/party drop');
-        await alice.send('/party drop');
+        for (let i = 0; i < 3; i++) await alice.send('/party drop');
         await bob.send('/party drop');
 
         expect(guest.errors()).toEqual(['Log in to play Plinko']);
-        expect(alice.errors()).toEqual(['One ball at a time']);
+        expect(alice.errors()).toEqual(['2 balls every 20 s at most, wait 20 s']);
+        expect(alice.last('plinko').you).toMatchObject({ maxBalls: 2, windowMs: 20_000 });
         expect(bob.errors()).toEqual(['A ball costs $10']);
-        expect(alice.session.user.money).toBe(20000 - PLINKO.ballPrice);
+        expect(alice.session.user.money).toBe(20000 - 2 * PLINKO.ballPrice);
     });
 
     it('reserves the jackpot when drawn, shows nothing of it while the ball falls, and pays it on landing', async () => {
-        const { game, clients } = await plinko(1, { rolls: [...JACKPOT], flightMs: 200 });
+        const { clients } = await plinko(1, { rolls: [...JACKPOT], flightMs: 200 });
         const [alice] = clients;
         const before = player().plinkoJackpot;
 
@@ -108,7 +119,6 @@ describe('plinko', () => {
         // The pot restarts, but the meters move as for any ball: nobody can tell a jackpot is falling
         expect(player().plinkoJackpot).toBe(PLINKO.jackpotStart);
         expect(alice.last('plinko').jackpot).toBe(before + PLINKO.toJackpot);
-        await settle(game.timings.cooldownMs + 10);
         await alice.send('/party drop');
         expect(alice.last('plinko').jackpot).toBe(before + 2 * PLINKO.toJackpot);
         // Nothing paid before landing

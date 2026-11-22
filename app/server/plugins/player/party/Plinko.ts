@@ -32,8 +32,8 @@ export type SanitizedPlinko = {
     recent: PlinkoLanding[];
     /** When the round ends if nobody drops again. Null while balls are falling */
     idleDeadline: number | null;
-    /** The viewer's own cooldown */
-    you: { nextDropAt: number };
+    /** The viewer's drops within the window, and the limit: the client counts what is left live, as old drops expire */
+    you: { drops: number[]; maxBalls: number; windowMs: number };
 };
 
 /**
@@ -50,7 +50,9 @@ export class Plinko extends PartyRound {
         idleMs: 30_000,
         /** After this long no new ball is taken, so the channel gets back to its vote */
         roundMs: 5 * 60_000,
-        cooldownMs: 1000,
+        /** At most this many balls per player in any windowMs: bursts are welcome, a script or a runaway hand isn't */
+        maxBalls: 20,
+        windowMs: 20_000,
     };
 
     /** Overridable for tests: a whole number in [0, max) */
@@ -63,7 +65,8 @@ export class Plinko extends PartyRound {
 
     private recent: PlinkoLanding[] = [];
 
-    private readonly nextDropAt = new Map<Session, number>();
+    /** When each player dropped their balls, within the last window */
+    private readonly drops = new Map<Session, number[]>();
 
     private closed = false;
 
@@ -101,18 +104,21 @@ export class Plinko extends PartyRound {
         if (this.over || this.closed) {
             throw new Error('This round is over');
         }
-        const wait = (this.nextDropAt.get(session) ?? 0) - Date.now();
-        if (wait > 0) {
-            throw new Error('One ball at a time');
+        const drops = this.recentDrops(session);
+        if (drops.length >= this.timings.maxBalls) {
+            const wait = Math.ceil((drops[0] + this.timings.windowMs - Date.now()) / 1000);
+            throw new Error(`${this.timings.maxBalls} balls every ${this.timings.windowMs / 1000} s at most, wait ${wait} s`);
         }
         if (session.user.money < PLINKO.ballPrice) {
             throw new Error(`A ball costs ${formatMoney(PLINKO.ballPrice)}`);
         }
-        this.nextDropAt.set(session, Date.now() + this.timings.cooldownMs);
+        // Counted before paying, so a burst of drops can't slip past the limit while payments are under way
+        const requestedAt = Date.now();
+        drops.push(requestedAt);
         try {
             await UserController.buy(session.user, PLINKO.ballPrice, 'Plinko', 'bet');
         } catch (error) {
-            this.nextDropAt.delete(session);
+            drops.splice(drops.indexOf(requestedAt), 1);
             throw error;
         }
         // The round ended while paying: nobody would see this ball fall
@@ -155,6 +161,18 @@ export class Plinko extends PartyRound {
         for (const channel of this.plugin.channelManager.channels) {
             channel.party?.gameOf(Plinko)?.broadcast();
         }
+    }
+
+    /** A player's drops within the last window, oldest first: older ones are forgotten */
+    private recentDrops(session: Session): number[] {
+        const since = Date.now() - this.timings.windowMs;
+        const drops = (this.drops.get(session) ?? []).filter((at) => at > since);
+        this.drops.set(session, drops);
+        return drops;
+    }
+
+    private limitFor(session: Session): SanitizedPlinko['you'] {
+        return { drops: [...this.recentDrops(session)], maxBalls: this.timings.maxBalls, windowMs: this.timings.windowMs };
     }
 
     /** The result first: the jackpot, else a small win from its table, else nothing. Then one of its slots */
@@ -246,7 +264,7 @@ export class Plinko extends PartyRound {
             })),
             recent: this.recent,
             idleDeadline: this.idleDeadline,
-            you: { nextDropAt: this.nextDropAt.get(session) ?? 0 },
+            you: this.limitFor(session),
         };
     }
 
