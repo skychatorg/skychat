@@ -249,11 +249,12 @@ const syncSelf = () => client.sendMessage('/playersync');
             <div v-if="showPlayer" class="strip-group hairline">
                 <button
                     class="strip-btn"
-                    :title="app.playerMode.size === 'cinema' ? 'Leave cinema mode' : 'Shrink player'"
+                    :title="app.playerMode.size === 'cinema' ? 'Leave cinema mode (Esc)' : 'Shrink player'"
                     :disabled="app.playerMode.size === 'xs'"
                     @click="app.shrinkPlayer"
                 >
                     <fa icon="compress" />
+                    <span v-if="app.playerMode.size === 'cinema'" class="strip-label">Exit</span>
                 </button>
                 <button
                     class="strip-btn"

@@ -72,16 +72,9 @@ const clearSearch = () => {
     </div>
 
     <div v-else-if="cinema" class="cinema fixed inset-0 z-40 flex flex-row bg-black">
-        <div class="group relative flex-1 min-w-0 flex flex-col justify-center bg-black">
+        <!-- Left through the strip's Exit button or Esc: a button floating over the player covered titles -->
+        <div class="relative flex-1 min-w-0 flex flex-col justify-center bg-black">
             <PlayerPannel />
-            <button
-                class="absolute top-3 left-3 z-10 px-3 py-1.5 rounded-lg text-sm text-white/80 bg-black/50 hover:bg-black/70 opacity-0 group-hover:opacity-100 transition"
-                title="Leave cinema mode (Esc)"
-                @click="app.exitCinemaMode()"
-            >
-                <fa icon="compress" class="mr-1.5" />
-                Exit
-            </button>
         </div>
         <aside class="cinema-chat h-full flex flex-col shrink-0 hairline" :style="{ background: 'var(--surface)' }">
             <MessagePannel class="grow min-h-0" />
