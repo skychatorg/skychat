@@ -36,7 +36,7 @@ const FIVE_TIMES = [1, 0];
 /**
  * A party channel playing Plinko with short timers, and players with $200 each (money is in cents)
  */
-async function plinko(players = 1, { flightMs = 40, rolls = [] as number[] } = {}) {
+async function plinko(players = 1, { flightMs = 40, rolls = [] as number[], roundMs = 5000, idleMs = 300 } = {}) {
     const admin = await server.connect(name('op'));
     admin.session.setOP(true);
     await admin.send('/playerchannelmanage create party 1000 10000 Plinko');
@@ -45,7 +45,7 @@ async function plinko(players = 1, { flightMs = 40, rolls = [] as number[] } = {
     party.timings = { voteMs: 120, stormEveryMs: 10 };
     party.onGameCreated = (game) => {
         if (game instanceof Plinko) {
-            game.timings = { idleMs: 300, roundMs: 5000, maxBalls: 20, windowMs: 20_000 };
+            game.timings = { idleMs, roundMs, maxBalls: 20, windowMs: 20_000 };
             game.flightMs = () => flightMs;
             game.random = scripted(rolls);
         }
@@ -184,6 +184,21 @@ describe('plinko', () => {
         await game.destroy();
 
         expect(alice.session.user.money).toBe(20000 - PLINKO.ballPrice + 5 * PLINKO.ballPrice);
+    });
+
+    it('stops taking balls when the round time is up, and waits for the last ones before the vote', async () => {
+        const { party, clients } = await plinko(1, { flightMs: 500, roundMs: 150, idleMs: 5000 });
+        const [alice] = clients;
+
+        await alice.send('/party drop');
+        // The round time runs out with that ball in the air
+        await settle(250);
+        await alice.send('/party drop');
+
+        expect(alice.errors()).toEqual(['This round is over']);
+        expect(party.sanitized().phase).toBe('playing');
+        await until(() => party.sanitized().phase === 'vote');
+        expect(alice.session.user.money).toBeGreaterThanOrEqual(20000 - PLINKO.ballPrice);
     });
 
     it('ends the round once nobody drops for a while, never with a ball in the air', async () => {

@@ -41,6 +41,7 @@ export const PARTY_GAMES = {
         minVotes: 2,
     },
     plinko: { emoji: '🪙', name: 'Plinko', pitch: 'Drop a ball, dream of the jackpot.', event: 'plinko', state: 'plinko' },
+    roulette: { emoji: '🎡', name: 'Roulette', pitch: 'Red, black or your lucky number.', event: 'roulette', state: 'roulette' },
 } as const;
 
 export type PartyGameId = keyof typeof PARTY_GAMES;

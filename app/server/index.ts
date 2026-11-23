@@ -16,6 +16,7 @@ export type { SanitizedDailyRoll } from './plugins/player/party/DailyRoll.js';
 export type { SanitizedMonkeyFight } from './plugins/player/party/MonkeyFight.js';
 export type { SanitizedHotPotato } from './plugins/player/party/HotPotato.js';
 export type { SanitizedPlinko, PlinkoLanding } from './plugins/player/party/Plinko.js';
+export type { SanitizedRoulette } from './plugins/player/party/Roulette.js';
 export type { SanitizedVoiceChannel } from './plugins/voice/VoiceTypes.js';
 export type { AuthData } from './skychat/AuthBridge.js';
 export type { PublicConfig } from './skychat/Config.js';

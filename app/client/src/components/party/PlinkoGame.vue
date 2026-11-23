@@ -55,9 +55,17 @@ const waitSeconds = computed(() =>
     liveDrops.value.length ? Math.ceil((liveDrops.value[0] + game.value.you.windowMs - now.value) / 1000) : 0,
 );
 const limited = computed(() => ballsLeft.value === 0);
-const canDrop = computed(() => !isGuest.value && client.state.user.money >= PLINKO.ballPrice && !limited.value);
+// The round's countdown, then the last balls falling before the vote
+const closed = computed(() => Boolean(game.value?.closed));
+const roundLeft = computed(() => {
+    const ms = Math.max(0, (game.value?.closesAt ?? 0) - now.value);
+    return `${Math.floor(ms / 60_000)}:${String(Math.ceil((ms % 60_000) / 1000) % 60).padStart(2, '0')}`;
+});
+const canDrop = computed(() => !isGuest.value && !closed.value && client.state.user.money >= PLINKO.ballPrice && !limited.value);
 const dropLabel = computed(() =>
-    isGuest.value
+    closed.value
+        ? 'Last balls falling…'
+        : isGuest.value
         ? 'Log in to play'
         : client.state.user.money < PLINKO.ballPrice
         ? `A ball costs ${formatMoney(PLINKO.ballPrice)}`
@@ -171,6 +179,9 @@ const coins = Array.from({ length: 28 }, (_, i) => ({
         <div class="frame">
             <div class="top">
                 <span class="title">Plinko</span>
+                <span class="clock" :class="{ ending: closed }" :title="closed ? 'No more balls this round' : 'Time left in this round'">{{
+                    closed ? 'Round over' : roundLeft
+                }}</span>
                 <div class="meter" role="status" aria-label="Jackpot">
                     <span class="meter-label">★ Jackpot ★</span>
                     <span class="meter-value">{{ formatJackpot(shownJackpot) }}</span>
@@ -243,6 +254,19 @@ const coins = Array.from({ length: 28 }, (_, i) => ({
 .title {
     font-weight: 700;
     font-size: clamp(12px, 3.6cqh, 15px);
+}
+.clock {
+    font:
+        600 12px ui-monospace,
+        monospace;
+    font-variant-numeric: tabular-nums;
+    padding: 2px 7px;
+    border-radius: 6px;
+    background: rgb(255 255 255 / 0.08);
+    color: rgb(255 255 255 / 0.8);
+}
+.clock.ending {
+    color: #ff8fa3;
 }
 .meter {
     flex: 1;

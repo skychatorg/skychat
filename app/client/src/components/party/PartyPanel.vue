@@ -7,6 +7,7 @@ import MonkeyFight from '@/components/party/MonkeyFight.vue';
 import HotPotato from '@/components/party/HotPotato.vue';
 import LuckyPop from '@/components/party/LuckyPop.vue';
 import PlinkoGame from '@/components/party/PlinkoGame.vue';
+import RouletteGame from '@/components/party/RouletteGame.vue';
 import { useCountdown } from '@/composables/useCountdown';
 import { useNow } from '@/composables/useNow';
 import { betLimits, minVotes, PARTY_GAMES } from '@/lib/channel';
@@ -30,6 +31,7 @@ const meta = (game) =>
         monkeys: limits.value && `bets ${betLimits(limits.value)} · up to ×50`,
         potato: limits.value && `stake ${betLimits(limits.value)} · 2+ players`,
         plinko: `${formatMoney(PLINKO.ballPrice)} · ★ ${formatJackpot(party.value.plinkoJackpot ?? 0)}`,
+        roulette: limits.value && `bets ${betLimits(limits.value)} · up to ×36`,
     })[game] ?? '';
 
 // Daily Roll is locked for the whole channel until 10 PM once played
@@ -82,6 +84,7 @@ const vote = (game) => client.sendMessage(`/party vote ${game}`);
             <MonkeyFight v-else-if="party.game === 'monkeys' && client.state.monkeyFight" />
             <HotPotato v-else-if="party.game === 'potato' && client.state.hotPotato" />
             <PlinkoGame v-else-if="party.game === 'plinko' && client.state.plinko" />
+            <RouletteGame v-else-if="party.game === 'roulette' && client.state.roulette" />
         </template>
 
         <section v-else-if="party.phase === 'vote'" class="screen" aria-labelledby="party-vote-title">

@@ -9,10 +9,11 @@ import { Crash } from './Crash.js';
 import { DailyRoll } from './DailyRoll.js';
 import { HotPotato } from './HotPotato.js';
 import { Plinko } from './Plinko.js';
+import { Roulette } from './Roulette.js';
 import { LuckyPop } from './LuckyPop.js';
 import { MonkeyFight } from './MonkeyFight.js';
 
-type PartyGame = BlackjackTable | LuckyPop | Crash | DailyRoll | MonkeyFight | HotPotato | Plinko;
+type PartyGame = BlackjackTable | LuckyPop | Crash | DailyRoll | MonkeyFight | HotPotato | Plinko | Roulette;
 
 /**
  * - lobby: no game, the first pick starts one
@@ -187,6 +188,7 @@ export class Party {
             monkeys: () => new MonkeyFight(this, onRoundEnd),
             potato: () => new HotPotato(this, onRoundEnd),
             plinko: () => new Plinko(this, onRoundEnd),
+            roulette: () => new Roulette(this, onRoundEnd),
         }[game]();
         if (game === 'dailyroll') {
             this.dailyRollAt = DailyRoll.nextReset(Date.now());

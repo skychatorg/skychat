@@ -32,6 +32,9 @@ export type SanitizedPlinko = {
     recent: PlinkoLanding[];
     /** When the round ends if nobody drops again. Null while balls are falling */
     idleDeadline: number | null;
+    /** When the round stops taking balls: then it ends once the last ones have landed */
+    closesAt: number;
+    closed: boolean;
     /** The viewer's drops within the window, and the limit: the client counts what is left live, as old drops expire */
     you: { drops: number[]; maxBalls: number; windowMs: number };
 };
@@ -48,8 +51,8 @@ export class Plinko extends PartyRound {
     public timings = {
         /** Nobody dropped since the last landing for this long: the round is over */
         idleMs: 30_000,
-        /** After this long no new ball is taken, so the channel gets back to its vote */
-        roundMs: 5 * 60_000,
+        /** A round's length, shown as a countdown: then no new ball is taken, and the vote comes once the last ones land */
+        roundMs: 3 * 60_000,
         /** At most this many balls per player in any windowMs: bursts are welcome, a script or a runaway hand isn't */
         maxBalls: 20,
         windowMs: 20_000,
@@ -70,6 +73,8 @@ export class Plinko extends PartyRound {
 
     private closed = false;
 
+    private closesAt = 0;
+
     private idleDeadline: number | null = null;
 
     private idleTimer: ReturnType<typeof setTimeout> | undefined;
@@ -84,8 +89,10 @@ export class Plinko extends PartyRound {
 
     public start(): void {
         this.waitForDrops();
+        this.closesAt = Date.now() + this.timings.roundMs;
         this.schedule(this.timings.roundMs, () => {
             this.closed = true;
+            this.broadcast();
             this.endWhenSettled();
         });
     }
@@ -264,6 +271,8 @@ export class Plinko extends PartyRound {
             })),
             recent: this.recent,
             idleDeadline: this.idleDeadline,
+            closesAt: this.closesAt,
+            closed: this.closed,
             you: this.limitFor(session),
         };
     }
