@@ -29,6 +29,7 @@ export type SanitizedRoulette = {
     results: { username: string; won: number; net: number }[];
     limits: { minBet: number; maxBet: number };
     spinsLeft: number;
+    maxSpins: number;
 };
 
 /**
@@ -216,6 +217,7 @@ export class Roulette extends PartyRound {
             results: this.results,
             limits: { minBet, maxBet },
             spinsLeft: Roulette.MAX_SPINS - this.spins,
+            maxSpins: Roulette.MAX_SPINS,
         };
     }
 
