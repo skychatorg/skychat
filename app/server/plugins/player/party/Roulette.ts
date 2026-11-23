@@ -37,7 +37,8 @@ export type SanitizedRoulette = {
  * The round runs for a number of spins, and ends early when a betting window passes with no bet.
  */
 export class Roulette extends PartyRound {
-    static readonly MAX_SPINS = 10;
+    /** Spins in a round, like blackjack's hands: then the channel votes */
+    static readonly MAX_SPINS = 5;
 
     /** How many times the table's maximum bet a player can put down on one spin */
     static readonly MAX_TOTAL = 5;

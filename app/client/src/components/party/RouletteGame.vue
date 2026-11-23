@@ -96,8 +96,6 @@ const status = computed(() => {
     if (g.phase === 'spinning') return 'No more bets';
     return `${g.result} ${pocketColor(g.result)}`;
 });
-// The spin being bet on, or the one just played
-const spinNumber = computed(() => game.value.maxSpins - game.value.spinsLeft + (game.value.phase === 'betting' ? 1 : 0));
 const winners = computed(() => [...game.value.results].filter((entry) => entry.won > 0).sort((a, b) => b.won - a.won));
 </script>
 
@@ -106,7 +104,6 @@ const winners = computed(() => [...game.value.results].filter((entry) => entry.w
         <div class="frame">
             <div class="top">
                 <span class="title">Roulette</span>
-                <span class="spin-count" title="Spins in this round">Spin {{ spinNumber }}/{{ game.maxSpins }}</span>
                 <span class="status" role="status">{{ status }}</span>
                 <span class="history" aria-label="Last results">
                     <span v-for="(n, i) in game.history.slice(0, 10)" :key="i" class="pill" :class="pocketColor(n)">{{ n }}</span>
@@ -283,16 +280,6 @@ const winners = computed(() => [...game.value.results].filter((entry) => entry.w
 }
 .title {
     font-weight: 700;
-}
-.spin-count {
-    font:
-        600 11px ui-monospace,
-        monospace;
-    padding: 2px 6px;
-    border-radius: 6px;
-    background: rgb(255 255 255 / 0.1);
-    color: rgb(255 255 255 / 0.75);
-    white-space: nowrap;
 }
 .status {
     font-family: ui-monospace, monospace;

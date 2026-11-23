@@ -52,6 +52,18 @@ const partyRound = computed(() => {
     if (client.state.crash) {
         return `Flight ${client.state.crash.flight} of ${client.state.crash.flights}`;
     }
+    if (client.state.roulette) {
+        const { maxSpins, spinsLeft, phase } = client.state.roulette;
+        // A spin counts once the wheel turns: while bets are open, it is the next one
+        return `Spin ${maxSpins - spinsLeft + (phase === 'betting' ? 1 : 0)} of ${maxSpins}`;
+    }
+    if (client.state.plinko) {
+        if (client.state.plinko.closed) {
+            return 'Last balls falling…';
+        }
+        const seconds = Math.max(0, Math.ceil((client.state.plinko.closesAt - now.value) / 1000));
+        return `Round ends in ${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+    }
     const round = client.state.casino?.round;
     if (!round) {
         return null;
