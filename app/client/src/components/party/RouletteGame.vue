@@ -436,9 +436,10 @@ const winners = computed(() => [...game.value.results].filter((entry) => entry.w
 .table {
     display: grid;
     grid-template-columns: 1.2fr repeat(12, 1fr);
-    grid-auto-rows: minmax(26px, 1fr);
-    gap: 3px;
-    max-height: 62cqh;
+    /* The numbers get the height, the outside bets a bit less: together they stand as tall as the wheel */
+    grid-template-rows: repeat(3, minmax(26px, 1fr)) repeat(2, minmax(24px, 0.75fr));
+    gap: clamp(3px, 0.8cqh, 6px);
+    height: min(100cqh - 150px, 330px);
 }
 .table.closed .cell:not(.won) {
     opacity: 0.75;
@@ -449,7 +450,7 @@ const winners = computed(() => [...game.value.results].filter((entry) => entry.w
     place-items: center;
     border-radius: 5px;
     font:
-        700 clamp(10px, 2.6cqh, 15px) ui-monospace,
+        700 clamp(10px, 3.6cqh, 18px) ui-monospace,
         monospace;
     color: #fff;
     border: 1px solid rgb(255 255 255 / 0.18);
@@ -461,7 +462,13 @@ const winners = computed(() => [...game.value.results].filter((entry) => entry.w
 }
 .cell.outside {
     background: rgb(255 255 255 / 0.06);
-    font-size: clamp(10px, 2.4cqh, 13px);
+    font-size: clamp(10px, 3cqh, 15px);
+}
+.cell.outside.red {
+    background: #b3261e;
+}
+.cell.outside.black {
+    background: #1b1b1f;
 }
 .cell.dozen {
     grid-row: 4;
@@ -480,9 +487,10 @@ const winners = computed(() => [...game.value.results].filter((entry) => entry.w
 }
 .stack {
     position: absolute;
-    width: clamp(18px, 6cqh, 28px);
-    right: -4px;
-    bottom: -4px;
+    width: clamp(16px, 6cqh, 28px);
+    right: -6px;
+    bottom: -6px;
+    pointer-events: none;
     z-index: 2;
 }
 .others {
@@ -505,7 +513,7 @@ const winners = computed(() => [...game.value.results].filter((entry) => entry.w
     gap: 6px;
 }
 .chip {
-    width: clamp(30px, 9cqh, 42px);
+    width: clamp(30px, 10cqh, 50px);
     border-radius: 50%;
     transition: transform 0.15s;
 }
@@ -514,7 +522,7 @@ const winners = computed(() => [...game.value.results].filter((entry) => entry.w
     box-shadow: 0 0 0 2px #f4c44e;
 }
 .mine {
-    font-size: 13px;
+    font-size: clamp(12px, 3cqh, 15px);
     color: rgb(255 255 255 / 0.8);
 }
 .clear {
@@ -541,6 +549,9 @@ const winners = computed(() => [...game.value.results].filter((entry) => entry.w
     .wheel-box {
         height: min(30cqh, 160px);
     }
+    .table {
+        height: auto;
+    }
 }
 /* Short: no room for the wheel, the result badge takes its place in the status line */
 @container (max-height: 300px) {
@@ -557,10 +568,10 @@ const winners = computed(() => [...game.value.results].filter((entry) => entry.w
         gap: 6px;
     }
     .table {
-        max-height: none;
+        height: auto;
         flex: 1;
         min-height: 0;
-        grid-auto-rows: minmax(0, 1fr);
+        grid-template-rows: repeat(5, minmax(0, 1fr));
         gap: 2px;
     }
     .cell {
