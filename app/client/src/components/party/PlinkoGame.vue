@@ -33,7 +33,7 @@ watch(
         for (const ball of list ?? []) {
             if (!balls.has(ball.id) && !landed.has(ball.id)) {
                 balls.set(ball.id, { ...ball });
-                if (ball.username === me.value && soundOn.value) playCasinoSound('drop');
+                if (soundOn.value) playCasinoSound('drop', 0, ball.username === me.value ? 1 : OTHERS);
             }
         }
     },
@@ -87,7 +87,10 @@ const drop = () => {
     client.sendMessage('/party drop');
 };
 
+// Other players' balls sound too, softer, so yours still stand out on a busy board
+const OTHERS = 0.35;
 let lastLandSound = 0;
+let lastOtherPeg = 0;
 function onLand(ball) {
     balls.delete(ball.id);
     landed.add(ball.id);
@@ -109,10 +112,9 @@ function onLand(ball) {
     });
     // One landing sound at a time: a tab coming back from the background lands every overdue ball in one frame
     if (!soundOn.value || now.value - lastLandSound < 120) return;
-    // Your own results always sound; others only when they win big, so a busy board stays pleasant
-    if (value >= 5 || mine) lastLandSound = now.value;
-    if (value >= 5) playCasinoSound('blackjack');
-    else if (mine) playCasinoSound(value >= 1 ? 'win' : value > 0 ? 'push' : 'thud');
+    lastLandSound = now.value;
+    const level = mine || value >= 5 ? 1 : OTHERS;
+    playCasinoSound(value >= 5 ? 'blackjack' : value >= 1 ? 'win' : value > 0 ? 'push' : 'thud', 0, level);
 }
 
 let frame = null;
@@ -146,14 +148,13 @@ function loop(time) {
             me: me.value,
             flashes,
         });
-        let ticked = false;
-        for (const event of events) {
-            if (event.type === 'land') onLand(event.ball);
-            // One tick a frame at most, and only for your own balls
-            else if (event.mine && !ticked && soundOn.value) {
-                playCasinoSound('peg');
-                ticked = true;
-            }
+        // One peg tick a frame at most: yours first, others' at most every 80 ms so many balls don't turn into a buzz
+        const pegs = events.filter((event) => event.type !== 'land');
+        events.filter((event) => event.type === 'land').forEach((event) => onLand(event.ball));
+        if (soundOn.value && pegs.some((event) => event.mine)) playCasinoSound('peg');
+        else if (soundOn.value && pegs.length && now.value - lastOtherPeg > 80) {
+            lastOtherPeg = now.value;
+            playCasinoSound('peg', 0, OTHERS);
         }
     }
     frame = requestAnimationFrame(loop);

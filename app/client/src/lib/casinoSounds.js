@@ -4,6 +4,8 @@
 
 let context = null;
 let master = null;
+/** Scales the notes of the sound being played: set by playCasinoSound around one call */
+let volume = 1;
 
 function audio() {
     if (!context) {
@@ -32,7 +34,7 @@ function tone(ctx, at, freq, duration, { type = 'triangle', gain = 0.25, slideTo
         osc.frequency.exponentialRampToValueAtTime(slideTo, at + duration);
     }
     env.gain.setValueAtTime(0, at);
-    env.gain.linearRampToValueAtTime(gain, at + 0.01);
+    env.gain.linearRampToValueAtTime(gain * volume, at + 0.01);
     env.gain.exponentialRampToValueAtTime(0.0001, at + duration);
     osc.connect(env).connect(master);
     osc.start(at);
@@ -185,9 +187,9 @@ function recording(ctx, at, name, { rate = 0.85 + Math.random() * 0.15, gain = 1
     const heard = length / rate;
     source.buffer = buffer;
     source.playbackRate.value = rate;
-    env.gain.setValueAtTime(level * gain, at);
+    env.gain.setValueAtTime(level * gain * volume, at);
     // A short fade, so the cut never clicks
-    env.gain.setValueAtTime(level * gain, at + heard - 0.08);
+    env.gain.setValueAtTime(level * gain * volume, at + heard - 0.08);
     env.gain.linearRampToValueAtTime(0, at + heard);
     source.connect(env).connect(master);
     source.start(at, offset, length);
@@ -210,7 +212,7 @@ function swish(ctx, at, duration, { from = 3000, to = 900, gain = 0.35 } = {}) {
     filter.Q.value = 1.2;
     filter.frequency.setValueAtTime(from, at);
     filter.frequency.exponentialRampToValueAtTime(to, at + duration);
-    env.gain.setValueAtTime(gain, at);
+    env.gain.setValueAtTime(gain * volume, at);
     env.gain.exponentialRampToValueAtTime(0.0001, at + duration);
     source.connect(filter).connect(env).connect(master);
     source.start(at);
@@ -341,16 +343,19 @@ const SOUNDS = {
 };
 
 /**
- * Play a casino sound, after delayMs. Sound is a nicety: it never throws
+ * Play a casino sound, after delayMs, at `level` of its usual volume. Sound is a nicety: it never throws
  */
-export function playCasinoSound(name, delayMs = 0) {
+export function playCasinoSound(name, delayMs = 0, level = 1) {
     try {
         const ctx = audio();
         if (ctx) {
+            volume = level;
             SOUNDS[name](ctx, ctx.currentTime + delayMs / 1000);
         }
     } catch {
         // No audio on this device
+    } finally {
+        volume = 1;
     }
 }
 
