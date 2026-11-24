@@ -820,11 +820,15 @@ export class SkyChatClient extends EventEmitter {
     private _onPlayerMemberships(memberships: PlayerMemberships) {
         const previous = this._memberships;
         this._memberships = memberships;
-        // The channel just joined takes the player; when the shown one is left, the other comes back
-        const joined = (['media', 'party'] as const).find((kind) => memberships[kind] !== null && memberships[kind] !== previous[kind]);
-        if (joined) {
-            this._shownKind = joined;
-        } else if (!this._shownKind || memberships[this._shownKind] === null) {
+        // Games come first: a game just joined takes the player, music joined during a game goes beside it.
+        // When the shown channel is left, the other one comes back
+        const joined = (kind: keyof PlayerMemberships) => memberships[kind] !== null && memberships[kind] !== previous[kind];
+        if (joined('party')) {
+            this._shownKind = 'party';
+        } else if (joined('media') && memberships.party === null) {
+            this._shownKind = 'media';
+        }
+        if (!this._shownKind || memberships[this._shownKind] === null) {
             this._shownKind = memberships.party !== null ? 'party' : memberships.media !== null ? 'media' : null;
         }
         this.emit('update', this.state);
