@@ -562,7 +562,8 @@ export class PlayerChannel {
      * Sync sessions in this channel
      */
     public sync() {
-        for (const session of this.sessions) {
+        // A game channel has no media: its empty sync would stop the music of the media channel its players are also in
+        for (const session of this.kind === 'media' ? this.sessions : []) {
             session.send('player-sync', this.buildSyncPayload(session));
         }
         this.manager.sync();
@@ -612,7 +613,7 @@ export class PlayerChannel {
      *                client to reload at the room cursor regardless of its drift threshold.
      */
     public syncConnections(connections: Connection[], options?: { forced?: boolean }) {
-        for (const connection of connections) {
+        for (const connection of this.kind === 'media' ? connections : []) {
             const payload = this.buildSyncPayload(connection.session);
             connection.send('player-sync', options?.forced ? { ...payload, forced: true } : payload);
         }

@@ -11,6 +11,9 @@ import NavidromePlayer from '@/components/player/impl/NavidromePlayer.vue';
 const app = useAppStore();
 const client = useClientStore();
 
+// The side player plays even while the main player is hidden
+const props = defineProps({ force: { type: Boolean, default: false } });
+
 const playerImpl = computed(() => {
     if (!client.state.player.current) {
         return null;
@@ -29,7 +32,7 @@ const playerImpl = computed(() => {
 
 <template>
     <div>
-        <component :is="playerImpl" v-if="app.playerMode.enabled && playerImpl" />
+        <component :is="playerImpl" v-if="(props.force || app.playerMode.enabled) && playerImpl" />
     </div>
 </template>
 

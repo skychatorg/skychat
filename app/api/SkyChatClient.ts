@@ -57,6 +57,8 @@ export type SkyChatOptions = {
     autoMessageAck?: boolean;
 };
 
+export type PlayerMemberships = { media: number | null; party: number | null };
+
 export type PlayerState = {
     current: QueuedVideoInfo | null;
     queue: QueuedVideoInfo[];
@@ -108,8 +110,14 @@ export type SkyChatClientState = {
     videoStreamInfo: VideoStreamInfo | null;
     ongoingConverts: OngoingConvert[];
     playerChannels: SanitizedPlayerChannel[];
+    /** The channel shown in the player: your media channel or your game channel */
     currentPlayerChannelId: number | null;
     currentPlayerChannel: SanitizedPlayerChannel | null;
+    /** You can be in one channel of each kind at once: music keeps playing while you play */
+    mediaChannelId: number | null;
+    partyChannelId: number | null;
+    /** The other channel you are in, not shown in the player */
+    sideChannelId: number | null;
     playerApiSearchResult: { type: string; items: Array<VideoInfo> } | null;
     player: PlayerState;
     playerLastUpdate: Date | null;
@@ -179,7 +187,7 @@ export declare interface SkyChatClient {
     on(event: 'convert-list', listener: (data: Array<OngoingConvert>) => any): this;
 
     on(event: 'player-channels', listener: (playerChannels: Array<SanitizedPlayerChannel>) => any): this;
-    on(event: 'player-channel', listener: (channelId: number | null) => any): this;
+    on(event: 'player-memberships', listener: (memberships: PlayerMemberships) => any): this;
     on(event: 'player-search', listener: (data: { type: string; items: Array<VideoInfo> }) => any): this;
     on(event: 'player-sync', listener: (data: PlayerState) => any): this;
     on(event: 'casino-table', listener: (table: SanitizedBlackjackTable | null) => any): this;
@@ -284,8 +292,9 @@ export class SkyChatClient extends EventEmitter {
     private _videoStreamInfo: VideoStreamInfo | null = null;
     private _ongoingConverts: Array<OngoingConvert> = [];
     private _playerChannels: Array<SanitizedPlayerChannel> = [];
-    private _currentPlayerChannelId: number | null = null;
-    private _currentPlayerChannel: SanitizedPlayerChannel | null = null;
+    private _memberships: PlayerMemberships = { media: null, party: null };
+    /** Which of your two channels the player shows */
+    private _shownKind: keyof PlayerMemberships | null = null;
     private _voiceChannels: Array<SanitizedVoiceChannel> = [];
 
     private _voiceEnabled = false;
@@ -391,7 +400,7 @@ export class SkyChatClient extends EventEmitter {
 
         // Player
         this.on('player-channels', this._onPlayerChannels.bind(this));
-        this.on('player-channel', this._onPlayerChannel.bind(this));
+        this.on('player-memberships', this._onPlayerMemberships.bind(this));
         this.on('player-search', this._onPlayerApiSearchResults.bind(this));
         this.on('player-sync', this._onPlayerSync.bind(this));
         this.on('party', (party) => {
@@ -804,20 +813,30 @@ export class SkyChatClient extends EventEmitter {
         this.emit('update', this.state);
     }
 
-    private _onPlayerChannel(currentPlayerChannelId: number | null) {
-        if (currentPlayerChannelId === null) {
-            this._currentPlayerChannelId = null;
-            this._currentPlayerChannel = null;
-            this.emit('update', this.state);
-            return;
+    private get _shownChannelId(): number | null {
+        return this._shownKind ? this._memberships[this._shownKind] : null;
+    }
+
+    private _onPlayerMemberships(memberships: PlayerMemberships) {
+        const previous = this._memberships;
+        this._memberships = memberships;
+        // The channel just joined takes the player; when the shown one is left, the other comes back
+        const joined = (['media', 'party'] as const).find((kind) => memberships[kind] !== null && memberships[kind] !== previous[kind]);
+        if (joined) {
+            this._shownKind = joined;
+        } else if (!this._shownKind || memberships[this._shownKind] === null) {
+            this._shownKind = memberships.party !== null ? 'party' : memberships.media !== null ? 'media' : null;
         }
-        const playerChannel = this._playerChannels.find((channel) => channel.id === currentPlayerChannelId);
-        if (typeof playerChannel === 'undefined') {
-            throw new Error('Player channel not found');
-        }
-        this._currentPlayerChannelId = currentPlayerChannelId;
-        this._currentPlayerChannel = playerChannel;
         this.emit('update', this.state);
+    }
+
+    /** Show your other channel in the player, keeping the one shown now beside it */
+    public swapPlayerChannels() {
+        const other = this._shownKind === 'media' ? 'party' : 'media';
+        if (this._memberships[other] !== null) {
+            this._shownKind = other;
+            this.emit('update', this.state);
+        }
     }
 
     private _onVoiceChannels(voiceChannels: Array<SanitizedVoiceChannel>) {
@@ -902,8 +921,11 @@ export class SkyChatClient extends EventEmitter {
             videoStreamInfo: this._videoStreamInfo,
             ongoingConverts: this._ongoingConverts,
             playerChannels: this._playerChannels,
-            currentPlayerChannelId: this._currentPlayerChannelId,
-            currentPlayerChannel: this._currentPlayerChannel,
+            currentPlayerChannelId: this._shownChannelId,
+            currentPlayerChannel: this._playerChannels.find((channel) => channel.id === this._shownChannelId) ?? null,
+            mediaChannelId: this._memberships.media,
+            partyChannelId: this._memberships.party,
+            sideChannelId: this._shownKind ? this._memberships[this._shownKind === 'media' ? 'party' : 'media'] : null,
             playerApiSearchResult: this._playerApiSearchResult,
             player: this._player,
             playerLastUpdate: this._playerLastUpdate,

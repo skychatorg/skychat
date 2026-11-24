@@ -20,7 +20,7 @@ const client = useClientStore();
 
 const party = computed(() => client.state.party);
 const isGuest = computed(() => !client.state.user.id);
-const limits = computed(() => client.currentChannel?.party);
+const limits = computed(() => client.partyChannel?.party);
 
 const meta = (game) =>
     ({

@@ -2,6 +2,7 @@
 import MessagePannel from '@/components/message/MessagePannel.vue';
 import NewMessageForm from '@/components/message/NewMessageForm.vue';
 import PlayerPannel from '@/components/player/PlayerPannel.vue';
+import SidePlayer from '@/components/player/SidePlayer.vue';
 import PlayerChannelList from '@/components/playerchannel/PlayerChannelList.vue';
 import VoiceChannelList from '@/components/voice/VoiceChannelList.vue';
 import VoicePanel from '@/components/voice/VoicePanel.vue';
@@ -77,6 +78,7 @@ const clearSearch = () => {
             <PlayerPannel />
         </div>
         <aside class="cinema-chat h-full flex flex-col shrink-0 hairline" :style="{ background: 'var(--surface)' }">
+            <SidePlayer />
             <MessagePannel class="grow min-h-0" />
             <NewMessageForm />
         </aside>
@@ -144,6 +146,7 @@ const clearSearch = () => {
             :style="{ background: 'var(--surface)' }"
             aria-label="Connected users"
         >
+            <SidePlayer :compact="app.effectiveRightCollapsed" />
             <ConnectedList class="flex-grow min-h-0" :compact="app.effectiveRightCollapsed" />
             <div class="p-2 lg:hidden">
                 <button class="form-control mr-2" title="Rooms" @click="app.mobileSetView('left')">

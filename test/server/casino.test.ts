@@ -217,7 +217,7 @@ describe('casino table', () => {
     });
 
     it('keeps media and casino commands in their own channels', async () => {
-        const { clients } = await casino(1);
+        const { clients, channel } = await casino(1);
         const [alice] = clients;
         await alice.send('/player skip');
         expect(alice.errors()).toEqual(['This channel is for games, it has no media']);
@@ -226,9 +226,10 @@ describe('casino table', () => {
         await admin.send('/playerchannelmanage create media Music');
         const media = player().channelManager.channels.at(-1) as PlayerChannel;
         await alice.send(`/playerchannel join ${media.id}`);
-        alice.clear();
-        await alice.send('/casino bet 2000');
-        expect(alice.errors()).toEqual(['No blackjack table here']);
+
+        // Music joins the game instead of replacing it
+        expect(player().channelManager.getSessionChannel(alice.session, 'party')).toBe(channel);
+        expect(player().channelManager.getSessionChannel(alice.session, 'media')).toBe(media);
     });
 });
 

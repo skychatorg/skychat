@@ -17,12 +17,8 @@ export function usePlayerAdd() {
         if (!canAdd.value) {
             return "Your account can't add to the player yet.";
         }
-        const channel = client.currentChannel;
-        if (!channel) {
+        if (!client.mediaChannel) {
             return 'Join a media channel first, from the channel list.';
-        }
-        if (channel.kind === 'party') {
-            return 'This channel is for games. Switch to a media channel to add things.';
         }
         return null;
     });

@@ -17,7 +17,12 @@ import { computed } from 'vue';
 const app = useAppStore();
 const client = useClientStore();
 
-const isParty = computed(() => Boolean(client.state.party));
+const isParty = computed(() => client.state.currentPlayerChannel?.kind === 'party');
+// Your other channel, playing beside this one
+const side = computed(() => client.sideChannel);
+const sideLabel = computed(() =>
+    side.value?.kind === 'media' ? client.state.player.current?.video?.title ?? side.value.name : side.value?.name ?? '',
+);
 const showPlayer = computed(() => client.channelHasContent && app.playerMode.enabled);
 
 // How far the party's round has gone: games show their own turns, not when the round ends
@@ -158,7 +163,7 @@ const syncSelf = () => client.sendMessage('/playersync');
         </div>
 
         <!-- Seek bar (only for media with a known duration) -->
-        <PlayerSeekBar v-if="showPlayer" />
+        <PlayerSeekBar v-if="showPlayer && !isParty" />
 
         <!-- Persistent action strip -->
         <div class="strip px-3 py-2 hairline" :style="{ background: 'var(--surface-2)' }">
@@ -170,6 +175,15 @@ const syncSelf = () => client.sendMessage('/playersync');
                     @click="app.setPlayerEnabled(!app.playerMode.enabled)"
                 >
                     <fa :icon="app.playerMode.enabled ? 'toggle-on' : 'toggle-off'" fixed-width />
+                </button>
+            </div>
+
+            <!-- Your other channel: one click shows it here instead -->
+            <div v-if="side" class="strip-group hairline min-w-0">
+                <button class="strip-btn min-w-0" :title="`Show ${side.name} here`" @click="client.swapPlayerChannels()">
+                    <fa :icon="side.kind === 'media' ? 'music' : 'dice'" />
+                    <span class="strip-label truncate max-w-[10rem]">{{ sideLabel }}</span>
+                    <fa icon="right-left" class="text-xs opacity-60" />
                 </button>
             </div>
 
@@ -189,7 +203,7 @@ const syncSelf = () => client.sendMessage('/playersync');
             </div>
 
             <!-- A party round's progress -->
-            <div v-if="showPlayer && partyRound" class="party-round font-mono text-sm text-white/70 truncate min-w-0">
+            <div v-if="showPlayer && isParty && partyRound" class="party-round font-mono text-sm text-white/70 truncate min-w-0">
                 {{ partyRound }}
             </div>
 

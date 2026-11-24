@@ -29,6 +29,7 @@ export class PartyPlugin extends GlobalPlugin {
     async run(_alias: string, param: string, connection: Connection): Promise<void> {
         const party = (this.manager.getPlugin(PlayerPlugin.commandName) as PlayerPlugin).channelManager.getSessionChannel(
             connection.session,
+            'party',
         )?.party;
         if (!party) {
             throw new Error('Join a party channel first');

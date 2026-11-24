@@ -13,9 +13,9 @@ export class PlayerChannelManager extends EventEmitter {
     public readonly plugin: PlayerPlugin;
 
     /**
-     * Mapping from session to channel ids
+     * The channels each session is in: one of each kind, so music keeps playing while you play a game
      */
-    public readonly sessionChannels: Map<Session, number> = new Map();
+    public readonly sessionChannels: Map<Session, Partial<Record<ChannelKind, number>>> = new Map();
 
     constructor(plugin: PlayerPlugin) {
         super();
@@ -85,9 +85,9 @@ export class PlayerChannelManager extends EventEmitter {
             throw new Error(`Unable to delete non-existant channel ${id}`);
         }
 
-        // Remove all sessions from this channel. A copy: leaving removes the session from this very list
+        // Remove all sessions from this channel, and only this one. A copy: leaving removes the session from this very list
         for (const session of [...channel.sessions]) {
-            this.leaveChannel(session);
+            this.leaveChannel(session, channel.kind);
         }
 
         channel.destroy();
@@ -96,30 +96,34 @@ export class PlayerChannelManager extends EventEmitter {
     }
 
     /**
-     * Get the channel where the session is, if any
-     * @param session
-     * @returns
+     * The session's channel of that kind, if any. Without a kind: its game channel, else its media channel
      */
-    public getSessionChannel(session: Session): PlayerChannel | null {
-        const channelId = this.sessionChannels.get(session);
-        if (typeof channelId === 'number') {
-            return this.getChannelById(channelId) || null;
-        }
-        return null;
+    public getSessionChannel(session: Session, kind?: ChannelKind): PlayerChannel | null {
+        const joined = this.sessionChannels.get(session) ?? {};
+        const channelId = kind ? joined[kind] : joined.party ?? joined.media;
+        return typeof channelId === 'number' ? this.getChannelById(channelId) : null;
     }
 
     /**
-     * The session's channel, for commands that only make sense with media
+     * The session's media channel, for commands that only make sense with media
      */
     public getSessionMediaChannel(session: Session): PlayerChannel {
-        const channel = this.getSessionChannel(session);
+        const channel = this.getSessionChannel(session, 'media');
         if (!channel) {
-            throw new Error('Join a media channel first');
-        }
-        if (channel.kind !== 'media') {
-            throw new Error('This channel is for games, it has no media');
+            throw new Error(
+                this.getSessionChannel(session, 'party') ? 'This channel is for games, it has no media' : 'Join a media channel first',
+            );
         }
         return channel;
+    }
+
+    /**
+     * Tell the session's tabs which channels it is in
+     */
+    public sendMemberships(session: Session | Connection) {
+        const owner = session instanceof Session ? session : session.session;
+        const joined = this.sessionChannels.get(owner) ?? {};
+        session.send('player-memberships', { media: joined.media ?? null, party: joined.party ?? null });
     }
 
     /**
@@ -128,65 +132,74 @@ export class PlayerChannelManager extends EventEmitter {
      * @param id
      */
     public joinChannel(session: Session, id: number) {
-        // Get current/previous channel
-        const previousChannel = this.getSessionChannel(session);
-
-        // If trying to join the same channel
-        if (previousChannel && previousChannel.id === id) {
-            return;
-        }
-
-        // If currently in another channel, leave it
-        if (previousChannel) {
-            this.leaveChannel(session);
-        }
-
         // Check that the given channel exists
         const channel = this.getChannelById(id);
         if (!channel) {
             throw new Error(`Channel ${id} not found`);
         }
 
+        // Only the channel of the same kind is left: music keeps playing when you join a game
+        const previousChannel = this.getSessionChannel(session, channel.kind);
+        if (previousChannel?.id === id) {
+            return;
+        }
+        if (previousChannel) {
+            this.leaveChannel(session, channel.kind);
+        }
+
         // Update mappings and session list
-        this.sessionChannels.set(session, channel.id);
+        this.sessionChannels.set(session, { ...this.sessionChannels.get(session), [channel.kind]: channel.id });
         channel.sessions.push(session);
         channel.syncConnections(session.connections);
 
         // Notify all connections of this session that the channel changed
-        session.send('player-channel', id);
+        this.sendMemberships(session);
 
         // Rebroadcast the channel list so everyone's watcher count/avatars update
         this.sync();
     }
 
     /**
-     *
-     * @param session
+     * Leave the session's channel of that kind, or both without a kind
      */
-    public leaveChannel(session: Session) {
-        // If the session is already within a channel, leave it first
-        const channelId = this.sessionChannels.get(session);
-        if (typeof channelId !== 'number') {
+    public leaveChannel(session: Session, kind?: ChannelKind) {
+        const joined = { ...this.sessionChannels.get(session) };
+        const kinds = kind ? [kind] : (Object.keys(joined) as ChannelKind[]);
+        if (!kinds.some((k) => typeof joined[k] === 'number')) {
             return;
         }
 
-        // Update mappings and session list
-        const channel = this.getChannelById(channelId);
-        this.sessionChannels.delete(session);
-        if (channel?.sessions.includes(session)) {
-            channel.sessions.splice(channel.sessions.indexOf(session), 1);
-            if (channel.party) {
-                logFailure(channel.party.onSessionLeft(session), 'Player channels');
+        for (const k of kinds) {
+            const channelId = joined[k];
+            if (typeof channelId !== 'number') {
+                continue;
+            }
+            delete joined[k];
+            const channel = this.getChannelById(channelId);
+            if (channel?.sessions.includes(session)) {
+                channel.sessions.splice(channel.sessions.indexOf(session), 1);
+                if (channel.party) {
+                    logFailure(channel.party.onSessionLeft(session), 'Player channels');
+                }
+            }
+            // Clear only this kind's state on the client: the other channel keeps playing
+            if (k === 'media') {
+                session.send('player-sync', { current: null, queue: [], cursor: 0, paused: false });
+            } else {
+                session.send('party', null);
+                for (const { event } of Object.values(PARTY_GAMES)) {
+                    session.send(event, null);
+                }
             }
         }
-        session.send('player-sync', { current: null, queue: [], cursor: 0, paused: false });
-        session.send('party', null);
-        for (const { event } of Object.values(PARTY_GAMES)) {
-            session.send(event, null);
+        if (Object.keys(joined).length) {
+            this.sessionChannels.set(session, joined);
+        } else {
+            this.sessionChannels.delete(session);
         }
 
         // Notify all connections of this session that the channel changed
-        session.send('player-channel', null);
+        this.sendMemberships(session);
 
         // Rebroadcast the channel list so everyone's watcher count/avatars update
         this.sync();

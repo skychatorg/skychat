@@ -22,6 +22,8 @@ const props = defineProps({
 const users = computed(() => props.playerChannel.users ?? []);
 
 const isCurrent = computed(() => client.state.currentPlayerChannelId === props.playerChannel.id);
+// Joined too, playing beside the player: music while you play a game
+const isSide = computed(() => client.state.sideChannelId === props.playerChannel.id);
 
 const currentTitle = computed(() => props.playerChannel.currentMedia?.title ?? props.playerChannel.name);
 
@@ -69,6 +71,10 @@ const statusText = computed(() => {
 });
 
 const onClick = () => {
+    if (isSide.value) {
+        client.swapPlayerChannels();
+        return;
+    }
     client.sendMessage(`/playerchannel ${isCurrent.value ? 'leave' : 'join'} ${props.playerChannel.id}`);
 };
 </script>
@@ -80,7 +86,11 @@ const onClick = () => {
             <button
                 class="relative w-full flex items-center justify-center py-2 rounded-lg cursor-pointer transition"
                 :class="[
-                    isCurrent ? 'bg-primary/15 ring-1 ring-primary/40 hover:bg-primary/20' : 'bg-white/[.03] hairline hover:bg-white/[.06]',
+                    isCurrent
+                        ? 'bg-primary/15 ring-1 ring-primary/40 hover:bg-primary/20'
+                        : isSide
+                        ? 'bg-primary/[.06] ring-1 ring-primary/20 hover:bg-primary/10'
+                        : 'bg-white/[.03] hairline hover:bg-white/[.06]',
                     isPlaying ? 'live-sweep live-sweep-media' : '',
                 ]"
                 @click="onClick"
@@ -99,7 +109,11 @@ const onClick = () => {
         v-else
         class="relative w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left transition cursor-pointer"
         :class="[
-            isCurrent ? 'bg-primary/15 ring-1 ring-primary/40 hover:bg-primary/20' : 'bg-white/[.03] hairline hover:bg-white/[.06]',
+            isCurrent
+                ? 'bg-primary/15 ring-1 ring-primary/40 hover:bg-primary/20'
+                : isSide
+                ? 'bg-primary/[.06] ring-1 ring-primary/20 hover:bg-primary/10'
+                : 'bg-white/[.03] hairline hover:bg-white/[.06]',
             isPlaying ? 'live-sweep live-sweep-media' : '',
         ]"
         :title="currentOwner ? `${currentTitle} — added by ${currentOwner}` : currentTitle"

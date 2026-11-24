@@ -4,6 +4,7 @@ import { Logging, logFailure } from '../../skychat/Logging.js';
 import { RoomManager } from '../../skychat/RoomManager.js';
 import { Session } from '../../skychat/Session.js';
 import { UserController } from '../../skychat/UserController.js';
+import { User } from '../../skychat/User.js';
 import { PLINKO } from '../../../api/plinko.js';
 import { GlobalPlugin, PluginRoute } from '../GlobalPlugin.js';
 import { PollPlugin } from '../core/global/PollPlugin.js';
@@ -675,24 +676,38 @@ export class PlayerPlugin extends GlobalPlugin {
         // Join channel
         if (action === 'join') {
             this.channelManager.joinChannel(connection.session, parseInt(value));
-            // If user is logged, save
-            if (connection.session.user.id > 0) {
-                this.saveUserData(connection.session.user, parseInt(value));
-            }
+            this.saveChannels(connection.session);
             return;
         }
 
-        // Leave channel
+        // Leave the given channel, or every channel
         if (action === 'leave') {
-            this.channelManager.leaveChannel(connection.session);
-            // If user is logged, save
-            if (connection.session.user.id > 0) {
-                this.saveUserData(connection.session.user, null);
+            const channel = value ? this.channelManager.getChannelById(parseInt(value)) : null;
+            if (value && !channel?.sessions.includes(connection.session)) {
+                return;
             }
+            this.channelManager.leaveChannel(connection.session, channel?.kind);
+            this.saveChannels(connection.session);
             return;
         }
 
         throw new Error('Unsupported action');
+    }
+
+    /** Logged users get their channels back on their next visit */
+    private saveChannels(session: Session) {
+        if (session.user.id > 0) {
+            this.saveUserData(session.user, { ...this.channelManager.sessionChannels.get(session) });
+        }
+    }
+
+    /** The channel ids saved for a user. Older saves hold a single id */
+    private savedChannelIds(user: User): number[] {
+        const saved = this.getUserData<unknown>(user);
+        if (typeof saved === 'number') {
+            return [saved];
+        }
+        return saved && typeof saved === 'object' ? Object.values(saved).filter((id): id is number => typeof id === 'number') : [];
     }
 
     /**
@@ -702,9 +717,9 @@ export class PlayerPlugin extends GlobalPlugin {
      * @returns
      */
     private async handlePlayerSync(param: string, connection: Connection) {
-        const channel = this.channelManager.getSessionChannel(connection.session);
+        const channel = this.channelManager.getSessionChannel(connection.session, 'media');
         // Nothing to sync outside a media channel
-        if (channel?.kind !== 'media') {
+        if (!channel) {
             return;
         }
 
@@ -960,18 +975,17 @@ export class PlayerPlugin extends GlobalPlugin {
             return;
         }
 
-        // Compare the saved channel id to this session
-        const currentChannel = this.channelManager.getSessionChannel(connection.session);
-        const savedChannelId = this.getUserData<unknown>(connection.session.user);
-
-        if (typeof savedChannelId === 'number' && (!currentChannel || savedChannelId !== currentChannel.id)) {
-            // If the user is supposed to be in a channel, but this session aint
-            // Make this session join the saved channel
-            this.channelManager.joinChannel(connection.session, savedChannelId);
-        } else if (currentChannel) {
-            // If this session is in a yt channel, synchronize this connection
-            connection.send('player-channel', currentChannel.id);
-            currentChannel.syncConnections([connection]);
+        // Join the saved channels this session isn't in yet, skipping deleted ones
+        for (const id of this.savedChannelIds(connection.session.user)) {
+            const channel = this.channelManager.getChannelById(id);
+            if (channel && !channel.sessions.includes(connection.session)) {
+                this.channelManager.joinChannel(connection.session, id);
+            }
+        }
+        // A new tab of a session already in channels gets their state
+        this.channelManager.sendMemberships(connection);
+        for (const kind of ['media', 'party'] as const) {
+            this.channelManager.getSessionChannel(connection.session, kind)?.syncConnections([connection]);
         }
     }
 

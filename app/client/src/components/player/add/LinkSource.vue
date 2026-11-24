@@ -32,7 +32,7 @@ const schedule = () => {
 
 const upcoming = computed(() =>
     // From the channel list: the current channel's own copy isn't refreshed when the schedule changes
-    (client.state.playerChannels.find((channel) => channel.id === client.state.currentPlayerChannelId)?.schedule?.events ?? [])
+    (client.state.playerChannels.find((channel) => channel.id === client.state.mediaChannelId)?.schedule?.events ?? [])
         .filter((event) => event.start + event.duration > now.value)
         .sort((a, b) => a.start - b.start),
 );

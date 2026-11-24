@@ -83,13 +83,24 @@ export const useClientStore = defineStore('client', {
         /**
          * Whether the player panel has something to show: a media playing, or a party
          */
-        channelHasContent: (state) => Boolean(state.state.player.current || state.state.party),
+        channelHasContent: (state) =>
+            state.state.currentPlayerChannel?.kind === 'party' ? Boolean(state.state.party) : Boolean(state.state.player.current),
+
+        /** Your channel of each kind, and the one beside the player */
+        mediaChannel: (state) => state.state.playerChannels.find((channel) => channel.id === state.state.mediaChannelId) ?? null,
+        partyChannel: (state) => state.state.playerChannels.find((channel) => channel.id === state.state.partyChannelId) ?? null,
+        sideChannel: (state) => state.state.playerChannels.find((channel) => channel.id === state.state.sideChannelId) ?? null,
     },
 
     actions: {
         /**
          * Initialize client (subscribe to relevant events) & make initial socket connection
          */
+        /** Show your other channel in the player */
+        swapPlayerChannels() {
+            client.swapPlayerChannels();
+        },
+
         init: function () {
             const encryptionStore = useEncryptionStore();
             // On global client state changed
