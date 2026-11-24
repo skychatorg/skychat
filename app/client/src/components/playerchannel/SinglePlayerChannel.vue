@@ -133,11 +133,11 @@ const leave = () => client.sendMessage(`/playerchannel leave ${props.playerChann
                     <template v-if="currentOwner"> · {{ currentOwner }}</template>
                 </div>
             </div>
-            <div v-if="users.length > 0" class="flex -space-x-1.5 shrink-0">
+            <div v-if="users.length > 0" class="trail flex -space-x-1.5 shrink-0">
                 <UserMiniAvatarCollection :users="users" />
             </div>
             <!-- Animated equalizer: only while actually playing -->
-            <div v-else-if="isPlaying" class="flex gap-[2px] items-end h-3.5 shrink-0" aria-hidden="true">
+            <div v-else-if="isPlaying" class="trail flex gap-[2px] items-end h-3.5 shrink-0" aria-hidden="true">
                 <span
                     v-for="i in 4"
                     :key="i"
@@ -149,12 +149,13 @@ const leave = () => client.sendMessage(`/playerchannel leave ${props.playerChann
         <!-- Leaving is its own button, so a click on the channel never drops you out of it -->
         <button
             v-if="isCurrent || isSide"
-            class="leave absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] bg-[var(--surface-2)] ring-1 ring-white/15 text-white/70 hover:text-white hover:bg-rose-600"
+            class="leave absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-1 px-2 py-1 rounded-md text-xs bg-[var(--surface-2)] ring-1 ring-white/15 text-white/80 hover:text-white hover:bg-white/10"
             :title="`Leave ${playerChannel.name}`"
             :aria-label="`Leave ${playerChannel.name}`"
             @click="leave"
         >
-            <fa icon="xmark" />
+            <fa icon="arrow-right-from-bracket" />
+            <span>Leave</span>
         </button>
     </div>
 </template>
@@ -198,9 +199,16 @@ const leave = () => client.sendMessage(`/playerchannel leave ${props.playerChann
 .leave:focus-visible {
     opacity: 1;
 }
+/* The Leave button takes the place of the avatars instead of covering them */
+.group:has(.leave):hover .trail {
+    visibility: hidden;
+}
 @media (hover: none) {
     .leave {
         opacity: 1;
+    }
+    .group:has(.leave) .trail {
+        visibility: hidden;
     }
 }
 

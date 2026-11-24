@@ -40,7 +40,7 @@ const leave = () => client.sendMessage(`/playerchannel leave ${side.value.id}`);
                 <fa icon="right-left" />
             </button>
             <button class="side-btn" :title="`Leave ${side.name}`" @click="leave">
-                <fa icon="xmark" />
+                <fa icon="arrow-right-from-bracket" />
             </button>
         </div>
         <!-- Mounted even when folded, so the music never stops: only its box is hidden -->
