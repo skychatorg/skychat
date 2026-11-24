@@ -641,7 +641,8 @@ export const useAppStore = defineStore('app', {
          */
         setColumnsCollapsed: function (collapsed) {
             this.leftCollapsed = collapsed;
-            this.rightCollapsed = collapsed;
+            // The right column holds the side player: folding it would hide what you listen to
+            this.rightCollapsed = collapsed && !useClientStore().sideChannel;
             applyLeftCollapsedClass(this.effectiveLeftCollapsed);
             applyRightCollapsedClass(this.effectiveRightCollapsed);
         },
