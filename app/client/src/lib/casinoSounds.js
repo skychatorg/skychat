@@ -331,6 +331,22 @@ const SOUNDS = {
         tone(ctx, at, 160, 0.08, { type: 'sine', gain: 0.25, slideTo: 60 });
     },
     // Plinko: a glassy tick on each peg, a little plunk when a ball is dropped, a muffled thud for nothing, and the jackpot
+    // A roulette ball rolling on the rim, fading as it slows
+    ballRoll: (ctx, at) => {
+        swish(ctx, at, 3.6, { from: 2600, to: 500, gain: 0.16 });
+        tone(ctx, at, 95, 3.4, { type: 'sine', gain: 0.06, slideTo: 60 });
+    },
+    // The ball hitting a fret: hard and short, wood and metal
+    clack: (ctx, at) => {
+        tone(ctx, at, 2300 + Math.random() * 600, 0.03, { type: 'square', gain: 0.05 });
+        swish(ctx, at, 0.05, { from: 6000, to: 2500, gain: 0.3 });
+    },
+    // The ball dropping into its pocket for good
+    settle: (ctx, at) => {
+        tone(ctx, at, 1400, 0.05, { type: 'square', gain: 0.04 });
+        tone(ctx, at + 0.02, 420, 0.12, { type: 'sine', gain: 0.12 });
+        swish(ctx, at, 0.07, { from: 4500, to: 1500, gain: 0.25 });
+    },
     peg: (ctx, at) => tone(ctx, at, 1600 + Math.random() * 1400, 0.06, { type: 'sine', gain: 0.05 }),
     drop: (ctx, at) => tone(ctx, at, 520, 0.12, { type: 'sine', gain: 0.15, slideTo: 880 }),
     thud: (ctx, at) => tone(ctx, at, 190, 0.18, { type: 'sine', gain: 0.14, slideTo: 110 }),

@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import CasinoChip from '@/components/casino/CasinoChip.vue';
 import DrainBar from '@/components/party/DrainBar.vue';
 import MuteButton from '@/components/party/MuteButton.vue';
@@ -45,6 +45,12 @@ const onSpace = (space) => {
     }
     return { mine, others };
 };
+// Who else bet on a space, for its tooltip
+const whoOn = (space) =>
+    game.value.bets
+        .filter((bet) => bet.space === space && bet.username !== me.value)
+        .map((bet) => `@${bet.username} ${formatMoney(bet.amount)}`)
+        .join(', ');
 const won = (space) => game.value.phase === 'results' && game.value.result !== null && ROULETTE_SPACES[space].covers(game.value.result);
 
 const bet = (space) => {
@@ -59,25 +65,84 @@ const rows = [3, 2, 1].map((start) => Array.from({ length: 12 }, (_, i) => start
 const dozens = [43, 44, 45];
 const evens = [41, 40, 37, 38, 39, 42];
 
-// The wheel turns so the result stops under the marker, while the ball circles the other way
+// The spin is drawn frame by frame from the server's start time, so a late viewer sees the same moment:
+// the wheel turns clockwise, the ball rolls the other way on the rim, drops, bounces over a few pockets and settles
 const POCKET = 360 / WHEEL.length;
+const RIM = 47.5;
+const IN_POCKET = 42.5;
+const DROP = 0.6;
+const BOUNCES_FROM = 0.66;
+const SETTLED = 0.93;
+const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 const wheelTurn = ref(0);
 const ballTurn = ref(0);
-const spinMs = ref(0);
+const ballRadius = ref(IN_POCKET);
+let wheelFrom = 0;
+let wheelTo = 0;
+let spinning = null;
+let frame = null;
+
+const easeOut = (u, power) => 1 - (1 - u) ** power;
+function draw() {
+    frame = null;
+    const g = game.value;
+    if (!spinning || !g) return;
+    const u = reducedMotion ? 1 : Math.min(1, Math.max(0, (serverNow() - spinning.startedAt) / spinning.ms));
+    const wheelAt = (x) => wheelFrom + (wheelTo - wheelFrom) * easeOut(x, 3);
+    wheelTurn.value = wheelAt(u);
+    // Where the result's pocket is on screen: the ball lands in it at the drop, then turns with the wheel
+    const pocketAt = (x) => wheelAt(x) + spinning.pocket * POCKET;
+    const atDrop = pocketAt(DROP);
+    let ball;
+    let radius = RIM;
+    if (u < DROP) {
+        // Rolling the other way on the rim, slowing down, from the top where it rested to the pocket's spot
+        const turns = 360 * 5 + (((-atDrop % 360) + 360) % 360);
+        ball = atDrop + turns * (1 - easeOut(u / DROP, 2));
+    } else {
+        const v = Math.min(1, Math.max(0, (u - BOUNCES_FROM) / (SETTLED - BOUNCES_FROM)));
+        // Falling from the rim, then three bounces that shrink, skipping back and forth over pockets
+        radius =
+            u < BOUNCES_FROM
+                ? RIM - (RIM - IN_POCKET) * ((u - DROP) / (BOUNCES_FROM - DROP))
+                : IN_POCKET + 4 * Math.abs(Math.sin(Math.PI * 3 * v)) * (1 - v);
+        ball = pocketAt(u) + (u >= BOUNCES_FROM ? POCKET * 1.5 * Math.sin(Math.PI * 2 * v) * (1 - v) : 0);
+    }
+    ballTurn.value = ball;
+    ballRadius.value = radius;
+    if (u < 1) frame = requestAnimationFrame(draw);
+}
+
+// The sounds of a spin, from where it is now: the launch, the roll, a clack on landing and on each bounce
+function spinSounds(elapsedMs, ms) {
+    if (!soundOn.value) return;
+    const at = (u) => u * ms - elapsedMs;
+    if (elapsedMs < 300) {
+        playCasinoSound('throw');
+        playCasinoSound('ballRoll');
+    }
+    [BOUNCES_FROM, ...[1, 2, 3].map((k) => BOUNCES_FROM + ((SETTLED - BOUNCES_FROM) * k) / 3)].forEach((u, i, all) => {
+        if (at(u) >= 0) playCasinoSound(i === all.length - 1 ? 'settle' : 'clack', at(u), 1 - i * 0.2);
+    });
+}
+
 watch(
-    () => [game.value?.phase, game.value?.result, game.value?.spinStartedAt],
-    ([phase, result, startedAt]) => {
-        if (result === null || startedAt === null) return;
-        const left = Math.max(0, startedAt + game.value.spinMs - serverNow());
-        spinMs.value = phase === 'spinning' ? left : 0;
-        // Always forward: whole turns past the current angle, then the pocket under the marker
-        const base = Math.ceil(wheelTurn.value / 360) * 360 + 360 * 5;
-        wheelTurn.value = base - WHEEL.indexOf(result) * POCKET;
-        ballTurn.value -= 360 * 3;
-        if (phase === 'spinning' && left > 0 && soundOn.value) playCasinoSound('whoosh');
+    () => [game.value?.result, game.value?.spinStartedAt],
+    ([result, startedAt]) => {
+        if (result === null || startedAt === null || spinning?.startedAt === startedAt) return;
+        const ms = game.value.spinMs;
+        // Always forward from where the wheel rests, whole turns, then the pocket under the marker
+        wheelFrom = ((wheelTurn.value % 360) + 360) % 360;
+        const target = (((-WHEEL.indexOf(result) * POCKET - wheelFrom) % 360) + 360) % 360;
+        wheelTo = wheelFrom + 360 * 3 + target;
+        spinning = { startedAt, ms, pocket: WHEEL.indexOf(result) };
+        const elapsed = serverNow() - startedAt;
+        if (elapsed < ms) spinSounds(elapsed, ms);
+        if (!frame) frame = requestAnimationFrame(draw);
     },
     { immediate: true },
 );
+onBeforeUnmount(() => frame && cancelAnimationFrame(frame));
 
 const lastResult = computed(() => (game.value.phase === 'results' ? game.value.result : null));
 const myResult = computed(() => game.value.results.find((entry) => entry.username === me.value) ?? null);
@@ -115,12 +180,7 @@ const winners = computed(() => [...game.value.results].filter((entry) => entry.w
             <div class="body">
                 <div class="wheel-zone">
                     <div class="wheel-box">
-                        <svg
-                            class="wheel"
-                            viewBox="-100 -100 200 200"
-                            :style="{ transform: `rotate(${wheelTurn}deg)`, transitionDuration: `${spinMs}ms` }"
-                            aria-hidden="true"
-                        >
+                        <svg class="wheel" viewBox="-100 -100 200 200" :style="{ transform: `rotate(${wheelTurn}deg)` }" aria-hidden="true">
                             <circle r="99" fill="#5a3a1c" />
                             <g v-for="(n, i) in WHEEL" :key="n" :transform="`rotate(${i * POCKET})`">
                                 <path
@@ -129,7 +189,7 @@ const winners = computed(() => [...game.value.results].filter((entry) => entry.w
                                     } A92 92 0 0 1 ${Math.sin((POCKET * Math.PI) / 360) * 92} ${
                                         -Math.cos((POCKET * Math.PI) / 360) * 92
                                     } Z`"
-                                    :class="`pocket ${pocketColor(n)}`"
+                                    :class="['pocket', pocketColor(n), { hit: n === lastResult }]"
                                 />
                                 <text y="-80" class="pocket-label">{{ n }}</text>
                             </g>
@@ -142,12 +202,8 @@ const winners = computed(() => [...game.value.results].filter((entry) => entry.w
                                 </radialGradient>
                             </defs>
                         </svg>
-                        <div
-                            class="ball-track"
-                            :style="{ transform: `rotate(${ballTurn}deg)`, transitionDuration: `${spinMs}ms` }"
-                            aria-hidden="true"
-                        >
-                            <span class="ball"></span>
+                        <div class="ball-track" :style="{ transform: `rotate(${ballTurn}deg)` }" aria-hidden="true">
+                            <span class="ball" :style="{ top: `${50 - ballRadius}%` }"></span>
                         </div>
                         <span class="marker" aria-hidden="true"></span>
                         <span v-if="lastResult !== null" class="result-badge" :class="pocketColor(lastResult)">{{ lastResult }}</span>
@@ -167,6 +223,9 @@ const winners = computed(() => [...game.value.results].filter((entry) => entry.w
                             <span v-if="onSpace(0).mine" class="stack"
                                 ><CasinoChip :value="onSpace(0).mine" :color="chipColor(onSpace(0).mine)"
                             /></span>
+                            <span v-if="onSpace(0).others" class="stack theirs" :title="whoOn(0)"
+                                ><CasinoChip :value="onSpace(0).others" :color="chipColor(onSpace(0).others)"
+                            /></span>
                         </button>
                         <template v-for="(row, r) in rows" :key="r">
                             <button
@@ -182,11 +241,9 @@ const winners = computed(() => [...game.value.results].filter((entry) => entry.w
                                 <span v-if="onSpace(n).mine" class="stack"
                                     ><CasinoChip :value="onSpace(n).mine" :color="chipColor(onSpace(n).mine)"
                                 /></span>
-                                <span
-                                    v-else-if="onSpace(n).others"
-                                    class="others"
-                                    :title="`${formatMoney(onSpace(n).others)} from others`"
-                                ></span>
+                                <span v-if="onSpace(n).others" class="stack theirs" :title="whoOn(n)"
+                                    ><CasinoChip :value="onSpace(n).others" :color="chipColor(onSpace(n).others)"
+                                /></span>
                             </button>
                         </template>
                         <button
@@ -202,6 +259,9 @@ const winners = computed(() => [...game.value.results].filter((entry) => entry.w
                             <span v-if="onSpace(space).mine" class="stack"
                                 ><CasinoChip :value="onSpace(space).mine" :color="chipColor(onSpace(space).mine)"
                             /></span>
+                            <span v-if="onSpace(space).others" class="stack theirs" :title="whoOn(space)"
+                                ><CasinoChip :value="onSpace(space).others" :color="chipColor(onSpace(space).others)"
+                            /></span>
                         </button>
                         <button
                             v-for="(space, i) in evens"
@@ -215,6 +275,9 @@ const winners = computed(() => [...game.value.results].filter((entry) => entry.w
                             {{ ROULETTE_SPACES[space].label }}
                             <span v-if="onSpace(space).mine" class="stack"
                                 ><CasinoChip :value="onSpace(space).mine" :color="chipColor(onSpace(space).mine)"
+                            /></span>
+                            <span v-if="onSpace(space).others" class="stack theirs" :title="whoOn(space)"
+                                ><CasinoChip :value="onSpace(space).others" :color="chipColor(onSpace(space).others)"
                             /></span>
                         </button>
                     </div>
@@ -345,8 +408,6 @@ const winners = computed(() => [...game.value.results].filter((entry) => entry.w
 .ball-track {
     position: absolute;
     inset: 0;
-    transition-property: transform;
-    transition-timing-function: cubic-bezier(0.15, 0.6, 0.25, 1);
 }
 .wheel {
     width: 100%;
@@ -366,6 +427,15 @@ const winners = computed(() => [...game.value.results].filter((entry) => entry.w
     stroke: #c9a24a;
     stroke-width: 0.6;
 }
+.pocket.hit {
+    fill: #f4c44e;
+    animation: hit 0.8s ease-in-out 3;
+}
+@keyframes hit {
+    50% {
+        fill: #fff3c4;
+    }
+}
 .pocket-label {
     fill: #fff;
     font:
@@ -380,11 +450,10 @@ const winners = computed(() => [...game.value.results].filter((entry) => entry.w
 .ball {
     position: absolute;
     left: 50%;
-    top: 14%;
-    width: 6%;
+    width: 5.5%;
     aspect-ratio: 1;
     border-radius: 50%;
-    transform: translateX(-50%);
+    transform: translate(-50%, -50%);
     background: radial-gradient(circle at 35% 35%, #fff, #c9c9d4);
     box-shadow: 0 1px 3px rgb(0 0 0 / 0.6);
 }
@@ -493,14 +562,14 @@ const winners = computed(() => [...game.value.results].filter((entry) => entry.w
     pointer-events: none;
     z-index: 2;
 }
-.others {
-    position: absolute;
-    right: 3px;
-    top: 3px;
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: #f4c44e;
+/* Other players' chips sit in the opposite corner, a bit faded, so yours stand out */
+.stack.theirs {
+    right: auto;
+    bottom: auto;
+    left: -6px;
+    top: -6px;
+    opacity: 0.85;
+    pointer-events: auto;
 }
 .controls {
     display: flex;
@@ -534,12 +603,6 @@ const winners = computed(() => [...game.value.results].filter((entry) => entry.w
 }
 .clear:hover {
     background: rgb(255 255 255 / 0.18);
-}
-@media (prefers-reduced-motion: reduce) {
-    .wheel,
-    .ball-track {
-        transition-duration: 0ms !important;
-    }
 }
 /* Narrow: the wheel goes above the table */
 @container (max-width: 640px) {

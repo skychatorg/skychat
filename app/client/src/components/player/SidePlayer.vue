@@ -44,9 +44,10 @@ const leave = () => client.sendMessage(`/playerchannel leave ${side.value.id}`);
             </button>
         </div>
         <!-- Mounted even when folded, so the music never stops: only its box is hidden -->
-        <div v-if="isMedia" v-show="!compact" class="aspect-video bg-black">
+        <div v-if="isMedia && client.state.player.current" v-show="!compact" class="aspect-video bg-black">
             <MediaPlayer force class="w-full h-full" />
         </div>
+        <div v-else-if="isMedia && !compact" class="px-3 pb-3 text-xs text-white/50">Nothing playing here yet</div>
         <button v-else-if="!compact" class="game-card" @click="client.swapPlayerChannels()">
             <span class="text-2xl">{{ game?.emoji ?? '🎲' }}</span>
             <span class="text-sm">{{ game ? `${game.name} is on` : 'Lobby' }} · back to the game</span>
