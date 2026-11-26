@@ -20,7 +20,7 @@ export const PARTY_GAMES = {
     dailyroll: {
         emoji: '🎴',
         name: 'Daily Roll',
-        pitch: 'A free card a day. One of them holds $80.',
+        pitch: 'A free card a day. One of them holds $1,000.',
         event: 'daily-roll',
         state: 'dailyRoll',
     },

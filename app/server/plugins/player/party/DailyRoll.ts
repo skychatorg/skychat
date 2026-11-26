@@ -4,6 +4,7 @@ import { Session } from '../../../skychat/Session.js';
 import { logFailure } from '../../../skychat/Logging.js';
 import { UserController } from '../../../skychat/UserController.js';
 import { shuffle } from './shuffle.js';
+import { formatMoney } from '../../../../api/money.js';
 import type { Party } from './Party.js';
 
 /** Geneva's time zone: Europe/Zurich is the IANA zone it uses */
@@ -53,8 +54,8 @@ export type SanitizedDailyRoll = {
 export class DailyRoll {
     static readonly CARDS = 30;
 
-    /** In cents: the big cards, the first one the jackpot. Every other card holds $0 to $5 */
-    static readonly PRIZES = [8000, 4000, 4000, 1000, 1000, 1000, 1000];
+    /** In cents, one per card, the first one the jackpot. The $10 cards are the ones that sting */
+    static readonly PRIZES = [100_000, ...Array(4).fill(20_000), ...Array(20).fill(8000), ...Array(5).fill(1000)];
 
     static readonly JACKPOT = DailyRoll.PRIZES[0];
 
@@ -65,8 +66,8 @@ export class DailyRoll {
 
     /** Instance values, so tests can shorten them */
     public timings = {
-        pickMs: 60_000,
-        lastCallMs: 10_000,
+        /** Long enough for people called by the announcement to come and pick */
+        pickMs: 3 * 60_000,
         countdownMs: 3000,
         flipMs: 120,
         suspenseMs: 1800,
@@ -116,6 +117,15 @@ export class DailyRoll {
 
     public start(): void {
         this.deadline = Date.now() + this.timings.pickMs;
+        const minutes = Math.round(this.timings.pickMs / 60_000);
+        logFailure(
+            this.party.channel.manager.plugin.announce(
+                `@here The Daily Roll is open in ${this.party.channel.name} for ${minutes} minutes: one free card each, up to ${formatMoney(
+                    DailyRoll.JACKPOT,
+                )}`,
+            ),
+            'Daily Roll',
+        );
         this.timer = setTimeout(() => logFailure(this.reveal(), 'Daily Roll'), this.timings.pickMs);
     }
 
@@ -148,14 +158,6 @@ export class DailyRoll {
             this.picks.delete(previous);
         }
         this.picks.set(id, session);
-        // Everyone here picked: only a last call left to change your mind
-        const pickers = [...this.picks.values()];
-        const lastCallAt = Date.now() + this.timings.lastCallMs;
-        if (lastCallAt < this.deadline && this.party.channel.sessions.every((s) => s.user.isGuest() || pickers.includes(s))) {
-            clearTimeout(this.timer);
-            this.deadline = lastCallAt;
-            this.timer = setTimeout(() => logFailure(this.reveal(), 'Daily Roll'), this.timings.lastCallMs);
-        }
         this.broadcast();
     }
 
@@ -204,7 +206,6 @@ export class DailyRoll {
 
         // Drawn only now, so nothing about the board exists before the picks are in
         const cardIds = () => Array.from({ length: DailyRoll.CARDS }, (_, id) => id);
-        this.amounts = Array.from({ length: DailyRoll.CARDS }, () => this.random(6) * 100);
         const spots = shuffle(cardIds(), this.random);
         DailyRoll.PRIZES.forEach((amount, i) => (this.amounts[spots[i]] = amount));
         this.phase = 'revealing';

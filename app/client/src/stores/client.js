@@ -4,6 +4,7 @@ import { SkyChatClient } from '../../../api/index.ts';
 import { WebPush } from '../lib/WebPush.js';
 import { triggerWizz } from '../lib/wizz.js';
 import { setServerTime } from '../lib/serverClock.js';
+import { playCasinoSound } from '../lib/casinoSounds.js';
 import { VoiceClient } from '../lib/voice/VoiceClient.js';
 import { useAppStore } from './app';
 import { useEncryptionStore } from './encryption';
@@ -183,6 +184,10 @@ export const useClientStore = defineStore('client', {
                 }
             });
 
+            client.on('allowance', (text) => {
+                useToast().success(text);
+                playCasinoSound('coin');
+            });
             client.on('info', (info) => {
                 if (String(info ?? '').trim()) {
                     useToast().info(info);

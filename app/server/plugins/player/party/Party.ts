@@ -60,7 +60,6 @@ export class Party {
     private deadline: number | null = null;
 
     /** Locks the whole channel, in memory: a restart unlocks it */
-    private dailyRollAt = 0;
 
     private timer: ReturnType<typeof setTimeout> | null = null;
 
@@ -191,7 +190,9 @@ export class Party {
             roulette: () => new Roulette(this, onRoundEnd),
         }[game]();
         if (game === 'dailyroll') {
-            this.dailyRollAt = DailyRoll.nextReset(Date.now());
+            this.channel.manager.plugin.dailyRollAt = DailyRoll.nextReset(Date.now());
+            // Every lobby shows the Daily Roll locked now, not only this one
+            this.channel.manager.channels.forEach((channel) => channel.party !== this && channel.party?.broadcast());
         }
         this.onGameCreated?.(this.game);
         this.game.start();
@@ -263,11 +264,15 @@ export class Party {
     }
 
     /** Who can play: everyone in the channel but guests */
+    private get dailyRollAt(): number {
+        return this.channel.manager.plugin.dailyRollAt;
+    }
+
     public players(): Session[] {
         return this.channel.sessions.filter((session) => !session.user.isGuest());
     }
 
-    private broadcast(): void {
+    public broadcast(): void {
         const payload = this.sanitized();
         this.channel.sessions.forEach((session) => session.send('party', payload));
         // The channel list shows which game is on

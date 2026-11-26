@@ -230,14 +230,10 @@ export class Plinko extends PartyRound {
         if (!ball.jackpot) {
             return;
         }
-        await this.announce(`★ ${ball.session.user.username} hit the Plinko jackpot: ${formatJackpot(ball.win)}! ★`);
+        await this.plugin.announce(`★ ${ball.session.user.username} hit the Plinko jackpot: ${formatJackpot(ball.win)}! ★`);
     }
 
     /** A jackpot is news for the whole chat, not only this channel */
-    private async announce(content: string): Promise<void> {
-        const mainRoom = this.plugin.manager.rooms.find((room) => room.main);
-        await mainRoom?.sendMessage({ content, user: UserController.getNeutralUser() });
-    }
 
     private waitForDrops(): void {
         clearTimeout(this.idleTimer);

@@ -79,6 +79,11 @@ const pick = (card) => {
 
 const sound = (name) => soundOn.value && playCasinoSound(name);
 
+// The roll just opened, nobody picked yet: a bell for everyone in the channel
+if (board.value.phase === 'picking' && picked.value === 0) {
+    sound('bell');
+}
+
 // Ticks for the last 5 seconds of picking, and each step of the 3, 2, 1
 watch(seconds, (left, before) => {
     if (left < before && left > 0 && (board.value.phase === 'countdown' || left <= 5)) {

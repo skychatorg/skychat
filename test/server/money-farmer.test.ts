@@ -48,7 +48,7 @@ describe('money farmer', () => {
         };
 
         expect(await tickOn(0)).toBe(2000);
-        expect(regular.last('info')).toBe('Daily allowance: $20. Come back tomorrow for $25');
+        expect(regular.last('allowance')).toBe('Daily allowance: $20. Come back tomorrow for $25');
         // Once a day only
         expect(await tickOn(0)).toBe(0);
         expect(await tickOn(1)).toBe(2500);

@@ -182,7 +182,7 @@ export class PlayerPlugin extends GlobalPlugin {
         },
     };
 
-    protected storage: { channels: SanitizedPlayerChannel[]; lastChannelId?: number; plinko?: PlinkoStorage } = {
+    protected storage: { channels: SanitizedPlayerChannel[]; lastChannelId?: number; plinko?: PlinkoStorage; dailyRollAt?: number } = {
         channels: [],
     };
 
@@ -230,6 +230,22 @@ export class PlayerPlugin extends GlobalPlugin {
             this.storage.lastChannelId = this.channelManager.lastChannelId;
             this.syncStorage();
         });
+    }
+
+    /** When the Daily Roll can be played again, in ms: once a day for the whole site, whatever the channel */
+    public get dailyRollAt(): number {
+        return this.storage.dailyRollAt ?? 0;
+    }
+
+    public set dailyRollAt(at: number) {
+        this.storage.dailyRollAt = at;
+        this.syncStorage();
+    }
+
+    /** Post in the main room as the server */
+    public async announce(content: string): Promise<void> {
+        const mainRoom = this.manager.rooms.find((room) => room.main);
+        await mainRoom?.sendMessage({ content, user: UserController.getNeutralUser() });
     }
 
     /** Plinko's jackpot, shared by every party channel, in cents */

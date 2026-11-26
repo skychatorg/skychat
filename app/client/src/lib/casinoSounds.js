@@ -347,6 +347,11 @@ const SOUNDS = {
         tone(ctx, at + 0.02, 420, 0.12, { type: 'sine', gain: 0.12 });
         swish(ctx, at, 0.07, { from: 4500, to: 1500, gain: 0.25 });
     },
+    // Money in: the two quick notes of a coin
+    coin: (ctx, at) => {
+        tone(ctx, at, 988, 0.09, { type: 'square', gain: 0.07 });
+        tone(ctx, at + 0.08, 1319, 0.35, { type: 'square', gain: 0.07 });
+    },
     peg: (ctx, at) => tone(ctx, at, 1600 + Math.random() * 1400, 0.06, { type: 'sine', gain: 0.05 }),
     drop: (ctx, at) => tone(ctx, at, 520, 0.12, { type: 'sine', gain: 0.15, slideTo: 880 }),
     thud: (ctx, at) => tone(ctx, at, 190, 0.18, { type: 'sine', gain: 0.14, slideTo: 110 }),

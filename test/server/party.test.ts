@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Plugin } from '../../app/server/plugins/Plugin.js';
 import { BlackjackTable } from '../../app/server/plugins/player/casino/BlackjackTable.js';
 import { PlayerChannel } from '../../app/server/plugins/player/PlayerChannel.js';
@@ -85,8 +85,8 @@ async function partyChannel(players = 2, { idleMs = 100, sky = [] as number[] } 
             };
             game.random = scripted([...sky]);
         } else if (game instanceof DailyRoll) {
-            game.timings = { pickMs: 800, lastCallMs: 30, countdownMs: 5, flipMs: 1, suspenseMs: 5, afterFlipMs: 1, resultsMs: 30 };
-            // Every card $5, but the first seven: the $80 jackpot, two $40 and four $10
+            game.timings = { pickMs: 400, countdownMs: 5, flipMs: 1, suspenseMs: 5, afterFlipMs: 1, resultsMs: 30 };
+            // Card 0 holds the $1,000 jackpot, 1 to 4 $200, 5 to 24 $80, 25 to 29 $10
             game.random = scripted([]);
         } else if (game instanceof MonkeyFight) {
             game.timings = { betMs: 600, lastCallMs: 20, introMs: 5, beatMs: 2, resultsMs: 30 };
@@ -993,7 +993,12 @@ describe('crash', () => {
 });
 
 describe('daily roll', () => {
-    it('gives one free card each, hides the values, and pays at the reveal once everyone picked', async () => {
+    // Once a day for the whole site: each test starts on a new day
+    beforeEach(() => {
+        player().dailyRollAt = 0;
+    });
+
+    it('gives one free card each, hides the values, and pays at the reveal', async () => {
         const { party, clients } = await partyChannel(2);
         const [alice, bob] = clients;
         const guest = await server.connect(null);
@@ -1011,18 +1016,19 @@ describe('daily roll', () => {
             { id: 1, username: alice.session.user.username, amount: null },
         ]);
 
-        // Everyone picked: the clock drops to the last call, and picks can still move
+        // Everyone picked, and picks stay open for latecomers: a pick can still move
+        const deadline = bob.last('daily-roll').deadline;
         await bob.send('/party card 0');
-        expect(bob.last('daily-roll').deadline).toBeLessThanOrEqual(Date.now() + 30);
+        expect(bob.last('daily-roll').deadline).toBe(deadline);
         await bob.send('/party card 29');
         expect(bob.errors()).toHaveLength(1);
         await until(() => bob.last('daily-roll')?.phase === 'done');
         // Nothing about the board leaves the server before the reveal starts
         const countdown = bob.events('daily-roll').find((board: { phase: string }) => board.phase === 'countdown');
         expect(countdown.cards.every((card: { amount: number | null }) => card.amount === null)).toBe(true);
-        expect(bob.last('daily-roll').cards[1]).toMatchObject({ username: alice.session.user.username, amount: 4000 });
-        expect(bob.last('daily-roll').cards[29]).toMatchObject({ username: bob.session.user.username, amount: 500 });
-        expect([alice.session.user.money, bob.session.user.money]).toEqual([24000, 20500]);
+        expect(bob.last('daily-roll').cards[1]).toMatchObject({ username: alice.session.user.username, amount: 20000 });
+        expect(bob.last('daily-roll').cards[29]).toMatchObject({ username: bob.session.user.username, amount: 1000 });
+        expect([alice.session.user.money, bob.session.user.money]).toEqual([40000, 21000]);
         await until(() => alice.last('party')?.phase === 'vote');
         expect(alice.last('daily-roll')).toBeNull();
     });
@@ -1034,7 +1040,22 @@ describe('daily roll', () => {
         await alice.send('/party card 3');
 
         await until(() => alice.last('daily-roll')?.phase === 'done');
-        expect([alice.session.user.money, bob.session.user.money]).toEqual([21000, 20000]);
+        expect([alice.session.user.money, bob.session.user.money]).toEqual([40000, 20000]);
+    });
+
+    it('calls everyone in the main room when it opens', async () => {
+        const announce = vi.spyOn(player(), 'announce').mockResolvedValue();
+        const { party, clients } = await partyChannel(1);
+
+        await clients[0].send('/party pick dailyroll');
+
+        expect(announce).toHaveBeenCalledWith(expect.stringMatching(new RegExp(`^@here The Daily Roll is open in ${party.channel.name}`)));
+    });
+
+    it('holds 30 cards: a $1,000 jackpot, four $200, twenty $80 and five $10', () => {
+        const count = (amount: number) => DailyRoll.PRIZES.filter((prize) => prize === amount).length;
+        expect(DailyRoll.PRIZES).toHaveLength(DailyRoll.CARDS);
+        expect([count(100_000), count(20_000), count(8000), count(1000)]).toEqual([1, 4, 20, 5]);
     });
 
     it('resets at 10 PM in Geneva, winter and summer, whatever the server time zone', () => {
@@ -1050,14 +1071,18 @@ describe('daily roll', () => {
         expect(reset('2026-10-24T21:00:00Z')).toBe('2026-10-25T21:00:00.000Z');
     });
 
-    it('locks the whole channel until 10 PM once played', async () => {
+    it('locks every channel until 10 PM once played anywhere', async () => {
         const { clients } = await partyChannel(2);
         const [alice, bob] = clients;
         const startedAt = Date.now();
+        const elsewhere = await partyChannel(1);
         await alice.send('/party pick dailyroll');
         const unlocksAt = alice.last('party').dailyRollAt;
         expect(unlocksAt).toBe(DailyRoll.nextReset(startedAt));
         expect(genevaHour(unlocksAt)).toBe('22:00');
+        // Another channel is locked too
+        await elsewhere.clients[0].send('/party pick dailyroll');
+        expect(elsewhere.clients[0].errors()).toEqual(['Daily Roll is back at 10 PM']);
 
         await until(() => alice.last('party')?.phase === 'vote');
         await bob.send('/party vote dailyroll');

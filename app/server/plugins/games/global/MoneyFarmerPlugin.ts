@@ -72,8 +72,9 @@ export class MoneyFarmerPlugin extends GlobalPlugin {
         await this.saveUserData(session.user, { day: today, streak });
         await UserController.giveMoney(session.user, amount, 'Daily allowance');
         const next = MoneyFarmerPlugin.allowanceFor(streak + 1);
+        // Its own event, so the client can ring a coin with the toast
         session.send(
-            'info',
+            'allowance',
             `Daily allowance: ${formatMoney(amount)}` +
                 (streak > 1 ? ` (${streak} days in a row)` : '') +
                 (next > amount ? `. Come back tomorrow for ${formatMoney(next)}` : ''),
