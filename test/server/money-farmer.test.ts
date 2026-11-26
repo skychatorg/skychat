@@ -26,27 +26,47 @@ describe('money farmer', () => {
         const quiet = await player('farmquiet', 500);
         quiet.session.lastPublicMessageSentDate = new Date(Date.now() - 6 * 60 * 1000);
 
+        // The first tick pays the day's allowance: the second shows the pay alone
+        await farmer['tick']();
+        players.forEach((p, i) => (p.session.user.money = [500, 2000, 20000][i]));
         await farmer['tick']();
 
         expect(players.map((p) => p.session.user.money)).toEqual([515, 2005, 20000]);
         expect(quiet.session.user.money).toBe(500);
     });
 
-    it('gives a broke player $10 once a day, then the usual pay', async () => {
-        const broke = await player('farmbroke', 40);
+    it('pays an allowance the first time a player chats each day, more for each day in a row', async () => {
+        const regular = await player('farmregular', 0);
+        const day = 24 * 60 * 60 * 1000;
+        const start = Date.now();
+        const tickOn = async (dayOffset: number) => {
+            vi.spyOn(Date, 'now').mockReturnValue(start + dayOffset * day);
+            regular.session.lastPublicMessageSentDate = new Date(Date.now());
+            regular.session.user.money = 20000;
+            await farmer['tick']();
+            return regular.session.user.money - 20000;
+        };
+
+        expect(await tickOn(0)).toBe(2000);
+        expect(regular.last('info')).toBe('Daily allowance: $20. Come back tomorrow for $25');
+        // Once a day only
+        expect(await tickOn(0)).toBe(0);
+        expect(await tickOn(1)).toBe(2500);
+        expect(await tickOn(2)).toBe(3000);
+        // A missed day starts over
+        expect(await tickOn(4)).toBe(2000);
+    });
+
+    it('tops out at $50 on the seventh day in a row', () => {
+        expect([1, 2, 7, 8, 30].map(MoneyFarmerPlugin.allowanceFor)).toEqual([2000, 2500, 5000, 5000, 5000]);
+    });
+
+    it('leaves quiet players without an allowance', async () => {
+        const quiet = await player('farmsilent', 0);
+        quiet.session.lastPublicMessageSentDate = new Date(Date.now() - 6 * 60 * 1000);
 
         await farmer['tick']();
-        expect(broke.session.user.money).toBe(1040);
-        expect(broke.last('info')).toContain('$10');
 
-        broke.session.user.money = 0;
-        await farmer['tick']();
-        expect(broke.session.user.money).toBe(15);
-
-        vi.spyOn(Date, 'now').mockReturnValue(Date.now() + MoneyFarmerPlugin.BAILOUT.everyMs);
-        // A day later, and still chatting
-        broke.session.lastPublicMessageSentDate = new Date(Date.now());
-        await farmer['tick']();
-        expect(broke.session.user.money).toBe(1015);
+        expect(quiet.session.user.money).toBe(0);
     });
 });

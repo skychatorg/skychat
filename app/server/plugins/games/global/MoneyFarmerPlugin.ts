@@ -6,6 +6,9 @@ import { GlobalPlugin } from '../../GlobalPlugin.js';
 import { Session } from '../../../skychat/Session.js';
 import { RoomManager } from '../../../skychat/RoomManager.js';
 import { logFailure } from '../../../skychat/Logging.js';
+import { DailyRoll } from '../../player/party/DailyRoll.js';
+
+type AllowanceData = { day: number; streak: number };
 
 export class MoneyFarmerPlugin extends GlobalPlugin {
     public static readonly MAX_INACTIVITY_DURATION_MS: number = 5 * 60 * 1000;
@@ -17,11 +20,11 @@ export class MoneyFarmerPlugin extends GlobalPlugin {
         { limit: 100 * 100, amount: 2 },
     ];
 
-    /** Under $1 nothing in the party is affordable: active players get $10 once a day to play again right away */
-    public static readonly BAILOUT = { below: 100, amount: 10 * 100, everyMs: 24 * 60 * 60 * 1000 };
+    /** Paid the first time a player chats each day: $20, then $5 more for each day in a row, up to $50 */
+    public static readonly ALLOWANCE = { first: 20 * 100, perDay: 5 * 100, max: 50 * 100 };
 
-    /** When the user last got the bailout, in ms */
-    static readonly defaultDataStorageValue = 0;
+    /** The day of the last allowance (the Daily Roll's reset that ends it), and how many days in a row */
+    static readonly defaultDataStorageValue: AllowanceData = { day: 0, streak: 0 };
 
     static readonly commandName = 'moneyfarmer';
 
@@ -48,22 +51,38 @@ export class MoneyFarmerPlugin extends GlobalPlugin {
         return entry ? entry.amount : 0;
     }
 
-    private async bailout(session: Session): Promise<boolean> {
-        const { below, amount, everyMs } = MoneyFarmerPlugin.BAILOUT;
-        if (session.user.money >= below || Date.now() - this.getUserData<number>(session.user) < everyMs) {
-            return false;
+    /** What a streak of `days` pays */
+    public static allowanceFor(days: number): number {
+        const { first, perDay, max } = MoneyFarmerPlugin.ALLOWANCE;
+        return Math.min(max, first + (days - 1) * perDay);
+    }
+
+    /** A day ends at the Daily Roll's reset, 10 PM in Geneva: it is named after that instant */
+    private async allowance(session: Session): Promise<void> {
+        const today = DailyRoll.nextReset(Date.now());
+        const saved = this.getUserData<AllowanceData | number>(session.user);
+        // Older saves hold the date of a bailout: a fresh start
+        const last = typeof saved === 'object' && saved ? saved : { day: 0, streak: 0 };
+        if (last.day === today) {
+            return;
         }
-        await this.saveUserData(session.user, Date.now());
-        await UserController.giveMoney(session.user, amount, 'Daily bailout');
-        session.send('info', `You were broke, here is ${formatMoney(amount)} to play again. Once a day.`);
-        return true;
+        // Yesterday ended at the reset before today's; 26 hours back lands in yesterday whatever daylight saving does
+        const streak = last.day === DailyRoll.nextReset(today - 26 * 60 * 60 * 1000) ? last.streak + 1 : 1;
+        const amount = MoneyFarmerPlugin.allowanceFor(streak);
+        await this.saveUserData(session.user, { day: today, streak });
+        await UserController.giveMoney(session.user, amount, 'Daily allowance');
+        const next = MoneyFarmerPlugin.allowanceFor(streak + 1);
+        session.send(
+            'info',
+            `Daily allowance: ${formatMoney(amount)}` +
+                (streak > 1 ? ` (${streak} days in a row)` : '') +
+                (next > amount ? `. Come back tomorrow for ${formatMoney(next)}` : ''),
+        );
     }
 
     private async tick(): Promise<void> {
         for (const session of Session.activeLoggedSessions(MoneyFarmerPlugin.MAX_INACTIVITY_DURATION_MS)) {
-            if (await this.bailout(session)) {
-                continue;
-            }
+            await this.allowance(session);
             const amount = this.getTickAmount(session.user);
             if (amount === 0) {
                 continue;
