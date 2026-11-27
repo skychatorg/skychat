@@ -191,9 +191,9 @@ export class PlayerPlugin extends GlobalPlugin {
     constructor(manager: RoomManager) {
         super(manager);
 
-        // Plinko balls already feed the jackpot their own way
+        // Plinko balls feed the jackpot their own way, and Hot Potato stakes go to players, not the house
         UserController.onBet = (amount, reason) => {
-            if (reason !== 'Plinko') {
+            if (!['Plinko', 'Hot Potato'].some((game) => reason.startsWith(game))) {
                 this.addToPlinkoJackpot(Math.round(amount * PLINKO.fromOtherBets));
             }
         };

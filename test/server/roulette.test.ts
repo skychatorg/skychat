@@ -1,5 +1,6 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { ROULETTE_SPACES, roulettePayout, WHEEL } from '../../app/api/roulette.js';
+import { UserController } from '../../app/server/skychat/UserController.js';
 import { PlayerChannel } from '../../app/server/plugins/player/PlayerChannel.js';
 import { PlayerPlugin } from '../../app/server/plugins/player/PlayerPlugin.js';
 import { Roulette } from '../../app/server/plugins/player/party/Roulette.js';
@@ -121,6 +122,9 @@ describe('roulette', () => {
 
         await clients[0].send(`/party bet ${RED} 5000`);
 
+        expect(player().plinkoJackpot).toBe(before + 50);
+        // Hot Potato is played between players: the house takes nothing to give
+        UserController.onBet?.(5000, 'Hot Potato stake');
         expect(player().plinkoJackpot).toBe(before + 50);
     });
 
