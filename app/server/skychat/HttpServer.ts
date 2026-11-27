@@ -80,6 +80,10 @@ export class HttpServer extends EventEmitter {
 
     private getExpressApp() {
         const app = express();
+        // Read by the page as it loads, before any login: only production sets a site id, so other setups send nothing
+        app.get('/api/analytics', (_request, response) => {
+            response.json({ rybbitSiteId: process.env.RYBBIT_SITE_ID?.trim() || null });
+        });
 
         return app;
     }

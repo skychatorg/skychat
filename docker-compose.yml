@@ -58,6 +58,8 @@ services:
       MAILGUN_FROM: "${MAILGUN_FROM}"
       VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY}
       VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY}
+      # Rybbit analytics site id, sent to the client at runtime: set in prod .env only
+      RYBBIT_SITE_ID: "${RYBBIT_SITE_ID:-}"
       DISCORD_GUILD_ID: "${DISCORD_GUILD_ID}"
       DISCORD_EXCLUDED_CHANNEL_IDS: "${DISCORD_EXCLUDED_CHANNEL_IDS}"
       DISCORD_OAUTH_CLIENT_ID: "${DISCORD_OAUTH_CLIENT_ID}"

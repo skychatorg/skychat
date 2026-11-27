@@ -10,6 +10,7 @@ import 'vue-smart-suggest/lib/style.css';
 
 import App from './App.vue';
 import { useAppStore } from '@/stores/app';
+import { startAnalytics } from '@/lib/analytics.js';
 import { router } from './router.js';
 
 import './icons';
@@ -29,6 +30,8 @@ import './css/index.css';
 
     // Use router
     app.use(router);
+
+    startAnalytics(router);
 
     // Mousetrap
     app.config.globalProperties.$mousetrap = mousetrap;
