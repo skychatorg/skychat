@@ -5,7 +5,7 @@ body {
     height: 100vh;
     overflow: hidden;
 
-    font-family: 'Inter', sans-serif;
+    font-family: 'Inter Variable', sans-serif;
 
     background:
         radial-gradient(ellipse at 20% 20%, rgba(119, 155, 233, 0.18), transparent 55%),

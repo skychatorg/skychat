@@ -14,6 +14,8 @@ import { startAnalytics } from '@/lib/analytics.js';
 import { router } from './router.js';
 
 import './icons';
+// Served by SkyChat itself: no request to Google, and only the scripts a page uses are downloaded
+import '@fontsource-variable/inter';
 import './css/index.css';
 
 (async () => {
