@@ -228,6 +228,9 @@ export class UserController {
     /**
      * Remove money from an user account
      */
+    /** Told of every bet once paid: the Plinko jackpot takes a share of them */
+    public static onBet: ((amount: number, reason: string) => void) | null = null;
+
     public static async buy(user: User, amount: number, reason: string, kind: MoneyKind = 'other'): Promise<void> {
         // NaN would pass the check below, and every check after it once it is the balance
         if (!Number.isFinite(amount) || amount < 0) {
@@ -237,6 +240,9 @@ export class UserController {
             throw new Error('User has not enough money to buy this amount');
         }
         await UserController.changeMoney(user, -amount, reason, kind);
+        if (kind === 'bet') {
+            UserController.onBet?.(amount, reason);
+        }
     }
 
     /**

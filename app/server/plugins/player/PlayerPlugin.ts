@@ -191,6 +191,13 @@ export class PlayerPlugin extends GlobalPlugin {
     constructor(manager: RoomManager) {
         super(manager);
 
+        // Plinko balls already feed the jackpot their own way
+        UserController.onBet = (amount, reason) => {
+            if (reason !== 'Plinko') {
+                this.addToPlinkoJackpot(Math.round(amount * PLINKO.fromOtherBets));
+            }
+        };
+
         for (const fetcherName of Object.keys(PlayerPlugin.FETCHERS)) {
             (this.rules as any)[fetcherName] = {
                 minCount: 1,
