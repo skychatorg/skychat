@@ -3,6 +3,7 @@ import { ConnectedListPlugin } from './ConnectedListPlugin.js';
 import { UserController } from '../../../skychat/UserController.js';
 import { Session } from '../../../skychat/Session.js';
 import { RoomManager } from '../../../skychat/RoomManager.js';
+import { logFailure } from '../../../skychat/Logging.js';
 
 export class XpTickerPlugin extends GlobalPlugin {
     public static readonly MAX_INACTIVITY_DURATION_MS: number = 5 * 60 * 1000;
@@ -14,7 +15,7 @@ export class XpTickerPlugin extends GlobalPlugin {
     constructor(manager: RoomManager) {
         super(manager);
 
-        setInterval(this.tick.bind(this), 60 * 1000);
+        setInterval(() => logFailure(this.tick(), 'XP ticker'), 60 * 1000);
     }
 
     async run(): Promise<void> {
@@ -22,18 +23,7 @@ export class XpTickerPlugin extends GlobalPlugin {
     }
 
     private async tick(): Promise<void> {
-        // Get rooms in the session
-        const sessions = Object.values(Session.sessions);
-        // For each session in the room
-        for (const session of sessions) {
-            // If it's not a logged session, continue
-            if (session.user.right < 0) {
-                continue;
-            }
-            // If user inactive for too long, continue
-            if (session.lastPublicMessageSentDate.getTime() + XpTickerPlugin.MAX_INACTIVITY_DURATION_MS < new Date().getTime()) {
-                continue;
-            }
+        for (const session of Session.activeLoggedSessions(XpTickerPlugin.MAX_INACTIVITY_DURATION_MS)) {
             await UserController.giveXP(session.user, 1);
         }
         (this.manager.getPlugin('connectedlist') as ConnectedListPlugin).sync();

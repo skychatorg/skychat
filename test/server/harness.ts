@@ -14,14 +14,25 @@ type QueryConfig = string | { text: string; values?: unknown[] };
 /**
  * In-memory stand-in for the pg client: inserts get fresh ids, everything else returns no rows.
  * Enough for the room and message flows, which keep their state in memory and only persist to the DB.
+ * Money changes are kept, so a user's money history reads back.
  */
 export function installFakeDb() {
     let nextId = 1;
     const queries: string[] = [];
+    const moneyChanges: { userId: unknown; amount: unknown; reason: unknown; date: unknown }[] = [];
     DatabaseHelper.db = {
         query: async (query: QueryConfig) => {
             const text = typeof query === 'string' ? query : query.text;
+            const values = typeof query === 'string' ? [] : query.values ?? [];
             queries.push(text);
+            if (/^\s*insert into money_changes\b/i.test(text)) {
+                const [userId, amount, , reason, date] = values;
+                moneyChanges.unshift({ userId, amount, reason, date });
+            }
+            if (/from money_changes where user_id/i.test(text)) {
+                const [userId, limit] = values;
+                return { rows: moneyChanges.filter((change) => change.userId === userId).slice(0, limit as number) };
+            }
             if (/^\s*insert\b[\s\S]*\breturning\s+id\b/i.test(text)) {
                 return { rows: [{ id: nextId++ }], rowCount: 1 };
             }

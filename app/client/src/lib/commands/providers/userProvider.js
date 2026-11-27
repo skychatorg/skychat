@@ -94,7 +94,7 @@ export function useUserCommands() {
                                 title: labels.banUserFor(d.name),
                                 icon: 'ban',
                                 category: /** @type {import('../types.js').CommandCategory} */ ('Users'),
-                                run: () => client.sendMessage(`/ban ${u} access ${d.seconds}`),
+                                run: () => client.sendMessage(`/ban ${u} ACCESS ${d.seconds}`),
                             })),
                             {
                                 id: `user.ban.${u}.custom`,
@@ -108,7 +108,7 @@ export function useUserCommands() {
                                     run: (value) => {
                                         const seconds = parseInt(value, 10);
                                         if (Number.isFinite(seconds) && seconds > 0) {
-                                            client.sendMessage(`/ban ${u} access ${seconds}`);
+                                            client.sendMessage(`/ban ${u} ACCESS ${seconds}`);
                                         }
                                     },
                                 }),

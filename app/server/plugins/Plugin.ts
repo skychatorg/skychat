@@ -129,7 +129,10 @@ export abstract class Plugin {
             return;
         }
         fs.mkdirSync(this.getStoragePath(), { recursive: true });
-        fs.writeFileSync(this.getStoragePath() + `/${this.commandName}.json`, JSON.stringify(this.storage));
+        // Written aside then swapped in: a crash mid-write must not leave a truncated file, which would load as empty
+        const file = this.getStoragePath() + `/${this.commandName}.json`;
+        fs.writeFileSync(`${file}.tmp`, JSON.stringify(this.storage));
+        fs.renameSync(`${file}.tmp`, file);
     }
 
     /**

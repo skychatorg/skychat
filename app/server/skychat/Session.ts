@@ -2,8 +2,6 @@ import { Connection } from './Connection.js';
 import { IBroadcaster } from './IBroadcaster.js';
 import { SanitizedUser, User } from './User.js';
 
-export const BinaryMessageTypes = 123;
-
 export type SanitizedSession = {
     identifier: string;
 
@@ -32,6 +30,16 @@ export class Session implements IBroadcaster {
      * Object mapping all active sessions
      */
     static sessions: { [identifier: string]: Session } = {};
+
+    /**
+     * Logged-in sessions that sent a public message in the last `maxInactivityMs`: who the minute rewards go to
+     */
+    public static activeLoggedSessions(maxInactivityMs: number): Session[] {
+        const since = Date.now() - maxInactivityMs;
+        return Object.values(Session.sessions).filter(
+            (session) => session.user.right >= 0 && session.lastPublicMessageSentDate.getTime() >= since,
+        );
+    }
 
     /**
      * Find an existing session using its identifier
@@ -221,7 +229,7 @@ export class Session implements IBroadcaster {
         // If this session was marked as dead, mark it as alive
         this.deadSince = null;
 
-        connection.send('set-user', this.user.sanitized());
+        this.sendUserData(connection);
         connection.send('set-op', this.op);
     }
 
@@ -251,7 +259,14 @@ export class Session implements IBroadcaster {
         if (!this.user) {
             return;
         }
-        this.connections.forEach((connection) => connection.send('set-user', this.user.sanitized()));
+        this.connections.forEach((connection) => this.sendUserData(connection));
+    }
+
+    /**
+     * The user as others see it, plus what only they see
+     */
+    private sendUserData(connection: Connection): void {
+        connection.send('set-user', this.user.sanitized());
     }
 
     /**

@@ -1,9 +1,8 @@
 import express from 'express';
-import { pipeline } from 'node:stream/promises';
 import { RateLimiterMemory } from 'rate-limiter-flexible';
-import { Logging } from '../../../skychat/Logging.js';
 import { PluginRoute } from '../../GlobalPlugin.js';
-import { JELLYFIN_ID_REGEX, JellyfinClient, JellyfinFetcher, msToTicks, verifyStreamToken } from './JellyfinFetcher.js';
+import { JELLYFIN_ID_REGEX, JellyfinClient, JellyfinFetcher, msToTicks } from './JellyfinFetcher.js';
+import { authenticate, rateLimit, sanitizeError, streamUpstream } from './MediaProxy.js';
 
 const INT_RE = /^\d{1,3}$/;
 const BIG_INT_RE = /^\d{1,15}$/;
@@ -18,78 +17,6 @@ const imageLimiter = new RateLimiterMemory({ points: 40, duration: 1 });
 // Segments are ~6s of video each, so steady state is well under 1/s, but seeking makes the player
 // burst-fetch to refill its buffer. Give HLS its own budget rather than sharing the stream one.
 const hlsLimiter = new RateLimiterMemory({ points: 120, duration: 1 });
-
-function sanitizeError(err: unknown): { status: number; message: string } {
-    Logging.warn(`Jellyfin proxy upstream error: ${(err as Error)?.message ?? String(err)}`);
-    return { status: 502, message: 'upstream error' };
-}
-
-function authenticate(req: express.Request): { userId: number } | null {
-    const token = typeof req.query.t === 'string' ? req.query.t : '';
-    return verifyStreamToken(token);
-}
-
-async function rateLimit(limiter: RateLimiterMemory, userId: number, res: express.Response): Promise<boolean> {
-    try {
-        await limiter.consume(String(userId));
-        return true;
-    } catch {
-        res.status(429).end();
-        return false;
-    }
-}
-
-async function streamUpstream(req: express.Request, res: express.Response, client: JellyfinClient, relativeUrl: string): Promise<void> {
-    const range = typeof req.headers.range === 'string' ? req.headers.range : undefined;
-    try {
-        const upstream = await client.rawHttp.get(relativeUrl, {
-            headers: range ? { Range: range } : {},
-            responseType: 'stream',
-            validateStatus: () => true,
-            maxContentLength: Infinity,
-            maxBodyLength: Infinity,
-            decompress: false,
-        });
-
-        if (upstream.status >= 400) {
-            const sanitized = sanitizeError(new Error(`upstream ${upstream.status}`));
-            upstream.data.destroy();
-            res.status(sanitized.status).json(sanitized);
-            return;
-        }
-
-        const headers: Record<string, string> = {};
-        for (const name of ['content-type', 'content-length', 'content-range', 'accept-ranges', 'last-modified', 'etag']) {
-            const v = upstream.headers[name];
-            if (typeof v === 'string') {
-                headers[name] = v;
-            }
-        }
-        res.writeHead(upstream.status, headers);
-
-        // Destroy the upstream stream if the client disconnects mid-transfer (seek, tab close).
-        const onClose = () => {
-            upstream.data.destroy();
-        };
-        req.on('close', onClose);
-
-        try {
-            await pipeline(upstream.data, res);
-        } catch (err) {
-            // Client aborted or upstream errored — both are normal; log at debug level.
-            Logging.info(`Jellyfin proxy pipeline ended: ${(err as Error).message}`);
-        } finally {
-            req.off('close', onClose);
-        }
-    } catch (err) {
-        const sanitized = sanitizeError(err);
-        if (!res.headersSent) {
-            res.status(sanitized.status).json(sanitized);
-        } else {
-            res.end();
-        }
-    }
-}
 
 // For small text responses we need to modify (playlists, subtitles), so buffering them is fine.
 async function sendRewrittenText(
@@ -173,7 +100,7 @@ export function buildJellyfinRoutes(fetcher: JellyfinFetcher): PluginRoute[] {
         const audioIdx = audioStreamIndex !== undefined ? parseInt(audioStreamIndex, 10) : undefined;
         const startTimeTicks = startTimeMsStr !== undefined ? parseInt(startTimeMsStr, 10) * 10_000 : undefined;
         const upstreamPath = fetcher.client.buildRemuxStreamPath(itemId, mediaSourceId, playSessionId, audioIdx, startTimeTicks);
-        await streamUpstream(req, res, fetcher.client, upstreamPath);
+        await streamUpstream(req, res, fetcher.client.rawHttp, upstreamPath);
     };
 
     const handleSubtitle: PluginRoute['handler'] = async (req, res) => {
@@ -288,7 +215,7 @@ export function buildJellyfinRoutes(fetcher: JellyfinFetcher): PluginRoute[] {
             query.set(key, value);
         }
         const upstreamPath = fetcher.client.buildHlsSegmentPath(itemId, playlistId, segment, query.toString());
-        await streamUpstream(req, res, fetcher.client, upstreamPath);
+        await streamUpstream(req, res, fetcher.client.rawHttp, upstreamPath);
     };
 
     const handleImage: PluginRoute['handler'] = async (req, res) => {
@@ -316,7 +243,7 @@ export function buildJellyfinRoutes(fetcher: JellyfinFetcher): PluginRoute[] {
         const tag = typeof req.query.tag === 'string' ? req.query.tag : undefined;
         const client = fetcher.client;
         const upstreamPath = client.buildImagePath(itemId, type as 'Primary' | 'Backdrop' | 'Thumb', tag);
-        await streamUpstream(req, res, client, upstreamPath);
+        await streamUpstream(req, res, client.rawHttp, upstreamPath);
     };
 
     return [

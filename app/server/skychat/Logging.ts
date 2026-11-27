@@ -9,6 +9,10 @@ export class Logging {
                 if (typeof a === 'string') {
                     return a;
                 }
+                // JSON.stringify gives {} for an Error
+                if (a instanceof Error) {
+                    return a.stack ?? a.message;
+                }
                 try {
                     return JSON.stringify(a);
                 } catch {
@@ -38,3 +42,10 @@ export class Logging {
         Logging.logger.trace(Logging.argsToString(messages));
     }
 }
+
+/**
+ * Work started without waiting for it, like a timer's: log its failure, since an unhandled rejection stops the server
+ */
+export const logFailure = (work: Promise<unknown>, label: string): void => {
+    work.catch((error) => Logging.error(label, error));
+};

@@ -3,6 +3,7 @@ import { Config } from '../../../skychat/Config.js';
 import { Connection } from '../../../skychat/Connection.js';
 import { RoomManager } from '../../../skychat/RoomManager.js';
 import { SanitizedSession, Session } from '../../../skychat/Session.js';
+import { UserController } from '../../../skychat/UserController.js';
 import { GlobalPlugin } from '../../GlobalPlugin.js';
 
 /**
@@ -10,6 +11,9 @@ import { GlobalPlugin } from '../../GlobalPlugin.js';
  */
 export class ConnectedListPlugin extends GlobalPlugin {
     static readonly SYNC_DELAY = 2 * 1000;
+
+    /** Changes asked for within this window are sent together: a payout to every winner rebuilds the list once */
+    static readonly BATCH_MS = 100;
 
     static readonly commandName = 'connectedlist';
 
@@ -22,6 +26,8 @@ export class ConnectedListPlugin extends GlobalPlugin {
      */
     private lastConnectedList: unknown = null;
 
+    private syncQueued = false;
+
     constructor(manager: RoomManager) {
         super(manager);
 
@@ -30,6 +36,7 @@ export class ConnectedListPlugin extends GlobalPlugin {
             objectHash: (obj: any, index?: number | undefined) => (obj as SanitizedSession)?.identifier ?? obj.id ?? index,
         });
         setInterval(this.sync.bind(this), ConnectedListPlugin.SYNC_DELAY);
+        UserController.onMoneyChange = () => this.sync();
     }
 
     public run(): Promise<void> {
@@ -40,12 +47,15 @@ export class ConnectedListPlugin extends GlobalPlugin {
         connection.send('connected-list', this.lastConnectedList);
     }
 
-    async onConnectionLeftRoom(): Promise<void> {
-        this.sync();
-    }
-
     public sync(): void {
-        this._patchClients();
+        if (this.syncQueued) {
+            return;
+        }
+        this.syncQueued = true;
+        setTimeout(() => {
+            this.syncQueued = false;
+            this._patchClients();
+        }, ConnectedListPlugin.BATCH_MS);
     }
 
     private _sessionSortFunction(a: Session, b: Session) {

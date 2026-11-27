@@ -3,6 +3,8 @@ import { useToast } from 'vue-toastification';
 import { SkyChatClient } from '../../../api/index.ts';
 import { WebPush } from '../lib/WebPush.js';
 import { triggerWizz } from '../lib/wizz.js';
+import { setServerTime } from '../lib/serverClock.js';
+import { playCasinoSound } from '../lib/casinoSounds.js';
 import { VoiceClient } from '../lib/voice/VoiceClient.js';
 import { useAppStore } from './app';
 import { useEncryptionStore } from './encryption';
@@ -52,6 +54,11 @@ export const useClientStore = defineStore('client', {
         messageSearchLoading: false,
 
         /**
+         * The saved login was refused (expired, revoked): the chat can't open until the user logs in again
+         */
+        authRefused: false,
+
+        /**
          * Local-only voice UI state (mirrors VoiceClient internals for the template).
          */
         voice: {
@@ -68,12 +75,33 @@ export const useClientStore = defineStore('client', {
          * Track only the last received message. Useful to be used in a watcher.
          */
         lastMessage: (state) => state.messages[state.messages.length - 1] || null,
+
+        /**
+         * The channel you are in, from the live list (state.currentPlayerChannel can lag behind a list update)
+         */
+        currentChannel: (state) => state.state.playerChannels.find((channel) => channel.id === state.state.currentPlayerChannelId) ?? null,
+
+        /**
+         * Whether the player panel has something to show: a media playing, or a party
+         */
+        channelHasContent: (state) =>
+            state.state.currentPlayerChannel?.kind === 'party' ? Boolean(state.state.party) : Boolean(state.state.player.current),
+
+        /** Your channel of each kind, and the one beside the player */
+        mediaChannel: (state) => state.state.playerChannels.find((channel) => channel.id === state.state.mediaChannelId) ?? null,
+        partyChannel: (state) => state.state.playerChannels.find((channel) => channel.id === state.state.partyChannelId) ?? null,
+        sideChannel: (state) => state.state.playerChannels.find((channel) => channel.id === state.state.sideChannelId) ?? null,
     },
 
     actions: {
         /**
          * Initialize client (subscribe to relevant events) & make initial socket connection
          */
+        /** Show your other channel in the player */
+        swapPlayerChannels() {
+            client.swapPlayerChannels();
+        },
+
         init: function () {
             const encryptionStore = useEncryptionStore();
             // On global client state changed
@@ -137,10 +165,13 @@ export const useClientStore = defineStore('client', {
             });
 
             // Ask for push notification permission on user login
+            // set-user arrives on every change to your user (money, avatar…), asking for push once per login is enough
+            let pushRegisteredFor = null;
             client.on('set-user', async (user) => {
-                if (!user.id) {
+                if (!user.id || user.id === pushRegisteredFor) {
                     return;
                 }
+                pushRegisteredFor = user.id;
 
                 try {
                     const subscription = await WebPush.register(import.meta.env.VAPID_PUBLIC_KEY);
@@ -153,11 +184,18 @@ export const useClientStore = defineStore('client', {
                 }
             });
 
+            client.on('allowance', (text) => {
+                useToast().success(text);
+                playCasinoSound('coin');
+            });
             client.on('info', (info) => {
                 if (String(info ?? '').trim()) {
                     useToast().info(info);
                 }
             });
+            client.on('auth-refused', () => (this.authRefused = true));
+            client.on('connection-accepted', () => (this.authRefused = false));
+
             client.on('error', (error) => {
                 // Never render an empty toast: a red box with no text tells the user nothing
                 const message = typeof error === 'string' ? error : error?.message ?? '';
@@ -169,6 +207,7 @@ export const useClientStore = defineStore('client', {
             client.on('discord-link', (url) => {
                 window.open(url, '_blank', 'width=500,height=800');
             });
+            client.on('ping', setServerTime);
             client.on('wizz', () => {
                 triggerWizz();
             });
@@ -269,6 +308,31 @@ export const useClientStore = defineStore('client', {
         },
         setVoiceUserLocallyMuted(userId, muted) {
             voiceClient?.setUserLocallyMuted(userId, muted);
+        },
+
+        /**
+         * Ask how much, then send it. The server takes the commission and says in the chat how much arrived
+         */
+        giveMoney: function (username) {
+            const dollars = Number(prompt(`How much do you give to ${username}? (in $)`)?.replace(',', '.'));
+            if (!(dollars > 0)) {
+                return false;
+            }
+            client.sendMessage(`/give ${username} ${Math.round(dollars * 100)}`);
+            return true;
+        },
+
+        /**
+         * Join the next (step 1) or previous (step -1) room you have access to
+         */
+        joinAdjacentRoom: function (step) {
+            const rooms = this.state.rooms.filter((room) => client.hasAccessToRoom(room.id));
+            const index = rooms.findIndex((room) => room.id === this.state.currentRoomId);
+            // Current room not listed yet (a new conversation): start from either end
+            const next = index === -1 ? rooms.at(step > 0 ? 0 : -1) : rooms[(index + step + rooms.length) % rooms.length];
+            if (next && next.id !== this.state.currentRoomId) {
+                this.join(next.id);
+            }
         },
 
         /**

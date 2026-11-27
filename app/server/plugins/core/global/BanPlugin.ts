@@ -10,6 +10,7 @@ import { User } from '../../../skychat/User.js';
 import { UserController } from '../../../skychat/UserController.js';
 import { GlobalPlugin } from '../../GlobalPlugin.js';
 import { MessageHistoryPlugin } from '../../core/room/MessageHistoryPlugin.js';
+import { logFailure } from '../../../skychat/Logging.js';
 import { triggerVoiceRevalidate } from '../../voice/triggerVoiceRevalidate.js';
 
 enum BAN_TYPES {
@@ -18,6 +19,9 @@ enum BAN_TYPES {
     LAG = 2,
     SPAM = 3,
 }
+
+/** One ban as moderators see it: `match` is what it applies to, a username or an IP */
+export type SanitizedBan = { source: string; match: string; type: keyof typeof BAN_TYPES; until: number | null };
 
 export class BanPlugin extends GlobalPlugin {
     static readonly TICK_INTERVAL = 1000;
@@ -62,7 +66,9 @@ export class BanPlugin extends GlobalPlugin {
         },
         [BanPlugin.BANLIST_COMMAND]: {
             minCount: 0,
-            maxCount: 0,
+            maxCount: 1,
+            // `ui`: the admin panel asks, so only the data is sent, no table in the chat
+            params: [{ name: 'mode', pattern: /^ui$/ }],
         },
     };
 
@@ -78,7 +84,7 @@ export class BanPlugin extends GlobalPlugin {
 
         this.loadStorage();
 
-        setInterval(() => this.tick(), BanPlugin.TICK_INTERVAL);
+        setInterval(() => logFailure(this.tick(), 'Ban'), BanPlugin.TICK_INTERVAL);
     }
 
     async run(alias: string, param: string, connection: Connection): Promise<void> {
@@ -151,6 +157,16 @@ export class BanPlugin extends GlobalPlugin {
     }
 
     async handleBanList(param: string, connection: Connection) {
+        const bans: SanitizedBan[] = Object.entries(this.storage.banned).map(([match, { source, type, until }]) => ({
+            source,
+            match,
+            type: BAN_TYPES[type] as keyof typeof BAN_TYPES,
+            until,
+        }));
+        connection.send('ban-list', bans);
+        if (param === 'ui') {
+            return;
+        }
         const formatter = MessageFormatter.getInstance();
         let content = '<p>Banned:</p>';
         content += '<table class="skychat-table">';
@@ -217,14 +233,6 @@ export class BanPlugin extends GlobalPlugin {
     }
 
     public async onNewConnection(connection: Connection): Promise<void> {
-        // If access ban, just close connection
-        if (this.isBanned(connection, BAN_TYPES.ACCESS)) {
-            connection.close(Connection.CLOSE_KICKED, 'You have been disconnected');
-            throw new Error();
-        }
-    }
-
-    public async onConnectionJoinedRoom(connection: Connection): Promise<void> {
         // If access ban, just close connection
         if (this.isBanned(connection, BAN_TYPES.ACCESS)) {
             connection.close(Connection.CLOSE_KICKED, 'You have been disconnected');

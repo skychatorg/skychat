@@ -1,0 +1,109 @@
+/* Animated names from the shop. The gradient is clipped to the text and slides along it */
+.name-fx {
+    background-size: 200% auto;
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent !important;
+    text-decoration-color: var(--name-color);
+    animation: name-fx 3s linear infinite;
+}
+.name-fx-shimmer {
+    background-image: linear-gradient(90deg, var(--name-color) 35%, #fff 50%, var(--name-color) 65%);
+}
+.name-fx-rainbow {
+    background-image: linear-gradient(90deg, #ff4769, #f0c46c, #49ff8c, #4cc9f0, #bb33ff, #ff4769);
+}
+.name-fx-fire {
+    background-image: linear-gradient(90deg, #ff3d00, #ffb000, #ff6a00, #ffd54f, #ff3d00);
+}
+.name-fx-ice {
+    background-image: linear-gradient(90deg, #7dd3fc, #ffffff, #a5b4fc, #e0f2fe, #7dd3fc);
+}
+.name-fx-gold {
+    background-image: linear-gradient(90deg, #b8860b, #ffe680, #d4a017, #fff3b0, #b8860b);
+}
+@keyframes name-fx {
+    to {
+        background-position: 200% center;
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .name-fx {
+        animation: none;
+    }
+}
+
+/* Avatar frames from the shop: a border with a glow around it */
+.frame-gold {
+    border-color: #e6b422;
+    box-shadow: 0 0 6px 1px rgb(240 196 108 / 0.7);
+}
+.frame-neon {
+    border-color: var(--name-color);
+    animation: frame-neon 1.6s ease-in-out infinite alternate;
+}
+.frame-fire {
+    animation: frame-fire 1.2s steps(6) infinite alternate;
+}
+.frame-ice {
+    border-color: #bae6fd;
+    box-shadow:
+        0 0 0 1px rgb(255 255 255 / 0.6),
+        0 0 8px 1px rgb(125 211 252 / 0.7);
+}
+.frame-rainbow {
+    animation: frame-rainbow 4s linear infinite;
+}
+@keyframes frame-neon {
+    from {
+        box-shadow: 0 0 2px 0 var(--name-color);
+    }
+    to {
+        box-shadow: 0 0 10px 2px var(--name-color);
+    }
+}
+@keyframes frame-fire {
+    from {
+        border-color: #ff3d00;
+        box-shadow: 0 -2px 6px 1px rgb(255 106 0 / 0.8);
+    }
+    to {
+        border-color: #ffb000;
+        box-shadow: 0 -4px 10px 2px rgb(255 61 0 / 0.7);
+    }
+}
+@keyframes frame-rainbow {
+    0%,
+    100% {
+        border-color: #ff4769;
+        box-shadow: 0 0 6px 1px #ff4769;
+    }
+    25% {
+        border-color: #f0c46c;
+        box-shadow: 0 0 6px 1px #f0c46c;
+    }
+    50% {
+        border-color: #49ff8c;
+        box-shadow: 0 0 6px 1px #49ff8c;
+    }
+    75% {
+        border-color: #4cc9f0;
+        box-shadow: 0 0 6px 1px #4cc9f0;
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .avatar-frame {
+        animation: none;
+    }
+    .frame-neon {
+        box-shadow: 0 0 6px 1px var(--name-color);
+    }
+    .frame-fire {
+        border-color: #ff6a00;
+        box-shadow: 0 -2px 6px 1px rgb(255 106 0 / 0.8);
+    }
+    .frame-rainbow {
+        border-color: #bb33ff;
+        box-shadow: 0 0 6px 1px #bb33ff;
+    }
+}

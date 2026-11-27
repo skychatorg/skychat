@@ -57,3 +57,17 @@ describe('plugin loading', () => {
         expect(missing).toEqual([]);
     });
 });
+
+describe('give money', () => {
+    it('moves the money minus the commission, with no error for the giver', async () => {
+        const server = await new TestServer().start();
+        const [alice, bob] = [await server.connect('givealice'), await server.connect('givebob')];
+        alice.session.user.money = 1000;
+        bob.session.user.money = 0;
+
+        await alice.send('/give givebob 500');
+
+        expect(alice.errors()).toEqual([]);
+        expect([alice.session.user.money, bob.session.user.money]).toEqual([500, 400]);
+    });
+});

@@ -1,7 +1,10 @@
 import { EventEmitter } from 'events';
 import { Connection } from '../../skychat/Connection.js';
 import { Session } from '../../skychat/Session.js';
-import { PlayerChannel, SanitizedPlayerChannel } from './PlayerChannel.js';
+import { PARTY_GAMES } from '../../../api/party.js';
+import { CasinoOptions } from './casino/BlackjackTable.js';
+import { logFailure } from '../../skychat/Logging.js';
+import { ChannelKind, PlayerChannel, SanitizedPlayerChannel } from './PlayerChannel.js';
 import { PlayerPlugin } from './PlayerPlugin.js';
 
 export class PlayerChannelManager extends EventEmitter {
@@ -10,9 +13,9 @@ export class PlayerChannelManager extends EventEmitter {
     public readonly plugin: PlayerPlugin;
 
     /**
-     * Mapping from session to channel ids
+     * The channels each session is in: one of each kind, so music keeps playing while you play a game
      */
-    public readonly sessionChannels: Map<Session, number> = new Map();
+    public readonly sessionChannels: Map<Session, Partial<Record<ChannelKind, number>>> = new Map();
 
     constructor(plugin: PlayerPlugin) {
         super();
@@ -22,24 +25,27 @@ export class PlayerChannelManager extends EventEmitter {
     }
 
     /**
-     * Get the next available channel id
-     * @returns
+     * Highest id ever given out, saved with the channels so a deleted channel's id is never reused
+     */
+    public lastChannelId = 0;
+
+    /**
+     * Users rejoin their last channel by id, so a reused id would drop them into an unrelated channel
      */
     public getNextChannelId(): number {
-        return this.channels.length === 0 ? 1 : Math.max(...this.channels.map((channel) => channel.id)) + 1;
+        this.lastChannelId = Math.max(this.lastChannelId, ...this.channels.map((channel) => channel.id)) + 1;
+        return this.lastChannelId;
     }
 
     /**
      * Create a new channel with the given name
-     * @param id
-     * @param name
      */
-    public createChannel(id: number, name: string): PlayerChannel {
+    public createChannel(id: number, name: string, kind: ChannelKind = 'media', casino?: Partial<CasinoOptions>): PlayerChannel {
         if (this.getChannelById(id)) {
             throw new Error(`Unable to create existing channel ${id}`);
         }
 
-        const channel = new PlayerChannel(this, id, name);
+        const channel = new PlayerChannel(this, id, name, kind, casino);
         this.channels.push(channel);
         this.emit('channels-changed', this.channels);
         return channel;
@@ -61,6 +67,15 @@ export class PlayerChannelManager extends EventEmitter {
     }
 
     /**
+     * Put the channels in the given order. Channels missing from the list keep their place at the end.
+     */
+    public reorderChannels(ids: number[]) {
+        const rank = (channel: PlayerChannel) => (ids.includes(channel.id) ? ids.indexOf(channel.id) : ids.length);
+        this.channels.sort((a, b) => rank(a) - rank(b));
+        this.emit('channels-changed', this.channels);
+    }
+
+    /**
      * Delete a given channel id
      * @param id
      */
@@ -70,9 +85,9 @@ export class PlayerChannelManager extends EventEmitter {
             throw new Error(`Unable to delete non-existant channel ${id}`);
         }
 
-        // Remove all sessions from this channel
-        for (const session of channel.sessions) {
-            this.leaveChannel(session);
+        // Remove all sessions from this channel, and only this one. A copy: leaving removes the session from this very list
+        for (const session of [...channel.sessions]) {
+            this.leaveChannel(session, channel.kind);
         }
 
         channel.destroy();
@@ -81,16 +96,34 @@ export class PlayerChannelManager extends EventEmitter {
     }
 
     /**
-     * Get the channel where the session is, if any
-     * @param session
-     * @returns
+     * The session's channel of that kind, if any. Without a kind: its game channel, else its media channel
      */
-    public getSessionChannel(session: Session): PlayerChannel | null {
-        const channelId = this.sessionChannels.get(session);
-        if (typeof channelId === 'number') {
-            return this.getChannelById(channelId) || null;
+    public getSessionChannel(session: Session, kind?: ChannelKind): PlayerChannel | null {
+        const joined = this.sessionChannels.get(session) ?? {};
+        const channelId = kind ? joined[kind] : joined.party ?? joined.media;
+        return typeof channelId === 'number' ? this.getChannelById(channelId) : null;
+    }
+
+    /**
+     * The session's media channel, for commands that only make sense with media
+     */
+    public getSessionMediaChannel(session: Session): PlayerChannel {
+        const channel = this.getSessionChannel(session, 'media');
+        if (!channel) {
+            throw new Error(
+                this.getSessionChannel(session, 'party') ? 'This channel is for games, it has no media' : 'Join a media channel first',
+            );
         }
-        return null;
+        return channel;
+    }
+
+    /**
+     * Tell the session's tabs which channels it is in
+     */
+    public sendMemberships(session: Session | Connection) {
+        const owner = session instanceof Session ? session : session.session;
+        const joined = this.sessionChannels.get(owner) ?? {};
+        session.send('player-memberships', { media: joined.media ?? null, party: joined.party ?? null });
     }
 
     /**
@@ -99,59 +132,74 @@ export class PlayerChannelManager extends EventEmitter {
      * @param id
      */
     public joinChannel(session: Session, id: number) {
-        // Get current/previous channel
-        const previousChannel = this.getSessionChannel(session);
-
-        // If trying to join the same channel
-        if (previousChannel && previousChannel.id === id) {
-            return;
-        }
-
-        // If currently in another channel, leave it
-        if (previousChannel) {
-            this.leaveChannel(session);
-        }
-
         // Check that the given channel exists
         const channel = this.getChannelById(id);
         if (!channel) {
             throw new Error(`Channel ${id} not found`);
         }
 
+        // Only the channel of the same kind is left: music keeps playing when you join a game
+        const previousChannel = this.getSessionChannel(session, channel.kind);
+        if (previousChannel?.id === id) {
+            return;
+        }
+        if (previousChannel) {
+            this.leaveChannel(session, channel.kind);
+        }
+
         // Update mappings and session list
-        this.sessionChannels.set(session, channel.id);
+        this.sessionChannels.set(session, { ...this.sessionChannels.get(session), [channel.kind]: channel.id });
         channel.sessions.push(session);
         channel.syncConnections(session.connections);
 
         // Notify all connections of this session that the channel changed
-        session.send('player-channel', id);
+        this.sendMemberships(session);
 
         // Rebroadcast the channel list so everyone's watcher count/avatars update
         this.sync();
     }
 
     /**
-     *
-     * @param session
+     * Leave the session's channel of that kind, or both without a kind
      */
-    public leaveChannel(session: Session) {
-        // If the session is already within a channel, leave it first
-        const channelId = this.sessionChannels.get(session);
-        if (typeof channelId !== 'number') {
+    public leaveChannel(session: Session, kind?: ChannelKind) {
+        const joined = { ...this.sessionChannels.get(session) };
+        const kinds = kind ? [kind] : (Object.keys(joined) as ChannelKind[]);
+        if (!kinds.some((k) => typeof joined[k] === 'number')) {
             return;
         }
 
-        // Update mappings and session list
-        const channel = this.getChannelById(channelId);
-        this.sessionChannels.delete(session);
-        if (channel) {
-            // If channel is not deleted
-            channel.sessions.splice(channel.sessions.indexOf(session), 1);
+        for (const k of kinds) {
+            const channelId = joined[k];
+            if (typeof channelId !== 'number') {
+                continue;
+            }
+            delete joined[k];
+            const channel = this.getChannelById(channelId);
+            if (channel?.sessions.includes(session)) {
+                channel.sessions.splice(channel.sessions.indexOf(session), 1);
+                if (channel.party) {
+                    logFailure(channel.party.onSessionLeft(session), 'Player channels');
+                }
+            }
+            // Clear only this kind's state on the client: the other channel keeps playing
+            if (k === 'media') {
+                session.send('player-sync', { current: null, queue: [], cursor: 0, paused: false });
+            } else {
+                session.send('party', null);
+                for (const { event } of Object.values(PARTY_GAMES)) {
+                    session.send(event, null);
+                }
+            }
         }
-        session.send('player-sync', { current: null, queue: [], cursor: 0, paused: false });
+        if (Object.keys(joined).length) {
+            this.sessionChannels.set(session, joined);
+        } else {
+            this.sessionChannels.delete(session);
+        }
 
         // Notify all connections of this session that the channel changed
-        session.send('player-channel', null);
+        this.sendMemberships(session);
 
         // Rebroadcast the channel list so everyone's watcher count/avatars update
         this.sync();

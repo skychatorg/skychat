@@ -5,6 +5,12 @@ import { UserController } from '../../skychat/UserController.js';
 import { PlayerChannelManager } from './PlayerChannelManager.js';
 import { PlayerChannelScheduler, SanitizedScheduler } from './PlayerChannelScheduler.js';
 import { issueStreamToken, STREAM_TOKEN_TTL_MS } from './fetcher/JellyfinFetcher.js';
+import { BlackjackTable, CasinoOptions } from './casino/BlackjackTable.js';
+import { logFailure } from '../../skychat/Logging.js';
+import { PartyGameId } from '../../../api/party.js';
+import { Party } from './party/Party.js';
+
+export type ChannelKind = 'media' | 'party';
 
 export type QueuedVideoInfo = {
     user: SanitizedUser;
@@ -41,7 +47,7 @@ export type VideoInfo = {
     /**
      * Video type
      */
-    type: 'youtube' | 'twitch' | 'gallery' | 'iframe' | 'jellyfin';
+    type: 'youtube' | 'twitch' | 'iframe' | 'jellyfin' | 'navidrome';
 
     /**
      * Video data (for youtube, video id; for jellyfin, item id)
@@ -82,6 +88,9 @@ export type VideoInfo = {
 export type SanitizedPlayerChannel = {
     id: number;
     name: string;
+    kind: ChannelKind;
+    /** Party channels only: the blackjack limits, the game on, and how many are seated at blackjack */
+    party?: Omit<CasinoOptions, 'game'> & { seated: number; game: PartyGameId | null };
     playing: boolean;
     paused: boolean;
     queueLength: number;
@@ -105,6 +114,11 @@ export class PlayerChannel {
     public readonly id: number;
 
     public name: string;
+
+    public readonly kind: ChannelKind;
+
+    /** The games of a party channel, null for media channels */
+    public readonly party: Party | null;
 
     public readonly manager: PlayerChannelManager;
 
@@ -151,10 +165,12 @@ export class PlayerChannel {
      */
     private lastResyncDate: Date | null = null;
 
-    constructor(manager: PlayerChannelManager, id: number, name: string) {
+    constructor(manager: PlayerChannelManager, id: number, name: string, kind: ChannelKind = 'media', casino?: Partial<CasinoOptions>) {
         this.manager = manager;
         this.id = id;
         this.name = name;
+        this.kind = kind;
+        this.party = kind === 'party' ? new Party(this, { ...BlackjackTable.DEFAULT_OPTIONS, ...casino }) : null;
         this.scheduler = new PlayerChannelScheduler(this);
     }
 
@@ -267,13 +283,15 @@ export class PlayerChannel {
             throw new Error('No video playing currently');
         }
         this.cancelResync();
+        // Never before the start, nor past the end: replay30 at 0:10 would otherwise put everyone 20s before the start
+        const duration = this.currentVideoInfo.video.duration;
+        const cursor = this.getCursor();
+        const target = duration > 0 ? Math.min(Math.max(0, cursor + delta), duration) : Math.max(0, cursor + delta);
+        delta = target - cursor;
         this.currentVideoInfo.video.startTime -= delta;
-        // When paused, the frozen cursor is authoritative, so move it too. replay30/skip30 reach
-        // moveCursor without clamping, so keep the frozen cursor inside [0, duration].
+        // When paused, the frozen cursor is authoritative, so move it too
         if (this.pausedCursor !== null) {
-            const duration = this.currentVideoInfo.video.duration;
-            this.pausedCursor += delta;
-            this.pausedCursor = duration > 0 ? Math.min(Math.max(0, this.pausedCursor), duration) : Math.max(0, this.pausedCursor);
+            this.pausedCursor = target;
         }
         this.armPlayNextTimeout();
         this.sync();
@@ -381,6 +399,9 @@ export class PlayerChannel {
      * Release resources held by this channel
      */
     public destroy() {
+        if (this.party) {
+            logFailure(this.party.destroy(), 'Player channel');
+        }
         this.cancelResync();
         if (this.playNextTimeout) {
             clearTimeout(this.playNextTimeout);
@@ -420,7 +441,7 @@ export class PlayerChannel {
      * @param video
      * @returns
      */
-    public isVideoPlayingOrInQueue(video: VideoInfo): boolean {
+    public isVideoPlayingOrInQueue(video: Pick<VideoInfo, 'type' | 'id'>): boolean {
         if (this.queue.find((q) => q.video.type === video.type && q.video.id === video.id)) {
             return true;
         }
@@ -523,13 +544,15 @@ export class PlayerChannel {
     }
 
     /**
-     * Build the player-sync payload for a specific session. When the current item is
-     * a Jellyfin media, include a signed stream token scoped to that session's user.
-     * Returns the bare payload unchanged for non-Jellyfin content.
+     * Build the player-sync payload for a specific session. When the current item comes from a
+     * self-hosted library (Jellyfin, Navidrome), include a signed stream token scoped to that
+     * session's user. Returns the bare payload unchanged for other content.
      */
     private buildSyncPayload(session: Session): ReturnType<PlayerChannel['getPlayerData']> & { streamToken?: string } {
         const data = this.getPlayerData();
-        if (data.current?.video.type === 'jellyfin' && this.manager.plugin.canBrowseJellyfin(session)) {
+        // Whatever is playing: queued library items need it for their covers too
+        const plugin = this.manager.plugin;
+        if (plugin.canUseFetcher('jellyfin', session) || plugin.canUseFetcher('navidrome', session)) {
             return { ...data, streamToken: issueStreamToken(session.user.id, Date.now() + STREAM_TOKEN_TTL_MS) };
         }
         return data;
@@ -539,7 +562,8 @@ export class PlayerChannel {
      * Sync sessions in this channel
      */
     public sync() {
-        for (const session of this.sessions) {
+        // A game channel has no media: its empty sync would stop the music of the media channel its players are also in
+        for (const session of this.kind === 'media' ? this.sessions : []) {
             session.send('player-sync', this.buildSyncPayload(session));
         }
         this.manager.sync();
@@ -589,10 +613,11 @@ export class PlayerChannel {
      *                client to reload at the room cursor regardless of its drift threshold.
      */
     public syncConnections(connections: Connection[], options?: { forced?: boolean }) {
-        for (const connection of connections) {
+        for (const connection of this.kind === 'media' ? connections : []) {
             const payload = this.buildSyncPayload(connection.session);
             connection.send('player-sync', options?.forced ? { ...payload, forced: true } : payload);
         }
+        this.party?.syncConnections(connections);
     }
 
     /**
@@ -603,6 +628,10 @@ export class PlayerChannel {
         return {
             id: this.id,
             name: this.name,
+            kind: this.kind,
+            party: this.party
+                ? { ...this.party.options, seated: this.party.gameOf(BlackjackTable)?.seatedCount ?? 0, game: this.party.sanitized().game }
+                : undefined,
             playing: this.isPlaying(),
             paused: this.pausedCursor !== null,
             queueLength: this.queue.length,

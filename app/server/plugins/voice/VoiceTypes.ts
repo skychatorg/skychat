@@ -51,5 +51,5 @@ export type VoiceConsumeParams = {
 
 /** Client -> server inbound shapes (after JSON.parse of the command arg). */
 export type ClientRtpCapabilities = { rtpCapabilities: RtpCapabilities };
-export type ClientDtlsParameters = { dtlsParameters: DtlsParameters };
+export type ClientDtlsParameters = { dtlsParameters: DtlsParameters; dtlsId?: string };
 export type ClientProduceParameters = { kind: MediaKind; rtpParameters: RtpParameters };

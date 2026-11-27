@@ -1,3 +1,4 @@
+import { CustomizationPlugin } from '../../core/global/CustomizationPlugin.js';
 import { Connection } from '../../../skychat/Connection.js';
 import { Session } from '../../../skychat/Session.js';
 import { User } from '../../../skychat/User.js';
@@ -43,7 +44,8 @@ export class WizzPlugin extends GlobalPlugin {
             throw new Error('User ' + identifier + ' is not connected');
         }
 
-        await UserController.buy(sender, WizzPlugin.COST);
+        CustomizationPlugin.checkUnshielded(identifier);
+        await UserController.buy(sender, WizzPlugin.COST, 'Wizz');
 
         target.send('wizz', { from: sender.sanitized() });
     }

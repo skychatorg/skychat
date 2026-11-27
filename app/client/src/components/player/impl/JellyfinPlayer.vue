@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref, watch, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import { useClientStore } from '@/stores/client';
-import { roomCursorMs } from '@/lib/player';
+import { lockedReason as getLockedReason, roomCursorMs } from '@/lib/player';
 import { useJellyfinTracks } from '@/composables/useJellyfinTracks.js';
 
 const client = useClientStore();
@@ -29,6 +29,7 @@ const { preferredAudioLang, preferredSubLang } = useJellyfinTracks();
 const jf = computed(() => client.state.player.current?.video?.jellyfin || null);
 const currentVideo = computed(() => client.state.player.current?.video || null);
 const streamToken = computed(() => client.state.player.streamToken || '');
+const lockedReason = computed(() => getLockedReason(currentVideo.value, streamToken.value, client.state.user));
 
 // Text-based subtitles are the only ones we can render via <track>.
 // Bitmap subs (PGS, VobSub) are shown in the picker but disabled.
@@ -295,8 +296,11 @@ onBeforeUnmount(() => {
 
 <template>
     <div class="relative w-full h-full flex flex-col">
-        <div v-if="decodeError" class="flex-1 flex items-center justify-center p-6 text-center text-sm bg-black text-white/80">
-            {{ decodeError }}
+        <div
+            v-if="lockedReason || decodeError"
+            class="flex-1 flex items-center justify-center p-6 text-center text-sm bg-black text-white/80"
+        >
+            {{ lockedReason || decodeError }}
         </div>
         <!-- playsinline: without it iOS Safari forces an autoplaying <video> into native fullscreen,
              breaking the inline watch-together layout (track picker overlay, chat alongside). -->

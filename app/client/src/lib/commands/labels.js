@@ -8,6 +8,10 @@ export const labels = {
     nextRoom: () => 'Next room',
     previousRoom: () => 'Previous room',
     manageRooms: () => 'Manage rooms',
+    manageChannels: () => 'Manage channels',
+    enterOpMode: () => 'Enter OP mode…',
+    createPoll: () => 'Create a poll…',
+    leaveOpMode: () => 'Leave OP mode',
 
     // Users
     sendPm: (username) => `Send PM to ${username}`,
@@ -27,8 +31,9 @@ export const labels = {
     skipForward30: () => 'Skip forward 30s',
     replay30: () => 'Replay 30s',
     syncPlayer: () => 'Sync player',
-    openPlayerQueue: () => 'Open player queue',
-    addYoutubeVideo: () => 'Add YouTube video…',
+    openPlayerQueue: () => 'See what plays next',
+    addToPlayer: () => 'Add to the player…',
+    browseMusic: () => 'Browse the music library…',
 
     // Chat
     focusMessageInput: () => 'Focus message input',
@@ -38,12 +43,13 @@ export const labels = {
     toggleEncryption: () => 'Toggle message encryption',
 
     // Settings
-    openProfile: () => 'Open profile',
+    openProfile: () => 'Open preferences',
     openGallery: () => 'Open gallery',
     manageStickers: () => 'Manage stickers',
     manageHighlights: () => 'Manage highlighted words',
     changeMotto: () => 'Change motto…',
     changeColor: () => 'Change color…',
+    openShop: () => 'Open shop',
     pickColor: (name) => `Use color: ${name}`,
     toggleGuestBlacklist: (hidden) => (hidden ? 'Show guests' : 'Hide all guests'),
     requestNotifPermission: () => 'Enable browser notifications',
@@ -52,8 +58,6 @@ export const labels = {
     mobileShowLeft: () => 'Show left column (rooms)',
     mobileShowMiddle: () => 'Show middle column (chat)',
     mobileShowRight: () => 'Show right column (users)',
-    goToChat: () => 'Go to chat',
-    goToHome: () => 'Go to home',
 
     // Session
     logout: () => 'Log out',

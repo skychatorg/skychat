@@ -2,7 +2,7 @@
 import SkyTooltip from '@/components/common/SkyTooltip.vue';
 import PresenceRail from '@/components/user/PresenceRail.vue';
 import SingleConnectedUser from '@/components/user/SingleConnectedUser.vue';
-import { useUserRight } from '@/composables/useUserRight';
+import { useAdminTabs } from '@/composables/useAdminTabs';
 import { useAppStore } from '@/stores/app';
 import { useClientStore } from '@/stores/client';
 import { computed } from 'vue';
@@ -38,8 +38,8 @@ const toggleGuestBlacklist = () => {
 const activeEntries = computed(() => (client.state.connectedList || []).filter((entry) => !entry.deadSinceTime));
 const awayEntries = computed(() => (client.state.connectedList || []).filter((entry) => Boolean(entry.deadSinceTime)));
 
-const canManageStickers = useUserRight('minRightForStickerManagement');
-const canManageHighlights = useUserRight('minRightForHighlightManagement');
+// One button for every admin section this user may open
+const adminTabs = useAdminTabs();
 </script>
 
 <template>
@@ -159,34 +159,24 @@ const canManageHighlights = useUserRight('minRightForHighlightManagement');
                 <span v-if="!compact">Settings</span>
             </button>
             <button
-                v-if="client.state.config && client.state.config.jellyfinEnabled"
+                v-if="client.state.user.right >= 0"
                 class="h-10 flex items-center justify-center gap-1.5 rounded-lg hairline bg-white/[.03] hover:bg-white/[.07] text-sm"
                 :class="compact ? 'w-full' : 'col-span-2'"
-                title="Browse Jellyfin library"
-                @click="app.toggleModal('jellyfin')"
+                title="Open the shop"
+                @click="app.toggleModal('shop')"
             >
-                <fa icon="film" />
-                <span v-if="!compact">Jellyfin</span>
+                <fa icon="store" />
+                <span v-if="!compact">Shop</span>
             </button>
             <button
-                v-if="canManageStickers"
+                v-if="adminTabs.length"
                 class="h-10 flex items-center justify-center gap-1.5 rounded-lg hairline bg-white/[.03] hover:bg-white/[.07] text-sm"
                 :class="compact ? 'w-full' : 'col-span-2'"
-                title="Manage stickers"
-                @click="app.toggleModal('manageStickers')"
+                title="Open the admin panel"
+                @click="app.toggleModal('admin')"
             >
-                <fa icon="image" />
-                <span v-if="!compact">Manage stickers</span>
-            </button>
-            <button
-                v-if="canManageHighlights && client.state.highlights !== null"
-                class="h-10 flex items-center justify-center gap-1.5 rounded-lg hairline bg-white/[.03] hover:bg-white/[.07] text-sm"
-                :class="compact ? 'w-full' : 'col-span-2'"
-                title="Manage highlighted words"
-                @click="app.toggleModal('manageHighlights')"
-            >
-                <fa icon="highlighter" />
-                <span v-if="!compact">Highlighted words</span>
+                <fa icon="shield-halved" />
+                <span v-if="!compact">Admin</span>
             </button>
         </div>
     </div>

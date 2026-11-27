@@ -54,8 +54,15 @@ export class MentionPlugin extends RoomPlugin {
 
     // Intercept quotes in messages
     public async onBeforeMessageBroadcastHook(message: Message, connection?: Connection) {
-        // It is currently not possible to mention an user if there's not connection the mention originates from
         if (!connection) {
+            // The server's own announcements may call everyone, like the Daily Roll opening
+            if (message.user.id === -1 && this.parseMentions(message).here) {
+                for (const receiver of Session.connections) {
+                    if (this.room.accepts(receiver.session)) {
+                        this.sendMention(receiver, message.user.username, message);
+                    }
+                }
+            }
             return message;
         }
 
@@ -117,11 +124,12 @@ export class MentionPlugin extends RoomPlugin {
         }
     }
 
-    private sendMention(receiver: Connection, sender: Connection, message: Message) {
-        Logging.info(`MentionPlugin: ${sender.session.identifier} mentioned ${receiver.session.identifier} in room ${this.room.id}`);
+    private sendMention(receiver: Connection, sender: Connection | string, message: Message) {
+        const identifier = typeof sender === 'string' ? sender : sender.session.identifier;
+        Logging.info(`MentionPlugin: ${identifier} mentioned ${receiver.session.identifier} in room ${this.room.id}`);
         receiver.send('mention', {
             roomId: this.room.id,
-            identifier: sender.session.identifier,
+            identifier,
             messageId: message.id,
         });
 
@@ -130,7 +138,7 @@ export class MentionPlugin extends RoomPlugin {
         if (webPushPlugin) {
             const truncatedContent = message.content.length > 100 ? message.content.substring(0, 100) + '...' : message.content;
             webPushPlugin.send(receiver.session.user, {
-                title: `@${sender.session.identifier} mentioned you`,
+                title: `@${identifier} mentioned you`,
                 body: truncatedContent,
                 tag: `mention-${message.id}`,
             });

@@ -4,6 +4,7 @@
 @import './util.css';
 @import './lib.css';
 @import './strip.css';
+@import './cosmetics.css';
 
 @tailwind base;
 @tailwind components;

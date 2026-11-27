@@ -2,6 +2,7 @@ import { RoomPlugin } from '../RoomPlugin.js';
 import { Room } from '../../skychat/Room.js';
 import { Connection } from '../../skychat/Connection.js';
 import { Message } from '../../skychat/Message.js';
+import { Session } from '../../skychat/Session.js';
 import { UserController } from '../../skychat/UserController.js';
 
 export type MessageLimit = {
@@ -50,6 +51,8 @@ export class MessageLimiterPlugin extends RoomPlugin {
         const maxSuccessiveChars = parseInt(param);
         this.storage.maxSuccessiveChars = isNaN(maxSuccessiveChars) ? null : maxSuccessiveChars;
         this.syncStorage();
+        // The room list carries the limit, so admin screens show it right away
+        Object.values(Session.sessions).forEach((session) => this.room.manager.sendRoomList(session));
 
         // Send message to connection
         const message = new Message({

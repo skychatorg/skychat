@@ -1,8 +1,11 @@
 <script setup>
+import UserTitle from '@/components/user/UserTitle.vue';
+import { avatarStyle, nameStyle } from '@/lib/cosmetics';
 import { copyText } from '@/lib/copyText.js';
 import SkyContextMenu from '@/components/common/SkyContextMenu.vue';
 import SkyContextMenuItem from '@/components/common/SkyContextMenuItem.vue';
 import UserMiniAvatar from '@/components/user/UserMiniAvatar.vue';
+import { useUserProfile } from '@/composables/useUserProfile';
 import { useIsBlacklisted } from '@/composables/useIsBlacklisted';
 import { useMessageComposer } from '@/composables/useMessageComposer';
 import { useUserRight } from '@/composables/useUserRight';
@@ -17,6 +20,7 @@ import MessageReactions from './MessageReactions.vue';
 
 const app = useAppStore();
 const client = useClientStore();
+const { openProfile } = useUserProfile();
 const encryptionStore = useEncryptionStore();
 const composer = useMessageComposer();
 
@@ -269,8 +273,6 @@ const toggleActionMenu = () => {
         actionMenuUp.value = list.getBoundingClientRect().bottom - actionMenuContainer.value.getBoundingClientRect().bottom < 150;
     }
 };
-
-const userColor = computed(() => props.message.user.data.plugins.custom.color);
 </script>
 
 <template>
@@ -304,21 +306,30 @@ const userColor = computed(() => props.message.user.data.plugins.custom.color);
 
                 <template v-else>
                     <!-- Avatar column -->
-                    <div
+                    <button
                         v-if="!compact"
                         class="w-7 h-7 shrink-0 mt-[2px] rounded overflow-hidden bg-black border-2"
-                        :style="{ borderColor: userColor }"
-                        :title="message.user.username"
+                        v-bind="avatarStyle(message.user)"
+                        :title="message.user.id < 0 ? undefined : `${message.user.username}’s profile`"
+                        :disabled="message.user.id < 0"
+                        @click.stop="openProfile(message.user.username)"
                     >
                         <img :src="message.user.data.plugins.avatar" :alt="message.user.username" class="h-full w-full object-cover" />
-                    </div>
+                    </button>
 
                     <div class="flex-1 min-w-0">
                         <!-- Header row -->
                         <div v-if="!compact" class="flex items-baseline gap-2 mb-0.5">
-                            <span class="font-semibold text-base" :style="{ color: userColor }">
+                            <button
+                                class="font-semibold text-base enabled:hover:underline"
+                                v-bind="nameStyle(message.user)"
+                                :title="message.user.id < 0 ? undefined : `${message.user.username}’s profile`"
+                                :disabled="message.user.id < 0"
+                                @click.stop="openProfile(message.user.username)"
+                            >
                                 {{ message.user.username }}
-                            </span>
+                            </button>
+                            <UserTitle :user="message.user" />
                             <span
                                 v-if="message.user.right > 0"
                                 class="font-mono text-xs text-white/30"
@@ -330,9 +341,16 @@ const userColor = computed(() => props.message.user.data.plugins.custom.color);
                             <span class="font-mono text-xs text-white/35">{{ formattedTime }}</span>
                         </div>
                         <div v-else class="flex items-baseline gap-2 mb-0.5">
-                            <span class="font-semibold text-base" :style="{ color: userColor }">
+                            <button
+                                class="font-semibold text-base enabled:hover:underline"
+                                v-bind="nameStyle(message.user)"
+                                :title="message.user.id < 0 ? undefined : `${message.user.username}’s profile`"
+                                :disabled="message.user.id < 0"
+                                @click.stop="openProfile(message.user.username)"
+                            >
                                 {{ message.user.username }}
-                            </span>
+                            </button>
+                            <UserTitle :user="message.user" />
                             <span class="font-mono text-xs text-white/35">
                                 {{ formattedTime }}<template v-if="room"> @ {{ room.name }}</template>
                             </span>

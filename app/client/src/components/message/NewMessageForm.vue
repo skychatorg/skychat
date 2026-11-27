@@ -481,6 +481,18 @@ onUnmounted(() => releaseComposer());
                             <fa :icon="isManuallyExpanded ? 'compress' : 'expand'" />
                             <span class="text-sm">{{ isManuallyExpanded ? 'Collapse' : 'Expand' }}</span>
                         </button>
+                        <button
+                            v-if="client.state.user.right >= 0"
+                            title="Ask the room a question"
+                            class="form-control w-full h-10 flex items-center gap-2 px-3"
+                            @click="
+                                app.toggleModal('createPoll');
+                                showMoreActions = false;
+                            "
+                        >
+                            <fa icon="list" />
+                            <span class="text-sm">Poll</span>
+                        </button>
                     </div>
                 </div>
 
