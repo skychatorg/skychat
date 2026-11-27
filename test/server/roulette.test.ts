@@ -115,13 +115,13 @@ describe('roulette', () => {
         expect(alice.errors()).toEqual(['No more bets']);
     });
 
-    it('feeds 2% of each bet into the Plinko jackpot', async () => {
+    it('feeds 1% of each bet into the Plinko jackpot', async () => {
         const { clients } = await roulette(1, { betMs: 400 });
         const before = player().plinkoJackpot;
 
         await clients[0].send(`/party bet ${RED} 5000`);
 
-        expect(player().plinkoJackpot).toBe(before + 100);
+        expect(player().plinkoJackpot).toBe(before + 50);
     });
 
     it('gives the bets back when a player clears them before the spin', async () => {

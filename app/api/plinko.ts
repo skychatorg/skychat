@@ -7,7 +7,7 @@ export const PLINKO = {
     ballPrice: 1000,
     toJackpot: 400,
     /** The share of every other casino bet that feeds the jackpot: what players lose comes back through it */
-    fromOtherBets: 0.02,
+    fromOtherBets: 0.01,
     jackpotStart: 200_000,
     /** One ball in this many wins the jackpot */
     jackpotOdds: 2000,
